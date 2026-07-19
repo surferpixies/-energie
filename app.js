@@ -3,7 +3,7 @@
 
 const APP_KEY = "energieRepasDB";
 const BACKUP_KEY = "energieRepasBackups";
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
 const LEGACY_KEYS = [
   "energieRepasData","energie_et_repas","energyMeals","mealTrackerData",
   "fatigueMeals","repasFatigue","energieRepas","appData"
@@ -141,22 +141,89 @@ function discoverLegacy(){
   return found;
 }
 
+function looksLikeKnownData(raw){
+  if(!raw || typeof raw !== "object") return false;
+  if(raw.version === CURRENT_VERSION && raw.days) return true;
+  if(raw.days && typeof raw.days === "object") return true;
+  if(Array.isArray(raw)) return true;
+  return ["meals","repas","entries","history","logs"].some(k=>Array.isArray(raw[k]));
+}
+
+function emergencyDownload(filename, payload){
+  const text = typeof payload === "string" ? payload : JSON.stringify(payload,null,2);
+  const blob = new Blob([text], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+function showSafetyStop(raw, message){
+  document.body.innerHTML = `
+    <main style="max-width:720px;margin:auto;padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+      <section style="background:#fff3d9;border-radius:24px;padding:22px;color:#28342d">
+        <h1 style="margin-top:0">Tes données sont protégées</h1>
+        <p>${message}</p>
+        <p><strong>L'application a refusé de remplacer ou modifier les données existantes.</strong></p>
+        <button id="downloadRaw" style="border:0;border-radius:14px;padding:12px 16px;font-weight:800;background:#6f8d72;color:white">
+          Télécharger une copie brute
+        </button>
+      </section>
+    </main>`;
+  document.getElementById("downloadRaw").onclick=()=>emergencyDownload(
+    `energie-repas-protection-${todayKey()}.json`, raw
+  );
+  throw new Error("SAFETY_STOP");
+}
+
 function loadDB(){
   const existing = localStorage.getItem(APP_KEY);
+
   if(existing){
+    let parsed;
     try{
-      const parsed = JSON.parse(existing);
-      if(parsed.version !== CURRENT_VERSION) createBackup(parsed,"avant-migration");
-      return migrate(parsed);
+      parsed = JSON.parse(existing);
     }catch(e){
-      createBackup(existing,"données-illisibles");
+      showSafetyStop(existing, "Les données existantes ne peuvent pas être lues correctement.");
     }
+
+    if(!looksLikeKnownData(parsed)){
+      showSafetyStop(parsed, "Le format actuel n'est pas reconnu par cette version.");
+    }
+
+    if(parsed.version !== CURRENT_VERSION){
+      createBackup(parsed,"avant-migration-v1.2.1");
+      const migrated = migrate(parsed);
+
+      const originalMeals = mealCountForSafety(parsed);
+      const migratedMeals = mealCountForSafety(migrated);
+
+      if(originalMeals > 0 && migratedMeals === 0){
+        showSafetyStop(parsed, "La migration aurait supprimé des repas. Elle a donc été annulée.");
+      }
+      return migrated;
+    }
+    return migrate(parsed);
   }
+
+  const shadow = localStorage.getItem(`${APP_KEY}_shadow`);
+  if(shadow){
+    try{
+      const parsedShadow = JSON.parse(shadow);
+      if(looksLikeKnownData(parsedShadow)){
+        createBackup(parsedShadow,"récupération-copie-miroir");
+        return migrate(parsedShadow);
+      }
+    }catch(_){}
+  }
+
   const legacy = discoverLegacy();
   if(legacy.length){
     createBackup(legacy,"import-automatique-ancien-format");
     const merged = emptyDB();
     legacy.forEach(({val})=>{
+      if(!looksLikeKnownData(val)) return;
       const part = migrate(val);
       Object.entries(part.days).forEach(([key,d])=>{
         const target = ensureDay(merged,key);
@@ -168,17 +235,53 @@ function loadDB(){
     });
     return merged;
   }
+
   return emptyDB();
+}
+
+function mealCountForSafety(raw){
+  if(!raw) return 0;
+  if(Array.isArray(raw)) return raw.length;
+  if(raw.data) return mealCountForSafety(raw.data);
+  if(raw.days && typeof raw.days==="object"){
+    return Object.values(raw.days).reduce((sum,d)=>sum+((d?.meals||d?.repas||[]).length||0),0);
+  }
+  for(const k of ["meals","repas","entries","history","logs"]){
+    if(Array.isArray(raw[k])) return raw[k].length;
+  }
+  return 0;
 }
 
 let db = loadDB();
 let currentView = "today";
 
 function saveDB(reason="save"){
+  const previousRaw = localStorage.getItem(APP_KEY);
+  let previous = null;
+  try{ previous = previousRaw ? JSON.parse(previousRaw) : null; }catch(_){ previous = previousRaw; }
+
+  const previousMeals = mealCountForSafety(previous);
+  const nextMeals = mealCountForSafety(db);
+
+  if(previousMeals > 0 && nextMeals === 0 && reason !== "explicit-empty-reset"){
+    showSafetyStop(previous, "Une sauvegarde vide aurait remplacé des données existantes.");
+  }
+
   db.updatedAt = new Date().toISOString();
-  localStorage.setItem(APP_KEY, JSON.stringify(db));
-  // Shadow copy: a second independent copy on every save.
-  localStorage.setItem(`${APP_KEY}_shadow`, JSON.stringify(db));
+  const serialized = JSON.stringify(db);
+
+  if(previousRaw && previousRaw !== serialized){
+    createBackup(previous,"avant-écriture");
+  }
+
+  localStorage.setItem(APP_KEY, serialized);
+  localStorage.setItem(`${APP_KEY}_shadow`, serialized);
+
+  const verify = localStorage.getItem(APP_KEY);
+  if(verify !== serialized){
+    showSafetyStop(previous || db, "Le navigateur n'a pas confirmé l'enregistrement des données.");
+  }
+
   if(reason === "important") createBackup(db,"sauvegarde-importante");
 }
 
@@ -227,7 +330,7 @@ function renderToday(){
         <div class="muted small">${d.activities.map(a=>esc(a.type)).join(", ") || "Aucune activité inscrite"}</div>
       </article>
       <article class="card wide">
-        <div class="row"><div><span>💧</span><h3>Hydratation</h3></div><button class="secondary small" id="minusWater">−1</button></div>
+        <div class="row"><div><span>💧</span><h3>Hydratation</h3></div><span class="muted small">Touche une goutte</span></div>
         <div class="water-row">${waterDrops}</div>
         <div class="row"><strong>${d.water} / ${goal} verres</strong><span class="muted small">${Math.round(Math.min(1,d.water/goal)*100)} %</span></div>
       </article>
@@ -248,7 +351,6 @@ function renderToday(){
   $("#editDay").onclick = openDayDialog;
   $("#addActivity").onclick = openDayDialog;
   $("#addMeal").onclick = ()=>openMealDialog();
-  $("#minusWater").onclick = ()=>{ d.water=Math.max(0,d.water-1); saveDB(); render(); };
   $$("[data-water]").forEach(btn=>btn.onclick=()=>{
     const n=Number(btn.dataset.water); d.water = d.water===n ? n-1 : n; saveDB(); render();
   });
@@ -325,8 +427,8 @@ function renderProfile(){
   $("#app").innerHTML=`<section class="hero"><div class="row"><div><p class="eyebrow">Préférences et sécurité</p><h2>Profil</h2><p>Tes données restent dans ton navigateur.</p></div><div class="mascot">⚙️</div></div></section>
   <section class="stack">
     <article class="card settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de verres par jour</p></div><input id="waterGoal" type="number" min="1" max="20" value="${db.settings.waterGoal}" style="width:90px"></article>
-    <article class="card"><h3>Protection des données</h3><p class="muted">Copie principale + copie miroir locale. ${backups.length} sauvegarde(s) de migration ou d'action importante.</p><div class="dialog-actions"><button class="secondary" id="exportBtn">Exporter JSON</button><button class="secondary" id="importBtn">Importer JSON</button><button class="secondary" id="restoreBackup">Restaurer la dernière sauvegarde</button></div></article>
-    <article class="card"><h3>Version</h3><p>Énergie & Repas V1.2 · données V${CURRENT_VERSION}</p><p class="muted small">Avant toute future migration, une sauvegarde est créée automatiquement.</p></article>
+    <article class="card"><h3>Protection des données</h3><p class="muted">Copie principale + copie miroir locale + sauvegarde avant chaque écriture. ${backups.length} sauvegarde(s) conservée(s).</p><div class="dialog-actions"><button class="secondary" id="exportBtn">Exporter JSON</button><button class="secondary" id="importBtn">Importer JSON</button><button class="secondary" id="restoreBackup">Restaurer la dernière sauvegarde</button></div></article>
+    <article class="card"><h3>Version</h3><p>Énergie & Repas V1.2.1 · données V${CURRENT_VERSION}</p><p class="muted small">Avant toute future migration, une sauvegarde est créée automatiquement.</p></article>
   </section>`;
   $("#waterGoal").onchange=e=>{db.settings.waterGoal=clamp(e.target.value,1,20);saveDB();};
   $("#exportBtn").onclick=exportData;
@@ -428,6 +530,6 @@ function applyTheme(){
   const dark=t==="dark" || (t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.dataset.theme=dark?"dark":"light";
 }
-applyTheme(); saveDB(); render();
+applyTheme(); render();
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(console.warn);
 })();

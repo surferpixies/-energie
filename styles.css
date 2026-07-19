@@ -39,3 +39,5 @@ label{display:grid;gap:7px;font-size:.86rem;font-weight:800}input,select,textare
 .progress{height:10px;background:var(--surface-2);border-radius:99px;overflow:hidden}.progress span{display:block;height:100%;background:var(--accent);border-radius:99px}
 .small{font-size:.8rem}.settings-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
 @media(max-width:520px){.rating-grid{grid-template-columns:1fr}.meal-card{grid-template-columns:58px 1fr}.meal-thumb{width:58px;height:58px}.hero{padding:20px}.grid{gap:10px}.card{padding:15px}}
+
+.drop{min-width:38px;min-height:44px;border-radius:16px}.drop:hover{background:var(--surface-2)}
