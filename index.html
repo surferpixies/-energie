@@ -1,25 +1,130 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr-CA">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#621B2D"><title>Énergie & Repas</title>
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png">
-<style>
-:root{--wine:#621B2D;--bg:#f4f1f2;--card:#fff;--text:#24181c;--muted:#7c6b71;--line:#eadfe3;--soft:#f8f3f5;--danger:#ae3030}html[data-theme=dark]{--bg:#161214;--card:#211a1d;--text:#fff8fa;--muted:#c5b4ba;--line:#3a3034;--soft:#2b2326}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.top{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:calc(16px + env(safe-area-inset-top)) 18px 14px;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(20px);border-bottom:1px solid var(--line)}h1{font-size:1.35rem;margin:0}.eyebrow{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:800}.icon{border:0;background:var(--soft);color:var(--text);width:42px;height:42px;border-radius:14px}main{max-width:760px;margin:auto;padding:16px 14px 110px}.view{display:none}.view.active{display:block}.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;margin-bottom:14px;box-shadow:0 10px 30px rgba(50,20,30,.07)}.hero{background:radial-gradient(circle at 100% 0%,rgba(98,27,45,.17),transparent 40%),var(--card)}.row{display:flex;justify-content:space-between;align-items:center;gap:12px}h2{font-size:1.05rem;margin:3px 0 0}.pill{border-radius:999px;background:#ead1d8;color:var(--wine);padding:7px 10px;font-weight:800;font-size:.73rem}.metrics,.analysis{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0}.metric,.analysis>div{background:var(--soft);border:1px solid var(--line);border-radius:17px;padding:13px 8px;text-align:center}.metric strong,.analysis strong{display:block;font-size:1.3rem}.metric span,.analysis span{display:block;color:var(--muted);font-size:.72rem;margin-top:4px}.primary,.secondary,.danger{width:100%;border:0;border-radius:15px;padding:14px;font-weight:800}.primary{background:var(--wine);color:white}.secondary{background:var(--soft);color:var(--text);border:1px solid var(--line)}.danger{background:rgba(174,48,48,.1);color:var(--danger);border:1px solid rgba(174,48,48,.25)}.meal{display:grid;grid-template-columns:56px 1fr auto;gap:11px;align-items:center;padding:13px 0;border-top:1px solid var(--line)}.meal:first-child{border-top:0}.meal img,.ph{width:56px;height:56px;object-fit:cover;border-radius:15px;background:var(--soft)}.ph{display:grid;place-items:center;font-size:1.3rem}.meal h3{font-size:.92rem;margin:0 0 4px}.meal p{font-size:.78rem;color:var(--muted);margin:0;line-height:1.4}.link{border:0;background:none;color:var(--wine);font-weight:800}.pending{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}.pending:first-child{border-top:0}.pending small{display:block;color:var(--muted)}input,select,textarea{width:100%;margin-top:7px;border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--soft);color:var(--text);font:inherit}label{display:block;margin:15px 0;font-size:.88rem;font-weight:700}.search{margin:14px 0}.empty{color:var(--muted);padding:12px 0;font-size:.9rem}.bars{display:flex;align-items:flex-end;gap:6px;min-height:160px;padding-top:10px}.bar{flex:1;text-align:center}.bar i{display:block;background:var(--wine);border-radius:7px 7px 2px 2px;min-height:4px}.bar small{font-size:.58rem;color:var(--muted)}.trend{padding:10px 0;border-top:1px solid var(--line)}.trend:first-child{border-top:0}.trend span{display:block;color:var(--muted);font-size:.8rem}.settings{display:grid;gap:9px}.nav{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(94vw,620px);display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:7px;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 90%,transparent);backdrop-filter:blur(22px);border-radius:23px;box-shadow:0 14px 36px rgba(0,0,0,.16)}.nav button{border:0;background:transparent;color:var(--muted);border-radius:16px;padding:8px 2px}.nav button.active{background:#ead1d8;color:var(--wine)}.nav span{display:block}.nav small{font-size:.65rem;font-weight:700}dialog{width:min(94vw,540px);max-height:88vh;border:0;border-radius:25px;padding:0;background:var(--card);color:var(--text);box-shadow:0 25px 80px rgba(0,0,0,.35)}dialog::backdrop{background:rgba(20,10,14,.62);backdrop-filter:blur(3px)}form{padding:20px;overflow:auto;max-height:88vh}.preview{width:100%;max-height:240px;object-fit:cover;border-radius:17px}.actions{display:grid;grid-template-columns:auto 1fr;gap:9px}.hidden{display:none!important}@media(max-width:390px){.metrics{grid-template-columns:repeat(3,1fr)}.metric strong{font-size:1.12rem}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f3e8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Énergie & Repas">
+  <title>Énergie & Repas</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon.svg">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header class="top"><div><span class="eyebrow">Suivi personnel</span><h1>Énergie & Repas</h1></div><button id="themeBtn" class="icon">◐</button></header>
-<main>
-<section id="today" class="view active"><article class="card hero"><div class="row"><div><span class="eyebrow">Aujourd’hui</span><h2 id="todayDate"></h2></div><span id="todayStatus" class="pill">Aucun repas</span></div><div class="metrics"><div class="metric"><strong id="todayMeals">0</strong><span>Repas</span></div><div class="metric"><strong id="avgFatigue">—</strong><span>Fatigue moy.</span></div><div class="metric"><strong id="sleepToday">—</strong><span>Sommeil</span></div></div><button id="addBtn" class="primary">＋ Ajouter un repas</button></article><article class="card"><div class="row"><div><span class="eyebrow">Suivi</span><h2>À compléter</h2></div><span id="pendingCount" class="pill">0</span></div><div id="pendingList" class="empty">Aucun suivi en attente.</div></article><article class="card"><span class="eyebrow">Récent</span><h2>Derniers repas</h2><div id="recentList" class="empty">Aucun repas.</div></article></section>
-<section id="history" class="view"><article class="card"><div class="row"><div><span class="eyebrow">Historique</span><h2>Tous les repas</h2></div><span id="historyCount" class="pill">0</span></div><input id="search" class="search" type="search" placeholder="Rechercher un aliment ou une note"><div id="historyList" class="empty">Aucun repas.</div></article></section>
-<section id="analysis" class="view"><article class="card"><span class="eyebrow">Analyse</span><h2>Vue d’ensemble</h2><div class="analysis"><div><strong id="completeCount">0</strong><span>Suivis complets</span></div><div><strong id="delta1">—</strong><span>Variation 1 h</span></div><div><strong id="delta3">—</strong><span>Variation 3 h</span></div></div></article><article class="card"><span class="eyebrow">Évolution</span><h2>14 derniers jours</h2><div id="chart" class="bars empty">Pas assez de données.</div></article><article class="card"><span class="eyebrow">Aliments récurrents</span><h2>Associations observées</h2><div id="trends" class="empty">Ajoute au moins trois suivis complets.</div><p class="empty">Ces résultats montrent des associations, pas des causes médicales.</p></article></section>
-<section id="settings" class="view"><article class="card"><span class="eyebrow">Données</span><h2>Sauvegarde</h2><div class="settings"><button id="exportJson" class="secondary">Exporter une sauvegarde</button><label class="secondary" style="text-align:center;margin:0">Importer une sauvegarde<input id="importJson" type="file" accept="application/json,.json" class="hidden"></label><button id="exportCsv" class="secondary">Exporter en CSV</button></div></article><article class="card"><span class="eyebrow">Apparence</span><h2>Thème</h2><select id="themeSelect"><option value="system">Système</option><option value="light">Clair</option><option value="dark">Sombre</option></select></article><article class="card"><button id="clearBtn" class="danger">Effacer toutes les données</button></article></section>
-</main>
-<nav class="nav"><button class="active" data-view="today"><span>⌂</span><small>Aujourd’hui</small></button><button data-view="history"><span>◫</span><small>Historique</small></button><button data-view="analysis"><span>⌁</span><small>Analyse</small></button><button data-view="settings"><span>⚙</span><small>Réglages</small></button></nav>
-<dialog id="mealDialog"><form id="mealForm"><input id="mealId" type="hidden"><div class="row"><div><span class="eyebrow">Repas</span><h2 id="dialogTitle">Nouveau repas</h2></div><button type="button" id="closeMeal" class="icon">✕</button></div><label>Date et heure<input id="mealTime" type="datetime-local" required></label><label>Photo<input id="mealPhoto" type="file" accept="image/*" capture="environment"></label><img id="preview" class="preview hidden"><label>Qu’as-tu mangé?<textarea id="mealText" rows="3" required placeholder="Ex. bagel, œufs et café"></textarea></label><label>Taille<select id="mealSize"><option>Petit</option><option selected>Moyen</option><option>Gros</option></select></label><label>Fatigue avant : <output id="beforeOut">5</output>/10<input id="before" type="range" min="0" max="10" value="5"></label><label>Sommeil la nuit dernière<input id="sleep" type="number" min="0" max="24" step="0.25" placeholder="Ex. 7.5"></label><label>Notes<textarea id="notes" rows="2"></textarea></label><div class="actions"><button type="button" id="deleteBtn" class="danger hidden">Supprimer</button><button class="primary">Enregistrer</button></div></form></dialog>
-<dialog id="followDialog"><form id="followForm"><div class="row"><div><span class="eyebrow">Suivi</span><h2>Compléter</h2></div><button type="button" id="closeFollow" class="icon">✕</button></div><p id="followName"></p><input id="followId" type="hidden"><label>Fatigue 1 h après : <output id="after1Out">5</output>/10<input id="after1" type="range" min="0" max="10" value="5"></label><label>Fatigue 3 h après : <output id="after3Out">5</output>/10<input id="after3" type="range" min="0" max="10" value="5"></label><button class="primary">Sauvegarder</button></form></dialog>
-<script>
-const KEY='energie_repas_v1',SET='energie_repas_settings_v1';let meals=normalize(JSON.parse(localStorage.getItem(KEY)||'[]')),settings=JSON.parse(localStorage.getItem(SET)||'{"theme":"system"}'),photo=null;const $=id=>document.getElementById(id),avg=a=>{a=a.filter(Number.isFinite);return a.length?a.reduce((x,y)=>x+y,0)/a.length:null},esc=s=>String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])),fmt=i=>new Date(i).toLocaleString('fr-CA',{dateStyle:'medium',timeStyle:'short'}),complete=m=>Number.isFinite(m.after1)&&Number.isFinite(m.after3);function normalize(a){return Array.isArray(a)?a.map(m=>({id:m.id||String(Date.now()+Math.random()),time:m.time||new Date().toISOString(),text:m.text||'',size:m.size||'Moyen',before:Number.isFinite(Number(m.before))?Number(m.before):5,after1:Number.isFinite(Number(m.after1))?Number(m.after1):null,after3:Number.isFinite(Number(m.after3))?Number(m.after3):null,sleep:Number.isFinite(Number(m.sleep))?Number(m.sleep):null,notes:m.notes||'',photo:m.photo||null})):[]}function save(){localStorage.setItem(KEY,JSON.stringify(meals));render()}function setTheme(t){settings.theme=t;let d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light';$('themeSelect').value=t;localStorage.setItem(SET,JSON.stringify(settings))}function now(){let d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());$('mealTime').value=d.toISOString().slice(0,16)}function row(m){return `<div class="meal">${m.photo?`<img src="${m.photo}">`:'<div class="ph">🍽️</div>'}<div><h3>${esc(m.text)}</h3><p>${fmt(m.time)} · ${esc(m.size)} · avant ${m.before}/10${Number.isFinite(m.after1)?` · 1 h ${m.after1}/10`:''}${Number.isFinite(m.after3)?` · 3 h ${m.after3}/10`:''}</p></div><button class="link" onclick="editMeal('${m.id}')">${complete(m)?'Modifier':'À suivre'}</button></div>`}function render(){let today=new Date().toDateString(),tm=meals.filter(m=>new Date(m.time).toDateString()===today);$('todayDate').textContent=new Date().toLocaleDateString('fr-CA',{weekday:'long',day:'numeric',month:'long'});$('todayMeals').textContent=tm.length;$('todayStatus').textContent=tm.length?`${tm.length} repas`:'Aucun repas';let f=avg(tm.flatMap(m=>[m.before,m.after1,m.after3]).filter(Number.isFinite));$('avgFatigue').textContent=f===null?'—':f.toFixed(1);let s=avg(tm.map(m=>m.sleep).filter(Number.isFinite));$('sleepToday').textContent=s===null?'—':s.toFixed(1)+' h';let p=[...meals].filter(m=>!complete(m)).sort((a,b)=>new Date(b.time)-new Date(a.time));$('pendingCount').textContent=p.length;$('pendingList').innerHTML=p.length?p.map(m=>`<div class="pending"><div><strong>${esc(m.text)}</strong><small>${fmt(m.time)}</small></div><button class="link" onclick="openFollow('${m.id}')">Compléter</button></div>`).join(''):'Aucun suivi en attente.';let sorted=[...meals].sort((a,b)=>new Date(b.time)-new Date(a.time));$('recentList').innerHTML=sorted.length?sorted.slice(0,5).map(row).join(''):'Aucun repas.';let q=$('search').value.toLowerCase(),filtered=q?sorted.filter(m=>(m.text+' '+m.notes).toLowerCase().includes(q)):sorted;$('historyCount').textContent=filtered.length;$('historyList').innerHTML=filtered.length?filtered.map(row).join(''):'Aucun repas correspondant.';analysis()}function analysis(){let c=meals.filter(complete);$('completeCount').textContent=c.length;let d1=avg(c.map(m=>m.after1-m.before)),d3=avg(c.map(m=>m.after3-m.before));$('delta1').textContent=d1===null?'—':(d1>=0?'+':'')+d1.toFixed(1);$('delta3').textContent=d3===null?'—':(d3>=0?'+':'')+d3.toFixed(1);let days=[];for(let i=13;i>=0;i--){let d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-i);let n=new Date(d);n.setDate(n.getDate()+1);let v=avg(meals.filter(m=>new Date(m.time)>=d&&new Date(m.time)<n).flatMap(m=>[m.before,m.after1,m.after3]).filter(Number.isFinite));days.push({l:d.toLocaleDateString('fr-CA',{day:'numeric',month:'short'}),v})}if(days.filter(x=>x.v!==null).length<2){$('chart').className='bars empty';$('chart').textContent='Pas assez de données.'}else{$('chart').className='bars';$('chart').innerHTML=days.map(x=>`<div class="bar"><i style="height:${x.v===null?4:Math.max(8,x.v*13)}px;opacity:${x.v===null?.18:1}"></i><small>${x.l}</small></div>`).join('')}if(c.length<3){$('trends').textContent='Ajoute au moins trois suivis complets.';return}let stop=new Set(['avec','dans','pour','sans','une','des','les','aux','sur','mon','mes','repas','plus','petit','moyen','gros','et','au','du','de','la','le']),st={};c.forEach(m=>[...new Set((m.text.toLowerCase().match(/[a-zàâçéèêëîïôûùüÿñæœ]{3,}/g)||[]).filter(w=>!stop.has(w)))].forEach(w=>{st[w]??={n:0,a:[],b:[]};st[w].n++;st[w].a.push(m.after1-m.before);st[w].b.push(m.after3-m.before)}));let r=Object.entries(st).filter(([,v])=>v.n>=2).map(([w,v])=>({w,n:v.n,a:avg(v.a),b:avg(v.b)})).sort((x,y)=>y.b-x.b).slice(0,8);$('trends').innerHTML=r.length?r.map(x=>`<div class="trend"><strong>${esc(x.w)} · ${x.n} repas</strong><span>${x.a>=0?'+':''}${x.a.toFixed(1)} à 1 h · ${x.b>=0?'+':''}${x.b.toFixed(1)} à 3 h</span></div>`).join(''):'Pas assez de répétitions.'}function reset(){ $('mealForm').reset();$('mealId').value='';$('dialogTitle').textContent='Nouveau repas';$('deleteBtn').classList.add('hidden');$('before').value=5;$('beforeOut').textContent=5;photo=null;$('preview').classList.add('hidden');now()}window.editMeal=id=>{let m=meals.find(x=>x.id===id);if(!m)return;$('mealId').value=id;$('dialogTitle').textContent='Modifier le repas';$('mealTime').value=m.time.slice(0,16);$('mealText').value=m.text;$('mealSize').value=m.size;$('before').value=m.before;$('beforeOut').textContent=m.before;$('sleep').value=Number.isFinite(m.sleep)?m.sleep:'';$('notes').value=m.notes;photo=m.photo;if(photo){$('preview').src=photo;$('preview').classList.remove('hidden')}else $('preview').classList.add('hidden');$('deleteBtn').classList.remove('hidden');$('mealDialog').showModal()};window.openFollow=id=>{let m=meals.find(x=>x.id===id);if(!m)return;$('followId').value=id;$('followName').textContent=m.text;$('after1').value=Number.isFinite(m.after1)?m.after1:5;$('after1Out').textContent=$('after1').value;$('after3').value=Number.isFinite(m.after3)?m.after3:5;$('after3Out').textContent=$('after3').value;$('followDialog').showModal()};$('addBtn').onclick=()=>{reset();$('mealDialog').showModal()};$('closeMeal').onclick=()=>$('mealDialog').close();$('closeFollow').onclick=()=>$('followDialog').close();$('before').oninput=e=>$('beforeOut').textContent=e.target.value;$('after1').oninput=e=>$('after1Out').textContent=e.target.value;$('after3').oninput=e=>$('after3Out').textContent=e.target.value;$('mealPhoto').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{photo=r.result;$('preview').src=photo;$('preview').classList.remove('hidden')};r.readAsDataURL(f)};$('mealForm').onsubmit=e=>{e.preventDefault();let id=$('mealId').value,s=parseFloat($('sleep').value),p={time:$('mealTime').value,text:$('mealText').value.trim(),size:$('mealSize').value,before:Number($('before').value),sleep:Number.isFinite(s)?s:null,notes:$('notes').value.trim(),photo};if(id)Object.assign(meals.find(x=>x.id===id),p);else meals.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),after1:null,after3:null,...p});save();$('mealDialog').close()};$('deleteBtn').onclick=()=>{let id=$('mealId').value;if(id&&confirm('Supprimer ce repas?')){meals=meals.filter(m=>m.id!==id);save();$('mealDialog').close()}};$('followForm').onsubmit=e=>{e.preventDefault();let m=meals.find(x=>x.id===$('followId').value);m.after1=Number($('after1').value);m.after3=Number($('after3').value);save();$('followDialog').close()};$('search').oninput=render;document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.view).classList.add('active');scrollTo({top:0,behavior:'smooth'})});$('themeBtn').onclick=()=>setTheme(settings.theme==='system'?'dark':settings.theme==='dark'?'light':'system');$('themeSelect').onchange=e=>setTheme(e.target.value);$('exportJson').onclick=()=>dl('energie-repas-sauvegarde.json',JSON.stringify({app:'Énergie & Repas',version:'1.1',exportedAt:new Date().toISOString(),meals,settings},null,2),'application/json');$('importJson').onchange=async e=>{try{let d=JSON.parse(await e.target.files[0].text()),a=Array.isArray(d)?d:d.meals;if(!Array.isArray(a))throw 0;if(confirm(`Importer ${a.length} repas et remplacer les données actuelles?`)){meals=normalize(a);if(d.settings)settings=d.settings;setTheme(settings.theme||'system');save()}}catch{alert('Fichier invalide')}e.target.value=''};$('exportCsv').onclick=()=>{let h=['Date','Repas','Taille','Fatigue avant','Fatigue 1 h','Fatigue 3 h','Sommeil','Notes'],q=v=>`"${String(v??'').replaceAll('"','""')}"`,csv=[h.join(','),...meals.map(m=>[m.time,m.text,m.size,m.before,m.after1,m.after3,m.sleep,m.notes].map(q).join(','))].join('\n');dl('suivi-energie-repas.csv','\ufeff'+csv,'text/csv')};$('clearBtn').onclick=()=>{if(confirm('Effacer définitivement toutes les données?')){meals=[];save()}};function dl(n,c,t){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;a.click()}if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');setTheme(settings.theme||'system');now();render();
-</script>
-</body></html>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow" id="todayLabel"></p>
+        <h1>Énergie & Repas</h1>
+      </div>
+      <button class="icon-button" id="themeToggle" aria-label="Changer le thème">☾</button>
+    </header>
+
+    <main id="app" tabindex="-1"></main>
+
+    <nav class="bottom-nav" aria-label="Navigation principale">
+      <button data-view="today" class="nav-item active"><span>☀️</span><small>Aujourd'hui</small></button>
+      <button data-view="history" class="nav-item"><span>📖</span><small>Historique</small></button>
+      <button data-view="insights" class="nav-item"><span>🧠</span><small>Découvertes</small></button>
+      <button data-view="profile" class="nav-item"><span>⚙️</span><small>Profil</small></button>
+    </nav>
+  </div>
+
+  <dialog id="mealDialog">
+    <form method="dialog" id="mealForm" class="dialog-card">
+      <div class="dialog-header">
+        <div>
+          <p class="eyebrow">Nouveau repas</p>
+          <h2 id="mealDialogTitle">Ajouter un repas</h2>
+        </div>
+        <button class="icon-button" value="cancel" aria-label="Fermer">✕</button>
+      </div>
+
+      <input type="hidden" id="mealId">
+      <label>Type de repas
+        <select id="mealType" required>
+          <option>Déjeuner</option><option>Dîner</option><option>Souper</option>
+          <option>Collation</option><option>Boisson</option>
+        </select>
+      </label>
+
+      <label>Heure
+        <input id="mealTime" type="time" required>
+      </label>
+
+      <label>Ce que tu as mangé ou bu
+        <textarea id="mealDescription" rows="3" placeholder="Ex. bagel, 2 œufs et café" required></textarea>
+      </label>
+
+      <label>Catégorie principale
+        <select id="mealCategory">
+          <option>Repas équilibré</option><option>Très sucré</option><option>Riche en glucides</option>
+          <option>Riche en protéines</option><option>Très gras / frit</option><option>Produits laitiers</option>
+          <option>Gluten / blé</option><option>Alcool</option><option>Caféine</option>
+          <option>Boisson énergisante</option><option>Repas léger</option><option>Jeûne / repas sauté</option><option>Autre</option>
+        </select>
+      </label>
+
+      <label>Quantité approximative
+        <input id="mealQuantity" placeholder="Ex. 1 bol, 2 tranches">
+      </label>
+
+      <div class="rating-grid">
+        <label>Fatigue avant
+          <input id="fatigueBefore" type="range" min="0" max="10" value="3">
+          <output id="fatigueBeforeOut">3</output>
+        </label>
+        <label>Fatigue après 1 h
+          <input id="fatigue1h" type="range" min="0" max="10" value="3">
+          <output id="fatigue1hOut">3</output>
+        </label>
+        <label>Fatigue après 3 h
+          <input id="fatigue3h" type="range" min="0" max="10" value="3">
+          <output id="fatigue3hOut">3</output>
+        </label>
+      </div>
+
+      <label>Photo
+        <input id="mealPhoto" type="file" accept="image/*" capture="environment">
+      </label>
+
+      <label>Notes
+        <textarea id="mealNotes" rows="2" placeholder="Symptômes, contexte, etc."></textarea>
+      </label>
+
+      <div class="dialog-actions">
+        <button type="button" class="secondary" id="copyYesterdayBreakfast">Copier le déjeuner d'hier</button>
+        <button type="submit" class="primary">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dayDialog">
+    <form method="dialog" id="dayForm" class="dialog-card">
+      <div class="dialog-header">
+        <div><p class="eyebrow">Ma journée</p><h2>Mettre à jour</h2></div>
+        <button class="icon-button" value="cancel" aria-label="Fermer">✕</button>
+      </div>
+      <label>Sommeil de la nuit dernière (heures)
+        <input id="sleepHours" type="number" step="0.25" min="0" max="24" placeholder="7.5">
+      </label>
+      <label>Qualité du sommeil (0 à 10)
+        <input id="sleepQuality" type="number" min="0" max="10" placeholder="8">
+      </label>
+      <label>Activité
+        <select id="activityType"><option>Marche</option><option>Course</option><option>Vélo</option><option>Musculation</option><option>Autre</option></select>
+      </label>
+      <label>Minutes d'activité
+        <input id="activityMinutes" type="number" min="0" max="1440" placeholder="45">
+      </label>
+      <button type="submit" class="primary">Enregistrer la journée</button>
+    </form>
+  </dialog>
+
+  <input id="importFile" type="file" accept="application/json" hidden>
+  <script src="app.js"></script>
+</body>
+</html>
