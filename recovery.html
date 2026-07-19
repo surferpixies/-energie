@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Récupération — Énergie & Repas</title>
+<style>
+:root{--bg:#f7f3e8;--card:#fffdf7;--text:#28342d;--muted:#708078;--accent:#6f8d72;--danger:#b85f5f;--border:rgba(40,52,45,.12)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:760px;margin:auto;padding:24px 16px 60px}.card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:18px;margin:12px 0}
+h1{font-size:1.7rem}h2{font-size:1.1rem;margin:0 0 8px}.muted{color:var(--muted)}button{border:0;border-radius:14px;padding:11px 14px;font-weight:800;cursor:pointer;margin:4px}
+.primary{background:var(--accent);color:white}.secondary{background:#e8eee4;color:var(--text)}.danger{background:#f5dddd;color:var(--danger)}
+pre{white-space:pre-wrap;word-break:break-word;background:#f1eee5;padding:12px;border-radius:14px;max-height:260px;overflow:auto;font-size:.78rem}
+.badge{display:inline-block;background:#e8eee4;border-radius:999px;padding:5px 9px;font-size:.74rem;font-weight:800;margin-right:6px}
+.warn{background:#fff2d8;border-left:5px solid #e8a96b}.ok{background:#e5f2e4;border-left:5px solid #6f8d72}
+</style>
+</head>
+<body>
+<main>
+  <h1>Récupération Énergie & Repas</h1>
+  <div class="card warn">
+    <strong>Ne supprime rien dans Safari.</strong>
+    <p>Cette page inspecte les anciennes copies locales sans les modifier. Utilise-la sur exactement le même domaine GitHub Pages.</p>
+  </div>
+  <div id="summary" class="card">Analyse en cours…</div>
+  <div id="results"></div>
+</main>
+<script>
+(() => {
+  "use strict";
+  const results = document.getElementById("results");
+  const summary = document.getElementById("summary");
+  const candidates = [];
+
+  function safeParse(v){
+    try { return JSON.parse(v); } catch { return null; }
+  }
+  function mealCount(obj){
+    if(!obj) return 0;
+    if(Array.isArray(obj)) return obj.length;
+    if(obj.data) return mealCount(obj.data);
+    if(obj.days && typeof obj.days === "object"){
+      return Object.values(obj.days).reduce((s,d)=>s + ((d && (d.meals||d.repas)) ? (d.meals||d.repas).length : 0),0);
+    }
+    for(const k of ["meals","repas","entries","history","logs"]){
+      if(Array.isArray(obj[k])) return obj[k].length;
+    }
+    if(Array.isArray(obj.payload)) return mealCount(obj.payload);
+    if(obj.payload) return mealCount(obj.payload);
+    return 0;
+  }
+  function dayCount(obj){
+    if(!obj) return 0;
+    if(obj.data) return dayCount(obj.data);
+    if(obj.days && typeof obj.days === "object") return Object.keys(obj.days).length;
+    return 0;
+  }
+  function addCandidate(label, key, payload, source){
+    if(payload == null) return;
+    const fingerprint = JSON.stringify(payload).slice(0,4000);
+    if(candidates.some(c=>c.fingerprint===fingerprint)) return;
+    candidates.push({label,key,payload,source,fingerprint,meals:mealCount(payload),days:dayCount(payload)});
+  }
+
+  // 1) Toutes les clés localStorage
+  for(let i=0;i<localStorage.length;i++){
+    const key = localStorage.key(i);
+    const raw = localStorage.getItem(key);
+    const parsed = safeParse(raw);
+    if(parsed !== null) addCandidate(key,key,parsed,"localStorage");
+  }
+
+  // 2) Sauvegardes internes V1.2
+  const backups = safeParse(localStorage.getItem("energieRepasBackups"));
+  if(Array.isArray(backups)){
+    backups.forEach((b,i)=>addCandidate(`Sauvegarde interne ${i+1}`, "energieRepasBackups", b.payload, b.reason || "backup"));
+  }
+
+  // Trier les candidats les plus prometteurs d'abord
+  candidates.sort((a,b)=>(b.meals-a.meals)||(b.days-a.days));
+
+  if(!candidates.length){
+    summary.className="card warn";
+    summary.innerHTML="<strong>Aucune donnée JSON locale trouvée.</strong><p>Ça peut vouloir dire que Safari a vraiment supprimé le stockage du site, ou que l'ancienne app utilisait un autre type de stockage.</p>";
+    return;
+  }
+
+  const promising = candidates.filter(c=>c.meals>0 || c.days>0);
+  summary.className = promising.length ? "card ok" : "card warn";
+  summary.innerHTML = `<strong>${candidates.length} copie(s) trouvée(s).</strong>
+    <p>${promising.length ? `${promising.length} copie(s) semblent contenir des journées ou des repas.` : "Aucune copie n'a été reconnue automatiquement comme contenant des repas, mais tu peux quand même les télécharger."}</p>`;
+
+  function download(name, payload){
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  }
+
+  candidates.forEach((c,idx)=>{
+    const card=document.createElement("section");
+    card.className="card";
+    card.innerHTML=`
+      <h2>${c.label}</h2>
+      <span class="badge">${c.meals} repas</span>
+      <span class="badge">${c.days} journée(s)</span>
+      <span class="badge">${c.source}</span>
+      <p class="muted">Clé : ${c.key}</p>
+      <div>
+        <button class="secondary" data-download="${idx}">Télécharger cette copie</button>
+        <button class="primary" data-restore="${idx}">Restaurer comme données actives</button>
+      </div>
+      <details><summary>Aperçu technique</summary><pre>${escapeHtml(JSON.stringify(c.payload,null,2).slice(0,12000))}</pre></details>`;
+    results.appendChild(card);
+  });
+
+  function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+
+  document.addEventListener("click",e=>{
+    const d=e.target.dataset.download;
+    if(d!==undefined){
+      const c=candidates[Number(d)];
+      download(`energie-repas-recuperation-${Number(d)+1}.json`,c.payload);
+    }
+    const r=e.target.dataset.restore;
+    if(r!==undefined){
+      const c=candidates[Number(r)];
+      if(!confirm(`Restaurer cette copie (${c.meals} repas, ${c.days} journées) comme données actives? La copie actuelle sera sauvegardée avant.`)) return;
+      const current = localStorage.getItem("energieRepasDB");
+      const existingBackups = safeParse(localStorage.getItem("energieRepasBackups")) || [];
+      existingBackups.unshift({at:new Date().toISOString(),reason:"avant-restauration-outil",payload:safeParse(current) || current});
+      localStorage.setItem("energieRepasBackups",JSON.stringify(existingBackups.slice(0,20)));
+      localStorage.setItem("energieRepasDB",JSON.stringify(c.payload));
+      localStorage.setItem("energieRepasDB_shadow",JSON.stringify(c.payload));
+      alert("Copie restaurée. Retourne maintenant à l'application principale et recharge-la.");
+    }
+  });
+})();
+</script>
+</body>
+</html>
