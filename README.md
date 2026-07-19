@@ -1,45 +1,54 @@
-# Énergie & Repas V1.3.1
+# Énergie & Repas V1.4
 
-Cette version corrige la connexion sur l’application iPhone installée et ajoute la nouvelle icône pomme + éclair.
+## Changement principal
 
-## 1. Étape obligatoire dans Supabase
+La connexion se fait maintenant avec **courriel + mot de passe directement dans l’application installée**.
 
-Dans **Authentication → Email Templates**, ouvre le modèle **Magic Link** (ou Magic link / OTP) et remplace son contenu par :
+Cette méthode évite le problème des sessions séparées entre Safari et la PWA iPhone.
 
-```html
-<h2>Ton code Énergie & Repas</h2>
-<p>Entre ce code directement dans l’application :</p>
-<p style="font-size:32px;font-weight:700;letter-spacing:6px;">{{ .Token }}</p>
-<p>Ce code est temporaire.</p>
-```
+## Mise à jour GitHub
 
-Le modèle doit utiliser `{{ .Token }}` et non `{{ .ConfirmationURL }}`. Après l’enregistrement, Supabase enverra un code au lieu d’un lien Safari.
+Remplace les fichiers à la racine du dépôt par ceux de ce dossier :
 
-## 2. Mise à jour GitHub
+- `index.html`
+- `styles.css`
+- `app.js`
+- `config.js`
+- `manifest.webmanifest`
+- `sw.js`
+- `supabase-setup.sql`
+- `README.md`
 
-Téléverse à la racine : `index.html`, `styles.css`, `app.js`, `config.js`, `manifest.webmanifest`, `sw.js`, `supabase-setup.sql` et `README.md`.
+Remplace également les fichiers du dossier `assets`.
 
-Dans `assets`, téléverse :
+## Configuration Supabase
 
-- `icon.svg`
-- `icon-192.png`
-- `icon-512.png`
-- `apple-touch-icon.png`
+Dans **Authentication → URL Configuration** :
 
-## 3. Important pour voir la nouvelle icône sur iPhone
+- Site URL : `https://surferpixies.github.io/-energie/`
+- Redirect URL autorisée : `https://surferpixies.github.io/-energie/**`
 
-L’icône d’une PWA déjà installée peut rester en cache. Après le déploiement :
+Aucune modification des modèles de courriel et aucun SMTP personnalisé ne sont nécessaires.
 
-1. vérifie que la nouvelle app fonctionne dans Safari;
-2. supprime uniquement l’ancienne icône de l’écran d’accueil;
-3. dans Safari, utilise **Partager → Sur l’écran d’accueil** pour la réinstaller.
+## Première connexion
 
-Les données officielles restent dans Supabase. Supprimer l’icône ne supprime pas les données du compte en ligne.
+### Nouveau compte
 
-## 4. Test de connexion
+1. Ouvre l’application installée.
+2. Va dans **Profil → Se connecter**.
+3. Choisis **Créer un compte**.
+4. Entre ton courriel et un mot de passe d’au moins 8 caractères.
+5. Confirme le courriel envoyé par Supabase si demandé.
+6. Reviens dans l’application installée et connecte-toi avec le même mot de passe.
 
-1. Ouvre **Profil → Se connecter**.
-2. Entre ton courriel.
-3. Reçois le code.
-4. Reviens dans la même application et saisis le code.
-5. Le badge doit afficher **Sauvegardé ☁️**.
+### Compte déjà créé avec le lien magique
+
+1. Dans **Connexion**, entre ton courriel.
+2. Touche **Mot de passe oublié ou compte créé avec un lien magique?**
+3. Ouvre le courriel de récupération dans Safari.
+4. Choisis un nouveau mot de passe sur la page qui s’ouvre.
+5. Reviens dans l’application installée et connecte-toi avec ce mot de passe.
+
+## Icône iPhone
+
+Si l’ancienne icône reste affichée, retire seulement l’icône de l’écran d’accueil puis ajoute de nouveau l’application depuis Safari. Cela ne supprime pas les données Supabase.
