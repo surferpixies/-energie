@@ -1,535 +1,68 @@
 (() => {
 "use strict";
+const CFG=window.ENERGIE_CONFIG||{};
+const APP_KEY="energieRepasDB";
+const BACKUP_KEY="energieRepasBackups";
+const OUTBOX_KEY="energieRepasOutboxV13";
+const CURRENT_VERSION=4;
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const uid=()=>crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(16).slice(2)}`;
+const todayKey=()=>new Date().toLocaleDateString("en-CA");
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,Number(n)||0));
+const client=(window.supabase&&CFG.supabaseUrl&&CFG.supabasePublishableKey)?window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey):null;
+let session=null, currentView="today", selectedDate=todayKey(), syncState="local", photoData=null, photoRemoved=false;
 
-const APP_KEY = "energieRepasDB";
-const BACKUP_KEY = "energieRepasBackups";
-const CURRENT_VERSION = 3;
-const LEGACY_KEYS = [
-  "energieRepasData","energie_et_repas","energyMeals","mealTrackerData",
-  "fatigueMeals","repasFatigue","energieRepas","appData"
-];
+function freshDB(){return{version:CURRENT_VERSION,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),settings:{waterGoal:8,theme:"system"},days:{}}}
+function ensureDay(db,key=todayKey()){if(!db.days[key])db.days[key]={date:key,sleepHours:null,water:0,activities:[],meals:[],updatedAt:new Date().toISOString()};const d=db.days[key];d.activities=Array.isArray(d.activities)?d.activities:[];d.meals=Array.isArray(d.meals)?d.meals:[];d.water=Number(d.water)||0;return d}
+function normalMeal(m={},date=todayKey()){return{id:m.id||uid(),date:m.date||date,time:m.time||"12:00",type:m.type||m.mealType||m.typeRepas||"Repas",description:m.description||m.food||m.aliments||m.repas||m.details||"",fatigueBefore:clamp(m.fatigueBefore??m.fatigueAvant??m.before,0,5),fatigueAfter:clamp(m.fatigueAfter??m.fatigueApres??m.after??m.fatigue1h??m.after1h,0,5),notes:m.notes||"",photoUrl:m.photoUrl||null,photoPath:m.photoPath||null,photoLocal:m.photoLocal||m.photo||m.image||null,createdAt:m.createdAt||new Date().toISOString(),updatedAt:m.updatedAt||new Date().toISOString()}}
+function migrate(raw){const out=freshDB();if(!raw||typeof raw!=="object")return out;out.settings={...out.settings,...(raw.settings||{})};if(raw.days&&typeof raw.days==="object"){Object.entries(raw.days).forEach(([k,d])=>{const day=ensureDay(out,k);day.sleepHours=d.sleepHours??d.sleep??d.sommeil??null;day.water=Number(d.water??d.waterGlasses??d.eau??0)||0;day.activities=Array.isArray(d.activities)?d.activities:[];day.meals=(d.meals||d.repas||[]).map(m=>normalMeal(m,k));day.updatedAt=d.updatedAt||new Date().toISOString()});return out}const arr=[raw.meals,raw.repas,raw.entries,raw.history,raw.logs,Array.isArray(raw)?raw:null].find(Array.isArray);if(arr)arr.forEach(x=>{const m=normalMeal(x,x.date||x.day||todayKey());ensureDay(out,m.date).meals.push(m)});return out}
+function backup(payload,reason){try{const b=JSON.parse(localStorage.getItem(BACKUP_KEY)||"[]");b.unshift({at:new Date().toISOString(),reason,payload});localStorage.setItem(BACKUP_KEY,JSON.stringify(b.slice(0,20)))}catch(e){console.warn(e)}}
+function load(){const raw=localStorage.getItem(APP_KEY);if(!raw)return freshDB();try{const parsed=JSON.parse(raw);backup(parsed,"ouverture-v1.3");return migrate(parsed)}catch(e){backup(raw,"copie-illisible-v1.3");return freshDB()}}
+let db=load();
+function saveLocal(reason="local"){db.updatedAt=new Date().toISOString();const before=localStorage.getItem(APP_KEY);if(before){try{backup(JSON.parse(before),`avant-${reason}`)}catch(_){}}const txt=JSON.stringify(db);localStorage.setItem(APP_KEY,txt);localStorage.setItem(`${APP_KEY}_shadow`,txt)}
+function outbox(){try{return JSON.parse(localStorage.getItem(OUTBOX_KEY)||"[]")}catch(_){return[]}}
+function setOutbox(items){localStorage.setItem(OUTBOX_KEY,JSON.stringify(items));updateSyncBadge()}
+function enqueue(op){const items=outbox();const key=`${op.kind}:${op.id||op.date}`;const idx=items.findIndex(x=>`${x.kind}:${x.id||x.date}`===key);if(idx>=0)items[idx]=op;else items.push(op);setOutbox(items);syncState="pending";updateSyncBadge();if(session&&navigator.onLine)syncNow()}
+function updateSyncBadge(){const el=$("#syncBadge");if(!el)return;const pending=outbox().length;el.className="sync-badge";if(!session){el.textContent=navigator.onLine?"Non connecté":"Hors ligne";if(!navigator.onLine)el.classList.add("pending");return}if(syncState==="error"){el.textContent="Erreur synchro";el.classList.add("error")}else if(pending){el.textContent=`${pending} à synchroniser`;el.classList.add("pending")}else{el.textContent="Sauvegardé ☁️";el.classList.add("online")}}
+function setDayChanged(date){const d=ensureDay(db,date);d.updatedAt=new Date().toISOString();saveLocal("jour");enqueue({kind:"day",date})}
+function setMealChanged(meal){saveLocal("repas");enqueue({kind:"meal",id:meal.id,date:meal.date})}
+function deleteMealLocal(meal){const d=ensureDay(db,meal.date);d.meals=d.meals.filter(x=>x.id!==meal.id);saveLocal("suppression-repas");enqueue({kind:"deleteMeal",id:meal.id,date:meal.date,photoPath:meal.photoPath})}
 
-const $ = s => document.querySelector(s);
-const $$ = s => [...document.querySelectorAll(s)];
-const todayKey = () => new Date().toLocaleDateString("en-CA");
-const uid = () => crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const clamp = (n,a,b) => Math.max(a,Math.min(b,Number(n)||0));
+async function uploadPhoto(meal){if(!client||!session||!meal.photoLocal||meal.photoLocal===meal.photoUrl)return meal;const blob=await (await fetch(meal.photoLocal)).blob();const ext=(blob.type.split("/")[1]||"jpg").replace("jpeg","jpg");const path=`${session.user.id}/${meal.id}.${ext}`;const {error}=await client.storage.from("meal-photos").upload(path,blob,{upsert:true,contentType:blob.type||"image/jpeg"});if(error)throw error;meal.photoPath=path;meal.photoLocal=null;return meal}
+async function signedPhoto(path){if(!path||!client)return null;const {data,error}=await client.storage.from("meal-photos").createSignedUrl(path,60*60);return error?null:data.signedUrl}
+async function syncNow(){if(!client||!session||!navigator.onLine)return;syncState="syncing";updateSyncBadge();let items=outbox();const remaining=[];for(const op of items){try{if(op.kind==="day"){const d=ensureDay(db,op.date);const {error}=await client.from("daily_logs").upsert({user_id:session.user.id,log_date:op.date,sleep_hours:d.sleepHours,water:d.water,activities:d.activities,updated_at:d.updatedAt},{onConflict:"user_id,log_date"});if(error)throw error}else if(op.kind==="meal"){const d=ensureDay(db,op.date);const meal=d.meals.find(m=>m.id===op.id);if(!meal)continue;await uploadPhoto(meal);meal.updatedAt=new Date().toISOString();const {error}=await client.from("meals").upsert({id:meal.id,user_id:session.user.id,meal_date:meal.date,meal_time:meal.time,meal_type:meal.type,description:meal.description,fatigue_before:meal.fatigueBefore,fatigue_after:meal.fatigueAfter,notes:meal.notes||null,photo_path:meal.photoPath||null,created_at:meal.createdAt,updated_at:meal.updatedAt});if(error)throw error;saveLocal("photo-cloud")}else if(op.kind==="deleteMeal"){const {error}=await client.from("meals").delete().eq("id",op.id);if(error)throw error;if(op.photoPath)await client.storage.from("meal-photos").remove([op.photoPath])}}catch(e){console.error("sync",e);remaining.push(op)}}setOutbox(remaining);syncState=remaining.length?"error":"online";updateSyncBadge();if(!remaining.length)await pullCloud(false)}
+async function pullCloud(show=true){if(!client||!session||!navigator.onLine)return;if(show){syncState="syncing";const el=$("#syncBadge");if(el)el.textContent="Synchronisation…"}const [{data:days,error:de},{data:meals,error:me}]=await Promise.all([client.from("daily_logs").select("*").order("log_date"),client.from("meals").select("*").order("meal_date").order("meal_time")]);if(de||me){syncState="error";updateSyncBadge();return}for(const r of days||[]){const local=ensureDay(db,r.log_date);if(!local.updatedAt||new Date(r.updated_at)>=new Date(local.updatedAt)){local.sleepHours=r.sleep_hours;local.water=r.water||0;local.activities=r.activities||[];local.updatedAt=r.updated_at}}for(const r of meals||[]){const d=ensureDay(db,r.meal_date);const remote=normalMeal({id:r.id,date:r.meal_date,time:(r.meal_time||"").slice(0,5),type:r.meal_type,description:r.description,fatigueBefore:r.fatigue_before,fatigueAfter:r.fatigue_after,notes:r.notes,photoPath:r.photo_path,createdAt:r.created_at,updatedAt:r.updated_at},r.meal_date);const i=d.meals.findIndex(x=>x.id===remote.id);if(i<0)d.meals.push(remote);else if(new Date(remote.updatedAt)>=new Date(d.meals[i].updatedAt||0))d.meals[i]={...d.meals[i],...remote}}saveLocal("retour-cloud");syncState="online";updateSyncBadge();render()}
+async function seedCloudFromLocal(){if(!session)return;const ops=[];Object.entries(db.days).forEach(([date,d])=>{ops.push({kind:"day",date});d.meals.forEach(m=>ops.push({kind:"meal",id:m.id,date}))});setOutbox(ops);await syncNow()}
 
-function emptyDB(){
-  return {
-    version: CURRENT_VERSION,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    settings: { waterGoal: 8, theme: "system" },
-    days: {}
-  };
-}
-
-function normalizeMeal(raw = {}, fallbackDate = todayKey()){
-  return {
-    id: raw.id || uid(),
-    date: raw.date || raw.day || fallbackDate,
-    time: raw.time || raw.heure || "12:00",
-    type: raw.type || raw.mealType || raw.typeRepas || "Repas",
-    description: raw.description || raw.food || raw.aliments || raw.repas || raw.details || "",
-    category: raw.category || raw.categorie || "Autre",
-    quantity: raw.quantity || raw.quantite || "",
-    fatigueBefore: Number(raw.fatigueBefore ?? raw.fatigueAvant ?? raw.before ?? 0),
-    fatigue1h: Number(raw.fatigue1h ?? raw.after1h ?? raw.fatigueApres1h ?? 0),
-    fatigue3h: Number(raw.fatigue3h ?? raw.after3h ?? raw.fatigueApres3h ?? 0),
-    notes: raw.notes || "",
-    photo: raw.photo || raw.image || null,
-    createdAt: raw.createdAt || new Date().toISOString()
-  };
-}
-
-function ensureDay(db, key = todayKey()){
-  if(!db.days[key]) db.days[key] = {
-    date:key, sleepHours:null, sleepQuality:null, water:0,
-    activities:[], meals:[], createdAt:new Date().toISOString()
-  };
-  const d = db.days[key];
-  d.activities = Array.isArray(d.activities) ? d.activities : [];
-  d.meals = Array.isArray(d.meals) ? d.meals : [];
-  d.water = Number(d.water)||0;
-  return d;
-}
-
-function migrate(raw){
-  const fresh = emptyDB();
-  if(!raw || typeof raw !== "object") return fresh;
-
-  if(raw.version === CURRENT_VERSION && raw.days){
-    const db = {...fresh, ...raw, settings:{...fresh.settings,...raw.settings}, days:{}};
-    Object.entries(raw.days).forEach(([key,d])=>{
-      db.days[key] = {
-        date:key,
-        sleepHours:d.sleepHours ?? d.sleep ?? null,
-        sleepQuality:d.sleepQuality ?? null,
-        water:Number(d.water ?? d.waterGlasses ?? 0)||0,
-        activities:Array.isArray(d.activities)?d.activities:[],
-        meals:(d.meals||[]).map(m=>normalizeMeal(m,key)),
-        createdAt:d.createdAt||new Date().toISOString()
-      };
-    });
-    return db;
-  }
-
-  // Formats journaliers proches de V2.
-  if(raw.days && typeof raw.days === "object"){
-    const db = fresh;
-    Object.entries(raw.days).forEach(([key,d])=>{
-      db.days[key] = {
-        date:key,
-        sleepHours:d.sleepHours ?? d.sleep ?? d.sommeil ?? null,
-        sleepQuality:d.sleepQuality ?? d.qualiteSommeil ?? null,
-        water:Number(d.water ?? d.waterGlasses ?? d.eau ?? 0)||0,
-        activities:Array.isArray(d.activities)?d.activities:[],
-        meals:(d.meals||d.repas||[]).map(m=>normalizeMeal(m,key))
-      };
-    });
-    db.settings = {...fresh.settings,...(raw.settings||{})};
-    return db;
-  }
-
-  // Anciens formats basés sur un tableau de repas.
-  const candidates = [
-    raw.meals, raw.repas, raw.entries, raw.history, raw.logs,
-    Array.isArray(raw) ? raw : null
-  ].find(Array.isArray);
-
-  if(candidates){
-    const db = fresh;
-    candidates.forEach(item=>{
-      const meal = normalizeMeal(item);
-      const day = ensureDay(db, meal.date);
-      day.meals.push(meal);
-      if(day.sleepHours == null) day.sleepHours = item.sleepHours ?? item.sleep ?? item.sommeil ?? null;
-      if(!day.water) day.water = Number(item.water ?? item.eau ?? item.waterGlasses ?? 0)||0;
-    });
-    return db;
-  }
-  return fresh;
-}
-
-function createBackup(payload, reason="auto"){
-  try{
-    const backups = JSON.parse(localStorage.getItem(BACKUP_KEY) || "[]");
-    backups.unshift({at:new Date().toISOString(),reason,payload});
-    localStorage.setItem(BACKUP_KEY, JSON.stringify(backups.slice(0,10)));
-  }catch(e){ console.warn("Backup impossible", e); }
-}
-
-function discoverLegacy(){
-  const found = [];
-  for(let i=0;i<localStorage.length;i++){
-    const key = localStorage.key(i);
-    if(key === APP_KEY || key === BACKUP_KEY) continue;
-    try{
-      const val = JSON.parse(localStorage.getItem(key));
-      if(val && (Array.isArray(val) || val.meals || val.repas || val.entries || val.days)) found.push({key,val});
-    }catch(_){}
-  }
-  for(const key of LEGACY_KEYS){
-    if(found.some(x=>x.key===key)) continue;
-    try{
-      const val = JSON.parse(localStorage.getItem(key));
-      if(val) found.push({key,val});
-    }catch(_){}
-  }
-  return found;
-}
-
-function looksLikeKnownData(raw){
-  if(!raw || typeof raw !== "object") return false;
-  if(raw.version === CURRENT_VERSION && raw.days) return true;
-  if(raw.days && typeof raw.days === "object") return true;
-  if(Array.isArray(raw)) return true;
-  return ["meals","repas","entries","history","logs"].some(k=>Array.isArray(raw[k]));
-}
-
-function emergencyDownload(filename, payload){
-  const text = typeof payload === "string" ? payload : JSON.stringify(payload,null,2);
-  const blob = new Blob([text], {type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-}
-
-function showSafetyStop(raw, message){
-  document.body.innerHTML = `
-    <main style="max-width:720px;margin:auto;padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
-      <section style="background:#fff3d9;border-radius:24px;padding:22px;color:#28342d">
-        <h1 style="margin-top:0">Tes données sont protégées</h1>
-        <p>${message}</p>
-        <p><strong>L'application a refusé de remplacer ou modifier les données existantes.</strong></p>
-        <button id="downloadRaw" style="border:0;border-radius:14px;padding:12px 16px;font-weight:800;background:#6f8d72;color:white">
-          Télécharger une copie brute
-        </button>
-      </section>
-    </main>`;
-  document.getElementById("downloadRaw").onclick=()=>emergencyDownload(
-    `energie-repas-protection-${todayKey()}.json`, raw
-  );
-  throw new Error("SAFETY_STOP");
-}
-
-function loadDB(){
-  const existing = localStorage.getItem(APP_KEY);
-
-  if(existing){
-    let parsed;
-    try{
-      parsed = JSON.parse(existing);
-    }catch(e){
-      showSafetyStop(existing, "Les données existantes ne peuvent pas être lues correctement.");
-    }
-
-    if(!looksLikeKnownData(parsed)){
-      showSafetyStop(parsed, "Le format actuel n'est pas reconnu par cette version.");
-    }
-
-    if(parsed.version !== CURRENT_VERSION){
-      createBackup(parsed,"avant-migration-v1.2.1");
-      const migrated = migrate(parsed);
-
-      const originalMeals = mealCountForSafety(parsed);
-      const migratedMeals = mealCountForSafety(migrated);
-
-      if(originalMeals > 0 && migratedMeals === 0){
-        showSafetyStop(parsed, "La migration aurait supprimé des repas. Elle a donc été annulée.");
-      }
-      return migrated;
-    }
-    return migrate(parsed);
-  }
-
-  const shadow = localStorage.getItem(`${APP_KEY}_shadow`);
-  if(shadow){
-    try{
-      const parsedShadow = JSON.parse(shadow);
-      if(looksLikeKnownData(parsedShadow)){
-        createBackup(parsedShadow,"récupération-copie-miroir");
-        return migrate(parsedShadow);
-      }
-    }catch(_){}
-  }
-
-  const legacy = discoverLegacy();
-  if(legacy.length){
-    createBackup(legacy,"import-automatique-ancien-format");
-    const merged = emptyDB();
-    legacy.forEach(({val})=>{
-      if(!looksLikeKnownData(val)) return;
-      const part = migrate(val);
-      Object.entries(part.days).forEach(([key,d])=>{
-        const target = ensureDay(merged,key);
-        target.meals.push(...d.meals.filter(m=>!target.meals.some(x=>x.id===m.id)));
-        if(target.sleepHours == null) target.sleepHours = d.sleepHours;
-        if(!target.water) target.water = d.water;
-        target.activities.push(...d.activities);
-      });
-    });
-    return merged;
-  }
-
-  return emptyDB();
-}
-
-function mealCountForSafety(raw){
-  if(!raw) return 0;
-  if(Array.isArray(raw)) return raw.length;
-  if(raw.data) return mealCountForSafety(raw.data);
-  if(raw.days && typeof raw.days==="object"){
-    return Object.values(raw.days).reduce((sum,d)=>sum+((d?.meals||d?.repas||[]).length||0),0);
-  }
-  for(const k of ["meals","repas","entries","history","logs"]){
-    if(Array.isArray(raw[k])) return raw[k].length;
-  }
-  return 0;
-}
-
-let db = loadDB();
-let currentView = "today";
-
-function saveDB(reason="save"){
-  const previousRaw = localStorage.getItem(APP_KEY);
-  let previous = null;
-  try{ previous = previousRaw ? JSON.parse(previousRaw) : null; }catch(_){ previous = previousRaw; }
-
-  const previousMeals = mealCountForSafety(previous);
-  const nextMeals = mealCountForSafety(db);
-
-  if(previousMeals > 0 && nextMeals === 0 && reason !== "explicit-empty-reset"){
-    showSafetyStop(previous, "Une sauvegarde vide aurait remplacé des données existantes.");
-  }
-
-  db.updatedAt = new Date().toISOString();
-  const serialized = JSON.stringify(db);
-
-  if(previousRaw && previousRaw !== serialized){
-    createBackup(previous,"avant-écriture");
-  }
-
-  localStorage.setItem(APP_KEY, serialized);
-  localStorage.setItem(`${APP_KEY}_shadow`, serialized);
-
-  const verify = localStorage.getItem(APP_KEY);
-  if(verify !== serialized){
-    showSafetyStop(previous || db, "Le navigateur n'a pas confirmé l'enregistrement des données.");
-  }
-
-  if(reason === "important") createBackup(db,"sauvegarde-importante");
-}
-
-function formatDate(key, opts={weekday:"long",day:"numeric",month:"long"}){
-  return new Date(`${key}T12:00:00`).toLocaleDateString("fr-CA",opts);
-}
-function avg(arr){ const nums=arr.filter(n=>Number.isFinite(Number(n))).map(Number); return nums.length?nums.reduce((a,b)=>a+b,0)/nums.length:null; }
-function mealEmoji(type){
-  return ({Déjeuner:"🥣",Dîner:"🥗",Souper:"🍲",Collation:"🍎",Boisson:"☕"})[type] || "🍽️";
-}
-function photoOrEmoji(m){
-  return m.photo ? `<img class="meal-thumb" src="${m.photo}" alt="">` : `<div class="meal-thumb">${mealEmoji(m.type)}</div>`;
-}
-
-function render(){
-  $("#todayLabel").textContent = formatDate(todayKey(),{weekday:"long",day:"numeric",month:"long"});
-  $$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView));
-  ({today:renderToday,history:renderHistory,insights:renderInsights,profile:renderProfile}[currentView])();
-}
-
-function renderToday(){
-  const d = ensureDay(db);
-  const goal = db.settings.waterGoal || 8;
-  const fatigue = avg(d.meals.map(m=>m.fatigueBefore));
-  const activity = d.activities.reduce((s,a)=>s+(Number(a.minutes)||0),0);
-  const waterDrops = Array.from({length:goal},(_,i)=>`<button class="drop ${i<d.water?"filled":""}" data-water="${i+1}" aria-label="Mettre l'eau à ${i+1} verres">💧</button>`).join("");
-  const meals = [...d.meals].sort((a,b)=>a.time.localeCompare(b.time));
-
-  $("#app").innerHTML = `
-    <section class="hero">
-      <div class="row">
-        <div><p class="eyebrow">Ton tableau du jour</p><h2>${greeting()}</h2><p>${dailyMessage(d)}</p></div>
-        <div class="mascot">${fatigue!=null&&fatigue>6?"🥱":"🌱"}</div>
-      </div>
-    </section>
-
-    <section class="grid">
-      <article class="card">
-        <div class="row"><span>😴</span><button class="secondary small" id="editDay">Modifier</button></div>
-        <h3>Sommeil</h3><div class="metric">${d.sleepHours ?? "—"}${d.sleepHours!=null?" h":""}</div>
-        <div class="muted small">${d.sleepQuality!=null?`Qualité ${d.sleepQuality}/10`:"À indiquer une fois"}</div>
-      </article>
-      <article class="card">
-        <div class="row"><span>🚶</span><button class="secondary small" id="addActivity">Ajouter</button></div>
-        <h3>Activité</h3><div class="metric">${activity} min</div>
-        <div class="muted small">${d.activities.map(a=>esc(a.type)).join(", ") || "Aucune activité inscrite"}</div>
-      </article>
-      <article class="card wide">
-        <div class="row"><div><span>💧</span><h3>Hydratation</h3></div><span class="muted small">Touche une goutte</span></div>
-        <div class="water-row">${waterDrops}</div>
-        <div class="row"><strong>${d.water} / ${goal} verres</strong><span class="muted small">${Math.round(Math.min(1,d.water/goal)*100)} %</span></div>
-      </article>
-      <article class="card wide">
-        <div class="row"><div><span>⚡</span><h3>Énergie observée</h3></div><div class="metric">${fatigue==null?"—":(10-fatigue).toFixed(1)}</div></div>
-        <div class="progress"><span style="width:${fatigue==null?0:(10-fatigue)*10}%"></span></div>
-        <p class="muted small">Basé sur la fatigue indiquée avant tes repas; ce n'est pas un diagnostic.</p>
-      </article>
-    </section>
-
-    ${nutritionNudge(d)}
-
-    <div class="section-title"><h2>Repas d'aujourd'hui</h2><button class="primary" id="addMeal">+ Ajouter</button></div>
-    <section class="stack">
-      ${meals.length ? meals.map(mealCard).join("") : `<article class="card empty"><div class="food-art">🍓🥑</div><h3>Ton assiette est encore vide</h3><p class="muted">Ajoute ton premier repas de la journée.</p></article>`}
-    </section>`;
-
-  $("#editDay").onclick = openDayDialog;
-  $("#addActivity").onclick = openDayDialog;
-  $("#addMeal").onclick = ()=>openMealDialog();
-  $$("[data-water]").forEach(btn=>btn.onclick=()=>{
-    const n=Number(btn.dataset.water); d.water = d.water===n ? n-1 : n; saveDB(); render();
-  });
-  $$("[data-edit-meal]").forEach(btn=>btn.onclick=()=>openMealDialog(btn.dataset.editMeal));
-  $$("[data-delete-meal]").forEach(btn=>btn.onclick=()=>{
-    if(confirm("Supprimer ce repas?")){ d.meals=d.meals.filter(m=>m.id!==btn.dataset.deleteMeal); saveDB("important"); render(); }
-  });
-}
-
-function greeting(){
-  const h=new Date().getHours();
-  return h<11?"Bon matin 👋":h<17?"Bonjour 👋":"Bonsoir 👋";
-}
-function dailyMessage(d){
-  if(!d.sleepHours) return "Commence par inscrire ton sommeil.";
-  if(d.water<2 && new Date().getHours()>13) return "Une petite gorgée ferait du bien à ta journée.";
-  if(!d.meals.length) return "Prêt à découvrir ce qui nourrit ton énergie?";
-  return "Chaque donnée t'aide à mieux comprendre ton énergie.";
-}
-function nutritionNudge(d){
-  if(d.meals.length<2) return "";
-  const sweet=d.meals.filter(m=>/sucr|boisson énergisante/i.test(m.category)).length;
-  const fatty=d.meals.filter(m=>/gras|frit/i.test(m.category)).length;
-  let msg="";
-  if(sweet>=2) msg="Ta journée semble déjà assez sucrée. Au prochain repas, pense à quelque chose de plus riche en fibres ou en protéines.";
-  else if(fatty>=2) msg="Tu as noté plusieurs repas riches ou frits aujourd'hui. Un prochain repas plus léger pourrait équilibrer la journée.";
-  if(!msg) return "";
-  return `<div class="notice"><strong>🌿 Petite suggestion</strong><p>${msg}</p><span class="small muted">Suggestion générale, sans jugement et sans valeur médicale.</span></div>`;
-}
-function mealCard(m){
-  return `<article class="card meal-card">
-    ${photoOrEmoji(m)}
-    <div>
-      <div class="row"><div><h3>${esc(m.type)} · ${esc(m.time)}</h3><div class="meal-meta">${esc(m.description)}</div></div>
-      <div><button class="icon-button" data-edit-meal="${m.id}" aria-label="Modifier">✎</button></div></div>
-      <div class="chips"><span class="chip">${esc(m.category)}</span><span class="chip">Fatigue ${m.fatigueBefore}/10</span>${m.quantity?`<span class="chip">${esc(m.quantity)}</span>`:""}</div>
-      <button class="danger small" data-delete-meal="${m.id}">Supprimer</button>
-    </div>
-  </article>`;
-}
-
-function renderHistory(){
-  const days=Object.values(db.days).sort((a,b)=>b.date.localeCompare(a.date));
-  $("#app").innerHTML=`<section class="hero"><div class="row"><div><p class="eyebrow">Ton journal</p><h2>Historique</h2><p>Une journée à la fois, sans pression.</p></div><div class="mascot">📖</div></div></section>
-  <section class="stack">${days.length?days.map(d=>{
-    const mins=(d.activities||[]).reduce((s,a)=>s+(Number(a.minutes)||0),0);
-    return `<article class="card history-day"><div class="row"><div><h3>${formatDate(d.date)}</h3><div class="mini-stats"><span>🍽️ ${d.meals.length}</span><span>💧 ${d.water}</span><span>🚶 ${mins} min</span><span>😴 ${d.sleepHours??"—"} h</span></div></div><span>›</span></div></article>`;
-  }).join(""):`<article class="card empty">Aucune journée enregistrée.</article>`}</section>`;
-}
-
-function renderInsights(){
-  const meals=Object.values(db.days).flatMap(d=>d.meals||[]);
-  const last7=Object.values(db.days).sort((a,b)=>a.date.localeCompare(b.date)).slice(-7);
-  const avgFat=avg(meals.map(m=>m.fatigue1h-m.fatigueBefore));
-  const bars=last7.map(d=>{
-    const v=avg((d.meals||[]).map(m=>10-m.fatigueBefore))??0;
-    return `<i title="${d.date}: ${v.toFixed(1)}" style="height:${Math.max(7,v*10)}%"></i>`;
-  }).join("");
-  const insight = meals.length<10
-    ? `Encore ${10-meals.length} repas avant une première tendance plus crédible.`
-    : avgFat>1.5 ? `Ta fatigue augmente en moyenne de ${avgFat.toFixed(1)} point après 1 heure. Observe surtout les catégories récurrentes.`
-    : `Ta fatigue après 1 heure demeure plutôt stable dans les données actuelles.`;
-  $("#app").innerHTML=`<section class="hero"><div class="row"><div><p class="eyebrow">Ton laboratoire personnel</p><h2>Découvertes</h2><p>Des tendances, jamais des diagnostics.</p></div><div class="mascot">🧠</div></div></section>
-  <section class="grid">
-    <article class="card wide"><h3>Énergie — 7 derniers jours</h3><div class="spark">${bars||"<span class='muted'>Pas encore de données</span>"}</div></article>
-    <article class="card"><h3>Repas suivis</h3><div class="metric">${meals.length}</div></article>
-    <article class="card"><h3>Variation à 1 h</h3><div class="metric">${avgFat==null?"—":`${avgFat>=0?"+":""}${avgFat.toFixed(1)}`}</div></article>
-    <article class="card wide"><span>🌱</span><h3>Première lecture</h3><p>${insight}</p><p class="muted small">Une corrélation n'établit pas une cause.</p></article>
-  </section>`;
-}
-
-function renderProfile(){
-  const backups=JSON.parse(localStorage.getItem(BACKUP_KEY)||"[]");
-  $("#app").innerHTML=`<section class="hero"><div class="row"><div><p class="eyebrow">Préférences et sécurité</p><h2>Profil</h2><p>Tes données restent dans ton navigateur.</p></div><div class="mascot">⚙️</div></div></section>
-  <section class="stack">
-    <article class="card settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de verres par jour</p></div><input id="waterGoal" type="number" min="1" max="20" value="${db.settings.waterGoal}" style="width:90px"></article>
-    <article class="card"><h3>Protection des données</h3><p class="muted">Copie principale + copie miroir locale + sauvegarde avant chaque écriture. ${backups.length} sauvegarde(s) conservée(s).</p><div class="dialog-actions"><button class="secondary" id="exportBtn">Exporter JSON</button><button class="secondary" id="importBtn">Importer JSON</button><button class="secondary" id="restoreBackup">Restaurer la dernière sauvegarde</button></div></article>
-    <article class="card"><h3>Version</h3><p>Énergie & Repas V1.2.1 · données V${CURRENT_VERSION}</p><p class="muted small">Avant toute future migration, une sauvegarde est créée automatiquement.</p></article>
-  </section>`;
-  $("#waterGoal").onchange=e=>{db.settings.waterGoal=clamp(e.target.value,1,20);saveDB();};
-  $("#exportBtn").onclick=exportData;
-  $("#importBtn").onclick=()=>$("#importFile").click();
-  $("#restoreBackup").onclick=()=>{
-    if(!backups.length) return alert("Aucune sauvegarde disponible.");
-    if(confirm("Restaurer la sauvegarde la plus récente? Les données actuelles seront d'abord sauvegardées.")){
-      createBackup(db,"avant-restauration"); db=migrate(backups[0].payload); saveDB("important"); render();
-    }
-  };
-}
-
-function openDayDialog(){
-  const d=ensureDay(db);
-  $("#sleepHours").value=d.sleepHours??"";
-  $("#sleepQuality").value=d.sleepQuality??"";
-  $("#activityMinutes").value="";
-  $("#dayDialog").showModal();
-}
-$("#dayForm").addEventListener("submit",e=>{
-  e.preventDefault(); const d=ensureDay(db);
-  const sh=$("#sleepHours").value, sq=$("#sleepQuality").value, mins=$("#activityMinutes").value;
-  d.sleepHours=sh===""?null:clamp(sh,0,24); d.sleepQuality=sq===""?null:clamp(sq,0,10);
-  if(Number(mins)>0) d.activities.push({id:uid(),type:$("#activityType").value,minutes:clamp(mins,0,1440),at:new Date().toISOString()});
-  saveDB("important"); $("#dayDialog").close(); render();
-});
-
-function openMealDialog(id=null){
-  const d=ensureDay(db), m=id?d.meals.find(x=>x.id===id):null;
-  $("#mealId").value=m?.id||"";
-  $("#mealType").value=m?.type||guessMealType();
-  $("#mealTime").value=m?.time||new Date().toTimeString().slice(0,5);
-  $("#mealDescription").value=m?.description||"";
-  $("#mealCategory").value=m?.category||"Repas équilibré";
-  $("#mealQuantity").value=m?.quantity||"";
-  [["fatigueBefore","fatigueBeforeOut"],["fatigue1h","fatigue1hOut"],["fatigue3h","fatigue3hOut"]].forEach(([a,b])=>{
-    $( "#"+a).value=m?.[a]??3; $("#"+b).value=$( "#"+a).value;
-  });
-  $("#mealNotes").value=m?.notes||"";
-  $("#mealPhoto").value="";
-  $("#mealDialogTitle").textContent=m?"Modifier le repas":"Ajouter un repas";
-  $("#mealDialog").showModal();
-}
-function guessMealType(){ const h=new Date().getHours(); return h<10?"Déjeuner":h<15?"Dîner":h<20?"Souper":"Collation"; }
-$$('input[type="range"]').forEach(r=>r.addEventListener("input",()=>$("#"+r.id+"Out").value=r.value));
-
-async function imageToDataURL(file){
-  if(!file) return null;
-  const img=await createImageBitmap(file);
-  const max=900, scale=Math.min(1,max/Math.max(img.width,img.height));
-  const c=document.createElement("canvas"); c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
-  c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-  return c.toDataURL("image/jpeg",.78);
-}
-$("#mealForm").addEventListener("submit",async e=>{
-  e.preventDefault(); const d=ensureDay(db), id=$("#mealId").value;
-  const old=id?d.meals.find(m=>m.id===id):null;
-  const photo=await imageToDataURL($("#mealPhoto").files[0]) || old?.photo || null;
-  const meal=normalizeMeal({
-    id:id||uid(),date:todayKey(),time:$("#mealTime").value,type:$("#mealType").value,
-    description:$("#mealDescription").value,category:$("#mealCategory").value,
-    quantity:$("#mealQuantity").value,fatigueBefore:$("#fatigueBefore").value,
-    fatigue1h:$("#fatigue1h").value,fatigue3h:$("#fatigue3h").value,
-    notes:$("#mealNotes").value,photo,createdAt:old?.createdAt
-  });
-  if(old) d.meals=d.meals.map(m=>m.id===id?meal:m); else d.meals.push(meal);
-  saveDB("important"); $("#mealDialog").close(); render();
-});
-
-$("#copyYesterdayBreakfast").onclick=()=>{
-  const y=new Date(); y.setDate(y.getDate()-1); const key=y.toLocaleDateString("en-CA");
-  const m=db.days[key]?.meals?.find(x=>x.type==="Déjeuner");
-  if(!m) return alert("Aucun déjeuner trouvé hier.");
-  $("#mealType").value="Déjeuner"; $("#mealDescription").value=m.description; $("#mealCategory").value=m.category;
-  $("#mealQuantity").value=m.quantity||""; $("#mealNotes").value=m.notes||"";
-};
-
-function exportData(){
-  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),app:"Énergie & Repas",data:db},null,2)],{type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`energie-repas-${todayKey()}.json`; a.click(); URL.revokeObjectURL(a.href);
-}
-$("#importFile").addEventListener("change",async e=>{
-  const file=e.target.files[0]; if(!file)return;
-  try{
-    const parsed=JSON.parse(await file.text()); const candidate=parsed.data||parsed;
-    createBackup(db,"avant-import"); db=migrate(candidate); saveDB("important"); alert("Importation réussie."); render();
-  }catch(err){alert("Le fichier n'a pas pu être importé.");}
-  e.target.value="";
-});
-
-$$(".nav-item").forEach(b=>b.onclick=()=>{currentView=b.dataset.view;render();window.scrollTo({top:0,behavior:"smooth"});});
-$("#themeToggle").onclick=()=>{
-  const dark=document.documentElement.dataset.theme==="dark";
-  document.documentElement.dataset.theme=dark?"light":"dark";
-  db.settings.theme=dark?"light":"dark"; saveDB();
-};
-function applyTheme(){
-  const t=db.settings.theme||"system";
-  const dark=t==="dark" || (t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);
-  document.documentElement.dataset.theme=dark?"dark":"light";
-}
-applyTheme(); render();
-if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(console.warn);
+function mealIcon(t){return({"Déjeuner":"🍳","Dîner":"🥗","Souper":"🍲","Collation":"🍎","Boisson":"🥤"})[t]||"🍽️"}
+function formatDate(k){return new Intl.DateTimeFormat("fr-CA",{weekday:"long",day:"numeric",month:"long"}).format(new Date(`${k}T12:00:00`))}
+function average(arr){const x=arr.filter(n=>Number.isFinite(Number(n))&&Number(n)>0).map(Number);return x.length?x.reduce((a,b)=>a+b,0)/x.length:null}
+function render(){document.documentElement.dataset.theme=db.settings.theme==="dark"?"dark":"";$("#todayLabel").textContent=formatDate(todayKey());$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===currentView));updateSyncBadge();({today:renderToday,history:renderHistory,insights:renderInsights,profile:renderProfile}[currentView]||renderToday)()}
+function renderToday(){const d=ensureDay(db,selectedDate);const goal=db.settings.waterGoal||8;const water=Array.from({length:goal},(_,i)=>`<button class="drop ${i<d.water?'filled':''}" data-water="${i+1}" aria-label="${i+1} verres">💧</button>`).join("");const meals=[...d.meals].sort((a,b)=>a.time.localeCompare(b.time));const avgAfter=average(meals.map(m=>m.fatigueAfter));$("#app").innerHTML=`${!navigator.onLine?'<div class="offline-banner">Tu es hors ligne. Les changements restent sur cet appareil et seront envoyés au retour d’Internet.</div>':''}<section class="hero"><div class="row"><div><p class="eyebrow">Aujourd'hui</p><h2>${meals.length?`Déjà ${meals.length} repas noté${meals.length>1?'s':''}`:'Une petite note à la fois'}</h2><p>${session?'Tes données sont reliées à ton compte.':'Connecte-toi pour sauvegarder dans le nuage.'}</p></div><div class="mascot">${meals.length?'🌿':'🍐'}</div></div></section><div class="grid"><section class="card"><span>😴</span><h3>Sommeil</h3><div class="metric">${d.sleepHours??'—'}${d.sleepHours!=null?' h':''}</div><button class="secondary small edit-day">Mettre à jour</button></section><section class="card"><span>⚡</span><h3>Fatigue après</h3><div class="metric">${avgAfter==null?'—':avgAfter.toFixed(1)+'/5'}</div><span class="muted small">Moyenne du jour</span></section><section class="card wide"><div class="row"><div><span>💧</span><h3>Hydratation</h3></div><strong>${d.water}/${goal}</strong></div><div class="water-row">${water}</div><span class="muted small">Touche une goutte pour choisir ton total.</span></section></div><div class="section-title"><h2>Mes repas</h2><button class="primary add-meal">＋ Ajouter</button></div><div class="stack">${meals.length?meals.map(mealCard).join(''):`<section class="card empty"><div class="food-art">🥣</div><h3>Aucun repas pour l'instant</h3><p class="muted">Une description, deux niveaux de fatigue et c'est fait.</p><button class="primary add-meal">Ajouter mon premier repas</button></section>`}</div>`;bindCommon()}
+function mealCard(m){const src=m.photoUrl||m.photoLocal;return `<article class="card meal-card" data-meal="${m.id}">${src?`<img class="meal-thumb" src="${esc(src)}" alt="Photo du repas">`:`<div class="meal-thumb">${mealIcon(m.type)}</div>`}<div><h3>${esc(m.type)} · ${esc(m.time)}</h3><div class="meal-meta">${esc(m.description)}</div><div class="chips"><span class="chip">Avant ${m.fatigueBefore||'—'}/5</span><span class="chip">Après ${m.fatigueAfter||'—'}/5</span></div></div><button class="delete-meal" data-delete="${m.id}" aria-label="Supprimer">⋯</button></article>`}
+function bindCommon(){$$('.add-meal').forEach(b=>b.onclick=()=>openMeal());$$('.edit-day').forEach(b=>b.onclick=openDay);$$('[data-water]').forEach(b=>b.onclick=()=>{const d=ensureDay(db,selectedDate),n=Number(b.dataset.water);d.water=(d.water===n?Math.max(0,n-1):n);setDayChanged(selectedDate);render()});$$('[data-meal]').forEach(c=>c.onclick=e=>{if(e.target.closest('[data-delete]'))return;openMeal(c.dataset.meal)});$$('[data-delete]').forEach(b=>b.onclick=e=>{e.stopPropagation();const d=ensureDay(db,selectedDate),m=d.meals.find(x=>x.id===b.dataset.delete);if(m&&confirm('Supprimer ce repas?')){deleteMealLocal(m);render()}});hydratePhotoUrls()}
+async function hydratePhotoUrls(){if(!session)return;let changed=false;for(const d of Object.values(db.days))for(const m of d.meals)if(m.photoPath&&!m.photoUrl){m.photoUrl=await signedPhoto(m.photoPath);changed=changed||!!m.photoUrl}if(changed){saveLocal('liens-photo');if(currentView==='today')render()}}
+function renderHistory(){const days=Object.values(db.days).filter(d=>d.meals.length||d.water||d.sleepHours!=null).sort((a,b)=>b.date.localeCompare(a.date));$("#app").innerHTML=`<section class="hero"><p class="eyebrow">Historique</p><h2>Ton journal, sans surcharge</h2><p>Chaque journée reste modifiable.</p></section><div class="stack">${days.length?days.map(d=>`<article class="card history-day" data-date="${d.date}"><div class="row"><div><h3>${esc(formatDate(d.date))}</h3><div class="mini-stats"><span>🍽️ ${d.meals.length}</span><span>💧 ${d.water}</span><span>😴 ${d.sleepHours??'—'} h</span></div></div><span>›</span></div></article>`).join(''):`<section class="card empty"><div class="food-art">📖</div><p>Aucune journée enregistrée.</p></section>`}</div>`;$$('[data-date]').forEach(x=>x.onclick=()=>{selectedDate=x.dataset.date;currentView='today';render()})}
+function renderInsights(){const meals=Object.values(db.days).flatMap(d=>d.meals);const before=average(meals.map(m=>m.fatigueBefore)),after=average(meals.map(m=>m.fatigueAfter));const delta=(before!=null&&after!=null)?after-before:null;const days=Object.values(db.days).filter(d=>d.meals.length).slice(-14);const bars=days.map(d=>{const a=average(d.meals.map(m=>m.fatigueAfter))||0;return `<i style="height:${Math.max(8,a/5*100)}%" title="${esc(d.date)} : ${a.toFixed(1)}"></i>`}).join('');$("#app").innerHTML=`<section class="hero"><p class="eyebrow">Tendances</p><h2>Des indices, pas des diagnostics</h2><p>Les tendances deviennent plus utiles à mesure que tu notes tes repas.</p></section><div class="grid"><section class="card"><h3>Fatigue avant</h3><div class="metric">${before==null?'—':before.toFixed(1)+'/5'}</div></section><section class="card"><h3>Fatigue après</h3><div class="metric">${after==null?'—':after.toFixed(1)+'/5'}</div></section><section class="card wide"><h3>Variation moyenne</h3><div class="metric">${delta==null?'—':`${delta>0?'+':''}${delta.toFixed(1)}`}</div><p class="muted small">Une valeur négative signifie moins de fatigue après les repas.</p></section><section class="card wide"><h3>Fatigue après — 14 jours</h3><div class="spark">${bars||'<span class="muted">Pas encore assez de données.</span>'}</div></section></div>`}
+function renderProfile(){const backups=(()=>{try{return JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]').length}catch(_){return 0}})();$("#app").innerHTML=`<section class="hero"><p class="eyebrow">Profil</p><h2>${session?esc(session.user.email):'Protège ton historique'}</h2><p>${session?'La synchronisation Supabase est active.':'La copie locale seule peut disparaître sur iPhone.'}</p></section><div class="stack"><section class="card">${session?`<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>`:`<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi par courriel afin que les repas soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="number" min="1" max="20" value="${db.settings.waterGoal||8}" style="width:80px"></div></section><section class="card"><h3>Sauvegarde supplémentaire</h3><p class="muted small">${backups} copie(s) locale(s) de sécurité. L'export JSON reste une bonne copie externe.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></section><section class="card"><p class="muted small">Énergie & Repas V${esc(CFG.appVersion||'1.3.0')}</p></section></div>`;$("#signIn")?.addEventListener('click',()=>$("#authDialog").showModal());$("#syncNow")?.addEventListener('click',async()=>{await syncNow();await pullCloud();});$("#signOut")?.addEventListener('click',async()=>{await client.auth.signOut();session=null;render()});$("#waterGoal").onchange=e=>{db.settings.waterGoal=clamp(e.target.value,1,20);saveLocal('objectif-eau');render()};$("#exportData").onclick=exportData;$("#importData").onclick=()=>$("#importFile").click()}
+function makeRatings(containerId,value){const c=$(containerId);c.innerHTML=Array.from({length:5},(_,i)=>`<button type="button" class="rating-button ${i+1===value?'active':''}" data-rating="${i+1}">${i+1}</button>`).join('');c.dataset.value=value;$$(`${containerId} [data-rating]`).forEach(b=>b.onclick=()=>{c.dataset.value=b.dataset.rating;$$(`${containerId} [data-rating]`).forEach(x=>x.classList.toggle('active',x===b))})}
+function openMeal(id=null){const d=ensureDay(db,selectedDate);const m=id?d.meals.find(x=>x.id===id):null;$("#mealDialogTitle").textContent=m?'Modifier le repas':'Ajouter un repas';$("#mealId").value=m?.id||'';$("#mealType").value=m?.type||'Déjeuner';$("#mealTime").value=m?.time||new Date().toTimeString().slice(0,5);$("#mealDescription").value=m?.description||'';$("#mealNotes").value=m?.notes||'';makeRatings('#fatigueBeforePicker',m?.fatigueBefore||3);makeRatings('#fatigueAfterPicker',m?.fatigueAfter||3);photoData=m?.photoLocal||m?.photoUrl||null;photoRemoved=false;showPhotoPreview();$("#mealDialog").showModal()}
+function showPhotoPreview(){const wrap=$("#photoPreviewWrap");wrap.hidden=!photoData;if(photoData)$("#photoPreview").src=photoData}
+function openDay(){const d=ensureDay(db,selectedDate);$("#sleepHours").value=d.sleepHours??'';$("#activityType").value='';$("#activityMinutes").value='';$("#dayDialog").showModal()}
+async function fileToDataUrl(file){if(!file)return null;const img=await createImageBitmap(file);const max=1280,scale=Math.min(1,max/Math.max(img.width,img.height));const canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);return canvas.toDataURL('image/jpeg',.78)}
+$("#mealPhoto").onchange=async e=>{photoData=await fileToDataUrl(e.target.files[0]);photoRemoved=false;showPhotoPreview()};$("#removePhoto").onclick=()=>{photoData=null;photoRemoved=true;showPhotoPreview()};
+$("#mealForm").onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDate),id=$("#mealId").value,old=d.meals.find(x=>x.id===id);const meal=normalMeal({...old,id:id||uid(),date:selectedDate,type:$("#mealType").value,time:$("#mealTime").value,description:$("#mealDescription").value.trim(),fatigueBefore:Number($("#fatigueBeforePicker").dataset.value),fatigueAfter:Number($("#fatigueAfterPicker").dataset.value),notes:$("#mealNotes").value.trim(),photoLocal:photoData&&photoData.startsWith('data:')?photoData:(old?.photoLocal||null),photoUrl:photoRemoved?null:(old?.photoUrl||null),photoPath:photoRemoved?null:(old?.photoPath||null),updatedAt:new Date().toISOString()},selectedDate);if(old)Object.assign(old,meal);else d.meals.push(meal);setMealChanged(meal);$("#mealDialog").close();render()};
+$("#dayForm").onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDate);d.sleepHours=$("#sleepHours").value===''?null:Number($("#sleepHours").value);const type=$("#activityType").value,min=Number($("#activityMinutes").value)||0;if(type&&min)d.activities.push({id:uid(),type,minutes:min,at:new Date().toISOString()});setDayChanged(selectedDate);$("#dayDialog").close();render()};
+$("#copyYesterdayBreakfast").onclick=()=>{const dt=new Date(`${selectedDate}T12:00:00`);dt.setDate(dt.getDate()-1);const k=dt.toLocaleDateString('en-CA'),m=ensureDay(db,k).meals.find(x=>x.type==='Déjeuner');if(!m)return alert("Aucun déjeuner trouvé hier.");$("#mealType").value=m.type;$("#mealDescription").value=m.description;$("#mealNotes").value=m.notes||'';makeRatings('#fatigueBeforePicker',m.fatigueBefore||3);makeRatings('#fatigueAfterPicker',m.fatigueAfter||3)};
+$$('.close-dialog').forEach(b=>b.onclick=()=>b.closest('dialog').close());
+$("#authForm").onsubmit=async e=>{e.preventDefault();if(!client)return;const email=$("#authEmail").value.trim(),msg=$("#authMessage");msg.textContent='Envoi en cours…';const redirectTo=`${location.origin}${location.pathname}`;const {error}=await client.auth.signInWithOtp({email,options:{emailRedirectTo:redirectTo}});msg.textContent=error?`Erreur : ${error.message}`:'Lien envoyé! Ouvre ton courriel sur cet appareil.'};
+function exportData(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`energie-repas-${todayKey()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+$("#importFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const parsed=JSON.parse(await f.text()),next=migrate(parsed);backup(db,'avant-import-v1.3');db=next;saveLocal('import');if(session&&confirm('Importer aussi cette copie dans Supabase?'))await seedCloudFromLocal();render()}catch(_){alert('Ce fichier JSON ne peut pas être importé.')}};
+$("#themeToggle").onclick=()=>{db.settings.theme=db.settings.theme==='dark'?'system':'dark';saveLocal('theme');render()};$$('.nav-item').forEach(b=>b.onclick=()=>{currentView=b.dataset.view;selectedDate=todayKey();render()});
+window.addEventListener('online',()=>{updateSyncBadge();if(session)syncNow()});window.addEventListener('offline',updateSyncBadge);
+async function initAuth(){if(!client){render();return}const {data}=await client.auth.getSession();session=data.session;client.auth.onAuthStateChange(async(event,newSession)=>{const firstLogin=!session&&!!newSession;session=newSession;updateSyncBadge();if(firstLogin){$("#authDialog").open&&$("#authDialog").close();await pullCloud(false);if(Object.values(db.days).some(d=>d.meals.length||d.water||d.sleepHours!=null)){const cloudHasData=Object.values(db.days).some(d=>d.meals.some(m=>m.photoPath)||false);if(!cloudHasData&&confirm('Veux-tu sauvegarder les données locales actuelles dans ton nouveau compte Supabase?'))await seedCloudFromLocal()}render()}});if(session){await pullCloud(false);await syncNow()}render()}
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(console.warn));
+initAuth();
 })();

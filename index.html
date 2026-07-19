@@ -16,115 +16,60 @@
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <div>
-        <p class="eyebrow" id="todayLabel"></p>
-        <h1>Énergie & Repas</h1>
-      </div>
-      <button class="icon-button" id="themeToggle" aria-label="Changer le thème">☾</button>
+      <div><p class="eyebrow" id="todayLabel"></p><h1>Énergie & Repas</h1></div>
+      <div class="header-actions"><span id="syncBadge" class="sync-badge">Local</span><button class="icon-button" id="themeToggle" aria-label="Changer le thème">☾</button></div>
     </header>
-
     <main id="app" tabindex="-1"></main>
-
     <nav class="bottom-nav" aria-label="Navigation principale">
       <button data-view="today" class="nav-item active"><span>☀️</span><small>Aujourd'hui</small></button>
       <button data-view="history" class="nav-item"><span>📖</span><small>Historique</small></button>
-      <button data-view="insights" class="nav-item"><span>🧠</span><small>Découvertes</small></button>
+      <button data-view="insights" class="nav-item"><span>✨</span><small>Tendances</small></button>
       <button data-view="profile" class="nav-item"><span>⚙️</span><small>Profil</small></button>
     </nav>
   </div>
 
   <dialog id="mealDialog">
-    <form method="dialog" id="mealForm" class="dialog-card">
-      <div class="dialog-header">
-        <div>
-          <p class="eyebrow">Nouveau repas</p>
-          <h2 id="mealDialogTitle">Ajouter un repas</h2>
-        </div>
-        <button class="icon-button" value="cancel" aria-label="Fermer">✕</button>
-      </div>
-
+    <form id="mealForm" class="dialog-card">
+      <div class="dialog-header"><div><p class="eyebrow">Mon repas</p><h2 id="mealDialogTitle">Ajouter un repas</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
       <input type="hidden" id="mealId">
-      <label>Type de repas
-        <select id="mealType" required>
-          <option>Déjeuner</option><option>Dîner</option><option>Souper</option>
-          <option>Collation</option><option>Boisson</option>
-        </select>
-      </label>
-
-      <label>Heure
-        <input id="mealTime" type="time" required>
-      </label>
-
-      <label>Ce que tu as mangé ou bu
-        <textarea id="mealDescription" rows="3" placeholder="Ex. bagel, 2 œufs et café" required></textarea>
-      </label>
-
-      <label>Catégorie principale
-        <select id="mealCategory">
-          <option>Repas équilibré</option><option>Très sucré</option><option>Riche en glucides</option>
-          <option>Riche en protéines</option><option>Très gras / frit</option><option>Produits laitiers</option>
-          <option>Gluten / blé</option><option>Alcool</option><option>Caféine</option>
-          <option>Boisson énergisante</option><option>Repas léger</option><option>Jeûne / repas sauté</option><option>Autre</option>
-        </select>
-      </label>
-
-      <label>Quantité approximative
-        <input id="mealQuantity" placeholder="Ex. 1 bol, 2 tranches">
-      </label>
-
-      <div class="rating-grid">
-        <label>Fatigue avant
-          <input id="fatigueBefore" type="range" min="0" max="10" value="3">
-          <output id="fatigueBeforeOut">3</output>
-        </label>
-        <label>Fatigue après 1 h
-          <input id="fatigue1h" type="range" min="0" max="10" value="3">
-          <output id="fatigue1hOut">3</output>
-        </label>
-        <label>Fatigue après 3 h
-          <input id="fatigue3h" type="range" min="0" max="10" value="3">
-          <output id="fatigue3hOut">3</output>
-        </label>
+      <div class="two-col">
+        <label>Type de repas<select id="mealType" required><option>Déjeuner</option><option>Dîner</option><option>Souper</option><option>Collation</option><option>Boisson</option></select></label>
+        <label>Heure<input id="mealTime" type="time" required></label>
       </div>
-
-      <label>Photo
-        <input id="mealPhoto" type="file" accept="image/*" capture="environment">
-      </label>
-
-      <label>Notes
-        <textarea id="mealNotes" rows="2" placeholder="Symptômes, contexte, etc."></textarea>
-      </label>
-
-      <div class="dialog-actions">
-        <button type="button" class="secondary" id="copyYesterdayBreakfast">Copier le déjeuner d'hier</button>
-        <button type="submit" class="primary">Enregistrer</button>
-      </div>
+      <label>Ce que tu as mangé ou bu<textarea id="mealDescription" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea></label>
+      <div class="energy-picker"><span>Fatigue avant</span><div id="fatigueBeforePicker" class="rating-buttons" role="radiogroup" aria-label="Fatigue avant"></div></div>
+      <div class="energy-picker"><span>Fatigue après</span><div id="fatigueAfterPicker" class="rating-buttons" role="radiogroup" aria-label="Fatigue après"></div></div>
+      <label>Photo facultative<input id="mealPhoto" type="file" accept="image/*" capture="environment"></label>
+      <div id="photoPreviewWrap" class="photo-preview-wrap" hidden><img id="photoPreview" alt="Aperçu"><button type="button" id="removePhoto" class="secondary small">Retirer la photo</button></div>
+      <label>Notes facultatives<textarea id="mealNotes" rows="2" placeholder="Contexte, digestion, humeur…"></textarea></label>
+      <div class="dialog-actions"><button type="button" class="secondary" id="copyYesterdayBreakfast">Copier le déjeuner d'hier</button><button type="submit" class="primary">Enregistrer</button></div>
     </form>
   </dialog>
 
   <dialog id="dayDialog">
-    <form method="dialog" id="dayForm" class="dialog-card">
-      <div class="dialog-header">
-        <div><p class="eyebrow">Ma journée</p><h2>Mettre à jour</h2></div>
-        <button class="icon-button" value="cancel" aria-label="Fermer">✕</button>
-      </div>
-      <label>Sommeil de la nuit dernière (heures)
-        <input id="sleepHours" type="number" step="0.25" min="0" max="24" placeholder="7.5">
-      </label>
-      <label>Qualité du sommeil (0 à 10)
-        <input id="sleepQuality" type="number" min="0" max="10" placeholder="8">
-      </label>
-      <label>Activité
-        <select id="activityType"><option>Marche</option><option>Course</option><option>Vélo</option><option>Musculation</option><option>Autre</option></select>
-      </label>
-      <label>Minutes d'activité
-        <input id="activityMinutes" type="number" min="0" max="1440" placeholder="45">
-      </label>
-      <button type="submit" class="primary">Enregistrer la journée</button>
+    <form id="dayForm" class="dialog-card">
+      <div class="dialog-header"><div><p class="eyebrow">Ma journée</p><h2>Sommeil et activité</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
+      <label>Sommeil de la nuit dernière<input id="sleepHours" type="number" step="0.25" min="0" max="24" placeholder="7.5"></label>
+      <label>Activité<select id="activityType"><option value="">Aucune</option><option>Marche</option><option>Course</option><option>Vélo</option><option>Musculation</option><option>Autre</option></select></label>
+      <label>Minutes d'activité<input id="activityMinutes" type="number" min="0" max="1440" placeholder="45"></label>
+      <button type="submit" class="primary">Enregistrer</button>
+    </form>
+  </dialog>
+
+  <dialog id="authDialog">
+    <form id="authForm" class="dialog-card auth-card">
+      <div class="dialog-header"><div><p class="eyebrow">Sauvegarde infonuagique</p><h2>Connexion sécurisée</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
+      <div class="cloud-art">☁️</div>
+      <p class="muted">Entre ton courriel. Supabase t'enverra un lien de connexion; aucun mot de passe n'est nécessaire.</p>
+      <label>Adresse courriel<input id="authEmail" type="email" autocomplete="email" required placeholder="toi@exemple.com"></label>
+      <button type="submit" class="primary">M'envoyer le lien</button>
+      <p id="authMessage" class="small muted"></p>
     </form>
   </dialog>
 
   <input id="importFile" type="file" accept="application/json" hidden>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
