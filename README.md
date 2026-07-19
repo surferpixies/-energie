@@ -1,29 +1,36 @@
-# Énergie & Repas V1.5
+# Énergie & Repas V1.5.1
 
-Cette version conserve l’authentification et la synchronisation Supabase de la V1.4, puis ajoute :
+Cette version part de la V1.4/V1.5 et conserve l’authentification ainsi que les repas déjà enregistrés dans Supabase.
 
-- une bibliothèque de repas favoris;
-- l’ajout rapide d’un repas à partir d’un favori;
-- une recherche par aliment, type, note ou date;
-- des filtres sur 7 et 30 jours;
-- un tableau de bord avec les repas récents, la fatigue moyenne et les repas fréquents.
+## Nouveautés
 
-## Mise à jour obligatoire de Supabase
+- ⭐ Bibliothèque de repas favoris et ajout rapide;
+- 🔎 Recherche instantanée par repas, type, note ou date;
+- filtres sur 7 et 30 jours;
+- 📊 tableau de bord;
+- 🧠 Insights avec niveau de confiance;
+- 👀 mode aperçu automatique lorsqu’il y a moins de 8 repas.
 
-Avant de publier les fichiers, ouvre **Supabase → SQL Editor**, colle le contenu complet de `supabase-setup.sql`, puis exécute-le.
+Les données du mode aperçu sont fictives, restent uniquement en mémoire et ne sont jamais envoyées dans Supabase.
 
-Le script conserve les tables existantes et ajoute seulement la table `favorite_meals` avec ses règles de sécurité. Tes repas actuels ne sont pas supprimés.
+## Mise à jour Supabase
 
-## Publication GitHub Pages
+Dans **Supabase → SQL Editor**, exécute `supabase-setup.sql` une seule fois.
 
-1. Remplace les fichiers de la V1.4 par ceux de ce dossier.
-2. Vérifie que `config.js` contient toujours l’URL et la clé publique de ton projet Supabase.
-3. Publie les changements.
-4. Sur iPhone, ferme complètement l’application et rouvre-la. Au besoin, retire-la de l’écran d’accueil puis réinstalle-la pour forcer la nouvelle version du service worker.
+Le script est non destructif : il ne contient aucun `DELETE`, `TRUNCATE` ou `DROP TABLE`. Il ajoute seulement `favorite_meals` et ses règles de sécurité. La table `meals` n’est pas modifiée.
 
-## Utilisation des favoris
+## Publication
 
-- Sur une carte de repas, touche l’étoile `☆`.
-- Donne un nom au favori.
-- Le favori apparaît sur l’accueil et dans **Historique**.
-- Touche **Utiliser** pour préremplir un nouveau repas.
+1. Fais d’abord un export JSON depuis **Profil → Exporter JSON**.
+2. Exécute `supabase-setup.sql`.
+3. Remplace les fichiers de ton dépôt GitHub Pages par ceux de cette archive.
+4. Vérifie que `config.js` contient l’URL et la clé publique Supabase déjà utilisées par la V1.4.
+5. Après la publication, ferme complètement la PWA et rouvre-la. Si l’ancienne version reste en cache, retire puis réinstalle l’icône depuis Safari.
+
+## Validation conseillée
+
+1. Connecte-toi et confirme que tes repas existants apparaissent.
+2. Ajoute un repas aux favoris avec `☆`.
+3. Utilise ce favori pour préremplir un nouveau repas.
+4. Teste la recherche.
+5. Ouvre **Tableau** pour voir le mode aperçu et les Insights.
