@@ -1,54 +1,29 @@
-# Énergie & Repas V1.4
+# Énergie & Repas V1.5
 
-## Changement principal
+Cette version conserve l’authentification et la synchronisation Supabase de la V1.4, puis ajoute :
 
-La connexion se fait maintenant avec **courriel + mot de passe directement dans l’application installée**.
+- une bibliothèque de repas favoris;
+- l’ajout rapide d’un repas à partir d’un favori;
+- une recherche par aliment, type, note ou date;
+- des filtres sur 7 et 30 jours;
+- un tableau de bord avec les repas récents, la fatigue moyenne et les repas fréquents.
 
-Cette méthode évite le problème des sessions séparées entre Safari et la PWA iPhone.
+## Mise à jour obligatoire de Supabase
 
-## Mise à jour GitHub
+Avant de publier les fichiers, ouvre **Supabase → SQL Editor**, colle le contenu complet de `supabase-setup.sql`, puis exécute-le.
 
-Remplace les fichiers à la racine du dépôt par ceux de ce dossier :
+Le script conserve les tables existantes et ajoute seulement la table `favorite_meals` avec ses règles de sécurité. Tes repas actuels ne sont pas supprimés.
 
-- `index.html`
-- `styles.css`
-- `app.js`
-- `config.js`
-- `manifest.webmanifest`
-- `sw.js`
-- `supabase-setup.sql`
-- `README.md`
+## Publication GitHub Pages
 
-Remplace également les fichiers du dossier `assets`.
+1. Remplace les fichiers de la V1.4 par ceux de ce dossier.
+2. Vérifie que `config.js` contient toujours l’URL et la clé publique de ton projet Supabase.
+3. Publie les changements.
+4. Sur iPhone, ferme complètement l’application et rouvre-la. Au besoin, retire-la de l’écran d’accueil puis réinstalle-la pour forcer la nouvelle version du service worker.
 
-## Configuration Supabase
+## Utilisation des favoris
 
-Dans **Authentication → URL Configuration** :
-
-- Site URL : `https://surferpixies.github.io/-energie/`
-- Redirect URL autorisée : `https://surferpixies.github.io/-energie/**`
-
-Aucune modification des modèles de courriel et aucun SMTP personnalisé ne sont nécessaires.
-
-## Première connexion
-
-### Nouveau compte
-
-1. Ouvre l’application installée.
-2. Va dans **Profil → Se connecter**.
-3. Choisis **Créer un compte**.
-4. Entre ton courriel et un mot de passe d’au moins 8 caractères.
-5. Confirme le courriel envoyé par Supabase si demandé.
-6. Reviens dans l’application installée et connecte-toi avec le même mot de passe.
-
-### Compte déjà créé avec le lien magique
-
-1. Dans **Connexion**, entre ton courriel.
-2. Touche **Mot de passe oublié ou compte créé avec un lien magique?**
-3. Ouvre le courriel de récupération dans Safari.
-4. Choisis un nouveau mot de passe sur la page qui s’ouvre.
-5. Reviens dans l’application installée et connecte-toi avec ce mot de passe.
-
-## Icône iPhone
-
-Si l’ancienne icône reste affichée, retire seulement l’icône de l’écran d’accueil puis ajoute de nouveau l’application depuis Safari. Cela ne supprime pas les données Supabase.
+- Sur une carte de repas, touche l’étoile `☆`.
+- Donne un nom au favori.
+- Le favori apparaît sur l’accueil et dans **Historique**.
+- Touche **Utiliser** pour préremplir un nouveau repas.

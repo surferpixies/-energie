@@ -23,7 +23,7 @@
     <nav class="bottom-nav" aria-label="Navigation principale">
       <button data-view="today" class="nav-item active"><span>☀️</span><small>Aujourd'hui</small></button>
       <button data-view="history" class="nav-item"><span>📖</span><small>Historique</small></button>
-      <button data-view="insights" class="nav-item"><span>✨</span><small>Tendances</small></button>
+      <button data-view="insights" class="nav-item"><span>📊</span><small>Tableau</small></button>
       <button data-view="profile" class="nav-item"><span>⚙️</span><small>Profil</small></button>
     </nav>
   </div>
@@ -32,6 +32,9 @@
     <form id="mealForm" class="dialog-card">
       <div class="dialog-header"><div><p class="eyebrow">Mon repas</p><h2 id="mealDialogTitle">Ajouter un repas</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
       <input type="hidden" id="mealId">
+      <label id="favoriteMealLabel">Choisir un repas favori
+        <select id="favoriteMealSelect"><option value="">Choisir un favori…</option></select>
+      </label>
       <div class="two-col">
         <label>Type de repas<select id="mealType" required><option>Déjeuner</option><option>Dîner</option><option>Souper</option><option>Collation</option><option>Boisson</option></select></label>
         <label>Heure<input id="mealTime" type="time" required></label>

@@ -3,244 +3,82 @@
 const CFG=window.ENERGIE_CONFIG||{};
 const APP_KEY="energieRepasDB";
 const BACKUP_KEY="energieRepasBackups";
-const OUTBOX_KEY="energieRepasOutboxV13";
-const CURRENT_VERSION=5;
+const OUTBOX_KEY="energieRepasOutboxV15";
+const CURRENT_VERSION=6;
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 const uid=()=>crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const todayKey=()=>new Date().toLocaleDateString("en-CA");
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,Number(n)||0));
-const client=(window.supabase&&CFG.supabaseUrl&&CFG.supabasePublishableKey)?window.supabase.createClient(
-  CFG.supabaseUrl,
-  CFG.supabasePublishableKey,
-  {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}
-):null;
-let session=null, currentView="today", selectedDate=todayKey(), syncState="local", photoData=null, photoRemoved=false, authMode="login", recoveryMode=false;
+const client=(window.supabase&&CFG.supabaseUrl&&CFG.supabasePublishableKey)?window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
+let session=null,currentView="today",selectedDate=todayKey(),syncState="local",photoData=null,photoRemoved=false,authMode="login";
 
-function freshDB(){return{version:CURRENT_VERSION,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),settings:{waterGoal:8,theme:"system"},days:{}}}
-function ensureDay(db,key=todayKey()){if(!db.days[key])db.days[key]={date:key,sleepHours:null,water:0,activities:[],meals:[],updatedAt:new Date().toISOString()};const d=db.days[key];d.activities=Array.isArray(d.activities)?d.activities:[];d.meals=Array.isArray(d.meals)?d.meals:[];d.water=Number(d.water)||0;return d}
+function freshDB(){return{version:CURRENT_VERSION,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),settings:{waterGoal:8,theme:"system"},favorites:[],days:{}}}
+function ensureDay(store,key=todayKey()){if(!store.days[key])store.days[key]={date:key,sleepHours:null,water:0,activities:[],meals:[],updatedAt:new Date().toISOString()};const d=store.days[key];d.activities=Array.isArray(d.activities)?d.activities:[];d.meals=Array.isArray(d.meals)?d.meals:[];d.water=Number(d.water)||0;return d}
 function normalMeal(m={},date=todayKey()){return{id:m.id||uid(),date:m.date||date,time:m.time||"12:00",type:m.type||m.mealType||m.typeRepas||"Repas",description:m.description||m.food||m.aliments||m.repas||m.details||"",fatigueBefore:clamp(m.fatigueBefore??m.fatigueAvant??m.before,0,5),fatigueAfter:clamp(m.fatigueAfter??m.fatigueApres??m.after??m.fatigue1h??m.after1h,0,5),notes:m.notes||"",photoUrl:m.photoUrl||null,photoPath:m.photoPath||null,photoLocal:m.photoLocal||m.photo||m.image||null,createdAt:m.createdAt||new Date().toISOString(),updatedAt:m.updatedAt||new Date().toISOString()}}
-function migrate(raw){const out=freshDB();if(!raw||typeof raw!=="object")return out;out.settings={...out.settings,...(raw.settings||{})};if(raw.days&&typeof raw.days==="object"){Object.entries(raw.days).forEach(([k,d])=>{const day=ensureDay(out,k);day.sleepHours=d.sleepHours??d.sleep??d.sommeil??null;day.water=Number(d.water??d.waterGlasses??d.eau??0)||0;day.activities=Array.isArray(d.activities)?d.activities:[];day.meals=(d.meals||d.repas||[]).map(m=>normalMeal(m,k));day.updatedAt=d.updatedAt||new Date().toISOString()});return out}const arr=[raw.meals,raw.repas,raw.entries,raw.history,raw.logs,Array.isArray(raw)?raw:null].find(Array.isArray);if(arr)arr.forEach(x=>{const m=normalMeal(x,x.date||x.day||todayKey());ensureDay(out,m.date).meals.push(m)});return out}
+function normalFavorite(f={}){return{id:f.id||uid(),name:f.name||f.description||"Mon repas",type:f.type||"Repas",description:f.description||"",notes:f.notes||"",usageCount:Number(f.usageCount??f.usage_count??0)||0,createdAt:f.createdAt||f.created_at||new Date().toISOString(),updatedAt:f.updatedAt||f.updated_at||new Date().toISOString()}}
+function migrate(raw){const out=freshDB();if(!raw||typeof raw!=="object")return out;out.settings={...out.settings,...(raw.settings||{})};out.favorites=(raw.favorites||raw.favoriteMeals||[]).map(normalFavorite);if(raw.days&&typeof raw.days==="object"){Object.entries(raw.days).forEach(([k,d])=>{const day=ensureDay(out,k);day.sleepHours=d.sleepHours??d.sleep??d.sommeil??null;day.water=Number(d.water??d.waterGlasses??d.eau??0)||0;day.activities=Array.isArray(d.activities)?d.activities:[];day.meals=(d.meals||d.repas||[]).map(m=>normalMeal(m,k));day.updatedAt=d.updatedAt||new Date().toISOString()});return out}const arr=[raw.meals,raw.repas,raw.entries,raw.history,raw.logs,Array.isArray(raw)?raw:null].find(Array.isArray);if(arr)arr.forEach(x=>{const m=normalMeal(x,x.date||x.day||todayKey());ensureDay(out,m.date).meals.push(m)});return out}
 function backup(payload,reason){try{const b=JSON.parse(localStorage.getItem(BACKUP_KEY)||"[]");b.unshift({at:new Date().toISOString(),reason,payload});localStorage.setItem(BACKUP_KEY,JSON.stringify(b.slice(0,20)))}catch(e){console.warn(e)}}
-function load(){const raw=localStorage.getItem(APP_KEY);if(!raw)return freshDB();try{const parsed=JSON.parse(raw);backup(parsed,"ouverture-v1.4");return migrate(parsed)}catch(e){backup(raw,"copie-illisible-v1.4");return freshDB()}}
+function load(){const raw=localStorage.getItem(APP_KEY);if(!raw)return freshDB();try{const parsed=JSON.parse(raw);backup(parsed,"ouverture-v1.5");return migrate(parsed)}catch(e){backup(raw,"copie-illisible-v1.5");return freshDB()}}
 let db=load();
-function saveLocal(reason="local"){db.updatedAt=new Date().toISOString();const before=localStorage.getItem(APP_KEY);if(before){try{backup(JSON.parse(before),`avant-${reason}`)}catch(_){}}const txt=JSON.stringify(db);localStorage.setItem(APP_KEY,txt);localStorage.setItem(`${APP_KEY}_shadow`,txt)}
+function saveLocal(reason="local"){db.version=CURRENT_VERSION;db.updatedAt=new Date().toISOString();const txt=JSON.stringify(db);localStorage.setItem(APP_KEY,txt);localStorage.setItem(`${APP_KEY}_shadow`,txt)}
 function outbox(){try{return JSON.parse(localStorage.getItem(OUTBOX_KEY)||"[]")}catch(_){return[]}}
 function setOutbox(items){localStorage.setItem(OUTBOX_KEY,JSON.stringify(items));updateSyncBadge()}
 function enqueue(op){const items=outbox();const key=`${op.kind}:${op.id||op.date}`;const idx=items.findIndex(x=>`${x.kind}:${x.id||x.date}`===key);if(idx>=0)items[idx]=op;else items.push(op);setOutbox(items);syncState="pending";updateSyncBadge();if(session&&navigator.onLine)syncNow()}
 function updateSyncBadge(){const el=$("#syncBadge");if(!el)return;const pending=outbox().length;el.className="sync-badge";if(!session){el.textContent=navigator.onLine?"Non connecté":"Hors ligne";if(!navigator.onLine)el.classList.add("pending");return}if(syncState==="error"){el.textContent="Erreur synchro";el.classList.add("error")}else if(pending){el.textContent=`${pending} à synchroniser`;el.classList.add("pending")}else{el.textContent="Sauvegardé ☁️";el.classList.add("online")}}
 function setDayChanged(date){const d=ensureDay(db,date);d.updatedAt=new Date().toISOString();saveLocal("jour");enqueue({kind:"day",date})}
 function setMealChanged(meal){saveLocal("repas");enqueue({kind:"meal",id:meal.id,date:meal.date})}
+function setFavoriteChanged(f){saveLocal("favori");enqueue({kind:"favorite",id:f.id})}
 function deleteMealLocal(meal){const d=ensureDay(db,meal.date);d.meals=d.meals.filter(x=>x.id!==meal.id);saveLocal("suppression-repas");enqueue({kind:"deleteMeal",id:meal.id,date:meal.date,photoPath:meal.photoPath})}
+function deleteFavoriteLocal(f){db.favorites=db.favorites.filter(x=>x.id!==f.id);saveLocal("suppression-favori");enqueue({kind:"deleteFavorite",id:f.id})}
 
-async function uploadPhoto(meal){if(!client||!session||!meal.photoLocal||meal.photoLocal===meal.photoUrl)return meal;const blob=await (await fetch(meal.photoLocal)).blob();const ext=(blob.type.split("/")[1]||"jpg").replace("jpeg","jpg");const path=`${session.user.id}/${meal.id}.${ext}`;const {error}=await client.storage.from("meal-photos").upload(path,blob,{upsert:true,contentType:blob.type||"image/jpeg"});if(error)throw error;meal.photoPath=path;meal.photoLocal=null;return meal}
-async function signedPhoto(path){if(!path||!client)return null;const {data,error}=await client.storage.from("meal-photos").createSignedUrl(path,60*60);return error?null:data.signedUrl}
-async function syncNow(){if(!client||!session||!navigator.onLine)return;syncState="syncing";updateSyncBadge();let items=outbox();const remaining=[];for(const op of items){try{if(op.kind==="day"){const d=ensureDay(db,op.date);const {error}=await client.from("daily_logs").upsert({user_id:session.user.id,log_date:op.date,sleep_hours:d.sleepHours,water:d.water,activities:d.activities,updated_at:d.updatedAt},{onConflict:"user_id,log_date"});if(error)throw error}else if(op.kind==="meal"){const d=ensureDay(db,op.date);const meal=d.meals.find(m=>m.id===op.id);if(!meal)continue;await uploadPhoto(meal);meal.updatedAt=new Date().toISOString();const {error}=await client.from("meals").upsert({id:meal.id,user_id:session.user.id,meal_date:meal.date,meal_time:meal.time,meal_type:meal.type,description:meal.description,fatigue_before:meal.fatigueBefore,fatigue_after:meal.fatigueAfter,notes:meal.notes||null,photo_path:meal.photoPath||null,created_at:meal.createdAt,updated_at:meal.updatedAt});if(error)throw error;saveLocal("photo-cloud")}else if(op.kind==="deleteMeal"){const {error}=await client.from("meals").delete().eq("id",op.id);if(error)throw error;if(op.photoPath)await client.storage.from("meal-photos").remove([op.photoPath])}}catch(e){console.error("sync",e);remaining.push(op)}}setOutbox(remaining);syncState=remaining.length?"error":"online";updateSyncBadge();if(!remaining.length)await pullCloud(false)}
-async function pullCloud(show=true){if(!client||!session||!navigator.onLine)return;if(show){syncState="syncing";const el=$("#syncBadge");if(el)el.textContent="Synchronisation…"}const [{data:days,error:de},{data:meals,error:me}]=await Promise.all([client.from("daily_logs").select("*").order("log_date"),client.from("meals").select("*").order("meal_date").order("meal_time")]);if(de||me){syncState="error";updateSyncBadge();return}for(const r of days||[]){const local=ensureDay(db,r.log_date);if(!local.updatedAt||new Date(r.updated_at)>=new Date(local.updatedAt)){local.sleepHours=r.sleep_hours;local.water=r.water||0;local.activities=r.activities||[];local.updatedAt=r.updated_at}}for(const r of meals||[]){const d=ensureDay(db,r.meal_date);const remote=normalMeal({id:r.id,date:r.meal_date,time:(r.meal_time||"").slice(0,5),type:r.meal_type,description:r.description,fatigueBefore:r.fatigue_before,fatigueAfter:r.fatigue_after,notes:r.notes,photoPath:r.photo_path,createdAt:r.created_at,updatedAt:r.updated_at},r.meal_date);const i=d.meals.findIndex(x=>x.id===remote.id);if(i<0)d.meals.push(remote);else if(new Date(remote.updatedAt)>=new Date(d.meals[i].updatedAt||0))d.meals[i]={...d.meals[i],...remote}}saveLocal("retour-cloud");syncState="online";updateSyncBadge();render()}
-async function seedCloudFromLocal(){if(!session)return;const ops=[];Object.entries(db.days).forEach(([date,d])=>{ops.push({kind:"day",date});d.meals.forEach(m=>ops.push({kind:"meal",id:m.id,date}))});setOutbox(ops);await syncNow()}
+async function uploadPhoto(meal){if(!client||!session||!meal.photoLocal||meal.photoLocal===meal.photoUrl)return meal;const blob=await(await fetch(meal.photoLocal)).blob();const ext=(blob.type.split("/")[1]||"jpg").replace("jpeg","jpg");const path=`${session.user.id}/${meal.id}.${ext}`;const {error}=await client.storage.from("meal-photos").upload(path,blob,{upsert:true,contentType:blob.type||"image/jpeg"});if(error)throw error;meal.photoPath=path;meal.photoLocal=null;return meal}
+async function signedPhoto(path){if(!path||!client)return null;const {data,error}=await client.storage.from("meal-photos").createSignedUrl(path,3600);return error?null:data.signedUrl}
+async function syncNow(){if(!client||!session||!navigator.onLine)return;syncState="syncing";updateSyncBadge();const remaining=[];for(const op of outbox()){try{if(op.kind==="day"){const d=ensureDay(db,op.date);const {error}=await client.from("daily_logs").upsert({user_id:session.user.id,log_date:op.date,sleep_hours:d.sleepHours,water:d.water,activities:d.activities,updated_at:d.updatedAt},{onConflict:"user_id,log_date"});if(error)throw error}else if(op.kind==="meal"){const meal=ensureDay(db,op.date).meals.find(m=>m.id===op.id);if(!meal)continue;await uploadPhoto(meal);const {error}=await client.from("meals").upsert({id:meal.id,user_id:session.user.id,meal_date:meal.date,meal_time:meal.time,meal_type:meal.type,description:meal.description,fatigue_before:meal.fatigueBefore,fatigue_after:meal.fatigueAfter,notes:meal.notes||null,photo_path:meal.photoPath||null,created_at:meal.createdAt,updated_at:meal.updatedAt});if(error)throw error}else if(op.kind==="favorite"){const f=db.favorites.find(x=>x.id===op.id);if(!f)continue;const {error}=await client.from("favorite_meals").upsert({id:f.id,user_id:session.user.id,name:f.name,meal_type:f.type,description:f.description,notes:f.notes||null,usage_count:f.usageCount||0,created_at:f.createdAt,updated_at:f.updatedAt});if(error)throw error}else if(op.kind==="deleteMeal"){const {error}=await client.from("meals").delete().eq("id",op.id);if(error)throw error;if(op.photoPath)await client.storage.from("meal-photos").remove([op.photoPath])}else if(op.kind==="deleteFavorite"){const {error}=await client.from("favorite_meals").delete().eq("id",op.id);if(error)throw error}}catch(e){console.error("sync",e);remaining.push(op)}}setOutbox(remaining);syncState=remaining.length?"error":"online";updateSyncBadge();if(!remaining.length)await pullCloud(false)}
+async function pullCloud(show=true){if(!client||!session||!navigator.onLine)return;if(show){syncState="syncing";updateSyncBadge()}const [dr,mr,fr]=await Promise.all([client.from("daily_logs").select("*").order("log_date"),client.from("meals").select("*").order("meal_date").order("meal_time"),client.from("favorite_meals").select("*").order("usage_count",{ascending:false})]);if(dr.error||mr.error||fr.error){console.error(dr.error||mr.error||fr.error);syncState="error";updateSyncBadge();return}for(const r of dr.data||[]){const d=ensureDay(db,r.log_date);if(!d.updatedAt||new Date(r.updated_at)>=new Date(d.updatedAt)){d.sleepHours=r.sleep_hours;d.water=r.water||0;d.activities=r.activities||[];d.updatedAt=r.updated_at}}for(const r of mr.data||[]){const d=ensureDay(db,r.meal_date);const remote=normalMeal({id:r.id,date:r.meal_date,time:(r.meal_time||"").slice(0,5),type:r.meal_type,description:r.description,fatigueBefore:r.fatigue_before,fatigueAfter:r.fatigue_after,notes:r.notes,photoPath:r.photo_path,createdAt:r.created_at,updatedAt:r.updated_at},r.meal_date);const i=d.meals.findIndex(x=>x.id===remote.id);if(i<0)d.meals.push(remote);else if(new Date(remote.updatedAt)>=new Date(d.meals[i].updatedAt||0))d.meals[i]={...d.meals[i],...remote}}for(const r of fr.data||[]){const remote=normalFavorite({id:r.id,name:r.name,type:r.meal_type,description:r.description,notes:r.notes,usageCount:r.usage_count,createdAt:r.created_at,updatedAt:r.updated_at});const i=db.favorites.findIndex(x=>x.id===remote.id);if(i<0)db.favorites.push(remote);else if(new Date(remote.updatedAt)>=new Date(db.favorites[i].updatedAt||0))db.favorites[i]=remote}saveLocal("retour-cloud");syncState="online";updateSyncBadge();render()}
+async function seedCloudFromLocal(){if(!session)return;const ops=[];Object.entries(db.days).forEach(([date,d])=>{ops.push({kind:"day",date});d.meals.forEach(m=>ops.push({kind:"meal",id:m.id,date}))});db.favorites.forEach(f=>ops.push({kind:"favorite",id:f.id}));setOutbox(ops);await syncNow()}
 
 function mealIcon(t){return({"Déjeuner":"🍳","Dîner":"🥗","Souper":"🍲","Collation":"🍎","Boisson":"🥤"})[t]||"🍽️"}
 function formatDate(k){return new Intl.DateTimeFormat("fr-CA",{weekday:"long",day:"numeric",month:"long"}).format(new Date(`${k}T12:00:00`))}
 function average(arr){const x=arr.filter(n=>Number.isFinite(Number(n))&&Number(n)>0).map(Number);return x.length?x.reduce((a,b)=>a+b,0)/x.length:null}
+function allMeals(){return Object.values(db.days).flatMap(d=>d.meals)}
 function render(){document.documentElement.dataset.theme=db.settings.theme==="dark"?"dark":"";$("#todayLabel").textContent=formatDate(todayKey());$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===currentView));updateSyncBadge();({today:renderToday,history:renderHistory,insights:renderInsights,profile:renderProfile}[currentView]||renderToday)()}
-function renderToday(){const d=ensureDay(db,selectedDate);const goal=db.settings.waterGoal||8;const water=Array.from({length:goal},(_,i)=>`<button class="drop ${i<d.water?'filled':''}" data-water="${i+1}" aria-label="${i+1} verres">💧</button>`).join("");const meals=[...d.meals].sort((a,b)=>a.time.localeCompare(b.time));const avgAfter=average(meals.map(m=>m.fatigueAfter));$("#app").innerHTML=`${!navigator.onLine?'<div class="offline-banner">Tu es hors ligne. Les changements restent sur cet appareil et seront envoyés au retour d’Internet.</div>':''}<section class="hero"><div class="row"><div><p class="eyebrow">Aujourd'hui</p><h2>${meals.length?`Déjà ${meals.length} repas noté${meals.length>1?'s':''}`:'Une petite note à la fois'}</h2><p>${session?'Tes données sont reliées à ton compte.':'Connecte-toi pour sauvegarder dans le nuage.'}</p></div><div class="mascot"><img src="assets/icon.svg" alt="Pomme énergie"></div></div></section><div class="grid"><section class="card"><span>😴</span><h3>Sommeil</h3><div class="metric">${d.sleepHours??'—'}${d.sleepHours!=null?' h':''}</div><button class="secondary small edit-day">Mettre à jour</button></section><section class="card"><span>⚡</span><h3>Fatigue après</h3><div class="metric">${avgAfter==null?'—':avgAfter.toFixed(1)+'/5'}</div><span class="muted small">Moyenne du jour</span></section><section class="card wide"><div class="row"><div><span>💧</span><h3>Hydratation</h3></div><strong>${d.water}/${goal}</strong></div><div class="water-row">${water}</div><span class="muted small">Touche une goutte pour choisir ton total.</span></section></div><div class="section-title"><h2>Mes repas</h2><button class="primary add-meal">＋ Ajouter</button></div><div class="stack">${meals.length?meals.map(mealCard).join(''):`<section class="card empty"><div class="food-art">🥣</div><h3>Aucun repas pour l'instant</h3><p class="muted">Une description, deux niveaux de fatigue et c'est fait.</p><button class="primary add-meal">Ajouter mon premier repas</button></section>`}</div>`;bindCommon()}
-function mealCard(m){const src=m.photoUrl||m.photoLocal;return `<article class="card meal-card" data-meal="${m.id}">${src?`<img class="meal-thumb" src="${esc(src)}" alt="Photo du repas">`:`<div class="meal-thumb">${mealIcon(m.type)}</div>`}<div><h3>${esc(m.type)} · ${esc(m.time)}</h3><div class="meal-meta">${esc(m.description)}</div><div class="chips"><span class="chip">Avant ${m.fatigueBefore||'—'}/5</span><span class="chip">Après ${m.fatigueAfter||'—'}/5</span></div></div><button class="delete-meal" data-delete="${m.id}" aria-label="Supprimer">⋯</button></article>`}
-function bindCommon(){$$('.add-meal').forEach(b=>b.onclick=()=>openMeal());$$('.edit-day').forEach(b=>b.onclick=openDay);$$('[data-water]').forEach(b=>b.onclick=()=>{const d=ensureDay(db,selectedDate),n=Number(b.dataset.water);d.water=(d.water===n?Math.max(0,n-1):n);setDayChanged(selectedDate);render()});$$('[data-meal]').forEach(c=>c.onclick=e=>{if(e.target.closest('[data-delete]'))return;openMeal(c.dataset.meal)});$$('[data-delete]').forEach(b=>b.onclick=e=>{e.stopPropagation();const d=ensureDay(db,selectedDate),m=d.meals.find(x=>x.id===b.dataset.delete);if(m&&confirm('Supprimer ce repas?')){deleteMealLocal(m);render()}});hydratePhotoUrls()}
-async function hydratePhotoUrls(){if(!session)return;let changed=false;for(const d of Object.values(db.days))for(const m of d.meals)if(m.photoPath&&!m.photoUrl){m.photoUrl=await signedPhoto(m.photoPath);changed=changed||!!m.photoUrl}if(changed){saveLocal('liens-photo');if(currentView==='today')render()}}
-function renderHistory(){const days=Object.values(db.days).filter(d=>d.meals.length||d.water||d.sleepHours!=null).sort((a,b)=>b.date.localeCompare(a.date));$("#app").innerHTML=`<section class="hero"><p class="eyebrow">Historique</p><h2>Ton journal, sans surcharge</h2><p>Chaque journée reste modifiable.</p></section><div class="stack">${days.length?days.map(d=>`<article class="card history-day" data-date="${d.date}"><div class="row"><div><h3>${esc(formatDate(d.date))}</h3><div class="mini-stats"><span>🍽️ ${d.meals.length}</span><span>💧 ${d.water}</span><span>😴 ${d.sleepHours??'—'} h</span></div></div><span>›</span></div></article>`).join(''):`<section class="card empty"><div class="food-art">📖</div><p>Aucune journée enregistrée.</p></section>`}</div>`;$$('[data-date]').forEach(x=>x.onclick=()=>{selectedDate=x.dataset.date;currentView='today';render()})}
-function renderInsights(){const meals=Object.values(db.days).flatMap(d=>d.meals);const before=average(meals.map(m=>m.fatigueBefore)),after=average(meals.map(m=>m.fatigueAfter));const delta=(before!=null&&after!=null)?after-before:null;const days=Object.values(db.days).filter(d=>d.meals.length).slice(-14);const bars=days.map(d=>{const a=average(d.meals.map(m=>m.fatigueAfter))||0;return `<i style="height:${Math.max(8,a/5*100)}%" title="${esc(d.date)} : ${a.toFixed(1)}"></i>`}).join('');$("#app").innerHTML=`<section class="hero"><p class="eyebrow">Tendances</p><h2>Des indices, pas des diagnostics</h2><p>Les tendances deviennent plus utiles à mesure que tu notes tes repas.</p></section><div class="grid"><section class="card"><h3>Fatigue avant</h3><div class="metric">${before==null?'—':before.toFixed(1)+'/5'}</div></section><section class="card"><h3>Fatigue après</h3><div class="metric">${after==null?'—':after.toFixed(1)+'/5'}</div></section><section class="card wide"><h3>Variation moyenne</h3><div class="metric">${delta==null?'—':`${delta>0?'+':''}${delta.toFixed(1)}`}</div><p class="muted small">Une valeur négative signifie moins de fatigue après les repas.</p></section><section class="card wide"><h3>Fatigue après — 14 jours</h3><div class="spark">${bars||'<span class="muted">Pas encore assez de données.</span>'}</div></section></div>`}
-function renderProfile(){const backups=(()=>{try{return JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]').length}catch(_){return 0}})();$("#app").innerHTML=`<section class="hero"><p class="eyebrow">Profil</p><h2>${session?esc(session.user.email):'Protège ton historique'}</h2><p>${session?'La synchronisation Supabase est active.':'La copie locale seule peut disparaître sur iPhone.'}</p></section><div class="stack"><section class="card">${session?`<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>`:`<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi avec ton courriel et ton mot de passe afin que les repas soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="number" min="1" max="20" value="${db.settings.waterGoal||8}" style="width:80px"></div></section><section class="card"><h3>Sauvegarde supplémentaire</h3><p class="muted small">${backups} copie(s) locale(s) de sécurité. L'export JSON reste une bonne copie externe.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></section><section class="card"><p class="muted small">Énergie & Repas V${esc(CFG.appVersion||'1.4.0')}</p></section></div>`;$("#signIn")?.addEventListener("click",()=>{setAuthMode("login");$("#authMessage").textContent="";$("#authDialog").showModal()});$("#syncNow")?.addEventListener('click',async()=>{await syncNow();await pullCloud();});$("#signOut")?.addEventListener('click',async()=>{await client.auth.signOut();session=null;render()});$("#waterGoal").onchange=e=>{db.settings.waterGoal=clamp(e.target.value,1,20);saveLocal('objectif-eau');render()};$("#exportData").onclick=exportData;$("#importData").onclick=()=>$("#importFile").click()}
+function mealCard(m,opts={}){return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${m.photoUrl||m.photoLocal?`<img src="${esc(m.photoUrl||m.photoLocal)}" alt="">`:mealIcon(m.type)}</div><div><h3>${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${esc(m.type)}${opts.showDate?` · ${esc(formatDate(m.date))}`:""}</div><div class="chips"><span class="chip">Avant ${m.fatigueBefore||'—'}/5</span><span class="chip">Après ${m.fatigueAfter||'—'}/5</span></div></div><div class="meal-actions"><button class="favorite-meal" data-favorite="${m.id}" title="Ajouter aux favoris">☆</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div></article>`}
+function bindMealCards(){$$('[data-meal]').forEach(c=>c.onclick=e=>{if(e.target.closest('button'))return;selectedDate=c.dataset.date||selectedDate;openMeal(c.dataset.meal)});$$('[data-delete]').forEach(b=>b.onclick=e=>{e.stopPropagation();const card=b.closest('[data-meal]'),d=ensureDay(db,card.dataset.date),m=d.meals.find(x=>x.id===b.dataset.delete);if(m&&confirm('Supprimer ce repas?')){deleteMealLocal(m);render()}});$$('[data-favorite]').forEach(b=>b.onclick=e=>{e.stopPropagation();const card=b.closest('[data-meal]'),m=ensureDay(db,card.dataset.date).meals.find(x=>x.id===b.dataset.favorite);if(m)createFavoriteFromMeal(m)});hydratePhotoUrls()}
+function renderToday(){const d=ensureDay(db,selectedDate),goal=db.settings.waterGoal||8,meals=[...d.meals].sort((a,b)=>a.time.localeCompare(b.time)),avgAfter=average(meals.map(m=>m.fatigueAfter));const water=Array.from({length:goal},(_,i)=>`<button class="drop ${i<d.water?'filled':''}" data-water="${i+1}">💧</button>`).join("");const favs=[...db.favorites].sort((a,b)=>b.usageCount-a.usageCount).slice(0,4);$("#app").innerHTML=`${!navigator.onLine?'<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>':''}<section class="hero"><div class="row"><div><p class="eyebrow">${selectedDate===todayKey()?"Aujourd'hui":esc(formatDate(selectedDate))}</p><h2>${meals.length?`${meals.length} repas noté${meals.length>1?'s':''}`:'Une petite note à la fois'}</h2><p>${session?'Tes données sont sauvegardées dans le nuage.':'Connecte-toi pour protéger ton historique.'}</p></div><div class="mascot"><img src="assets/icon.svg" alt=""></div></div></section>${favs.length?`<section class="favorites-strip"><div class="section-title"><h2>⭐ Repas favoris</h2><button class="text-button" id="showAllFavorites">Voir tout</button></div><div class="favorite-grid">${favs.map(f=>`<button class="favorite-tile" data-use-favorite="${f.id}"><span>${mealIcon(f.type)}</span><strong>${esc(f.name)}</strong><small>${esc(f.description)}</small></button>`).join('')}</div></section>`:''}<div class="grid"><section class="card"><span>😴</span><h3>Sommeil</h3><div class="metric">${d.sleepHours??'—'}${d.sleepHours!=null?' h':''}</div><button class="secondary small edit-day">Mettre à jour</button></section><section class="card"><span>⚡</span><h3>Fatigue après</h3><div class="metric">${avgAfter==null?'—':avgAfter.toFixed(1)+'/5'}</div><span class="muted small">Moyenne du jour</span></section><section class="card wide"><div class="row"><div><span>💧</span><h3>Hydratation</h3></div><strong>${d.water}/${goal}</strong></div><div class="water-row">${water}</div></section></div><div class="section-title"><h2>Repas</h2><button class="primary" id="addMeal">+ Ajouter</button></div><div class="stack">${meals.length?meals.map(m=>mealCard(m)).join(''):`<section class="card empty"><div class="food-art">🍽️</div><p>Aucun repas pour cette journée.</p></section>`}</div>`;$("#addMeal").onclick=()=>openMeal();$(".edit-day").onclick=openDay;$$('[data-water]').forEach(b=>b.onclick=()=>{d.water=Number(b.dataset.water)===d.water?d.water-1:Number(b.dataset.water);setDayChanged(selectedDate);render()});$$('[data-use-favorite]').forEach(b=>b.onclick=()=>useFavorite(b.dataset.useFavorite));$("#showAllFavorites")?.addEventListener('click',()=>{currentView='history';render();setTimeout(()=>$("#favoriteSearch")?.focus(),0)});bindMealCards()}
+async function hydratePhotoUrls(){if(!session)return;let changed=false;for(const d of Object.values(db.days))for(const m of d.meals)if(m.photoPath&&!m.photoUrl){m.photoUrl=await signedPhoto(m.photoPath);changed=changed||!!m.photoUrl}if(changed){saveLocal('liens-photo');render()}}
+function renderHistory(){const meals=allMeals().sort((a,b)=>`${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`));$("#app").innerHTML=`<section class="hero"><p class="eyebrow">Historique et recherche</p><h2>Retrouve rapidement un repas</h2><p>Recherche par aliment, type, note ou date.</p></section><section class="card search-card"><input id="mealSearch" type="search" placeholder="Ex. poulet, déjeuner, café…" autocomplete="off"><div class="filter-row"><button class="filter-chip active" data-range="all">Tout</button><button class="filter-chip" data-range="7">7 jours</button><button class="filter-chip" data-range="30">30 jours</button></div></section><section class="section-title"><h2>⭐ Favoris</h2><span class="muted small">${db.favorites.length}</span></section><div id="favoritesList" class="stack">${renderFavoriteList(db.favorites)}</div><section class="section-title"><h2>Repas</h2><span id="resultCount" class="muted small">${meals.length}</span></section><div id="historyResults" class="stack">${meals.length?meals.map(m=>mealCard(m,{showDate:true})).join(''):`<section class="card empty"><div class="food-art">📖</div><p>Aucun repas enregistré.</p></section>`}</div>`;let range='all';const apply=()=>{const q=$("#mealSearch").value.trim().toLowerCase();const cutoff=range==='all'?null:new Date(Date.now()-Number(range)*86400000);const filtered=meals.filter(m=>(!cutoff||new Date(`${m.date}T23:59:59`)>=cutoff)&&`${m.description} ${m.type} ${m.notes} ${m.date}`.toLowerCase().includes(q));$("#resultCount").textContent=filtered.length;$("#historyResults").innerHTML=filtered.length?filtered.map(m=>mealCard(m,{showDate:true})).join(''):`<section class="card empty"><div class="food-art">🔎</div><p>Aucun résultat.</p></section>`;bindMealCards()};$("#mealSearch").oninput=apply;$$('[data-range]').forEach(b=>b.onclick=()=>{range=b.dataset.range;$$('[data-range]').forEach(x=>x.classList.toggle('active',x===b));apply()});bindFavoriteActions();bindMealCards()}
+function renderFavoriteList(list){return list.length?list.sort((a,b)=>b.usageCount-a.usageCount).map(f=>`<article class="card favorite-card"><div class="favorite-icon">${mealIcon(f.type)}</div><div><h3>${esc(f.name)}</h3><p>${esc(f.description)}</p><small class="muted">Utilisé ${f.usageCount||0} fois</small></div><div class="favorite-actions"><button class="primary small" data-use-favorite="${f.id}">Utiliser</button><button class="delete-meal" data-delete-favorite="${f.id}">×</button></div></article>`).join(''):`<section class="card empty"><div class="food-art">⭐</div><p>Ajoute un repas existant à tes favoris avec l’étoile.</p></section>`}
+function bindFavoriteActions(){$$('[data-use-favorite]').forEach(b=>b.onclick=()=>useFavorite(b.dataset.useFavorite));$$('[data-delete-favorite]').forEach(b=>b.onclick=()=>{const f=db.favorites.find(x=>x.id===b.dataset.deleteFavorite);if(f&&confirm(`Supprimer « ${f.name} » des favoris?`)){deleteFavoriteLocal(f);render()}})}
+function renderInsights(){const meals=allMeals(),before=average(meals.map(m=>m.fatigueBefore)),after=average(meals.map(m=>m.fatigueAfter)),delta=(before!=null&&after!=null)?after-before:null;const last7=meals.filter(m=>new Date(`${m.date}T23:59:59`)>=new Date(Date.now()-7*86400000));const freq={};meals.forEach(m=>{const key=m.description.trim().toLowerCase();if(key)freq[key]=(freq[key]||0)+1});const common=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5);const days=Object.values(db.days).filter(d=>d.meals.length).sort((a,b)=>a.date.localeCompare(b.date)).slice(-14);const bars=days.map(d=>{const a=average(d.meals.map(m=>m.fatigueAfter))||0;return `<i style="height:${Math.max(8,a/5*100)}%" title="${esc(d.date)} : ${a.toFixed(1)}"></i>`}).join('');$("#app").innerHTML=`<section class="hero"><p class="eyebrow">Tableau de bord</p><h2>Une vue claire de tes habitudes</h2><p>Des tendances utiles, jamais un diagnostic.</p></section><div class="grid"><section class="card"><h3>Repas — 7 jours</h3><div class="metric">${last7.length}</div></section><section class="card"><h3>Repas au total</h3><div class="metric">${meals.length}</div></section><section class="card"><h3>Fatigue avant</h3><div class="metric">${before==null?'—':before.toFixed(1)+'/5'}</div></section><section class="card"><h3>Fatigue après</h3><div class="metric">${after==null?'—':after.toFixed(1)+'/5'}</div></section><section class="card wide"><h3>Variation moyenne</h3><div class="metric">${delta==null?'—':`${delta>0?'+':''}${delta.toFixed(1)}`}</div><p class="muted small">Une valeur positive signifie plus de fatigue après les repas.</p></section><section class="card wide"><h3>Fatigue après — 14 jours</h3><div class="spark">${bars||'<span class="muted">Pas encore assez de données.</span>'}</div></section><section class="card wide"><h3>Repas les plus fréquents</h3><div class="ranking">${common.length?common.map(([name,count],i)=>`<div><span>${i+1}</span><strong>${esc(name)}</strong><em>${count}×</em></div>`).join(''):'<p class="muted">Ajoute quelques repas pour voir le classement.</p>'}</div></section></div>`}
+function renderProfile(){const backups=(()=>{try{return JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]').length}catch(_){return 0}})();$("#app").innerHTML=`<section class="hero"><p class="eyebrow">Profil</p><h2>${session?esc(session.user.email):'Protège ton historique'}</h2><p>${session?'La synchronisation Supabase est active.':'La copie locale seule peut disparaître sur iPhone.'}</p></section><div class="stack"><section class="card">${session?`<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>`:`<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="number" min="1" max="20" value="${db.settings.waterGoal||8}" style="width:80px"></div></section><section class="card"><h3>Sauvegarde supplémentaire</h3><p class="muted small">${backups} copie(s) locale(s) de sécurité.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></section><section class="card"><p class="muted small">Énergie & Repas V${esc(CFG.appVersion||'1.5.0')}</p></section></div>`;$("#signIn")?.addEventListener("click",()=>{setAuthMode("login");$("#authMessage").textContent="";$("#authDialog").showModal()});$("#syncNow")?.addEventListener('click',async()=>{await syncNow();await pullCloud()});$("#signOut")?.addEventListener('click',async()=>{await client.auth.signOut();session=null;render()});$("#waterGoal").onchange=e=>{db.settings.waterGoal=clamp(e.target.value,1,20);saveLocal('objectif-eau');render()};$("#exportData").onclick=exportData;$("#importData").onclick=()=>$("#importFile").click()}
 function makeRatings(containerId,value){const c=$(containerId);c.innerHTML=Array.from({length:5},(_,i)=>`<button type="button" class="rating-button ${i+1===value?'active':''}" data-rating="${i+1}">${i+1}</button>`).join('');c.dataset.value=value;$$(`${containerId} [data-rating]`).forEach(b=>b.onclick=()=>{c.dataset.value=b.dataset.rating;$$(`${containerId} [data-rating]`).forEach(x=>x.classList.toggle('active',x===b))})}
-function openMeal(id=null){const d=ensureDay(db,selectedDate);const m=id?d.meals.find(x=>x.id===id):null;$("#mealDialogTitle").textContent=m?'Modifier le repas':'Ajouter un repas';$("#mealId").value=m?.id||'';$("#mealType").value=m?.type||'Déjeuner';$("#mealTime").value=m?.time||new Date().toTimeString().slice(0,5);$("#mealDescription").value=m?.description||'';$("#mealNotes").value=m?.notes||'';makeRatings('#fatigueBeforePicker',m?.fatigueBefore||3);makeRatings('#fatigueAfterPicker',m?.fatigueAfter||3);photoData=m?.photoLocal||m?.photoUrl||null;photoRemoved=false;showPhotoPreview();$("#mealDialog").showModal()}
+function populateFavoriteSelect(){const s=$("#favoriteMealSelect");if(!s)return;s.innerHTML=`<option value="">Choisir un favori…</option>${[...db.favorites].sort((a,b)=>b.usageCount-a.usageCount).map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join('')}`;s.closest('label').hidden=!db.favorites.length}
+function openMeal(id=null){const d=ensureDay(db,selectedDate),m=id?d.meals.find(x=>x.id===id):null;$("#mealDialogTitle").textContent=m?'Modifier le repas':'Ajouter un repas';$("#mealId").value=m?.id||'';$("#mealType").value=m?.type||'Déjeuner';$("#mealTime").value=m?.time||new Date().toTimeString().slice(0,5);$("#mealDescription").value=m?.description||'';$("#mealNotes").value=m?.notes||'';makeRatings('#fatigueBeforePicker',m?.fatigueBefore||3);makeRatings('#fatigueAfterPicker',m?.fatigueAfter||3);photoData=m?.photoLocal||m?.photoUrl||null;photoRemoved=false;showPhotoPreview();populateFavoriteSelect();$("#favoriteMealSelect").value='';$("#mealDialog").showModal()}
 function showPhotoPreview(){const wrap=$("#photoPreviewWrap");wrap.hidden=!photoData;if(photoData)$("#photoPreview").src=photoData}
 function openDay(){const d=ensureDay(db,selectedDate);$("#sleepHours").value=d.sleepHours??'';$("#activityType").value='';$("#activityMinutes").value='';$("#dayDialog").showModal()}
-async function fileToDataUrl(file){if(!file)return null;const img=await createImageBitmap(file);const max=1280,scale=Math.min(1,max/Math.max(img.width,img.height));const canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);return canvas.toDataURL('image/jpeg',.78)}
+async function fileToDataUrl(file){if(!file)return null;const img=await createImageBitmap(file),max=1280,scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);return canvas.toDataURL('image/jpeg',.78)}
+function createFavoriteFromMeal(m){const existing=db.favorites.find(f=>f.description.trim().toLowerCase()===m.description.trim().toLowerCase());if(existing){alert('Ce repas est déjà dans tes favoris.');return}const name=prompt('Nom du repas favori :',m.description.slice(0,45));if(!name)return;const f=normalFavorite({name:name.trim(),type:m.type,description:m.description,notes:m.notes});db.favorites.push(f);setFavoriteChanged(f);alert('Repas ajouté aux favoris ⭐');render()}
+function useFavorite(id){const f=db.favorites.find(x=>x.id===id);if(!f)return;selectedDate=todayKey();openMeal();$("#mealType").value=f.type;$("#mealDescription").value=f.description;$("#mealNotes").value=f.notes||'';f.usageCount=(f.usageCount||0)+1;f.updatedAt=new Date().toISOString();setFavoriteChanged(f)}
+
 $("#mealPhoto").onchange=async e=>{photoData=await fileToDataUrl(e.target.files[0]);photoRemoved=false;showPhotoPreview()};$("#removePhoto").onclick=()=>{photoData=null;photoRemoved=true;showPhotoPreview()};
+$("#favoriteMealSelect").onchange=e=>{const f=db.favorites.find(x=>x.id===e.target.value);if(!f)return;$("#mealType").value=f.type;$("#mealDescription").value=f.description;$("#mealNotes").value=f.notes||'';f.usageCount=(f.usageCount||0)+1;f.updatedAt=new Date().toISOString();setFavoriteChanged(f)};
 $("#mealForm").onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDate),id=$("#mealId").value,old=d.meals.find(x=>x.id===id);const meal=normalMeal({...old,id:id||uid(),date:selectedDate,type:$("#mealType").value,time:$("#mealTime").value,description:$("#mealDescription").value.trim(),fatigueBefore:Number($("#fatigueBeforePicker").dataset.value),fatigueAfter:Number($("#fatigueAfterPicker").dataset.value),notes:$("#mealNotes").value.trim(),photoLocal:photoData&&photoData.startsWith('data:')?photoData:(old?.photoLocal||null),photoUrl:photoRemoved?null:(old?.photoUrl||null),photoPath:photoRemoved?null:(old?.photoPath||null),updatedAt:new Date().toISOString()},selectedDate);if(old)Object.assign(old,meal);else d.meals.push(meal);setMealChanged(meal);$("#mealDialog").close();render()};
 $("#dayForm").onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDate);d.sleepHours=$("#sleepHours").value===''?null:Number($("#sleepHours").value);const type=$("#activityType").value,min=Number($("#activityMinutes").value)||0;if(type&&min)d.activities.push({id:uid(),type,minutes:min,at:new Date().toISOString()});setDayChanged(selectedDate);$("#dayDialog").close();render()};
 $("#copyYesterdayBreakfast").onclick=()=>{const dt=new Date(`${selectedDate}T12:00:00`);dt.setDate(dt.getDate()-1);const k=dt.toLocaleDateString('en-CA'),m=ensureDay(db,k).meals.find(x=>x.type==='Déjeuner');if(!m)return alert("Aucun déjeuner trouvé hier.");$("#mealType").value=m.type;$("#mealDescription").value=m.description;$("#mealNotes").value=m.notes||'';makeRatings('#fatigueBeforePicker',m.fatigueBefore||3);makeRatings('#fatigueAfterPicker',m.fatigueAfter||3)};
 $$('.close-dialog').forEach(b=>b.onclick=()=>b.closest('dialog').close());
-function setAuthMode(mode){
-  authMode=mode==="signup"?"signup":"login";
-  const signup=authMode==="signup";
-  $("#loginTab").classList.toggle("active",!signup);
-  $("#signupTab").classList.toggle("active",signup);
-  $("#authTitle").textContent=signup?"Créer un compte":"Connexion";
-  $("#authSubmit").textContent=signup?"Créer mon compte":"Me connecter";
-  $("#confirmPasswordLabel").hidden=!signup;
-  $("#authPassword").autocomplete=signup?"new-password":"current-password";
-  $("#forgotPassword").hidden=signup;
-  $("#authMessage").className="small muted";
-  $("#authMessage").textContent=signup
-    ?"Après l’inscription, Supabase peut envoyer un courriel de confirmation. Confirme-le dans Safari, puis reviens te connecter ici."
-    :"La connexion se fait directement dans cette application, sans dépendre de la session Safari.";
-}
-function friendlyAuthError(error){
-  const text=(error?.message||"Une erreur est survenue.").toLowerCase();
-  if(text.includes("invalid login credentials"))return "Courriel ou mot de passe incorrect.";
-  if(text.includes("email not confirmed"))return "Confirme d’abord ton adresse avec le courriel envoyé par Supabase, puis reconnecte-toi ici.";
-  if(text.includes("user already registered"))return "Ce courriel possède déjà un compte. Utilise Connexion ou Mot de passe oublié.";
-  if(text.includes("password should be"))return "Le mot de passe doit contenir au moins 8 caractères.";
-  if(text.includes("rate limit"))return "Trop de tentatives rapprochées. Attends une minute puis réessaie.";
-  return error?.message||"Une erreur est survenue.";
-}
-$("#loginTab").onclick=()=>setAuthMode("login");
-$("#signupTab").onclick=()=>setAuthMode("signup");
-$("#authForm").onsubmit=async e=>{
-  e.preventDefault();
-  if(!client)return;
-  const email=$("#authEmail").value.trim().toLowerCase();
-  const password=$("#authPassword").value;
-  const confirmPassword=$("#authPasswordConfirm").value;
-  const msg=$("#authMessage");
-  msg.className="small muted";
-  msg.textContent=authMode==="signup"?"Création du compte…":"Connexion…";
-  if(password.length<8){
-    msg.className="small auth-error";
-    msg.textContent="Le mot de passe doit contenir au moins 8 caractères.";
-    return;
-  }
-  if(authMode==="signup"&&password!==confirmPassword){
-    msg.className="small auth-error";
-    msg.textContent="Les deux mots de passe ne sont pas identiques.";
-    return;
-  }
-  if(authMode==="signup"){
-    const redirectTo=`${location.origin}${location.pathname}`;
-    const {data,error}=await client.auth.signUp({
-      email,
-      password,
-      options:{emailRedirectTo:redirectTo}
-    });
-    if(error){
-      msg.className="small auth-error";
-      msg.textContent=friendlyAuthError(error);
-      return;
-    }
-    if(data.session){
-      session=data.session;
-      msg.className="small auth-success";
-      msg.textContent="Compte créé et connecté.";
-      setTimeout(()=>$("#authDialog").open&&$("#authDialog").close(),350);
-      await seedCloudFromLocal();
-      render();
-    }else{
-      msg.className="small auth-success";
-      msg.textContent="Compte créé. Confirme maintenant le courriel de Supabase, puis reviens ici dans Connexion.";
-      setAuthMode("login");
-      $("#authEmail").value=email;
-      $("#authPassword").value="";
-      $("#authPasswordConfirm").value="";
-    }
-    return;
-  }
-  const {data,error}=await client.auth.signInWithPassword({email,password});
-  if(error){
-    msg.className="small auth-error";
-    msg.textContent=friendlyAuthError(error);
-    return;
-  }
-  session=data.session;
-  msg.className="small auth-success";
-  msg.textContent="Connexion réussie.";
-  setTimeout(()=>$("#authDialog").open&&$("#authDialog").close(),300);
-  await pullCloud(false);
-  await syncNow();
-  render();
-};
-$("#forgotPassword").onclick=async()=>{
-  if(!client)return;
-  const email=$("#authEmail").value.trim().toLowerCase();
-  const msg=$("#authMessage");
-  if(!email){
-    msg.className="small auth-error";
-    msg.textContent="Entre d’abord ton adresse courriel.";
-    $("#authEmail").focus();
-    return;
-  }
-  msg.className="small muted";
-  msg.textContent="Envoi du courriel de récupération…";
-  const redirectTo=`${location.origin}${location.pathname}`;
-  const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo});
-  if(error){
-    msg.className="small auth-error";
-    msg.textContent=friendlyAuthError(error);
-    return;
-  }
-  msg.className="small auth-success";
-  msg.textContent="Courriel envoyé. Ouvre le lien dans Safari, choisis ton nouveau mot de passe, puis connecte-toi dans l’app installée.";
-};
-$("#passwordForm").onsubmit=async e=>{
-  e.preventDefault();
-  if(!client)return;
-  const password=$("#newPassword").value;
-  const confirmation=$("#newPasswordConfirm").value;
-  const msg=$("#passwordMessage");
-  if(password.length<8){
-    msg.className="small auth-error";
-    msg.textContent="Le mot de passe doit contenir au moins 8 caractères.";
-    return;
-  }
-  if(password!==confirmation){
-    msg.className="small auth-error";
-    msg.textContent="Les deux mots de passe ne sont pas identiques.";
-    return;
-  }
-  msg.className="small muted";
-  msg.textContent="Enregistrement…";
-  const {error}=await client.auth.updateUser({password});
-  if(error){
-    msg.className="small auth-error";
-    msg.textContent=friendlyAuthError(error);
-    return;
-  }
-  recoveryMode=false;
-  msg.className="small auth-success";
-  msg.textContent="Mot de passe enregistré. Tu peux maintenant te connecter directement dans l’app installée.";
-  setTimeout(()=>$("#passwordDialog").open&&$("#passwordDialog").close(),700);
-};
+function setAuthMode(mode){authMode=mode==="signup"?"signup":"login";const signup=authMode==="signup";$("#loginTab").classList.toggle("active",!signup);$("#signupTab").classList.toggle("active",signup);$("#authTitle").textContent=signup?"Créer un compte":"Connexion";$("#authSubmit").textContent=signup?"Créer mon compte":"Me connecter";$("#confirmPasswordLabel").hidden=!signup;$("#authPassword").autocomplete=signup?"new-password":"current-password";$("#forgotPassword").hidden=signup;$("#authMessage").textContent=signup?"Après l’inscription, confirme le courriel de Supabase.":"La connexion se fait directement dans l’application."}
+function friendlyAuthError(error){const text=(error?.message||"").toLowerCase();if(text.includes("invalid login credentials"))return"Courriel ou mot de passe incorrect.";if(text.includes("email not confirmed"))return"Confirme d’abord ton adresse courriel.";if(text.includes("user already registered"))return"Ce courriel possède déjà un compte.";if(text.includes("rate limit"))return"Trop de tentatives rapprochées. Attends un peu puis réessaie.";return error?.message||"Une erreur est survenue."}
+$("#loginTab").onclick=()=>setAuthMode("login");$("#signupTab").onclick=()=>setAuthMode("signup");
+$("#authForm").onsubmit=async e=>{e.preventDefault();if(!client)return;const email=$("#authEmail").value.trim().toLowerCase(),password=$("#authPassword").value,confirm=$("#authPasswordConfirm").value,msg=$("#authMessage");msg.textContent=authMode==="signup"?"Création du compte…":"Connexion…";if(password.length<8){msg.textContent="Le mot de passe doit contenir au moins 8 caractères.";return}if(authMode==="signup"&&password!==confirm){msg.textContent="Les deux mots de passe ne sont pas identiques.";return}if(authMode==="signup"){const {data,error}=await client.auth.signUp({email,password,options:{emailRedirectTo:`${location.origin}${location.pathname}`}});if(error){msg.textContent=friendlyAuthError(error);return}if(data.session){session=data.session;$("#authDialog").close();await seedCloudFromLocal();render()}else{msg.textContent="Compte créé. Confirme le courriel, puis connecte-toi.";setAuthMode("login")}}else{const {data,error}=await client.auth.signInWithPassword({email,password});if(error){msg.textContent=friendlyAuthError(error);return}session=data.session;$("#authDialog").close();await pullCloud(false);await syncNow();render()}};
+$("#forgotPassword").onclick=async()=>{const email=$("#authEmail").value.trim().toLowerCase(),msg=$("#authMessage");if(!email){msg.textContent="Entre d’abord ton adresse courriel.";return}const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo:`${location.origin}${location.pathname}`});msg.textContent=error?friendlyAuthError(error):"Courriel de récupération envoyé."};
+$("#passwordForm").onsubmit=async e=>{e.preventDefault();const p=$("#newPassword").value,c=$("#newPasswordConfirm").value,msg=$("#passwordMessage");if(p.length<8||p!==c){msg.textContent=p!==c?"Les mots de passe ne sont pas identiques.":"Minimum 8 caractères.";return}const {error}=await client.auth.updateUser({password:p});msg.textContent=error?friendlyAuthError(error):"Mot de passe enregistré.";if(!error)setTimeout(()=>$("#passwordDialog").close(),600)};
 function exportData(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`energie-repas-${todayKey()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-$("#importFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const parsed=JSON.parse(await f.text()),next=migrate(parsed);backup(db,'avant-import-v1.4');db=next;saveLocal('import');if(session&&confirm('Importer aussi cette copie dans Supabase?'))await seedCloudFromLocal();render()}catch(_){alert('Ce fichier JSON ne peut pas être importé.')}};
+$("#importFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{db=migrate(JSON.parse(await f.text()));saveLocal('import');if(session&&confirm('Importer aussi cette copie dans Supabase?'))await seedCloudFromLocal();render()}catch(_){alert('Ce fichier JSON ne peut pas être importé.')}};
 $("#themeToggle").onclick=()=>{db.settings.theme=db.settings.theme==='dark'?'system':'dark';saveLocal('theme');render()};$$('.nav-item').forEach(b=>b.onclick=()=>{currentView=b.dataset.view;selectedDate=todayKey();render()});
 window.addEventListener('online',()=>{updateSyncBadge();if(session)syncNow()});window.addEventListener('offline',updateSyncBadge);
-async function initAuth(){
-  if(!client){render();return}
-  const {data}=await client.auth.getSession();
-  session=data.session;
-  client.auth.onAuthStateChange((event,newSession)=>{
-    const wasSignedOut=!session;
-    session=newSession;
-    updateSyncBadge();
-    if(event==="PASSWORD_RECOVERY"){
-      recoveryMode=true;
-      setTimeout(()=>{
-        $("#passwordMessage").textContent="";
-        $("#newPassword").value="";
-        $("#newPasswordConfirm").value="";
-        $("#passwordDialog").showModal();
-      },0);
-      return;
-    }
-    if(event==="SIGNED_IN"&&wasSignedOut&&newSession){
-      setTimeout(async()=>{
-        $("#authDialog").open&&$("#authDialog").close();
-        await pullCloud(false);
-        await syncNow();
-        render();
-      },0);
-      return;
-    }
-    if(event==="SIGNED_OUT"){
-      render();
-    }
-  });
-  if(session){
-    await pullCloud(false);
-    await syncNow();
-  }
-  render();
-}
+async function initAuth(){if(!client){render();return}const {data}=await client.auth.getSession();session=data.session;client.auth.onAuthStateChange((event,newSession)=>{session=newSession;updateSyncBadge();if(event==="PASSWORD_RECOVERY")setTimeout(()=>$("#passwordDialog").showModal(),0);if(event==="SIGNED_OUT")render()});if(session){await pullCloud(false);await syncNow()}render()}
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(console.warn));
 initAuth();
 })();
