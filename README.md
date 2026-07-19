@@ -34,3 +34,9 @@ Le script est non destructif : il ne contient aucun `DELETE`, `TRUNCATE` ou `DRO
 3. Utilise ce favori pour préremplir un nouveau repas.
 4. Teste la recherche.
 5. Ouvre **Tableau** pour voir le mode aperçu et les Insights.
+
+
+## Correctif 1.5.2
+
+- Le champ « Confirmer le mot de passe » est maintenant affiché uniquement lors de la création de compte.
+- Aucun changement au schéma Supabase ni aux données existantes.
