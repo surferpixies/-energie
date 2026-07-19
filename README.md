@@ -1,38 +1,45 @@
-# Énergie & Repas V1.3
+# Énergie & Repas V1.3.1
 
-Cette version remplace le stockage local comme seule source de vérité par une synchronisation Supabase sécurisée.
+Cette version corrige la connexion sur l’application iPhone installée et ajoute la nouvelle icône pomme + éclair.
 
-## Avant de publier
+## 1. Étape obligatoire dans Supabase
 
-1. Dans Supabase, ouvre **SQL Editor**.
-2. Crée une nouvelle requête, colle tout le contenu de `supabase-setup.sql`, puis clique **Run**.
-3. Dans **Authentication → URL Configuration** :
-   - Site URL : `https://surferpixies.github.io/-energie/`
-   - Redirect URLs : ajoute `https://surferpixies.github.io/-energie/**`
-4. Vérifie dans **Authentication → Providers → Email** que le fournisseur Email est activé.
-5. Téléverse tous les fichiers de ce dossier à la racine de ton dépôt GitHub Pages. Le dossier `assets` doit conserver son nom.
-6. Attends une ou deux minutes, ouvre l'application dans Safari, puis reconnecte-toi avec ton courriel.
+Dans **Authentication → Email Templates**, ouvre le modèle **Magic Link** (ou Magic link / OTP) et remplace son contenu par :
 
-## Test de sécurité recommandé
+```html
+<h2>Ton code Énergie & Repas</h2>
+<p>Entre ce code directement dans l’application :</p>
+<p style="font-size:32px;font-weight:700;letter-spacing:6px;">{{ .Token }}</p>
+<p>Ce code est temporaire.</p>
+```
 
-1. Connecte-toi.
-2. Ajoute un repas test et attends que le badge affiche **Sauvegardé ☁️**.
-3. Ouvre Supabase → Table Editor → `meals` et confirme que le repas est présent.
-4. Ouvre l'app dans une fenêtre privée ou sur le Mac, reconnecte-toi, puis confirme que le repas revient.
-5. Seulement après ce test, utilise l'application pour tes vraies données.
+Le modèle doit utiliser `{{ .Token }}` et non `{{ .ConfirmationURL }}`. Après l’enregistrement, Supabase enverra un code au lieu d’un lien Safari.
 
-## Changements V1.3
+## 2. Mise à jour GitHub
 
-- connexion par lien magique;
-- repas, journées et photos dans Supabase;
-- RLS : chaque compte ne voit que ses propres données;
-- file d'attente hors ligne et resynchronisation automatique;
-- import automatique possible de la copie locale après la première connexion;
-- retrait de « catégorie principale » et « quantité approximative »;
-- uniquement « fatigue avant » et « fatigue après », sur une échelle de 1 à 5;
-- gouttes d'eau directement interactives;
-- export/import JSON conservé.
+Téléverse à la racine : `index.html`, `styles.css`, `app.js`, `config.js`, `manifest.webmanifest`, `sw.js`, `supabase-setup.sql` et `README.md`.
 
-## Important
+Dans `assets`, téléverse :
 
-La clé `sb_publishable_...` du fichier `config.js` est une clé publique destinée au navigateur. Ne place jamais une clé secrète ou `service_role` dans ce projet. La protection dépend des politiques RLS installées par `supabase-setup.sql`.
+- `icon.svg`
+- `icon-192.png`
+- `icon-512.png`
+- `apple-touch-icon.png`
+
+## 3. Important pour voir la nouvelle icône sur iPhone
+
+L’icône d’une PWA déjà installée peut rester en cache. Après le déploiement :
+
+1. vérifie que la nouvelle app fonctionne dans Safari;
+2. supprime uniquement l’ancienne icône de l’écran d’accueil;
+3. dans Safari, utilise **Partager → Sur l’écran d’accueil** pour la réinstaller.
+
+Les données officielles restent dans Supabase. Supprimer l’icône ne supprime pas les données du compte en ligne.
+
+## 4. Test de connexion
+
+1. Ouvre **Profil → Se connecter**.
+2. Entre ton courriel.
+3. Reçois le code.
+4. Reviens dans la même application et saisis le code.
+5. Le badge doit afficher **Sauvegardé ☁️**.

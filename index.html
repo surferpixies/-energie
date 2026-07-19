@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f7f3e8">
+  <meta name="theme-color" content="#f4f8e8">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Énergie & Repas">
   <title>Énergie & Repas</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="assets/icon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -59,11 +59,20 @@
   <dialog id="authDialog">
     <form id="authForm" class="dialog-card auth-card">
       <div class="dialog-header"><div><p class="eyebrow">Sauvegarde infonuagique</p><h2>Connexion sécurisée</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
-      <div class="cloud-art">☁️</div>
-      <p class="muted">Entre ton courriel. Supabase t'enverra un lien de connexion; aucun mot de passe n'est nécessaire.</p>
-      <label>Adresse courriel<input id="authEmail" type="email" autocomplete="email" required placeholder="toi@exemple.com"></label>
-      <button type="submit" class="primary">M'envoyer le lien</button>
-      <p id="authMessage" class="small muted"></p>
+      <div class="brand-auth"><img src="assets/icon.svg" alt=""><div><strong>Énergie & Repas</strong><span>Connexion directement dans l'app</span></div></div>
+      <section id="authEmailStep" class="auth-step">
+        <p class="muted">Entre ton courriel. Tu recevras un code temporaire à saisir ici, sans ouvrir de lien dans Safari.</p>
+        <label>Adresse courriel<input id="authEmail" type="email" autocomplete="email" required placeholder="toi@exemple.com"></label>
+        <button type="submit" class="primary">M'envoyer le code</button>
+      </section>
+      <section id="authCodeStep" class="auth-step" hidden>
+        <p class="muted">Entre le code reçu par courriel.</p>
+        <p id="authEmailPreview" class="auth-email-preview"></p>
+        <label>Code de connexion<input id="authCode" class="otp-input" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="000000"></label>
+        <button type="submit" class="primary">Me connecter</button>
+        <div class="dialog-actions auth-secondary-actions"><button type="button" class="secondary" id="resendCode">Renvoyer</button><button type="button" class="secondary" id="changeEmail">Changer de courriel</button></div>
+      </section>
+      <p id="authMessage" class="small muted" aria-live="polite"></p>
     </form>
   </dialog>
 
