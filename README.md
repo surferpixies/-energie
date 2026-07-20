@@ -89,3 +89,33 @@ Après avoir remplacé les fichiers sur GitHub Pages, ferme complètement l’ap
 - Elle change automatiquement selon l’heure locale : 🌅 le matin, ☀️ le jour, 🌇 en fin de journée et 🌙 le soir.
 - La même icône dynamique est conservée dans l’onglet **Aujourd’hui**.
 - Aucun changement aux données, à Supabase ou au regroupement de l’historique.
+
+
+## V1.7.7 — Icône météo discrète
+
+- 🌤️ le matin lorsque la météo n’indique ni pluie ni neige
+- ☀️ l’après-midi lorsque la météo n’indique ni pluie ni neige
+- 🌧️ le jour lorsqu’il pleut ou qu’il y a des averses / orages
+- 🌙 le soir et la nuit
+- ❄️ lorsqu’il neige, y compris le soir
+- utilisation d’Open-Meteo sans clé API
+- géolocalisation approximative de l’appareil, sans enregistrer les coordonnées dans Supabase
+- cache météo local de 30 minutes et repli automatique sur l’heure en cas de refus, d’absence de réseau ou d’erreur
+
+Aucune modification SQL n’est nécessaire.
+
+
+## V1.7.7
+
+- Remplacement des emojis météo par un seul jeu d’icônes SVG intégré à l’application.
+- Icônes autorisées uniquement : soleil du matin, plein soleil en après-midi, pluie, neige et lune.
+- Suppression du changement visuel causé par les variantes d’emojis du système.
+- L’historique hiérarchique demeure inchangé.
+
+
+## V1.7.7 — Nuages
+
+- Ajout d’une icône SVG de nuage pour les codes météo Open-Meteo 2, 3, 45 et 48.
+- Le soleil demeure affiché lorsqu’il fait clair ou principalement clair.
+- La pluie, la neige et la lune conservent leur comportement existant.
+- Aucun changement SQL ni aux données enregistrées.

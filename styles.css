@@ -42,3 +42,17 @@ dialog{border:0;border-radius:28px;background:transparent;padding:0;width:min(94
 
 /* V1.7.4 — en-tête vivant selon le moment de la journée */
 .brand-title{display:flex;align-items:center;gap:9px}.living-header-icon{display:inline-grid;place-items:center;line-height:1;font-size:1.12em;transform-origin:center;animation:livingIconArrival .35s ease both}.nav-item #todayNavIcon{transition:transform .2s ease}.nav-item.active #todayNavIcon{transform:translateY(-1px) scale(1.06)}@keyframes livingIconArrival{from{opacity:0;transform:translateY(3px) scale(.9)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.living-header-icon{animation:none}.nav-item #todayNavIcon{transition:none}}
+
+
+/* V1.7.7 — icônes météo SVG uniques, stables et nuageuses */
+.weather-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;color:#f4b400;line-height:1}
+.weather-icon svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.weather-icon--header{width:1.15em;height:1.15em;margin-right:.12em;vertical-align:-.12em}
+.weather-icon--nav{width:1.45rem;height:1.45rem;margin-inline:auto}
+.weather-icon[data-weather-kind="rain"]{color:#4f83a8}
+.weather-icon[data-weather-kind="snow"]{color:#78a9c4}
+.weather-icon[data-weather-kind="night"]{color:#6558a6}
+.weather-icon[data-weather-kind="morning"]{color:#e3a400}
+.weather-icon[data-weather-kind="afternoon"]{color:#f4b400}
+
+.weather-icon[data-weather-kind="cloud"]{color:#7d8b92}

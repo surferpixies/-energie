@@ -11,17 +11,17 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=1.7.4">
+  <link rel="stylesheet" href="styles.css?v=1.7.7">
 </head>
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <div><p class="eyebrow" id="todayLabel"></p><h1 class="brand-title"><span id="livingHeaderIcon" class="living-header-icon" aria-hidden="true">☀️</span><span>Énergie & Repas</span></h1></div>
+      <div><p class="eyebrow" id="todayLabel"></p><h1 class="brand-title"><span id="livingHeaderIcon" class="living-header-icon weather-icon weather-icon--header" role="img" aria-label="Ambiance du jour"></span><span>Énergie & Repas</span></h1></div>
       <div class="header-actions"><span id="syncBadge" class="sync-badge">Local</span><button class="icon-button" id="themeToggle" aria-label="Changer le thème">☾</button></div>
     </header>
     <main id="app" tabindex="-1"></main>
     <nav class="bottom-nav" aria-label="Navigation principale">
-      <button data-view="today" class="nav-item active"><span id="todayNavIcon">☀️</span><small>Aujourd'hui</small></button>
+      <button data-view="today" class="nav-item active"><span id="todayNavIcon" class="weather-icon weather-icon--nav" role="img" aria-label="Ambiance du jour"></span><small>Aujourd'hui</small></button>
       <button data-view="history" class="nav-item"><span>📖</span><small>Historique</small></button>
       <button data-view="insights" class="nav-item"><span>📊</span><small>Tableau</small></button>
       <button data-view="profile" class="nav-item"><span>⚙️</span><small>Profil</small></button>
@@ -134,7 +134,7 @@
 
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=1.7.4"></script>
-  <script src="app.js?v=1.7.4"></script>
+  <script src="config.js?v=1.7.5"></script>
+  <script src="app.js?v=1.7.7"></script>
 </body>
 </html>
