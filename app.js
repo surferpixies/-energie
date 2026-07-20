@@ -43,7 +43,7 @@ function mealIcon(t){return({"Déjeuner":"🍳","Dîner":"🥗","Souper":"🍲",
 function formatDate(k){return new Intl.DateTimeFormat("fr-CA",{weekday:"long",day:"numeric",month:"long"}).format(new Date(`${k}T12:00:00`))}
 function average(arr){const x=arr.filter(n=>Number.isFinite(Number(n))&&Number(n)>0).map(Number);return x.length?x.reduce((a,b)=>a+b,0)/x.length:null}
 function allMeals(){return Object.values(db.days).flatMap(d=>d.meals)}
-const WEATHER_CACHE_KEY="energieRepasWeatherV177";
+const WEATHER_CACHE_KEY="energieRepasWeatherV178";
 const WEATHER_CACHE_MS=30*60*1000;
 let weatherRefreshPromise=null;
 
@@ -71,7 +71,12 @@ function weatherTitleFromKind(kind){return({morning:"Beau temps ce matin",aftern
 function setLivingHeaderIcon(kind,title=weatherTitleFromKind(kind)){
   const svg=WEATHER_SVGS[kind]||WEATHER_SVGS.afternoon;
   const header=$("#livingHeaderIcon"),nav=$("#todayNavIcon");
-  for(const el of [header,nav])if(el){el.innerHTML=svg;el.dataset.weatherKind=kind;el.title=title;el.setAttribute("aria-label",title)}
+  for(const el of [header,nav])if(el){
+    if(el.dataset.weatherKind!==kind||!el.firstElementChild)el.innerHTML=svg;
+    el.dataset.weatherKind=kind;
+    el.title=title;
+    el.setAttribute("aria-label",title);
+  }
 }
 function readWeatherCache(){try{return JSON.parse(localStorage.getItem(WEATHER_CACHE_KEY)||"null")}catch(_){return null}}
 function writeWeatherCache(value){try{localStorage.setItem(WEATHER_CACHE_KEY,JSON.stringify(value))}catch(_){}}
@@ -90,10 +95,24 @@ async function fetchCurrentWeather(){
   const value={code,savedAt:Date.now()};writeWeatherCache(value);return value;
 }
 async function updateLivingHeader(force=false){
-  const initialKind=fallbackWeatherKind();
+  if(force)localStorage.removeItem(WEATHER_CACHE_KEY);
+  const cached=readWeatherCache();
+  const initialKind=cached&&Date.now()-cached.savedAt<WEATHER_CACHE_MS&&Number.isFinite(Number(cached.code))
+    ? weatherKindFromCode(cached.code)
+    : fallbackWeatherKind();
   setLivingHeaderIcon(initialKind);
   if(weatherRefreshPromise&&!force)return weatherRefreshPromise;
-  weatherRefreshPromise=(async()=>{try{if(force)localStorage.removeItem(WEATHER_CACHE_KEY);const weather=await fetchCurrentWeather();const kind=weatherKindFromCode(weather.code);setLivingHeaderIcon(kind)}catch(error){console.info("Icône météo en mode horaire:",error?.message||error)}finally{weatherRefreshPromise=null}})();
+  weatherRefreshPromise=(async()=>{
+    try{
+      const weather=await fetchCurrentWeather();
+      const kind=weatherKindFromCode(weather.code);
+      setLivingHeaderIcon(kind);
+    }catch(error){
+      console.info("Icône météo en mode horaire:",error?.message||error);
+    }finally{
+      weatherRefreshPromise=null;
+    }
+  })();
   return weatherRefreshPromise;
 }
 function render(){document.documentElement.dataset.theme=db.settings.theme==="dark"?"dark":"";updateLivingHeader();$("#todayLabel").textContent=formatDate(todayKey());$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===currentView));updateSyncBadge();({today:renderToday,history:renderHistory,insights:renderInsights,profile:renderProfile}[currentView]||renderToday)()}
@@ -162,7 +181,7 @@ $("#importFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{d
 $("#themeToggle").onclick=()=>{db.settings.theme=db.settings.theme==='dark'?'system':'dark';saveLocal('theme');render()};$$('.nav-item').forEach(b=>b.onclick=()=>{currentView=b.dataset.view;selectedDate=todayKey();render()});
 window.addEventListener('online',()=>{updateSyncBadge();if(session)syncNow()});window.addEventListener('offline',updateSyncBadge);
 async function initAuth(){if(!client){render();if(db.settings.showWelcome!==false)setTimeout(()=>$("#welcomeDialog").showModal(),120);return}const {data}=await client.auth.getSession();session=data.session;client.auth.onAuthStateChange((event,newSession)=>{session=newSession;updateSyncBadge();if(event==="PASSWORD_RECOVERY")setTimeout(()=>$("#passwordDialog").showModal(),0);if(event==="SIGNED_OUT")render()});if(session){await pullCloud(false);await syncNow()}render();if(db.settings.showWelcome!==false)setTimeout(()=>$("#welcomeDialog").showModal(),120)}
-if('serviceWorker'in navigator)window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js?v=1.7.6');await reg.update();let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});if(reg.waiting)reg.waiting.postMessage?.({type:'SKIP_WAITING'})}catch(e){console.warn(e)}});
+if('serviceWorker'in navigator)window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js?v=1.7.8');await reg.update();let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});if(reg.waiting)reg.waiting.postMessage?.({type:'SKIP_WAITING'})}catch(e){console.warn(e)}});
 initAuth();
 
 setInterval(()=>updateLivingHeader(),30*60*1000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)updateLivingHeader()});

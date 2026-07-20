@@ -119,3 +119,11 @@ Aucune modification SQL n’est nécessaire.
 - Le soleil demeure affiché lorsqu’il fait clair ou principalement clair.
 - La pluie, la neige et la lune conservent leur comportement existant.
 - Aucun changement SQL ni aux données enregistrées.
+
+
+## V1.7.8
+- Correction du remplacement visuel de l’icône météo.
+- Le cache météo utilise une nouvelle clé.
+- L’icône n’est redessinée que lorsque la condition change réellement.
+- Mise à jour complète des versions du service worker et des fichiers CSS/JS/config.
+- Conditions disponibles : soleil du matin, soleil de l’après-midi, nuage, pluie, neige et lune.
