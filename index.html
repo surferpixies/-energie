@@ -41,7 +41,6 @@
       </div>
       <label>Ce que tu as mangé ou bu<textarea id="mealDescription" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea></label>
       <div class="energy-picker"><span>Fatigue avant</span><div id="fatigueBeforePicker" class="rating-buttons" role="radiogroup" aria-label="Fatigue avant"></div></div>
-      <div class="energy-picker"><span>Fatigue après</span><div id="fatigueAfterPicker" class="rating-buttons" role="radiogroup" aria-label="Fatigue après"></div></div>
       <label>Photo facultative<input id="mealPhoto" type="file" accept="image/*" capture="environment"></label>
       <div id="photoPreviewWrap" class="photo-preview-wrap" hidden><img id="photoPreview" alt="Aperçu"><button type="button" id="removePhoto" class="secondary small">Retirer la photo</button></div>
       <label>Notes facultatives<textarea id="mealNotes" rows="2" placeholder="Contexte, digestion, humeur…"></textarea></label>
@@ -57,6 +56,24 @@
       <label>Minutes d'activité<input id="activityMinutes" type="number" min="0" max="1440" placeholder="45"></label>
       <button type="submit" class="primary">Enregistrer</button>
     </form>
+  </dialog>
+
+  <dialog id="welcomeDialog" class="welcome-dialog">
+    <form id="welcomeForm" class="dialog-card welcome-card">
+      <div class="welcome-brand"><img src="assets/icon.svg" alt=""><div><p class="eyebrow">Bienvenue</p><h2>Énergie & Repas</h2></div></div>
+      <p>Cette application sert à suivre tes repas, ton niveau de fatigue avant de manger et certaines habitudes afin de t’aider à observer des tendances personnelles.</p>
+      <div class="notice info-notice"><strong>Un outil d’observation, pas un avis médical</strong><p>Les observations et suggestions sont informatives. Elles ne posent aucun diagnostic, ne prouvent pas un lien de cause à effet et ne remplacent pas les conseils d’un médecin, d’un nutritionniste ou d’un autre professionnel de la santé.</p></div>
+      <p class="small muted">Les estimations nutritionnelles peuvent être incomplètes, surtout lorsque l’application ne connaît pas les portions ni les valeurs nutritives exactes.</p>
+      <label class="checkbox-row"><input id="hideWelcome" type="checkbox"><span>Ne plus afficher ce message automatiquement</span></label>
+      <button type="submit" class="primary">J’ai compris</button>
+    </form>
+  </dialog>
+
+  <dialog id="sourceDialog">
+    <div class="dialog-card source-card">
+      <div class="dialog-header"><div><p class="eyebrow">Transparence</p><h2 id="sourceTitle">Pourquoi je vois ceci?</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
+      <div id="sourceContent"></div>
+    </div>
   </dialog>
 
   <dialog id="authDialog">

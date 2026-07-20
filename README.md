@@ -1,3 +1,22 @@
+# Énergie & Repas V1.6.0
+
+## Nouveautés
+
+- Message d’information au premier lancement avec option « Ne plus afficher ».
+- Le message peut être revu dans Profil et préférences.
+- Suppression de la saisie « Fatigue après »; les anciennes valeurs demeurent dans les données historiques pour éviter toute perte.
+- Observations personnelles reformulées sans causalité ni diagnostic.
+- Observations nutritionnelles proactives et prudentes sur les descriptions de repas.
+- Sources officielles de Santé Canada et de l’OMS accessibles avec « Pourquoi je vois ceci? ».
+- Paramètres séparés pour désactiver les Insights, observations nutritionnelles, suggestions générales et sources.
+- Aucune modification SQL requise et aucune donnée supprimée.
+
+## Limite importante
+
+Sans code-barres, portions ou tableau de valeur nutritive, l’application ne peut pas calculer réellement le sucre, le sodium ou les gras saturés. Les cartes nutritionnelles de cette version utilisent uniquement des mots-clés dans les descriptions et sont explicitement présentées comme des estimations.
+
+---
+
 # Énergie & Repas V1.5.1
 
 Cette version part de la V1.4/V1.5 et conserve l’authentification ainsi que les repas déjà enregistrés dans Supabase.
