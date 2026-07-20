@@ -1,4 +1,4 @@
-# Énergie & Repas V1.7.0
+# Énergie & Repas V1.7.3
 
 ## Nouveautés
 
@@ -61,7 +61,7 @@ Le script est non destructif : il ne contient aucun `DELETE`, `TRUNCATE` ou `DRO
 - Aucun changement au schéma Supabase ni aux données existantes.
 
 
-## Nouveautés V1.7 — Smart Timeline
+## Nouveautés V1.7.1 à V1.7.3 — Smart Timeline
 
 - historique regroupé par mois, semaine et journée;
 - sections repliables pour conserver une chronologie compacte;
@@ -69,3 +69,15 @@ Le script est non destructif : il ne contient aucun `DELETE`, `TRUNCATE` ou `DRO
 - filtres par période, type de repas, favoris et niveau de fatigue;
 - recherche conservée dans toute la chronologie;
 - aucune modification SQL requise et aucune suppression de données.
+
+
+## Détails de la V1.7.3
+
+- V1.7.1 : résumés quotidiens enrichis (repas, fatigue, sommeil, hydratation et favoris selon les données disponibles).
+- V1.7.2 : résumés hebdomadaires et mensuels avec observations descriptives.
+- V1.7.3 : parcours global, animations discrètes et stratégie de cache PWA renforcée pour que les mises à jour apparaissent immédiatement.
+- Toutes les fonctions existantes sont conservées; aucune modification SQL n’est requise.
+
+### Important pour la mise à jour iPhone
+
+Après avoir remplacé les fichiers sur GitHub Pages, ferme complètement l’application puis rouvre-la. La V1.7.3 ajoute des paramètres anti-cache dans les fichiers et force la mise à jour du service worker.
