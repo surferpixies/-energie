@@ -1,4 +1,4 @@
-# Énergie & Repas V1.7.3
+# Énergie & Repas V1.7.4
 
 ## Nouveautés
 
@@ -81,3 +81,11 @@ Le script est non destructif : il ne contient aucun `DELETE`, `TRUNCATE` ou `DRO
 ### Important pour la mise à jour iPhone
 
 Après avoir remplacé les fichiers sur GitHub Pages, ferme complètement l’application puis rouvre-la. La V1.7.3 ajoute des paramètres anti-cache dans les fichiers et force la mise à jour du service worker.
+
+
+## Nouveauté V1.7.4 — en-tête vivant
+
+- L’icône à côté du titre **Énergie & Repas** est restaurée.
+- Elle change automatiquement selon l’heure locale : 🌅 le matin, ☀️ le jour, 🌇 en fin de journée et 🌙 le soir.
+- La même icône dynamique est conservée dans l’onglet **Aujourd’hui**.
+- Aucun changement aux données, à Supabase ou au regroupement de l’historique.
