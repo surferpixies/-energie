@@ -1,4 +1,4 @@
-# Énergie & Repas V1.6.0
+# Énergie & Repas V1.6.1
 
 ## Nouveautés
 
@@ -59,3 +59,11 @@ Le script est non destructif : il ne contient aucun `DELETE`, `TRUNCATE` ou `DRO
 
 - Le champ « Confirmer le mot de passe » est maintenant affiché uniquement lors de la création de compte.
 - Aucun changement au schéma Supabase ni aux données existantes.
+
+
+## V1.6.1 — météo locale
+- Affiche discrètement la condition actuelle et la température près du titre.
+- Utilise la géolocalisation uniquement pour interroger Open-Meteo; les coordonnées ne sont pas enregistrées dans Supabase ni dans le stockage local.
+- Met la météo en cache pendant 30 minutes.
+- Un toucher sur la pastille permet de rafraîchir ou de redemander l’autorisation.
+- Retire aussi `fatigue_after` des nouveaux envois Supabase.
