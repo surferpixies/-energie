@@ -129,15 +129,8 @@ Aucune modification SQL n’est nécessaire.
 - Conditions disponibles : soleil du matin, soleil de l’après-midi, nuage, pluie, neige et lune.
 
 
-## V2.0.2
+## V2.0.4
 
 - Zoom désactivé dans l’application installée.
 - Boutons Déjeuner, Dîner, Souper et Collation rendus plus compacts.
 - Correction du débordement horizontal et du défilement latéral.
-
-
-## Version 2.0.3
-- Restauration d’une carte Sommeil distincte avec barre visuelle.
-- Restauration des choix d’activité illustrés (marche, course, vélo, musculation, yoga, natation, autre).
-- Affichage des activités enregistrées et suppression individuelle depuis la fenêtre Sommeil et activité.
-- Conservation des cartes repas compactes de la V2.0.2.
