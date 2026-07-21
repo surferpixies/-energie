@@ -1,4 +1,4 @@
-# Énergie V2.1.0
+# Énergie V2.1.1
 
 - Nom simplifié : **Énergie**.
 - Logo pomme + éclair conservé exactement tel quel.
@@ -151,3 +151,9 @@ Aucune modification SQL n’est nécessaire.
 - La carte Sommeil ouvre uniquement la saisie des heures de sommeil.
 - La carte Activité ouvre uniquement les icônes d'exercices, la durée et la liste des activités.
 - Aucun changement aux repas, à la navigation ou aux favoris.
+
+
+## Correctif V2.1.1
+
+- La flèche vers le jour suivant est grisée et désactivée à la date du jour.
+- La navigation par glissement et la logique interne empêchent aussi toute ouverture d’une date future.
