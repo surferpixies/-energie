@@ -127,3 +127,10 @@ Aucune modification SQL n’est nécessaire.
 - L’icône n’est redessinée que lorsque la condition change réellement.
 - Mise à jour complète des versions du service worker et des fichiers CSS/JS/config.
 - Conditions disponibles : soleil du matin, soleil de l’après-midi, nuage, pluie, neige et lune.
+
+
+## V2.0.1
+
+- Zoom désactivé dans l’application installée.
+- Boutons Déjeuner, Dîner, Souper et Collation rendus plus compacts.
+- Correction du débordement horizontal et du défilement latéral.
