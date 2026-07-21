@@ -134,3 +134,10 @@ Aucune modification SQL n’est nécessaire.
 - Zoom désactivé dans l’application installée.
 - Boutons Déjeuner, Dîner, Souper et Collation rendus plus compacts.
 - Correction du débordement horizontal et du défilement latéral.
+
+
+## V2.0.5
+- Séparation complète des formulaires Sommeil et Activité.
+- La carte Sommeil ouvre uniquement la saisie des heures de sommeil.
+- La carte Activité ouvre uniquement les icônes d'exercices, la durée et la liste des activités.
+- Aucun changement aux repas, à la navigation ou aux favoris.

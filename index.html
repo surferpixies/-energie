@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=2.0.4">
+  <link rel="stylesheet" href="styles.css?v=2.0.5">
 </head>
 <body>
   <div class="app-shell">
@@ -48,11 +48,19 @@
     </form>
   </dialog>
 
-  <dialog id="dayDialog">
-    <form id="dayForm" class="dialog-card">
-      <div class="dialog-header"><div><p class="eyebrow">Ma journée</p><h2>Sommeil et activité</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
-      <label>Sommeil de la nuit dernière<input id="sleepHours" type="number" step="0.25" min="0" max="24" placeholder="7.5"></label>
-      <fieldset class="activity-fieldset"><legend>Activité</legend>
+  <dialog id="sleepDialog">
+    <form id="sleepForm" class="dialog-card">
+      <div class="dialog-header"><div><p class="eyebrow">Repos</p><h2>Sommeil</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
+      <div class="sleep-dialog-hero"><span>😴</span><div><strong>Sommeil de la nuit dernière</strong><p class="muted small">Inscris simplement la durée totale approximative.</p></div></div>
+      <label>Nombre d'heures<input id="sleepHours" type="number" step="0.25" min="0" max="24" inputmode="decimal" placeholder="Ex. 7.5"></label>
+      <button type="submit" class="primary">Enregistrer le sommeil</button>
+    </form>
+  </dialog>
+
+  <dialog id="activityDialog">
+    <form id="activityForm" class="dialog-card">
+      <div class="dialog-header"><div><p class="eyebrow">Mouvement</p><h2>Ajouter une activité</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
+      <fieldset class="activity-fieldset"><legend>Choisis une activité</legend>
         <div id="activityChoices" class="activity-choices" role="radiogroup" aria-label="Type d’activité">
           <button type="button" data-activity="Marche"><span>🚶</span><small>Marche</small></button>
           <button type="button" data-activity="Course"><span>🏃</span><small>Course</small></button>
@@ -64,9 +72,9 @@
         </div>
         <input id="activityType" type="hidden">
       </fieldset>
-      <label>Minutes d'activité<input id="activityMinutes" type="number" min="0" max="1440" placeholder="45"></label>
+      <label>Durée en minutes<input id="activityMinutes" type="number" min="1" max="1440" inputmode="numeric" placeholder="Ex. 45"></label>
       <div><p class="eyebrow">Activités enregistrées</p><div id="dayActivitiesList" class="day-activities-list"></div></div>
-      <button type="submit" class="primary">Enregistrer</button>
+      <button type="submit" class="primary">Ajouter l'activité</button>
     </form>
   </dialog>
 
@@ -146,7 +154,7 @@
 
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=2.0.4"></script>
-  <script src="app.js?v=2.0.4"></script>
+  <script src="config.js?v=2.0.5"></script>
+  <script src="app.js?v=2.0.5"></script>
 </body>
 </html>
