@@ -129,7 +129,7 @@ Aucune modification SQL n’est nécessaire.
 - Conditions disponibles : soleil du matin, soleil de l’après-midi, nuage, pluie, neige et lune.
 
 
-## V2.0.1
+## V2.0.2
 
 - Zoom désactivé dans l’application installée.
 - Boutons Déjeuner, Dîner, Souper et Collation rendus plus compacts.
