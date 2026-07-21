@@ -1,3 +1,13 @@
+# Énergie V2.1.0
+
+- Nom simplifié : **Énergie**.
+- Logo pomme + éclair conservé exactement tel quel.
+- Nouvel écran de lancement discret avec le logo existant.
+- « Fatigue avant » devient « Énergie avant le repas ».
+- Nouveau curseur à cinq niveaux, de 😴 à 😄, avec libellé dynamique.
+- L’hydratation précise maintenant qu’une goutte correspond à **500 ml**.
+- Structure des données et colonnes Supabase conservées pour assurer la compatibilité.
+
 # Énergie & Repas V1.7.4
 
 ## Nouveautés

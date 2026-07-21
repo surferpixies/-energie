@@ -6,17 +6,23 @@
   <meta name="theme-color" content="#eef8e7">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Énergie & Repas">
-  <title>Énergie & Repas</title>
+  <meta name="apple-mobile-web-app-title" content="Énergie">
+  <title>Énergie</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=2.0.5">
+  <link rel="stylesheet" href="styles.css?v=2.1.0">
 </head>
 <body>
+  <div id="splashScreen" class="splash-screen" aria-hidden="true">
+    <div class="splash-brand">
+      <img src="assets/icon.svg" alt="">
+      <strong>Énergie</strong>
+    </div>
+  </div>
   <div class="app-shell">
     <header class="topbar">
-      <div><p class="eyebrow" id="todayLabel"></p><h1 class="brand-title"><span id="livingHeaderIcon" class="living-header-icon weather-icon weather-icon--header" role="img" aria-label="Ambiance du jour"></span><span>Énergie & Repas</span></h1></div>
+      <div><p class="eyebrow" id="todayLabel"></p><h1 class="brand-title"><span id="livingHeaderIcon" class="living-header-icon weather-icon weather-icon--header" role="img" aria-label="Ambiance du jour"></span><span>Énergie</span></h1></div>
       <div class="header-actions"><span id="syncBadge" class="sync-badge">Local</span><button class="icon-button" id="themeToggle" aria-label="Changer le thème">☾</button></div>
     </header>
     <main id="app" tabindex="-1"></main>
@@ -40,7 +46,10 @@
         <label>Heure<input id="mealTime" type="time" required></label>
       </div>
       <label>Ce que tu as mangé ou bu<textarea id="mealDescription" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea></label>
-      <div class="energy-picker"><span>Fatigue avant</span><div id="fatigueBeforePicker" class="rating-buttons" role="radiogroup" aria-label="Fatigue avant"></div></div>
+      <div class="energy-picker">
+        <span>Énergie avant le repas</span>
+        <div id="fatigueBeforePicker" class="energy-slider" role="radiogroup" aria-label="Énergie avant le repas"></div>
+      </div>
       <label>Photo facultative<input id="mealPhoto" type="file" accept="image/*" capture="environment"></label>
       <div id="photoPreviewWrap" class="photo-preview-wrap" hidden><img id="photoPreview" alt="Aperçu"><button type="button" id="removePhoto" class="secondary small">Retirer la photo</button></div>
       <label>Notes facultatives<textarea id="mealNotes" rows="2" placeholder="Contexte, digestion, humeur…"></textarea></label>
@@ -80,8 +89,8 @@
 
   <dialog id="welcomeDialog" class="welcome-dialog">
     <form id="welcomeForm" class="dialog-card welcome-card">
-      <div class="welcome-brand"><img src="assets/icon.svg" alt=""><div><p class="eyebrow">Bienvenue</p><h2>Énergie & Repas</h2></div></div>
-      <p>Cette application sert à suivre tes repas, ton niveau de fatigue avant de manger et certaines habitudes afin de t’aider à observer des tendances personnelles.</p>
+      <div class="welcome-brand"><img src="assets/icon.svg" alt=""><div><p class="eyebrow">Bienvenue</p><h2>Énergie</h2></div></div>
+      <p>Cette application sert à suivre tes repas, ton niveau d’énergie avant de manger et certaines habitudes afin de t’aider à observer des tendances personnelles.</p>
       <div class="notice info-notice"><strong>Un outil d’observation, pas un avis médical</strong><p>Les observations et suggestions sont informatives. Elles ne posent aucun diagnostic, ne prouvent pas un lien de cause à effet et ne remplacent pas les conseils d’un médecin, d’un nutritionniste ou d’un autre professionnel de la santé.</p></div>
       <p class="small muted">Les estimations nutritionnelles peuvent être incomplètes, surtout lorsque l’application ne connaît pas les portions ni les valeurs nutritives exactes.</p>
       <label class="checkbox-row"><input id="hideWelcome" type="checkbox"><span>Ne plus afficher ce message automatiquement</span></label>
@@ -105,7 +114,7 @@
 
       <div class="brand-auth">
         <img src="assets/icon.svg" alt="">
-        <div><strong>Énergie & Repas</strong><span>Connexion directe dans l’app iPhone</span></div>
+        <div><strong>Énergie</strong><span>Connexion directe dans l’app iPhone</span></div>
       </div>
 
       <div class="auth-tabs" role="tablist" aria-label="Type de connexion">
@@ -154,7 +163,7 @@
 
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=2.0.5"></script>
-  <script src="app.js?v=2.0.5"></script>
+  <script src="config.js?v=2.1.0"></script>
+  <script src="app.js?v=2.1.0"></script>
 </body>
 </html>
