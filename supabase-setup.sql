@@ -37,3 +37,11 @@ create policy "favorite_meals_update_own" on public.favorite_meals
   with check ((select auth.uid()) = user_id);
 create policy "favorite_meals_delete_own" on public.favorite_meals
   for delete to authenticated using ((select auth.uid()) = user_id);
+
+-- Énergie V2.2.0 — Ressenti après les repas
+-- Ajoute les champs de ressenti directement au repas afin de conserver un lien 1:1 robuste.
+alter table public.meals add column if not exists feeling jsonb;
+alter table public.meals add column if not exists feeling_notified_at timestamptz;
+
+comment on column public.meals.feeling is
+  'Ressenti après le repas: rating 1-5, tags text[], notes et recordedAt.';

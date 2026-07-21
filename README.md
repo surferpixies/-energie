@@ -1,4 +1,4 @@
-# Énergie V2.1.1
+# Énergie V2.2.0
 
 - Nom simplifié : **Énergie**.
 - Logo pomme + éclair conservé exactement tel quel.
@@ -153,7 +153,26 @@ Aucune modification SQL n’est nécessaire.
 - Aucun changement aux repas, à la navigation ou aux favoris.
 
 
-## Correctif V2.1.1
+## Correctif V2.2.0
 
 - La flèche vers le jour suivant est grisée et désactivée à la date du jour.
 - La navigation par glissement et la logique interne empêchent aussi toute ouverture d’une date future.
+
+
+## V2.2.0 — Ressenti après les repas
+
+- Carte **Ressenti** dans le Journal avec réponses en attente.
+- Ressenti général de 1 à 5 lié au repas exact.
+- Sélection multiple de symptômes et d'états positifs.
+- Modification ultérieure depuis la carte du repas.
+- Rappels configurables dans le Profil : activation complète, types de repas et délai de 1, 2 ou 3 heures.
+- Les collations sont désactivées par défaut.
+- Les ressentis restent accessibles dans le Journal même lorsqu'une notification système n'a pas pu être affichée.
+
+### Limite des notifications PWA
+
+Une application Web statique ne peut pas garantir une notification différée lorsque le navigateur ou la PWA est complètement fermé sans service de notifications push côté serveur. La V2.2 affiche une notification locale lorsque le navigateur l'autorise et que l'application peut s'exécuter. Le système de **ressentis en attente** demeure la source fiable et ne perd aucune demande de suivi.
+
+### Migration Supabase
+
+Exécuter les nouvelles lignes à la fin de `supabase-setup.sql` pour ajouter `feeling` et `feeling_notified_at` à la table `meals`.

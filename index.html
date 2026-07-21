@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=2.1.1">
+  <link rel="stylesheet" href="styles.css?v=2.2.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -84,6 +84,17 @@
       <label>Durée en minutes<input id="activityMinutes" type="number" min="1" max="1440" inputmode="numeric" placeholder="Ex. 45"></label>
       <div><p class="eyebrow">Activités enregistrées</p><div id="dayActivitiesList" class="day-activities-list"></div></div>
       <button type="submit" class="primary">Ajouter l'activité</button>
+    </form>
+  </dialog>
+
+  <dialog id="feelingDialog">
+    <form id="feelingForm" class="dialog-card feeling-dialog-card">
+      <div class="dialog-header"><div><p class="eyebrow">Après le repas</p><h2>😊 Ressenti</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
+      <div class="feeling-context"><span>🍽️</span><strong id="feelingMealContext"></strong></div>
+      <fieldset class="feeling-fieldset"><legend>Comment te sens-tu?</legend><div id="feelingRating" class="feeling-rating" role="radiogroup" aria-label="Ressenti général"></div></fieldset>
+      <fieldset class="feeling-fieldset"><legend>Qu’as-tu ressenti?</legend><p class="muted small">Sélectionne tous les éléments qui s’appliquent.</p><div id="feelingTags" class="feeling-tags"></div></fieldset>
+      <label>Autre chose? <textarea id="feelingNotes" rows="3" placeholder="Notes facultatives"></textarea></label>
+      <button type="submit" class="primary">Enregistrer le ressenti</button>
     </form>
   </dialog>
 
@@ -163,7 +174,7 @@
 
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=2.1.1"></script>
-  <script src="app.js?v=2.1.1"></script>
+  <script src="config.js?v=2.2.0"></script>
+  <script src="app.js?v=2.2.0"></script>
 </body>
 </html>
