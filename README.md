@@ -1,4 +1,4 @@
-# Énergie V2.2.0
+# Énergie V2.2.1
 
 - Nom simplifié : **Énergie**.
 - Logo pomme + éclair conservé exactement tel quel.
@@ -9,6 +9,13 @@
 - Structure des données et colonnes Supabase conservées pour assurer la compatibilité.
 
 # Énergie & Repas V1.7.4
+
+
+## Correctif V2.2.1
+
+- Les options Déjeuner, Dîner, Souper et Collation du profil restent entièrement visibles sur mobile.
+- Les cases et leur libellé sont maintenant regroupés dans une zone cliquable pleine largeur.
+- L’alignement et les espacements des options de rappel ont été uniformisés.
 
 ## Nouveautés
 
@@ -153,7 +160,7 @@ Aucune modification SQL n’est nécessaire.
 - Aucun changement aux repas, à la navigation ou aux favoris.
 
 
-## Correctif V2.2.0
+## Correctif V2.1.1
 
 - La flèche vers le jour suivant est grisée et désactivée à la date du jour.
 - La navigation par glissement et la logique interne empêchent aussi toute ouverture d’une date future.
