@@ -1,20 +1,3 @@
-# Énergie & Repas V1.8.0
-
-Cette version part directement de la V1.7.8 et conserve ses fonctions existantes.
-
-## Nouveautés
-- Correction et affichage visible de la sauvegarde du sommeil et des activités.
-- Activités avec choix illustrés : marche, course, vélo, musculation, yoga, natation et autre.
-- Suppression individuelle d’une activité enregistrée.
-- Bilan du soir : état général, stress et note facultative.
-- Rappel du soir configurable dans Profil (rappel dans l’app lorsqu’elle est ouverte).
-- Liste complète des favoris déplacée dans Profil.
-- Bouton rapide « ⭐ Favori » près de « + Ajouter » sur Aujourd’hui.
-- Aucun changement destructif dans Supabase et aucune migration SQL requise. Le bilan du soir est synchronisé dans le champ JSON des activités pour préserver la compatibilité.
-
-## Déploiement
-Remplacer les fichiers de GitHub Pages par le contenu de ce dossier. Le cache PWA est versionné 1.8.0.
-
 # Énergie & Repas V1.7.4
 
 ## Nouveautés
@@ -138,7 +121,7 @@ Aucune modification SQL n’est nécessaire.
 - Aucun changement SQL ni aux données enregistrées.
 
 
-## V1.7.8
+## V2.0.0
 - Correction du remplacement visuel de l’icône météo.
 - Le cache météo utilise une nouvelle clé.
 - L’icône n’est redessinée que lorsque la condition change réellement.

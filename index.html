@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=1.8.0">
+  <link rel="stylesheet" href="styles.css?v=2.0.0">
 </head>
 <body>
   <div class="app-shell">
@@ -21,7 +21,7 @@
     </header>
     <main id="app" tabindex="-1"></main>
     <nav class="bottom-nav" aria-label="Navigation principale">
-      <button data-view="today" class="nav-item active"><span id="todayNavIcon" class="weather-icon weather-icon--nav" role="img" aria-label="Ambiance du jour"></span><small>Aujourd'hui</small></button>
+      <button data-view="today" class="nav-item active"><span id="todayNavIcon" class="weather-icon weather-icon--nav" role="img" aria-label="Ambiance du jour"></span><small>Journal</small></button>
       <button data-view="history" class="nav-item"><span>📖</span><small>Historique</small></button>
       <button data-view="insights" class="nav-item"><span>📊</span><small>Tableau</small></button>
       <button data-view="profile" class="nav-item"><span>⚙️</span><small>Profil</small></button>
@@ -32,6 +32,9 @@
     <form id="mealForm" class="dialog-card">
       <div class="dialog-header"><div><p class="eyebrow">Mon repas</p><h2 id="mealDialogTitle">Ajouter un repas</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
       <input type="hidden" id="mealId">
+      <label id="favoriteMealLabel">Choisir un repas favori
+        <select id="favoriteMealSelect"><option value="">Choisir un favori…</option></select>
+      </label>
       <div class="two-col">
         <label>Type de repas<select id="mealType" required><option>Déjeuner</option><option>Dîner</option><option>Souper</option><option>Collation</option><option>Boisson</option></select></label>
         <label>Heure<input id="mealTime" type="time" required></label>
@@ -49,20 +52,8 @@
     <form id="dayForm" class="dialog-card">
       <div class="dialog-header"><div><p class="eyebrow">Ma journée</p><h2>Sommeil et activité</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
       <label>Sommeil de la nuit dernière<input id="sleepHours" type="number" step="0.25" min="0" max="24" placeholder="7.5"></label>
-      <fieldset class="activity-fieldset"><legend>Ajouter une activité</legend>
-        <div id="activityChoices" class="activity-choices" role="radiogroup" aria-label="Type d’activité">
-          <button type="button" data-activity="Marche"><span>🚶</span><small>Marche</small></button>
-          <button type="button" data-activity="Course"><span>🏃</span><small>Course</small></button>
-          <button type="button" data-activity="Vélo"><span>🚴</span><small>Vélo</small></button>
-          <button type="button" data-activity="Musculation"><span>🏋️</span><small>Musculation</small></button>
-          <button type="button" data-activity="Yoga"><span>🧘</span><small>Yoga</small></button>
-          <button type="button" data-activity="Natation"><span>🏊</span><small>Natation</small></button>
-          <button type="button" data-activity="Autre"><span>✨</span><small>Autre</small></button>
-        </div>
-        <input id="activityType" type="hidden">
-        <label>Minutes d'activité<input id="activityMinutes" type="number" min="0" max="1440" placeholder="45"></label>
-      </fieldset>
-      <div id="dayActivitiesList" class="day-activities-list"></div>
+      <label>Activité<select id="activityType"><option value="">Aucune</option><option>Marche</option><option>Course</option><option>Vélo</option><option>Musculation</option><option>Autre</option></select></label>
+      <label>Minutes d'activité<input id="activityMinutes" type="number" min="0" max="1440" placeholder="45"></label>
       <button type="submit" class="primary">Enregistrer</button>
     </form>
   </dialog>
@@ -83,25 +74,6 @@
       <div class="dialog-header"><div><p class="eyebrow">Transparence</p><h2 id="sourceTitle">Pourquoi je vois ceci?</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
       <div id="sourceContent"></div>
     </div>
-  </dialog>
-
-
-  <dialog id="favoriteDialog">
-    <div class="dialog-card">
-      <div class="dialog-header"><div><p class="eyebrow">Ajout rapide</p><h2>Choisir un favori</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
-      <label>Rechercher<input id="favoritePickerSearch" type="search" placeholder="Nom ou contenu du repas"></label>
-      <div id="favoritePickerList" class="stack"></div>
-    </div>
-  </dialog>
-
-  <dialog id="eveningDialog">
-    <form id="eveningForm" class="dialog-card">
-      <div class="dialog-header"><div><p class="eyebrow">Bilan du soir</p><h2>Comment se termine ta journée?</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
-      <div class="energy-picker"><span>État général</span><div id="eveningFeelingPicker" class="mood-buttons" role="radiogroup" aria-label="État général"></div></div>
-      <div class="energy-picker"><span>Niveau de stress</span><div id="eveningStressPicker" class="rating-buttons" role="radiogroup" aria-label="Niveau de stress"></div></div>
-      <label>Note facultative<textarea id="eveningNote" rows="3" placeholder="Un mot sur ta journée, ton énergie ou ton humeur…"></textarea></label>
-      <button type="submit" class="primary">Enregistrer mon bilan</button>
-    </form>
   </dialog>
 
   <dialog id="authDialog">
@@ -162,7 +134,7 @@
 
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=1.8.0"></script>
-  <script src="app.js?v=1.8.0"></script>
+  <script src="config.js?v=2.0.0"></script>
+  <script src="app.js?v=2.0.0"></script>
 </body>
 </html>
