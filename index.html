@@ -52,8 +52,20 @@
     <form id="dayForm" class="dialog-card">
       <div class="dialog-header"><div><p class="eyebrow">Ma journée</p><h2>Sommeil et activité</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
       <label>Sommeil de la nuit dernière<input id="sleepHours" type="number" step="0.25" min="0" max="24" placeholder="7.5"></label>
-      <label>Activité<select id="activityType"><option value="">Aucune</option><option>Marche</option><option>Course</option><option>Vélo</option><option>Musculation</option><option>Autre</option></select></label>
+      <fieldset class="activity-fieldset"><legend>Activité</legend>
+        <div id="activityChoices" class="activity-choices" role="radiogroup" aria-label="Type d’activité">
+          <button type="button" data-activity="Marche"><span>🚶</span><small>Marche</small></button>
+          <button type="button" data-activity="Course"><span>🏃</span><small>Course</small></button>
+          <button type="button" data-activity="Vélo"><span>🚴</span><small>Vélo</small></button>
+          <button type="button" data-activity="Musculation"><span>🏋️</span><small>Musculation</small></button>
+          <button type="button" data-activity="Yoga"><span>🧘</span><small>Yoga</small></button>
+          <button type="button" data-activity="Natation"><span>🏊</span><small>Natation</small></button>
+          <button type="button" data-activity="Autre"><span>✨</span><small>Autre</small></button>
+        </div>
+        <input id="activityType" type="hidden">
+      </fieldset>
       <label>Minutes d'activité<input id="activityMinutes" type="number" min="0" max="1440" placeholder="45"></label>
+      <div><p class="eyebrow">Activités enregistrées</p><div id="dayActivitiesList" class="day-activities-list"></div></div>
       <button type="submit" class="primary">Enregistrer</button>
     </form>
   </dialog>
