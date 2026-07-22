@@ -108,3 +108,11 @@ dialog[open]{display:block}
 .meal-dialog-type strong{display:block;margin-top:2px;font-size:1.08rem}
 .copy-breakfast-button{justify-self:start;margin-top:-5px}
 @media (max-width:520px){dialog{width:calc(100vw - 20px);max-height:calc(100dvh - 20px)}.dialog-card{max-height:calc(100dvh - 20px)}}
+
+
+/* V2.4.5 — heure compacte et protection contre l’autoremplissage */
+.meal-time-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:2px 0}
+.meal-time-label{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;font-size:.9rem;font-weight:850}
+.meal-time-label>span:first-child{font-size:1.12rem;line-height:1}
+#mealTime{width:112px;max-width:42vw;min-width:0;flex:0 0 auto;padding:10px 11px;text-align:center}
+@media(max-width:360px){.meal-time-row{gap:9px}.meal-time-label{font-size:.84rem}#mealTime{width:104px;padding-inline:8px}}

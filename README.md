@@ -239,3 +239,9 @@ Aucune migration SQL n'est requise pour la V2.4.2. La langue choisie est enregis
 - « Copier le déjeuner d’hier » apparaît uniquement pour un déjeuner.
 - Les repas favoris proposés sont limités au type de repas actuellement ouvert afin d’éviter toute ambiguïté.
 - Aucune migration SQL requise.
+
+
+## V2.4.5 — Heure compacte et autoremplissage
+- Champ Heure présenté sur une seule ligne avec une petite horloge.
+- Largeur du sélecteur d’heure réduite pour éviter tout débordement mobile.
+- Autoremplissage désactivé sur les formulaires de suivi non liés au compte afin de limiter les suggestions « Préremplir le contact » du navigateur.

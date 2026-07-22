@@ -3,5 +3,5 @@
 window.ENERGIE_CONFIG = {
   supabaseUrl: "https://drbrzyteaitaahediyds.supabase.co",
   supabasePublishableKey: "sb_publishable_-BGkUrOjPUBEZarW8OIfKg_GffhkLW_",
-  appVersion: "2.4.4"
+  appVersion: "2.4.5"
 };
