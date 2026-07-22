@@ -1,4 +1,4 @@
-# Énergie V2.3.1
+# Énergie V2.4.1
 
 - Nom simplifié : **Énergie**.
 - Logo pomme + éclair conservé exactement tel quel.
@@ -11,7 +11,7 @@
 # Énergie & Repas V1.7.4
 
 
-## Correctif V2.3.1
+## Correctif V2.4.1
 
 - Les options Déjeuner, Dîner, Souper et Collation du profil restent entièrement visibles sur mobile.
 - Les cases et leur libellé sont maintenant regroupés dans une zone cliquable pleine largeur.
@@ -185,7 +185,7 @@ Une application Web statique ne peut pas garantir une notification différée lo
 Exécuter les nouvelles lignes à la fin de `supabase-setup.sql` pour ajouter `feeling` et `feeling_notified_at` à la table `meals`.
 
 
-## V2.3.1 — Internationalisation
+## V2.4.1 — Internationalisation
 
 - Détection automatique de la langue du navigateur.
 - Français (Canada), français (France) et anglais.
@@ -195,12 +195,26 @@ Exécuter les nouvelles lignes à la fin de `supabase-setup.sql` pour ajouter `f
 
 ### Base de données
 
-Aucune migration SQL n'est requise pour la V2.3.1. La langue choisie est enregistrée localement dans le navigateur (`energieLocale`) et les valeurs métier existantes demeurent compatibles avec Supabase.
+Aucune migration SQL n'est requise pour la V2.4.1. La langue choisie est enregistrée localement dans le navigateur (`energieLocale`) et les valeurs métier existantes demeurent compatibles avec Supabase.
 
-### Passe de traduction exhaustive V2.3.1
+### Passe de traduction exhaustive V2.4.1
 
 - Traduction du message d'accueil et des avertissements du splash screen.
 - Traduction complète du module Ressenti, de ses rappels et de ses messages de confirmation.
 - Traduction des fenêtres de connexion, création de compte et récupération du mot de passe.
 - Traduction des alertes, confirmations, invites, placeholders, attributs d'accessibilité et contenus créés dynamiquement.
 - Observation des changements de texte dynamiques afin que les écrans rerendus restent dans la langue sélectionnée.
+
+## V2.4.1 — Internationalisation complète
+
+- Traduction des écrans Historique, Chronologie et Tableau de bord.
+- Traduction des compteurs dynamiques avec pluriels anglais.
+- Dates localisées en français canadien, français de France et anglais.
+- Traduction des résumés quotidiens, du parcours, des périodes et des cartes d’observation.
+- Aucune migration Supabase requise.
+
+
+## Version 2.4.1
+- Moteur de traduction renforcé pour fr-CA, fr-FR et anglais.
+- Traduction des textes statiques, dynamiques, pluriels, alertes, profils, statistiques, chronologie et ressentis.
+- Aucune migration de base de données requise.

@@ -155,9 +155,110 @@
     'Santé Canada — Limiter les aliments hautement transformés':'Health Canada — Limit highly processed foods','Santé Canada — Symbole nutritionnel sur le devant de l’emballage':'Health Canada — Front-of-package nutrition symbol'
   });
 
+  Object.assign(frFR, {
+    'Smart Timeline':'Chronologie intelligente','Ton historique, organisé naturellement':'Votre historique, organisé naturellement',
+    'Les repas sont regroupés par journée, semaine et mois pour rester faciles à consulter avec le temps.':'Les repas sont regroupés par jour, semaine et mois pour rester faciles à consulter au fil du temps.',
+    'Ton parcours':'Votre parcours','Résumé de la journée':'Résumé de la journée','Période':'Période','PÉRIODE':'PÉRIODE','Tout':'Tout','7 jours':'7 jours','Ce mois':'Ce mois','Cette année':'Cette année',
+    'Type de repas':'Type de repas','⭐ Favoris':'⭐ Favoris','Énergie faible':'Énergie faible','Énergie élevée':'Énergie élevée','Chronologie':'Chronologie',
+    'Rechercher un aliment, une note ou une date…':'Rechercher un aliment, une note ou une date…',
+    'Tableau de bord & observations':'Tableau de bord et observations','Observe tes habitudes sans jugement':'Observez vos habitudes sans jugement',
+    'Les cartes décrivent des tendances possibles. Elles ne posent aucun diagnostic et ne prouvent jamais qu’un aliment cause un effet.':'Les cartes décrivent des tendances possibles. Elles ne posent aucun diagnostic et ne prouvent jamais qu’un aliment provoque un effet.',
+    'Repas — 7 jours':'Repas — 7 jours','Repas au total':'Repas au total','Heure moyenne':'Heure moyenne','Énergie avant — jours récents':'Énergie avant — jours récents',
+    'Pas encore assez de données.':'Pas encore assez de données.','énergie faible':'énergie faible','énergie élevée':'énergie élevée','Repas les plus fréquents':'Repas les plus fréquents',
+    'Ajoute quelques repas pour voir le classement.':'Ajoutez quelques repas pour voir le classement.','🧠 Observations':'🧠 Observations',
+    'Mode aperçu activé':'Mode aperçu activé','Tes vraies données':'Vos données réelles','Des données exemples montrent la présentation. Elles ne sont jamais sauvegardées.':'Des données d’exemple illustrent la présentation. Elles ne sont jamais enregistrées.',
+    'Le tableau de bord utilise seulement tes repas enregistrés.':'Le tableau de bord utilise uniquement vos repas enregistrés.','Voir mes données':'Voir mes données','Voir l’aperçu':'Voir l’aperçu',
+    'Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.':'Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.',
+    'repas':'repas','journées':'jours','mois':'mois','jour de suivi':'jour de suivi','jours de suivi':'jours de suivi','Depuis le':'Depuis le',
+    'fatigue moyenne':'fatigue moyenne','Sources générales':'Sources générales','Observation nutritionnelle estimée':'Observation nutritionnelle estimée',
+    'Ambiance du jour':'Ambiance du jour','Beau temps ce matin':'Beau temps ce matin','Pluie aujourd’hui':'Pluie aujourd’hui','Neige aujourd’hui':'Neige aujourd’hui'
+  });
+  Object.assign(en, {
+    'Smart Timeline':'Smart Timeline','Ton historique, organisé naturellement':'Your history, naturally organized',
+    'Les repas sont regroupés par journée, semaine et mois pour rester faciles à consulter avec le temps.':'Meals are grouped by day, week, and month so they stay easy to browse over time.',
+    'Ton parcours':'Your journey','Résumé de la journée':'Daily summary','Période':'Period','PÉRIODE':'PERIOD','Tout':'All','7 jours':'7 days','Ce mois':'This month','Cette année':'This year',
+    'Type de repas':'Meal type','⭐ Favoris':'⭐ Favorites','Énergie faible':'Low energy','Énergie élevée':'High energy','Chronologie':'Timeline',
+    'Rechercher un aliment, une note ou une date…':'Search food, notes, or a date…',
+    'Tableau de bord & observations':'Dashboard & insights','Observe tes habitudes sans jugement':'Notice your habits without judgment',
+    'Les cartes décrivent des tendances possibles. Elles ne posent aucun diagnostic et ne prouvent jamais qu’un aliment cause un effet.':'These cards describe possible patterns. They do not diagnose anything or prove that a food causes an effect.',
+    'Repas — 7 jours':'Meals — 7 days','Repas au total':'Total meals','Heure moyenne':'Average time','Énergie avant — jours récents':'Energy before meals — recent days',
+    'Pas encore assez de données.':'Not enough data yet.','énergie faible':'low energy','énergie élevée':'high energy','Repas les plus fréquents':'Most frequent meals',
+    'Ajoute quelques repas pour voir le classement.':'Log a few meals to see the ranking.','🧠 Observations':'🧠 Insights',
+    'Mode aperçu activé':'Preview mode on','Tes vraies données':'Your actual data','Des données exemples montrent la présentation. Elles ne sont jamais sauvegardées.':'Sample data shows how the dashboard will look. It is never saved.',
+    'Le tableau de bord utilise seulement tes repas enregistrés.':'The dashboard uses only your saved meals.','Voir mes données':'View my data','Voir l’aperçu':'View preview',
+    'Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.':'Preview values are fictional and are shown only to demonstrate the presentation.',
+    'repas':'meals','journées':'days','mois':'months','jour de suivi':'day tracked','jours de suivi':'days tracked','Depuis le':'Since',
+    'fatigue moyenne':'average fatigue','Sources générales':'General sources','Observation nutritionnelle estimée':'Estimated nutrition observation',
+    'Ambiance du jour':'Today’s atmosphere','Beau temps ce matin':'Clear this morning','Pluie aujourd’hui':'Rain today','Neige aujourd’hui':'Snow today',
+    'Aucun repas pour cette journée.':'No meals saved for this day.','Tableau de bord':'Dashboard','Observations':'Insights','carte':'card','cartes':'cards'
+  });
+
+
+  // V2.4.1 — couverture complète des textes statiques et dynamiques de l’interface.
+  Object.assign(en, {
+    'Local':'Local','Changer le thème':'Change theme','Navigation principale':'Main navigation','Fermer':'Close','Aperçu':'Preview',
+    'Un outil d’observation, pas un avis médical':'A tracking tool, not medical advice',
+    'Cette application sert à suivre tes repas, ton niveau d’énergie avant de manger et certaines habitudes afin de t’aider à observer des tendances personnelles.':'This app helps you track meals, your energy before eating, and selected habits so you can notice personal patterns.',
+    'Les observations et suggestions sont informatives. Elles ne posent aucun diagnostic, ne prouvent pas un lien de cause à effet et ne remplacent pas les conseils d’un médecin, d’un nutritionniste ou d’un autre professionnel de la santé.':'Insights and suggestions are informational. They do not provide a diagnosis, prove cause and effect, or replace advice from a physician, dietitian, or other health professional.',
+    'Connexion directe dans l’app iPhone':'Sign in directly in the iPhone app','Mot de passe oublié ou compte créé avec un lien magique?':'Forgot your password or created your account with a magic link?',
+    'Sécurité':'Security','Choisir un mot de passe':'Choose a password','Presque terminé':'Almost done','Nouveau mot de passe':'New password',
+    'Revoir les limites et l’utilisation prévue de l’application':'Review the app’s limits and intended use',
+    'Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.':'Choose whether and when the app reminds you to record how you feel after a meal.',
+    'Désactive ceci pour ne recevoir aucun rappel':'Turn this off to receive no reminders',
+    'Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.':'On the web, system reminders depend on browser permissions and may require the app to be open. Due check-ins always remain visible in the Journal.',
+    'Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.':'Sign in so your meals and favorites are saved in Supabase.',
+    'La synchronisation Supabase est active.':'Supabase sync is active.','Compte connecté':'Connected account',
+    'Ajoute « Pourquoi je vois ceci? » aux cartes':'Add “Why am I seeing this?” to cards',
+    'Observations nutritionnelles':'Nutrition insights','Tendances calculées à partir de ton historique':'Patterns calculated from your history',
+    'Estimations prudentes selon les descriptions saisies':'Careful estimates based on entered descriptions',
+    'Conseils facultatifs et non moralisateurs':'Optional, non-judgmental suggestions',
+    'Choisir une activité':'Choose an activity','Ajouter l\'activité':'Add activity','Ressenti général':'Overall feeling',
+    'Répondre':'Respond','Utiliser':'Use','Limites importantes':'Important limitations',
+    'Cette observation est automatisée et informative. Elle ne constitue ni un diagnostic, ni une preuve de causalité, ni un remplacement d’un avis professionnel.':'This automated insight is informational. It is not a diagnosis, proof of causation, or a substitute for professional advice.',
+    'Cette observation utilise les données disponibles dans l’application.':'This insight uses the data available in the app.',
+    'Tu es hors ligne. Les changements seront synchronisés plus tard.':'You are offline. Changes will sync later.',
+    'Très faible':'Very low','Faible':'Low','Moyenne':'Moderate','Bonne':'Good','Excellente':'Excellent',
+    '1 heure':'1 hour','2 heures':'2 hours','3 heures':'3 hours','Tous':'All',
+    'Utilisé':'Used','fois':'times','Confiance':'Confidence','élevée':'high','moyenne':'moderate','faible':'low',
+    'Repas principaux':'Main meals','repas principal':'main meal','repas principaux':'main meals',
+    'journée':'day','jour':'day','jours':'days','mois':'months','Depuis':'Since',
+    'Aucun ressenti en attente':'No pending check-ins','Dernier ressenti':'Latest feeling',
+    'Observation':'Insight','Observations':'Insights','Pourquoi je vois ceci?':'Why am I seeing this?',
+    'Sources générales':'General sources','Afficher les sources':'Show sources',
+    'Objectif d\'eau':'Water goal','Nombre de gouttes affichées':'Number of drops displayed',
+    'Sauvegarde supplémentaire':'Additional backup','copie(s) locale(s) de sécurité.':'local backup copies.',
+    'Énergie V':'Energy V','Enregistrer le mot de passe':'Save password',
+    'Repas concernés':'Meals included','Délai après le repas':'Delay after meal',
+    'Mode aperçu activé':'Preview mode enabled','Tes vraies données':'Your real data',
+    'Des données exemples montrent la présentation. Elles ne sont jamais sauvegardées.':'Sample data demonstrates the experience. It is never saved.',
+    'Le tableau de bord utilise seulement tes repas enregistrés.':'The dashboard uses only your logged meals.',
+    'Repas au total':'Total meals','Résumé de la journée':'Daily summary','Chronologie':'Timeline','Période':'Period','PÉRIODE':'PERIOD',
+    'Ton parcours':'Your journey','Observe tes habitudes sans jugement':'Notice your habits without judgment',
+    'Tableau de bord & observations':'Dashboard & insights','Smart Timeline':'Smart Timeline',
+    'Ton historique, organisé naturellement':'Your history, naturally organized',
+    'Repas — 7 jours':'Meals — 7 days','Heure moyenne':'Average time','Énergie avant — jours récents':'Energy before meals — recent days',
+    'Repas les plus fréquents':'Most frequent meals','Pas encore assez de données.':'Not enough data yet.',
+    'Journal':'Journal','Historique':'History','Tableau':'Insights','Profil':'Profile'
+  });
+
+  Object.assign(frFR, {
+    'Changer le thème':'Changer de thème','Navigation principale':'Navigation principale','Fermer':'Fermer',
+    'Cette application sert à suivre tes repas, ton niveau d’énergie avant de manger et certaines habitudes afin de t’aider à observer des tendances personnelles.':'Cette application permet de suivre vos repas, votre niveau d’énergie avant de manger et certaines habitudes afin de vous aider à observer des tendances personnelles.',
+    'Un outil d’observation, pas un avis médical':'Un outil d’observation, pas un avis médical',
+    'Les observations et suggestions sont informatives. Elles ne posent aucun diagnostic, ne prouvent pas un lien de cause à effet et ne remplacent pas les conseils d’un médecin, d’un nutritionniste ou d’un autre professionnel de la santé.':'Les observations et suggestions sont informatives. Elles ne posent aucun diagnostic, ne prouvent pas de lien de cause à effet et ne remplacent pas les conseils d’un médecin, d’un diététicien ou d’un autre professionnel de santé.',
+    'Connexion directe dans l’app iPhone':'Connexion directe dans l’application iPhone',
+    'Mot de passe oublié ou compte créé avec un lien magique?':'Mot de passe oublié ou compte créé avec un lien magique ?',
+    'Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.':'Choisissez si et quand l’application vous rappelle de noter votre ressenti après un repas.',
+    'Désactive ceci pour ne recevoir aucun rappel':'Désactivez cette option pour ne recevoir aucun rappel',
+    'Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.':'Connectez-vous afin que vos repas et favoris soient enregistrés dans Supabase.',
+    'Tu es hors ligne. Les changements seront synchronisés plus tard.':'Vous êtes hors ligne. Les modifications seront synchronisées ultérieurement.',
+    'Répondre':'Répondre','Utiliser':'Utiliser','Limites importantes':'Limites importantes',
+    'Très faible':'Très faible','Faible':'Faible','Moyenne':'Moyenne','Bonne':'Bonne','Excellente':'Excellente'
+  });
+
   const dict=locale==='en'?en:locale==='fr-FR'?frFR:{};
   const translate=s=>dict[s]||s;
-  window.ENERGIE_I18N={locale,t:translateString};
+  window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
   window.t=translateString;
   const nativeAlert=window.alert.bind(window),nativeConfirm=window.confirm.bind(window),nativePrompt=window.prompt.bind(window);
   window.alert=message=>nativeAlert(translateString(String(message)));
@@ -173,20 +274,57 @@
   function translateString(s){
     let out=translate(s);
     if(locale==='en'){
-      out=out.replace(/^(\d+) entrée(s?) aujourd’hui$/,(_,n)=>`${n} entr${n==='1'?'y':'ies'} today`)
+      const mealWord=x=>translate(x.charAt(0).toUpperCase()+x.slice(1)).toLowerCase();
+      out=out
+        .replace(/^(\d+)\/(\d+) repas principal(?:aux)?$/,(_,a,b)=>`${a}/${b} main meals`)
+        .replace(/^(\d+) entrée(s?) aujourd’hui$/,(_,n)=>`${n} entr${n==='1'?'y':'ies'} today`)
         .replace(/^(\d+) réponse(s?) en attente$/,(_,n)=>`${n} pending response${n==='1'?'':'s'}`)
-        .replace(/^Après (.+) · /,'After $1 · ')
+        .replace(/^Après (déjeuner|dîner|souper|collation|boisson) · (.+)$/i,(_,m,time)=>`After ${mealWord(m)} · ${time}`)
         .replace(/^Dernier ressenti : /,'Latest feeling: ')
-        .replace(/^Ajouter (Breakfast|Lunch|Dinner|Snack)$/,'Add $1')
-        .replace(/^Modifier (Breakfast|Lunch|Dinner|Snack)$/,'Edit $1')
+        .replace(/^Ajouter (Déjeuner|Dîner|Souper|Collation|Boisson)$/i,(_,m)=>`Add ${translate(m)}`)
+        .replace(/^Modifier (Déjeuner|Dîner|Souper|Collation|Boisson)$/i,(_,m)=>`Edit ${translate(m)}`)
         .replace(/^(\d+) heure(s?)$/,(_,n)=>`${n} hour${n==='1'?'':'s'}`)
         .replace(/^(\d+) à synchroniser$/,(_,n)=>`${n} to sync`)
         .replace(/^(\d+) repas$/,(_,n)=>`${n} meal${n==='1'?'':'s'}`)
+        .replace(/^(\d+) journée(s?)$/,(_,n)=>`${n} day${n==='1'?'':'s'}`)
+        .replace(/^(\d+) mois$/,(_,n)=>`${n} month${n==='1'?'':'s'}`)
+        .replace(/^(\d+) jour(s?) de suivi$/,(_,n)=>`${n} day${n==='1'?'':'s'} tracked`)
+        .replace(/^Depuis le (.+)$/,'Since $1')
         .replace(/^(\d+) collation(s?) notée(s?)$/,(_,n)=>`${n} snack${n==='1'?'':'s'} logged`)
         .replace(/^Ressenti (\d+) sur 5$/, 'Feeling $1 out of 5')
-        .replace(/^Comment te sens-tu après ton (.+) \?$/,(_,meal)=>`How do you feel after your ${translateString(meal)}?`)
+        .replace(/^Comment te sens-tu après ton (.+) \?$/,(_,meal)=>`How do you feel after your ${mealWord(meal)}?`)
         .replace(/^Supprimer « (.+) » des favoris\?$/,(_,name)=>`Remove “${name}” from favorites?`)
-        .replace(/^Semaine du (.+) au (.+)$/,(_,a,b)=>`Week of ${a} to ${b}`);
+        .replace(/^Semaine du (.+) au (.+)$/,(_,a,b)=>`Week of ${a} to ${b}`)
+        .replace(/^(\d+) carte(s?)$/,(_,n)=>`${n} card${n==='1'?'':'s'}`)
+        .replace(/^(\d+) copie\(s\) locale\(s\) de sécurité\.$/,(_,n)=>`${n} local backup cop${n==='1'?'y':'ies'}.`)
+        .replace(/^Basé sur (\d+) repas enregistrés ce jour de la semaine\.$/,(_,n)=>`Based on ${n} meals logged on this day of the week.`)
+        .replace(/^Basé sur (\d+) repas enregistrés\.$/,(_,n)=>`Based on ${n} logged meals.`)
+        .replace(/^Tu as enregistré (\d+) repas\. Ce suivi régulier donnera davantage de contexte aux tendances futures\.$/,(_,n)=>`You logged ${n} meals. Continued tracking will add more context to future patterns.`)
+        .replace(/^Tu enregistres tes repas vers (.+) en moyenne\.$/,(_,time)=>`You usually log meals around ${time}.`)
+        .replace(/^Le (.+), ton énergie avant les repas est en moyenne de (.+)\/5 dans les données disponibles\.$/,(_,day,val)=>`On ${day}, your average energy before meals is ${val}/5 in the available data.`)
+        .replace(/^L’énergie notée avant les repas est plutôt faible pour cette journée, selon les données enregistrées\.$/,'Energy before meals was relatively low on this day, based on your entries.')
+        .replace(/^L’énergie notée avant les repas est plutôt élevée pour cette journée\. Cela ne permet pas d’en déterminer la cause\.$/,'Energy before meals was relatively high on this day. This does not identify a cause.')
+        .replace(/^(\d+) repas au total$/,(_,n)=>`${n} total meal${n==='1'?'':'s'}`)
+        .replace(/^(\d+) entrée(?:s)? aujourd’hui$/,(_,n)=>`${n} entr${n==='1'?'y':'ies'} today`)
+        .replace(/^(\d+) réponse(?:s)? en attente$/,(_,n)=>`${n} pending response${n==='1'?'':'s'}`)
+        .replace(/^(\d+) copie\(s\) locale\(s\) de sécurité\.$/,(_,n)=>`${n} local backup cop${n==='1'?'y':'ies'}.`)
+        .replace(/^Utilisé (\d+) fois$/,(_,n)=>`Used ${n} time${n==='1'?'':'s'}`)
+        .replace(/^Confiance (.+)$/i,(_,level)=>`Confidence ${translateString(level).toLowerCase()}`)
+        .replace(/^Énergie avant (.+)\/5$/,(_,v)=>`Energy before ${v}/5`)
+        .replace(/^Après (.+) · (.+)$/,(_,meal,date)=>`After ${translateString(meal)} · ${date}`)
+        .replace(/^Depuis le (.+)$/i,(_,date)=>`Since ${date}`)
+        .replace(/^(\d+) jour(?:s)? de suivi$/,(_,n)=>`${n} day${n==='1'?'':'s'} tracked`)
+        .replace(/^(\d+) journée(?:s)?$/,(_,n)=>`${n} day${n==='1'?'':'s'}`)
+        .replace(/^(\d+) mois$/,(_,n)=>`${n} month${n==='1'?'':'s'}`)
+        .replace(/^(\d+) repas$/,(_,n)=>`${n} meal${n==='1'?'':'s'}`)
+        .replace(/^Supprimer (.+)$/,(_,x)=>`Delete ${translateString(x)}`)
+        .replace(/^Ajouter (.+)$/,(_,x)=>`Add ${translateString(x)}`)
+        .replace(/^Modifier (.+)$/,(_,x)=>`Edit ${translateString(x)}`);
+    } else if(locale==='fr-FR'){
+      out=out.replace(/^Ton parcours$/,'Votre parcours')
+        .replace(/^Observe tes habitudes sans jugement$/,'Observez vos habitudes sans jugement')
+        .replace(/^Depuis le (.+)$/,'Depuis le $1')
+        .replace(/^(\d+) journée(s?)$/,(_,n)=>`${n} jour${n==='1'?'':'s'}`);
     }
     return out;
   }
