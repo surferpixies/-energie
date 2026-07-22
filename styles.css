@@ -203,31 +203,4 @@ body.demo-tour-open{overflow:hidden}
   .demo-heading-mascot img,.demo-heading-mascot:after,.demo-mascot,.demo-mascot-spark,.demo-tour-target{animation:none}
 }
 
-
-/* V2.5.1 — visite narrative et finalité claire */
-.demo-tour-meta{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.demo-tour-meta .eyebrow{margin:0}
-.demo-tour-close{display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:999px;background:var(--surface2);color:var(--muted);font-size:1.35rem;line-height:1;cursor:pointer}
-.demo-tour-progress-track{height:5px;margin:8px 0 12px;border-radius:999px;background:var(--surface2);overflow:hidden}
-.demo-tour-progress-track span{display:block;width:0;height:100%;border-radius:inherit;background:var(--accent);transition:width .28s ease}
-.demo-inline-proof{display:grid;gap:3px;margin-top:2px;padding:10px 11px;border-radius:14px;background:color-mix(in srgb,var(--accent) 7%,var(--surface2));font-size:.76rem;line-height:1.4}
-.demo-inline-proof b{color:var(--text)}
-.demo-inline-proof span{color:var(--muted)}
-.demo-final-dialog{border:0;padding:0;background:transparent;max-width:min(92vw,520px)}
-.demo-final-dialog::backdrop{background:rgba(12,20,15,.58);backdrop-filter:blur(5px)}
-.demo-final-card{text-align:center;gap:12px;padding:26px}
-.demo-final-card h2{margin:0;font-size:1.45rem;letter-spacing:-.03em}
-.demo-final-card>p:not(.eyebrow){margin:0;color:var(--muted);line-height:1.5}
-.demo-final-mascot{position:relative;margin:0 auto;width:88px;height:88px}
-.demo-final-mascot img{width:100%;height:100%;border-radius:26px;animation:demoMascotFloat 2.8s ease-in-out infinite}
-.demo-final-mascot:after{content:"✦";position:absolute;right:-5px;top:-10px;color:var(--accent2);font-size:1.5rem;animation:demoSpark 1.5s ease-in-out infinite}
-.demo-final-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 6px}
-.demo-final-summary span{display:grid;gap:2px;padding:11px 7px;border-radius:16px;background:var(--surface2)}
-.demo-final-summary b{font-size:1.15rem}
-.demo-final-summary small{color:var(--muted);font-size:.68rem}
-.demo-final-replay{border:0;background:transparent;color:var(--muted);font-weight:800;cursor:pointer;padding:8px}
-@media(max-width:480px){
-  .demo-tour-card{bottom:max(12px,env(safe-area-inset-bottom));max-height:48vh;overflow:auto}
-  .demo-tour-card.tour-card-top{top:max(12px,env(safe-area-inset-top));bottom:auto}
-  .demo-final-card{padding:21px}
-}
+.demo-tour-meta{display:flex;align-items:center;justify-content:space-between;gap:10px}.demo-tour-meta .eyebrow{margin:0}.demo-tour-close{display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:999px;background:var(--surface2);color:var(--muted);font-size:1.35rem}.demo-tour-progress-track{height:5px;margin:8px 0 12px;border-radius:999px;background:var(--surface2);overflow:hidden}.demo-tour-progress-track span{display:block;width:0;height:100%;border-radius:inherit;background:var(--accent);transition:width .25s ease}.demo-inline-proof{display:grid;gap:3px;margin-top:4px;padding:10px 11px;border-radius:14px;background:var(--surface2);font-size:.76rem;line-height:1.4}.demo-inline-proof span{color:var(--muted)}.demo-final-dialog{border:0;padding:0;background:transparent;max-width:min(92vw,520px)}.demo-final-dialog::backdrop{background:rgba(12,20,15,.58);backdrop-filter:blur(5px)}.demo-final-card{text-align:center;gap:12px;padding:26px}.demo-final-card h2{margin:0}.demo-final-card>p:not(.eyebrow){margin:0;color:var(--muted);line-height:1.5}.demo-final-mascot{margin:0 auto;width:88px;height:88px}.demo-final-mascot img{width:100%;height:100%;border-radius:26px}.demo-final-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.demo-final-summary span{display:grid;gap:2px;padding:11px 7px;border-radius:16px;background:var(--surface2)}.demo-final-summary small{color:var(--muted);font-size:.68rem}.demo-final-replay{border:0;background:transparent;color:var(--muted);font-weight:800}@media(max-width:480px){.demo-tour-card{max-height:52vh;overflow:auto}}

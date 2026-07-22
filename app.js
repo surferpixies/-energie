@@ -120,119 +120,209 @@ async function updateLivingHeader(force=false){
 
 const DEMO_BACKUP_KEY="energieBeforeDemoV250";
 let demoTourIndex=0;
-let demoTourChangingView=false;
 
+function demoDateKey(offset){
+  const d=new Date();
+  d.setHours(12,0,0,0);
+  d.setDate(d.getDate()+offset);
+  return d.toLocaleDateString("en-CA")
+}
+function demoRand(seed){
+  const x=Math.sin(seed*12.9898+78.233)*43758.5453;
+  return x-Math.floor(x)
+}
+function demoMeal(date,time,type,description,energy,tags=[],rating=3,notes=""){
+  return normalMeal({
+    id:`demo-${date}-${time.replace(":","")}-${type}`,
+    date,time,type,description,
+    fatigueBefore:energy,
+    fatigueAfter:0,
+    notes,
+    feeling:{rating,tags,notes:"",recordedAt:`${date}T${time}:00`},
+    createdAt:`${date}T${time}:00`,
+    updatedAt:`${date}T${time}:00`
+  },date)
+}
+function createDemoDB(){
+  const store=freshDB();
+  store.settings={...store.settings,showWelcome:false,demoMode:true,demoTourSeen:false,demoName:"Phil",waterGoal:8};
+  store.createdAt=new Date(Date.now()-180*86400000).toISOString();
+  store.favorites=[
+    normalFavorite({id:"demo-fav-1",name:"Bol énergie",type:"Déjeuner",description:"Gruau, banane, beurre d’arachide et graines de chia",usageCount:18}),
+    normalFavorite({id:"demo-fav-2",name:"Dîner simple",type:"Dîner",description:"Poulet grillé, riz et légumes",usageCount:14}),
+    normalFavorite({id:"demo-fav-3",name:"Collation fraîche",type:"Collation",description:"Pomme et amandes",usageCount:11})
+  ];
+
+  for(let offset=-179;offset<=0;offset++){
+    const date=demoDateKey(offset);
+    const seed=offset+500;
+    const day=ensureDay(store,date);
+    const weekday=new Date(`${date}T12:00:00`).getDay();
+    const active=weekday===2||weekday===4||weekday===6;
+    const lateCoffee=(offset%9===0||offset%13===0);
+    const dairyDay=(offset%4===0||offset%11===0);
+    const hydrated=offset%5!==0;
+    const goodSleep=!lateCoffee&&offset%7!==0;
+
+    day.sleepHours=lateCoffee?6.1:Number((goodSleep?7.7+demoRand(seed)*0.8:6.6+demoRand(seed)*0.6).toFixed(1));
+    day.water=hydrated?6+Math.floor(demoRand(seed+2)*3):3+Math.floor(demoRand(seed+2)*2);
+    day.activities=active?[{id:`demo-a-${date}`,type:weekday===6?"Vélo":"Marche",minutes:weekday===6?55:35,at:`${date}T17:30:00`}]:[];
+
+    const breakfastEnergy=goodSleep?4:2;
+    day.meals.push(demoMeal(
+      date,"07:35","Déjeuner",
+      offset%3===0?"Gruau, banane et beurre d’arachide":"Œufs, pain complet et petits fruits",
+      breakfastEnergy,goodSleep?["Énergie stable"]:["Fatigue"],goodSleep?4:2
+    ));
+
+    const lunchDescription=dairyDay
+      ?"Sandwich au fromage, yogourt et crudités"
+      :(offset%3===0?"Poulet, riz et brocoli":"Salade de quinoa, pois chiches et légumes");
+    const lunchTags=dairyDay
+      ?(["Maux de tête", ...(offset%8===0?["Ballonnements"]:[])])
+      :(hydrated?["Énergie stable"]:["Fatigue"]);
+    day.meals.push(demoMeal(
+      date,"12:15","Dîner",lunchDescription,
+      hydrated?4:2,lunchTags,dairyDay?2:(hydrated?4:3),
+      dairyDay?"Inconfort apparu environ deux heures après le repas.":""
+    ));
+
+    const dinnerDescription=lateCoffee
+      ?"Pâtes aux légumes et café vers 17 h"
+      :(offset%6===0?"Saumon, pommes de terre et salade":"Poulet ou tofu, légumes et riz");
+    day.meals.push(demoMeal(
+      date,"18:25","Souper",dinnerDescription,
+      active?4:3,lateCoffee?["Sommeil agité"]:(active?["Détendu"]:["Satisfait"]),lateCoffee?2:4
+    ));
+
+    if(offset%3===0){
+      day.meals.push(demoMeal(date,"15:35","Collation",
+        dairyDay?"Latte et muffin":"Pomme et amandes",
+        dairyDay?2:4,dairyDay?["Maux de tête"]:["Énergie stable"],dairyDay?2:4));
+    }
+    day.updatedAt=`${date}T21:00:00`;
+  }
+  return store
+}
+function demoDiscoveryHtml(){
+  if(!db.settings.demoMode)return "";
+  return `<section class="demo-discoveries" id="demoDiscoveries">
+    <div class="demo-discoveries-heading">
+      <div class="demo-heading-mascot"><img src="assets/icon.svg" alt=""></div>
+      <div><p class="eyebrow">Ce que tes données racontent</p><h2>4 tendances ressortent après 180 jours</h2><p>Ces observations décrivent des associations dans ce journal fictif. Elles ne prouvent pas qu’un aliment cause un symptôme.</p></div>
+    </div>
+    <div class="demo-insight-grid">
+      <article class="card demo-insight-card demo-insight-strong">
+        <div class="demo-insight-top"><span class="demo-signal">Tendance forte</span><strong>82 %</strong></div>
+        <div class="demo-insight-icon">🥛</div>
+        <h3>Produits laitiers et maux de tête</h3>
+        <p>Les repas contenant du lait, du yogourt ou du fromage sont plus souvent suivis d’un mal de tête dans ce journal.</p>
+        <div class="demo-comparison"><span><b>31 %</b><small>avec produits laitiers</small></span><i>contre</i><span><b>8 %</b><small>sans produits laitiers</small></span></div>
+        <div class="demo-inline-proof"><b>Pourquoi cette tendance?</b><span>16 maux de tête après 52 repas avec produits laitiers, contre une fréquence nettement plus faible sans eux.</span></div><button class="why-demo-insight" type="button" data-demo-detail="lactose">Voir tous les détails →</button>
+      </article>
+      <article class="card demo-insight-card">
+        <div class="demo-insight-top"><span class="demo-signal moderate">Tendance modérée</span><strong>74 %</strong></div>
+        <div class="demo-insight-icon">☕</div>
+        <h3>Café tardif et sommeil plus court</h3>
+        <p>Les journées où un café est noté après 16 h sont associées à une nuit plus courte.</p>
+        <div class="demo-comparison"><span><b>6 h 08</b><small>avec café tardif</small></span><i>contre</i><span><b>7 h 46</b><small>sans café tardif</small></span></div>
+        <div class="demo-inline-proof"><b>Pourquoi cette tendance?</b><span>La nuit moyenne est plus courte après les journées comprenant un café après 16 h.</span></div><button class="why-demo-insight" type="button" data-demo-detail="coffee">Voir tous les détails →</button>
+      </article>
+      <article class="card demo-insight-card">
+        <div class="demo-insight-top"><span class="demo-signal moderate">Tendance modérée</span><strong>69 %</strong></div>
+        <div class="demo-insight-icon">💧</div>
+        <h3>Hydratation et fatigue d’après-midi</h3>
+        <p>Les journées avec moins de quatre verres sont plus souvent accompagnées d’une énergie faible.</p>
+        <div class="demo-comparison"><span><b>46 %</b><small>faible hydratation</small></span><i>contre</i><span><b>17 %</b><small>bonne hydratation</small></span></div>
+        <div class="demo-inline-proof"><b>Pourquoi cette tendance?</b><span>Les journées sous quatre verres contiennent plus souvent une note d’énergie faible.</span></div><button class="why-demo-insight" type="button" data-demo-detail="water">Voir tous les détails →</button>
+      </article>
+      <article class="card demo-insight-card">
+        <div class="demo-insight-top"><span class="demo-signal emerging">Observation émergente</span><strong>61 %</strong></div>
+        <div class="demo-insight-icon">🚶</div>
+        <h3>Activité et humeur plus détendue</h3>
+        <p>Après au moins 30 minutes d’activité, le ressenti « détendu » apparaît plus souvent en soirée.</p>
+        <div class="demo-comparison"><span><b>2,4×</b><small>plus fréquent</small></span><i>sur</i><span><b>48</b><small>journées actives</small></span></div>
+        <div class="demo-inline-proof"><b>Pourquoi cette tendance?</b><span>Le ressenti « détendu » apparaît 2,4 fois plus souvent après au moins 30 minutes d’activité.</span></div><button class="why-demo-insight" type="button" data-demo-detail="activity">Voir tous les détails →</button>
+      </article>
+    </div>
+    <p class="demo-legal-note">🍏⚡ Énergie observe des tendances personnelles. Pour toute préoccupation médicale, consulte un professionnel de la santé.</p>
+  </section>`
+}
+function demoBannerHtml(){
+  if(!db.settings.demoMode)return "";
+  return `<section class="demo-mode-banner" id="demoModeBanner">
+    <span><img src="assets/icon.svg" alt=""> <b>Mode démo</b></span>
+    <p>Tu explores le journal fictif de Phil.</p>
+    <button type="button" id="leaveDemoQuick">Commencer mon journal</button>
+  </section>`
+}
+function bindDemoChrome(){
+  $("#leaveDemoQuick")?.addEventListener("click",leaveDemoMode);
+  $$(".why-demo-insight").forEach(button=>button.addEventListener("click",()=>{
+    const details={
+      lactose:["Produits laitiers et maux de tête","Sur 52 repas contenant des produits laitiers, 16 sont suivis d’un mal de tête. Sur les autres repas, cette observation apparaît beaucoup moins souvent. L’application présente donc une association à surveiller, pas une intolérance confirmée."],
+      coffee:["Café tardif et sommeil","La durée de sommeil moyenne est plus faible après les 20 journées où un café a été inscrit après 16 h. D’autres facteurs peuvent aussi expliquer cette différence."],
+      water:["Hydratation et énergie","Les notes d’énergie faible sont plus fréquentes lors des journées comptant moins de quatre verres. Les données ne permettent pas d’affirmer que le manque d’eau en est la cause."],
+      activity:["Activité et détente","Le mot « détendu » est noté plus souvent après les journées comprenant au moins 30 minutes d’activité. Cette observation pourrait devenir plus fiable avec davantage de données."]
+    };
+    const [title,body]=details[button.dataset.demoDetail]||["Observation",""];
+    $("#sourceTitle").textContent=title;
+    $("#sourceContent").innerHTML=`<div class="demo-detail-mascot"><img src="assets/icon.svg" alt=""></div><p>${body}</p><div class="notice info-notice"><strong>À retenir</strong><p>Une association n’est pas une preuve de cause à effet et ne constitue pas un diagnostic.</p></div>`;
+    $("#sourceDialog").showModal()
+  }))
+}
+function renderDemoChrome(){
+  document.body.classList.toggle("is-demo-mode",!!db.settings.demoMode);
+  const appRoot=$("#app");
+  if(db.settings.demoMode&&appRoot&&!$("#demoModeBanner")){
+    appRoot.insertAdjacentHTML("afterbegin",demoBannerHtml())
+  }
+  bindDemoChrome()
+}
+function startDemoMode(){
+  try{
+    if(!localStorage.getItem(DEMO_BACKUP_KEY))localStorage.setItem(DEMO_BACKUP_KEY,JSON.stringify(db))
+  }catch(_){}
+  db=createDemoDB();
+  selectedDate=todayKey();
+  currentView="today";
+  saveLocal("demarrage-demo");
+  $("#welcomeDialog")?.close();
+  render();
+  setTimeout(()=>startDemoTour(),350)
+}
+function leaveDemoMode(){
+  if(!confirm("Commencer ton propre journal? Les données fictives seront retirées."))return;
+  db=freshDB();
+  db.settings.showWelcome=false;
+  db.settings.demoMode=false;
+  db.settings.demoTourSeen=true;
+  localStorage.removeItem(DEMO_BACKUP_KEY);
+  localStorage.removeItem(OUTBOX_KEY);
+  selectedDate=todayKey();
+  currentView="today";
+  saveLocal("fin-demo");
+  render()
+}
 const demoTourSteps=[
   {view:"today",target:".date-card",title:"Bienvenue dans le journal de Phil",text:"Pendant une minute, je vais te montrer comment de petites notes quotidiennes deviennent des observations utiles."},
-  {view:"today",target:".meal-quick-grid",title:"Les repas se notent rapidement",text:"Phil ajoute ce qu’il mange, son énergie avant le repas et son ressenti après. Aucun calcul compliqué n’est nécessaire."},
-  {view:"today",target:".wellbeing-detail-grid",title:"Le contexte complète l’histoire",text:"Sommeil, eau et activité peuvent expliquer pourquoi deux repas semblables ne sont pas toujours vécus de la même manière."},
-  {view:"history",target:".history-list, .calendar-grid, main",title:"L’historique montre la régularité",text:"Après plusieurs semaines, Phil peut revoir ses journées et reconnaître les répétitions."},
-  {view:"insights",target:".insights-chart, canvas, .chart-card, .insight-chart, main",title:"Les graphiques rendent les tendances visibles",text:"Les données accumulées remplissent les graphiques : énergie, sommeil, hydratation, activité et ressentis évoluent dans le temps."},
-  {view:"insights",target:"#demoDiscoveries",title:"Puis Énergie relie les observations",text:"Ici, les produits laitiers apparaissent plus souvent avant des maux de tête. C’est une association à surveiller, jamais un diagnostic."},
-  {view:"insights",target:".demo-insight-card",title:"Chaque découverte explique pourquoi",text:"Les comparaisons sont déjà visibles. Tu n’as rien à cliquer pour comprendre la tendance."},
-  {view:"profile",target:".profile-header, .profile-card, main",title:"Le profil garde le contrôle",text:"Le profil permet de gérer les objectifs, les rappels, la sauvegarde et la confidentialité."},
-  {view:"profile",target:".demo-profile-card",title:"La démo reste clairement identifiable",text:"Tu peux revoir cette visite ou quitter le mode démo à tout moment pour commencer ton propre journal."}
+  {view:"today",target:".meal-quick-grid",title:"Les repas se notent rapidement",text:"Phil ajoute ce qu’il mange, son énergie avant le repas et son ressenti plus tard."},
+  {view:"today",target:".wellbeing-detail-grid",title:"Le contexte complète l’histoire",text:"Sommeil, eau et activité donnent du contexte aux bonnes et moins bonnes journées."},
+  {view:"history",target:"#historyResults, .search-card, main",title:"L’historique montre les répétitions",text:"Après plusieurs semaines, les journées s’accumulent et les habitudes deviennent faciles à reconnaître."},
+  {view:"insights",target:".spark, .grid, main",title:"Les graphiques rendent les tendances visibles",text:"Les données de Phil remplissent déjà les graphiques d’énergie et les résumés."},
+  {view:"insights",target:"#demoDiscoveries",title:"Puis Énergie relie les observations",text:"Les produits laitiers apparaissent plus souvent avant des maux de tête. C’est une association, jamais un diagnostic."},
+  {view:"insights",target:".demo-insight-card",title:"Le pourquoi est visible tout de suite",text:"Les chiffres comparés et le niveau de confiance sont présentés directement."},
+  {view:"profile",target:".demo-profile-card, .stack, main",title:"Le profil garde le contrôle",text:"Le profil rassemble les préférences, la sauvegarde, les rappels et les commandes du mode démo."}
 ];
-
-function clearDemoTourTarget(){
-  $$(".demo-tour-target").forEach(el=>el.classList.remove("demo-tour-target"))
-}
-function resolveDemoTarget(selector){
-  if(!selector)return null;
-  for(const part of selector.split(",")){
-    const found=$(part.trim());
-    if(found)return found
-  }
-  return null
-}
-function positionDemoTourCard(target){
-  const card=$("#demoTour .demo-tour-card");
-  if(!card)return;
-  card.classList.remove("tour-card-top");
-  if(!target)return;
-  const r=target.getBoundingClientRect();
-  if(r.top>window.innerHeight*.5)card.classList.add("tour-card-top");
-  target.scrollIntoView({behavior:"smooth",block:"center",inline:"nearest"})
-}
-function updateDemoTourProgress(){
-  const total=demoTourSteps.length;
-  const current=Math.min(demoTourIndex+1,total);
-  $("#demoTourProgress").textContent=`Visite guidée · ${current}/${total}`;
-  const bar=$("#demoTourProgressBar");
-  if(bar)bar.style.width=`${Math.round(current/total*100)}%`
-}
-function showDemoTourStep(){
-  const step=demoTourSteps[demoTourIndex];
-  if(!step)return finishDemoTour(true);
-
-  if(currentView!==step.view){
-    demoTourChangingView=true;
-    currentView=step.view;
-    if(step.view==="today")selectedDate=todayKey();
-    render();
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      demoTourChangingView=false;
-      showDemoTourStep()
-    }));
-    return
-  }
-
-  setTimeout(()=>{
-    const tour=$("#demoTour");
-    if(!tour||tour.hidden)return;
-    clearDemoTourTarget();
-    const target=resolveDemoTarget(step.target);
-    target?.classList.add("demo-tour-target");
-    updateDemoTourProgress();
-    $("#demoTourTitle").textContent=step.title;
-    $("#demoTourText").textContent=step.text;
-    $("#nextDemoTour").textContent=demoTourIndex===demoTourSteps.length-1?"Terminer":"Suivant";
-    positionDemoTourCard(target)
-  },180)
-}
-function startDemoTour(){
-  if(!db.settings.demoMode)return;
-  demoTourIndex=0;
-  const tour=$("#demoTour");
-  if(!tour)return;
-  tour.hidden=false;
-  document.body.classList.add("demo-tour-open");
-  showDemoTourStep()
-}
-function closeDemoTourToChoice(){
-  clearDemoTourTarget();
-  const tour=$("#demoTour");
-  if(tour)tour.hidden=true;
-  document.body.classList.remove("demo-tour-open");
-  showDemoFinalDialog()
-}
-function showDemoFinalDialog(){
-  const dialog=$("#demoFinalDialog");
-  if(dialog&&!dialog.open)dialog.showModal()
-}
-function finishDemoTour(showFinal=true){
-  clearDemoTourTarget();
-  const tour=$("#demoTour");
-  if(tour)tour.hidden=true;
-  document.body.classList.remove("demo-tour-open");
-  db.settings.demoTourSeen=true;
-  saveLocal("visite-demo");
-  if(showFinal)showDemoFinalDialog()
-}
-function nextDemoTourStep(){
-  demoTourIndex++;
-  if(demoTourIndex>=demoTourSteps.length){
-    finishDemoTour(true);
-    return
-  }
-  showDemoTourStep()
-}
-function continueExploringDemo(){
-  $("#demoFinalDialog")?.close();
-  currentView="insights";
-  render();
-  setTimeout(()=>$("#demoDiscoveries")?.scrollIntoView({behavior:"smooth",block:"start"}),100)
-}
+function clearDemoTourTarget(){$$(".demo-tour-target").forEach(el=>el.classList.remove("demo-tour-target"))}
+function findDemoTourTarget(selector){for(const part of String(selector||"").split(",")){const target=$(part.trim());if(target)return target}return null}
+function positionDemoTourCard(target){const card=$("#demoTour .demo-tour-card");if(!card)return;card.classList.remove("tour-card-top");if(!target)return;const r=target.getBoundingClientRect();card.classList.toggle("tour-card-top",r.top>window.innerHeight*.5);target.scrollIntoView({behavior:"smooth",block:"center"})}
+function showDemoTourStep(){const step=demoTourSteps[demoTourIndex];if(!step){finishDemoTour();return}if(currentView!==step.view){currentView=step.view;if(step.view==="today")selectedDate=todayKey();render()}setTimeout(()=>{const tour=$("#demoTour");if(!tour||tour.hidden)return;clearDemoTourTarget();const target=findDemoTourTarget(step.target);target?.classList.add("demo-tour-target");$("#demoTourProgress").textContent=`Visite guidée · ${demoTourIndex+1}/${demoTourSteps.length}`;const progress=$("#demoTourProgressBar");if(progress)progress.style.width=`${Math.round((demoTourIndex+1)/demoTourSteps.length*100)}%`;$("#demoTourTitle").textContent=step.title;$("#demoTourText").textContent=step.text;$("#nextDemoTour").textContent=demoTourIndex===demoTourSteps.length-1?"Terminer":"Suivant";positionDemoTourCard(target)},120)}
+function startDemoTour(){if(!db.settings.demoMode)return;demoTourIndex=0;const tour=$("#demoTour");if(!tour)return;tour.hidden=false;document.body.classList.add("demo-tour-open");showDemoTourStep()}
+function showDemoFinalDialog(){const dialog=$("#demoFinalDialog");if(dialog&&!dialog.open)dialog.showModal()}
+function finishDemoTour(){clearDemoTourTarget();const tour=$("#demoTour");if(tour)tour.hidden=true;document.body.classList.remove("demo-tour-open");db.settings.demoTourSeen=true;saveLocal("visite-demo");showDemoFinalDialog()}
+function leaveDemoTourEarly(){clearDemoTourTarget();const tour=$("#demoTour");if(tour)tour.hidden=true;document.body.classList.remove("demo-tour-open");showDemoFinalDialog()}
+function continueExploringDemo(){$("#demoFinalDialog")?.close();currentView="insights";render();setTimeout(()=>$("#demoDiscoveries")?.scrollIntoView({behavior:"smooth",block:"start"}),100)}
 
 function render(){if(selectedDate>todayKey())selectedDate=todayKey();document.documentElement.dataset.theme=db.settings.theme==="dark"?"dark":"";updateLivingHeader();$("#todayLabel").textContent=currentView==="today"?formatDate(selectedDate):formatDate(todayKey());$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===currentView));updateSyncBadge();({today:renderToday,history:renderHistory,insights:renderInsights,profile:renderProfile}[currentView]||renderToday)();renderDemoChrome()}
 function mealCard(m,opts={}){const feeling=m.feeling;return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${m.photoUrl||m.photoLocal?`<img src="${esc(m.photoUrl||m.photoLocal)}" alt="">`:mealIcon(m.type)}</div><div><h3>${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${esc(t(m.type))}${opts.showDate?` · ${esc(formatDate(m.date))}`:""}</div><div class="chips"><span class="chip">Énergie avant ${m.fatigueBefore||'—'}/5</span>${feeling?`<span class="chip feeling-chip">${feelingEmoji(feeling.rating)} ${t("Ressenti")} ${feeling.rating}/5</span>`:""}</div></div><div class="meal-actions">${isFeelingEligible(m)?`<button class="feeling-meal" data-feeling="${m.id}" title="${feeling?'Modifier le ressenti':'Ajouter un ressenti'}">${feeling?'😊':'＋😊'}</button>`:""}<button class="favorite-meal" data-favorite="${m.id}" title="Ajouter aux favoris">☆</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div></article>`}
@@ -311,7 +401,7 @@ $('#sleepForm').onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDat
 $('#activityForm').onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDate),type=$('#activityType').value,min=parseAppNumber($('#activityMinutes').value)||0;if(!type)return alert('Choisis un type d’activité.');if(min<1||min>1440)return alert('Indique une durée valide en minutes.');d.activities.push({id:uid(),type,minutes:min,at:new Date().toISOString()});setDayChanged(selectedDate);$('#activityDialog').close();render()};
 $$('[data-activity]').forEach(b=>b.onclick=()=>{$('#activityType').value=b.dataset.activity;$$('[data-activity]').forEach(x=>x.classList.toggle('active',x===b))});
 $("#copyYesterdayBreakfast").onclick=()=>{const dt=new Date(`${selectedDate}T12:00:00`);dt.setDate(dt.getDate()-1);const k=dt.toLocaleDateString('en-CA'),m=ensureDay(db,k).meals.find(x=>x.type==='Déjeuner');if(!m)return alert("Aucun déjeuner trouvé hier.");$("#mealType").value=m.type;$("#mealDescription").value=m.description;$("#mealNotes").value=m.notes||'';makeRatings('#fatigueBeforePicker',m.fatigueBefore||3)};
-$("#startDemo").onclick=startDemoMode;$("#welcomeForm").onsubmit=e=>{e.preventDefault();db.settings.showWelcome=!$("#hideWelcome").checked;db.settings.demoMode=false;db.settings.demoTourSeen=true;saveLocal('message-information');$("#welcomeDialog").close()};$("#nextDemoTour").onclick=nextDemoTourStep;$("#skipDemoTour").onclick=closeDemoTourToChoice;$("#closeDemoTour").onclick=closeDemoTourToChoice;$("#finishStartJournal").onclick=()=>{$("#demoFinalDialog")?.close();leaveDemoMode()};$("#finishExploreDemo").onclick=continueExploringDemo;$("#finishReplayTour").onclick=()=>{$("#demoFinalDialog")?.close();startDemoTour()};
+$("#startDemo").onclick=startDemoMode;$("#welcomeForm").onsubmit=e=>{e.preventDefault();db.settings.showWelcome=!$("#hideWelcome").checked;db.settings.demoMode=false;db.settings.demoTourSeen=true;saveLocal('message-information');$("#welcomeDialog").close()};$("#nextDemoTour").onclick=()=>{demoTourIndex++;showDemoTourStep()};$("#skipDemoTour").onclick=leaveDemoTourEarly;$("#closeDemoTour").onclick=leaveDemoTourEarly;$("#finishStartJournal").onclick=()=>{$("#demoFinalDialog")?.close();leaveDemoMode()};$("#finishExploreDemo").onclick=continueExploringDemo;$("#finishReplayTour").onclick=()=>{$("#demoFinalDialog")?.close();startDemoTour()};
 $$('.close-dialog').forEach(b=>b.onclick=()=>b.closest('dialog').close());
 function setAuthMode(mode){authMode=mode==="signup"?"signup":"login";const signup=authMode==="signup",confirmInput=$("#authPasswordConfirm");$("#loginTab").classList.toggle("active",!signup);$("#signupTab").classList.toggle("active",signup);$("#authTitle").textContent=signup?"Créer un compte":"Connexion";$("#authSubmit").textContent=signup?"Créer mon compte":"Me connecter";$("#confirmPasswordLabel").hidden=!signup;confirmInput.required=signup;if(!signup)confirmInput.value="";$("#authPassword").autocomplete=signup?"new-password":"current-password";$("#forgotPassword").hidden=signup;$("#authMessage").textContent=signup?"Après l’inscription, confirme le courriel de Supabase.":"La connexion se fait directement dans l’application."}
 function friendlyAuthError(error){const text=(error?.message||"").toLowerCase();if(text.includes("invalid login credentials"))return"Courriel ou mot de passe incorrect.";if(text.includes("email not confirmed"))return"Confirme d’abord ton adresse courriel.";if(text.includes("user already registered"))return"Ce courriel possède déjà un compte.";if(text.includes("rate limit"))return"Trop de tentatives rapprochées. Attends un peu puis réessaie.";return error?.message||"Une erreur est survenue."}
@@ -326,7 +416,7 @@ window.addEventListener('online',()=>{updateSyncBadge();if(session)syncNow()});w
 function dismissSplash(){const splash=$('#splashScreen');if(!splash)return;setTimeout(()=>{splash.classList.add('is-hidden');setTimeout(()=>splash.remove(),420)},760)}
 let dialogScrollY=0;function syncDialogScrollLock(){const open=!!document.querySelector('dialog[open]');if(open&&!document.body.classList.contains('dialog-open')){dialogScrollY=window.scrollY;document.body.style.top=`-${dialogScrollY}px`;document.body.classList.add('dialog-open')}else if(!open&&document.body.classList.contains('dialog-open')){document.body.classList.remove('dialog-open');document.body.style.top='';window.scrollTo(0,dialogScrollY)}}new MutationObserver(syncDialogScrollLock).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
 async function initAuth(){if(!client){render();if(db.settings.showWelcome!==false)setTimeout(()=>$("#welcomeDialog").showModal(),120);return}const {data}=await client.auth.getSession();session=data.session;client.auth.onAuthStateChange((event,newSession)=>{session=newSession;updateSyncBadge();if(event==="PASSWORD_RECOVERY")setTimeout(()=>$("#passwordDialog").showModal(),0);if(event==="SIGNED_OUT")render()});if(session){await pullCloud(false);await syncNow()}render();if(db.settings.showWelcome!==false)setTimeout(()=>$("#welcomeDialog").showModal(),120)}
-if('serviceWorker'in navigator)window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js?v=2.5.1');await reg.update();let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});if(reg.waiting)reg.waiting.postMessage?.({type:'SKIP_WAITING'})}catch(e){console.warn(e)}});
+if('serviceWorker'in navigator)window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js?v=2.5.2');await reg.update();let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});if(reg.waiting)reg.waiting.postMessage?.({type:'SKIP_WAITING'})}catch(e){console.warn(e)}});
 dismissSplash();
 initAuth();
 scheduleFeelingChecks();

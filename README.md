@@ -272,9 +272,5 @@ Aucune migration SQL n'est requise pour la V2.4.2. La langue choisie est enregis
 - Formulations prudentes : associations possibles, jamais de diagnostic.
 
 
-## V2.5.1 — Visite démo narrative
-- Navigation automatique entre Journal, Historique, Graphiques, Découvertes et Profil.
-- Explications importantes visibles sans clic obligatoire.
-- Barre de progression et bouton Suivant toujours accessibles.
-- Écran final avec trois choix clairs.
-- Profil fictif renommé Phil.
+## V2.5.2
+Visite guidée étendue avec graphiques, profil et écran final clair. Construite à partir de la dernière V2.5.0 fonctionnelle.
