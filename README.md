@@ -228,3 +228,14 @@ Aucune migration SQL n'est requise pour la V2.4.2. La langue choisie est enregis
 - Traduction complétée pour le type de repas dans la chronologie.
 - Traduction complétée pour les observations dynamiques des Insights, notamment les repas nommés dans « Avant tes repas… » et l’observation sur les aliments fréquemment notés.
 - Aucune migration SQL requise.
+
+
+## V2.4.4 — Fenêtre de repas et type figé
+
+- La fenêtre d’ajout et de modification d’un repas reste fixe à l’écran.
+- Le défilement de la page derrière la fenêtre est bloqué pendant son ouverture.
+- Le type de repas n’est plus modifiable dans la fenêtre : il reprend automatiquement la tuile choisie dans le Journal.
+- Une tuile illustrée affiche clairement le type de repas sélectionné.
+- « Copier le déjeuner d’hier » apparaît uniquement pour un déjeuner.
+- Les repas favoris proposés sont limités au type de repas actuellement ouvert afin d’éviter toute ambiguïté.
+- Aucune migration SQL requise.

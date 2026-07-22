@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=2.4.3">
+  <link rel="stylesheet" href="styles.css?v=2.4.4">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -38,15 +38,16 @@
     <form id="mealForm" class="dialog-card">
       <div class="dialog-header"><div><p class="eyebrow">Mon repas</p><h2 id="mealDialogTitle">Ajouter un repas</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
       <input type="hidden" id="mealId">
+      <input type="hidden" id="mealType" value="Déjeuner">
+      <div class="meal-dialog-type" aria-live="polite">
+        <span id="mealDialogTypeIcon" class="meal-dialog-type-icon" aria-hidden="true">🍳</span>
+        <div><span class="muted small">Type de repas</span><strong id="mealDialogTypeLabel">Déjeuner</strong></div>
+      </div>
+      <button type="button" class="secondary small copy-breakfast-button" id="copyYesterdayBreakfast">Copier le déjeuner d'hier</button>
       <label id="favoriteMealLabel">Choisir un repas favori
         <select id="favoriteMealSelect"><option value="">Choisir un favori…</option></select>
       </label>
-      <div class="two-col">
-        <label>Type de repas<select id="mealType" required><option value="Déjeuner">Déjeuner</option><option value="Dîner">Dîner</option><option value="Souper">Souper</option><option value="Collation">Collation</option><option value="Boisson">Boisson</option></select>
-          <button type="button" class="secondary small copy-breakfast-button" id="copyYesterdayBreakfast">Copier le déjeuner d'hier</button>
-        </label>
-        <label>Heure<input id="mealTime" type="time" required></label>
-      </div>
+      <label>Heure<input id="mealTime" type="time" required></label>
       <label>Ce que tu as mangé ou bu<textarea id="mealDescription" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea></label>
       <div class="energy-picker">
         <span>Énergie avant le repas</span>
@@ -176,8 +177,8 @@
 
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=2.4.3"></script>
-  <script src="i18n.js?v=2.4.3"></script>
-  <script src="app.js?v=2.4.3"></script>
+  <script src="config.js?v=2.4.4"></script>
+  <script src="i18n.js?v=2.4.4"></script>
+  <script src="app.js?v=2.4.4"></script>
 </body>
 </html>

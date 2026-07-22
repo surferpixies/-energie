@@ -97,3 +97,14 @@ dialog{border:0;border-radius:28px;background:transparent;padding:0;width:min(94
 @media(max-width:360px){.setting-option{padding:10px}.setting-option span{font-size:.82rem}}
 
 .copy-breakfast-button{margin-top:10px;width:100%;justify-content:center}.copy-breakfast-button[hidden]{display:none!important}
+
+/* V2.4.4 — Modale de repas stable et type de repas figé */
+body.dialog-open{position:fixed;left:0;right:0;width:100%;overflow:hidden;overscroll-behavior:none}
+dialog{position:fixed;inset:0;margin:auto;max-width:calc(100vw - 24px);overflow:hidden;overscroll-behavior:none}
+dialog[open]{display:block}
+.dialog-card{box-sizing:border-box;width:100%;overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch}
+.meal-dialog-type{display:grid;grid-template-columns:54px minmax(0,1fr);align-items:center;gap:13px;padding:13px 14px;border:1px solid color-mix(in srgb,var(--accent) 20%,var(--border));border-radius:18px;background:color-mix(in srgb,var(--accent) 8%,var(--surface));box-shadow:0 8px 22px rgba(20,26,22,.06)}
+.meal-dialog-type-icon{display:grid;place-items:center;width:54px;height:54px;border-radius:16px;background:var(--surface);font-size:2rem;box-shadow:0 6px 16px rgba(20,26,22,.08)}
+.meal-dialog-type strong{display:block;margin-top:2px;font-size:1.08rem}
+.copy-breakfast-button{justify-self:start;margin-top:-5px}
+@media (max-width:520px){dialog{width:calc(100vw - 20px);max-height:calc(100dvh - 20px)}.dialog-card{max-height:calc(100dvh - 20px)}}
