@@ -1,4 +1,4 @@
-# Énergie V3.0.0 — Nutrition facultative
+# Énergie V3.0.1 — Gestion des collations
 
 Cette version ajoute un raccourci de saisie par code-barres dans la fenêtre de repas. Le scan cherche uniquement le nom et la marque dans Open Food Facts. Le nom reste toujours modifiable avant l’ajout. Aucune calorie, macro, portion, note nutritionnelle ou Nutri-Score n’est enregistré.
 
@@ -325,3 +325,10 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 - Récupération des valeurs Open Food Facts au scan lorsqu’elles existent.
 - Les estimations sont indicatives et ne remplacent pas les données d’une étiquette ni les conseils d’un professionnel.
 - Pour Supabase, exécuter la nouvelle ligne `alter table ... nutrition jsonb` du fichier `supabase-setup.sql`.
+
+
+## V3.0.1 — Gestion des collations
+- Toucher la carte Collation affiche les collations de la journée lorsqu’il y en a déjà.
+- Chaque collation peut être modifiée ou supprimée individuellement.
+- Un bouton permet d’ajouter une autre collation.
+- Tout repas ouvert en modification possède maintenant un bouton Supprimer.

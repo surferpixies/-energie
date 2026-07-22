@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.0.0">
+  <link rel="stylesheet" href="styles.css?v=3.0.1">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -75,10 +75,19 @@
       <label>Photo facultative<input id="mealPhoto" type="file" accept="image/*" capture="environment"></label>
       <div id="photoPreviewWrap" class="photo-preview-wrap" hidden><img id="photoPreview" alt="Aperçu"><button type="button" id="removePhoto" class="secondary small">Retirer la photo</button></div>
       <label>Notes facultatives<textarea id="mealNotes" name="energie_meal_notes_value" autocomplete="one-time-code" autocapitalize="sentences" rows="2" placeholder="Contexte, digestion, humeur…"></textarea></label>
-      <div class="dialog-actions"><button type="submit" class="primary">Enregistrer</button></div>
+      <div class="dialog-actions meal-form-actions"><button type="button" class="danger" id="deleteCurrentMeal" hidden>Supprimer</button><button type="submit" class="primary">Enregistrer</button></div>
     </form>
   </dialog>
 
+
+
+  <dialog id="snackManagerDialog">
+    <section class="dialog-card snack-manager-card">
+      <div class="dialog-header"><div><p class="eyebrow">Aujourd’hui</p><h2>Mes collations</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
+      <div id="snackManagerList" class="snack-manager-list"></div>
+      <button type="button" class="primary" id="addAnotherSnack">＋ Ajouter une collation</button>
+    </section>
+  </dialog>
 
   <dialog id="barcodeDialog" class="barcode-dialog">
     <div class="dialog-card barcode-dialog-card">
@@ -269,8 +278,8 @@
 
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=3.0.0"></script>
-  <script src="i18n.js?v=3.0.0"></script>
-  <script src="app.js?v=3.0.0"></script>
+  <script src="config.js?v=3.0.1"></script>
+  <script src="i18n.js?v=3.0.1"></script>
+  <script src="app.js?v=3.0.1"></script>
 </body>
 </html>
