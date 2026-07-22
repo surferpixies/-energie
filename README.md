@@ -270,3 +270,11 @@ Aucune migration SQL n'est requise pour la V2.4.2. La langue choisie est enregis
 - Mode démo clairement identifié et isolé de Supabase.
 - Boutons pour revoir la visite ou commencer un journal personnel.
 - Formulations prudentes : associations possibles, jamais de diagnostic.
+
+
+## V2.5.1 — Visite démo narrative
+- Navigation automatique entre Journal, Historique, Graphiques, Découvertes et Profil.
+- Explications importantes visibles sans clic obligatoire.
+- Barre de progression et bouton Suivant toujours accessibles.
+- Écran final avec trois choix clairs.
+- Profil fictif renommé Phil.
