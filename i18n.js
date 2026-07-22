@@ -194,7 +194,7 @@
   });
 
 
-  // V2.4.1 — couverture complète des textes statiques et dynamiques de l’interface.
+  // V2.4.2 — correctifs finaux des textes statiques et dynamiques de l’interface.
   Object.assign(en, {
     'Local':'Local','Changer le thème':'Change theme','Navigation principale':'Main navigation','Fermer':'Close','Aperçu':'Preview',
     'Un outil d’observation, pas un avis médical':'A tracking tool, not medical advice',
@@ -223,7 +223,7 @@
     'Repas principaux':'Main meals','repas principal':'main meal','repas principaux':'main meals',
     'journée':'day','jour':'day','jours':'days','mois':'months','Depuis':'Since',
     'Aucun ressenti en attente':'No pending check-ins','Dernier ressenti':'Latest feeling',
-    'Observation':'Insight','Observations':'Insights','Pourquoi je vois ceci?':'Why am I seeing this?',
+    '😊 Ressenti':'😊 Feeling','⭐ Mes favoris':'⭐ My favorites','Observation personnelle':'Personal insight','Observation':'Insight','Observations':'Insights','Pourquoi je vois ceci?':'Why am I seeing this?',
     'Sources générales':'General sources','Afficher les sources':'Show sources',
     'Objectif d\'eau':'Water goal','Nombre de gouttes affichées':'Number of drops displayed',
     'Sauvegarde supplémentaire':'Additional backup','copie(s) locale(s) de sécurité.':'local backup copies.',
@@ -253,7 +253,7 @@
     'Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.':'Connectez-vous afin que vos repas et favoris soient enregistrés dans Supabase.',
     'Tu es hors ligne. Les changements seront synchronisés plus tard.':'Vous êtes hors ligne. Les modifications seront synchronisées ultérieurement.',
     'Répondre':'Répondre','Utiliser':'Utiliser','Limites importantes':'Limites importantes',
-    'Très faible':'Très faible','Faible':'Faible','Moyenne':'Moyenne','Bonne':'Bonne','Excellente':'Excellente'
+    '😊 Ressenti':'😊 Ressenti','⭐ Mes favoris':'⭐ Mes favoris','Observation personnelle':'Observation personnelle','Très faible':'Très faible','Faible':'Faible','Moyenne':'Moyenne','Bonne':'Bonne','Excellente':'Excellente'
   });
 
   const dict=locale==='en'?en:locale==='fr-FR'?frFR:{};
