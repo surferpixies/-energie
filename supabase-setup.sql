@@ -45,3 +45,10 @@ alter table public.meals add column if not exists feeling_notified_at timestampt
 
 comment on column public.meals.feeling is
   'Ressenti après le repas: rating 1-5, tags text[], notes et recordedAt.';
+
+
+-- Énergie V3.0.0 — macros facultatives
+-- Données approximatives et modifiables associées au repas.
+alter table public.meals add column if not exists nutrition jsonb;
+comment on column public.meals.nutrition is
+  'Macros facultatives: calories, protein, carbs, fat, source, confidence, basis et estimated.';

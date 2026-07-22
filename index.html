@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=2.9.0">
+  <link rel="stylesheet" href="styles.css?v=3.0.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -57,6 +57,17 @@
       <label class="meal-time-row" for="mealTime"><span class="meal-time-label"><span aria-hidden="true">🕒</span><span>Heure</span></span><input id="mealTime" type="time" name="energie_meal_clock_value" autocomplete="one-time-code" required></label>
       <label>Ce que tu as mangé ou bu<textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea></label>
       <button type="button" class="secondary barcode-scan-launch" id="openBarcodeScanner"><span aria-hidden="true">▥</span><span><strong>Scanner un produit</strong><small>Ajoute rapidement son nom au repas</small></span></button>
+      <section id="mealNutritionSection" class="meal-nutrition-section" hidden>
+        <div class="meal-nutrition-heading"><div><span class="eyebrow">Nutrition facultative</span><strong>Estimation des macros</strong></div><button type="button" class="secondary small" id="estimateMealNutrition">Estimer</button></div>
+        <div class="nutrition-fields">
+          <label>Calories<input id="nutritionCalories" type="number" min="0" step="1" inputmode="decimal" placeholder="—"></label>
+          <label>Protéines (g)<input id="nutritionProtein" type="number" min="0" step="0.1" inputmode="decimal" placeholder="—"></label>
+          <label>Glucides (g)<input id="nutritionCarbs" type="number" min="0" step="0.1" inputmode="decimal" placeholder="—"></label>
+          <label>Lipides (g)<input id="nutritionFat" type="number" min="0" step="0.1" inputmode="decimal" placeholder="—"></label>
+        </div>
+        <p id="nutritionEstimateNote" class="muted tiny">Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.</p>
+        <button type="button" class="text-button nutrition-clear" id="clearMealNutrition">Effacer les valeurs</button>
+      </section>
       <div class="energy-picker">
         <span>Énergie avant le repas</span>
         <div id="fatigueBeforePicker" class="energy-slider" role="radiogroup" aria-label="Énergie avant le repas"></div>
@@ -87,9 +98,10 @@
         <div class="barcode-result-heading"><img id="barcodeProductImage" alt="" hidden><div><span id="barcodeResultBadge" class="barcode-result-badge">Produit reconnu</span><p id="barcodeBrand" class="muted small"></p></div></div>
         <label>Nom de l’aliment<input id="barcodeProductName" type="text" autocapitalize="sentences" autocomplete="off" placeholder="Entre un nom"></label>
         <p id="barcodeResultHelp" class="muted tiny"></p>
+        <div id="barcodeNutritionPreview" class="barcode-nutrition-preview" hidden></div>
         <button type="button" class="primary" id="addBarcodeProduct">Ajouter au repas</button>
       </section>
-      <p class="muted tiny barcode-source-note">Recherche de produits : Open Food Facts. Aucun renseignement nutritionnel n’est ajouté.</p>
+      <p class="muted tiny barcode-source-note">Recherche de produits : Open Food Facts. Les valeurs nutritionnelles, lorsqu’elles existent, restent approximatives et modifiables.</p>
     </div>
   </dialog>
 
@@ -257,8 +269,8 @@
 
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=2.9.0"></script>
-  <script src="i18n.js?v=2.9.0"></script>
-  <script src="app.js?v=2.9.0"></script>
+  <script src="config.js?v=3.0.0"></script>
+  <script src="i18n.js?v=3.0.0"></script>
+  <script src="app.js?v=3.0.0"></script>
 </body>
 </html>

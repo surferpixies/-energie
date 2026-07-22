@@ -1,4 +1,4 @@
-# Énergie V2.9.0 — Suggestions par repas
+# Énergie V3.0.0 — Nutrition facultative
 
 Cette version ajoute un raccourci de saisie par code-barres dans la fenêtre de repas. Le scan cherche uniquement le nom et la marque dans Open Food Facts. Le nom reste toujours modifiable avant l’ajout. Aucune calorie, macro, portion, note nutritionnelle ou Nutri-Score n’est enregistré.
 
@@ -316,3 +316,12 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 - Le dîner conserve en priorité le raccourci « Restants : copier le souper d’hier ».
 - Les suggestions sont classées par fréquence d’utilisation avec un léger avantage aux repas récents.
 - Les doublons simples causés par les espaces ou la ponctuation finale sont regroupés.
+
+
+## V3.0.0 — Nutrition facultative
+- Suppression de la carte « Ton parcours » dans l’Historique.
+- Mode Macros facultatives (bêta), désactivé par défaut dans Profil.
+- Estimation locale à partir de mots courants, toujours modifiable.
+- Récupération des valeurs Open Food Facts au scan lorsqu’elles existent.
+- Les estimations sont indicatives et ne remplacent pas les données d’une étiquette ni les conseils d’un professionnel.
+- Pour Supabase, exécuter la nouvelle ligne `alter table ... nutrition jsonb` du fichier `supabase-setup.sql`.
