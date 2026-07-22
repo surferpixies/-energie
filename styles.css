@@ -314,3 +314,5 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .recent-foods-list::-webkit-scrollbar{display:none}
 .recent-food-button{flex:0 0 auto;max-width:220px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text);padding:8px 11px;font:inherit;font-size:.78rem;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .recent-food-button:active{transform:scale(.98)}
+
+/* Suggestions contextuelles par type de repas — V2.9.0 */
