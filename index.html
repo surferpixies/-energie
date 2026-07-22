@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=2.5.4">
+  <link rel="stylesheet" href="styles.css?v=2.6.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -23,7 +23,7 @@
   <div class="app-shell">
     <header class="topbar">
       <div><p class="eyebrow" id="todayLabel"></p><h1 class="brand-title"><span id="livingHeaderIcon" class="living-header-icon weather-icon weather-icon--header" role="img" aria-label="Ambiance du jour"></span><span>Énergie</span></h1></div>
-      <div class="header-actions"><button type="button" class="header-demo-button" id="launchDemoHeader"><span>▶</span><strong>Démo</strong></button><span id="syncBadge" class="sync-badge">Local</span><button class="icon-button" id="themeToggle" aria-label="Changer le thème">☾</button></div>
+      <div class="header-actions"><span id="syncBadge" class="sync-badge">Local</span><button class="icon-button" id="themeToggle" aria-label="Changer le thème">☾</button></div>
     </header>
     <main id="app" tabindex="-1"></main>
     <nav class="bottom-nav" aria-label="Navigation principale">
@@ -103,54 +103,58 @@
 
   <dialog id="welcomeDialog" class="welcome-dialog">
     <form id="welcomeForm" class="dialog-card welcome-card">
-      <div class="welcome-brand"><img src="assets/icon.svg" alt=""><div><p class="eyebrow">Bienvenue</p><h2>Énergie</h2></div></div>
-      <p>Découvre comment tes repas, ton sommeil, ton hydratation et ton ressenti peuvent faire apparaître des tendances personnelles avec le temps.</p>
-      <div class="demo-choice">
-        <button type="button" class="demo-start-button" id="startDemo">
-          <span class="demo-choice-icon"><img src="assets/icon.svg" alt=""></span>
-          <span><strong>Explorer la démo</strong><small>6 mois de données fictives et une visite guidée d’environ une minute.</small></span>
-          <b>›</b>
-        </button>
-        <button type="submit" class="secondary demo-empty-button">
-          <span>🍏</span>
-          <span><strong>Commencer mon journal</strong><small>Partir avec un journal vide et ajouter mes propres données.</small></span>
-        </button>
-      </div>
-      <div class="notice info-notice"><strong>Un outil d’observation, pas un avis médical</strong><p>Les observations décrivent des associations possibles. Elles ne posent aucun diagnostic, ne prouvent pas un lien de cause à effet et ne remplacent pas un professionnel de la santé.</p></div>
-      <label class="checkbox-row"><input id="hideWelcome" type="checkbox"><span>Ne plus afficher ce message automatiquement</span></label>
+      <div class="welcome-brand"><img src="assets/icon.svg" alt=""><div><p class="eyebrow">À propos d’Énergie</p><h2>Observer, jamais diagnostiquer</h2></div></div>
+      <p>Énergie aide à repérer des associations possibles entre les repas, le sommeil, l’hydratation, l’activité et le ressenti.</p>
+      <div class="notice info-notice"><strong>Important</strong><p>Les observations ne prouvent pas un lien de cause à effet, ne posent aucun diagnostic et ne remplacent pas un professionnel de la santé.</p></div>
+      <div class="dialog-actions"><button type="submit" class="primary">J’ai compris</button></div>
     </form>
   </dialog>
 
-  <div id="demoTour" class="demo-tour" hidden aria-live="polite">
-    <div class="demo-tour-backdrop"></div>
-    <section class="demo-tour-card" role="dialog" aria-modal="true" aria-labelledby="demoTourTitle">
-      <div class="demo-mascot-wrap">
-        <img class="demo-mascot" src="assets/icon.svg" alt="Mascotte Énergie">
-        <span class="demo-mascot-spark">✦</span>
+  <section id="experienceLaunch" class="experience-launch" hidden aria-labelledby="experienceTitle">
+    <div class="experience-launch-card">
+      <div class="experience-brand">
+        <div class="experience-logo"><img src="assets/icon.svg" alt=""></div>
+        <div><p class="eyebrow">Bienvenue dans</p><h2 id="experienceTitle">Énergie</h2></div>
       </div>
-      <div class="demo-tour-copy">
-        <div class="demo-tour-meta"><p class="eyebrow" id="demoTourProgress">Visite guidée</p><button type="button" class="demo-tour-close" id="closeDemoTour" aria-label="Fermer la visite">×</button></div>
-        <div class="demo-tour-progress-track" aria-hidden="true"><span id="demoTourProgressBar"></span></div>
-        <h2 id="demoTourTitle">Salut 👋</h2>
-        <p id="demoTourText">Je vais te montrer comment Énergie transforme un journal quotidien en observations utiles.</p>
+      <h3>Découvre ce que ton journal peut raconter avec le temps.</h3>
+      <p class="experience-intro">Explore six mois de données fictives de Phil, puis vois comment les repas, le sommeil, l’eau, l’activité et le ressenti deviennent des observations utiles.</p>
+      <div class="experience-preview" aria-label="Aperçu de la démo">
+        <span><b>180</b><small>journées</small></span>
+        <span><b>640+</b><small>repas</small></span>
+        <span><b>4</b><small>tendances</small></span>
       </div>
-      <div class="demo-tour-actions">
-        <button type="button" class="text-button" id="skipDemoTour">Quitter la visite</button>
-        <button type="button" class="primary" id="nextDemoTour">Continuer</button>
-      </div>
-    </section>
-  </div>
+      <button type="button" class="primary experience-primary" id="experienceStartDemo"><span>Explorer la démo guidée</span><b>→</b></button>
+      <button type="button" class="secondary experience-secondary" id="experienceStartEmpty">Commencer avec mon journal</button>
+      <p class="experience-note">La démo demeure entièrement locale et n’est jamais envoyée à Supabase.</p>
+    </div>
+  </section>
 
+  <aside id="demoGuide" class="demo-guide" hidden aria-live="polite" aria-label="Visite guidée">
+    <div class="demo-guide-head">
+      <div class="demo-guide-brand"><img src="assets/icon.svg" alt=""><span><small>Journal fictif</small><strong>Phil</strong></span></div>
+      <button type="button" class="demo-guide-close" id="closeDemoTour" aria-label="Fermer la visite">×</button>
+    </div>
+    <div class="demo-guide-progress"><span id="demoTourProgressBar"></span></div>
+    <p class="eyebrow" id="demoTourProgress">Étape 1</p>
+    <h2 id="demoTourTitle">Bienvenue</h2>
+    <p id="demoTourText">Découvre comment Énergie transforme de petites notes quotidiennes en tendances personnelles.</p>
+    <div id="demoTourProof" class="demo-tour-proof"></div>
+    <div class="demo-guide-actions">
+      <button type="button" class="text-button" id="previousDemoTour">Retour</button>
+      <button type="button" class="primary" id="nextDemoTour">Continuer</button>
+    </div>
+    <button type="button" class="demo-guide-skip" id="skipDemoTour">Explorer librement</button>
+  </aside>
 
   <dialog id="demoFinalDialog" class="demo-final-dialog">
     <section class="dialog-card demo-final-card">
       <div class="demo-final-mascot"><img src="assets/icon.svg" alt=""></div>
       <p class="eyebrow">Visite terminée</p>
-      <h2>Voilà ce qu’Énergie peut révéler avec le temps.</h2>
-      <p>Phil utilisait des données fictives. Les prochaines observations pourraient venir de ton propre journal.</p>
-      <div class="demo-final-summary"><span><b>180</b><small>journées</small></span><span><b>642+</b><small>repas</small></span><span><b>4</b><small>tendances</small></span></div>
+      <h2>Tu viens d’explorer 180 jours de journal.</h2>
+      <p>Énergie a relié des repas, du sommeil, de l’hydratation, de l’activité et des ressentis — tout en restant prudent sur ce que les données peuvent réellement dire.</p>
+      <div class="demo-final-checks"><span>✓ Journal quotidien</span><span>✓ Historique détaillé</span><span>✓ Graphiques</span><span>✓ Tendances expliquées</span></div>
       <button type="button" class="primary" id="finishStartJournal">Commencer mon journal</button>
-      <button type="button" class="secondary" id="finishExploreDemo">Explorer librement la démo</button>
+      <button type="button" class="secondary" id="finishExploreDemo">Continuer à explorer la démo</button>
       <button type="button" class="text-button demo-final-replay" id="finishReplayTour">Revoir la visite</button>
     </section>
   </dialog>
@@ -220,8 +224,8 @@
 
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=2.5.4"></script>
-  <script src="i18n.js?v=2.5.4"></script>
-  <script src="app.js?v=2.5.4"></script>
+  <script src="config.js?v=2.6.0"></script>
+  <script src="i18n.js?v=2.6.0"></script>
+  <script src="app.js?v=2.6.0"></script>
 </body>
 </html>

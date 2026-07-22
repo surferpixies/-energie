@@ -287,10 +287,12 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 - un cache de service worker V2.5.3 afin que la nouvelle interface soit réellement chargée.
 
 
-## V2.5.4 — Correctif de lancement de la démo
+## V2.6.0 — Expérience démo reconstruite
 
-- Le lancement ne dépend plus d'un enregistrement réussi dans localStorage.
-- La démo s'affiche même si le navigateur refuse temporairement d'enregistrer les données fictives.
-- Un seul gestionnaire central contrôle maintenant les trois boutons de lancement.
-- Les doubles déclenchements ont été retirés.
-- Une erreur visible est affichée si la création de la démo échoue réellement.
+- Écran de choix de première ouverture indépendant des anciennes préférences.
+- Démo guidée dans un panneau fixe qui ne peut pas passer derrière l’historique.
+- Navigation automatique dans Journal, Historique, Tableau et Profil.
+- Étapes plus riches avec preuve ou contexte à chaque écran.
+- Aucun blocage du défilement et aucun changement de z-index du contenu.
+- Restauration du vrai journal à la sortie de la démo.
+- Démo fictive entièrement locale et isolée de Supabase.
