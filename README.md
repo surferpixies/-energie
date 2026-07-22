@@ -274,3 +274,23 @@ Aucune migration SQL n'est requise pour la V2.4.2. La langue choisie est enregis
 
 ## V2.5.2
 Visite guidée étendue avec graphiques, profil et écran final clair. Construite à partir de la dernière V2.5.0 fonctionnelle.
+
+
+## V2.5.3 — Démo toujours accessible
+
+Correction importante : le message de bienvenue pouvait rester caché à cause des préférences déjà conservées dans le navigateur. La démo est maintenant accessible en tout temps grâce à :
+
+- un bouton **Démo** permanent dans l’entête;
+- une grande carte **Lancer la démo guidée** dans le Profil;
+- une restauration du vrai journal après la sortie de la démo;
+- des cibles corrigées dans la visite guidée;
+- un cache de service worker V2.5.3 afin que la nouvelle interface soit réellement chargée.
+
+
+## V2.5.4 — Correctif de lancement de la démo
+
+- Le lancement ne dépend plus d'un enregistrement réussi dans localStorage.
+- La démo s'affiche même si le navigateur refuse temporairement d'enregistrer les données fictives.
+- Un seul gestionnaire central contrôle maintenant les trois boutons de lancement.
+- Les doubles déclenchements ont été retirés.
+- Une erreur visible est affichée si la création de la démo échoue réellement.
