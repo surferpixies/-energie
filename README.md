@@ -245,3 +245,11 @@ Aucune migration SQL n'est requise pour la V2.4.2. La langue choisie est enregis
 - Champ Heure présenté sur une seule ligne avec une petite horloge.
 - Largeur du sélecteur d’heure réduite pour éviter tout débordement mobile.
 - Autoremplissage désactivé sur les formulaires de suivi non liés au compte afin de limiter les suggestions « Préremplir le contact » du navigateur.
+
+
+## V2.4.6 — Saisie mobile et autoremplissage
+
+- Contournement renforcé de la suggestion Safari/iOS « Préremplir le contact ».
+- Champs Sommeil et Activité convertis en saisies texte avec clavier numérique.
+- Validation numérique conservée, y compris les décimales avec virgule ou point.
+- Champ Heure compact conservé sur une seule ligne.

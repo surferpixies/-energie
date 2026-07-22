@@ -116,3 +116,8 @@ dialog[open]{display:block}
 .meal-time-label>span:first-child{font-size:1.12rem;line-height:1}
 #mealTime{width:112px;max-width:42vw;min-width:0;flex:0 0 auto;padding:10px 11px;text-align:center}
 @media(max-width:360px){.meal-time-row{gap:9px}.meal-time-label{font-size:.84rem}#mealTime{width:104px;padding-inline:8px}}
+
+
+/* V2.4.6 — contournement renforcé de l’autoremplissage Safari/iOS */
+#sleepHours,#activityMinutes,#waterGoal{-webkit-text-security:none}
+#sleepHours,#activityMinutes{font-variant-numeric:tabular-nums}

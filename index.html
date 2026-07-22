@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=2.4.5">
+  <link rel="stylesheet" href="styles.css?v=2.4.6">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -47,15 +47,15 @@
       <label id="favoriteMealLabel">Choisir un repas favori
         <select id="favoriteMealSelect" autocomplete="off"><option value="">Choisir un favori…</option></select>
       </label>
-      <label class="meal-time-row" for="mealTime"><span class="meal-time-label"><span aria-hidden="true">🕒</span><span>Heure</span></span><input id="mealTime" type="time" name="energie-meal-time" autocomplete="off" required></label>
-      <label>Ce que tu as mangé ou bu<textarea id="mealDescription" name="energie-meal-description" autocomplete="off" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea></label>
+      <label class="meal-time-row" for="mealTime"><span class="meal-time-label"><span aria-hidden="true">🕒</span><span>Heure</span></span><input id="mealTime" type="time" name="energie_meal_clock_value" autocomplete="one-time-code" required></label>
+      <label>Ce que tu as mangé ou bu<textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea></label>
       <div class="energy-picker">
         <span>Énergie avant le repas</span>
         <div id="fatigueBeforePicker" class="energy-slider" role="radiogroup" aria-label="Énergie avant le repas"></div>
       </div>
       <label>Photo facultative<input id="mealPhoto" type="file" accept="image/*" capture="environment"></label>
       <div id="photoPreviewWrap" class="photo-preview-wrap" hidden><img id="photoPreview" alt="Aperçu"><button type="button" id="removePhoto" class="secondary small">Retirer la photo</button></div>
-      <label>Notes facultatives<textarea id="mealNotes" name="energie-meal-notes" autocomplete="off" autocapitalize="sentences" rows="2" placeholder="Contexte, digestion, humeur…"></textarea></label>
+      <label>Notes facultatives<textarea id="mealNotes" name="energie_meal_notes_value" autocomplete="one-time-code" autocapitalize="sentences" rows="2" placeholder="Contexte, digestion, humeur…"></textarea></label>
       <div class="dialog-actions"><button type="submit" class="primary">Enregistrer</button></div>
     </form>
   </dialog>
@@ -64,7 +64,7 @@
     <form id="sleepForm" class="dialog-card" autocomplete="off">
       <div class="dialog-header"><div><p class="eyebrow">Repos</p><h2>Sommeil</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
       <div class="sleep-dialog-hero"><span>😴</span><div><strong>Sommeil de la nuit dernière</strong><p class="muted small">Inscris simplement la durée totale approximative.</p></div></div>
-      <label>Nombre d'heures<input id="sleepHours" name="energie-sleep-hours" autocomplete="off" type="number" step="0.25" min="0" max="24" inputmode="decimal" placeholder="Ex. 7.5"></label>
+      <label>Nombre d'heures<input id="sleepHours" name="energie_sleep_duration_value" type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Ex. 7.5" aria-label="Nombre d’heures de sommeil"></label>
       <button type="submit" class="primary">Enregistrer le sommeil</button>
     </form>
   </dialog>
@@ -84,7 +84,7 @@
         </div>
         <input id="activityType" type="hidden">
       </fieldset>
-      <label>Durée en minutes<input id="activityMinutes" name="energie-activity-minutes" autocomplete="off" type="number" min="1" max="1440" inputmode="numeric" placeholder="Ex. 45"></label>
+      <label>Durée en minutes<input id="activityMinutes" name="energie_activity_duration_value" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Ex. 45" aria-label="Durée de l’activité en minutes"></label>
       <div><p class="eyebrow">Activités enregistrées</p><div id="dayActivitiesList" class="day-activities-list"></div></div>
       <button type="submit" class="primary">Ajouter l'activité</button>
     </form>
@@ -96,7 +96,7 @@
       <div class="feeling-context"><span>🍽️</span><strong id="feelingMealContext"></strong></div>
       <fieldset class="feeling-fieldset"><legend>Comment te sens-tu?</legend><div id="feelingRating" class="feeling-rating" role="radiogroup" aria-label="Ressenti général"></div></fieldset>
       <fieldset class="feeling-fieldset"><legend>Qu’as-tu ressenti?</legend><p class="muted small">Sélectionne tous les éléments qui s’appliquent.</p><div id="feelingTags" class="feeling-tags"></div></fieldset>
-      <label>Autre chose? <textarea id="feelingNotes" name="energie-feeling-notes" autocomplete="off" autocapitalize="sentences" rows="3" placeholder="Notes facultatives"></textarea></label>
+      <label>Autre chose? <textarea id="feelingNotes" name="energie_feeling_notes_value" autocomplete="one-time-code" autocapitalize="sentences" rows="3" placeholder="Notes facultatives"></textarea></label>
       <button type="submit" class="primary">Enregistrer le ressenti</button>
     </form>
   </dialog>
@@ -177,8 +177,8 @@
 
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=2.4.5"></script>
-  <script src="i18n.js?v=2.4.5"></script>
-  <script src="app.js?v=2.4.5"></script>
+  <script src="config.js?v=2.4.6"></script>
+  <script src="i18n.js?v=2.4.6"></script>
+  <script src="app.js?v=2.4.6"></script>
 </body>
 </html>
