@@ -1,3 +1,9 @@
+# Énergie V2.7.0 — Scanner de produits
+
+Cette version ajoute un raccourci de saisie par code-barres dans la fenêtre de repas. Le scan cherche uniquement le nom et la marque dans Open Food Facts. Le nom reste toujours modifiable avant l’ajout. Aucune calorie, macro, portion, note nutritionnelle ou Nutri-Score n’est enregistré.
+
+Le scanner utilise la caméra du téléphone et offre une saisie manuelle du numéro en solution de secours. Les produits déjà reconnus sont conservés dans un petit cache local.
+
 # Énergie V2.4.3
 
 - Nom simplifié : **Énergie**.
