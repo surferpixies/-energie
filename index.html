@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=2.7.0">
+  <link rel="stylesheet" href="styles.css?v=2.8.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -43,10 +43,17 @@
         <span id="mealDialogTypeIcon" class="meal-dialog-type-icon" aria-hidden="true">🍳</span>
         <div><span class="muted small">Type de repas</span><strong id="mealDialogTypeLabel">Déjeuner</strong></div>
       </div>
-      <button type="button" class="secondary small copy-breakfast-button" id="copyYesterdayBreakfast">Copier le déjeuner d'hier</button>
+      <div class="meal-copy-actions">
+        <button type="button" class="secondary small meal-copy-button" id="copyYesterdayBreakfast">🍳 Copier le déjeuner d'hier</button>
+        <button type="button" class="secondary small meal-copy-button" id="copyYesterdayDinner">🍱 Restants : copier le souper d'hier</button>
+      </div>
       <label id="favoriteMealLabel">Choisir un repas favori
         <select id="favoriteMealSelect" autocomplete="off"><option value="">Choisir un favori…</option></select>
       </label>
+      <section id="recentFoodsSection" class="recent-foods-section" hidden>
+        <div class="recent-foods-heading"><span>🕒</span><strong>Derniers repas</strong></div>
+        <div id="recentFoodsList" class="recent-foods-list"></div>
+      </section>
       <label class="meal-time-row" for="mealTime"><span class="meal-time-label"><span aria-hidden="true">🕒</span><span>Heure</span></span><input id="mealTime" type="time" name="energie_meal_clock_value" autocomplete="one-time-code" required></label>
       <label>Ce que tu as mangé ou bu<textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea></label>
       <button type="button" class="secondary barcode-scan-launch" id="openBarcodeScanner"><span aria-hidden="true">▥</span><span><strong>Scanner un produit</strong><small>Ajoute rapidement son nom au repas</small></span></button>
@@ -250,8 +257,8 @@
 
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=2.7.0"></script>
-  <script src="i18n.js?v=2.7.0"></script>
-  <script src="app.js?v=2.7.0"></script>
+  <script src="config.js?v=2.8.0"></script>
+  <script src="i18n.js?v=2.8.0"></script>
+  <script src="app.js?v=2.8.0"></script>
 </body>
 </html>

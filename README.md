@@ -1,4 +1,4 @@
-# Énergie V2.7.0 — Scanner de produits
+# Énergie V2.8.0 — Journal plus rapide
 
 Cette version ajoute un raccourci de saisie par code-barres dans la fenêtre de repas. Le scan cherche uniquement le nom et la marque dans Open Food Facts. Le nom reste toujours modifiable avant l’ajout. Aucune calorie, macro, portion, note nutritionnelle ou Nutri-Score n’est enregistré.
 
@@ -302,3 +302,9 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 - Aucun blocage du défilement et aucun changement de z-index du contenu.
 - Restauration du vrai journal à la sortie de la démo.
 - Démo fictive entièrement locale et isolée de Supabase.
+
+
+## Nouveautés V2.8.0
+- Section « Repas enregistrés » retirée du bas du Journal.
+- Au dîner, copie rapide du souper de la veille pour les restants.
+- Raccourcis vers les derniers repas saisis dans la fenêtre d’ajout.

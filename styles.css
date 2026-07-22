@@ -96,7 +96,7 @@ dialog{border:0;border-radius:28px;background:transparent;padding:0;width:min(94
 /* V2.2.1 — finition mobile des options de ressenti */
 @media(max-width:360px){.setting-option{padding:10px}.setting-option span{font-size:.82rem}}
 
-.copy-breakfast-button{margin-top:10px;width:100%;justify-content:center}.copy-breakfast-button[hidden]{display:none!important}
+.meal-copy-actions{display:grid;gap:8px;margin-top:10px}.meal-copy-button{width:100%;justify-content:center}.meal-copy-button[hidden]{display:none!important}
 
 /* V2.4.4 — Modale de repas stable et type de repas figé */
 body.dialog-open{position:fixed;left:0;right:0;width:100%;overflow:hidden;overscroll-behavior:none}
@@ -106,7 +106,7 @@ dialog[open]{display:block}
 .meal-dialog-type{display:grid;grid-template-columns:54px minmax(0,1fr);align-items:center;gap:13px;padding:13px 14px;border:1px solid color-mix(in srgb,var(--accent) 20%,var(--border));border-radius:18px;background:color-mix(in srgb,var(--accent) 8%,var(--surface));box-shadow:0 8px 22px rgba(20,26,22,.06)}
 .meal-dialog-type-icon{display:grid;place-items:center;width:54px;height:54px;border-radius:16px;background:var(--surface);font-size:2rem;box-shadow:0 6px 16px rgba(20,26,22,.08)}
 .meal-dialog-type strong{display:block;margin-top:2px;font-size:1.08rem}
-.copy-breakfast-button{justify-self:start;margin-top:-5px}
+.meal-copy-actions{margin-top:-5px}.meal-copy-button{justify-self:start}
 @media (max-width:520px){dialog{width:calc(100vw - 20px);max-height:calc(100dvh - 20px)}.dialog-card{max-height:calc(100dvh - 20px)}}
 
 
@@ -305,3 +305,12 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .barcode-result-heading p{margin:5px 0 0}
 .barcode-source-note{text-align:center;margin:0}
 @media(max-width:430px){.barcode-camera-panel video{height:235px}.barcode-manual-row{grid-template-columns:1fr}.barcode-manual-row button{width:100%}}
+
+/* Journal rapide — V2.8.0 */
+.recent-foods-section{display:grid;gap:8px;padding:11px 12px;border:1px solid var(--border);border-radius:16px;background:var(--surface2)}
+.recent-foods-section[hidden]{display:none!important}
+.recent-foods-heading{display:flex;align-items:center;gap:7px;font-size:.86rem}
+.recent-foods-list{display:flex;gap:7px;overflow-x:auto;padding:2px 1px 5px;scrollbar-width:none}
+.recent-foods-list::-webkit-scrollbar{display:none}
+.recent-food-button{flex:0 0 auto;max-width:220px;border:1px solid var(--border);border-radius:999px;background:var(--surface);color:var(--text);padding:8px 11px;font:inherit;font-size:.78rem;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.recent-food-button:active{transform:scale(.98)}
