@@ -1,4 +1,4 @@
-# Énergie V2.4.2
+# Énergie V2.4.3
 
 - Nom simplifié : **Énergie**.
 - Logo pomme + éclair conservé exactement tel quel.
@@ -218,3 +218,13 @@ Aucune migration SQL n'est requise pour la V2.4.2. La langue choisie est enregis
 - Moteur de traduction renforcé pour fr-CA, fr-FR et anglais.
 - Traduction des textes statiques, dynamiques, pluriels, alertes, profils, statistiques, chronologie et ressentis.
 - Aucune migration de base de données requise.
+
+
+## V2.4.3 — Journal et traductions ciblées
+
+- Suppression du bouton redondant « + Autre » sous les repas enregistrés.
+- Déplacement de « Copier le déjeuner d’hier » sous le type de repas.
+- Le bouton de copie apparaît uniquement lorsque « Déjeuner » est sélectionné.
+- Traduction complétée pour le type de repas dans la chronologie.
+- Traduction complétée pour les observations dynamiques des Insights, notamment les repas nommés dans « Avant tes repas… » et l’observation sur les aliments fréquemment notés.
+- Aucune migration SQL requise.

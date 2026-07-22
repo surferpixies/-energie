@@ -95,3 +95,5 @@ dialog{border:0;border-radius:28px;background:transparent;padding:0;width:min(94
 
 /* V2.2.1 — finition mobile des options de ressenti */
 @media(max-width:360px){.setting-option{padding:10px}.setting-option span{font-size:.82rem}}
+
+.copy-breakfast-button{margin-top:10px;width:100%;justify-content:center}.copy-breakfast-button[hidden]{display:none!important}

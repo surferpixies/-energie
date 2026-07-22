@@ -46,7 +46,7 @@
     'Journal':'Journal','Historique':'History','Tableau':'Insights','Tableau de bord':'Insights','Profil':'Profile',
     'Déjeuner':'Breakfast','Dîner':'Lunch','Souper':'Dinner','Collation':'Snack','En-cas':'Snack','Boisson':'Drink','Repas':'Meal',
     'Mon repas':'My meal','Ajouter un repas':'Add a meal','Modifier le repas':'Edit meal','Choisir un repas favori':'Choose a favorite meal',
-    'Choisir un favori…':'Choose a favorite…','Type de repas':'Meal type','Heure':'Time','Ce que tu as mangé ou bu':'What you ate or drank',
+    'Choisir un favori…':'Choose a favorite…','Type de repas':'Meal type','Le type de repas':'Meal type','Heure':'Time','Ce que tu as mangé ou bu':'What you ate or drank',
     'Ce que vous avez mangé ou bu':'What you ate or drank','Énergie avant le repas':'Energy before the meal','Photo facultative':'Optional photo',
     'Retirer la photo':'Remove photo','Notes facultatives':'Optional notes','Enregistrer':'Save',"Copier le déjeuner d'hier":"Copy yesterday’s breakfast",
     'Repos':'Rest','Sommeil':'Sleep','Sommeil de la nuit dernière':'Last night’s sleep','Inscris simplement la durée totale approximative.':'Simply enter the approximate total duration.',
@@ -150,7 +150,7 @@
     'Cette journée contribue progressivement à mieux décrire tes habitudes.':'This day gradually adds context to your habits.',
     'Journée associée à plus d’énergie':'Day associated with higher energy','Énergie observée avant certains repas':'Energy observed before certain meals',
     'Ton horaire habituel':'Your usual schedule','Aliments possiblement plus salés':'Foods that may be higher in sodium','Aliments possiblement plus sucrés':'Foods that may be higher in sugar',
-    'Gras saturés à surveiller dans les choix fréquents':'Saturated fat in frequently logged foods','Peu de végétaux repérés dans les descriptions':'Few plant foods detected in descriptions',
+    'Gras saturés à surveiller dans les choix fréquents':'Saturated fat in frequently logged foods','Certains aliments notés fréquemment peuvent contenir davantage de gras saturés. Il ne s’agit pas d’un jugement sur un repas; la variété au fil du temps est ce qui compte.':'Some frequently logged foods may contain more saturated fat. This is not a judgment about any meal; variety over time is what matters.','Peu de végétaux repérés dans les descriptions':'Few plant foods detected in descriptions',
     'Organisation mondiale de la Santé — Alimentation saine':'World Health Organization — Healthy diet','Santé Canada — Guide alimentaire canadien':"Health Canada — Canada's Food Guide",
     'Santé Canada — Limiter les aliments hautement transformés':'Health Canada — Limit highly processed foods','Santé Canada — Symbole nutritionnel sur le devant de l’emballage':'Health Canada — Front-of-package nutrition symbol'
   });
@@ -177,7 +177,7 @@
     'Smart Timeline':'Smart Timeline','Ton historique, organisé naturellement':'Your history, naturally organized',
     'Les repas sont regroupés par journée, semaine et mois pour rester faciles à consulter avec le temps.':'Meals are grouped by day, week, and month so they stay easy to browse over time.',
     'Ton parcours':'Your journey','Résumé de la journée':'Daily summary','Période':'Period','PÉRIODE':'PERIOD','Tout':'All','7 jours':'7 days','Ce mois':'This month','Cette année':'This year',
-    'Type de repas':'Meal type','⭐ Favoris':'⭐ Favorites','Énergie faible':'Low energy','Énergie élevée':'High energy','Chronologie':'Timeline',
+    'Type de repas':'Meal type','Le type de repas':'Meal type','⭐ Favoris':'⭐ Favorites','Énergie faible':'Low energy','Énergie élevée':'High energy','Chronologie':'Timeline',
     'Rechercher un aliment, une note ou une date…':'Search food, notes, or a date…',
     'Tableau de bord & observations':'Dashboard & insights','Observe tes habitudes sans jugement':'Notice your habits without judgment',
     'Les cartes décrivent des tendances possibles. Elles ne posent aucun diagnostic et ne prouvent jamais qu’un aliment cause un effet.':'These cards describe possible patterns. They do not diagnose anything or prove that a food causes an effect.',
@@ -194,7 +194,7 @@
   });
 
 
-  // V2.4.2 — correctifs finaux des textes statiques et dynamiques de l’interface.
+  // V2.4.3 — nettoyage UX du Journal et derniers correctifs de traduction ciblés.
   Object.assign(en, {
     'Local':'Local','Changer le thème':'Change theme','Navigation principale':'Main navigation','Fermer':'Close','Aperçu':'Preview',
     'Un outil d’observation, pas un avis médical':'A tracking tool, not medical advice',
@@ -318,6 +318,8 @@
         .replace(/^(\d+) mois$/,(_,n)=>`${n} month${n==='1'?'':'s'}`)
         .replace(/^(\d+) repas$/,(_,n)=>`${n} meal${n==='1'?'':'s'}`)
         .replace(/^Supprimer (.+)$/,(_,x)=>`Delete ${translateString(x)}`)
+        .replace(/^Avant tes repas « (.+) », ton énergie enregistrée est en moyenne de (.+)\/5\. Cela décrit ton historique sans expliquer la cause\.$/,(_,meal,val)=>`Before ${translateString(meal).toLowerCase()} meals, your logged energy averages ${val}/5. This describes your history without explaining the cause.`)
+        .replace(/^Le type de repas le plus souvent enregistré est « (.+) »\. Cette information est descriptive seulement\.$/,(_,meal)=>`The most frequently logged meal type is “${translateString(meal)}”. This information is descriptive only.`)
         .replace(/^Ajouter (.+)$/,(_,x)=>`Add ${translateString(x)}`)
         .replace(/^Modifier (.+)$/,(_,x)=>`Edit ${translateString(x)}`);
     } else if(locale==='fr-FR'){
