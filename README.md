@@ -253,3 +253,20 @@ Aucune migration SQL n'est requise pour la V2.4.2. La langue choisie est enregis
 - Champs Sommeil et Activité convertis en saisies texte avec clavier numérique.
 - Validation numérique conservée, y compris les décimales avec virgule ou point.
 - Champ Heure compact conservé sur une seule ligne.
+
+
+## V2.5.0 — Mode démo guidé
+
+- Nouveau choix au premier lancement : explorer une démo ou commencer avec un journal vide.
+- Génération locale de 180 jours de données fictives pour le profil « Phil ».
+- Mascotte dérivée directement du logo pomme-éclair.
+- Visite guidée animée en cinq étapes.
+- Nouvelles découvertes à long terme :
+  - produits laitiers et maux de tête;
+  - café tardif et sommeil plus court;
+  - hydratation et fatigue;
+  - activité et humeur plus détendue.
+- Comparaisons chiffrées, niveaux de confiance et explications « Voir pourquoi ».
+- Mode démo clairement identifié et isolé de Supabase.
+- Boutons pour revoir la visite ou commencer un journal personnel.
+- Formulations prudentes : associations possibles, jamais de diagnostic.

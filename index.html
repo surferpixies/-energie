@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=2.4.6">
+  <link rel="stylesheet" href="styles.css?v=2.5.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -104,13 +104,41 @@
   <dialog id="welcomeDialog" class="welcome-dialog">
     <form id="welcomeForm" class="dialog-card welcome-card">
       <div class="welcome-brand"><img src="assets/icon.svg" alt=""><div><p class="eyebrow">Bienvenue</p><h2>Énergie</h2></div></div>
-      <p>Cette application sert à suivre tes repas, ton niveau d’énergie avant de manger et certaines habitudes afin de t’aider à observer des tendances personnelles.</p>
-      <div class="notice info-notice"><strong>Un outil d’observation, pas un avis médical</strong><p>Les observations et suggestions sont informatives. Elles ne posent aucun diagnostic, ne prouvent pas un lien de cause à effet et ne remplacent pas les conseils d’un médecin, d’un nutritionniste ou d’un autre professionnel de la santé.</p></div>
-      <p class="small muted">Les estimations nutritionnelles peuvent être incomplètes, surtout lorsque l’application ne connaît pas les portions ni les valeurs nutritives exactes.</p>
+      <p>Découvre comment tes repas, ton sommeil, ton hydratation et ton ressenti peuvent faire apparaître des tendances personnelles avec le temps.</p>
+      <div class="demo-choice">
+        <button type="button" class="demo-start-button" id="startDemo">
+          <span class="demo-choice-icon"><img src="assets/icon.svg" alt=""></span>
+          <span><strong>Explorer la démo</strong><small>6 mois de données fictives et une visite guidée d’environ une minute.</small></span>
+          <b>›</b>
+        </button>
+        <button type="submit" class="secondary demo-empty-button">
+          <span>🍏</span>
+          <span><strong>Commencer mon journal</strong><small>Partir avec un journal vide et ajouter mes propres données.</small></span>
+        </button>
+      </div>
+      <div class="notice info-notice"><strong>Un outil d’observation, pas un avis médical</strong><p>Les observations décrivent des associations possibles. Elles ne posent aucun diagnostic, ne prouvent pas un lien de cause à effet et ne remplacent pas un professionnel de la santé.</p></div>
       <label class="checkbox-row"><input id="hideWelcome" type="checkbox"><span>Ne plus afficher ce message automatiquement</span></label>
-      <button type="submit" class="primary">J’ai compris</button>
     </form>
   </dialog>
+
+  <div id="demoTour" class="demo-tour" hidden aria-live="polite">
+    <div class="demo-tour-backdrop"></div>
+    <section class="demo-tour-card" role="dialog" aria-modal="true" aria-labelledby="demoTourTitle">
+      <div class="demo-mascot-wrap">
+        <img class="demo-mascot" src="assets/icon.svg" alt="Mascotte Énergie">
+        <span class="demo-mascot-spark">✦</span>
+      </div>
+      <div class="demo-tour-copy">
+        <p class="eyebrow" id="demoTourProgress">Visite guidée</p>
+        <h2 id="demoTourTitle">Salut 👋</h2>
+        <p id="demoTourText">Je vais te montrer comment Énergie transforme un journal quotidien en observations utiles.</p>
+      </div>
+      <div class="demo-tour-actions">
+        <button type="button" class="text-button" id="skipDemoTour">Passer</button>
+        <button type="button" class="primary" id="nextDemoTour">Continuer</button>
+      </div>
+    </section>
+  </div>
 
   <dialog id="sourceDialog">
     <div class="dialog-card source-card">
@@ -177,8 +205,8 @@
 
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=2.4.6"></script>
-  <script src="i18n.js?v=2.4.6"></script>
-  <script src="app.js?v=2.4.6"></script>
+  <script src="config.js?v=2.5.0"></script>
+  <script src="i18n.js?v=2.5.0"></script>
+  <script src="app.js?v=2.5.0"></script>
 </body>
 </html>

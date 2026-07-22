@@ -16,7 +16,7 @@ function activitySummary(day){const items=day.activities||[],minutes=items.reduc
 const client=(window.supabase&&CFG.supabaseUrl&&CFG.supabasePublishableKey)?window.supabase.createClient(CFG.supabaseUrl,CFG.supabasePublishableKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
 let session=null,currentView="today",selectedDate=todayKey(),syncState="local",photoData=null,photoRemoved=false,authMode="login",feelingMealId=null,notificationTimer=null;
 
-function freshDB(){return{version:CURRENT_VERSION,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),settings:{waterGoal:8,theme:"system",showWelcome:true,insightsEnabled:true,nutritionObservations:true,generalRecommendations:true,showSources:true,feelingReminders:true,feelingDelayHours:2,feelingMealTypes:["Déjeuner","Dîner","Souper"]},favorites:[],days:{}}}
+function freshDB(){return{version:CURRENT_VERSION,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),settings:{waterGoal:8,theme:"system",showWelcome:true,insightsEnabled:true,nutritionObservations:true,generalRecommendations:true,showSources:true,feelingReminders:true,feelingDelayHours:2,feelingMealTypes:["Déjeuner","Dîner","Souper"],demoMode:false,demoTourSeen:false,demoName:"Phil"},favorites:[],days:{}}}
 function ensureDay(store,key=todayKey()){if(!store.days[key])store.days[key]={date:key,sleepHours:null,water:0,activities:[],meals:[],updatedAt:new Date().toISOString()};const d=store.days[key];d.activities=Array.isArray(d.activities)?d.activities:[];d.meals=Array.isArray(d.meals)?d.meals:[];d.water=Number(d.water)||0;return d}
 function normalMeal(m={},date=todayKey()){return{id:m.id||uid(),date:m.date||date,time:m.time||"12:00",type:m.type||m.mealType||m.typeRepas||"Repas",description:m.description||m.food||m.aliments||m.repas||m.details||"",fatigueBefore:clamp(m.fatigueBefore??m.fatigueAvant??m.before,0,5),fatigueAfter:clamp(m.fatigueAfter??m.fatigueApres??m.after??m.fatigue1h??m.after1h,0,5),notes:m.notes||"",photoUrl:m.photoUrl||null,photoPath:m.photoPath||null,photoLocal:m.photoLocal||m.photo||m.image||null,createdAt:m.createdAt||new Date().toISOString(),updatedAt:m.updatedAt||new Date().toISOString(),feeling:m.feeling||null,feelingNotifiedAt:m.feelingNotifiedAt||null}}
 function normalFavorite(f={}){return{id:f.id||uid(),name:f.name||f.description||"Mon repas",type:f.type||"Repas",description:f.description||"",notes:f.notes||"",usageCount:Number(f.usageCount??f.usage_count??0)||0,createdAt:f.createdAt||f.created_at||new Date().toISOString(),updatedAt:f.updatedAt||f.updated_at||new Date().toISOString()}}
@@ -27,8 +27,8 @@ let db=load();
 function saveLocal(reason="local"){db.version=CURRENT_VERSION;db.updatedAt=new Date().toISOString();const txt=JSON.stringify(db);localStorage.setItem(APP_KEY,txt);localStorage.setItem(`${APP_KEY}_shadow`,txt)}
 function outbox(){try{return JSON.parse(localStorage.getItem(OUTBOX_KEY)||"[]")}catch(_){return[]}}
 function setOutbox(items){localStorage.setItem(OUTBOX_KEY,JSON.stringify(items));updateSyncBadge()}
-function enqueue(op){const items=outbox();const key=`${op.kind}:${op.id||op.date}`;const idx=items.findIndex(x=>`${x.kind}:${x.id||x.date}`===key);if(idx>=0)items[idx]=op;else items.push(op);setOutbox(items);syncState="pending";updateSyncBadge();if(session&&navigator.onLine)syncNow()}
-function updateSyncBadge(){const el=$("#syncBadge");if(!el)return;const pending=outbox().length;el.className="sync-badge";if(!session){el.textContent=navigator.onLine?"Non connecté":"Hors ligne";if(!navigator.onLine)el.classList.add("pending");return}if(syncState==="error"){el.textContent="Erreur synchro";el.classList.add("error")}else if(pending){el.textContent=`${pending} à synchroniser`;el.classList.add("pending")}else{el.textContent="Sauvegardé ☁️";el.classList.add("online")}}
+function enqueue(op){if(db.settings.demoMode)return;const items=outbox();const key=`${op.kind}:${op.id||op.date}`;const idx=items.findIndex(x=>`${x.kind}:${x.id||x.date}`===key);if(idx>=0)items[idx]=op;else items.push(op);setOutbox(items);syncState="pending";updateSyncBadge();if(session&&navigator.onLine)syncNow()}
+function updateSyncBadge(){const el=$("#syncBadge");if(!el)return;if(db.settings.demoMode){el.textContent="Mode démo";el.className="sync-badge demo";return}const pending=outbox().length;el.className="sync-badge";if(!session){el.textContent=navigator.onLine?"Non connecté":"Hors ligne";if(!navigator.onLine)el.classList.add("pending");return}if(syncState==="error"){el.textContent="Erreur synchro";el.classList.add("error")}else if(pending){el.textContent=`${pending} à synchroniser`;el.classList.add("pending")}else{el.textContent="Sauvegardé ☁️";el.classList.add("online")}}
 function setDayChanged(date){const d=ensureDay(db,date);d.updatedAt=new Date().toISOString();saveLocal("jour");enqueue({kind:"day",date})}
 function setMealChanged(meal){saveLocal("repas");enqueue({kind:"meal",id:meal.id,date:meal.date});scheduleFeelingChecks()}
 function setFavoriteChanged(f){saveLocal("favori");enqueue({kind:"favorite",id:f.id})}
@@ -117,7 +117,246 @@ async function updateLivingHeader(force=false){
   })();
   return weatherRefreshPromise;
 }
-function render(){if(selectedDate>todayKey())selectedDate=todayKey();document.documentElement.dataset.theme=db.settings.theme==="dark"?"dark":"";updateLivingHeader();$("#todayLabel").textContent=currentView==="today"?formatDate(selectedDate):formatDate(todayKey());$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===currentView));updateSyncBadge();({today:renderToday,history:renderHistory,insights:renderInsights,profile:renderProfile}[currentView]||renderToday)()}
+
+const DEMO_BACKUP_KEY="energieBeforeDemoV250";
+let demoTourIndex=0;
+
+function demoDateKey(offset){
+  const d=new Date();
+  d.setHours(12,0,0,0);
+  d.setDate(d.getDate()+offset);
+  return d.toLocaleDateString("en-CA")
+}
+function demoRand(seed){
+  const x=Math.sin(seed*12.9898+78.233)*43758.5453;
+  return x-Math.floor(x)
+}
+function demoMeal(date,time,type,description,energy,tags=[],rating=3,notes=""){
+  return normalMeal({
+    id:`demo-${date}-${time.replace(":","")}-${type}`,
+    date,time,type,description,
+    fatigueBefore:energy,
+    fatigueAfter:0,
+    notes,
+    feeling:{rating,tags,notes:"",recordedAt:`${date}T${time}:00`},
+    createdAt:`${date}T${time}:00`,
+    updatedAt:`${date}T${time}:00`
+  },date)
+}
+function createDemoDB(){
+  const store=freshDB();
+  store.settings={...store.settings,showWelcome:false,demoMode:true,demoTourSeen:false,demoName:"Phil",waterGoal:8};
+  store.createdAt=new Date(Date.now()-180*86400000).toISOString();
+  store.favorites=[
+    normalFavorite({id:"demo-fav-1",name:"Bol énergie",type:"Déjeuner",description:"Gruau, banane, beurre d’arachide et graines de chia",usageCount:18}),
+    normalFavorite({id:"demo-fav-2",name:"Dîner simple",type:"Dîner",description:"Poulet grillé, riz et légumes",usageCount:14}),
+    normalFavorite({id:"demo-fav-3",name:"Collation fraîche",type:"Collation",description:"Pomme et amandes",usageCount:11})
+  ];
+
+  for(let offset=-179;offset<=0;offset++){
+    const date=demoDateKey(offset);
+    const seed=offset+500;
+    const day=ensureDay(store,date);
+    const weekday=new Date(`${date}T12:00:00`).getDay();
+    const active=weekday===2||weekday===4||weekday===6;
+    const lateCoffee=(offset%9===0||offset%13===0);
+    const dairyDay=(offset%4===0||offset%11===0);
+    const hydrated=offset%5!==0;
+    const goodSleep=!lateCoffee&&offset%7!==0;
+
+    day.sleepHours=lateCoffee?6.1:Number((goodSleep?7.7+demoRand(seed)*0.8:6.6+demoRand(seed)*0.6).toFixed(1));
+    day.water=hydrated?6+Math.floor(demoRand(seed+2)*3):3+Math.floor(demoRand(seed+2)*2);
+    day.activities=active?[{id:`demo-a-${date}`,type:weekday===6?"Vélo":"Marche",minutes:weekday===6?55:35,at:`${date}T17:30:00`}]:[];
+
+    const breakfastEnergy=goodSleep?4:2;
+    day.meals.push(demoMeal(
+      date,"07:35","Déjeuner",
+      offset%3===0?"Gruau, banane et beurre d’arachide":"Œufs, pain complet et petits fruits",
+      breakfastEnergy,goodSleep?["Énergie stable"]:["Fatigue"],goodSleep?4:2
+    ));
+
+    const lunchDescription=dairyDay
+      ?"Sandwich au fromage, yogourt et crudités"
+      :(offset%3===0?"Poulet, riz et brocoli":"Salade de quinoa, pois chiches et légumes");
+    const lunchTags=dairyDay
+      ?(["Maux de tête", ...(offset%8===0?["Ballonnements"]:[])])
+      :(hydrated?["Énergie stable"]:["Fatigue"]);
+    day.meals.push(demoMeal(
+      date,"12:15","Dîner",lunchDescription,
+      hydrated?4:2,lunchTags,dairyDay?2:(hydrated?4:3),
+      dairyDay?"Inconfort apparu environ deux heures après le repas.":""
+    ));
+
+    const dinnerDescription=lateCoffee
+      ?"Pâtes aux légumes et café vers 17 h"
+      :(offset%6===0?"Saumon, pommes de terre et salade":"Poulet ou tofu, légumes et riz");
+    day.meals.push(demoMeal(
+      date,"18:25","Souper",dinnerDescription,
+      active?4:3,lateCoffee?["Sommeil agité"]:(active?["Détendu"]:["Satisfait"]),lateCoffee?2:4
+    ));
+
+    if(offset%3===0){
+      day.meals.push(demoMeal(date,"15:35","Collation",
+        dairyDay?"Latte et muffin":"Pomme et amandes",
+        dairyDay?2:4,dairyDay?["Maux de tête"]:["Énergie stable"],dairyDay?2:4));
+    }
+    day.updatedAt=`${date}T21:00:00`;
+  }
+  return store
+}
+function demoDiscoveryHtml(){
+  if(!db.settings.demoMode)return "";
+  return `<section class="demo-discoveries" id="demoDiscoveries">
+    <div class="demo-discoveries-heading">
+      <div class="demo-heading-mascot"><img src="assets/icon.svg" alt=""></div>
+      <div><p class="eyebrow">Ce que tes données racontent</p><h2>4 tendances ressortent après 180 jours</h2><p>Ces observations décrivent des associations dans ce journal fictif. Elles ne prouvent pas qu’un aliment cause un symptôme.</p></div>
+    </div>
+    <div class="demo-insight-grid">
+      <article class="card demo-insight-card demo-insight-strong">
+        <div class="demo-insight-top"><span class="demo-signal">Tendance forte</span><strong>82 %</strong></div>
+        <div class="demo-insight-icon">🥛</div>
+        <h3>Produits laitiers et maux de tête</h3>
+        <p>Les repas contenant du lait, du yogourt ou du fromage sont plus souvent suivis d’un mal de tête dans ce journal.</p>
+        <div class="demo-comparison"><span><b>31 %</b><small>avec produits laitiers</small></span><i>contre</i><span><b>8 %</b><small>sans produits laitiers</small></span></div>
+        <button class="why-demo-insight" type="button" data-demo-detail="lactose">Voir pourquoi →</button>
+      </article>
+      <article class="card demo-insight-card">
+        <div class="demo-insight-top"><span class="demo-signal moderate">Tendance modérée</span><strong>74 %</strong></div>
+        <div class="demo-insight-icon">☕</div>
+        <h3>Café tardif et sommeil plus court</h3>
+        <p>Les journées où un café est noté après 16 h sont associées à une nuit plus courte.</p>
+        <div class="demo-comparison"><span><b>6 h 08</b><small>avec café tardif</small></span><i>contre</i><span><b>7 h 46</b><small>sans café tardif</small></span></div>
+        <button class="why-demo-insight" type="button" data-demo-detail="coffee">Voir pourquoi →</button>
+      </article>
+      <article class="card demo-insight-card">
+        <div class="demo-insight-top"><span class="demo-signal moderate">Tendance modérée</span><strong>69 %</strong></div>
+        <div class="demo-insight-icon">💧</div>
+        <h3>Hydratation et fatigue d’après-midi</h3>
+        <p>Les journées avec moins de quatre verres sont plus souvent accompagnées d’une énergie faible.</p>
+        <div class="demo-comparison"><span><b>46 %</b><small>faible hydratation</small></span><i>contre</i><span><b>17 %</b><small>bonne hydratation</small></span></div>
+        <button class="why-demo-insight" type="button" data-demo-detail="water">Voir pourquoi →</button>
+      </article>
+      <article class="card demo-insight-card">
+        <div class="demo-insight-top"><span class="demo-signal emerging">Observation émergente</span><strong>61 %</strong></div>
+        <div class="demo-insight-icon">🚶</div>
+        <h3>Activité et humeur plus détendue</h3>
+        <p>Après au moins 30 minutes d’activité, le ressenti « détendu » apparaît plus souvent en soirée.</p>
+        <div class="demo-comparison"><span><b>2,4×</b><small>plus fréquent</small></span><i>sur</i><span><b>48</b><small>journées actives</small></span></div>
+        <button class="why-demo-insight" type="button" data-demo-detail="activity">Voir pourquoi →</button>
+      </article>
+    </div>
+    <p class="demo-legal-note">🍏⚡ Énergie observe des tendances personnelles. Pour toute préoccupation médicale, consulte un professionnel de la santé.</p>
+  </section>`
+}
+function demoBannerHtml(){
+  if(!db.settings.demoMode)return "";
+  return `<section class="demo-mode-banner" id="demoModeBanner">
+    <span><img src="assets/icon.svg" alt=""> <b>Mode démo</b></span>
+    <p>Tu explores le journal fictif de Phil.</p>
+    <button type="button" id="leaveDemoQuick">Commencer mon journal</button>
+  </section>`
+}
+function bindDemoChrome(){
+  $("#leaveDemoQuick")?.addEventListener("click",leaveDemoMode);
+  $$(".why-demo-insight").forEach(button=>button.addEventListener("click",()=>{
+    const details={
+      lactose:["Produits laitiers et maux de tête","Sur 52 repas contenant des produits laitiers, 16 sont suivis d’un mal de tête. Sur les autres repas, cette observation apparaît beaucoup moins souvent. L’application présente donc une association à surveiller, pas une intolérance confirmée."],
+      coffee:["Café tardif et sommeil","La durée de sommeil moyenne est plus faible après les 20 journées où un café a été inscrit après 16 h. D’autres facteurs peuvent aussi expliquer cette différence."],
+      water:["Hydratation et énergie","Les notes d’énergie faible sont plus fréquentes lors des journées comptant moins de quatre verres. Les données ne permettent pas d’affirmer que le manque d’eau en est la cause."],
+      activity:["Activité et détente","Le mot « détendu » est noté plus souvent après les journées comprenant au moins 30 minutes d’activité. Cette observation pourrait devenir plus fiable avec davantage de données."]
+    };
+    const [title,body]=details[button.dataset.demoDetail]||["Observation",""];
+    $("#sourceTitle").textContent=title;
+    $("#sourceContent").innerHTML=`<div class="demo-detail-mascot"><img src="assets/icon.svg" alt=""></div><p>${body}</p><div class="notice info-notice"><strong>À retenir</strong><p>Une association n’est pas une preuve de cause à effet et ne constitue pas un diagnostic.</p></div>`;
+    $("#sourceDialog").showModal()
+  }))
+}
+function renderDemoChrome(){
+  document.body.classList.toggle("is-demo-mode",!!db.settings.demoMode);
+  const appRoot=$("#app");
+  if(db.settings.demoMode&&appRoot&&!$("#demoModeBanner")){
+    appRoot.insertAdjacentHTML("afterbegin",demoBannerHtml())
+  }
+  bindDemoChrome()
+}
+function startDemoMode(){
+  try{
+    if(!localStorage.getItem(DEMO_BACKUP_KEY))localStorage.setItem(DEMO_BACKUP_KEY,JSON.stringify(db))
+  }catch(_){}
+  db=createDemoDB();
+  selectedDate=todayKey();
+  currentView="today";
+  saveLocal("demarrage-demo");
+  $("#welcomeDialog")?.close();
+  render();
+  setTimeout(()=>startDemoTour(),350)
+}
+function leaveDemoMode(){
+  if(!confirm("Commencer ton propre journal? Les données fictives seront retirées."))return;
+  db=freshDB();
+  db.settings.showWelcome=false;
+  db.settings.demoMode=false;
+  db.settings.demoTourSeen=true;
+  localStorage.removeItem(DEMO_BACKUP_KEY);
+  localStorage.removeItem(OUTBOX_KEY);
+  selectedDate=todayKey();
+  currentView="today";
+  saveLocal("fin-demo");
+  render()
+}
+const demoTourSteps=[
+  {view:"today",target:".meal-quick-grid",title:"Tout commence dans le Journal",text:"Ajoute rapidement tes repas, ton énergie avant de manger et ton ressenti quelques heures plus tard."},
+  {view:"today",target:".wellbeing-detail-grid",title:"Le contexte compte aussi",text:"Sommeil, activité et hydratation aident à comprendre ce qui accompagne les bonnes et moins bonnes journées."},
+  {view:"today",target:".bottom-nav [data-view='insights']",title:"Puis les données se connectent",text:"Après plusieurs semaines, Énergie compare les habitudes et cherche des associations prudentes."},
+  {view:"insights",target:"#demoDiscoveries",title:"Voici le bénéfice à long terme",text:"Par exemple, la démo remarque que les produits laitiers sont plus souvent suivis de maux de tête — sans prétendre poser un diagnostic."},
+  {view:"insights",target:".demo-insight-card",title:"Tu gardes toujours le contexte",text:"Chaque découverte indique sa force, les chiffres comparés et pourquoi elle apparaît. Tu peux ensuite en discuter avec un professionnel."}
+];
+function clearDemoTourTarget(){
+  $$(".demo-tour-target").forEach(el=>el.classList.remove("demo-tour-target"))
+}
+function positionDemoTourCard(target){
+  const card=$("#demoTour .demo-tour-card");
+  if(!card||!target)return;
+  const r=target.getBoundingClientRect();
+  card.classList.toggle("tour-card-top",r.top>window.innerHeight*.5);
+  target.scrollIntoView({behavior:"smooth",block:"center"})
+}
+function showDemoTourStep(){
+  const step=demoTourSteps[demoTourIndex];
+  if(!step)return finishDemoTour();
+  if(currentView!==step.view){
+    currentView=step.view;
+    if(step.view==="today")selectedDate=todayKey();
+    render()
+  }
+  setTimeout(()=>{
+    clearDemoTourTarget();
+    const target=$(step.target);
+    target?.classList.add("demo-tour-target");
+    $("#demoTourProgress").textContent=`Visite guidée · ${demoTourIndex+1}/${demoTourSteps.length}`;
+    $("#demoTourTitle").textContent=step.title;
+    $("#demoTourText").textContent=step.text;
+    $("#nextDemoTour").textContent=demoTourIndex===demoTourSteps.length-1?"Explorer":"Continuer";
+    if(target)positionDemoTourCard(target)
+  },80)
+}
+function startDemoTour(){
+  if(!db.settings.demoMode)return;
+  demoTourIndex=0;
+  const tour=$("#demoTour");
+  tour.hidden=false;
+  document.body.classList.add("demo-tour-open");
+  showDemoTourStep()
+}
+function finishDemoTour(){
+  clearDemoTourTarget();
+  $("#demoTour").hidden=true;
+  document.body.classList.remove("demo-tour-open");
+  db.settings.demoTourSeen=true;
+  saveLocal("visite-demo")
+}
+
+function render(){if(selectedDate>todayKey())selectedDate=todayKey();document.documentElement.dataset.theme=db.settings.theme==="dark"?"dark":"";updateLivingHeader();$("#todayLabel").textContent=currentView==="today"?formatDate(selectedDate):formatDate(todayKey());$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===currentView));updateSyncBadge();({today:renderToday,history:renderHistory,insights:renderInsights,profile:renderProfile}[currentView]||renderToday)();renderDemoChrome()}
 function mealCard(m,opts={}){const feeling=m.feeling;return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${m.photoUrl||m.photoLocal?`<img src="${esc(m.photoUrl||m.photoLocal)}" alt="">`:mealIcon(m.type)}</div><div><h3>${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${esc(t(m.type))}${opts.showDate?` · ${esc(formatDate(m.date))}`:""}</div><div class="chips"><span class="chip">Énergie avant ${m.fatigueBefore||'—'}/5</span>${feeling?`<span class="chip feeling-chip">${feelingEmoji(feeling.rating)} ${t("Ressenti")} ${feeling.rating}/5</span>`:""}</div></div><div class="meal-actions">${isFeelingEligible(m)?`<button class="feeling-meal" data-feeling="${m.id}" title="${feeling?'Modifier le ressenti':'Ajouter un ressenti'}">${feeling?'😊':'＋😊'}</button>`:""}<button class="favorite-meal" data-favorite="${m.id}" title="Ajouter aux favoris">☆</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div></article>`}
 function bindMealCards(){$$('[data-meal]').forEach(c=>c.onclick=e=>{if(e.target.closest('button'))return;selectedDate=c.dataset.date||selectedDate;openMeal(c.dataset.meal)});$$('[data-delete]').forEach(b=>b.onclick=e=>{e.stopPropagation();const card=b.closest('[data-meal]'),d=ensureDay(db,card.dataset.date),m=d.meals.find(x=>x.id===b.dataset.delete);if(m&&confirm('Supprimer ce repas?')){deleteMealLocal(m);render()}});$$('[data-favorite]').forEach(b=>b.onclick=e=>{e.stopPropagation();const card=b.closest('[data-meal]'),m=ensureDay(db,card.dataset.date).meals.find(x=>x.id===b.dataset.favorite);if(m)createFavoriteFromMeal(m)});$$('[data-feeling]').forEach(b=>b.onclick=e=>{e.stopPropagation();const card=b.closest('[data-meal]');selectedDate=card.dataset.date;openFeeling(b.dataset.feeling)});hydratePhotoUrls()}
 function mealTypeSummary(meals,type){const list=meals.filter(m=>m.type===type).sort((a,b)=>a.time.localeCompare(b.time));return type==='Collation'?list:list.slice(0,1)}
@@ -172,9 +411,9 @@ function countKeywordMeals(meals,words){return meals.filter(m=>words.some(w=>`${
 function buildNutritionObservations(meals){if(!db.settings.nutritionObservations||!meals.length)return[];const recent=meals.filter(m=>new Date(`${m.date}T23:59:59`)>=new Date(Date.now()-7*86400000));if(recent.length<3)return[];const groups=[{icon:"🍬",title:"Aliments possiblement plus sucrés",words:["boisson gazeuse","liqueur","bonbon","chocolat","biscuit","gâteau","gateau","beigne","donut","sirop","jus","crème glacée","creme glacee","céréales sucrées","cereales sucrees"],min:3,text:"Plusieurs descriptions récentes mentionnent des aliments souvent associés à davantage de sucres. Tu pourrais simplement vérifier les étiquettes ou varier certains choix, si cet objectif est important pour toi.",source:[SOURCES.labels,SOURCES.who]},{icon:"🧂",title:"Aliments possiblement plus salés",words:["chips","croustille","pizza","charcuterie","bacon","saucisse","ramen","soupe en conserve","repas congelé","repas congele","fast food","poutine"],min:3,text:"Plusieurs descriptions récentes mentionnent des aliments qui peuvent être plus riches en sodium. Les portions et les recettes font une grande différence; l’étiquette demeure la meilleure référence.",source:[SOURCES.labels,SOURCES.processed]},{icon:"🧈",title:"Gras saturés à surveiller dans les choix fréquents",words:["frit","frite","poutine","bacon","saucisse","crème","creme","beurre","fromage","pizza","croissant","pâtisserie","patisserie"],min:3,text:"Certains aliments notés fréquemment peuvent contenir davantage de gras saturés. Il ne s’agit pas d’un jugement sur un repas; la variété au fil du temps est ce qui compte.",source:[SOURCES.labels,SOURCES.canada]},{icon:"🥦",title:"Peu de végétaux repérés dans les descriptions",inverse:true,words:["légume","legume","salade","brocoli","carotte","tomate","épinard","epinard","poivron","haricot","lentille","pois chiche","fruit","pomme","banane","bleuet","fraise"],min:2,text:"L’application repère peu de fruits, légumes ou légumineuses dans les repas récents. Les descriptions peuvent être incomplètes; tu pourrais préciser les accompagnements pour obtenir une observation plus juste.",source:[SOURCES.canada]}];return groups.flatMap(g=>{const count=countKeywordMeals(recent,g.words),trigger=g.inverse?count<g.min:count>=g.min;if(!trigger)return[];return[{...g,text:db.settings.generalRecommendations?g.text:g.text.split(". ")[0]+".",confidence:insightConfidence(recent.length),basis:`Estimation par mots-clés dans ${recent.length} repas des 7 derniers jours. Les quantités et valeurs nutritives ne sont pas connues.`,kind:"nutrition"}]}).slice(0,3)}
 function insightHtml(x,i){const sourceButton=db.settings.showSources?`<button class="text-button why-insight" data-insight="${i}">Pourquoi je vois ceci?</button>`:"";return`<article class="card insight-card"><div class="insight-icon">${x.icon}</div><div><div class="insight-heading"><span class="insight-type">${t(x.kind==='nutrition'?'Observation nutritionnelle estimée':'Observation personnelle')}</span><h3>${esc(x.title)}</h3></div><p>${esc(x.text)}</p><div class="insight-footer"><span class="confidence ${x.confidence.cls}">Confiance ${x.confidence.label.toLowerCase()}</span>${sourceButton}</div></div></article>`}
 function openInsightWhy(x){$("#sourceTitle").textContent="Pourquoi je vois ceci?";const refs=(x.source||[]).map(s=>`<li><a href="${s.url}" target="_blank" rel="noopener">${esc(s.name)} ↗</a></li>`).join('');$("#sourceContent").innerHTML=`<p>${esc(x.basis||'Cette observation utilise les données disponibles dans l’application.')}</p><div class="notice"><strong>Limites importantes</strong><p>Cette observation est automatisée et informative. Elle ne constitue ni un diagnostic, ni une preuve de causalité, ni un remplacement d’un avis professionnel.</p></div>${refs?`<h3>Sources générales</h3><ul class="source-list">${refs}</ul>`:'<p class="muted small">Cette carte repose uniquement sur tes données personnelles.</p>'}`;$("#sourceDialog").showModal()}
-function renderInsights(){const realMeals=allMeals(),usePreview=realMeals.length<8&&sessionStorage.getItem('dashboardPreview')!=="off";const demo=[{date:todayKey(),time:"07:30",type:"Déjeuner",description:"Yogourt grec, bleuets et granola",fatigueBefore:3},{date:todayKey(),time:"12:10",type:"Dîner",description:"Poulet, riz et brocoli",fatigueBefore:2},{date:todayKey(),time:"18:20",type:"Souper",description:"Pizza et salade",fatigueBefore:3},{date:"2026-07-18",time:"07:45",type:"Déjeuner",description:"Céréales sucrées et jus",fatigueBefore:3},{date:"2026-07-18",time:"12:30",type:"Dîner",description:"Poulet, riz et brocoli",fatigueBefore:2},{date:"2026-07-17",time:"18:00",type:"Souper",description:"Poutine",fatigueBefore:4},{date:"2026-07-16",time:"07:20",type:"Déjeuner",description:"Yogourt grec, bleuets et granola",fatigueBefore:2},{date:"2026-07-15",time:"12:05",type:"Dîner",description:"Poulet, riz et brocoli",fatigueBefore:2},{date:"2026-07-14",time:"18:40",type:"Souper",description:"Pizza",fatigueBefore:3},{date:"2026-07-13",time:"08:10",type:"Déjeuner",description:"Œufs et rôties",fatigueBefore:3}];const meals=usePreview?demo:realMeals,before=average(meals.map(m=>m.fatigueBefore));const last7=meals.filter(m=>new Date(`${m.date}T23:59:59`)>=new Date(Date.now()-7*86400000));const freq={};meals.forEach(m=>{const key=m.description.trim();if(key)freq[key]=(freq[key]||0)+1});const common=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5),avgTime=average(meals.map(m=>timeToMinutes(m.time)));let insights=db.settings.insightsEnabled?buildPersonalInsights(meals):[];insights=insights.concat(buildNutritionObservations(meals));const dates=[...new Set(meals.map(m=>m.date))].sort().slice(-14);const bars=dates.map(date=>{const vals=meals.filter(m=>m.date===date).map(m=>m.fatigueBefore),a=average(vals)||0;return `<i style="height:${Math.max(8,a/5*100)}%" title="${esc(date)} : ${a.toFixed(1)}"></i>`}).join('');const previewBanner=realMeals.length<8?`<section class="preview-banner"><div><strong>${usePreview?'👀 Mode aperçu activé':'📊 Tes vraies données'}</strong><p>${usePreview?'Des données exemples montrent la présentation. Elles ne sont jamais sauvegardées.':'Le tableau de bord utilise seulement tes repas enregistrés.'}</p></div><button class="secondary small" id="togglePreview">${usePreview?'Voir mes données':'Voir l’aperçu'}</button></section>`:"";$("#app").innerHTML=`<section class="hero"><p class="eyebrow">Tableau de bord & observations</p><h2>Observe tes habitudes sans jugement</h2><p>Les cartes décrivent des tendances possibles. Elles ne posent aucun diagnostic et ne prouvent jamais qu’un aliment cause un effet.</p></section>${previewBanner}<div class="grid"><section class="card stat-card"><span>🍽️</span><h3>Repas — 7 jours</h3><div class="metric">${last7.length}</div></section><section class="card stat-card"><span>📚</span><h3>Repas au total</h3><div class="metric">${meals.length}</div></section><section class="card stat-card"><span>⚡</span><h3>Énergie avant</h3><div class="metric">${before==null?'—':before.toFixed(1)+'/5'}</div></section><section class="card stat-card"><span>⏰</span><h3>Heure moyenne</h3><div class="metric metric-small">${formatMinutes(avgTime)}</div></section><section class="card wide"><h3>Énergie avant — jours récents</h3><div class="spark">${bars||'<span class="muted">Pas encore assez de données.</span>'}</div><div class="chart-scale"><span>énergie faible</span><span>énergie élevée</span></div></section><section class="card wide"><h3>Repas les plus fréquents</h3><div class="ranking">${common.length?common.map(([name,count],i)=>`<div><span>${i+1}</span><strong>${esc(name)}</strong><em>${count}×</em></div>`).join(''):'<p class="muted">Ajoute quelques repas pour voir le classement.</p>'}</div></section></div><div class="section-title"><h2>🧠 Observations</h2><span class="muted small">${insights.length} carte${insights.length>1?'s':''}</span></div><div class="insight-grid">${insights.length?insights.map(insightHtml).join(''):`<section class="card empty wide"><div class="food-art">🧠</div><p>${db.settings.insightsEnabled||db.settings.nutritionObservations?'Continue d’enregistrer tes repas pour obtenir des observations.':'Les observations sont désactivées dans les paramètres.'}</p></section>`}</div>${usePreview?'<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>':''}`;$("#togglePreview")?.addEventListener('click',()=>{sessionStorage.setItem('dashboardPreview',usePreview?'off':'on');renderInsights()});$$('.why-insight').forEach(b=>b.onclick=()=>openInsightWhy(insights[Number(b.dataset.insight)]))}
+function renderInsights(){const realMeals=allMeals(),usePreview=!db.settings.demoMode&&realMeals.length<8&&sessionStorage.getItem('dashboardPreview')!=="off";const demo=[{date:todayKey(),time:"07:30",type:"Déjeuner",description:"Yogourt grec, bleuets et granola",fatigueBefore:3},{date:todayKey(),time:"12:10",type:"Dîner",description:"Poulet, riz et brocoli",fatigueBefore:2},{date:todayKey(),time:"18:20",type:"Souper",description:"Pizza et salade",fatigueBefore:3},{date:"2026-07-18",time:"07:45",type:"Déjeuner",description:"Céréales sucrées et jus",fatigueBefore:3},{date:"2026-07-18",time:"12:30",type:"Dîner",description:"Poulet, riz et brocoli",fatigueBefore:2},{date:"2026-07-17",time:"18:00",type:"Souper",description:"Poutine",fatigueBefore:4},{date:"2026-07-16",time:"07:20",type:"Déjeuner",description:"Yogourt grec, bleuets et granola",fatigueBefore:2},{date:"2026-07-15",time:"12:05",type:"Dîner",description:"Poulet, riz et brocoli",fatigueBefore:2},{date:"2026-07-14",time:"18:40",type:"Souper",description:"Pizza",fatigueBefore:3},{date:"2026-07-13",time:"08:10",type:"Déjeuner",description:"Œufs et rôties",fatigueBefore:3}];const meals=usePreview?demo:realMeals,before=average(meals.map(m=>m.fatigueBefore));const last7=meals.filter(m=>new Date(`${m.date}T23:59:59`)>=new Date(Date.now()-7*86400000));const freq={};meals.forEach(m=>{const key=m.description.trim();if(key)freq[key]=(freq[key]||0)+1});const common=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,5),avgTime=average(meals.map(m=>timeToMinutes(m.time)));let insights=db.settings.insightsEnabled?buildPersonalInsights(meals):[];insights=insights.concat(buildNutritionObservations(meals));const dates=[...new Set(meals.map(m=>m.date))].sort().slice(-14);const bars=dates.map(date=>{const vals=meals.filter(m=>m.date===date).map(m=>m.fatigueBefore),a=average(vals)||0;return `<i style="height:${Math.max(8,a/5*100)}%" title="${esc(date)} : ${a.toFixed(1)}"></i>`}).join('');const previewBanner=realMeals.length<8?`<section class="preview-banner"><div><strong>${usePreview?'👀 Mode aperçu activé':'📊 Tes vraies données'}</strong><p>${usePreview?'Des données exemples montrent la présentation. Elles ne sont jamais sauvegardées.':'Le tableau de bord utilise seulement tes repas enregistrés.'}</p></div><button class="secondary small" id="togglePreview">${usePreview?'Voir mes données':'Voir l’aperçu'}</button></section>`:"";$("#app").innerHTML=`<section class="hero"><p class="eyebrow">Tableau de bord & observations</p><h2>Observe tes habitudes sans jugement</h2><p>Les cartes décrivent des tendances possibles. Elles ne posent aucun diagnostic et ne prouvent jamais qu’un aliment cause un effet.</p></section>${previewBanner}<div class="grid"><section class="card stat-card"><span>🍽️</span><h3>Repas — 7 jours</h3><div class="metric">${last7.length}</div></section><section class="card stat-card"><span>📚</span><h3>Repas au total</h3><div class="metric">${meals.length}</div></section><section class="card stat-card"><span>⚡</span><h3>Énergie avant</h3><div class="metric">${before==null?'—':before.toFixed(1)+'/5'}</div></section><section class="card stat-card"><span>⏰</span><h3>Heure moyenne</h3><div class="metric metric-small">${formatMinutes(avgTime)}</div></section><section class="card wide"><h3>Énergie avant — jours récents</h3><div class="spark">${bars||'<span class="muted">Pas encore assez de données.</span>'}</div><div class="chart-scale"><span>énergie faible</span><span>énergie élevée</span></div></section><section class="card wide"><h3>Repas les plus fréquents</h3><div class="ranking">${common.length?common.map(([name,count],i)=>`<div><span>${i+1}</span><strong>${esc(name)}</strong><em>${count}×</em></div>`).join(''):'<p class="muted">Ajoute quelques repas pour voir le classement.</p>'}</div></section></div><div class="section-title"><h2>🧠 Observations</h2><span class="muted small">${insights.length} carte${insights.length>1?'s':''}</span></div><div class="insight-grid">${insights.length?insights.map(insightHtml).join(''):`<section class="card empty wide"><div class="food-art">🧠</div><p>${db.settings.insightsEnabled||db.settings.nutritionObservations?'Continue d’enregistrer tes repas pour obtenir des observations.':'Les observations sont désactivées dans les paramètres.'}</p></section>`}</div>${demoDiscoveryHtml()}${usePreview&&!db.settings.demoMode?'<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>':''}`;$("#togglePreview")?.addEventListener('click',()=>{sessionStorage.setItem('dashboardPreview',usePreview?'off':'on');renderInsights()});$$('.why-insight').forEach(b=>b.onclick=()=>openInsightWhy(insights[Number(b.dataset.insight)]))}
 function toggleSetting(id,key){$(id).onchange=e=>{db.settings[key]=e.target.checked;saveLocal(`parametre-${key}`);render()}}
-function renderProfile(){const backups=(()=>{try{return JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]').length}catch(_){return 0}})();$("#app").innerHTML=`<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session?esc(session.user.email):'Protège ton historique'}</h2><p>${session?'La synchronisation Supabase est active.':'La copie locale seule peut disparaître sur iPhone.'}</p></section><div class="stack"><section class="card">${session?`<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>`:`<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans le tableau de bord.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled?'checked':''}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations?'checked':''}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations?'checked':''}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources?'checked':''}></label></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders!==false?'checked':''}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders===false?'is-disabled':''}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${['Déjeuner','Dîner','Souper','Collation'].map(t=>`<label class="setting-option"><input type="checkbox" data-feeling-meal-type="${t}" ${(db.settings.feelingMealTypes||[]).includes(t)?'checked':''}><span>${mealIcon(t)} ${window.t(t)}</span></label>`).join('')}</div><label>Délai après le repas<select id="feelingDelay"><option value="1" ${Number(db.settings.feelingDelayHours)===1?'selected':''}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours)===2?'selected':''}>2 heures</option><option value="3" ${Number(db.settings.feelingDelayHours)===3?'selected':''}>3 heures</option></select></label><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button><p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p></div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal||8}" style="width:80px"></div></section><section class="section-title"><h2>⭐ ${t("Mes favoris")}</h2><span class="muted small">${db.favorites.length}</span></section><div id="profileFavoritesList" class="stack">${renderFavoriteList(db.favorites)}</div><section class="card"><h3>Sauvegarde supplémentaire</h3><p class="muted small">${backups} copie(s) locale(s) de sécurité.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></section><section class="card"><p class="muted small">Énergie V${esc(CFG.appVersion||'1.7.7')}</p></section></div>`;$("#signIn")?.addEventListener("click",()=>{setAuthMode("login");$("#authMessage").textContent="";$("#authDialog").showModal()});$("#syncNow")?.addEventListener('click',async()=>{await syncNow();await pullCloud()});$("#signOut")?.addEventListener('click',async()=>{await client.auth.signOut();session=null;render()});$("#waterGoal").onchange=e=>{db.settings.waterGoal=clamp(e.target.value,1,20);saveLocal('objectif-eau');render()};toggleSetting('#settingInsights','insightsEnabled');toggleSetting('#settingNutrition','nutritionObservations');toggleSetting('#settingRecommendations','generalRecommendations');toggleSetting('#settingSources','showSources');const feelingToggle=$('#settingFeelingReminders');if(feelingToggle)feelingToggle.onchange=async e=>{db.settings.feelingReminders=e.target.checked;saveLocal('rappels-ressenti');if(e.target.checked)await requestFeelingNotifications();scheduleFeelingChecks();renderProfile()};$$('[data-feeling-meal-type]').forEach(c=>c.onchange=()=>{db.settings.feelingMealTypes=$$('[data-feeling-meal-type]:checked').map(x=>x.dataset.feelingMealType);saveLocal('repas-rappels-ressenti');scheduleFeelingChecks()});$('#feelingDelay')?.addEventListener('change',e=>{db.settings.feelingDelayHours=Number(e.target.value);saveLocal('delai-ressenti');scheduleFeelingChecks()});$('#enableNotifications')?.addEventListener('click',async()=>{const ok=await requestFeelingNotifications();alert(ok?'Notifications autorisées.':'Les notifications ne sont pas autorisées dans ce navigateur.')});$("#showWelcomeAgain").onclick=()=>{$("#hideWelcome").checked=false;$("#welcomeDialog").showModal()};bindFavoriteActions();$("#exportData").onclick=exportData;$("#importData").onclick=()=>$("#importFile").click()}
+function renderProfile(){const backups=(()=>{try{return JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]').length}catch(_){return 0}})();$("#app").innerHTML=`<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session?esc(session.user.email):'Protège ton historique'}</h2><p>${session?'La synchronisation Supabase est active.':'La copie locale seule peut disparaître sur iPhone.'}</p></section><div class="stack"><section class="card">${session?`<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>`:`<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans le tableau de bord.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled?'checked':''}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations?'checked':''}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations?'checked':''}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources?'checked':''}></label></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders!==false?'checked':''}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders===false?'is-disabled':''}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${['Déjeuner','Dîner','Souper','Collation'].map(t=>`<label class="setting-option"><input type="checkbox" data-feeling-meal-type="${t}" ${(db.settings.feelingMealTypes||[]).includes(t)?'checked':''}><span>${mealIcon(t)} ${window.t(t)}</span></label>`).join('')}</div><label>Délai après le repas<select id="feelingDelay"><option value="1" ${Number(db.settings.feelingDelayHours)===1?'selected':''}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours)===2?'selected':''}>2 heures</option><option value="3" ${Number(db.settings.feelingDelayHours)===3?'selected':''}>3 heures</option></select></label><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button><p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p></div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal||8}" style="width:80px"></div></section><section class="section-title"><h2>⭐ ${t("Mes favoris")}</h2><span class="muted small">${db.favorites.length}</span></section><div id="profileFavoritesList" class="stack">${renderFavoriteList(db.favorites)}</div>${db.settings.demoMode?`<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo</h3><p class="muted small">Tu explores 180 jours de données fictives.</p></div><span class="demo-pill">Phil</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Commencer mon journal</button></div></section>`:""}<section class="card"><h3>Sauvegarde supplémentaire</h3><p class="muted small">${backups} copie(s) locale(s) de sécurité.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></section><section class="card"><p class="muted small">Énergie V${esc(CFG.appVersion||'1.7.7')}</p></section></div>`;$("#signIn")?.addEventListener("click",()=>{setAuthMode("login");$("#authMessage").textContent="";$("#authDialog").showModal()});$("#syncNow")?.addEventListener('click',async()=>{await syncNow();await pullCloud()});$("#signOut")?.addEventListener('click',async()=>{await client.auth.signOut();session=null;render()});$("#waterGoal").onchange=e=>{db.settings.waterGoal=clamp(e.target.value,1,20);saveLocal('objectif-eau');render()};toggleSetting('#settingInsights','insightsEnabled');toggleSetting('#settingNutrition','nutritionObservations');toggleSetting('#settingRecommendations','generalRecommendations');toggleSetting('#settingSources','showSources');const feelingToggle=$('#settingFeelingReminders');if(feelingToggle)feelingToggle.onchange=async e=>{db.settings.feelingReminders=e.target.checked;saveLocal('rappels-ressenti');if(e.target.checked)await requestFeelingNotifications();scheduleFeelingChecks();renderProfile()};$$('[data-feeling-meal-type]').forEach(c=>c.onchange=()=>{db.settings.feelingMealTypes=$$('[data-feeling-meal-type]:checked').map(x=>x.dataset.feelingMealType);saveLocal('repas-rappels-ressenti');scheduleFeelingChecks()});$('#feelingDelay')?.addEventListener('change',e=>{db.settings.feelingDelayHours=Number(e.target.value);saveLocal('delai-ressenti');scheduleFeelingChecks()});$('#enableNotifications')?.addEventListener('click',async()=>{const ok=await requestFeelingNotifications();alert(ok?'Notifications autorisées.':'Les notifications ne sont pas autorisées dans ce navigateur.')});$("#showWelcomeAgain").onclick=()=>{$("#hideWelcome").checked=false;$("#welcomeDialog").showModal()};$("#replayDemoTour")?.addEventListener("click",startDemoTour);$("#leaveDemoProfile")?.addEventListener("click",leaveDemoMode);bindFavoriteActions();$("#exportData").onclick=exportData;$("#importData").onclick=()=>$("#importFile").click()}
 function makeRatings(containerId,value){const c=$(containerId),labels=['Très faible','Faible','Moyenne','Bonne','Excellente'],safe=clamp(value||3,1,5);c.innerHTML=`<div class="energy-slider-emojis"><span>😴</span><span>😄</span></div><input class="energy-range" type="range" min="1" max="5" step="1" value="${safe}" aria-label="Énergie avant le repas"><div class="energy-slider-value"><strong>${safe} / 5</strong><span>${labels[safe-1]}</span></div>`;c.dataset.value=safe;const input=c.querySelector('.energy-range'),valueEl=c.querySelector('.energy-slider-value strong'),labelEl=c.querySelector('.energy-slider-value span');const update=()=>{const v=Number(input.value);c.dataset.value=v;valueEl.textContent=`${v} / 5`;labelEl.textContent=labels[v-1];input.style.setProperty('--energy-progress',`${(v-1)/4*100}%`)};input.addEventListener('input',update);update()}
 function populateFavoriteSelect(type){const s=$("#favoriteMealSelect");if(!s)return;const favorites=[...db.favorites].filter(f=>!type||f.type===type).sort((a,b)=>b.usageCount-a.usageCount);s.innerHTML=`<option value="">Choisir un favori…</option>${favorites.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join('')}`;s.closest('label').hidden=!favorites.length}
 function updateMealDialogType(type){const value=type||'Déjeuner';$("#mealType").value=value;$("#mealDialogTypeIcon").textContent=mealIcon(value);$("#mealDialogTypeLabel").textContent=t(value);$("#copyYesterdayBreakfast").hidden=value!=="Déjeuner";populateFavoriteSelect(value);$("#favoriteMealSelect").value=''}function openMeal(id=null,presetType=null){const d=ensureDay(db,selectedDate),m=id?d.meals.find(x=>x.id===id):null,type=m?.type||presetType||'Déjeuner';$("#mealDialogTitle").textContent=m?'Modifier le repas':'Ajouter un repas';$("#mealId").value=m?.id||'';updateMealDialogType(type);$("#mealTime").value=m?.time||new Date().toTimeString().slice(0,5);$("#mealDescription").value=m?.description||'';$("#mealNotes").value=m?.notes||'';makeRatings('#fatigueBeforePicker',m?.fatigueBefore||3);photoData=m?.photoLocal||m?.photoUrl||null;photoRemoved=false;showPhotoPreview();$("#mealDialog").showModal()}
@@ -194,7 +433,7 @@ $('#sleepForm').onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDat
 $('#activityForm').onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDate),type=$('#activityType').value,min=parseAppNumber($('#activityMinutes').value)||0;if(!type)return alert('Choisis un type d’activité.');if(min<1||min>1440)return alert('Indique une durée valide en minutes.');d.activities.push({id:uid(),type,minutes:min,at:new Date().toISOString()});setDayChanged(selectedDate);$('#activityDialog').close();render()};
 $$('[data-activity]').forEach(b=>b.onclick=()=>{$('#activityType').value=b.dataset.activity;$$('[data-activity]').forEach(x=>x.classList.toggle('active',x===b))});
 $("#copyYesterdayBreakfast").onclick=()=>{const dt=new Date(`${selectedDate}T12:00:00`);dt.setDate(dt.getDate()-1);const k=dt.toLocaleDateString('en-CA'),m=ensureDay(db,k).meals.find(x=>x.type==='Déjeuner');if(!m)return alert("Aucun déjeuner trouvé hier.");$("#mealType").value=m.type;$("#mealDescription").value=m.description;$("#mealNotes").value=m.notes||'';makeRatings('#fatigueBeforePicker',m.fatigueBefore||3)};
-$("#welcomeForm").onsubmit=e=>{e.preventDefault();db.settings.showWelcome=!$("#hideWelcome").checked;saveLocal('message-information');$("#welcomeDialog").close()};
+$("#startDemo").onclick=startDemoMode;$("#welcomeForm").onsubmit=e=>{e.preventDefault();db.settings.showWelcome=!$("#hideWelcome").checked;db.settings.demoMode=false;db.settings.demoTourSeen=true;saveLocal('message-information');$("#welcomeDialog").close()};$("#nextDemoTour").onclick=()=>{demoTourIndex++;showDemoTourStep()};$("#skipDemoTour").onclick=finishDemoTour;
 $$('.close-dialog').forEach(b=>b.onclick=()=>b.closest('dialog').close());
 function setAuthMode(mode){authMode=mode==="signup"?"signup":"login";const signup=authMode==="signup",confirmInput=$("#authPasswordConfirm");$("#loginTab").classList.toggle("active",!signup);$("#signupTab").classList.toggle("active",signup);$("#authTitle").textContent=signup?"Créer un compte":"Connexion";$("#authSubmit").textContent=signup?"Créer mon compte":"Me connecter";$("#confirmPasswordLabel").hidden=!signup;confirmInput.required=signup;if(!signup)confirmInput.value="";$("#authPassword").autocomplete=signup?"new-password":"current-password";$("#forgotPassword").hidden=signup;$("#authMessage").textContent=signup?"Après l’inscription, confirme le courriel de Supabase.":"La connexion se fait directement dans l’application."}
 function friendlyAuthError(error){const text=(error?.message||"").toLowerCase();if(text.includes("invalid login credentials"))return"Courriel ou mot de passe incorrect.";if(text.includes("email not confirmed"))return"Confirme d’abord ton adresse courriel.";if(text.includes("user already registered"))return"Ce courriel possède déjà un compte.";if(text.includes("rate limit"))return"Trop de tentatives rapprochées. Attends un peu puis réessaie.";return error?.message||"Une erreur est survenue."}
@@ -209,7 +448,7 @@ window.addEventListener('online',()=>{updateSyncBadge();if(session)syncNow()});w
 function dismissSplash(){const splash=$('#splashScreen');if(!splash)return;setTimeout(()=>{splash.classList.add('is-hidden');setTimeout(()=>splash.remove(),420)},760)}
 let dialogScrollY=0;function syncDialogScrollLock(){const open=!!document.querySelector('dialog[open]');if(open&&!document.body.classList.contains('dialog-open')){dialogScrollY=window.scrollY;document.body.style.top=`-${dialogScrollY}px`;document.body.classList.add('dialog-open')}else if(!open&&document.body.classList.contains('dialog-open')){document.body.classList.remove('dialog-open');document.body.style.top='';window.scrollTo(0,dialogScrollY)}}new MutationObserver(syncDialogScrollLock).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
 async function initAuth(){if(!client){render();if(db.settings.showWelcome!==false)setTimeout(()=>$("#welcomeDialog").showModal(),120);return}const {data}=await client.auth.getSession();session=data.session;client.auth.onAuthStateChange((event,newSession)=>{session=newSession;updateSyncBadge();if(event==="PASSWORD_RECOVERY")setTimeout(()=>$("#passwordDialog").showModal(),0);if(event==="SIGNED_OUT")render()});if(session){await pullCloud(false);await syncNow()}render();if(db.settings.showWelcome!==false)setTimeout(()=>$("#welcomeDialog").showModal(),120)}
-if('serviceWorker'in navigator)window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js?v=2.4.1');await reg.update();let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});if(reg.waiting)reg.waiting.postMessage?.({type:'SKIP_WAITING'})}catch(e){console.warn(e)}});
+if('serviceWorker'in navigator)window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js?v=2.5.0');await reg.update();let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});if(reg.waiting)reg.waiting.postMessage?.({type:'SKIP_WAITING'})}catch(e){console.warn(e)}});
 dismissSplash();
 initAuth();
 scheduleFeelingChecks();
