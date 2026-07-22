@@ -1,4 +1,4 @@
-# Énergie V2.2.1
+# Énergie V2.3.0
 
 - Nom simplifié : **Énergie**.
 - Logo pomme + éclair conservé exactement tel quel.
@@ -11,7 +11,7 @@
 # Énergie & Repas V1.7.4
 
 
-## Correctif V2.2.1
+## Correctif V2.3.0
 
 - Les options Déjeuner, Dîner, Souper et Collation du profil restent entièrement visibles sur mobile.
 - Les cases et leur libellé sont maintenant regroupés dans une zone cliquable pleine largeur.
@@ -183,3 +183,16 @@ Une application Web statique ne peut pas garantir une notification différée lo
 ### Migration Supabase
 
 Exécuter les nouvelles lignes à la fin de `supabase-setup.sql` pour ajouter `feeling` et `feeling_notified_at` à la table `meals`.
+
+
+## V2.3.0 — Internationalisation
+
+- Détection automatique de la langue du navigateur.
+- Français (Canada), français (France) et anglais.
+- Sélecteur de langue dans Profil.
+- Dates localisées avec Intl.
+- Les valeurs enregistrées demeurent compatibles avec les versions précédentes et Supabase.
+
+### Base de données
+
+Aucune migration SQL n'est requise pour la V2.3.0. La langue choisie est enregistrée localement dans le navigateur (`energieLocale`) et les valeurs métier existantes demeurent compatibles avec Supabase.
