@@ -1,4 +1,10 @@
-## V3.0.5 — Historique compact
+## Nouveauté V3.0.6
+
+- Option configurable dans Profil, désactivée par défaut.
+- Carte « À discuter avec votre professionnel » dans le Tableau lorsqu’elle est activée.
+- Sujets prudents tirés du journal, sans diagnostic ni partage automatique.
+
+## V3.0.6 — Accompagnement professionnel
 
 - Recherche visible en permanence, filtres repliés par défaut.
 - Bouton Filtres avec ouverture/fermeture des blocs Période et Type de repas.
