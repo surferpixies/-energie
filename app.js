@@ -5,7 +5,7 @@ const APP_KEY="energieRepasDB";
 const BACKUP_KEY="energieRepasBackups";
 const OUTBOX_KEY="energieRepasOutboxV15";
 const BARCODE_CACHE_KEY="energieBarcodeProductsV1";
-const CURRENT_VERSION=12;
+const CURRENT_VERSION=13;
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 const uid=()=>crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -87,15 +87,15 @@ function nutritionFromInputs(){const get=id=>{const value=$(id)?.value;if(value=
 function fillNutritionInputs(n,note=""){n=normalNutrition(n);[["#nutritionCalories","calories"],["#nutritionProtein","protein"],["#nutritionCarbs","carbs"],["#nutritionFat","fat"]].forEach(([id,key])=>{$(id).value=n?.[key]??""});const section=$("#mealNutritionSection");if(section){section.dataset.source=n?.source||"manual";section.dataset.confidence=n?.confidence||"low";section.dataset.basis=n?.basis||"portion courante";section.dataset.estimated=String(n?.estimated!==false)}$("#nutritionEstimateNote").textContent=note||(n?.source==="barcode"?`Valeurs ${n.basis||"du produit"} provenant de l’étiquette Open Food Facts. Vérifie-les au besoin.`:"Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.")}
 function estimateCurrentMealNutrition(){const n=estimateNutritionFromText($("#mealDescription").value);if(!n){fillNutritionInputs(null,"Aucune estimation fiable trouvée. Tu peux entrer ou modifier les valeurs manuellement.");return}fillNutritionInputs(n)}
 
-// --- V3.0.2 : recommandations contextuelles après un repas --------------------
-const RECOMMENDATION_HISTORY_KEY="energieMealRecommendationsV302";
+// --- V3.0.3 : recommandations adaptées au prochain repas --------------------
+const RECOMMENDATION_HISTORY_KEY="energieMealRecommendationsV303";
 const RECOMMENDATION_WORDS={
  protein:["oeuf","œuf","poulet","dinde","poisson","saumon","thon","boeuf","bœuf","porc","tofu","tempeh","lentille","pois chiche","haricot","légumineuse","yogourt grec","yaourt grec","fromage cottage","cottage","protéine","protein","noix","amande","beurre d'arachide","beurre de pinotte"],
  vegetables:["brocoli","salade","légume","legume","carotte","concombre","tomate","poivron","épinard","epinard","chou","courgette","asperge","champignon","avocat","aubergine","céleri","celeri","haricot vert","betterave"],
  fruit:["fruit","pomme","banane","orange","fraise","framboise","bleuet","mangue","poire","kiwi","raisin","ananas","pêche","peche","melon"],
  fiber:["avoine","gruau","pain entier","blé entier","ble entier","multigrain","riz brun","quinoa","lentille","pois chiche","haricot","légumineuse","legumineuse","pomme","poire","framboise","amande","noix","graine","chia","lin"],
  sugary:["beigne","donut","muffin","croissant","biscuit","gâteau","gateau","bonbon","chocolat","céréale sucrée","cereale sucree","boisson gazeuse","liqueur","cola","jus sucré","jus sucre","frappuccino","sirop"],
- refined:["pain blanc","bagel","croissant","beigne","donut","frites","chips","croustille","poutine"],
+ refined:["pain blanc","toast","rôtie","rotie","bagel","croissant","beigne","donut","frites","chips","croustille","poutine"],
  coffee:["café","cafe","espresso","latte","cappuccino","americano"]
 };
 function recommendationNormalize(value){return String(value||"").toLocaleLowerCase("fr-CA").normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
@@ -117,39 +117,78 @@ function recommendationMealProfile(meal){
   refined:recommendationHas(text,RECOMMENDATION_WORDS.refined),
   coffee:recommendationHas(text,RECOMMENDATION_WORDS.coffee)
  };
- const wordHits=Object.entries(RECOMMENDATION_WORDS).reduce((total,[key,words])=>total+recommendationHits(text,words),0);
+ const wordHits=Object.entries(RECOMMENDATION_WORDS).reduce((total,[,words])=>total+recommendationHits(text,words),0);
  const nutritionConfidence=nutrition?.confidence==="high"?2:nutrition?.confidence==="medium"?1:0;
  return{meal,flags,nutrition,confidence:Math.min(3,wordHits+nutritionConfidence)};
 }
+function recommendationMealMoment(type){
+ const clean=recommendationNormalize(type);
+ if(clean.includes("dejeuner")||clean.includes("breakfast"))return"breakfast";
+ if(clean.includes("diner")||clean.includes("lunch"))return"lunch";
+ if(clean.includes("souper")||clean.includes("dinner")||clean.includes("supper"))return"dinner";
+ if(clean.includes("collation")||clean.includes("snack"))return"snack";
+ return"other";
+}
 function chooseMealRecommendation(date,justSavedMeal){
- if(!db.settings.generalRecommendations||date!==todayKey())return null;
- const meals=[...ensureDay(db,date).meals].filter(m=>m.type!=="Boisson"&&m.description?.trim()).sort((a,b)=>a.time.localeCompare(b.time));
+ if(!db.settings.generalRecommendations||date!==todayKey()||!justSavedMeal)return null;
+ const moment=recommendationMealMoment(justSavedMeal.type);
+ // Une boisson, un type inconnu ou le souper ne déclenchent pas de conseil alimentaire.
+ if(moment==="other"||moment==="dinner")return null;
+ const meals=[...ensureDay(db,date).meals]
+  .filter(m=>m.type!=="Boisson"&&m.description?.trim()&&m.time<=justSavedMeal.time)
+  .sort((a,b)=>a.time.localeCompare(b.time));
  if(!meals.length)return null;
  const profiles=meals.map(recommendationMealProfile);
+ const saved=profiles.find(p=>p.meal.id===justSavedMeal.id)||profiles.at(-1);
+ if(!saved||saved.confidence<1)return null;
  const known=profiles.filter(p=>p.confidence>0);
- const principal=profiles.filter(p=>["Déjeuner","Dîner","Souper"].includes(p.meal.type));
- const saved=profiles.find(p=>p.meal.id===justSavedMeal?.id)||profiles.at(-1);
- const coverage=known.length/profiles.length;
  const confidencePoints=known.reduce((sum,p)=>sum+p.confidence,0);
- if(!known.length||coverage<0.5||confidencePoints<2)return null;
+ if(!known.length||confidencePoints<1)return null;
  const has=key=>profiles.some(p=>p.flags[key]);
- const proteinMeals=profiles.filter(p=>p.flags.protein).length;
- const produceMeals=profiles.filter(p=>p.flags.vegetables||p.flags.fruit).length;
- const fiberMeals=profiles.filter(p=>p.flags.fiber).length;
- const coffeeCount=profiles.reduce((sum,p)=>sum+(p.flags.coffee?1:0),0);
- const hour=Number((justSavedMeal?.time||"12:00").split(":")[0]);
- const water=Number(ensureDay(db,date).water)||0;
  const english=window.ENERGIE_LOCALE==="en";
  const candidates=[];
- // Un repas clairement sucré ou raffiné sans protéine mérite une suggestion dès le premier repas.
- if(proteinMeals===0&&(saved?.flags.sugary||saved?.flags.refined||principal.length>=2))candidates.push({category:"protein",message:english?"For your next meal, a protein source such as eggs, Greek yogurt, tofu or legumes could nicely complement your day.":"Pour ton prochain repas, une source de protéines comme des œufs, du yogourt grec, du tofu ou des légumineuses pourrait bien compléter ta journée."});
- // On attend au moins deux repas principaux avant de conclure qu'il manque de la variété végétale.
- if(principal.length>=2&&produceMeals===0)candidates.push({category:"produce",message:english?"A fruit or a few vegetables could add a little more variety to the rest of your day.":"Un fruit ou quelques légumes pourraient ajouter un peu plus de variété à la suite de ta journée."});
- // Les fibres arrivent après les aliments entiers afin d'éviter plusieurs conseils semblables.
- if(principal.length>=2&&fiberMeals===0&&(has("protein")||produceMeals>0))candidates.push({category:"fiber",message:english?"Whole grains, fruit or legumes could add a little more fibre to a future meal.":"Des grains entiers, un fruit ou des légumineuses pourraient ajouter un peu plus de fibres à un prochain repas."});
- // L'hydratation n'est jamais un conseil par défaut : seulement après plusieurs cafés, aucune eau et pas le matin.
- if(hour>=12&&coffeeCount>=2&&water===0)candidates.push({category:"hydration",message:english?"With the coffees noted today, a glass of water could be a simple addition when it suits you.":"Avec les cafés notés aujourd’hui, un verre d’eau pourrait être un ajout simple quand ça te convient."});
- return candidates.find(item=>!recommendationWasShown(date,item.category))||null;
+ const add=(category,message)=>{if(!recommendationWasShown(date,category))candidates.push({category,message})};
+
+ if(moment==="breakfast"){
+  // Après le déjeuner, on agit tout de suite, mais avec des idées naturelles pour le prochain repas.
+  if(!has("protein"))add("protein",english
+   ?"For your next meal, a protein source such as eggs, Greek yogurt, tofu or legumes could be a nice addition."
+   :"Pour ton prochain repas, une source de protéines comme des œufs, du yogourt grec, du tofu ou des légumineuses pourrait être un bel ajout.");
+  if(!has("fiber"))add("fiber",english
+   ?"Whole grains, fruit or legumes could be a simple way to add a little more fibre to your next meal."
+   :"Des grains entiers, un fruit ou des légumineuses pourraient être une façon simple d’ajouter un peu plus de fibres à ton prochain repas.");
+  if(!has("fruit"))add("fruit",english
+   ?"A fruit could be an easy addition to your next meal or snack."
+   :"Un fruit pourrait être un ajout facile à ton prochain repas ou à une collation.");
+ }
+
+ if(moment==="lunch"){
+  // Après le dîner, l'analyse cumulative prépare surtout le souper.
+  if(!has("protein"))add("protein",english
+   ?"Your next meal could be a good opportunity to add a protein source such as fish, chicken, tofu or legumes."
+   :"Ton prochain repas pourrait être une bonne occasion d’ajouter une source de protéines comme du poisson, du poulet, du tofu ou des légumineuses.");
+  if(!has("vegetables"))add("vegetables",english
+   ?"A few vegetables could add some variety to your next meal."
+   :"Quelques légumes pourraient ajouter un peu de variété à ton prochain repas.");
+  if(!has("fiber"))add("fiber",english
+   ?"Whole grains, vegetables or legumes could add a little more fibre to your next meal."
+   :"Des grains entiers, des légumes ou des légumineuses pourraient ajouter un peu plus de fibres à ton prochain repas.");
+  if(!has("fruit"))add("fruit",english
+   ?"A fruit later today could be a simple way to add a little more variety."
+   :"Un fruit plus tard aujourd’hui pourrait être une façon simple d’ajouter un peu plus de variété.");
+ }
+
+ if(moment==="snack"){
+  // Une collation ne déclenche un conseil que si le signal est clair.
+  const clearlySweetOrRefined=saved.flags.sugary||saved.flags.refined;
+  if(clearlySweetOrRefined&&!has("protein"))add("protein",english
+   ?"For your next meal, a protein source could help round out what you’ve had so far."
+   :"Pour ton prochain repas, une source de protéines pourrait compléter ce que tu as mangé jusqu’à maintenant.");
+  if(saved.confidence>=2&&!has("fruit")&&!has("fiber"))add("fruit",english
+   ?"A fruit could be a simple option at a future snack or meal."
+   :"Un fruit pourrait être une option simple à une prochaine collation ou à un prochain repas.");
+ }
+ return candidates[0]||null;
 }
 let recommendationTimer=null;
 function showMealRecommendation(recommendation,date=todayKey()){
@@ -642,7 +681,7 @@ window.addEventListener('online',()=>{updateSyncBadge();if(session)syncNow()});w
 function dismissSplash(){const splash=$('#splashScreen');if(!splash)return;setTimeout(()=>{splash.classList.add('is-hidden');setTimeout(()=>splash.remove(),420)},760)}
 let dialogScrollY=0;function syncDialogScrollLock(){const open=!!document.querySelector('dialog[open]');if(open&&!document.body.classList.contains('dialog-open')){dialogScrollY=window.scrollY;document.body.style.top=`-${dialogScrollY}px`;document.body.classList.add('dialog-open')}else if(!open&&document.body.classList.contains('dialog-open')){document.body.classList.remove('dialog-open');document.body.style.top='';window.scrollTo(0,dialogScrollY)}}new MutationObserver(syncDialogScrollLock).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
 async function initAuth(){if(!client){render();setTimeout(showExperienceLaunchIfNeeded,120);return}const {data}=await client.auth.getSession();session=data.session;client.auth.onAuthStateChange((event,newSession)=>{session=newSession;updateSyncBadge();if(event==="PASSWORD_RECOVERY")setTimeout(()=>$("#passwordDialog").showModal(),0);if(event==="SIGNED_OUT")render()});if(session){await pullCloud(false);await syncNow()}render();setTimeout(showExperienceLaunchIfNeeded,120)}
-if('serviceWorker'in navigator)window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js?v=3.0.2');await reg.update();let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});if(reg.waiting)reg.waiting.postMessage?.({type:'SKIP_WAITING'})}catch(e){console.warn(e)}});
+if('serviceWorker'in navigator)window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js?v=3.0.3');await reg.update();let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});if(reg.waiting)reg.waiting.postMessage?.({type:'SKIP_WAITING'})}catch(e){console.warn(e)}});
 dismissSplash();
 initAuth();
 scheduleFeelingChecks();

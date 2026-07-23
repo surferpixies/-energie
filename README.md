@@ -1,12 +1,14 @@
-## V3.0.2 — Recommandations plus intelligentes
+## V3.0.3 — Suggestions adaptées au prochain repas
 
-- Le titre de la carte devient **Petite suggestion**.
-- Analyse de l’ensemble des repas de la journée plutôt que du dernier repas seulement.
-- Seuil de confiance : aucune suggestion lorsque les descriptions sont trop vagues.
-- Une recommandation déjà affichée n’est pas répétée le même jour.
-- L’hydratation n’est plus un conseil par défaut; elle apparaît seulement dans un contexte précis et jamais le matin.
-- L’application ne montre rien lorsque la journée semble déjà suffisamment variée selon les informations disponibles.
-# Énergie V3.0.2 — Recommandations plus intelligentes
+- Les suggestions sont maintenant déclenchées selon le repas qui vient d’être enregistré.
+- Après le déjeuner : protéines, fibres ou fruit; aucune suggestion de légumes.
+- Après le dîner : analyse cumulative pour préparer le souper, avec protéines, légumes, fibres ou fruit.
+- Après une collation : suggestion seulement lorsque le signal est suffisamment clair.
+- Après le souper : aucune suggestion alimentaire tardive.
+- Un manque évident peut être signalé dès le déjeuner; l’application n’attend plus la fin de la journée.
+- Une seule suggestion est affichée et les catégories déjà proposées ne sont pas répétées le même jour.
+
+# Énergie V3.0.3 — Suggestions adaptées au prochain repas
 
 Cette version ajoute un raccourci de saisie par code-barres dans la fenêtre de repas. Le scan cherche uniquement le nom et la marque dans Open Food Facts. Le nom reste toujours modifiable avant l’ajout. Aucune calorie, macro, portion, note nutritionnelle ou Nutri-Score n’est enregistré.
 
