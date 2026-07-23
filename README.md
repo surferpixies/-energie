@@ -370,3 +370,9 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 - Base locale de 272 aliments courants dans `foods.js`.
 - Recherche bilingue FR/EN avec gestion des expressions longues pour éviter les doubles comptages (ex. « pomme de terre » vs « pomme »).
 - Macros estimées par portion courante; les valeurs peuvent être ajustées manuellement.
+
+
+## Version 3.1.1
+- Remplacement de la carte « Ton horaire habituel » par « Ce que j’apprends sur toi ».
+- L’application privilégie une habitude utile observée sur les 28 derniers jours : régularité du déjeuner, fruits en collation, légumes au souper, protéines dans les repas principaux ou hydratation.
+- Chaque observation indique clairement la période et le nombre d’entrées utilisés.
