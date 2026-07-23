@@ -1,4 +1,12 @@
-# Énergie V3.0.1 — Gestion des collations
+## V3.0.2 — Recommandations plus intelligentes
+
+- Le titre de la carte devient **Petite suggestion**.
+- Analyse de l’ensemble des repas de la journée plutôt que du dernier repas seulement.
+- Seuil de confiance : aucune suggestion lorsque les descriptions sont trop vagues.
+- Une recommandation déjà affichée n’est pas répétée le même jour.
+- L’hydratation n’est plus un conseil par défaut; elle apparaît seulement dans un contexte précis et jamais le matin.
+- L’application ne montre rien lorsque la journée semble déjà suffisamment variée selon les informations disponibles.
+# Énergie V3.0.2 — Recommandations plus intelligentes
 
 Cette version ajoute un raccourci de saisie par code-barres dans la fenêtre de repas. Le scan cherche uniquement le nom et la marque dans Open Food Facts. Le nom reste toujours modifiable avant l’ajout. Aucune calorie, macro, portion, note nutritionnelle ou Nutri-Score n’est enregistré.
 

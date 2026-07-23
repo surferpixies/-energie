@@ -5,7 +5,7 @@ const APP_KEY="energieRepasDB";
 const BACKUP_KEY="energieRepasBackups";
 const OUTBOX_KEY="energieRepasOutboxV15";
 const BARCODE_CACHE_KEY="energieBarcodeProductsV1";
-const CURRENT_VERSION=11;
+const CURRENT_VERSION=12;
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 const uid=()=>crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -87,50 +87,80 @@ function nutritionFromInputs(){const get=id=>{const value=$(id)?.value;if(value=
 function fillNutritionInputs(n,note=""){n=normalNutrition(n);[["#nutritionCalories","calories"],["#nutritionProtein","protein"],["#nutritionCarbs","carbs"],["#nutritionFat","fat"]].forEach(([id,key])=>{$(id).value=n?.[key]??""});const section=$("#mealNutritionSection");if(section){section.dataset.source=n?.source||"manual";section.dataset.confidence=n?.confidence||"low";section.dataset.basis=n?.basis||"portion courante";section.dataset.estimated=String(n?.estimated!==false)}$("#nutritionEstimateNote").textContent=note||(n?.source==="barcode"?`Valeurs ${n.basis||"du produit"} provenant de l’étiquette Open Food Facts. Vérifie-les au besoin.`:"Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.")}
 function estimateCurrentMealNutrition(){const n=estimateNutritionFromText($("#mealDescription").value);if(!n){fillNutritionInputs(null,"Aucune estimation fiable trouvée. Tu peux entrer ou modifier les valeurs manuellement.");return}fillNutritionInputs(n)}
 
-// --- V3.0.1 : recommandation douce après l'enregistrement d'un repas ---------
+// --- V3.0.2 : recommandations contextuelles après un repas --------------------
+const RECOMMENDATION_HISTORY_KEY="energieMealRecommendationsV302";
 const RECOMMENDATION_WORDS={
- protein:["oeuf","œuf","poulet","dinde","poisson","saumon","thon","boeuf","bœuf","porc","tofu","tempeh","lentille","pois chiche","haricot","légumineuse","yogourt grec","yaourt grec","fromage cottage","noix","amande","beurre d'arachide","beurre de pinotte"],
- produce:["brocoli","salade","légume","legume","carotte","concombre","tomate","poivron","épinard","epinard","chou","courgette","asperge","champignon","fruit","pomme","banane","orange","fraise","framboise","bleuet","mangue","poire","kiwi","avocat"],
- fiber:["avoine","gruau","pain entier","blé entier","ble entier","riz brun","quinoa","lentille","pois chiche","haricot","légumineuse","legumineuse","fruit","pomme","poire","framboise","amande","noix","graine"],
+ protein:["oeuf","œuf","poulet","dinde","poisson","saumon","thon","boeuf","bœuf","porc","tofu","tempeh","lentille","pois chiche","haricot","légumineuse","yogourt grec","yaourt grec","fromage cottage","cottage","protéine","protein","noix","amande","beurre d'arachide","beurre de pinotte"],
+ vegetables:["brocoli","salade","légume","legume","carotte","concombre","tomate","poivron","épinard","epinard","chou","courgette","asperge","champignon","avocat","aubergine","céleri","celeri","haricot vert","betterave"],
+ fruit:["fruit","pomme","banane","orange","fraise","framboise","bleuet","mangue","poire","kiwi","raisin","ananas","pêche","peche","melon"],
+ fiber:["avoine","gruau","pain entier","blé entier","ble entier","multigrain","riz brun","quinoa","lentille","pois chiche","haricot","légumineuse","legumineuse","pomme","poire","framboise","amande","noix","graine","chia","lin"],
  sugary:["beigne","donut","muffin","croissant","biscuit","gâteau","gateau","bonbon","chocolat","céréale sucrée","cereale sucree","boisson gazeuse","liqueur","cola","jus sucré","jus sucre","frappuccino","sirop"],
  refined:["pain blanc","bagel","croissant","beigne","donut","frites","chips","croustille","poutine"],
- coffee:["café","cafe","espresso","latte","cappuccino"]
+ coffee:["café","cafe","espresso","latte","cappuccino","americano"]
 };
 function recommendationNormalize(value){return String(value||"").toLocaleLowerCase("fr-CA").normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
 function recommendationHas(text,words){const clean=recommendationNormalize(text);return words.some(word=>clean.includes(recommendationNormalize(word)))}
+function recommendationHits(text,words){const clean=recommendationNormalize(text);return words.reduce((n,word)=>n+(clean.includes(recommendationNormalize(word))?1:0),0)}
 function nutritionForRecommendation(meal){return normalNutrition(meal.nutrition)||estimateNutritionFromText(meal.description)||null}
+function recommendationHistory(){try{const value=JSON.parse(localStorage.getItem(RECOMMENDATION_HISTORY_KEY)||"{}");return value&&typeof value==="object"?value:{}}catch(_){return{}}}
+function recommendationWasShown(date,category){return (recommendationHistory()[date]||[]).includes(category)}
+function rememberRecommendation(date,category){const history=recommendationHistory();history[date]=[...new Set([...(history[date]||[]),category])];const cutoff=new Date();cutoff.setDate(cutoff.getDate()-14);const cutoffKey=cutoff.toLocaleDateString("en-CA");Object.keys(history).filter(key=>key<cutoffKey).forEach(key=>delete history[key]);localStorage.setItem(RECOMMENDATION_HISTORY_KEY,JSON.stringify(history))}
+function recommendationMealProfile(meal){
+ const text=meal.description||"";
+ const nutrition=nutritionForRecommendation(meal);
+ const flags={
+  protein:recommendationHas(text,RECOMMENDATION_WORDS.protein)||(Number(nutrition?.protein)||0)>=12,
+  vegetables:recommendationHas(text,RECOMMENDATION_WORDS.vegetables),
+  fruit:recommendationHas(text,RECOMMENDATION_WORDS.fruit),
+  fiber:recommendationHas(text,RECOMMENDATION_WORDS.fiber),
+  sugary:recommendationHas(text,RECOMMENDATION_WORDS.sugary),
+  refined:recommendationHas(text,RECOMMENDATION_WORDS.refined),
+  coffee:recommendationHas(text,RECOMMENDATION_WORDS.coffee)
+ };
+ const wordHits=Object.entries(RECOMMENDATION_WORDS).reduce((total,[key,words])=>total+recommendationHits(text,words),0);
+ const nutritionConfidence=nutrition?.confidence==="high"?2:nutrition?.confidence==="medium"?1:0;
+ return{meal,flags,nutrition,confidence:Math.min(3,wordHits+nutritionConfidence)};
+}
 function chooseMealRecommendation(date,justSavedMeal){
  if(!db.settings.generalRecommendations||date!==todayKey())return null;
  const meals=[...ensureDay(db,date).meals].filter(m=>m.type!=="Boisson"&&m.description?.trim()).sort((a,b)=>a.time.localeCompare(b.time));
  if(!meals.length)return null;
- const text=meals.map(m=>m.description).join(" · ");
- const recognized=Object.values(RECOMMENDATION_WORDS).reduce((count,words)=>count+(recommendationHas(text,words)?1:0),0);
- if(recognized<1)return null;
- const protein=meals.reduce((total,meal)=>total+(Number(nutritionForRecommendation(meal)?.protein)||0),0);
- const hasProtein=recommendationHas(text,RECOMMENDATION_WORDS.protein)||protein>=Math.max(12,meals.length*10);
- const hasProduce=recommendationHas(text,RECOMMENDATION_WORDS.produce);
- const hasFiber=recommendationHas(text,RECOMMENDATION_WORDS.fiber);
- const sugary=recommendationHas(text,RECOMMENDATION_WORDS.sugary);
- const refined=recommendationHas(text,RECOMMENDATION_WORDS.refined);
- const coffee=recommendationHas(text,RECOMMENDATION_WORDS.coffee);
- const water=Number(ensureDay(db,date).water)||0;
+ const profiles=meals.map(recommendationMealProfile);
+ const known=profiles.filter(p=>p.confidence>0);
+ const principal=profiles.filter(p=>["Déjeuner","Dîner","Souper"].includes(p.meal.type));
+ const saved=profiles.find(p=>p.meal.id===justSavedMeal?.id)||profiles.at(-1);
+ const coverage=known.length/profiles.length;
+ const confidencePoints=known.reduce((sum,p)=>sum+p.confidence,0);
+ if(!known.length||coverage<0.5||confidencePoints<2)return null;
+ const has=key=>profiles.some(p=>p.flags[key]);
+ const proteinMeals=profiles.filter(p=>p.flags.protein).length;
+ const produceMeals=profiles.filter(p=>p.flags.vegetables||p.flags.fruit).length;
+ const fiberMeals=profiles.filter(p=>p.flags.fiber).length;
+ const coffeeCount=profiles.reduce((sum,p)=>sum+(p.flags.coffee?1:0),0);
  const hour=Number((justSavedMeal?.time||"12:00").split(":")[0]);
+ const water=Number(ensureDay(db,date).water)||0;
  const english=window.ENERGIE_LOCALE==="en";
- if(!hasProtein&&(sugary||refined||meals.length>=2))return{message:english?"For your next meal, a protein source such as eggs, Greek yogurt, tofu or legumes could nicely complement your day.":"Pour ton prochain repas, une source de protéines comme des œufs, du yogourt grec, du tofu ou des légumineuses pourrait bien compléter ta journée."};
- if(meals.length>=2&&!hasProduce)return{message:english?"A fruit or a few vegetables could add a little more variety to your next meal.":"Un fruit ou quelques légumes pourraient ajouter un peu plus de variété à ton prochain repas."};
- if(meals.length>=2&&!hasFiber)return{message:english?"Whole grains, fruit or legumes could add a little more fibre to the rest of your day.":"Des grains entiers, un fruit ou des légumineuses pourraient ajouter un peu plus de fibres à la suite de ta journée."};
- if(coffee&&water<2&&hour<19)return{message:english?"A gentle reminder: a glass of water could also be a nice addition to the rest of your day.":"Petit rappel tout doux : un verre d’eau pourrait aussi bien accompagner la suite de ta journée."};
- return null;
+ const candidates=[];
+ // Un repas clairement sucré ou raffiné sans protéine mérite une suggestion dès le premier repas.
+ if(proteinMeals===0&&(saved?.flags.sugary||saved?.flags.refined||principal.length>=2))candidates.push({category:"protein",message:english?"For your next meal, a protein source such as eggs, Greek yogurt, tofu or legumes could nicely complement your day.":"Pour ton prochain repas, une source de protéines comme des œufs, du yogourt grec, du tofu ou des légumineuses pourrait bien compléter ta journée."});
+ // On attend au moins deux repas principaux avant de conclure qu'il manque de la variété végétale.
+ if(principal.length>=2&&produceMeals===0)candidates.push({category:"produce",message:english?"A fruit or a few vegetables could add a little more variety to the rest of your day.":"Un fruit ou quelques légumes pourraient ajouter un peu plus de variété à la suite de ta journée."});
+ // Les fibres arrivent après les aliments entiers afin d'éviter plusieurs conseils semblables.
+ if(principal.length>=2&&fiberMeals===0&&(has("protein")||produceMeals>0))candidates.push({category:"fiber",message:english?"Whole grains, fruit or legumes could add a little more fibre to a future meal.":"Des grains entiers, un fruit ou des légumineuses pourraient ajouter un peu plus de fibres à un prochain repas."});
+ // L'hydratation n'est jamais un conseil par défaut : seulement après plusieurs cafés, aucune eau et pas le matin.
+ if(hour>=12&&coffeeCount>=2&&water===0)candidates.push({category:"hydration",message:english?"With the coffees noted today, a glass of water could be a simple addition when it suits you.":"Avec les cafés notés aujourd’hui, un verre d’eau pourrait être un ajout simple quand ça te convient."});
+ return candidates.find(item=>!recommendationWasShown(date,item.category))||null;
 }
 let recommendationTimer=null;
-function showMealRecommendation(recommendation){
+function showMealRecommendation(recommendation,date=todayKey()){
  if(!recommendation)return;
+ rememberRecommendation(date,recommendation.category);
  document.querySelector(".meal-recommendation-toast")?.remove();
  const card=document.createElement("aside");
  card.className="meal-recommendation-toast";
  card.setAttribute("role","status");
  const english=window.ENERGIE_LOCALE==="en";
- card.innerHTML=`<button class="meal-recommendation-close" type="button" aria-label="${english?'Close':'Fermer'}">×</button><div class="meal-recommendation-icon">💡</div><div><strong>${english?'A small idea for what comes next':'Petite idée pour la suite'}</strong><p>${esc(recommendation.message)}</p></div>`;
+ card.innerHTML=`<button class="meal-recommendation-close" type="button" aria-label="${english?'Close':'Fermer'}">×</button><div class="meal-recommendation-icon">💡</div><div><strong>${english?'A small suggestion':'Petite suggestion'}</strong><p>${esc(recommendation.message)}</p></div>`;
  document.body.appendChild(card);
  requestAnimationFrame(()=>card.classList.add("is-visible"));
  const close=()=>{clearTimeout(recommendationTimer);card.classList.remove("is-visible");setTimeout(()=>card.remove(),260)};
@@ -589,7 +619,7 @@ $("#barcodeDialog").addEventListener("close",stopBarcodeCamera);
 $("#mealPhoto").onchange=async e=>{photoData=await fileToDataUrl(e.target.files[0]);photoRemoved=false;showPhotoPreview()};$("#removePhoto").onclick=()=>{photoData=null;photoRemoved=true;showPhotoPreview()};
 $("#favoriteMealSelect").onchange=e=>{const f=db.favorites.find(x=>x.id===e.target.value);if(!f)return;$("#mealDescription").value=f.description;$("#mealNotes").value=f.notes||'';f.usageCount=(f.usageCount||0)+1;f.updatedAt=new Date().toISOString();setFavoriteChanged(f)};
 $("#estimateMealNutrition").onclick=estimateCurrentMealNutrition;$("#clearMealNutrition").onclick=()=>fillNutritionInputs(null,"Valeurs effacées. Tu peux les entrer manuellement ou relancer l’estimation.");
-$("#mealForm").onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDate),id=$("#mealId").value,old=d.meals.find(x=>x.id===id);const meal=normalMeal({...old,id:id||uid(),date:selectedDate,type:$("#mealType").value,time:$("#mealTime").value,description:$("#mealDescription").value.trim(),nutrition:db.settings.macroTracking?(nutritionFromInputs()||estimateNutritionFromText($("#mealDescription").value.trim())):(old?.nutrition||null),fatigueBefore:Number($("#fatigueBeforePicker").dataset.value),fatigueAfter:old?.fatigueAfter||0,notes:$("#mealNotes").value.trim(),photoLocal:photoData&&photoData.startsWith('data:')?photoData:(old?.photoLocal||null),photoUrl:photoRemoved?null:(old?.photoUrl||null),photoPath:photoRemoved?null:(old?.photoPath||null),updatedAt:new Date().toISOString()},selectedDate);if(old)Object.assign(old,meal);else d.meals.push(meal);setMealChanged(meal);$("#mealDialog").close();render();const recommendation=chooseMealRecommendation(selectedDate,meal);if(recommendation)setTimeout(()=>showMealRecommendation(recommendation),280)};
+$("#mealForm").onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDate),id=$("#mealId").value,old=d.meals.find(x=>x.id===id);const meal=normalMeal({...old,id:id||uid(),date:selectedDate,type:$("#mealType").value,time:$("#mealTime").value,description:$("#mealDescription").value.trim(),nutrition:db.settings.macroTracking?(nutritionFromInputs()||estimateNutritionFromText($("#mealDescription").value.trim())):(old?.nutrition||null),fatigueBefore:Number($("#fatigueBeforePicker").dataset.value),fatigueAfter:old?.fatigueAfter||0,notes:$("#mealNotes").value.trim(),photoLocal:photoData&&photoData.startsWith('data:')?photoData:(old?.photoLocal||null),photoUrl:photoRemoved?null:(old?.photoUrl||null),photoPath:photoRemoved?null:(old?.photoPath||null),updatedAt:new Date().toISOString()},selectedDate);if(old)Object.assign(old,meal);else d.meals.push(meal);setMealChanged(meal);$("#mealDialog").close();render();const recommendation=chooseMealRecommendation(selectedDate,meal);if(recommendation)setTimeout(()=>showMealRecommendation(recommendation,selectedDate),280)};
 $('#feelingForm').onsubmit=e=>{e.preventDefault();const m=allMeals().find(x=>x.id===feelingMealId);if(!m)return;const tags=$$('[data-feeling-tag].active').map(x=>x.dataset.feelingTag);if(!tags.length&&!confirm('Aucun symptôme ou état sélectionné. Enregistrer seulement la note globale?'))return;m.feeling={rating:Number($('#feelingRating').dataset.value)||3,tags,notes:$('#feelingNotes').value.trim(),recordedAt:new Date().toISOString()};m.updatedAt=new Date().toISOString();m.feelingNotifiedAt=m.feelingNotifiedAt||new Date().toISOString();setMealChanged(m);$('#feelingDialog').close();render()};
 $('#sleepForm').onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDate),hours=parseAppNumber($('#sleepHours').value);if(hours!==null&&(hours<0||hours>24))return alert('Entre une durée de sommeil entre 0 et 24 heures.');d.sleepHours=hours;setDayChanged(selectedDate);$('#sleepDialog').close();render()};
 $('#activityForm').onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDate),type=$('#activityType').value,min=parseAppNumber($('#activityMinutes').value)||0;if(!type)return alert('Choisis un type d’activité.');if(min<1||min>1440)return alert('Indique une durée valide en minutes.');d.activities.push({id:uid(),type,minutes:min,at:new Date().toISOString()});setDayChanged(selectedDate);$('#activityDialog').close();render()};
@@ -612,7 +642,7 @@ window.addEventListener('online',()=>{updateSyncBadge();if(session)syncNow()});w
 function dismissSplash(){const splash=$('#splashScreen');if(!splash)return;setTimeout(()=>{splash.classList.add('is-hidden');setTimeout(()=>splash.remove(),420)},760)}
 let dialogScrollY=0;function syncDialogScrollLock(){const open=!!document.querySelector('dialog[open]');if(open&&!document.body.classList.contains('dialog-open')){dialogScrollY=window.scrollY;document.body.style.top=`-${dialogScrollY}px`;document.body.classList.add('dialog-open')}else if(!open&&document.body.classList.contains('dialog-open')){document.body.classList.remove('dialog-open');document.body.style.top='';window.scrollTo(0,dialogScrollY)}}new MutationObserver(syncDialogScrollLock).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
 async function initAuth(){if(!client){render();setTimeout(showExperienceLaunchIfNeeded,120);return}const {data}=await client.auth.getSession();session=data.session;client.auth.onAuthStateChange((event,newSession)=>{session=newSession;updateSyncBadge();if(event==="PASSWORD_RECOVERY")setTimeout(()=>$("#passwordDialog").showModal(),0);if(event==="SIGNED_OUT")render()});if(session){await pullCloud(false);await syncNow()}render();setTimeout(showExperienceLaunchIfNeeded,120)}
-if('serviceWorker'in navigator)window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js?v=3.0.1');await reg.update();let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});if(reg.waiting)reg.waiting.postMessage?.({type:'SKIP_WAITING'})}catch(e){console.warn(e)}});
+if('serviceWorker'in navigator)window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js?v=3.0.2');await reg.update();let refreshing=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(refreshing)return;refreshing=true;location.reload()});if(reg.waiting)reg.waiting.postMessage?.({type:'SKIP_WAITING'})}catch(e){console.warn(e)}});
 dismissSplash();
 initAuth();
 scheduleFeelingChecks();
