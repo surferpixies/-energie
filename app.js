@@ -5,7 +5,7 @@ const APP_KEY="energieRepasDB";
 const BACKUP_KEY="energieRepasBackups";
 const OUTBOX_KEY="energieRepasOutboxV15";
 const BARCODE_CACHE_KEY="energieBarcodeProductsV1";
-const CURRENT_VERSION=10;
+const CURRENT_VERSION=11;
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 const uid=()=>crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -86,6 +86,58 @@ function mergeNutrition(a,b){a=normalNutrition(a);b=normalNutrition(b);if(!a)ret
 function nutritionFromInputs(){const get=id=>{const value=$(id)?.value;if(value===""||value==null)return null;const n=Number(value);return Number.isFinite(n)&&n>=0?n:null};return normalNutrition({calories:get("#nutritionCalories"),protein:get("#nutritionProtein"),carbs:get("#nutritionCarbs"),fat:get("#nutritionFat"),source:$("#mealNutritionSection")?.dataset.source||"manual",confidence:$("#mealNutritionSection")?.dataset.confidence||"low",basis:$("#mealNutritionSection")?.dataset.basis||"portion courante",estimated:$("#mealNutritionSection")?.dataset.estimated!=="false"})}
 function fillNutritionInputs(n,note=""){n=normalNutrition(n);[["#nutritionCalories","calories"],["#nutritionProtein","protein"],["#nutritionCarbs","carbs"],["#nutritionFat","fat"]].forEach(([id,key])=>{$(id).value=n?.[key]??""});const section=$("#mealNutritionSection");if(section){section.dataset.source=n?.source||"manual";section.dataset.confidence=n?.confidence||"low";section.dataset.basis=n?.basis||"portion courante";section.dataset.estimated=String(n?.estimated!==false)}$("#nutritionEstimateNote").textContent=note||(n?.source==="barcode"?`Valeurs ${n.basis||"du produit"} provenant de l’étiquette Open Food Facts. Vérifie-les au besoin.`:"Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.")}
 function estimateCurrentMealNutrition(){const n=estimateNutritionFromText($("#mealDescription").value);if(!n){fillNutritionInputs(null,"Aucune estimation fiable trouvée. Tu peux entrer ou modifier les valeurs manuellement.");return}fillNutritionInputs(n)}
+
+// --- V3.0.1 : recommandation douce après l'enregistrement d'un repas ---------
+const RECOMMENDATION_WORDS={
+ protein:["oeuf","œuf","poulet","dinde","poisson","saumon","thon","boeuf","bœuf","porc","tofu","tempeh","lentille","pois chiche","haricot","légumineuse","yogourt grec","yaourt grec","fromage cottage","noix","amande","beurre d'arachide","beurre de pinotte"],
+ produce:["brocoli","salade","légume","legume","carotte","concombre","tomate","poivron","épinard","epinard","chou","courgette","asperge","champignon","fruit","pomme","banane","orange","fraise","framboise","bleuet","mangue","poire","kiwi","avocat"],
+ fiber:["avoine","gruau","pain entier","blé entier","ble entier","riz brun","quinoa","lentille","pois chiche","haricot","légumineuse","legumineuse","fruit","pomme","poire","framboise","amande","noix","graine"],
+ sugary:["beigne","donut","muffin","croissant","biscuit","gâteau","gateau","bonbon","chocolat","céréale sucrée","cereale sucree","boisson gazeuse","liqueur","cola","jus sucré","jus sucre","frappuccino","sirop"],
+ refined:["pain blanc","bagel","croissant","beigne","donut","frites","chips","croustille","poutine"],
+ coffee:["café","cafe","espresso","latte","cappuccino"]
+};
+function recommendationNormalize(value){return String(value||"").toLocaleLowerCase("fr-CA").normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
+function recommendationHas(text,words){const clean=recommendationNormalize(text);return words.some(word=>clean.includes(recommendationNormalize(word)))}
+function nutritionForRecommendation(meal){return normalNutrition(meal.nutrition)||estimateNutritionFromText(meal.description)||null}
+function chooseMealRecommendation(date,justSavedMeal){
+ if(!db.settings.generalRecommendations||date!==todayKey())return null;
+ const meals=[...ensureDay(db,date).meals].filter(m=>m.type!=="Boisson"&&m.description?.trim()).sort((a,b)=>a.time.localeCompare(b.time));
+ if(!meals.length)return null;
+ const text=meals.map(m=>m.description).join(" · ");
+ const recognized=Object.values(RECOMMENDATION_WORDS).reduce((count,words)=>count+(recommendationHas(text,words)?1:0),0);
+ if(recognized<1)return null;
+ const protein=meals.reduce((total,meal)=>total+(Number(nutritionForRecommendation(meal)?.protein)||0),0);
+ const hasProtein=recommendationHas(text,RECOMMENDATION_WORDS.protein)||protein>=Math.max(12,meals.length*10);
+ const hasProduce=recommendationHas(text,RECOMMENDATION_WORDS.produce);
+ const hasFiber=recommendationHas(text,RECOMMENDATION_WORDS.fiber);
+ const sugary=recommendationHas(text,RECOMMENDATION_WORDS.sugary);
+ const refined=recommendationHas(text,RECOMMENDATION_WORDS.refined);
+ const coffee=recommendationHas(text,RECOMMENDATION_WORDS.coffee);
+ const water=Number(ensureDay(db,date).water)||0;
+ const hour=Number((justSavedMeal?.time||"12:00").split(":")[0]);
+ const english=window.ENERGIE_LOCALE==="en";
+ if(!hasProtein&&(sugary||refined||meals.length>=2))return{message:english?"For your next meal, a protein source such as eggs, Greek yogurt, tofu or legumes could nicely complement your day.":"Pour ton prochain repas, une source de protéines comme des œufs, du yogourt grec, du tofu ou des légumineuses pourrait bien compléter ta journée."};
+ if(meals.length>=2&&!hasProduce)return{message:english?"A fruit or a few vegetables could add a little more variety to your next meal.":"Un fruit ou quelques légumes pourraient ajouter un peu plus de variété à ton prochain repas."};
+ if(meals.length>=2&&!hasFiber)return{message:english?"Whole grains, fruit or legumes could add a little more fibre to the rest of your day.":"Des grains entiers, un fruit ou des légumineuses pourraient ajouter un peu plus de fibres à la suite de ta journée."};
+ if(coffee&&water<2&&hour<19)return{message:english?"A gentle reminder: a glass of water could also be a nice addition to the rest of your day.":"Petit rappel tout doux : un verre d’eau pourrait aussi bien accompagner la suite de ta journée."};
+ return null;
+}
+let recommendationTimer=null;
+function showMealRecommendation(recommendation){
+ if(!recommendation)return;
+ document.querySelector(".meal-recommendation-toast")?.remove();
+ const card=document.createElement("aside");
+ card.className="meal-recommendation-toast";
+ card.setAttribute("role","status");
+ const english=window.ENERGIE_LOCALE==="en";
+ card.innerHTML=`<button class="meal-recommendation-close" type="button" aria-label="${english?'Close':'Fermer'}">×</button><div class="meal-recommendation-icon">💡</div><div><strong>${english?'A small idea for what comes next':'Petite idée pour la suite'}</strong><p>${esc(recommendation.message)}</p></div>`;
+ document.body.appendChild(card);
+ requestAnimationFrame(()=>card.classList.add("is-visible"));
+ const close=()=>{clearTimeout(recommendationTimer);card.classList.remove("is-visible");setTimeout(()=>card.remove(),260)};
+ card.querySelector(".meal-recommendation-close").onclick=close;
+ recommendationTimer=setTimeout(close,9000);
+}
+
 const WEATHER_CACHE_KEY="energieRepasWeatherV178";
 const WEATHER_CACHE_MS=30*60*1000;
 let weatherRefreshPromise=null;
@@ -537,7 +589,7 @@ $("#barcodeDialog").addEventListener("close",stopBarcodeCamera);
 $("#mealPhoto").onchange=async e=>{photoData=await fileToDataUrl(e.target.files[0]);photoRemoved=false;showPhotoPreview()};$("#removePhoto").onclick=()=>{photoData=null;photoRemoved=true;showPhotoPreview()};
 $("#favoriteMealSelect").onchange=e=>{const f=db.favorites.find(x=>x.id===e.target.value);if(!f)return;$("#mealDescription").value=f.description;$("#mealNotes").value=f.notes||'';f.usageCount=(f.usageCount||0)+1;f.updatedAt=new Date().toISOString();setFavoriteChanged(f)};
 $("#estimateMealNutrition").onclick=estimateCurrentMealNutrition;$("#clearMealNutrition").onclick=()=>fillNutritionInputs(null,"Valeurs effacées. Tu peux les entrer manuellement ou relancer l’estimation.");
-$("#mealForm").onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDate),id=$("#mealId").value,old=d.meals.find(x=>x.id===id);const meal=normalMeal({...old,id:id||uid(),date:selectedDate,type:$("#mealType").value,time:$("#mealTime").value,description:$("#mealDescription").value.trim(),nutrition:db.settings.macroTracking?(nutritionFromInputs()||estimateNutritionFromText($("#mealDescription").value.trim())):(old?.nutrition||null),fatigueBefore:Number($("#fatigueBeforePicker").dataset.value),fatigueAfter:old?.fatigueAfter||0,notes:$("#mealNotes").value.trim(),photoLocal:photoData&&photoData.startsWith('data:')?photoData:(old?.photoLocal||null),photoUrl:photoRemoved?null:(old?.photoUrl||null),photoPath:photoRemoved?null:(old?.photoPath||null),updatedAt:new Date().toISOString()},selectedDate);if(old)Object.assign(old,meal);else d.meals.push(meal);setMealChanged(meal);$("#mealDialog").close();render()};
+$("#mealForm").onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDate),id=$("#mealId").value,old=d.meals.find(x=>x.id===id);const meal=normalMeal({...old,id:id||uid(),date:selectedDate,type:$("#mealType").value,time:$("#mealTime").value,description:$("#mealDescription").value.trim(),nutrition:db.settings.macroTracking?(nutritionFromInputs()||estimateNutritionFromText($("#mealDescription").value.trim())):(old?.nutrition||null),fatigueBefore:Number($("#fatigueBeforePicker").dataset.value),fatigueAfter:old?.fatigueAfter||0,notes:$("#mealNotes").value.trim(),photoLocal:photoData&&photoData.startsWith('data:')?photoData:(old?.photoLocal||null),photoUrl:photoRemoved?null:(old?.photoUrl||null),photoPath:photoRemoved?null:(old?.photoPath||null),updatedAt:new Date().toISOString()},selectedDate);if(old)Object.assign(old,meal);else d.meals.push(meal);setMealChanged(meal);$("#mealDialog").close();render();const recommendation=chooseMealRecommendation(selectedDate,meal);if(recommendation)setTimeout(()=>showMealRecommendation(recommendation),280)};
 $('#feelingForm').onsubmit=e=>{e.preventDefault();const m=allMeals().find(x=>x.id===feelingMealId);if(!m)return;const tags=$$('[data-feeling-tag].active').map(x=>x.dataset.feelingTag);if(!tags.length&&!confirm('Aucun symptôme ou état sélectionné. Enregistrer seulement la note globale?'))return;m.feeling={rating:Number($('#feelingRating').dataset.value)||3,tags,notes:$('#feelingNotes').value.trim(),recordedAt:new Date().toISOString()};m.updatedAt=new Date().toISOString();m.feelingNotifiedAt=m.feelingNotifiedAt||new Date().toISOString();setMealChanged(m);$('#feelingDialog').close();render()};
 $('#sleepForm').onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDate),hours=parseAppNumber($('#sleepHours').value);if(hours!==null&&(hours<0||hours>24))return alert('Entre une durée de sommeil entre 0 et 24 heures.');d.sleepHours=hours;setDayChanged(selectedDate);$('#sleepDialog').close();render()};
 $('#activityForm').onsubmit=e=>{e.preventDefault();const d=ensureDay(db,selectedDate),type=$('#activityType').value,min=parseAppNumber($('#activityMinutes').value)||0;if(!type)return alert('Choisis un type d’activité.');if(min<1||min>1440)return alert('Indique une durée valide en minutes.');d.activities.push({id:uid(),type,minutes:min,at:new Date().toISOString()});setDayChanged(selectedDate);$('#activityDialog').close();render()};

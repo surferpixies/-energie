@@ -318,6 +318,16 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 - Les doublons simples causés par les espaces ou la ponctuation finale sont regroupés.
 
 
+
+## V3.0.1 — Recommandation après un repas
+
+- Analyse locale et prudente des repas enregistrés pour la journée.
+- Affiche au maximum une petite idée après l’enregistrement d’un repas.
+- Suggestions possibles : protéines, fruits/légumes, fibres ou hydratation.
+- Aucun conseil lorsque les données sont trop vagues ou qu’aucun complément évident n’est utile.
+- Aucun diagnostic, score, jugement ou conclusion de causalité.
+- La carte disparaît automatiquement et peut être fermée immédiatement.
+
 ## V3.0.0 — Nutrition facultative
 - Suppression de la carte « Ton parcours » dans l’Historique.
 - Mode Macros facultatives (bêta), désactivé par défaut dans Profil.
