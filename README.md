@@ -372,7 +372,7 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 - Macros estimées par portion courante; les valeurs peuvent être ajustées manuellement.
 
 
-## Version 3.1.1
+## Version 3.1.2
 - Remplacement de la carte « Ton horaire habituel » par « Ce que j’apprends sur toi ».
 - L’application privilégie une habitude utile observée sur les 28 derniers jours : régularité du déjeuner, fruits en collation, légumes au souper, protéines dans les repas principaux ou hydratation.
 - Chaque observation indique clairement la période et le nombre d’entrées utilisés.
