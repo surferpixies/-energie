@@ -373,6 +373,12 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 
 
 ## Version 3.1.2
-- Remplacement de la carte « Ton horaire habituel » par « Ce que j’apprends sur toi ».
-- L’application privilégie une habitude utile observée sur les 28 derniers jours : régularité du déjeuner, fruits en collation, légumes au souper, protéines dans les repas principaux ou hydratation.
-- Chaque observation indique clairement la période et le nombre d’entrées utilisés.
+- Ajout de la carte d’estimation nutritionnelle dans le Journal.
+- Totaux quotidiens des calories, protéines, glucides et lipides.
+
+## Version 3.2.0
+- Estimation nutritionnelle activée par défaut, y compris lors de la migration depuis une version antérieure.
+- Une seule meilleure correspondance est retenue pour chaque ingrédient afin d’éviter les doubles calculs (ex. « thon en conserve » + « thon »).
+- Les repas composés séparés par `+`, virgules, points-virgules, retours de ligne, « et » ou « avec » sont additionnés ingrédient par ingrédient.
+- Meilleure tolérance aux marques ajoutées au nom d’un aliment et aux pluriels courants.
+- Les données d’un produit scanné demeurent prioritaires et modifiables.
