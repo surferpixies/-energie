@@ -1,3 +1,9 @@
+## V3.0.5 — Historique compact
+
+- Recherche visible en permanence, filtres repliés par défaut.
+- Bouton Filtres avec ouverture/fermeture des blocs Période et Type de repas.
+- Les journées affichent un maximum de 3 repas principaux; les collations sont présentées séparément comme complément.
+
 ## V3.0.3 — Suggestions adaptées au prochain repas
 
 - Les suggestions sont maintenant déclenchées selon le repas qui vient d’être enregistré.

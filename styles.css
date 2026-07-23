@@ -333,3 +333,14 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .meal-recommendation-close{position:absolute;right:9px;top:8px;border:0;background:transparent;color:var(--muted,#6f6267);font-size:24px;line-height:1;padding:5px 8px;cursor:pointer}
 @media (max-width:520px){.meal-recommendation-toast{bottom:calc(76px + env(safe-area-inset-bottom));width:calc(100vw - 24px);border-radius:18px}}
 @media (prefers-reduced-motion:reduce){.meal-recommendation-toast{transition:none}}
+
+
+/* V3.0.5 — historique plus compact */
+.history-search-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center}
+.history-search-row input{min-width:0}
+.history-filter-toggle{border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:7px;font-weight:850;cursor:pointer;white-space:nowrap}
+.history-filter-toggle b{font-size:1.05rem;line-height:1;transition:transform .2s}
+.history-filter-toggle.active b{transform:rotate(180deg)}
+.history-filter-panel{display:grid;gap:12px;padding-top:2px}
+.history-filter-panel[hidden]{display:none}
+@media (max-width:420px){.history-filter-toggle span{display:none}.history-filter-toggle{padding-inline:11px}}
