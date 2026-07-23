@@ -3,9 +3,9 @@
 const CFG=window.ENERGIE_CONFIG||{};
 const APP_KEY="energieRepasDB";
 const BACKUP_KEY="energieRepasBackups";
-const OUTBOX_KEY="energieRepasOutboxV15";
+const OUTBOX_KEY="energieRepasOutboxV16";
 const BARCODE_CACHE_KEY="energieBarcodeProductsV1";
-const CURRENT_VERSION=15;
+const CURRENT_VERSION=16;
 const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 const uid=()=>crypto.randomUUID?.()||`${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -49,39 +49,23 @@ function formatDate(k){return new Intl.DateTimeFormat("fr-CA",{weekday:"long",da
 function average(arr){const x=arr.filter(n=>Number.isFinite(Number(n))&&Number(n)>0).map(Number);return x.length?x.reduce((a,b)=>a+b,0)/x.length:null}
 function allMeals(){return Object.values(db.days).flatMap(d=>d.meals)}
 function nutritionText(n){if(!n)return"";const pieces=[];if(n.calories!=null)pieces.push(`${Math.round(n.calories)} kcal`);if(n.protein!=null)pieces.push(`${Number(n.protein).toFixed(n.protein%1?1:0)} g prot.`);if(n.carbs!=null)pieces.push(`${Number(n.carbs).toFixed(n.carbs%1?1:0)} g gluc.`);if(n.fat!=null)pieces.push(`${Number(n.fat).toFixed(n.fat%1?1:0)} g lip.`);return pieces.join(" · ")}
-const FOOD_MACROS=[
- {keys:["oeuf","œuf","eggs"],calories:78,protein:6.3,carbs:.6,fat:5.3},
- {keys:["toast","rôtie","rotie","pain"],calories:95,protein:3.5,carbs:18,fat:1.2},
- {keys:["beurre de pinotte","beurre d'arachide","beurre arachide","peanut butter"],calories:95,protein:4,carbs:3.5,fat:8},
- {keys:["gruau","avoine","oatmeal"],calories:180,protein:6,carbs:32,fat:3.5},
- {keys:["banane","banana"],calories:105,protein:1.3,carbs:27,fat:.4},
- {keys:["pomme","apple"],calories:95,protein:.5,carbs:25,fat:.3},
- {keys:["yogourt grec","yogourt","yaourt","greek yogurt"],calories:130,protein:14,carbs:10,fat:3},
- {keys:["poulet","chicken"],calories:250,protein:42,carbs:0,fat:8},
- {keys:["riz","rice"],calories:205,protein:4.3,carbs:45,fat:.4},
- {keys:["brocoli","broccoli"],calories:55,protein:3.7,carbs:11,fat:.6},
- {keys:["saumon","salmon"],calories:280,protein:34,carbs:0,fat:16},
- {keys:["thon","tuna"],calories:180,protein:38,carbs:0,fat:2},
- {keys:["steak","boeuf","bœuf","beef"],calories:330,protein:38,carbs:0,fat:20},
- {keys:["tofu"],calories:180,protein:20,carbs:5,fat:11},
- {keys:["patate douce","sweet potato"],calories:180,protein:4,carbs:41,fat:.3},
- {keys:["patate","pomme de terre","potato"],calories:190,protein:5,carbs:43,fat:.2},
- {keys:["avocat","avocado"],calories:160,protein:2,carbs:9,fat:15},
- {keys:["amandes","almonds"],calories:170,protein:6,carbs:6,fat:15},
- {keys:["fromage","cheese"],calories:115,protein:7,carbs:1,fat:9},
- {keys:["lait","milk"],calories:130,protein:9,carbs:12,fat:5},
- {keys:["café noir","cafe noir","black coffee"],calories:3,protein:0,carbs:0,fat:0},
- {keys:["salade grecque","greek salad"],calories:320,protein:10,carbs:18,fat:24},
- {keys:["lasagne","lasagna"],calories:520,protein:28,carbs:48,fat:24},
- {keys:["poutine"],calories:850,protein:24,carbs:95,fat:42},
- {keys:["pizza"],calories:570,protein:24,carbs:66,fat:23},
- {keys:["spaghetti","pâtes","pates","pasta"],calories:430,protein:16,carbs:72,fat:9},
- {keys:["chili"],calories:420,protein:28,carbs:45,fat:15},
- {keys:["smoothie"],calories:260,protein:8,carbs:48,fat:5},
- {keys:["sandwich"],calories:430,protein:22,carbs:48,fat:17},
- {keys:["wrap"],calories:450,protein:25,carbs:45,fat:18}
-];
-function estimateNutritionFromText(text){const source=String(text||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");if(!source.trim())return null;const matched=[];for(const food of FOOD_MACROS){const hit=food.keys.some(k=>source.includes(k.normalize("NFD").replace(/[\u0300-\u036f]/g,"")));if(hit)matched.push(food)}if(!matched.length)return null;const total=matched.reduce((a,f)=>({calories:a.calories+f.calories,protein:a.protein+f.protein,carbs:a.carbs+f.carbs,fat:a.fat+f.fat}),{calories:0,protein:0,carbs:0,fat:0});return normalNutrition({...total,source:"text",confidence:matched.length>=3?"medium":"low",basis:matched.length===1?"portion courante":"portions courantes",estimated:true})}
+const FOOD_MACROS=Array.isArray(window.ENERGIE_FOODS)?window.ENERGIE_FOODS:[];
+function normalizeFoodText(value){return String(value||"").toLocaleLowerCase("fr-CA").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g," ").replace(/[^a-z0-9]+/g," ").replace(/\s+/g," ").trim()}
+function estimateNutritionFromText(text){
+ const original=normalizeFoodText(text);if(!original)return null;
+ let remaining=` ${original} `;const matched=[];
+ const candidates=FOOD_MACROS.map(food=>({food,keys:(food.keys||[]).map(normalizeFoodText).filter(Boolean).sort((a,b)=>b.length-a.length)})).sort((a,b)=>(b.keys[0]?.length||0)-(a.keys[0]?.length||0));
+ for(const item of candidates){
+  const key=item.keys.find(k=>remaining.includes(` ${k} `));
+  if(!key)continue;
+  matched.push(item.food);
+  remaining=remaining.replace(` ${key} `," ").replace(/\s+/g," ");
+ }
+ if(!matched.length)return null;
+ const total=matched.reduce((a,f)=>({calories:a.calories+(Number(f.calories)||0),protein:a.protein+(Number(f.protein)||0),carbs:a.carbs+(Number(f.carbs)||0),fat:a.fat+(Number(f.fat)||0)}),{calories:0,protein:0,carbs:0,fat:0});
+ const portions=[...new Set(matched.map(f=>f.portion).filter(Boolean))];
+ return normalNutrition({...total,source:"energie-foods",confidence:matched.length>=2?"medium":"low",basis:matched.length===1?(portions[0]||"portion courante"):`${matched.length} portions courantes`,estimated:true})
+}
 function mergeNutrition(a,b){a=normalNutrition(a);b=normalNutrition(b);if(!a)return b;if(!b)return a;return normalNutrition({calories:(a.calories||0)+(b.calories||0),protein:(a.protein||0)+(b.protein||0),carbs:(a.carbs||0)+(b.carbs||0),fat:(a.fat||0)+(b.fat||0),source:a.source===b.source?a.source:"mixed",confidence:(a.confidence==="low"||b.confidence==="low")?"low":"medium",basis:"éléments additionnés",estimated:a.estimated||b.estimated})}
 function nutritionFromInputs(){const get=id=>{const value=$(id)?.value;if(value===""||value==null)return null;const n=Number(value);return Number.isFinite(n)&&n>=0?n:null};return normalNutrition({calories:get("#nutritionCalories"),protein:get("#nutritionProtein"),carbs:get("#nutritionCarbs"),fat:get("#nutritionFat"),source:$("#mealNutritionSection")?.dataset.source||"manual",confidence:$("#mealNutritionSection")?.dataset.confidence||"low",basis:$("#mealNutritionSection")?.dataset.basis||"portion courante",estimated:$("#mealNutritionSection")?.dataset.estimated!=="false"})}
 function fillNutritionInputs(n,note=""){n=normalNutrition(n);[["#nutritionCalories","calories"],["#nutritionProtein","protein"],["#nutritionCarbs","carbs"],["#nutritionFat","fat"]].forEach(([id,key])=>{$(id).value=n?.[key]??""});const section=$("#mealNutritionSection");if(section){section.dataset.source=n?.source||"manual";section.dataset.confidence=n?.confidence||"low";section.dataset.basis=n?.basis||"portion courante";section.dataset.estimated=String(n?.estimated!==false)}$("#nutritionEstimateNote").textContent=note||(n?.source==="barcode"?`Valeurs ${n.basis||"du produit"} provenant de l’étiquette Open Food Facts. Vérifie-les au besoin.`:"Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.")}

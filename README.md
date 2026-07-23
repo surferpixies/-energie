@@ -364,3 +364,9 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 - Chaque collation peut être modifiée ou supprimée individuellement.
 - Un bouton permet d’ajouter une autre collation.
 - Tout repas ouvert en modification possède maintenant un bouton Supprimer.
+
+
+## Version 3.1.0
+- Base locale de 272 aliments courants dans `foods.js`.
+- Recherche bilingue FR/EN avec gestion des expressions longues pour éviter les doubles comptages (ex. « pomme de terre » vs « pomme »).
+- Macros estimées par portion courante; les valeurs peuvent être ajustées manuellement.
