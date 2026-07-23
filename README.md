@@ -352,7 +352,7 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 
 ## V3.0.0 — Nutrition facultative
 - Suppression de la carte « Ton parcours » dans l’Historique.
-- Mode Macros facultatives (bêta), désactivé par défaut dans Profil.
+- Mode d’estimation nutritionnelle facultatif, activé par défaut dans Profil.
 - Estimation locale à partir de mots courants, toujours modifiable.
 - Récupération des valeurs Open Food Facts au scan lorsqu’elles existent.
 - Les estimations sont indicatives et ne remplacent pas les données d’une étiquette ni les conseils d’un professionnel.
@@ -369,7 +369,7 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 ## Version 3.1.0
 - Base locale de 272 aliments courants dans `foods.js`.
 - Recherche bilingue FR/EN avec gestion des expressions longues pour éviter les doubles comptages (ex. « pomme de terre » vs « pomme »).
-- Macros estimées par portion courante; les valeurs peuvent être ajustées manuellement.
+- Valeurs nutritionnelles estimées par portion courante; les valeurs peuvent être ajustées manuellement.
 
 
 ## Version 3.1.2
@@ -382,3 +382,11 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 - Les repas composés séparés par `+`, virgules, points-virgules, retours de ligne, « et » ou « avec » sont additionnés ingrédient par ingrédient.
 - Meilleure tolérance aux marques ajoutées au nom d’un aliment et aux pluriels courants.
 - Les données d’un produit scanné demeurent prioritaires et modifiables.
+
+
+## V3.3.0 — Estimation nutritionnelle enrichie
+
+- Remplacement des libellés visibles « Macros » par « Estimation nutritionnelle ».
+- Ajout des fibres, sucres et sodium lorsqu’ils sont disponibles.
+- Les valeurs absentes ne sont pas inventées ni affichées.
+- Lecture de ces nutriments depuis Open Food Facts et ajout d’estimations prudentes pour des aliments courants de la base Énergie.
