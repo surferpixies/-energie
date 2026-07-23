@@ -390,3 +390,10 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 - Ajout des fibres, sucres et sodium lorsqu’ils sont disponibles.
 - Les valeurs absentes ne sont pas inventées ni affichées.
 - Lecture de ces nutriments depuis Open Food Facts et ajout d’estimations prudentes pour des aliments courants de la base Énergie.
+
+
+## V3.3.1 — Finition du Journal
+- Affiche maintenant Fibres, Sucres et Sodium dans le résumé nutritionnel quotidien lorsque toutes les entrées de la journée disposent de ces valeurs.
+- Corrige la condition qui empêchait ces trois nutriments d’apparaître dans le Journal.
+- Réduit la hauteur de la tuile Journal et de son anneau de progression.
+- Resserre l’espacement entre la progression quotidienne et l’estimation nutritionnelle.
