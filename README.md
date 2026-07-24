@@ -399,7 +399,7 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 - Resserre l’espacement entre la progression quotidienne et l’estimation nutritionnelle.
 
 
-## V3.3.5 — Suggestions et portions scannées
+## V3.3.4 — Suggestions et portions scannées
 - La suggestion d’un repas principal peut être rouverte lors de la modification du repas.
 - Aucun lien de suggestion n’est affiché pour les collations.
 - Le scanner demande maintenant la quantité réellement consommée en grammes et recalcule les valeurs à partir des données pour 100 g lorsqu’elles sont disponibles.
