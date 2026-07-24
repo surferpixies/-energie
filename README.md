@@ -1,3 +1,7 @@
+# Énergie V3.5.0a — Activité intelligente
+
+Cette version ajoute la durée, l’intensité, une estimation instantanée des calories et une valeur mesurée facultative pour chaque activité. Les données sont sauvegardées dans l’objet quotidien existant et restent compatibles avec la synchronisation Supabase.
+
 ## Nouveauté V3.0.6
 
 - Option configurable dans Profil, désactivée par défaut.

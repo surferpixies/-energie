@@ -52,7 +52,7 @@
     'Repos':'Rest','Sommeil':'Sleep','Sommeil de la nuit dernière':'Last night’s sleep','Inscris simplement la durée totale approximative.':'Simply enter the approximate total duration.',
     "Nombre d'heures":'Number of hours','Nombre d’heures':'Number of hours','Enregistrer le sommeil':'Save sleep',
     'Mouvement':'Movement','Ajouter une activité':'Add an activity','Choisis une activité':'Choose an activity','Choisissez une activité':'Choose an activity',
-    'Durée en minutes':'Duration in minutes','Activités enregistrées':'Saved activities',"Ajouter l'activité":'Add activity',
+    'Durée en minutes':'Duration in minutes','Intensité':'Intensity','Faible':'Low','Modérée':'Moderate','Élevée':'High','Calories estimées':'Estimated calories','Calories mesurées':'Measured calories','Activités enregistrées':'Saved activities',"Ajouter l'activité":'Add activity',
     'Marche':'Walk','Course':'Run','Course à pied':'Run','Vélo':'Cycling','Musculation':'Strength training','Renforcement musculaire':'Strength training','Yoga':'Yoga','Natation':'Swimming','Autre':'Other',
     'Après le repas':'After the meal','Ressenti':'Feeling','Comment te sens-tu?':'How do you feel?','Comment vous sentez-vous ?':'How do you feel?',
     'Qu’as-tu ressenti?':'What did you notice?','Qu’avez-vous ressenti ?':'What did you notice?','Sélectionne tous les éléments qui s’appliquent.':'Select everything that applies.',

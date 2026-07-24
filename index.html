@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.4.0">
+  <link rel="stylesheet" href="styles.css?v=3.5.0a">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -145,6 +145,9 @@
         <input id="activityType" type="hidden">
       </fieldset>
       <label>Durée en minutes<input id="activityMinutes" name="energie_activity_duration_value" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Ex. 45" aria-label="Durée de l’activité en minutes"></label>
+      <fieldset class="activity-intensity-fieldset"><legend>Intensité</legend><div class="activity-intensity-choices" role="radiogroup" aria-label="Intensité de l’activité"><button type="button" data-intensity="low">Faible</button><button type="button" data-intensity="moderate" class="active">Modérée</button><button type="button" data-intensity="high">Élevée</button></div><input id="activityIntensity" type="hidden" value="moderate"></fieldset>
+      <div class="activity-estimate-card"><div><span>🔥</span><div><small>Calories estimées</small><strong id="activityEstimateValue">— kcal</strong></div></div><p>Estimation indicative selon l’activité, la durée et l’intensité.</p></div>
+      <label>Calories mesurées <span class="muted tiny">(facultatif)</span><input id="activityActualCalories" type="number" min="0" max="10000" step="1" inputmode="numeric" autocomplete="off" placeholder="Ex. 320"><small class="field-hint">Entre la valeur de ta montre ou de ton appareil pour remplacer l’estimation.</small></label>
       <div><p class="eyebrow">Activités enregistrées</p><div id="dayActivitiesList" class="day-activities-list"></div></div>
       <button type="submit" class="primary">Ajouter l'activité</button>
     </form>
@@ -285,8 +288,8 @@
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=3.4.0"></script>
-  <script src="i18n.js?v=3.4.0"></script>
-  <script src="foods.js?v=3.4.0"></script>
-  <script src="app.js?v=3.4.0"></script>
+  <script src="i18n.js?v=3.5.0a"></script>
+  <script src="foods.js?v=3.5.0a"></script>
+  <script src="app.js?v=3.5.0a"></script>
 </body>
 </html>
