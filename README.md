@@ -403,3 +403,10 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 - La suggestion d’un repas principal peut être rouverte lors de la modification du repas.
 - Aucun lien de suggestion n’est affiché pour les collations.
 - Le scanner demande maintenant la quantité réellement consommée en grammes et recalcule les valeurs à partir des données pour 100 g lorsqu’elles sont disponibles.
+
+
+## V3.3.3 — Suggestions persistantes et portions rapides
+- Corrige l’enregistrement des suggestions : elles sont maintenant conservées avec le repas et visibles lors de sa modification.
+- Les suggestions restent limitées aux déjeuners, dîners et soupers; aucune suggestion n’apparaît pour les collations.
+- Après un scan, choix rapide de ¼, ½, ¾, 1, 1½ ou 2 portions, avec option de grammes personnalisés.
+- Les calories et nutriments sont recalculés selon la quantité choisie.
