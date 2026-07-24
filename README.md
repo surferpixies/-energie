@@ -403,3 +403,11 @@ Correction importante : le message de bienvenue pouvait rester caché à cause d
 - La suggestion d’un repas principal peut être rouverte lors de la modification du repas.
 - Aucun lien de suggestion n’est affiché pour les collations.
 - Le scanner demande maintenant la quantité réellement consommée en grammes et recalcule les valeurs à partir des données pour 100 g lorsqu’elles sont disponibles.
+
+
+## V3.4.0 — Contexte du sommeil
+- Ajout de marqueurs sélectionnables pour décrire la nuit.
+- Ajout d’un commentaire facultatif.
+- Affichage compact du contexte dans le Journal.
+- Synchronisation Supabase avec repli compatible si la migration SQL n’est pas encore appliquée.
+- Champ d’heures passé en saisie numérique avec autoremplissage désactivé.

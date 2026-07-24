@@ -57,3 +57,10 @@ comment on column public.meals.nutrition is
 -- V3.3.2 — conserver la suggestion affichée avec le repas
 alter table public.meals add column if not exists recommendation jsonb;
 comment on column public.meals.recommendation is 'Suggestion facultative affichée après un repas principal.';
+
+
+-- Énergie V3.4.0 — contexte facultatif du sommeil
+alter table public.daily_logs add column if not exists sleep_tags jsonb not null default '[]'::jsonb;
+alter table public.daily_logs add column if not exists sleep_comment text;
+comment on column public.daily_logs.sleep_tags is 'Éléments facultatifs ayant marqué la nuit, sélection multiple.';
+comment on column public.daily_logs.sleep_comment is 'Commentaire libre facultatif sur la nuit.';
