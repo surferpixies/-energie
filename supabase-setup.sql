@@ -64,3 +64,22 @@ alter table public.daily_logs add column if not exists sleep_tags jsonb not null
 alter table public.daily_logs add column if not exists sleep_comment text;
 comment on column public.daily_logs.sleep_tags is 'Éléments facultatifs ayant marqué la nuit, sélection multiple.';
 comment on column public.daily_logs.sleep_comment is 'Commentaire libre facultatif sur la nuit.';
+
+
+-- Énergie V3.5.0b — Activité intelligente synchronisée dans Supabase
+-- Chaque activité demeure dans le tableau JSONB daily_logs.activities.
+-- Les objets contiennent: id, type, minutes, intensity, estimatedCalories,
+-- actualCalories et at. Cette migration est non destructive.
+alter table public.daily_logs
+  add column if not exists activities jsonb not null default '[]'::jsonb;
+
+update public.daily_logs
+set activities = '[]'::jsonb
+where activities is null or jsonb_typeof(activities) <> 'array';
+
+alter table public.daily_logs
+  alter column activities set default '[]'::jsonb,
+  alter column activities set not null;
+
+comment on column public.daily_logs.activities is
+  'Tableau des activités quotidiennes: type, durée, intensité, calories estimées ou mesurées et horodatage.';

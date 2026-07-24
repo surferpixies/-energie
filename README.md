@@ -1,6 +1,18 @@
-# Énergie V3.5.0a — Activité intelligente
+# Énergie V3.5.0b — Activité intelligente + Supabase
 
-Cette version ajoute la durée, l’intensité, une estimation instantanée des calories et une valeur mesurée facultative pour chaque activité. Les données sont sauvegardées dans l’objet quotidien existant et restent compatibles avec la synchronisation Supabase.
+Cette version synchronise maintenant explicitement les activités intelligentes dans `daily_logs.activities` sur Supabase. Chaque activité conserve le type, la durée, l’intensité, les calories estimées, les calories mesurées facultatives et l’horodatage.
+
+## Mise à jour obligatoire de Supabase
+
+Dans **Supabase → SQL Editor**, exécute le fichier `supabase-setup.sql` une seule fois avant de publier la version. La migration est non destructive et conserve les activités et les autres données existantes.
+
+## Vérification rapide
+
+1. Connecte-toi dans l’application.
+2. Ajoute une activité avec une intensité et, au besoin, une valeur de montre.
+3. Attends l’état **Sauvegardé ☁️**.
+4. Recharge l’application ou ouvre-la sur un autre appareil connecté au même compte.
+5. L’activité doit revenir avec sa durée, son intensité et ses calories.
 
 ## Nouveauté V3.0.6
 
