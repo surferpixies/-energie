@@ -52,3 +52,8 @@ comment on column public.meals.feeling is
 alter table public.meals add column if not exists nutrition jsonb;
 comment on column public.meals.nutrition is
   'Macros facultatives: calories, protein, carbs, fat, source, confidence, basis et estimated.';
+
+
+-- V3.3.2 — conserver la suggestion affichée avec le repas
+alter table public.meals add column if not exists recommendation jsonb;
+comment on column public.meals.recommendation is 'Suggestion facultative affichée après un repas principal.';

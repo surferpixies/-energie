@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.3.1">
+  <link rel="stylesheet" href="styles.css?v=3.3.2">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -55,7 +55,7 @@
         <div id="recentFoodsList" class="recent-foods-list"></div>
       </section>
       <label class="meal-time-row" for="mealTime"><span class="meal-time-label"><span aria-hidden="true">🕒</span><span>Heure</span></span><input id="mealTime" type="time" name="energie_meal_clock_value" autocomplete="one-time-code" required></label>
-      <label>Ce que tu as mangé ou bu<textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea></label>
+      <label>Ce que tu as mangé ou bu<textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea></label><div id="mealSuggestionWrap" class="meal-suggestion-wrap" hidden><button type="button" id="mealSuggestionToggle" class="meal-suggestion-toggle" aria-expanded="false">💡 Voir la suggestion</button><p id="mealSuggestionBody" class="meal-suggestion-body" hidden></p></div>
       <button type="button" class="secondary barcode-scan-launch" id="openBarcodeScanner"><span aria-hidden="true">▥</span><span><strong>Scanner un produit</strong><small>Ajoute rapidement son nom au repas</small></span></button>
       <section id="mealNutritionSection" class="meal-nutrition-section" hidden>
         <div class="meal-nutrition-heading"><div><span class="eyebrow">Nutrition facultative</span><strong>Estimation nutritionnelle</strong></div><button type="button" class="secondary small" id="estimateMealNutrition">Estimer</button></div>
@@ -110,6 +110,7 @@
         <div class="barcode-result-heading"><img id="barcodeProductImage" alt="" hidden><div><span id="barcodeResultBadge" class="barcode-result-badge">Produit reconnu</span><p id="barcodeBrand" class="muted small"></p></div></div>
         <label>Nom de l’aliment<input id="barcodeProductName" type="text" autocapitalize="sentences" autocomplete="off" placeholder="Entre un nom"></label>
         <p id="barcodeResultHelp" class="muted tiny"></p>
+        <label id="barcodePortionWrap" class="barcode-portion-wrap" hidden>Quantité consommée <span class="barcode-portion-input"><input id="barcodePortionGrams" type="number" min="1" max="2000" step="1" inputmode="decimal" value="100"><b>g</b></span><small>Modifie la quantité pour calculer seulement ce que tu as réellement mangé.</small></label>
         <div id="barcodeNutritionPreview" class="barcode-nutrition-preview" hidden></div>
         <button type="button" class="primary" id="addBarcodeProduct">Ajouter au repas</button>
       </section>
@@ -281,9 +282,9 @@
 
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=3.3.1"></script>
-  <script src="i18n.js?v=3.3.1"></script>
-  <script src="foods.js?v=3.3.1"></script>
-  <script src="app.js?v=3.3.1"></script>
+  <script src="config.js?v=3.3.2"></script>
+  <script src="i18n.js?v=3.3.2"></script>
+  <script src="foods.js?v=3.3.2"></script>
+  <script src="app.js?v=3.3.2"></script>
 </body>
 </html>
