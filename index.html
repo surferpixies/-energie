@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.3.3">
+  <link rel="stylesheet" href="styles.css?v=3.3.4">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -110,20 +110,7 @@
         <div class="barcode-result-heading"><img id="barcodeProductImage" alt="" hidden><div><span id="barcodeResultBadge" class="barcode-result-badge">Produit reconnu</span><p id="barcodeBrand" class="muted small"></p></div></div>
         <label>Nom de l’aliment<input id="barcodeProductName" type="text" autocapitalize="sentences" autocomplete="off" placeholder="Entre un nom"></label>
         <p id="barcodeResultHelp" class="muted tiny"></p>
-        <div id="barcodePortionWrap" class="barcode-portion-wrap" hidden>
-          <span class="barcode-portion-title">Portion consommée</span>
-          <div class="barcode-portion-options" role="group" aria-label="Choisir la portion consommée">
-            <button type="button" data-portion-multiplier="0.25">¼</button>
-            <button type="button" data-portion-multiplier="0.5">½</button>
-            <button type="button" data-portion-multiplier="0.75">¾</button>
-            <button type="button" data-portion-multiplier="1" class="active">1 portion</button>
-            <button type="button" data-portion-multiplier="1.5">1½</button>
-            <button type="button" data-portion-multiplier="2">2</button>
-            <button type="button" data-portion-multiplier="custom">Grammes</button>
-          </div>
-          <label id="barcodeCustomPortion" class="barcode-custom-portion" hidden>Quantité personnalisée <span class="barcode-portion-input"><input id="barcodePortionGrams" type="number" min="1" max="2000" step="1" inputmode="decimal" value="100"><b>g</b></span></label>
-          <small>Les valeurs sont recalculées selon la portion indiquée sur le produit.</small>
-        </div>
+        <label id="barcodePortionWrap" class="barcode-portion-wrap" hidden>Quantité consommée <span class="barcode-portion-input"><input id="barcodePortionGrams" type="number" min="1" max="2000" step="1" inputmode="decimal" value="100"><b>g</b></span><small>Modifie la quantité pour calculer seulement ce que tu as réellement mangé.</small></label>
         <div id="barcodeNutritionPreview" class="barcode-nutrition-preview" hidden></div>
         <button type="button" class="primary" id="addBarcodeProduct">Ajouter au repas</button>
       </section>
@@ -295,9 +282,9 @@
 
   <input id="importFile" type="file" accept="application/json" hidden>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="config.js?v=3.3.3"></script>
-  <script src="i18n.js?v=3.3.3"></script>
-  <script src="foods.js?v=3.3.3"></script>
-  <script src="app.js?v=3.3.3"></script>
+  <script src="config.js?v=3.3.4"></script>
+  <script src="i18n.js?v=3.3.4"></script>
+  <script src="foods.js?v=3.3.4"></script>
+  <script src="app.js?v=3.3.4"></script>
 </body>
 </html>
