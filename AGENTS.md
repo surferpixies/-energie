@@ -1,5 +1,15 @@
 # AGENTS.md
 
+# Langue
+
+Toutes les réponses destinées au développeur doivent être en français (fr-CA).
+
+Le code demeure en anglais lorsque cela est déjà la convention du projet (noms de fonctions, variables, etc.).
+
+Les commentaires dans le code doivent être en français, sauf si le fichier est déjà majoritairement en anglais.
+
+Les explications, résumés, propositions et plans doivent toujours être rédigés en français.
+
 # Énergie
 
 Énergie est une Progressive Web App (PWA) permettant à l'utilisateur de suivre son alimentation, son énergie, son sommeil, son activité physique et son ressenti afin d'observer des tendances au fil du temps.
