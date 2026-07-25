@@ -10,6 +10,18 @@ Les commentaires dans le code doivent être en français, sauf si le fichier est
 
 Les explications, résumés, propositions et plans doivent toujours être rédigés en français.
 
+## Avant toute modification
+
+Toujours :
+
+1. analyser le code existant;
+2. expliquer brièvement ce qui sera modifié;
+3. limiter les modifications au minimum nécessaire;
+4. conserver le style existant;
+5. vérifier que les changements n'affectent pas les fonctionnalités existantes.
+
+Si plusieurs approches sont possibles, proposer la plus simple en premier.
+
 # Énergie
 
 Énergie est une Progressive Web App (PWA) permettant à l'utilisateur de suivre son alimentation, son énergie, son sommeil, son activité physique et son ressenti afin d'observer des tendances au fil du temps.
