@@ -42,7 +42,7 @@ dialog{border:0;border-radius:28px;background:transparent;padding:0;width:min(94
 
 
 /* V1.7.4 — en-tête vivant selon le moment de la journée */
-.brand-title{display:flex;align-items:center;gap:9px}.living-header-icon{display:inline-grid;place-items:center;line-height:1;font-size:1.12em;transform-origin:center;animation:livingIconArrival .35s ease both}.nav-item #todayNavIcon{transition:transform .2s ease}.nav-item.active #todayNavIcon{transform:translateY(-1px) scale(1.06)}@keyframes livingIconArrival{from{opacity:0;transform:translateY(3px) scale(.9)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.living-header-icon{animation:none}.nav-item #todayNavIcon{transition:none}}
+.brand-title{display:flex;align-items:center;gap:9px}.brand-icon{width:20px;height:20px;flex-shrink:0;display:block;object-fit:contain}.living-header-icon{display:inline-grid;place-items:center;line-height:1;font-size:1.12em;transform-origin:center;animation:livingIconArrival .35s ease both}.nav-item #todayNavIcon{transition:transform .2s ease}.nav-item.active #todayNavIcon{transform:translateY(-1px) scale(1.06)}@keyframes livingIconArrival{from{opacity:0;transform:translateY(3px) scale(.9)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.living-header-icon{animation:none}.nav-item #todayNavIcon{transition:none}}
 
 
 /* V1.7.7 — icônes météo SVG uniques, stables et nuageuses */
