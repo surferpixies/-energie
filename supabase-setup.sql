@@ -83,3 +83,18 @@ alter table public.daily_logs
 
 comment on column public.daily_logs.activities is
   'Tableau des activités quotidiennes: type, durée, intensité, calories estimées ou mesurées et horodatage.';
+
+-- Énergie V3.6.0 — état des suppléments synchronisé par jour
+alter table public.daily_logs
+  add column if not exists supplements jsonb not null default '{}'::jsonb;
+
+update public.daily_logs
+set supplements = '{}'::jsonb
+where supplements is null or jsonb_typeof(supplements) <> 'object';
+
+alter table public.daily_logs
+  alter column supplements set default '{}'::jsonb,
+  alter column supplements set not null;
+
+comment on column public.daily_logs.supplements is
+  'État des suppléments pour la journée: prises aujourd’hui et defaults enregistrés dans le profil.';
