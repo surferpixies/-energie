@@ -8,7 +8,7 @@
   document.documentElement.lang=locale;
 
   const frFR={
-    'Journal':'Journal','Historique':'Historique','Tableau':'Tableau de bord','Observations':'Observations','Profil':'Profil',
+    'Journal':'Journal','Historique':'Historique','Tableau':'Tableau de bord','Profil':'Profil',
     'Déjeuner':'Petit-déjeuner','Dîner':'Déjeuner','Souper':'Dîner','Collation':'En-cas','Boisson':'Boisson',
     'Courriel':'E-mail','Adresse courriel':'Adresse e-mail','Mot de passe':'Mot de passe',
     'Sauvegarde infonuagique':'Sauvegarde dans le cloud','Sauvegarde en ligne':'Sauvegarde en ligne',
@@ -43,7 +43,7 @@
     'Langue':'Langue','Langue de l’application':'Langue de l’application','Français (Canada)':'Français (Canada)','Français (France)':'Français (France)','English':'English'
   };
   const en={
-    'Journal':'Journal','Historique':'History','Tableau':'Insights','Observations':'Insights','Tableau de bord':'Insights','Profil':'Profile',
+    'Journal':'Journal','Historique':'History','Tableau':'Insights','Tableau de bord':'Insights','Profil':'Profile',
     'Déjeuner':'Breakfast','Dîner':'Lunch','Souper':'Dinner','Collation':'Snack','En-cas':'Snack','Boisson':'Drink','Repas':'Meal',
     'Mon repas':'My meal','Ajouter un repas':'Add a meal','Modifier le repas':'Edit meal','Choisir un repas favori':'Choose a favorite meal',
     'Choisir un favori…':'Choose a favorite…','Type de repas':'Meal type','Le type de repas':'Meal type','Heure':'Time','Ce que tu as mangé ou bu':'What you ate or drank',
@@ -238,7 +238,7 @@
     'Ton historique, organisé naturellement':'Your history, naturally organized',
     'Repas — 7 jours':'Meals — 7 days','Heure moyenne':'Average time','Énergie avant — jours récents':'Energy before meals — recent days',
     'Repas les plus fréquents':'Most frequent meals','Pas encore assez de données.':'Not enough data yet.',
-    'Journal':'Journal','Historique':'History','Tableau':'Insights','Observations':'Insights','Profil':'Profile'
+    'Journal':'Journal','Historique':'History','Tableau':'Insights','Profil':'Profile'
   });
 
   Object.assign(frFR, {
