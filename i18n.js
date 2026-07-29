@@ -256,6 +256,37 @@
     '😊 Ressenti':'😊 Ressenti','⭐ Mes favoris':'⭐ Mes favoris','Observation personnelle':'Observation personnelle','Très faible':'Très faible','Faible':'Faible','Moyenne':'Moyenne','Bonne':'Bonne','Excellente':'Excellente'
   });
 
+
+
+  // V3.7.0 — Sprint 2C : interface du moteur d’observations alimentaires.
+  Object.assign(en, {
+    'Observations alimentaires':'Food insights','Ce que tes repas semblent révéler':'What your meals may be revealing',
+    'Nouvelle tendance détectée':'New trend detected','Tendance forte':'Strong trend','Tendance modérée':'Moderate trend','Tendance légère':'Slight trend',
+    'Avec':'With','Sans':'Without','journées analysées':'days analyzed','journée analysée':'day analyzed',
+    'Ton journal apprend encore':'Your journal is still learning',
+    'Continue à remplir ton journal. Après quelques semaines, Énergie commencera à repérer des tendances personnelles entre tes repas et ton niveau d’énergie.':'Keep filling in your journal. After a few weeks, Énergie will begin noticing personal patterns between your meals and energy level.',
+    'actuellement analysable':'currently analyzable','actuellement analysables':'currently analyzable',
+    'journée analysable':'analyzable day','journées analysables':'analyzable days','documentée':'documented','documentées':'documented',
+    'Ces observations comparent uniquement les journées de ton propre historique. Elles décrivent des associations possibles, ne prouvent aucune cause et ne constituent jamais un diagnostic.':'These insights compare only days from your own history. They describe possible associations, do not prove a cause, and never constitute a diagnosis.',
+    'Pourquoi cette tendance apparaît-elle?':'Why does this trend appear?','À interpréter avec prudence':'Interpret with care',
+    'Une association ne signifie pas que cet aliment ou cette catégorie est la cause du niveau d’énergie observé. Le sommeil, l’hydratation, les portions, le moment des repas et d’autres facteurs peuvent varier.':'An association does not mean that this food or category caused the observed energy level. Sleep, hydration, portions, meal timing, and other factors may vary.',
+    'Comment cette observation est calculée':'How this insight is calculated',
+    'Énergie classe les descriptions de repas par catégories, compare les journées avec et sans la catégorie, puis conserve seulement les écarts suffisamment nets avec assez de journées comparables.':'Énergie classifies meal descriptions into categories, compares days with and without the category, and keeps only sufficiently clear differences supported by enough comparable days.',
+    'Le moteur préfère ne rien afficher lorsque les données sont insuffisantes ou que la différence est trop faible.':'The engine prefers to show nothing when there is not enough data or the difference is too small.',
+    'Autres observations':'Other insights','Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles.':'Keep logging meals to unlock other personal insights.'
+  });
+  Object.assign(frFR, {
+    'Observations alimentaires':'Observations alimentaires','Ce que tes repas semblent révéler':'Ce que vos repas semblent révéler',
+    'Nouvelle tendance détectée':'Nouvelle tendance détectée','Tendance forte':'Tendance forte','Tendance modérée':'Tendance modérée','Tendance légère':'Tendance légère',
+    'Ton journal apprend encore':'Votre journal apprend encore',
+    'Continue à remplir ton journal. Après quelques semaines, Énergie commencera à repérer des tendances personnelles entre tes repas et ton niveau d’énergie.':'Continuez à remplir votre journal. Après quelques semaines, Énergie commencera à repérer des tendances personnelles entre vos repas et votre niveau d’énergie.',
+    'Ces observations comparent uniquement les journées de ton propre historique. Elles décrivent des associations possibles, ne prouvent aucune cause et ne constituent jamais un diagnostic.':'Ces observations comparent uniquement les journées de votre propre historique. Elles décrivent des associations possibles, ne prouvent aucune cause et ne constituent jamais un diagnostic.',
+    'Pourquoi cette tendance apparaît-elle?':'Pourquoi cette tendance apparaît-elle ?',
+    'Une association ne signifie pas que cet aliment ou cette catégorie est la cause du niveau d’énergie observé. Le sommeil, l’hydratation, les portions, le moment des repas et d’autres facteurs peuvent varier.':'Une association ne signifie pas que cet aliment ou cette catégorie est à l’origine du niveau d’énergie observé. Le sommeil, l’hydratation, les portions, l’heure des repas et d’autres facteurs peuvent varier.',
+    'Énergie classe les descriptions de repas par catégories, compare les journées avec et sans la catégorie, puis conserve seulement les écarts suffisamment nets avec assez de journées comparables.':'Énergie classe les descriptions de repas par catégories, compare les journées avec et sans la catégorie, puis conserve uniquement les écarts suffisamment nets reposant sur assez de journées comparables.',
+    'Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles.':'Continuez à enregistrer vos repas pour obtenir d’autres observations personnelles.'
+  });
+
   const dict=locale==='en'?en:locale==='fr-FR'?frFR:{};
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
