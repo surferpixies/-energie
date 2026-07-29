@@ -287,6 +287,18 @@
     'Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles.':'Continuez à enregistrer vos repas pour obtenir d’autres observations personnelles.'
   });
 
+  // V3.7.1 — Le cerveau d’Énergie.
+  Object.assign(en, {
+    'Le cerveau d’Énergie':'Énergie’s brain','Je fais connaissance avec toi':'I’m getting to know you','Le cerveau d’Énergie apprend encore':'Énergie’s brain is still learning',
+    'Premières connexions détectées':'First connections detected','Mes observations gagnent en confiance':'My insights are gaining confidence','Ton journal est riche en données':'Your journal is rich in data',
+    'Les premières tendances se préparent':'Your first trends are taking shape','Continue simplement à remplir ton journal. Le cerveau d’Énergie compare déjà tes journées, mais préfère attendre avant de montrer une observation trop fragile.':'Keep filling in your journal. Énergie’s brain is already comparing your days, but prefers to wait rather than show an insight that is too fragile.',
+    'Analyse avancée':'Advanced analysis','La croissance continue avec chaque nouvelle journée.':'Growth continues with every new day.','avant les premières tendances':'until the first trends','pour renforcer les observations':'to strengthen insights','vers un journal riche':'toward a rich journal'
+  });
+  Object.assign(frFR, {
+    'Je fais connaissance avec toi':'Je fais connaissance avec vous','Le cerveau d’Énergie apprend encore':'Le cerveau d’Énergie apprend encore','Premières connexions détectées':'Premières connexions détectées','Mes observations gagnent en confiance':'Mes observations gagnent en fiabilité','Ton journal est riche en données':'Votre journal est riche en données',
+    'Les premières tendances se préparent':'Les premières tendances se préparent','Continue simplement à remplir ton journal. Le cerveau d’Énergie compare déjà tes journées, mais préfère attendre avant de montrer une observation trop fragile.':'Continuez simplement à remplir votre journal. Le cerveau d’Énergie compare déjà vos journées, mais préfère attendre avant d’afficher une observation trop fragile.'
+  });
+
   const dict=locale==='en'?en:locale==='fr-FR'?frFR:{};
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
