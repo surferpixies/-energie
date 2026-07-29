@@ -2,6 +2,7 @@
   "use strict";
 
   const FOOD = window.ENERGIE_FOOD_CATEGORIES;
+  const DEFAULT_LOCALE = "fr-CA";
   const DAY_MS = 86400000;
   const NEGATIVE_TAGS = new Set(["headache","stomachache","bloating","nausea","fatigue","dizziness","reflux","gas"]);
   const POSITIVE_TAGS = new Set(["energy","good_mood","focus","easy_digestion","feeling_good"]);
@@ -90,21 +91,26 @@
     };
   }
 
-  function foodObservations(days) {
+  function categoryLabel(category, locale = DEFAULT_LOCALE) {
+    return FOOD?.getCategoryLabel?.(category.id, locale) || category.labels?.[locale] || category.label || category.id;
+  }
+
+  function foodObservations(days, locale = DEFAULT_LOCALE) {
     if (!FOOD) return [];
     const cards = [];
     FOOD.definitions.forEach(foodCategory => {
+      const label = categoryLabel(foodCategory, locale);
       [...NEGATIVE_TAGS].forEach(outcome => {
         const card = compareBinary(days, day => day.categoryIds.has(foodCategory.id), outcome, {
-          title: foodCategory.label,
-          text: outcomeLabel => `Les journées où tu notes ${foodCategory.label.toLowerCase()} sont plus souvent accompagnées de ${outcomeLabel}.`
+          title: label,
+          text: outcomeLabel => `Les journées où tu notes ${label.toLowerCase()} semblent être plus souvent accompagnées de ${outcomeLabel}.`
         }, foodCategory.icon, `food:${foodCategory.id}`);
         if (card) cards.push(card);
       });
       [...POSITIVE_TAGS].forEach(outcome => {
         const card = compareBinary(days, day => day.categoryIds.has(foodCategory.id), outcome, {
-          title: foodCategory.label,
-          text: outcomeLabel => `Les journées où tu notes ${foodCategory.label.toLowerCase()} sont plus souvent associées à ${outcomeLabel}.`
+          title: label,
+          text: outcomeLabel => `Les journées où tu notes ${label.toLowerCase()} semblent être plus souvent associées à ${outcomeLabel}.`
         }, foodCategory.icon, `food:${foodCategory.id}`);
         if (card) cards.push(card);
       });
@@ -152,7 +158,8 @@
     const days = normalizeDays(db, options.meals);
     const cutoff = Date.now() - (Number(options.lookbackDays) || 180) * DAY_MS;
     const recentDays = days.filter(day => dateValue(day.date) >= cutoff);
-    const candidates = [...foodObservations(recentDays), ...habitObservations(recentDays, db?.settings?.waterGoal)]
+    const locale = options.locale || db?.settings?.language || DEFAULT_LOCALE;
+    const candidates = [...foodObservations(recentDays, locale), ...habitObservations(recentDays, db?.settings?.waterGoal)]
       .sort((a,b) => b.score - a.score);
     const selected = [];
     const usedCategories = new Set();
@@ -162,8 +169,8 @@
       usedCategories.add(card.category);
       if (selected.length === (Number(options.limit) || 3)) break;
     }
-    return {version:1, generatedAt:new Date().toISOString(), maturity:journalMaturity(recentDays), observations:selected, analyzedDays:recentDays.length};
+    return {version:2, foodCategoriesVersion:FOOD?.version || null, generatedAt:new Date().toISOString(), maturity:journalMaturity(recentDays), observations:selected, analyzedDays:recentDays.length};
   }
 
-  window.EnergieObservationEngine = Object.freeze({version:1, analyze, normalizeDays});
+  window.EnergieObservationEngine = Object.freeze({version:2, analyze, normalizeDays});
 })();
