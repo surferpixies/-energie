@@ -8,7 +8,7 @@
   document.documentElement.lang=locale;
 
   const frFR={
-    'Journal':'Journal','Historique':'Historique','Tableau':'Tableau de bord','Profil':'Profil',
+    'Journal':'Journal','Historique':'Historique','Observations':'Observations','Profil':'Profil',
     'Déjeuner':'Petit-déjeuner','Dîner':'Déjeuner','Souper':'Dîner','Collation':'En-cas','Boisson':'Boisson',
     'Courriel':'E-mail','Adresse courriel':'Adresse e-mail','Mot de passe':'Mot de passe',
     'Sauvegarde infonuagique':'Sauvegarde dans le cloud','Sauvegarde en ligne':'Sauvegarde en ligne',
@@ -43,7 +43,7 @@
     'Langue':'Langue','Langue de l’application':'Langue de l’application','Français (Canada)':'Français (Canada)','Français (France)':'Français (France)','English':'English'
   };
   const en={
-    'Journal':'Journal','Historique':'History','Tableau':'Insights','Tableau de bord':'Insights','Profil':'Profile',
+    'Journal':'Journal','Historique':'History','Observations':'Insights','Observations':'Insights','Profil':'Profile',
     'Déjeuner':'Breakfast','Dîner':'Lunch','Souper':'Dinner','Collation':'Snack','En-cas':'Snack','Boisson':'Drink','Repas':'Meal',
     'Mon repas':'My meal','Ajouter un repas':'Add a meal','Modifier le repas':'Edit meal','Choisir un repas favori':'Choose a favorite meal',
     'Choisir un favori…':'Choose a favorite…','Type de repas':'Meal type','Le type de repas':'Meal type','Heure':'Time','Ce que tu as mangé ou bu':'What you ate or drank',
@@ -223,7 +223,7 @@
     'Repas principaux':'Main meals','repas principal':'main meal','repas principaux':'main meals',
     'journée':'day','jour':'day','jours':'days','mois':'months','Depuis':'Since',
     'Aucun ressenti en attente':'No pending check-ins','Dernier ressenti':'Latest feeling',
-    '😊 Ressenti':'😊 Feeling','⭐ Mes favoris':'⭐ My favorites','Observation personnelle':'Personal insight','Observation':'Insight','Observations':'Insights','Pourquoi je vois ceci?':'Why am I seeing this?',
+    '😊 Ressenti':'😊 Feeling','⭐ Mes favoris':'⭐ My favorites','Observation personnelle':'Personal insight','Observations':'Insight','Observations':'Insights','Pourquoi je vois ceci?':'Why am I seeing this?',
     'Sources générales':'General sources','Afficher les sources':'Show sources',
     'Objectif d\'eau':'Water goal','Nombre de gouttes affichées':'Number of drops displayed',
     'Sauvegarde supplémentaire':'Additional backup','copie(s) locale(s) de sécurité.':'local backup copies.',
@@ -231,10 +231,10 @@
     'Repas concernés':'Meals included','Délai après le repas':'Delay after meal',
     'Mode aperçu activé':'Preview mode enabled','Tes vraies données':'Your real data',
     'Des données exemples montrent la présentation. Elles ne sont jamais sauvegardées.':'Sample data demonstrates the experience. It is never saved.',
-    'Le tableau de bord utilise seulement tes repas enregistrés.':'The dashboard uses only your logged meals.',
+    'Les observations utilisent seulement tes repas enregistrés.':'The dashboard uses only your logged meals.',
     'Repas au total':'Total meals','Résumé de la journée':'Daily summary','Chronologie':'Timeline','Période':'Period','PÉRIODE':'PERIOD',
     'Ton parcours':'Your journey','Observe tes habitudes sans jugement':'Notice your habits without judgment',
-    'Tableau de bord & observations':'Dashboard & insights','Smart Timeline':'Smart Timeline',
+    'Observations':'Dashboard & insights','Smart Timeline':'Smart Timeline',
     'Ton historique, organisé naturellement':'Your history, naturally organized',
     'Repas — 7 jours':'Meals — 7 days','Heure moyenne':'Average time','Énergie avant — jours récents':'Energy before meals — recent days',
     'Repas les plus fréquents':'Most frequent meals','Pas encore assez de données.':'Not enough data yet.',
