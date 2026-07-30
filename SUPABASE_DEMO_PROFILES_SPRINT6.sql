@@ -23,7 +23,7 @@ using (auth.uid() = id);
 -- Cette commande crée aussi la ligne de profil si elle n'existe pas encore.
 insert into public.profiles (id, has_demo_access)
 select id, true from auth.users
-where email in ('philippe_dumont@icloud.com', 'brigitte.boisvert@icloud.com')
+where email in ('TON_COURRIEL_ICI', 'COURRIEL_DE_TA_CONJOINTE_ICI')
 on conflict (id) do update
 set has_demo_access = excluded.has_demo_access,
     updated_at = now();

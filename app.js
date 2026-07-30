@@ -339,6 +339,7 @@ async function updateLivingHeader(force=false){
 }
 
 const DEMO_BACKUP_KEY="energieBeforeDemoV250";
+const DEMO_MEMORY_BACKUP_KEY="energieBeforeDemoMemoryV1";
 let demoTourIndex=0;
 
 function demoDateKey(offset){
@@ -368,6 +369,26 @@ function createDemoDB(profileId="marie"){
   if(!raw)throw new Error("Les profils de démonstration ne sont pas chargés.");
   return migrate(raw)
 }
+function allMealsFromDB(source=db){
+  return Object.values(source?.days||{}).flatMap(day=>Array.isArray(day?.meals)?day.meals:[]).filter(meal=>meal?.description)
+}
+function backupRealBrainMemory(){
+  try{
+    if(!localStorage.getItem(DEMO_MEMORY_BACKUP_KEY))localStorage.setItem(DEMO_MEMORY_BACKUP_KEY,JSON.stringify(brainMemoryState()||{version:1,memories:[]}))
+  }catch(error){console.warn("Copie de la mémoire avant démo impossible",error)}
+}
+function buildDemoBrainMemory(source=db){
+  if(!window.Brain?.replaceMemoryState||!window.Brain?.learnMeals)return;
+  window.Brain.replaceMemoryState({version:1,settings:{},memories:[],updatedAt:new Date().toISOString()});
+  window.Brain.learnMeals(allMealsFromDB(source));
+}
+function restoreRealBrainMemory(){
+  try{
+    const raw=localStorage.getItem(DEMO_MEMORY_BACKUP_KEY);
+    if(raw&&window.Brain?.replaceMemoryState)window.Brain.replaceMemoryState(JSON.parse(raw));
+    localStorage.removeItem(DEMO_MEMORY_BACKUP_KEY)
+  }catch(error){console.warn("Restauration de la mémoire impossible",error)}
+}
 function activeDemoProfile(){
   const id=db.settings?.demoProfileId||"marie";
   return window.EnergieDemoProfiles?.profiles?.[id]||window.EnergieDemoProfiles?.profiles?.marie||{id,name:db.settings?.demoName||"Démo",icon:"🧪",scenario:"Démonstration",summary:"Profil fictif"}
@@ -380,8 +401,10 @@ function switchDemoProfile(profileId){
   if(!hasDemoAccess)return alert("Cet accès de démonstration n’est pas activé pour ce compte.");
   if(!db.settings.demoMode){
     try{if(!localStorage.getItem(DEMO_BACKUP_KEY))localStorage.setItem(DEMO_BACKUP_KEY,JSON.stringify(db))}catch(error){console.warn("Copie avant démo non enregistrée",error)}
+    backupRealBrainMemory();
   }
   db=createDemoDB(profileId);
+  buildDemoBrainMemory(db);
   selectedDate=todayKey();currentView="today";
   try{saveLocal("profil-demo") }catch(error){console.warn(error)}
   render()
@@ -520,9 +543,11 @@ function startDemoMode(profileId="marie"){
   try{
     if(!localStorage.getItem(DEMO_BACKUP_KEY))localStorage.setItem(DEMO_BACKUP_KEY,JSON.stringify(db))
   }catch(error){console.warn("Copie avant démo non enregistrée",error)}
+  backupRealBrainMemory();
   markExperienceSeen();
   closeExperienceLaunch();
   db=createDemoDB(profileId);
+  buildDemoBrainMemory(db);
   selectedDate=todayKey();
   currentView="today";
   try{saveLocal("demarrage-demo")}catch(error){console.warn("Démo locale temporaire",error)}
@@ -537,6 +562,7 @@ function leaveDemoMode(){
   db.settings.showWelcome=false;
   db.settings.demoMode=false;
   db.settings.demoTourSeen=true;
+  restoreRealBrainMemory();
   try{localStorage.removeItem(DEMO_BACKUP_KEY);localStorage.removeItem(OUTBOX_KEY)}catch(_){}
   selectedDate=todayKey();currentView="today";
   saveLocal("fin-demo");
