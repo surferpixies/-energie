@@ -35,14 +35,16 @@
   }
   function parseMeal(text, options = {}) {
     const foods = findFoods(text), recipes = findRecipes(text);
+    const personalMemory = options.memory === false ? null : (options.memoryStore || window.EnergieBrain?.memory)?.findBest?.(text) || null;
     const categories = new Set(), nutrients = new Set();
     foods.forEach(match => { match.food.categories.forEach(x => categories.add(x)); match.food.nutrients.forEach(x => nutrients.add(x)); });
     recipes.forEach(recipe => recipe.categories.forEach(x => categories.add(x)));
     const unknown = unknownWords(text, foods);
     const explicitConfidence = foods.length ? foods.reduce((sum,x)=>sum+x.confidence,0)/foods.length : 0;
     const recipeConfidence = recipes.length ? Math.max(...recipes.map(x=>x.confidence)) : 0;
-    const confidence = Math.max(explicitConfidence, recipeConfidence, text ? .18 : 0);
-    return { version:1, input:String(text||""), locale:options.locale||"fr-CA", foods, recipes, categories:[...categories], nutrients:[...nutrients], unknownWords:unknown, confidence:Number(confidence.toFixed(2)), isReliable:confidence>=.6 };
+    const memoryConfidence = personalMemory ? personalMemory.confidence * personalMemory.matchConfidence : 0;
+    const confidence = Math.max(explicitConfidence, recipeConfidence, memoryConfidence, text ? .18 : 0);
+    return { version:2, input:String(text||""), locale:options.locale||"fr-CA", foods, recipes, personalMemory, categories:[...categories], nutrients:[...nutrients], unknownWords:unknown, confidence:Number(confidence.toFixed(2)), isReliable:confidence>=.6 };
   }
   window.EnergieBrainModules = window.EnergieBrainModules || {};
   window.EnergieBrainModules.parser = Object.freeze({ version:1, findFoods, parseMeal });
