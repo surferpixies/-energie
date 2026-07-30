@@ -485,3 +485,15 @@ body.demo-guide-open .bottom-nav{z-index:20}
 
 /* Sprint 5 — observations explicables */
 .brain-insight-grid{display:grid;gap:14px}.brain-insight-card{background:var(--card,#fff);border:1px solid var(--border,rgba(80,70,60,.12));border-radius:22px;padding:18px;box-shadow:0 8px 26px rgba(40,35,30,.05)}.brain-insight-head{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start}.brain-insight-head h3{margin:3px 0 0;font-size:1rem;line-height:1.35}.brain-insight-head>strong{font-size:.82rem;padding:6px 9px;border-radius:999px;background:rgba(98,27,45,.08)}.brain-insight-icon{font-size:1.45rem}.brain-proof{margin-top:14px;border-top:1px solid var(--border,rgba(80,70,60,.12));padding-top:12px}.brain-proof summary{cursor:pointer;font-weight:700;color:var(--accent,#621b2d)}.brain-proof ul{margin:12px 0;padding-left:20px}.brain-proof li{margin:6px 0}.brain-insight-empty{text-align:center;padding:12px 4px 4px}.brain-insight-empty>span{font-size:2rem}@media(min-width:760px){.brain-insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Sprint 6 — profils de démonstration privés */
+.demo-profile-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.demo-person-card{display:flex;flex-direction:column;gap:10px;padding:16px;border:1px solid var(--border,#d9e2d5);border-radius:18px;background:var(--surface,#fff)}
+.demo-person-card.is-active{outline:2px solid var(--accent,#5f8b4c);outline-offset:1px}
+.demo-person-head{display:flex;align-items:center;gap:10px}
+.demo-person-head h4{margin:0}.demo-person-head small{color:var(--muted,#667085)}
+.demo-person-avatar{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--soft,#eef7e9);font-size:22px}
+.demo-person-card p{margin:0;flex:1;font-size:.9rem;line-height:1.45;color:var(--muted,#667085)}
+.is-demo-mode .meal-quick-grid button,.is-demo-mode [data-edit-meal],.is-demo-mode [data-delete-meal],.is-demo-mode .water-controls button,.is-demo-mode [data-add-activity]{cursor:not-allowed;opacity:.68}
+.demo-mode-banner p{margin:0;flex:1}
+@media(max-width:720px){.demo-profile-grid{grid-template-columns:1fr}.demo-person-card{padding:14px}}
