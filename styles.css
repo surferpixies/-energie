@@ -499,4 +499,24 @@ body.demo-guide-open .bottom-nav{z-index:20}
 @media(max-width:720px){.demo-profile-grid{grid-template-columns:1fr}.demo-person-card{padding:14px}}
 
 /* Ambiance saisonnière de la journée */
-.journal-date-value{display:flex;align-items:center;justify-content:center;gap:7px;line-height:1.15}.seasonal-day-icon{display:inline-flex;align-items:center;justify-content:center;min-width:1.05em;font-size:1.725rem !important;line-height:1;transform:translateY(-1px) scale(1.35);transform-origin:center;filter:saturate(.9);animation:seasonalIconIn .28s ease-out}.seasonal-setting-card>p{margin-bottom:2px}@keyframes seasonalIconIn{from{opacity:0;transform:translateY(2px) scale(.82)}to{opacity:1;transform:translateY(-1px) scale(1)}}@media(prefers-reduced-motion:reduce){.seasonal-day-icon{animation:none}}
+.journal-date-value{display:flex;align-items:center;justify-content:center;gap:7px;line-height:1.15}.seasonal-day-icon-wrap{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:2.3rem;          /* espace réservé près de la bordure */
+    margin-right:.55rem;   /* espace entre l'icône et la date */
+    flex-shrink:0;
+}
+
+.seasonal-day-icon{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:1.725rem !important;
+    line-height:1;
+
+    transform:none;        /* parfaitement centré verticalement */
+    filter:saturate(.9);
+    animation:seasonalIconIn .28s ease-out;
+}.seasonal-setting-card>p{margin-bottom:2px}@keyframes seasonalIconIn{from{opacity:0;transform:translateY(2px) scale(.82)}to{opacity:1;transform:translateY(-1px) scale(1)}}@media(prefers-reduced-motion:reduce){.seasonal-day-icon{animation:none}}
