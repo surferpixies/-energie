@@ -161,7 +161,7 @@
     'Ton parcours':'Votre parcours','Résumé de la journée':'Résumé de la journée','Période':'Période','PÉRIODE':'PÉRIODE','Tout':'Tout','7 jours':'7 jours','Ce mois':'Ce mois','Cette année':'Cette année',
     'Type de repas':'Type de repas','⭐ Favoris':'⭐ Favoris','Énergie faible':'Énergie faible','Énergie élevée':'Énergie élevée','Chronologie':'Chronologie',
     'Rechercher un aliment, une note ou une date…':'Rechercher un aliment, une note ou une date…',
-    'Tableau de bord & observations':'Tableau de bord et observations','Observe tes habitudes sans jugement':'Observez vos habitudes sans jugement',
+    'Tableau de bord & observations':'Tableau de bord et observations','Observe tes habitudes sans jugement':'Observez vos habitudes',
     'Les cartes décrivent des tendances possibles. Elles ne posent aucun diagnostic et ne prouvent jamais qu’un aliment cause un effet.':'Les cartes décrivent des tendances possibles. Elles ne posent aucun diagnostic et ne prouvent jamais qu’un aliment provoque un effet.',
     'Repas — 7 jours':'Repas — 7 jours','Repas au total':'Repas au total','Heure moyenne':'Heure moyenne','Énergie avant — jours récents':'Énergie avant — jours récents',
     'Pas encore assez de données.':'Pas encore assez de données.','énergie faible':'énergie faible','énergie élevée':'énergie élevée','Repas les plus fréquents':'Repas les plus fréquents',
@@ -179,7 +179,7 @@
     'Ton parcours':'Your journey','Résumé de la journée':'Daily summary','Période':'Period','PÉRIODE':'PERIOD','Tout':'All','7 jours':'7 days','Ce mois':'This month','Cette année':'This year',
     'Type de repas':'Meal type','Le type de repas':'Meal type','⭐ Favoris':'⭐ Favorites','Énergie faible':'Low energy','Énergie élevée':'High energy','Chronologie':'Timeline',
     'Rechercher un aliment, une note ou une date…':'Search food, notes, or a date…',
-    'Tableau de bord & observations':'Dashboard & insights','Observe tes habitudes sans jugement':'Notice your habits without judgment',
+    'Tableau de bord & observations':'Dashboard & insights','Observe tes habitudes sans jugement':'Notice your habits',
     'Les cartes décrivent des tendances possibles. Elles ne posent aucun diagnostic et ne prouvent jamais qu’un aliment cause un effet.':'These cards describe possible patterns. They do not diagnose anything or prove that a food causes an effect.',
     'Repas — 7 jours':'Meals — 7 days','Repas au total':'Total meals','Heure moyenne':'Average time','Énergie avant — jours récents':'Energy before meals — recent days',
     'Pas encore assez de données.':'Not enough data yet.','énergie faible':'low energy','énergie élevée':'high energy','Repas les plus fréquents':'Most frequent meals',
@@ -233,7 +233,7 @@
     'Des données exemples montrent la présentation. Elles ne sont jamais sauvegardées.':'Sample data demonstrates the experience. It is never saved.',
     'Les observations utilisent seulement tes repas enregistrés.':'The dashboard uses only your logged meals.',
     'Repas au total':'Total meals','Résumé de la journée':'Daily summary','Chronologie':'Timeline','Période':'Period','PÉRIODE':'PERIOD',
-    'Ton parcours':'Your journey','Observe tes habitudes sans jugement':'Notice your habits without judgment',
+    'Ton parcours':'Your journey','Observe tes habitudes sans jugement':'Notice your habits',
     'Observations':'Dashboard & insights','Smart Timeline':'Smart Timeline',
     'Ton historique, organisé naturellement':'Your history, naturally organized',
     'Repas — 7 jours':'Meals — 7 days','Heure moyenne':'Average time','Énergie avant — jours récents':'Energy before meals — recent days',
@@ -367,7 +367,7 @@
         .replace(/^Modifier (.+)$/,(_,x)=>`Edit ${translateString(x)}`);
     } else if(locale==='fr-FR'){
       out=out.replace(/^Ton parcours$/,'Votre parcours')
-        .replace(/^Observe tes habitudes sans jugement$/,'Observez vos habitudes sans jugement')
+        .replace(/^Observe tes habitudes sans jugement$/,'Observez vos habitudes')
         .replace(/^Depuis le (.+)$/,'Depuis le $1')
         .replace(/^(\d+) journée(s?)$/,(_,n)=>`${n} jour${n==='1'?'':'s'}`);
     }
