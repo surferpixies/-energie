@@ -213,8 +213,12 @@ function chooseMealRecommendation(date,justSavedMeal){
    ?"A few vegetables could add some variety to your next meal."
    :"Quelques légumes pourraient ajouter un peu de variété à ton prochain repas.");
   if(!has("fiber"))add("fiber",english
-   ?"Whole grains, vegetables or legumes could add a little more fibre to your next meal."
-   :"Des grains entiers, des légumes ou des légumineuses pourraient ajouter un peu plus de fibres à ton prochain repas.");
+   ?(has("vegetables")
+     ?"Whole grains or legumes could add a little more fibre to your next meal."
+     :"Whole grains, vegetables or legumes could add a little more fibre to your next meal.")
+   :(has("vegetables")
+     ?"Des grains entiers ou des légumineuses pourraient ajouter un peu plus de fibres à ton prochain repas."
+     :"Des grains entiers, des légumes ou des légumineuses pourraient ajouter un peu plus de fibres à ton prochain repas."));
   if(!has("fruit"))add("fruit",english
    ?"A fruit later today could be a simple way to add a little more variety."
    :"Un fruit plus tard aujourd’hui pourrait être une façon simple d’ajouter un peu plus de variété.");
@@ -228,8 +232,12 @@ function chooseMealRecommendation(date,justSavedMeal){
    ?"A few vegetables could add some variety to this meal."
    :"Quelques légumes pourraient ajouter un peu de variété à ce repas.");
   if(!saved.flags.fiber)add("fiber",english
-   ?"Whole grains, vegetables or legumes could add a little more fibre to this meal."
-   :"Des grains entiers, des légumes ou des légumineuses pourraient ajouter un peu plus de fibres à ce repas.");
+   ?(saved.flags.vegetables
+     ?"Whole grains or legumes could add a little more fibre to this meal."
+     :"Whole grains, vegetables or legumes could add a little more fibre to this meal.")
+   :(saved.flags.vegetables
+     ?"Des grains entiers ou des légumineuses pourraient ajouter un peu plus de fibres à ce repas."
+     :"Des grains entiers, des légumes ou des légumineuses pourraient ajouter un peu plus de fibres à ce repas."));
  }
  const fresh=candidates.find(item=>!recommendationWasShown(date,item.category));
  return fresh||candidates[0]||null;
