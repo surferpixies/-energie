@@ -7,7 +7,7 @@
   const memory = M.memory.loadLocal();
   const persistMemory = () => M.memory.saveLocal(memory);
   const api = {
-    version:"3.9.0-brain.2",
+    version:"3.10.0-brain.3",
     foods:M.database.foods,
     legacyFoods:M.database.legacyFoods,
     parseMeal:(text,options={}) => M.parser.parseMeal(text,{...options,memoryStore:options.memoryStore||memory}),
@@ -18,9 +18,24 @@
     getFood:id => M.database.byId.get(id) || null,
     confidence:M.confidence.describe,
     memory,
-    learnMeal(meal,analysis=null){ const result=memory.learnMeal(meal,analysis||this.parseMeal(meal?.description||meal?.name||meal?.text||"",{memory:false})); persistMemory(); return result; },
-    learnMeals(meals=[]){ const result=memory.learnMany(meals,(text,options)=>M.parser.parseMeal(text,options)); persistMemory(); return result; },
+    learnMeal(meal,analysis=null){
+      const result=memory.learnMeal(meal,analysis||this.parseMeal(meal?.description||meal?.name||meal?.text||"",{memory:false}));
+      persistMemory();
+      if (result?.learned) window.dispatchEvent(new CustomEvent("energie:memory-changed", { detail: { reason:"learn", memoryId:result.memory?.id || null } }));
+      return result;
+    },
+    learnMeals(meals=[]){
+      const result=memory.learnMany(meals,(text,options)=>M.parser.parseMeal(text,options));
+      persistMemory();
+      if (result?.learnedCount) window.dispatchEvent(new CustomEvent("energie:memory-changed", { detail: { reason:"learn-many" } }));
+      return result;
+    },
     saveMemory:persistMemory,
+    replaceMemoryState(nextState){
+      const state=memory.replaceState(nextState);
+      persistMemory();
+      return state;
+    },
     diagnostics(){ return {version:this.version, foods:this.foods.length, recipes:M.recipes.recipes.length, memories:memory.diagnostics().active, categories:window.ENERGIE_FOOD_CATEGORIES?.categories?.length||0}; }
   };
   window.EnergieBrain = Object.freeze(api);
