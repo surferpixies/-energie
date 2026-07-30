@@ -7,7 +7,7 @@
   const memory = M.memory.loadLocal();
   const persistMemory = () => M.memory.saveLocal(memory);
   const api = {
-    version:"3.10.0-brain.3",
+    version:"3.11.0-brain.4",
     foods:M.database.foods,
     legacyFoods:M.database.legacyFoods,
     parseMeal:(text,options={}) => M.parser.parseMeal(text,{...options,memoryStore:options.memoryStore||memory}),
