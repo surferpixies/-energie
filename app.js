@@ -780,7 +780,7 @@ function monthLabel(key){return localDate(`${key}-15`).toLocaleDateString('fr-CA
 function mondayKey(date){const d=localDate(date),day=(d.getDay()+6)%7;d.setDate(d.getDate()-day);return d.toLocaleDateString('en-CA')}
 function addDaysKey(date,days){const d=localDate(date);d.setDate(d.getDate()+days);return d.toLocaleDateString('en-CA')}
 function weekLabel(key){return `Semaine du ${localDate(key).toLocaleDateString('fr-CA',{day:'numeric',month:'short'})} au ${localDate(addDaysKey(key,6)).toLocaleDateString('fr-CA',{day:'numeric',month:'short',year:'numeric'})}`}
-function relativeDayLabel(date){if(date===todayKey())return "Aujourd’hui";if(date===addDaysKey(todayKey(),-1))return "Hier";return localDate(date).toLocaleDateString('fr-CA',{weekday:'long',day:'numeric',month:'long'}).replace(/^./,c=>c.toUpperCase())}
+function relativeDayLabel(date){if(date===todayKey())return "Aujourd’hui";if(date===addDaysKey(todayKey(),-1))return "Hier";return localDate(date).toLocaleDateString('fr-CA',{weekday:'long'}).replace(/^./,c=>c.toUpperCase())}
 function isFavoriteMeal(m){const norm=x=>String(x||'').trim().toLowerCase();return db.favorites.some(f=>norm(f.description)===norm(m.description)&&norm(f.type)===norm(m.type))}
 function historyStats(meals){const avg=average(meals.map(m=>m.fatigueBefore)),fav=meals.filter(isFavoriteMeal).length,times=meals.map(m=>m.time).filter(Boolean).sort();return{count:meals.length,avg,fav,first:times[0]||null,last:times.at(-1)||null}}
 function dayMealCounts(meals){const main=meals.filter(m=>['Déjeuner','Dîner','Souper'].includes(m.type)).length,snacks=meals.filter(m=>m.type==='Collation').length,extras=Math.max(0,meals.length-main-snacks);return{main:Math.min(3,main),snacks,extras}}
