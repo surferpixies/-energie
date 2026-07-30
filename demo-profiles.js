@@ -18,6 +18,81 @@
       color:"fiber"
     }
   };
+
+  const referenceBrains = {
+    marie: {
+      story: {
+        strength: "Tu cuisines davantage et tes repas sans produits laitiers sont devenus plus fréquents au fil des derniers mois.",
+        habit: "Tu as progressivement remplacé plusieurs produits laitiers par des alternatives, surtout au déjeuner et dans tes collations.",
+        suggestion: "Continue cette transition encore quelques semaines et observe si la diminution récente des maux de tête se maintient."
+      },
+      feelings: {
+        negative: [
+          {id:"headache",group:"symptom",label:"Maux de tête",emoji:"🤕",count:27,trend:"down",summary:"Ils sont nettement moins fréquents durant les deux derniers mois.",occurrences:[]},
+          {id:"bloating",group:"symptom",label:"Ballonnements",emoji:"🫧",count:12,trend:"down",summary:"Ils apparaissent surtout après certains repas riches en produits laitiers.",occurrences:[]},
+          {id:"fatigue",group:"symptom",label:"Fatigue",emoji:"😴",count:18,trend:"stable",summary:"Elle reste plus fréquente après les quarts tardifs et les nuits courtes.",occurrences:[]}
+        ],
+        positive: [
+          {id:"feeling_good",group:"positive",label:"Je me sens bien",emoji:"😊",count:38,trend:"up",summary:"Ce ressenti apparaît plus souvent depuis la réduction des produits laitiers.",occurrences:[]},
+          {id:"energy",group:"positive",label:"Énergie",emoji:"⚡",count:24,trend:"up",summary:"Les mentions d’énergie positive augmentent durant les dernières semaines.",occurrences:[]}
+        ]
+      },
+      observations: [
+        {id:"marie-dairy-headache",icon:"🥛",title:"Produits laitiers et énergie plus faible",text:"Les journées contenant plusieurs produits laitiers sont plus souvent associées à une énergie plus faible et à des maux de tête dans ce journal.",statistic:"2.5",comparisonStatistic:"3.7",samples:{exposed:52,comparison:113,total:165},metrics:{strength:"strong"},confidence:{icon:"🌳",label:"Très forte tendance",cls:"high"},basis:"52 journées avec produits laitiers ont été comparées à 113 journées sans cette exposition. Les maux de tête apparaissent aussi plus souvent dans le premier groupe."},
+        {id:"marie-water-energy",icon:"💧",title:"Hydratation et meilleure énergie",text:"Les journées où l’hydratation atteint au moins six verres sont généralement accompagnées d’une meilleure énergie.",statistic:"3.8",comparisonStatistic:"2.9",samples:{exposed:74,comparison:91,total:165},metrics:{strength:"moderate"},confidence:{icon:"🌿",label:"Bonne tendance",cls:"medium"},basis:"L’énergie moyenne de 74 journées mieux hydratées a été comparée à celle de 91 journées moins hydratées."}
+      ],
+      insights: [
+        {icon:"📉",title:"Une amélioration récente se confirme",text:"Les maux de tête sont passés d’environ six par mois au début du journal à un ou deux durant chacun des deux derniers mois.",confidence:{label:"Élevée",cls:"high"},basis:"Comparaison des six périodes mensuelles du profil.",kind:"reference"},
+        {icon:"🏠",title:"Davantage de repas maison",text:"Les bols de riz, soupes, poissons et légumes remplacent progressivement plusieurs repas rapides du début.",confidence:{label:"Élevée",cls:"high"},basis:"Évolution des descriptions de repas sur 180 jours.",kind:"reference"}
+      ]
+    },
+    alex: {
+      story: {
+        strength: "Ton alimentation est variée et tes routines de sommeil, d’hydratation et d’activité demeurent très régulières.",
+        habit: "Les repas principaux contiennent presque toujours une source de protéines, des légumes et un féculent rassasiant.",
+        suggestion: "Continue simplement à documenter les changements inhabituels; aucune priorité particulière ne ressort actuellement."
+      },
+      feelings: {
+        negative: [],
+        positive: [
+          {id:"energy",group:"positive",label:"Énergie",emoji:"⚡",count:62,trend:"stable",summary:"L’énergie positive demeure régulière pendant toute la période.",occurrences:[]},
+          {id:"feeling_good",group:"positive",label:"Je me sens bien",emoji:"😊",count:54,trend:"stable",summary:"Ce ressenti est fréquent sans variation préoccupante.",occurrences:[]},
+          {id:"good_mood",group:"positive",label:"Bonne humeur",emoji:"😄",count:29,trend:"stable",summary:"Elle apparaît souvent les journées comprenant une activité physique.",occurrences:[]}
+        ]
+      },
+      observations: [],
+      insights: [
+        {icon:"⚖️",title:"Un profil remarquablement stable",text:"Aucun aliment ou contexte ne présente une association négative assez répétée pour devenir une tendance.",confidence:{label:"Élevée",cls:"high"},basis:"Analyse de 170 journées documentées.",kind:"reference"},
+        {icon:"🏃",title:"Activité et ressenti positif",text:"Les journées actives contiennent plus souvent une mention de bonne humeur ou d’énergie élevée.",confidence:{label:"Moyenne",cls:"medium"},basis:"Comparaison des journées avec et sans activité documentée.",kind:"reference"}
+      ]
+    },
+    sophie: {
+      story: {
+        strength: "Ton hydratation et la place des fibres se sont améliorées de façon régulière pendant les six derniers mois.",
+        habit: "Le gruau, les légumineuses, les fruits et les légumes sont devenus des choix habituels plutôt qu’occasionnels.",
+        suggestion: "Maintiens l’augmentation graduelle des fibres avec une bonne hydratation afin de préserver le confort observé récemment."
+      },
+      feelings: {
+        negative: [
+          {id:"bloating",group:"symptom",label:"Ballonnements",emoji:"🫧",count:31,trend:"down",summary:"Ils étaient fréquents au début, mais deviennent rares dans les dernières semaines.",occurrences:[]},
+          {id:"stomachache",group:"symptom",label:"Mal de ventre",emoji:"🤢",count:19,trend:"down",summary:"Les épisodes diminuent à mesure que l’hydratation et les fibres deviennent plus régulières.",occurrences:[]}
+        ],
+        positive: [
+          {id:"easy_digestion",group:"positive",label:"Digestion facile",emoji:"🌿",count:42,trend:"up",summary:"Cette mention est beaucoup plus fréquente durant les deux derniers mois.",occurrences:[]},
+          {id:"energy",group:"positive",label:"Énergie",emoji:"⚡",count:26,trend:"up",summary:"L’énergie positive augmente avec la nouvelle routine alimentaire.",occurrences:[]}
+        ]
+      },
+      observations: [
+        {id:"sophie-fiber-energy",icon:"🌾",title:"Fibres et meilleure énergie",text:"Les journées comprenant du gruau, des légumineuses ou plusieurs légumes sont associées à une meilleure énergie.",statistic:"3.9",comparisonStatistic:"2.7",samples:{exposed:88,comparison:81,total:169},metrics:{strength:"strong"},confidence:{icon:"🌳",label:"Très forte tendance",cls:"high"},basis:"88 journées riches en fibres ont été comparées à 81 journées où ces aliments apparaissent peu."},
+        {id:"sophie-water-digestion",icon:"💧",title:"Hydratation et confort digestif",text:"Une hydratation plus régulière accompagne la diminution des ballonnements et des maux de ventre.",statistic:"3.8",comparisonStatistic:"2.8",samples:{exposed:93,comparison:76,total:169},metrics:{strength:"moderate"},confidence:{icon:"🌿",label:"Bonne tendance",cls:"medium"},basis:"Les journées atteignant au moins six verres ont été comparées aux journées moins hydratées."}
+      ],
+      insights: [
+        {icon:"📉",title:"Les inconforts diminuent",text:"Les ballonnements et maux de ventre sont beaucoup moins fréquents durant les huit dernières semaines qu’au début du journal.",confidence:{label:"Élevée",cls:"high"},basis:"Comparaison du début et de la fin de la période de 180 jours.",kind:"reference"},
+        {icon:"🥣",title:"Une nouvelle routine est installée",text:"Le gruau, les fruits, les graines et les légumineuses apparaissent maintenant plusieurs fois par semaine.",confidence:{label:"Élevée",cls:"high"},basis:"Fréquence des aliments riches en fibres par période mensuelle.",kind:"reference"}
+      ]
+    }
+  };
+
   const rand = seed => { const x=Math.sin(seed*12.9898+78.233)*43758.5453; return x-Math.floor(x); };
   const keyFor = offset => { const d=new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate()+offset); return d.toLocaleDateString("en-CA"); };
   const meal = (profile,date,time,type,description,energy,tags=[],rating=3,notes="") => ({
@@ -85,5 +160,6 @@
     }
     return store;
   }
-  window.EnergieDemoProfiles=Object.freeze({profiles,create});
+  Object.keys(profiles).forEach(id=>profiles[id].brain=referenceBrains[id]);
+  window.EnergieDemoProfiles=Object.freeze({profiles,referenceBrains,create});
 })();
