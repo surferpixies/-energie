@@ -583,3 +583,47 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .header-actions{position:relative;z-index:2}
 .header-date-line{display:none}
 @media(max-width:430px){.brand-weather{font-size:.68rem;gap:4px}.brand-weather svg{width:.8rem;height:.8rem;flex-basis:.8rem}}
+
+/* Correctif mobile : la météo occupe la zone libre entre la marque et les actions. */
+@media (max-width: 430px){
+  .topbar{
+    display:grid;
+    grid-template-columns:auto minmax(38px,1fr) auto;
+    align-items:center;
+    column-gap:6px;
+  }
+  .header-brand-block,
+  .header-actions{
+    min-width:0;
+    position:relative;
+    z-index:2;
+  }
+  .brand-weather{
+    position:static;
+    left:auto;
+    top:auto;
+    transform:none;
+    justify-self:center;
+    align-self:center;
+    max-width:100%;
+    overflow:hidden;
+    font-size:.64rem;
+    gap:3px;
+    z-index:1;
+  }
+  .brand-weather svg{
+    width:.74rem;
+    height:.74rem;
+    flex-basis:.74rem;
+  }
+  .brand-weather .weather-temp{
+    white-space:nowrap;
+  }
+}
+
+@media (max-width: 370px){
+  .topbar{column-gap:4px}
+  .brand-title{gap:5px}
+  .brand-weather{font-size:.6rem;gap:2px}
+  .sync-badge{padding-left:7px;padding-right:7px;font-size:.66rem}
+}
