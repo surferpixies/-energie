@@ -574,4 +574,12 @@ body.demo-guide-open .bottom-nav{z-index:20}
 @media(max-width:380px){.journal-brain-card{grid-template-columns:50px minmax(0,1fr);padding:11px}.journal-brain-visual{width:48px}.journal-brain-message{font-size:.68rem}.journal-brain-progress{grid-template-columns:1fr}.journal-brain-progress small{white-space:normal}}
 @media(prefers-reduced-motion:reduce){.journal-brain-plant{animation:none}.journal-brain-progress em{transition:none}}
 
-.brand-weather{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;font-size:.9em}.header-brand-block{gap:0}.header-date-line{display:none}
+.topbar{position:relative}
+.brand-weather{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:.72rem;font-weight:850;white-space:nowrap;z-index:1}
+.brand-weather.weather-icon--header{width:auto;height:auto;margin:0;vertical-align:middle}
+.brand-weather svg{width:.86rem;height:.86rem;flex:0 0 .86rem}
+.brand-weather .weather-temp{display:inline-block;color:var(--text);line-height:1}
+.header-brand-block{gap:0;position:relative;z-index:2}
+.header-actions{position:relative;z-index:2}
+.header-date-line{display:none}
+@media(max-width:430px){.brand-weather{font-size:.68rem;gap:4px}.brand-weather svg{width:.8rem;height:.8rem;flex-basis:.8rem}}

@@ -341,14 +341,20 @@ function weatherTitleFromKind(kind){return({morning:"Beau temps ce matin",aftern
 function setLivingHeaderIcon(kind,title=weatherTitleFromKind(kind)){
   const svg=WEATHER_SVGS[kind]||WEATHER_SVGS.afternoon;
   const header=$("#livingHeaderIcon"),nav=$("#todayNavIcon");
-  for(const el of [header,nav])if(el){
-    if(el.dataset.weatherKind!==kind||!el.firstElementChild){
-      const temp=(window.lastWeatherTemp!=null)?`<span class="weather-temp">${Math.round(window.lastWeatherTemp)}°C</span>`:"";
-      el.innerHTML=svg+temp;
-    }
-    el.dataset.weatherKind=kind;
-    el.title=title;
-    el.setAttribute("aria-label",title);
+  if(header){
+    const temp=Number.isFinite(Number(window.lastWeatherTemp))
+      ? `<span class="weather-temp">${Math.round(Number(window.lastWeatherTemp))}°C</span>`
+      : "";
+    header.innerHTML=svg+temp;
+    header.dataset.weatherKind=kind;
+    header.title=title;
+    header.setAttribute("aria-label",temp?`${title}, ${Math.round(Number(window.lastWeatherTemp))} degrés Celsius`:title);
+  }
+  if(nav){
+    if(nav.dataset.weatherKind!==kind||!nav.firstElementChild)nav.innerHTML=svg;
+    nav.dataset.weatherKind=kind;
+    nav.title=title;
+    nav.setAttribute("aria-label",title);
   }
 }
 function readWeatherCache(){try{return JSON.parse(localStorage.getItem(WEATHER_CACHE_KEY)||"null")}catch(_){return null}}
@@ -360,25 +366,26 @@ async function fetchCurrentWeather(){
   if(!navigator.onLine)throw new Error("Hors ligne");
   const pos=await currentPosition();
   const latitude=pos.coords.latitude.toFixed(4),longitude=pos.coords.longitude.toFixed(4);
-  const url=`https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&current=weather_code&timezone=auto&forecast_days=1`;
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&current=weather_code,temperature_2m&timezone=auto&forecast_days=1`;
   const response=await fetch(url,{cache:"no-store"});
   if(!response.ok)throw new Error(`Météo ${response.status}`);
-  const data=await response.json(),code=Number(data?.current?.weather_code);
+  const data=await response.json(),code=Number(data?.current?.weather_code),temperature=Number(data?.current?.temperature_2m);
   if(!Number.isFinite(code))throw new Error("Code météo absent");
-  const value={code,savedAt:Date.now()};writeWeatherCache(value);return value;
+  const value={code,temperature:Number.isFinite(temperature)?temperature:null,savedAt:Date.now()};writeWeatherCache(value);return value;
 }
 async function updateLivingHeader(force=false){
   if(force)localStorage.removeItem(WEATHER_CACHE_KEY);
   const cached=readWeatherCache();
-  const initialKind=cached&&Date.now()-cached.savedAt<WEATHER_CACHE_MS&&Number.isFinite(Number(cached.code))
-    ? weatherKindFromCode(cached.code)
-    : fallbackWeatherKind();
+  const cacheIsFresh=cached&&Date.now()-cached.savedAt<WEATHER_CACHE_MS&&Number.isFinite(Number(cached.code));
+  const initialKind=cacheIsFresh?weatherKindFromCode(cached.code):fallbackWeatherKind();
+  window.lastWeatherTemp=cacheIsFresh&&Number.isFinite(Number(cached.temperature))?Number(cached.temperature):null;
   setLivingHeaderIcon(initialKind);
   if(weatherRefreshPromise&&!force)return weatherRefreshPromise;
   weatherRefreshPromise=(async()=>{
     try{
       const weather=await fetchCurrentWeather();
       const kind=weatherKindFromCode(weather.code);
+      window.lastWeatherTemp=Number.isFinite(Number(weather.temperature))?Number(weather.temperature):null;
       setLivingHeaderIcon(kind);
     }catch(error){
       console.info("Icône météo en mode horaire:",error?.message||error);
