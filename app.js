@@ -342,7 +342,13 @@ function setLivingHeaderIcon(kind,title=weatherTitleFromKind(kind)){
   const svg=WEATHER_SVGS[kind]||WEATHER_SVGS.afternoon;
   const header=$("#livingHeaderIcon"),nav=$("#todayNavIcon");
   if(header){
-    const temp=Number.isFinite(Number(window.lastWeatherTemp))
+    const hasTemperature =
+      window.lastWeatherTemp !== null &&
+      window.lastWeatherTemp !== undefined &&
+      window.lastWeatherTemp !== "" &&
+      Number.isFinite(Number(window.lastWeatherTemp));
+
+    const temp = hasTemperature
       ? `<span class="weather-temp">${Math.round(Number(window.lastWeatherTemp))}°C</span>`
       : "";
     header.innerHTML=svg+temp;
