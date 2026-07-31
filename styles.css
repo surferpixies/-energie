@@ -552,3 +552,24 @@ body.demo-guide-open .bottom-nav{z-index:20}
 }
 
 .seasonal-setting-card>p{margin-bottom:2px}@keyframes seasonalIconIn{from{opacity:0;transform:translateY(2px) scale(.82)}to{opacity:1;transform:translateY(0) scale(1)}}@media(prefers-reduced-motion:reduce){.seasonal-day-icon{animation:none}}
+
+/* Sprint WOW — carte quotidienne du Cerveau */
+.journal-brain-card{width:100%;display:grid;grid-template-columns:58px minmax(0,1fr);gap:11px;align-items:center;margin:0 0 10px;padding:12px 13px;text-align:left;color:var(--text);border-color:color-mix(in srgb,var(--accent) 20%,var(--border));background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 7%,var(--surface)),var(--surface));box-shadow:0 10px 24px rgba(35,66,43,.07);cursor:pointer;overflow:hidden}
+.journal-brain-visual{position:relative;width:54px;height:58px;display:grid;place-items:center;align-self:start}
+.journal-brain-icon{font-size:2.25rem;line-height:1;transform:translateY(8px);filter:drop-shadow(0 6px 9px rgba(24,60,39,.12))}
+.journal-brain-plant{position:absolute;z-index:2;top:-1px;left:50%;font-size:1.15rem;line-height:1;transform:translateX(-50%);transform-origin:bottom center;animation:journalBrainGrow .42s ease both}
+.journal-brain-copy{min-width:0;display:grid;gap:5px}
+.journal-brain-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.journal-brain-top>span{min-width:0;display:grid;gap:1px}
+.journal-brain-top small{color:var(--accent);font-size:.62rem;font-weight:900;letter-spacing:.055em;text-transform:uppercase}
+.journal-brain-top strong{font-size:.88rem;line-height:1.25;letter-spacing:-.012em}
+.journal-brain-top b{color:var(--muted);font-size:1.25rem;line-height:1;font-weight:500}
+.journal-brain-message{display:block;color:var(--muted);font-size:.72rem;line-height:1.38}
+.journal-brain-progress{display:grid;grid-template-columns:minmax(70px,1fr) auto;align-items:center;gap:8px;margin-top:1px}
+.journal-brain-progress i{height:5px;border-radius:999px;background:color-mix(in srgb,var(--border) 76%,var(--surface2));overflow:hidden}
+.journal-brain-progress em{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 58%,var(--accent2)));transition:width .45s ease}
+.journal-brain-progress small{color:var(--muted);font-size:.58rem;font-weight:800;white-space:nowrap}
+.journal-brain-card:active{transform:scale(.992)}
+@keyframes journalBrainGrow{from{opacity:0;transform:translateX(-50%) translateY(4px) scale(.78)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+@media(max-width:380px){.journal-brain-card{grid-template-columns:50px minmax(0,1fr);padding:11px}.journal-brain-visual{width:48px}.journal-brain-message{font-size:.68rem}.journal-brain-progress{grid-template-columns:1fr}.journal-brain-progress small{white-space:normal}}
+@media(prefers-reduced-motion:reduce){.journal-brain-plant{animation:none}.journal-brain-progress em{transition:none}}
