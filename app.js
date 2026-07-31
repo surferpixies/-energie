@@ -313,7 +313,7 @@ function showMealRecommendation(recommendation,date=todayKey()){
  recommendationTimer=setTimeout(close,9000);
 }
 
-const WEATHER_CACHE_KEY="energieRepasWeatherV178";
+const WEATHER_CACHE_KEY="energieRepasWeatherV179";
 const WEATHER_CACHE_MS=30*60*1000;
 let weatherRefreshPromise=null;
 
@@ -338,23 +338,21 @@ function weatherKindFromCode(code,date=new Date()){
   return h<12?"morning":"afternoon";
 }
 function weatherTitleFromKind(kind){return({morning:"Beau temps ce matin",afternoon:"Beau temps cet après-midi",cloud:"Temps nuageux",rain:"Pluie aujourd’hui",snow:"Neige aujourd’hui",night:"Soirée"})[kind]||"Ambiance du jour"}
+function normalizeWeatherTemperature(rawValue){
+  if(rawValue===null||rawValue===undefined||rawValue==="")return null;
+  const value=typeof rawValue==="number"?rawValue:Number(rawValue);
+  return Number.isFinite(value)?value:null;
+}
 function setLivingHeaderIcon(kind,title=weatherTitleFromKind(kind)){
   const svg=WEATHER_SVGS[kind]||WEATHER_SVGS.afternoon;
   const header=$("#livingHeaderIcon"),nav=$("#todayNavIcon");
   if(header){
-    const hasTemperature =
-      window.lastWeatherTemp !== null &&
-      window.lastWeatherTemp !== undefined &&
-      window.lastWeatherTemp !== "" &&
-      Number.isFinite(Number(window.lastWeatherTemp));
-
-    const temp = hasTemperature
-      ? `<span class="weather-temp">${Math.round(Number(window.lastWeatherTemp))}°C</span>`
-      : "";
+    const temperature=normalizeWeatherTemperature(window.lastWeatherTemp);
+    const temp=temperature===null?"":`<span class="weather-temp">${Math.round(temperature)}°C</span>`;
     header.innerHTML=svg+temp;
     header.dataset.weatherKind=kind;
     header.title=title;
-    header.setAttribute("aria-label",temp?`${title}, ${Math.round(Number(window.lastWeatherTemp))} degrés Celsius`:title);
+    header.setAttribute("aria-label",temperature===null?title:`${title}, ${Math.round(temperature)} degrés Celsius`);
   }
   if(nav){
     if(nav.dataset.weatherKind!==kind||!nav.firstElementChild)nav.innerHTML=svg;
@@ -375,23 +373,25 @@ async function fetchCurrentWeather(){
   const url=`https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&current=weather_code,temperature_2m&timezone=auto&forecast_days=1`;
   const response=await fetch(url,{cache:"no-store"});
   if(!response.ok)throw new Error(`Météo ${response.status}`);
-  const data=await response.json(),code=Number(data?.current?.weather_code),temperature=Number(data?.current?.temperature_2m);
+  const data=await response.json();
+  const code=Number(data?.current?.weather_code);
+  const temperature=normalizeWeatherTemperature(data?.current?.temperature_2m);
   if(!Number.isFinite(code))throw new Error("Code météo absent");
-  const value={code,temperature:Number.isFinite(temperature)?temperature:null,savedAt:Date.now()};writeWeatherCache(value);return value;
+  const value={code,temperature,savedAt:Date.now()};writeWeatherCache(value);return value;
 }
 async function updateLivingHeader(force=false){
   if(force)localStorage.removeItem(WEATHER_CACHE_KEY);
   const cached=readWeatherCache();
   const cacheIsFresh=cached&&Date.now()-cached.savedAt<WEATHER_CACHE_MS&&Number.isFinite(Number(cached.code));
   const initialKind=cacheIsFresh?weatherKindFromCode(cached.code):fallbackWeatherKind();
-  window.lastWeatherTemp=cacheIsFresh&&Number.isFinite(Number(cached.temperature))?Number(cached.temperature):null;
+  window.lastWeatherTemp=cacheIsFresh?normalizeWeatherTemperature(cached.temperature):null;
   setLivingHeaderIcon(initialKind);
   if(weatherRefreshPromise&&!force)return weatherRefreshPromise;
   weatherRefreshPromise=(async()=>{
     try{
       const weather=await fetchCurrentWeather();
       const kind=weatherKindFromCode(weather.code);
-      window.lastWeatherTemp=Number.isFinite(Number(weather.temperature))?Number(weather.temperature):null;
+      window.lastWeatherTemp=normalizeWeatherTemperature(weather.temperature);
       setLivingHeaderIcon(kind);
     }catch(error){
       console.info("Icône météo en mode horaire:",error?.message||error);
