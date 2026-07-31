@@ -342,7 +342,10 @@ function setLivingHeaderIcon(kind,title=weatherTitleFromKind(kind)){
   const svg=WEATHER_SVGS[kind]||WEATHER_SVGS.afternoon;
   const header=$("#livingHeaderIcon"),nav=$("#todayNavIcon");
   for(const el of [header,nav])if(el){
-    if(el.dataset.weatherKind!==kind||!el.firstElementChild)el.innerHTML=svg;
+    if(el.dataset.weatherKind!==kind||!el.firstElementChild){
+      const temp=(window.lastWeatherTemp!=null)?`<span class="weather-temp">${Math.round(window.lastWeatherTemp)}°C</span>`:"";
+      el.innerHTML=svg+temp;
+    }
     el.dataset.weatherKind=kind;
     el.title=title;
     el.setAttribute("aria-label",title);

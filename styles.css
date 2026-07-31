@@ -42,7 +42,7 @@ dialog{border:0;border-radius:28px;background:transparent;padding:0;width:min(94
 
 
 /* V1.7.4 — en-tête vivant selon le moment de la journée */
-.header-brand-block{display:flex;flex-direction:column;gap:2px}.header-date-line{display:flex;align-items:center;gap:8px}.brand-title{display:flex;align-items:center;gap:8px}.brand-icon{width:24px;height:24px;flex-shrink:0;display:block;object-fit:contain;margin-right:2px}.living-header-icon{display:inline-grid;place-items:center;line-height:1;font-size:1.12em;transform-origin:center;animation:livingIconArrival .35s ease both}.nav-item #todayNavIcon{transition:transform .2s ease}.nav-item.active #todayNavIcon{transform:translateY(-1px) scale(1.06)}@keyframes livingIconArrival{from{opacity:0;transform:translateY(3px) scale(.9)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.living-header-icon{animation:none}.nav-item #todayNavIcon{transition:none}}
+.header-brand-block{display:flex;flex-direction:column;gap:2px}.header-date-line{display:flex;align-items:center;gap:8px}.brand-title{display:flex;align-items:center;gap:8px;position:relative;width:100%}.brand-icon{width:36px;height:36px;flex-shrink:0;display:block;object-fit:contain;margin-right:2px}.living-header-icon{display:inline-grid;place-items:center;line-height:1;font-size:1.12em;transform-origin:center;animation:livingIconArrival .35s ease both}.nav-item #todayNavIcon{transition:transform .2s ease}.nav-item.active #todayNavIcon{transform:translateY(-1px) scale(1.06)}@keyframes livingIconArrival{from{opacity:0;transform:translateY(3px) scale(.9)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.living-header-icon{animation:none}.nav-item #todayNavIcon{transition:none}}
 
 
 /* V1.7.7 — icônes météo SVG uniques, stables et nuageuses */
@@ -574,4 +574,4 @@ body.demo-guide-open .bottom-nav{z-index:20}
 @media(max-width:380px){.journal-brain-card{grid-template-columns:50px minmax(0,1fr);padding:11px}.journal-brain-visual{width:48px}.journal-brain-message{font-size:.68rem}.journal-brain-progress{grid-template-columns:1fr}.journal-brain-progress small{white-space:normal}}
 @media(prefers-reduced-motion:reduce){.journal-brain-plant{animation:none}.journal-brain-progress em{transition:none}}
 
-.brand-weather{margin-left:auto;font-size:1.2em}.header-brand-block{gap:0}.header-date-line{display:none}
+.brand-weather{position:absolute;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;font-size:.9em}.header-brand-block{gap:0}.header-date-line{display:none}
