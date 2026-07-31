@@ -573,3 +573,5 @@ body.demo-guide-open .bottom-nav{z-index:20}
 @keyframes journalBrainGrow{from{opacity:0;transform:translateX(-50%) translateY(4px) scale(.78)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
 @media(max-width:380px){.journal-brain-card{grid-template-columns:50px minmax(0,1fr);padding:11px}.journal-brain-visual{width:48px}.journal-brain-message{font-size:.68rem}.journal-brain-progress{grid-template-columns:1fr}.journal-brain-progress small{white-space:normal}}
 @media(prefers-reduced-motion:reduce){.journal-brain-plant{animation:none}.journal-brain-progress em{transition:none}}
+
+.brand-weather{margin-left:auto;font-size:1.2em}.header-brand-block{gap:0}.header-date-line{display:none}
