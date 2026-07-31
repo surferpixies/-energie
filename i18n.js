@@ -636,6 +636,73 @@
     "Les états positifs enregistrés ici apparaîtront automatiquement ici.":"Les états positifs enregistrés ici apparaîtront automatiquement ici."
   });
 
+
+  // Audit de localisation — Brain, Tableau intelligent, tendances et suppléments.
+  Object.assign(en, {
+    'Cerveau':'Brain','Tendance':'Trend','Tendances':'Trends','Tendance forte':'Strong trend','Tendance modérée':'Moderate trend',
+    'Nouvelle observation mémorisée':'New insight saved','Nouvelle observation mémorisée dans le journal':'New insight saved in your journal',
+    'Valeurs approximatives':'Approximate values','Valeurs approximatives, calculées à partir des aliments reconnus.':'Approximate values calculated from recognized foods.',
+    'Les 7 derniers jours':'Last 7 days','Comparaison avec les 7 jours précédents.':'Compared with the previous 7 days.',
+    'Comparaison avec les 7 jours précédents. Ces variations montrent des associations dans ton journal, pas des liens de cause à effet.':'Compared with the previous 7 days. These changes show associations in your journal, not cause-and-effect relationships.',
+    'La semaine est plutôt stable par rapport aux 7 jours précédents.':'The week is fairly stable compared with the previous 7 days.',
+    'Les tendances se préciseront avec quelques jours de données.':'The trends will become clearer after a few more days of data.',
+    'Données à venir':'More data needed','Continue à remplir ton journal pour faire ressortir cette tendance.':'Keep filling in your journal to reveal this trend.',
+    'Stable':'Stable','À venir':'Coming soon','Repas complets':'Complete meals',
+    'Suppléments':'Supplements','Coche ce que tu as pris aujourd’hui. Les éléments restants restent décochés.':'Check what you took today. Items you did not take remain unchecked.',
+    'Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.':'Add the supplements you take and they will appear in your journal.',
+    'Aucun supplément ajouté pour le moment.':'No supplements added yet.','Ex. Vitamine D3':'e.g. Vitamin D3',
+    'Tableau intelligent':'Smart dashboard','Tableau':'Dashboard','Point fort':'Strength','Habitude observée':'Observed habit','Suggestion principale':'Main suggestion',
+    'Éléments signalés':'Reported items','Accompagnement professionnel':'Professional support','Préparer mes rendez-vous':'Prepare for my appointments',
+    'Prépare des sujets à apporter lors de tes rendez-vous.':'Prepare topics to bring up at your appointments.',
+    'Affiche dans le Tableau une section « À discuter avec votre professionnel »':'Shows a “Discuss with your healthcare professional” section in the Dashboard',
+    'Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.':'No data is shared automatically. You remain in control of your journal at all times.',
+    'À discuter avec votre professionnel':'Discuss with your healthcare professional',
+    'Voici des sujets possibles tirés uniquement de votre journal. Choisissez ceux qui vous semblent pertinents.':'Here are possible topics based only on your journal. Choose the ones that feel relevant to you.',
+    'Ces observations servent à préparer une conversation. Elles ne constituent ni un diagnostic ni une recommandation médicale.':'These observations are meant to help prepare a conversation. They are neither a diagnosis nor medical advice.',
+    'La place des fibres dans vos repas':'The role of fibre in your meals','Les aliments riches en fibres apparaissent peu souvent dans les repas documentés.':'High-fibre foods appear infrequently in the meals you logged.',
+    'Les protéines au déjeuner':'Protein at breakfast','Plusieurs déjeuners enregistrés ne mentionnent pas clairement une source de protéines.':'Several logged breakfasts do not clearly mention a source of protein.',
+    'L’énergie en après-midi':'Afternoon energy','Une énergie plus faible a été notée à quelques reprises durant l’après-midi.':'Lower energy was noted a few times during the afternoon.',
+    'La régularité des repas':'Meal regularity','Plusieurs journées ne contiennent pas les trois repas principaux dans le journal.':'Several days do not include all three main meals in the journal.',
+    'Vos priorités actuelles':'Your current priorities','Votre journal peut servir de point de départ pour préciser ce que vous souhaitez améliorer ou mieux comprendre.':'Your journal can be a starting point for clarifying what you would like to improve or understand better.',
+    'Fatigue':'Fatigue','Mal de tête':'Headache','Mal de ventre':'Stomach ache','Ballonnements':'Bloating','Nausées':'Nausea','Reflux':'Reflux','Gaz':'Gas',
+    'Contexte de cette journée':'Context for this day','Comparé à tes habitudes personnelles':'Compared with your personal habits','Repas précédents':'Previous meals',
+    'Aucun repas précédent enregistré cette journée.':'No previous meal was logged for this day.','Non noté':'Not logged','Non notée':'Not logged',
+    'Observation personnelle':'Personal insight','Observation nutritionnelle estimée':'Estimated nutrition insight','Pourquoi je vois ceci?':'Why am I seeing this?',
+    'Limites importantes':'Important limitations','Sources générales':'General sources','Cette carte repose uniquement sur tes données personnelles.':'This card is based only on your personal data.',
+    'Cette observation utilise les données disponibles dans l’application.':'This insight uses the data available in the app.',
+    'Cette observation est automatisée et informative. Elle ne constitue ni un diagnostic, ni une preuve de causalité, ni un remplacement d’un avis professionnel.':'This insight is automated and informational. It is not a diagnosis, proof of causation, or a substitute for professional advice.',
+    'Avec les données recueillies':'Based on the data collected','Je commence à voir certaines tendances dans ton journal.':'I am starting to see some patterns in your journal.',
+    'Chaque repas ajouté aidera Énergie à faire ressortir tes habitudes positives.':'Every meal you add will help Énergie highlight your positive habits.',
+    'Ajoute encore quelques repas pour qu’une habitude claire puisse se dégager.':'Add a few more meals so a clear habit can emerge.',
+    'Continue simplement à noter tes repas; une suggestion plus personnalisée apparaîtra avec le temps.':'Keep logging your meals; a more personalized suggestion will appear over time.',
+    'Estimation nutritionnelle':'Nutrition estimate','Protéines':'Protein','Glucides':'Carbohydrates','Lipides':'Fat','Fibres':'Fibre','Sucres':'Sugars','Sodium':'Sodium',
+    'Ambiance saisonnière':'Seasonal theme','Icônes saisonnières':'Seasonal icons','Affiche une petite icône près de la date dans le Journal':'Shows a small icon beside the date in the Journal',
+    'De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.':'Small decorations change based on the selected date, the seasons, and certain times of year.',
+    'Tu gardes le contrôle sur ce qui apparaît dans les observations.':'You control what appears in Insights.',
+    'Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.':'Shows available calories, protein, carbohydrates, fat, fibre, sugars, and sodium by default. Everything remains editable and approximate.',
+    'Revoir les limites et l’utilisation prévue de l’application':'Review the app’s limitations and intended use',
+    'Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.':'Choose whether and when the app reminds you to log how you feel after a meal.',
+    'Désactive ceci pour ne recevoir aucun rappel':'Turn this off to receive no reminders',
+    'Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.':'On the web, system reminders depend on browser permissions and may require the app to be open. Due check-ins always remain visible in the Journal.'
+  });
+  Object.assign(frFR, {
+    'Nouvelle observation mémorisée dans le journal':'Nouvelle observation enregistrée dans votre journal',
+    'Coche ce que tu as pris aujourd’hui. Les éléments restants restent décochés.':'Cochez ce que vous avez pris aujourd’hui. Les autres éléments restent décochés.',
+    'Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.':'Ajoutez ceux que vous prenez ; ils apparaîtront ensuite dans votre journal.',
+    'Continue à remplir ton journal pour faire ressortir cette tendance.':'Continuez à remplir votre journal pour faire ressortir cette tendance.',
+    'Comparaison avec les 7 jours précédents. Ces variations montrent des associations dans ton journal, pas des liens de cause à effet.':'Comparaison avec les 7 jours précédents. Ces variations montrent des associations dans votre journal, et non des liens de cause à effet.',
+    'Prépare des sujets à apporter lors de tes rendez-vous.':'Préparez des sujets à aborder lors de vos rendez-vous.',
+    'Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.':'Aucune donnée n’est partagée automatiquement. Vous gardez le contrôle de votre journal à tout moment.',
+    'Comparé à tes habitudes personnelles':'Comparé à vos habitudes personnelles',
+    'Cette carte repose uniquement sur tes données personnelles.':'Cette carte repose uniquement sur vos données personnelles.',
+    'Chaque repas ajouté aidera Énergie à faire ressortir tes habitudes positives.':'Chaque repas ajouté aidera Énergie à faire ressortir vos habitudes positives.',
+    'Ajoute encore quelques repas pour qu’une habitude claire puisse se dégager.':'Ajoutez encore quelques repas afin qu’une habitude claire puisse se dégager.',
+    'Continue simplement à noter tes repas; une suggestion plus personnalisée apparaîtra avec le temps.':'Continuez simplement à noter vos repas ; une suggestion plus personnalisée apparaîtra avec le temps.',
+    'Tu gardes le contrôle sur ce qui apparaît dans les observations.':'Vous gardez le contrôle sur ce qui apparaît dans les observations.',
+    'Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.':'Choisissez si et quand l’application vous rappelle de noter votre ressenti après un repas.',
+    'Désactive ceci pour ne recevoir aucun rappel':'Désactivez cette option pour ne recevoir aucun rappel'
+  });
+
   const dict=locale==='en'?en:locale==='fr-FR'?frFR:{};
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
@@ -701,7 +768,17 @@
         .replace(/^Avant tes repas « (.+) », ton énergie enregistrée est en moyenne de (.+)\/5\. Cela décrit ton historique sans expliquer la cause\.$/,(_,meal,val)=>`Before ${translateString(meal).toLowerCase()} meals, your logged energy averages ${val}/5. This describes your history without explaining the cause.`)
         .replace(/^Le type de repas le plus souvent enregistré est « (.+) »\. Cette information est descriptive seulement\.$/,(_,meal)=>`The most frequently logged meal type is “${translateString(meal)}”. This information is descriptive only.`)
         .replace(/^Ajouter (.+)$/,(_,x)=>`Add ${translateString(x)}`)
-        .replace(/^Modifier (.+)$/,(_,x)=>`Edit ${translateString(x)}`);
+        .replace(/^Modifier (.+)$/,(_,x)=>`Edit ${translateString(x)}`)
+        .replace(/^La semaine va dans une direction positive(?:, surtout pour (.+))?\.$/,(_,items)=>items?`The week is trending in a positive direction, especially for ${items}.`:'The week is trending in a positive direction.')
+        .replace(/^Quelques éléments sont en baisse(?:, notamment (.+))?\.$/,(_,items)=>items?`A few areas are down, including ${items}.`:'A few areas are down.')
+        .replace(/^Avec les données recueillies, (.+) apparaissent régulièrement dans tes repas\.$/,(_,x)=>`Based on the data collected, ${x} regularly appear in your meals.`)
+        .replace(/^Avec les données recueillies jusqu’à présent, (.+) sont moins souvent repérées dans tes descriptions de repas\.$/,(_,x)=>`Based on the data collected so far, ${x} appear less often in your meal descriptions.`)
+        .replace(/^Pour les prochains repas, tu pourrais simplement penser à intégrer davantage (.+), lorsque cela te convient\.$/,(_,x)=>`For upcoming meals, you could consider adding more ${x}, whenever that works for you.`)
+        .replace(/^Estimation par mots-clés dans (\d+) repas des 7 derniers jours\. Les quantités et valeurs nutritives ne sont pas connues\.$/,(_,n)=>`Keyword-based estimate from ${n} meals over the last 7 days. Quantities and nutrient values are unknown.`)
+        .replace(/^(\d+) fois$/,(_,n)=>`${n} time${n==='1'?'':'s'}`)
+        .replace(/^(\d+) non pris$/,(_,n)=>`${n} not taken`)
+        .replace(/^(\d+)\/(\d+) pris$/,(_,a,b)=>`${a}/${b} taken`)
+        .replace(/^Ressenti (\d+)\/5$/,(_,n)=>`Feeling ${n}/5`);
     } else if(locale==='fr-FR'){
       out=out.replace(/^Ton parcours$/,'Votre parcours')
         .replace(/^Observe tes habitudes sans jugement$/,'Observez vos habitudes')
