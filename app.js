@@ -1173,8 +1173,8 @@ function splashLocalePack(){
  return packs[locale]||packs["fr-CA"]
 }
 function initDailySplash(){
- const wrap=$("#splashDaily"),statusEl=$("#splashStatus"),labelEl=$("#splashTipLabel"),textEl=$("#splashTipText"),appHintLabelEl=$("#splashAppHintLabel"),appHintTextEl=$("#splashAppHintText");
- if(!wrap||!statusEl||!labelEl||!textEl||!appHintLabelEl||!appHintTextEl)return;
+ const wrap=$("#splashDaily"),statusEl=$("#splashStatus"),labelEl=$("#splashTipLabel"),textEl=$("#splashTipText"),appHintIconEl=$("#splashAppHintIcon"),appHintLabelEl=$("#splashAppHintLabel"),appHintTextEl=$("#splashAppHintText");
+ if(!wrap||!statusEl||!labelEl||!textEl||!appHintIconEl||!appHintLabelEl||!appHintTextEl)return;
  const pack=splashLocalePack(),days=Object.values(db.days||{}).filter(day=>day&&(day.meals?.length||day.sleepHours!=null||Number(day.water)>0||day.activities?.length)).length;
  statusEl.textContent=days===0?pack.status.empty:days===1?pack.status.one:days<14?pack.status.many(days):pack.status.growing(days);
  const seed=dateSeed(todayKey()),showFeatureTip=seed%3===0;
@@ -1185,9 +1185,11 @@ function initDailySplash(){
  let appHintIndex=randomValue%pack.appHints.length;
  if(pack.appHints.length>1&&appHintIndex===previousHint)appHintIndex=(appHintIndex+1+randomValue%(pack.appHints.length-1))%pack.appHints.length;
  sessionStorage.setItem("energieLastSplashAppHint",String(appHintIndex));
+ const appHintIcons=["🧠","⚙️","📝","📈","📊","😊","⭐","🧮","🧠","🗓️"];
+ appHintIconEl.textContent=appHintIcons[appHintIndex]||"✨";
  appHintLabelEl.textContent=pack.labels.appHint;appHintTextEl.textContent=pack.appHints[appHintIndex];wrap.hidden=false;
 }
-function dismissSplash(){const splash=$("#splashScreen");if(!splash)return;const reduced=matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;const readingTime=reduced?3800:4400;setTimeout(()=>{splash.classList.add("is-hidden");setTimeout(()=>splash.remove(),420)},readingTime)}
+function dismissSplash(){const splash=$("#splashScreen");if(!splash)return;const reduced=matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;const readingTime=reduced?4800:5400;setTimeout(()=>{splash.classList.add("is-hidden");setTimeout(()=>splash.remove(),420)},readingTime)}
 let dialogScrollY=0;function syncDialogScrollLock(){const open=!!document.querySelector('dialog[open]');if(open&&!document.body.classList.contains('dialog-open')){dialogScrollY=window.scrollY;document.body.style.top=`-${dialogScrollY}px`;document.body.classList.add('dialog-open')}else if(!open&&document.body.classList.contains('dialog-open')){document.body.classList.remove('dialog-open');document.body.style.top='';window.scrollTo(0,dialogScrollY)}}new MutationObserver(syncDialogScrollLock).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
 async function loadDemoAccess(){
   hasDemoAccess=false;

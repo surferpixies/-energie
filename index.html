@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.16.3">
+  <link rel="stylesheet" href="styles.css?v=3.16.4">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -25,7 +25,10 @@
           <p id="splashTipText"></p>
         </div>
         <div class="splash-app-hint">
-          <span id="splashAppHintLabel" class="splash-tip-label"></span>
+          <div class="splash-app-hint-heading">
+            <span id="splashAppHintIcon" class="splash-app-hint-icon" aria-hidden="true"></span>
+            <span id="splashAppHintLabel" class="splash-tip-label"></span>
+          </div>
           <p id="splashAppHintText"></p>
         </div>
       </div>
@@ -326,6 +329,6 @@
   <script src="brain/index.js?v=3.12.0"></script>
   <script src="observation-engine.js?v=3.8.0"></script>
   <script src="demo-profiles.js?v=3.15.0"></script>
-  <script src="app.js?v=3.16.4"></script>
+  <script src="app.js?v=3.16.5"></script>
 </body>
 </html>
