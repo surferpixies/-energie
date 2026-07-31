@@ -1178,7 +1178,7 @@ function initDailySplash(){
  const pool=showFeatureTip?pack.tips:pack.facts,index=Math.floor(seed/3)%pool.length;
  labelEl.textContent=showFeatureTip?pack.labels.tip:pack.labels.fact;textEl.textContent=pool[index];wrap.hidden=false;
 }
-function dismissSplash(){const splash=$("#splashScreen");if(!splash)return;const reduced=matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;setTimeout(()=>{splash.classList.add("is-hidden");setTimeout(()=>splash.remove(),420)},reduced?900:2100)}
+function dismissSplash(){const splash=$("#splashScreen");if(!splash)return;const reduced=matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;const readingTime=reduced?2800:3400;setTimeout(()=>{splash.classList.add("is-hidden");setTimeout(()=>splash.remove(),420)},readingTime)}
 let dialogScrollY=0;function syncDialogScrollLock(){const open=!!document.querySelector('dialog[open]');if(open&&!document.body.classList.contains('dialog-open')){dialogScrollY=window.scrollY;document.body.style.top=`-${dialogScrollY}px`;document.body.classList.add('dialog-open')}else if(!open&&document.body.classList.contains('dialog-open')){document.body.classList.remove('dialog-open');document.body.style.top='';window.scrollTo(0,dialogScrollY)}}new MutationObserver(syncDialogScrollLock).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
 async function loadDemoAccess(){
   hasDemoAccess=false;
