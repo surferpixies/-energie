@@ -703,6 +703,77 @@
     'Désactive ceci pour ne recevoir aucun rappel':'Désactivez cette option pour ne recevoir aucun rappel'
   });
 
+
+
+  // Audit complet ciblé — Cerveau, bandeau du Journal et estimation nutritionnelle.
+  Object.assign(en, {
+    'Le cerveau apprend':'The brain is learning',
+    'Chaque journée nourrit ton arbre':'Every day helps your tree grow',
+    'Continue simplement à noter tes repas et ton ressenti. Je compare progressivement les journées qui se ressemblent.':'Keep logging your meals and how you feel. I gradually compare similar days.',
+    'Le cerveau en prend note et vérifiera si cette situation se répète avant de te présenter une tendance.':'The brain is taking note and will check whether this happens again before showing you a pattern.',
+    'Le cerveau commence avec toi':'The brain starts with you',
+    'Le cerveau reste prudent':'The brain remains cautious',
+    'Je préfère attendre suffisamment de données plutôt que de te montrer une conclusion fragile.':'I prefer to wait for enough data rather than show you a weak conclusion.',
+    'Le cerveau d’Énergie':'Énergie’s brain',
+    'Analyse avancée':'Advanced analysis',
+    'La croissance continue avec chaque nouvelle journée.':'Growth continues with each new day.',
+    'Observations alimentaires':'Food insights',
+    'Ce que tes repas semblent révéler':'What your meals may be revealing',
+    'Ces observations comparent uniquement les journées de ton propre historique. Elles décrivent des associations possibles, ne prouvent aucune cause et ne constituent jamais un diagnostic.':'These insights compare only days from your own history. They describe possible associations, do not prove causation, and are never a diagnosis.',
+    'Date inconnue':'Unknown date','Aujourd’hui':'Today','Hier':'Yesterday',
+    'Je découvre':'Discovering','Je sais':'Well known','Je pense':'Likely','J’apprends':'Learning',
+    'Toujours':'Always','Souvent':'Often','Parfois':'Sometimes','Rare':'Rarely',
+    'Je reconnais ce repas, mais j’ai encore besoin de détails pour apprendre ses ingrédients habituels.':'I recognize this meal, but I still need more detail to learn its usual ingredients.',
+    'Pourquoi le Cerveau pense cela?':'Why does the Brain think this?',
+    'Observations personnalisées':'Personalized insights',
+    'Le moteur compare ton propre historique avec prudence.':'The engine carefully compares your own history.',
+    'Le Cerveau rassemble encore des preuves':'The Brain is still gathering evidence',
+    'Il faut plusieurs journées comparables dans chaque groupe avant qu’une association apparaisse. Aucune conclusion ne sera forcée.':'Several comparable days are needed in each group before an association appears. No conclusion will be forced.',
+    'Ces observations décrivent des associations dans ton propre journal. Elles ne prouvent aucune cause et ne remplacent jamais un avis médical.':'These insights describe associations in your own journal. They do not prove causation and never replace medical advice.',
+    'Ce que le Cerveau connaît de toi':'What the Brain knows about you',
+    'Ta mémoire alimentaire personnelle':'Your personal food memory',
+    'Le Cerveau connaît maintenant assez bien plusieurs de tes habitudes alimentaires.':'The Brain now knows several of your eating habits quite well.',
+    'Le Cerveau commence à relier tes différentes façons de nommer et de composer tes repas.':'The Brain is starting to connect the different ways you name and build your meals.',
+    'Chaque repas ajouté aide le Cerveau à mieux comprendre tes habitudes.':'Every meal you add helps the Brain better understand your habits.',
+    'Connaissance de tes habitudes':'Knowledge of your habits',
+    'Cette jauge augmente avec la répétition, la variété et la précision des repas appris.':'This gauge increases with repetition, variety, and the detail of learned meals.',
+    'repas appris':'learned meals','utilisations':'uses','bien connus':'well known',
+    'Le Cerveau commence tout juste':'The Brain is just getting started',
+    'Ajoute naturellement tes repas. Après quelques répétitions, tes recettes et habitudes apparaîtront ici.':'Log your meals naturally. After a few repetitions, your recipes and habits will appear here.',
+    'Repas appris':'Learned meals','Les recettes que le Cerveau reconnaît déjà.':'Recipes the Brain already recognizes.',
+    'Aliments fréquents':'Frequent foods','Observés dans tes recettes apprises.':'Seen in your learned recipes.',
+    'J’ai besoin de descriptions un peu plus détaillées pour identifier tes aliments fréquents.':'I need slightly more detailed descriptions to identify your frequent foods.',
+    'En apprentissage':'Still learning',
+    'Les repas affichés ici ont maintenant une base suffisamment solide pour être reconnus avec confiance.':'The meals shown here now have a strong enough foundation to be recognized confidently.',
+    'Chronologie':'Timeline',
+    'Estimation nutritionnelle de la journée':'Daily nutrition estimate',
+    'Estimation nutritionnelle':'Nutrition estimate',
+    'Valeurs approximatives, calculées à partir des aliments reconnus.':'Approximate values calculated from recognized foods.',
+    'Protéines':'Protein','Glucides':'Carbohydrates','Lipides':'Fat','Fibres':'Fibre','Sucres':'Sugars','Sodium':'Sodium'
+  });
+  Object.assign(frFR, {
+    'Le cerveau apprend':'Le cerveau apprend',
+    'Chaque journée nourrit ton arbre':'Chaque journée nourrit votre arbre',
+    'Continue simplement à noter tes repas et ton ressenti. Je compare progressivement les journées qui se ressemblent.':'Continuez simplement à noter vos repas et votre ressenti. Je compare progressivement les journées qui se ressemblent.',
+    'Le cerveau en prend note et vérifiera si cette situation se répète avant de te présenter une tendance.':'Le cerveau en prend note et vérifiera si cette situation se répète avant de vous présenter une tendance.',
+    'Ce que le Cerveau connaît de toi':'Ce que le Cerveau connaît de vous',
+    'Ta mémoire alimentaire personnelle':'Votre mémoire alimentaire personnelle',
+    'Le Cerveau connaît maintenant assez bien plusieurs de tes habitudes alimentaires.':'Le Cerveau connaît maintenant assez bien plusieurs de vos habitudes alimentaires.',
+    'Le Cerveau commence à relier tes différentes façons de nommer et de composer tes repas.':'Le Cerveau commence à relier vos différentes façons de nommer et de composer vos repas.',
+    'Chaque repas ajouté aide le Cerveau à mieux comprendre tes habitudes.':'Chaque repas ajouté aide le Cerveau à mieux comprendre vos habitudes.',
+    'Connaissance de tes habitudes':'Connaissance de vos habitudes',
+    'Cette jauge augmente avec la répétition, la variété et la précision des repas appris.':'Cette jauge augmente avec la répétition, la variété et la précision des repas appris.',
+    'Ajoute naturellement tes repas. Après quelques répétitions, tes recettes et habitudes apparaîtront ici.':'Ajoutez naturellement vos repas. Après quelques répétitions, vos recettes et habitudes apparaîtront ici.',
+    'Les recettes que le Cerveau reconnaît déjà.':'Les recettes que le Cerveau reconnaît déjà.',
+    'Observés dans tes recettes apprises.':'Observés dans vos recettes apprises.',
+    'J’ai besoin de descriptions un peu plus détaillées pour identifier tes aliments fréquents.':'J’ai besoin de descriptions un peu plus détaillées pour identifier vos aliments fréquents.',
+    'Pourquoi le Cerveau pense cela?':'Pourquoi le Cerveau pense-t-il cela ?',
+    'Le moteur compare ton propre historique avec prudence.':'Le moteur compare votre propre historique avec prudence.',
+    'Ces observations décrivent des associations dans ton propre journal. Elles ne prouvent aucune cause et ne remplacent jamais un avis médical.':'Ces observations décrivent des associations dans votre propre journal. Elles ne prouvent aucune cause et ne remplacent jamais un avis médical.',
+    'Ce que tes repas semblent révéler':'Ce que vos repas semblent révéler',
+    'Ces observations comparent uniquement les journées de ton propre historique. Elles décrivent des associations possibles, ne prouvent aucune cause et ne constituent jamais un diagnostic.':'Ces observations comparent uniquement les journées de votre propre historique. Elles décrivent des associations possibles, ne prouvent aucun lien de causalité et ne constituent jamais un diagnostic.'
+  });
+
   const dict=locale==='en'?en:locale==='fr-FR'?frFR:{};
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
@@ -769,6 +840,18 @@
         .replace(/^Le type de repas le plus souvent enregistré est « (.+) »\. Cette information est descriptive seulement\.$/,(_,meal)=>`The most frequently logged meal type is “${translateString(meal)}”. This information is descriptive only.`)
         .replace(/^Ajouter (.+)$/,(_,x)=>`Add ${translateString(x)}`)
         .replace(/^Modifier (.+)$/,(_,x)=>`Edit ${translateString(x)}`)
+        .replace(/^Hier, tu as noté (.+) après (.+)$/i,(_,feeling,meal)=>`Yesterday, you logged ${translateString(feeling)} after ${translateString(meal)}.`)
+        .replace(/^Hier, tu as noté « (.+) » après (.+)$/i,(_,feeling,meal)=>`Yesterday, you logged “${translateString(feeling)}” after ${translateString(meal)}.`)
+        .replace(/^Il y a (\d+) jours$/,(_,n)=>`${n} days ago`)
+        .replace(/^Utilisé (\d+) fois · (.+)$/,(_,n,date)=>`Used ${n} time${n==='1'?'':'s'} · ${translateString(date)}`)
+        .replace(/^Confiance (\d+) %$/,(_,n)=>`Confidence ${n}%`)
+        .replace(/^Associations détectées dans (\d+) journées récentes\.$/,(_,n)=>`Associations detected across ${n} recent days.`)
+        .replace(/^(\d+) autres repas continuent d’être appris en arrière-plan\.$/,(_,n)=>`${n} other meals are still being learned in the background.`)
+        .replace(/^(\d+) apparition(?:s)?$/,(_,n)=>`${n} occurrence${n==='1'?'':'s'}`)
+        .replace(/^Je suis encore en train de préciser (\d+) repas appris\. Quelques nouvelles utilisations m’aideront à distinguer ce qui est toujours présent de ce qui varie\.$/,(_,n)=>`I am still refining ${n} learned meals. A few more uses will help me distinguish what is always present from what varies.`)
+        .replace(/^Le Cerveau a commencé à apprendre (.+)\.$/,(_,meal)=>`The Brain started learning ${meal}.`)
+        .replace(/^(\d+) journée(?:s)? analysée(?:s)?$/,(_,n)=>`${n} analyzed day${n==='1'?'':'s'}`)
+        .replace(/^(\d+) restante(?:s)?$/,(_,n)=>`${n} remaining`)
         .replace(/^La semaine va dans une direction positive(?:, surtout pour (.+))?\.$/,(_,items)=>items?`The week is trending in a positive direction, especially for ${items}.`:'The week is trending in a positive direction.')
         .replace(/^Quelques éléments sont en baisse(?:, notamment (.+))?\.$/,(_,items)=>items?`A few areas are down, including ${items}.`:'A few areas are down.')
         .replace(/^Avec les données recueillies, (.+) apparaissent régulièrement dans tes repas\.$/,(_,x)=>`Based on the data collected, ${x} regularly appear in your meals.`)
