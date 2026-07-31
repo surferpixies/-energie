@@ -1145,7 +1145,40 @@ function exportData(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'app
 $("#importFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{db=migrate(JSON.parse(await f.text()));saveLocal('import');if(session&&confirm('Importer aussi cette copie dans Supabase?'))await seedCloudFromLocal();render()}catch(_){alert('Ce fichier JSON ne peut pas être importé.')}};
 $("#themeToggle").onclick=()=>{db.settings.theme=db.settings.theme==='dark'?'system':'dark';saveLocal('theme');render()};$$('.nav-item').forEach(b=>b.onclick=()=>{const was=currentView;currentView=b.dataset.view;if(currentView==='today'&&was!=='today')selectedDate=todayKey();render()});
 window.addEventListener('online',()=>{updateSyncBadge();if(session)syncNow()});window.addEventListener('offline',updateSyncBadge);
-function dismissSplash(){const splash=$('#splashScreen');if(!splash)return;setTimeout(()=>{splash.classList.add('is-hidden');setTimeout(()=>splash.remove(),420)},760)}
+function splashLocalePack(){
+ const locale=window.ENERGIE_LOCALE||"fr-CA";
+ const packs={
+  "fr-CA":{
+   status:{empty:"Le Cerveau est prêt à apprendre avec ton journal.",one:"1 journée est maintenant enregistrée.",many:n=>`${n} journées alimentent maintenant tes observations.`,growing:n=>`Ton historique de ${n} journées rend les tendances plus précises.`},
+   labels:{fact:"Saviez-vous que…",tip:"Astuce Énergie"},
+   facts:["Les fibres et les protéines contribuent souvent à une satiété plus durable.","Une hydratation régulière peut soutenir l’énergie au fil de la journée.","La régularité du sommeil compte souvent autant que sa durée.","Une courte marche après un repas peut aider certaines personnes à se sentir plus alertes.","Les besoins en énergie varient selon le sommeil, l’activité et plusieurs autres facteurs."],
+   tips:["Ajoute un repas aux Favoris pour le réutiliser en quelques secondes.","Le Cerveau recherche des habitudes sur plusieurs journées, jamais sur une seule entrée.","Tu peux noter un ressenti après un repas pour enrichir les observations.","Le Tableau intelligent résume rapidement les sept derniers jours.","Une description précise des aliments améliore les estimations et les observations.","Balaye l’écran horizontalement pour passer rapidement d’une section à l’autre."]
+  },
+  "fr-FR":{
+   status:{empty:"Le Cerveau est prêt à apprendre avec votre journal.",one:"1 journée est maintenant enregistrée.",many:n=>`${n} journées alimentent maintenant vos observations.`,growing:n=>`Votre historique de ${n} journées rend les tendances plus précises.`},
+   labels:{fact:"Le saviez-vous ?",tip:"Astuce Énergie"},
+   facts:["Les fibres et les protéines contribuent souvent à une satiété plus durable.","Une hydratation régulière peut soutenir l’énergie au fil de la journée.","La régularité du sommeil compte souvent autant que sa durée.","Une courte marche après un repas peut aider certaines personnes à se sentir plus alerte.","Les besoins en énergie varient selon le sommeil, l’activité et plusieurs autres facteurs."],
+   tips:["Ajoutez un repas aux Favoris pour le réutiliser en quelques secondes.","Le Cerveau recherche des habitudes sur plusieurs journées, jamais sur une seule entrée.","Vous pouvez noter un ressenti après un repas pour enrichir les observations.","Le Tableau intelligent résume rapidement les sept derniers jours.","Une description précise des aliments améliore les estimations et les observations.","Balayez l’écran horizontalement pour passer rapidement d’une section à l’autre."]
+  },
+  en:{
+   status:{empty:"The Brain is ready to learn from your journal.",one:"1 day is now recorded in your journal.",many:n=>`${n} days now contribute to your observations.`,growing:n=>`Your ${n}-day history is making patterns more precise.`},
+   labels:{fact:"Did you know?",tip:"Energy tip"},
+   facts:["Fiber and protein often contribute to longer-lasting fullness.","Regular hydration can support energy throughout the day.","A consistent sleep schedule can matter as much as sleep duration.","A short walk after a meal may help some people feel more alert.","Energy needs vary with sleep, activity, and many other factors."],
+   tips:["Save a meal as a Favorite to reuse it in seconds.","The Brain looks for patterns across several days, never from a single entry.","Log how you feel after a meal to enrich your observations.","The Smart Dashboard summarizes your last seven days at a glance.","Detailed food descriptions improve estimates and observations.","Swipe horizontally to move quickly between app sections."]
+  }
+ };
+ return packs[locale]||packs["fr-CA"]
+}
+function initDailySplash(){
+ const wrap=$("#splashDaily"),statusEl=$("#splashStatus"),labelEl=$("#splashTipLabel"),textEl=$("#splashTipText");
+ if(!wrap||!statusEl||!labelEl||!textEl)return;
+ const pack=splashLocalePack(),days=Object.values(db.days||{}).filter(day=>day&&(day.meals?.length||day.sleepHours!=null||Number(day.water)>0||day.activities?.length)).length;
+ statusEl.textContent=days===0?pack.status.empty:days===1?pack.status.one:days<14?pack.status.many(days):pack.status.growing(days);
+ const seed=dateSeed(todayKey()),showFeatureTip=seed%3===0;
+ const pool=showFeatureTip?pack.tips:pack.facts,index=Math.floor(seed/3)%pool.length;
+ labelEl.textContent=showFeatureTip?pack.labels.tip:pack.labels.fact;textEl.textContent=pool[index];wrap.hidden=false;
+}
+function dismissSplash(){const splash=$("#splashScreen");if(!splash)return;const reduced=matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;setTimeout(()=>{splash.classList.add("is-hidden");setTimeout(()=>splash.remove(),420)},reduced?900:2100)}
 let dialogScrollY=0;function syncDialogScrollLock(){const open=!!document.querySelector('dialog[open]');if(open&&!document.body.classList.contains('dialog-open')){dialogScrollY=window.scrollY;document.body.style.top=`-${dialogScrollY}px`;document.body.classList.add('dialog-open')}else if(!open&&document.body.classList.contains('dialog-open')){document.body.classList.remove('dialog-open');document.body.style.top='';window.scrollTo(0,dialogScrollY)}}new MutationObserver(syncDialogScrollLock).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
 async function loadDemoAccess(){
   hasDemoAccess=false;
@@ -1178,6 +1211,7 @@ if("serviceWorker" in navigator){
   });
 }
 
+initDailySplash();
 dismissSplash();
 initAuth();
 scheduleFeelingChecks();
