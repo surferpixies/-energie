@@ -643,3 +643,16 @@ body.demo-guide-open .bottom-nav{z-index:20}
   .brand-weather{font-size:.6rem;gap:2px}
   .sync-badge{padding-left:7px;padding-right:7px;font-size:.66rem}
 }
+
+/* Journal : hiérarchie et cartes compactes */
+.daily-macros-title{display:inline-flex;align-items:center;gap:7px;min-width:0}
+.daily-macros-title>b{font-size:.92rem;line-height:1;flex:0 0 auto}
+.daily-macros-title>span{font-size:.7rem;font-weight:850;letter-spacing:.045em;text-transform:uppercase;color:var(--muted)}
+.hydration-card{padding:11px 13px;margin-bottom:12px}
+.hydration-card .row{gap:9px}
+.hydration-card .hydration-heading{display:flex;align-items:center;gap:7px}
+.hydration-card .hydration-heading>span{display:inline-flex;align-items:center;gap:4px;font-size:.98rem}
+.hydration-card .hydration-heading h3{margin:0;font-size:.9rem}
+.hydration-card .water-row{margin:7px 0 0;gap:3px}
+.hydration-card .drop{font-size:1.35rem;min-width:34px;min-height:38px;border-radius:13px}
+@media(max-width:520px){.hydration-card{padding:10px 11px}.hydration-card .drop{min-width:32px;min-height:36px}}
