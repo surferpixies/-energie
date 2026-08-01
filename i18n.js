@@ -82,6 +82,51 @@
     'Bonne concentration':'Good focus','Digestion facile':'Easy digestion','Je me sens bien':'I feel good',
     'Langue':'Language','Langue de l’application':'App language','Français (Canada)':'French (Canada)','Français (France)':'French (France)','English':'English'
   };
+  Object.assign(frFR,{
+    'Ressentis positifs':'Ressentis positifs','Digestion':'Digestion','Énergie et état général':'Énergie et état général',
+    'Tête et sens':'Tête et sens','Réactions cutanées et respiratoires':'Réactions cutanées et respiratoires',
+    'Humeur et envies':'Humeur et envies','Autres signes physiques':'Autres signes physiques',
+    'Énergie stable':'Énergie stable','Plus énergique':'Plus énergique','Rassasié':'Rassasié',
+    'Digestion confortable':'Digestion confortable','Léger après le repas':'Léger après le repas','Calme ou détendu':'Calme ou détendu',
+    'Douleur abdominale':'Douleur abdominale','Crampes abdominales':'Crampes abdominales',
+    'Reflux ou brûlures d’estomac':'Reflux ou brûlures d’estomac','Vomissements':'Vomissements','Diarrhée':'Diarrhée',
+    'Constipation':'Constipation','Selles urgentes':'Selles urgentes','Sensation de lourdeur':'Sensation de lourdeur',
+    'Digestion lente':'Digestion lente','Faim rapidement après le repas':'Faim rapidement après le repas',
+    'Perte d’appétit':'Perte d’appétit','Somnolence':'Somnolence','Baisse d’énergie':'Baisse d’énergie',
+    'Faiblesse':'Faiblesse','Tremblements':'Tremblements','Brouillard mental':'Brouillard mental',
+    'Difficulté à se concentrer':'Difficulté à se concentrer','Migraine':'Migraine',
+    'Sensibilité à la lumière':'Sensibilité à la lumière','Sensibilité au bruit':'Sensibilité au bruit',
+    'Sensibilité aux odeurs':'Sensibilité aux odeurs','Vision trouble':'Vision trouble',
+    'Démangeaisons':'Démangeaisons','Rougeurs':'Rougeurs','Urticaire':'Urticaire','Gonflement':'Gonflement',
+    'Nez congestionné':'Nez bouché','Éternuements':'Éternuements','Gorge irritée':'Gorge irritée',
+    'Irritabilité':'Irritabilité','Stress':'Stress','Anxiété':'Anxiété','Humeur basse':'Humeur maussade',
+    'Envie intense de sucre':'Forte envie de sucre','Fringale':'Fringale','Palpitations':'Palpitations',
+    'Bouffées de chaleur':'Bouffées de chaleur','Frissons':'Frissons','Soif inhabituelle':'Soif inhabituelle',
+    'Envie fréquente d’uriner':'Envie fréquente d’uriner','Douleur musculaire':'Douleur musculaire'
+  });
+  Object.assign(en,{
+    'Ressentis positifs':'Positive feelings','Digestion':'Digestion','Énergie et état général':'Energy and general wellbeing',
+    'Tête et sens':'Head and senses','Réactions cutanées et respiratoires':'Skin and respiratory reactions',
+    'Humeur et envies':'Mood and cravings','Autres signes physiques':'Other physical signs',
+    'Énergie stable':'Steady energy','Plus énergique':'More energetic','Rassasié':'Satisfied',
+    'Digestion confortable':'Comfortable digestion','Léger après le repas':'Light after the meal',
+    'Calme ou détendu':'Calm or relaxed','Douleur abdominale':'Abdominal pain','Crampes abdominales':'Abdominal cramps',
+    'Reflux ou brûlures d’estomac':'Reflux or heartburn','Vomissements':'Vomiting','Diarrhée':'Diarrhea',
+    'Constipation':'Constipation','Selles urgentes':'Urgent bowel movement','Sensation de lourdeur':'Feeling of heaviness',
+    'Digestion lente':'Slow digestion','Faim rapidement après le repas':'Hungry soon after the meal',
+    'Perte d’appétit':'Loss of appetite','Somnolence':'Sleepiness','Baisse d’énergie':'Energy drop',
+    'Faiblesse':'Weakness','Tremblements':'Shakiness','Brouillard mental':'Brain fog',
+    'Difficulté à se concentrer':'Difficulty concentrating','Migraine':'Migraine',
+    'Sensibilité à la lumière':'Light sensitivity','Sensibilité au bruit':'Sound sensitivity',
+    'Sensibilité aux odeurs':'Smell sensitivity','Vision trouble':'Blurred vision',
+    'Démangeaisons':'Itching','Rougeurs':'Redness','Urticaire':'Hives','Gonflement':'Swelling',
+    'Nez congestionné':'Nasal congestion','Éternuements':'Sneezing','Gorge irritée':'Throat irritation',
+    'Irritabilité':'Irritability','Stress':'Stress','Anxiété':'Anxiety','Humeur basse':'Low mood',
+    'Envie intense de sucre':'Strong sugar craving','Fringale':'Craving','Palpitations':'Palpitations',
+    'Bouffées de chaleur':'Hot flashes','Frissons':'Chills','Soif inhabituelle':'Unusual thirst',
+    'Envie fréquente d’uriner':'Frequent urination','Douleur musculaire':'Muscle pain'
+  });
+
 
   Object.assign(frFR, {
     'Changer le thème':'Changer le thème','Fermer':'Fermer','Aperçu':'Aperçu','Repos':'Repos','Mouvement':'Mouvement',

@@ -756,8 +756,78 @@ function changeJournalDay(offset){const nextDate=addDaysKey(selectedDate,offset)
 function bindJournalSwipe(){const target=$(".journal-date-nav");if(!target)return;let startX=0,startY=0;target.addEventListener('touchstart',e=>{const t=e.changedTouches[0];startX=t.clientX;startY=t.clientY},{passive:true});target.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-startX,dy=t.clientY-startY;if(Math.abs(dx)>65&&Math.abs(dx)>Math.abs(dy)*1.4)changeJournalDay(dx>0?-1:1)},{passive:true})}
 const VIEW_SWIPE_ORDER=["today","history","insights","brain","profile"];
 function bindViewSwipe(){const target=$("#app");if(!target||target.dataset.viewSwipeBound==="1")return;target.dataset.viewSwipeBound="1";let startX=0,startY=0,startTarget=null;target.addEventListener('touchstart',e=>{if(e.touches.length!==1)return;const touch=e.touches[0];startX=touch.clientX;startY=touch.clientY;startTarget=e.target},{passive:true});target.addEventListener('touchend',e=>{if(!startTarget||document.querySelector('dialog[open]'))return;const touch=e.changedTouches[0],dx=touch.clientX-startX,dy=touch.clientY-startY;const isHorizontal=Math.abs(dx)>=75&&Math.abs(dx)>Math.abs(dy)*1.45;if(!isHorizontal)return;if(startTarget.closest('input,textarea,select,[contenteditable="true"],.journal-date-nav,.horizontal-scroll,.chart-scroll'))return;const index=VIEW_SWIPE_ORDER.indexOf(currentView);if(index<0)return;const nextIndex=dx<0?index+1:index-1;if(nextIndex<0||nextIndex>=VIEW_SWIPE_ORDER.length)return;const was=currentView;currentView=VIEW_SWIPE_ORDER[nextIndex];if(currentView==="today"&&was!=="today")selectedDate=todayKey();render()},{passive:true})}
+const FEELING_CATEGORIES=[
+  {id:"positive",emoji:"😊",label:"Ressentis positifs",open:true},
+  {id:"digestion",emoji:"🍽️",label:"Digestion",open:true},
+  {id:"energy_state",emoji:"⚡",label:"Énergie et état général"},
+  {id:"head_senses",emoji:"🧠",label:"Tête et sens"},
+  {id:"reactions",emoji:"🌿",label:"Réactions cutanées et respiratoires"},
+  {id:"mood",emoji:"❤️",label:"Humeur et envies"},
+  {id:"other_physical",emoji:"🩺",label:"Autres signes physiques"}
+];
 const FEELING_TAGS=[
-  {id:"headache",emoji:"🤕",label:"Mal de tête",group:"symptom"},{id:"stomachache",emoji:"🤢",label:"Mal de ventre",group:"symptom"},{id:"bloating",emoji:"🎈",label:"Ballonnements",group:"symptom"},{id:"nausea",emoji:"🤮",label:"Nausées",group:"symptom"},{id:"fatigue",emoji:"😴",label:"Fatigue",group:"symptom"},{id:"dizziness",emoji:"😵",label:"Étourdissements",group:"symptom"},{id:"reflux",emoji:"🔥",label:"Reflux",group:"symptom"},{id:"gas",emoji:"💨",label:"Gaz",group:"symptom"},{id:"energy",emoji:"⚡",label:"Plein d’énergie",group:"positive"},{id:"good_mood",emoji:"😊",label:"Bonne humeur",group:"positive"},{id:"focus",emoji:"🧠",label:"Bonne concentration",group:"positive"},{id:"easy_digestion",emoji:"😌",label:"Digestion facile",group:"positive"},{id:"feeling_good",emoji:"💪",label:"Je me sens bien",group:"positive"}
+  {id:"feeling_good",emoji:"💪",label:"Je me sens bien",group:"positive",category:"positive"},
+  {id:"stable_energy",emoji:"🔋",label:"Énergie stable",group:"positive",category:"positive"},
+  {id:"energy",emoji:"⚡",label:"Plus énergique",group:"positive",category:"positive"},
+  {id:"satisfied",emoji:"🥗",label:"Rassasié",group:"positive",category:"positive"},
+  {id:"easy_digestion",emoji:"😌",label:"Digestion confortable",group:"positive",category:"positive"},
+  {id:"light_after_meal",emoji:"🪶",label:"Léger après le repas",group:"positive",category:"positive"},
+  {id:"focus",emoji:"🧠",label:"Bonne concentration",group:"positive",category:"positive"},
+  {id:"good_mood",emoji:"😊",label:"Bonne humeur",group:"positive",category:"positive"},
+  {id:"calm",emoji:"🧘",label:"Calme ou détendu",group:"positive",category:"positive"},
+
+  {id:"bloating",emoji:"🎈",label:"Ballonnements",group:"symptom",category:"digestion"},
+  {id:"gas",emoji:"💨",label:"Gaz",group:"symptom",category:"digestion"},
+  {id:"stomachache",emoji:"🤢",label:"Douleur abdominale",group:"symptom",category:"digestion"},
+  {id:"cramps",emoji:"🫄",label:"Crampes abdominales",group:"symptom",category:"digestion"},
+  {id:"reflux",emoji:"🔥",label:"Reflux ou brûlures d’estomac",group:"symptom",category:"digestion"},
+  {id:"nausea",emoji:"🤮",label:"Nausées",group:"symptom",category:"digestion"},
+  {id:"vomiting",emoji:"🤮",label:"Vomissements",group:"symptom",category:"digestion"},
+  {id:"diarrhea",emoji:"🚻",label:"Diarrhée",group:"symptom",category:"digestion"},
+  {id:"constipation",emoji:"🧱",label:"Constipation",group:"symptom",category:"digestion"},
+  {id:"urgent_stool",emoji:"⏱️",label:"Selles urgentes",group:"symptom",category:"digestion"},
+  {id:"heaviness",emoji:"🪨",label:"Sensation de lourdeur",group:"symptom",category:"digestion"},
+  {id:"slow_digestion",emoji:"🐢",label:"Digestion lente",group:"symptom",category:"digestion"},
+  {id:"hungry_soon",emoji:"🍽️",label:"Faim rapidement après le repas",group:"symptom",category:"digestion"},
+  {id:"low_appetite",emoji:"🥄",label:"Perte d’appétit",group:"symptom",category:"digestion"},
+
+  {id:"fatigue",emoji:"😴",label:"Fatigue",group:"symptom",category:"energy_state"},
+  {id:"sleepiness",emoji:"🥱",label:"Somnolence",group:"symptom",category:"energy_state"},
+  {id:"energy_drop",emoji:"📉",label:"Baisse d’énergie",group:"symptom",category:"energy_state"},
+  {id:"weakness",emoji:"🫠",label:"Faiblesse",group:"symptom",category:"energy_state"},
+  {id:"dizziness",emoji:"😵",label:"Étourdissements",group:"symptom",category:"energy_state"},
+  {id:"trembling",emoji:"🫨",label:"Tremblements",group:"symptom",category:"energy_state"},
+  {id:"brain_fog",emoji:"🌫️",label:"Brouillard mental",group:"symptom",category:"energy_state"},
+  {id:"poor_focus",emoji:"🌀",label:"Difficulté à se concentrer",group:"symptom",category:"energy_state"},
+
+  {id:"headache",emoji:"🤕",label:"Mal de tête",group:"symptom",category:"head_senses"},
+  {id:"migraine",emoji:"🧠",label:"Migraine",group:"symptom",category:"head_senses"},
+  {id:"light_sensitivity",emoji:"☀️",label:"Sensibilité à la lumière",group:"symptom",category:"head_senses"},
+  {id:"sound_sensitivity",emoji:"🔊",label:"Sensibilité au bruit",group:"symptom",category:"head_senses"},
+  {id:"smell_sensitivity",emoji:"👃",label:"Sensibilité aux odeurs",group:"symptom",category:"head_senses"},
+  {id:"blurred_vision",emoji:"👁️",label:"Vision trouble",group:"symptom",category:"head_senses"},
+
+  {id:"itching",emoji:"🫳",label:"Démangeaisons",group:"symptom",category:"reactions"},
+  {id:"redness",emoji:"🔴",label:"Rougeurs",group:"symptom",category:"reactions"},
+  {id:"hives",emoji:"🌡️",label:"Urticaire",group:"symptom",category:"reactions"},
+  {id:"swelling",emoji:"🫧",label:"Gonflement",group:"symptom",category:"reactions"},
+  {id:"congestion",emoji:"🤧",label:"Nez congestionné",group:"symptom",category:"reactions"},
+  {id:"sneezing",emoji:"🤧",label:"Éternuements",group:"symptom",category:"reactions"},
+  {id:"throat_irritation",emoji:"🗣️",label:"Gorge irritée",group:"symptom",category:"reactions"},
+
+  {id:"irritability",emoji:"😠",label:"Irritabilité",group:"symptom",category:"mood"},
+  {id:"stress",emoji:"😥",label:"Stress",group:"symptom",category:"mood"},
+  {id:"anxiety",emoji:"😟",label:"Anxiété",group:"symptom",category:"mood"},
+  {id:"low_mood",emoji:"😔",label:"Humeur basse",group:"symptom",category:"mood"},
+  {id:"sugar_craving",emoji:"🍬",label:"Envie intense de sucre",group:"symptom",category:"mood"},
+  {id:"craving",emoji:"🍪",label:"Fringale",group:"symptom",category:"mood"},
+
+  {id:"palpitations",emoji:"💓",label:"Palpitations",group:"symptom",category:"other_physical"},
+  {id:"hot_flash",emoji:"🥵",label:"Bouffées de chaleur",group:"symptom",category:"other_physical"},
+  {id:"chills",emoji:"🥶",label:"Frissons",group:"symptom",category:"other_physical"},
+  {id:"unusual_thirst",emoji:"💧",label:"Soif inhabituelle",group:"symptom",category:"other_physical"},
+  {id:"frequent_urination",emoji:"🚻",label:"Envie fréquente d’uriner",group:"symptom",category:"other_physical"},
+  {id:"muscle_pain",emoji:"💪",label:"Douleur musculaire",group:"symptom",category:"other_physical"}
 ];
 function feelingEmoji(r){return ["","😞","😐","🙂","😄","😁"][Number(r)||0]||"🙂"}
 function isFeelingEligible(m){return ["Déjeuner","Dîner","Souper","Collation"].includes(m.type)}
@@ -765,7 +835,25 @@ function mealDateTime(m){return new Date(`${m.date}T${m.time||"12:00"}:00`)}
 function feelingDueAt(m){return new Date(mealDateTime(m).getTime()+(Number(db.settings.feelingDelayHours)||2)*3600000)}
 function pendingFeelings(){const enabled=db.settings.feelingReminders!==false,types=db.settings.feelingMealTypes||["Déjeuner","Dîner","Souper"];return allMeals().filter(m=>enabled&&types.includes(m.type)&&!m.feeling&&feelingDueAt(m)<=new Date()).sort((a,b)=>feelingDueAt(b)-feelingDueAt(a))}
 function feelingCardHtml(){const pending=pendingFeelings(),todayMeals=ensureDay(db,selectedDate).meals.filter(isFeelingEligible),answered=todayMeals.filter(m=>m.feeling);if(pending.length){const m=pending[0];return `<section class="card feeling-overview is-pending"><div class="feeling-overview-icon">😊</div><div><p class="eyebrow">${t("Ressenti")}</p><h3>${pending.length} réponse${pending.length>1?'s':''} en attente</h3><p class="muted small">Après ${m.type.toLowerCase()} · ${formatDate(m.date)}</p></div><button class="secondary small" id="answerFeeling" data-id="${m.id}" data-date="${m.date}">Répondre</button></section>`}const last=[...answered].sort((a,b)=>`${b.date}${b.time}`.localeCompare(`${a.date}${a.time}`))[0];const lastLabel=last?`${feelingEmoji(last.feeling.rating)} ${last.feeling.rating}/5`:'Aucun ressenti';const lastHint=last?`Modifiable depuis le repas${last.feeling.tags?.length?` · ${last.feeling.tags.length} étiquette${last.feeling.tags.length>1?'s':''}`:''}`:'Les rappels apparaîtront après tes repas principaux.';return `<section class="card feeling-overview"><div class="feeling-overview-icon">${last?feelingEmoji(last.feeling.rating):'😊'}</div><div><p class="eyebrow">${t("Ressenti")}</p><h3>${last?`Dernier ressenti · ${last.feeling.rating}/5`:lastLabel}</h3><p class="muted small">${lastHint}</p></div>${last?`<button class="secondary small" id="answerFeeling" data-id="${last.id}" data-date="${last.date}">Modifier</button>`:''}</section>`}
-function openFeeling(id){const m=allMeals().find(x=>x.id===id);if(!m)return;feelingMealId=id;$("#feelingMealContext").textContent=`Après ${m.type.toLowerCase()} · ${m.time}`;makeFeelingRatings(m.feeling?.rating||3);const selected=new Set(m.feeling?.tags||[]);$("#feelingTags").innerHTML=FEELING_TAGS.map(t=>`<button type="button" class="feeling-tag ${selected.has(t.id)?'active':''}" data-feeling-tag="${t.id}"><span>${t.emoji}</span>${esc(t.label)}</button>`).join('');$$('[data-feeling-tag]').forEach(b=>b.onclick=()=>b.classList.toggle('active'));$("#feelingNotes").value=m.feeling?.notes||'';$("#feelingDialog").showModal()}
+function openFeeling(id){
+  const m=allMeals().find(x=>x.id===id);if(!m)return;
+  feelingMealId=id;
+  $("#feelingMealContext").textContent=`Après ${m.type.toLowerCase()} · ${m.time}`;
+  makeFeelingRatings(m.feeling?.rating||3);
+  const selected=new Set(m.feeling?.tags||[]);
+  $("#feelingTags").innerHTML=FEELING_CATEGORIES.map(category=>{
+    const tags=FEELING_TAGS.filter(tag=>tag.category===category.id);
+    const hasSelected=tags.some(tag=>selected.has(tag.id));
+    const open=category.open||hasSelected;
+    return `<details class="feeling-tag-group feeling-tag-group-${category.id}" ${open?'open':''}>
+      <summary><span><b>${category.emoji}</b><strong>${esc(t(category.label))}</strong></span><small>${tags.length}</small><i aria-hidden="true">›</i></summary>
+      <div class="feeling-tag-group-body">${tags.map(tag=>`<button type="button" class="feeling-tag ${selected.has(tag.id)?'active':''}" data-feeling-tag="${tag.id}"><span>${tag.emoji}</span>${esc(t(tag.label))}</button>`).join('')}</div>
+    </details>`;
+  }).join('');
+  $$('[data-feeling-tag]').forEach(button=>button.onclick=()=>button.classList.toggle('active'));
+  $("#feelingNotes").value=m.feeling?.notes||'';
+  $("#feelingDialog").showModal();
+}
 function makeFeelingRatings(value){const wrap=$("#feelingRating");wrap.dataset.value=String(value);wrap.innerHTML=[1,2,3,4,5].map(n=>`<button type="button" class="feeling-rating-button ${n===Number(value)?'active':''}" data-rating="${n}" aria-label="Ressenti ${n} sur 5"><span>${feelingEmoji(n)}</span><small>${n}</small></button>`).join('');$$('[data-rating]').forEach(b=>b.onclick=()=>{wrap.dataset.value=b.dataset.rating;$$('[data-rating]').forEach(x=>x.classList.toggle('active',x===b))})}
 async function requestFeelingNotifications(){if(!('Notification'in window))return false;if(Notification.permission==='granted')return true;if(Notification.permission==='denied')return false;return (await Notification.requestPermission())==='granted'}
 function notifyDueFeelings(){if(db.settings.feelingReminders===false||!('Notification'in window)||Notification.permission!=='granted')return;for(const m of pendingFeelings()){if(m.feelingNotifiedAt)continue;try{new Notification(`🍏⚡ ${t('Ressenti')}`,{body:t(`Comment te sens-tu après ton ${m.type.toLowerCase()} ?`),icon:'assets/icon-192.png',tag:`feeling-${m.id}`});m.feelingNotifiedAt=new Date().toISOString();setMealChanged(m)}catch(_){}}}
