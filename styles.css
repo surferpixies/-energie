@@ -364,7 +364,23 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .professional-setting-title{margin-bottom:8px}
 .professional-privacy{margin:10px 0 0}
 
-.daily-macros-card{margin:0 0 12px;padding:12px 14px;border:1px solid var(--border);border-radius:16px;background:color-mix(in srgb,var(--surface2) 68%,var(--surface));box-shadow:0 4px 14px rgba(0,0,0,.035)}.daily-macros-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px}.daily-macros-head span{font-size:.7rem;font-weight:850;letter-spacing:.045em;text-transform:uppercase;color:var(--muted)}.daily-macros-head strong{font-size:.95rem;white-space:nowrap}.daily-macros-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.daily-macros-grid span{min-width:0;padding:7px 8px;border-radius:11px;background:color-mix(in srgb,var(--surface) 82%,transparent)}.daily-macros-grid b,.daily-macros-grid small{display:block}.daily-macros-grid b{font-size:.78rem;white-space:nowrap}.daily-macros-grid small{margin-top:2px;font-size:.59rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis}.daily-macros-card p{margin:8px 0 0;font-size:.62rem;line-height:1.4;color:var(--muted)}@media(max-width:350px){.daily-macros-head{align-items:flex-start;flex-direction:column;gap:2px}.daily-macros-grid{gap:5px}.daily-macros-grid span{padding:6px}.daily-macros-grid b{font-size:.71rem}.daily-macros-grid small{font-size:.55rem}}
+.daily-macros-card{margin:0 0 12px;padding:0;border:1px solid var(--border);border-radius:16px;background:color-mix(in srgb,var(--surface2) 68%,var(--surface));box-shadow:0 4px 14px rgba(0,0,0,.035);overflow:hidden}
+.daily-macros-card>summary{list-style:none;cursor:pointer;user-select:none}
+.daily-macros-card>summary::-webkit-details-marker{display:none}
+.daily-macros-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;margin:0}
+.daily-macros-head>span:first-child{font-size:.7rem;font-weight:850;letter-spacing:.045em;text-transform:uppercase;color:var(--muted)}
+.daily-macros-head-right{display:flex;align-items:center;gap:10px;min-width:0}
+.daily-macros-head-right strong{font-size:.95rem;white-space:nowrap}
+.daily-macros-card[open] .weekly-trends-chevron{transform:rotate(90deg)}
+.daily-macros-details{padding:0 14px 12px;border-top:1px solid var(--border);animation:weeklyTrendReveal .2s ease both}
+.daily-macros-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding-top:10px}
+.daily-macros-grid span{min-width:0;padding:7px 8px;border-radius:11px;background:color-mix(in srgb,var(--surface) 82%,transparent)}
+.daily-macros-grid b,.daily-macros-grid small{display:block}
+.daily-macros-grid b{font-size:.78rem;white-space:nowrap}
+.daily-macros-grid small{margin-top:2px;font-size:.59rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.daily-macros-details p{margin:8px 0 0;font-size:.62rem;line-height:1.4;color:var(--muted)}
+@media(max-width:350px){.daily-macros-head{gap:6px}.daily-macros-head-right{gap:6px}.daily-macros-head-right strong{font-size:.86rem}.daily-macros-grid{gap:5px}.daily-macros-grid span{padding:6px}.daily-macros-grid b{font-size:.71rem}.daily-macros-grid small{font-size:.55rem}}
+@media(prefers-reduced-motion:reduce){.daily-macros-details{animation:none}}
 
 
 /* V3.3.2 — suggestion consultable et portion du scan */
@@ -627,21 +643,3 @@ body.demo-guide-open .bottom-nav{z-index:20}
   .brand-weather{font-size:.6rem;gap:2px}
   .sync-badge{padding-left:7px;padding-right:7px;font-size:.66rem}
 }
-
-
-/* Estimation nutritionnelle compacte dans les cartes de repas */
-.meal-nutrition-compact{margin-top:7px;border:1px solid color-mix(in srgb,var(--accent) 14%,var(--border));border-radius:14px;background:color-mix(in srgb,var(--accent) 5%,var(--surface2));overflow:hidden}
-.meal-nutrition-compact>summary{list-style:none;display:grid;grid-template-columns:minmax(0,1fr) 18px;align-items:center;gap:9px;padding:9px 10px;cursor:pointer;user-select:none}
-.meal-nutrition-compact>summary::-webkit-details-marker{display:none}
-.meal-nutrition-summary{display:flex;align-items:center;gap:9px;min-width:0}
-.meal-nutrition-summary>b{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;border-radius:10px;background:color-mix(in srgb,var(--accent) 10%,var(--surface));font-size:.9rem}
-.meal-nutrition-summary>span{display:grid;min-width:0}
-.meal-nutrition-summary small{color:var(--muted);font-size:.57rem;font-weight:850;text-transform:uppercase;letter-spacing:.07em}
-.meal-nutrition-summary strong{color:var(--accent-strong);font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meal-nutrition-compact[open] .weekly-trends-chevron{transform:rotate(90deg)}
-.meal-nutrition-details{display:grid;padding:4px 10px 10px;border-top:1px solid var(--border);animation:weeklyTrendReveal .2s ease both}
-.meal-nutrition-row{display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:7px;padding:7px 1px;border-bottom:1px solid color-mix(in srgb,var(--border) 72%,transparent);font-size:.72rem}
-.meal-nutrition-row:last-of-type{border-bottom:0}
-.meal-nutrition-row strong{font-size:.72rem;white-space:nowrap}
-.meal-nutrition-note,.meal-nutrition-empty{margin:7px 0 0;color:var(--muted);font-size:.59rem;line-height:1.35}
-@media(prefers-reduced-motion:reduce){.meal-nutrition-details{animation:none}}

@@ -886,23 +886,4 @@
   }
   const obs=new MutationObserver(ms=>ms.forEach(m=>{if(m.type==='characterData'){const raw=m.target.nodeValue,trim=raw.trim();if(trim){const tr=translateString(trim);if(tr!==trim)m.target.nodeValue=raw.replace(trim,tr)}}m.addedNodes.forEach(n=>{if(n.nodeType===1)translateDOM(n);else if(n.nodeType===3){const raw=n.nodeValue,trim=raw.trim();if(trim){const tr=translateString(trim);if(tr!==trim)n.nodeValue=raw.replace(trim,tr)}}})}));
   document.addEventListener('DOMContentLoaded',()=>{translateDOM(document);obs.observe(document.body,{childList:true,subtree:true,characterData:true})});
-
-
-// V3.15.x — libellés de l'estimation nutritionnelle compacte.
-Object.assign(en, {
-  "Protéines":"Protein",
-  "Glucides":"Carbohydrates",
-  "Lipides":"Fat",
-  "Fibres":"Fiber",
-  "Sucres":"Sugars",
-  "Sodium":"Sodium"
-});
-Object.assign(frFR, {
-  "Protéines":"Protéines",
-  "Glucides":"Glucides",
-  "Lipides":"Lipides",
-  "Fibres":"Fibres",
-  "Sucres":"Sucres",
-  "Sodium":"Sodium"
-});
 })();
