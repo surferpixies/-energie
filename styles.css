@@ -693,5 +693,19 @@ body.demo-guide-open .bottom-nav{z-index:20}
 /* V3.17.2 — champs date et heure compacts */
 .observation-time-grid{width:100%;justify-items:start}
 .observation-time-grid>label:first-child{width:min(205px,100%)}
-.observation-time-grid>label:last-child{width:min(155px,100%)}
+.observation-time-grid>label:last-child{width:min(205px,100%)}
 .observation-time-grid>label input{width:100%;max-width:100%;box-sizing:border-box}
+
+/* V3.18.0 — splash plus lisible */
+.splash-brand{width:min(90vw,420px);gap:15px}
+.splash-daily{gap:20px;margin-top:8px}
+.splash-status{font-size:.94rem;line-height:1.55}
+.splash-tip{gap:7px;padding-top:17px}
+.splash-tip-label{font-size:.74rem;letter-spacing:.065em}
+.splash-tip p,.splash-app-hint p{font-size:.86rem;line-height:1.58}
+.splash-app-hint{gap:8px;padding-top:2px}
+.splash-app-hint-heading{gap:8px}
+.splash-app-hint-icon{font-size:1.08rem}
+.splash-app-hint .splash-tip-label{font-size:.7rem}
+.splash-app-hint p{font-size:.81rem;line-height:1.54}
+@media(max-height:700px){.splash-brand{top:24px;gap:9px}.splash-brand img{width:78px;height:78px}.splash-daily{gap:12px;margin-top:2px}.splash-tip{padding-top:10px}.splash-status{font-size:.86rem}.splash-tip p,.splash-app-hint p{font-size:.76rem;line-height:1.42}}

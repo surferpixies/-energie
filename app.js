@@ -1280,13 +1280,23 @@ function splashLocalePack(){
  };
  return packs[locale]||packs["fr-CA"]
 }
+function rotatingSplashIndex(length,kind){
+ if(length<2)return 0;
+ const locale=window.ENERGIE_LOCALE||"fr-CA",key=`energieSplashRotation_${todayKey()}_${locale}_${kind}`;
+ let shown=[];try{shown=JSON.parse(localStorage.getItem(key)||"[]").filter(index=>Number.isInteger(index)&&index>=0&&index<length)}catch(_){shown=[]}
+ let available=Array.from({length},(_,index)=>index).filter(index=>!shown.includes(index));
+ if(!available.length){shown=[];available=Array.from({length},(_,index)=>index)}
+ const randomValue=globalThis.crypto?.getRandomValues?globalThis.crypto.getRandomValues(new Uint32Array(1))[0]:Math.floor(Math.random()*4294967296),index=available[randomValue%available.length];
+ shown.push(index);try{localStorage.setItem(key,JSON.stringify(shown))}catch(_){}
+ return index
+}
 function initDailySplash(){
  const wrap=$("#splashDaily"),statusEl=$("#splashStatus"),labelEl=$("#splashTipLabel"),textEl=$("#splashTipText"),appHintIconEl=$("#splashAppHintIcon"),appHintLabelEl=$("#splashAppHintLabel"),appHintTextEl=$("#splashAppHintText");
  if(!wrap||!statusEl||!labelEl||!textEl||!appHintIconEl||!appHintLabelEl||!appHintTextEl)return;
  const pack=splashLocalePack(),days=Object.values(db.days||{}).filter(day=>day&&(day.meals?.length||day.sleepHours!=null||Number(day.water)>0||day.activities?.length)).length;
  statusEl.textContent=days===0?pack.status.empty:days===1?pack.status.one:days<14?pack.status.many(days):pack.status.growing(days);
  const seed=dateSeed(todayKey()),showFeatureTip=seed%3===0;
- const pool=showFeatureTip?pack.tips:pack.facts,index=Math.floor(seed/3)%pool.length;
+ const pool=showFeatureTip?pack.tips:pack.facts,index=rotatingSplashIndex(pool.length,showFeatureTip?"tip":"fact");
  labelEl.textContent=showFeatureTip?pack.labels.tip:pack.labels.fact;textEl.textContent=pool[index];
  const randomValue=globalThis.crypto?.getRandomValues?globalThis.crypto.getRandomValues(new Uint32Array(1))[0]:Math.floor(Math.random()*4294967296);
  const previousHint=Number(sessionStorage.getItem("energieLastSplashAppHint"));
@@ -1297,7 +1307,7 @@ function initDailySplash(){
  appHintIconEl.textContent=appHintIcons[appHintIndex]||"✨";
  appHintLabelEl.textContent=pack.labels.appHint;appHintTextEl.textContent=pack.appHints[appHintIndex];wrap.hidden=false;
 }
-function dismissSplash(){const splash=$("#splashScreen");if(!splash)return;const reduced=matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;const readingTime=reduced?4800:5400;setTimeout(()=>{splash.classList.add("is-hidden");setTimeout(()=>splash.remove(),420)},readingTime)}
+function dismissSplash(){const splash=$("#splashScreen");if(!splash)return;const reduced=matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;const readingTime=reduced?6300:6900;setTimeout(()=>{splash.classList.add("is-hidden");setTimeout(()=>splash.remove(),420)},readingTime)}
 let dialogScrollY=0;function syncDialogScrollLock(){const open=!!document.querySelector('dialog[open]');if(open&&!document.body.classList.contains('dialog-open')){dialogScrollY=window.scrollY;document.body.style.top=`-${dialogScrollY}px`;document.body.classList.add('dialog-open')}else if(!open&&document.body.classList.contains('dialog-open')){document.body.classList.remove('dialog-open');document.body.style.top='';window.scrollTo(0,dialogScrollY)}}new MutationObserver(syncDialogScrollLock).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
 async function loadDemoAccess(){
   hasDemoAccess=false;
