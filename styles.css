@@ -689,3 +689,9 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .observation-meal-option>span{overflow:hidden}.observation-meal-option strong,.observation-meal-option small{display:block;max-width:100%;overflow-wrap:anywhere;word-break:break-word;white-space:normal}
 .observation-meals{width:100%;max-width:100%;overflow-x:hidden;overflow-y:auto}
 @media(max-width:480px){#globalObservationDialog{width:calc(100vw - 16px);max-width:calc(100vw - 16px)}.observation-dialog-card{padding:16px 13px}.observation-intensity{grid-template-columns:repeat(5,minmax(0,1fr));width:100%}.observation-intensity button{min-width:0;padding-inline:2px}.observation-form-actions{display:grid;grid-template-columns:1fr;width:100%}.observation-form-actions .danger{margin-right:0;order:2}}
+
+/* V3.17.2 — champs date et heure compacts */
+.observation-time-grid{width:100%;justify-items:start}
+.observation-time-grid>label:first-child{width:min(205px,100%)}
+.observation-time-grid>label:last-child{width:min(155px,100%)}
+.observation-time-grid>label input{width:100%;max-width:100%;box-sizing:border-box}
