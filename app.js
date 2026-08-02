@@ -466,6 +466,14 @@ function demoReferenceStory(profileId,progress,base){const stage=progress<.2?0:p
 function activeReferenceBrain(){if(!db.settings?.demoMode)return null;const base=activeDemoProfile()?.brain||window.EnergieDemoProfiles?.referenceBrains?.[db.settings.demoProfileId]||null,ctx=demoAnalysisContext();if(!base||!ctx)return base;const progress=ctx.progress,clone=JSON.parse(JSON.stringify(base));clone.story=demoReferenceStory(db.settings.demoProfileId||"marie",progress,clone.story);const scale=i=>({...i,count:Math.max(0,Math.round((Number(i.count)||0)*progress))});clone.feelings={negative:(clone.feelings?.negative||[]).map(scale).filter(x=>x.count),positive:(clone.feelings?.positive||[]).map(scale).filter(x=>x.count)};clone.observations=progress<.25?[]:clone.observations.slice(0,progress<.58?1:clone.observations.length);clone.insights=progress<.38?[]:clone.insights.slice(0,progress<.75?1:clone.insights.length);clone.timeline=ctx;return clone}
 const defaultDemoReferenceStory=demoReferenceStory;
 demoReferenceStory=function(profileId,progress,base){
+  if(profileId==="elodie"){
+    const stage=progress<.34?0:progress<.68?1:2;
+    return [
+      {strength:"Tu commences à noter les réactions hors repas dans les observations globales.",habit:"Le tofu, l’edamame, le miso ou les boissons de soya apparaissent encore régulièrement.",suggestion:"Documente le moment, la durée et l’intensité des rougeurs, démangeaisons ou symptômes digestifs, sans conclure trop vite à leur cause."},
+      {strength:"Les observations globales permettent de voir les réactions qui apparaissent le soir ou le lendemain.",habit:"Les réactions cutanées semblent revenir davantage dans les 24 à 48 heures suivant une exposition possible au soya.",suggestion:"Montre cette chronologie à un professionnel de la santé avant d’éliminer davantage d’aliments."},
+      base
+    ][stage]||base;
+  }
   if(profileId!=="marie")return defaultDemoReferenceStory(profileId,progress,base);
   const stage=progress<.2?0:progress<.45?1:progress<.72?2:3;
   return [
@@ -487,7 +495,12 @@ function referenceFeelingStats(brain){
 }
 function demoProfileCardsHtml(){
   const profiles=Object.values(window.EnergieDemoProfiles?.profiles||{});
-  return `<section class="card demo-selector-card"><div class="settings-row"><div><p class="eyebrow">Accès privé</p><h3>Profils de démonstration</h3><p class="muted small">Trois parcours fictifs de six mois, toujours en lecture seule.</p></div><span class="demo-pill">${profiles.length} profils</span></div><div class="demo-profile-grid">${profiles.map(profile=>`<article class="demo-person-card ${db.settings.demoMode&&db.settings.demoProfileId===profile.id?'is-active':''}"><div class="demo-person-head"><span class="demo-person-avatar">${profile.icon}</span><div><h4>${esc(profile.name)}</h4><small>${esc(profile.scenario)}</small></div></div><p>${esc(profile.summary)}</p><button class="${db.settings.demoMode&&db.settings.demoProfileId===profile.id?'secondary':'primary'} small" type="button" data-open-demo-profile="${profile.id}">${db.settings.demoMode&&db.settings.demoProfileId===profile.id?'Profil ouvert':'Explorer'}</button></article>`).join("")}</div></section>`
+  return `<section class="card demo-selector-card"><div class="settings-row"><div><p class="eyebrow">Accès privé</p><h3>Profils de démonstration</h3><p class="muted small">Quatre parcours fictifs de trois à six mois, toujours en lecture seule.</p></div><span class="demo-pill">${profiles.length} profils</span></div><div class="demo-profile-grid">${profiles.map(profile=>`<article class="demo-person-card ${db.settings.demoMode&&db.settings.demoProfileId===profile.id?'is-active':''}"><div class="demo-person-head"><span class="demo-person-avatar">${profile.icon}</span><div><h4>${esc(profile.name)}</h4><small>${esc(profile.scenario)}</small></div></div><p>${esc(profile.summary)}</p><button class="${db.settings.demoMode&&db.settings.demoProfileId===profile.id?'secondary':'primary'} small" type="button" data-open-demo-profile="${profile.id}">${db.settings.demoMode&&db.settings.demoProfileId===profile.id?'Profil ouvert':'Explorer'}</button></article>`).join("")}</div></section>`
+}
+function demoLandingDate(profileId){
+  const dates=Object.keys(db.days||{}).sort();
+  if(profileId==="elodie")return dates.slice().reverse().find(date=>(db.days[date]?.observations||[]).length)||dates.at(-1)||todayKey();
+  return dates.at(-1)||todayKey();
 }
 function switchDemoProfile(profileId){
   if(!hasDemoAccess)return alert("Cet accès de démonstration n’est pas activé pour ce compte.");
@@ -497,13 +510,46 @@ function switchDemoProfile(profileId){
   }
   db=createDemoDB(profileId);
   buildDemoBrainMemory(db);
-  const demoDates=Object.keys(db.days||{}).sort();
-  selectedDate=demoDates.at(-1)||todayKey();currentView="today";
+  selectedDate=demoLandingDate(profileId);currentView="today";
   try{saveLocal("profil-demo") }catch(error){console.warn(error)}
   render()
 }
 
 function demoDiscoveryHtml(){
+  if(db.settings.demoMode&&db.settings.demoProfileId==="elodie")return `<section class="demo-discoveries" id="demoDiscoveries">
+    <div class="demo-discoveries-heading">
+      <div class="demo-heading-mascot"><img src="assets/icon.svg" alt=""></div>
+      <div><p class="eyebrow">Ce que les observations globales racontent</p><h2>Des réactions parfois retardées ressortent après 90 jours</h2><p>Ces associations proviennent surtout des observations faites hors repas. Elles ne confirment pas une allergie au soya.</p></div>
+    </div>
+    <div class="demo-insight-grid">
+      <article class="card demo-insight-card demo-insight-strong">
+        <div class="demo-insight-top"><span class="demo-signal">Tendance forte</span><strong>84 %</strong></div>
+        <div class="demo-insight-icon">🌿</div><h3>Soya et réactions cutanées retardées</h3>
+        <p>Les démangeaisons, rougeurs, plaques d’urticaire ou poussées d’eczéma sont plus fréquentes dans les 48 heures suivant une exposition possible.</p>
+        <div class="demo-comparison"><span><b>46 %</b><small>après exposition possible</small></span><i>contre</i><span><b>13 %</b><small>sans exposition repérée</small></span></div>
+        <div class="demo-inline-proof"><b>Point d’ancrage</b><span>Les réactions ont été consignées dans Observations globales, puis rapprochées de la chronologie des repas précédents.</span></div>
+      </article>
+      <article class="card demo-insight-card">
+        <div class="demo-insight-top"><span class="demo-signal moderate">Tendance modérée</span><strong>71 %</strong></div>
+        <div class="demo-insight-icon">⏳</div><h3>Un délai de plusieurs heures</h3>
+        <p>Plusieurs réactions sont remarquées le soir ou le lendemain plutôt qu’immédiatement après le repas.</p>
+        <div class="demo-inline-proof"><b>Pourquoi c’est utile?</b><span>Le ressenti après repas seul aurait manqué une partie importante de ces manifestations.</span></div>
+      </article>
+      <article class="card demo-insight-card">
+        <div class="demo-insight-top"><span class="demo-signal moderate">À surveiller</span><strong>6</strong></div>
+        <div class="demo-insight-icon">🤢</div><h3>Quelques symptômes digestifs</h3>
+        <p>Nausées ou douleurs abdominales apparaissent parfois, mais beaucoup moins souvent que les réactions cutanées.</p>
+        <div class="demo-inline-proof"><b>Interprétation prudente</b><span>Le nombre d’épisodes reste trop faible pour tirer une conclusion clinique.</span></div>
+      </article>
+      <article class="card demo-insight-card">
+        <div class="demo-insight-top"><span class="demo-signal emerging">Sécurité</span><strong>⚠️</strong></div>
+        <div class="demo-insight-icon">😮‍💨</div><h3>Les signes graves ne sont pas banalisés</h3>
+        <p>Une difficulté à respirer, un gonflement de la langue ou de la gorge, ou une réaction sévère exige une aide médicale urgente.</p>
+        <div class="demo-inline-proof"><b>Dans cette démo</b><span>Aucune anaphylaxie ni obstruction respiratoire n’est simulée comme une observation ordinaire.</span></div>
+      </article>
+    </div>
+    <p class="demo-legal-note">🍏⚡ Énergie aide à documenter une chronologie personnelle; l’application ne diagnostique pas une allergie.</p>
+  </section>`;
   if(!db.settings.demoMode||db.settings.demoProfileId!=="marie")return "";
   return `<section class="demo-discoveries" id="demoDiscoveries">
     <div class="demo-discoveries-heading">
@@ -629,7 +675,7 @@ function startEmptyExperience(){
   db.settings.demoTourSeen=true;
   saveLocal("premiere-ouverture-journal");
   currentView="today";
-  selectedDate=todayKey();
+  selectedDate=demoLandingDate(profileId);
   render()
 }
 function startDemoMode(profileId="marie"){

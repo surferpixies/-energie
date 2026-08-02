@@ -16,6 +16,11 @@
       id:"sophie", name:"Sophie", icon:"🌱", age:42, scenario:"Fibres et digestion",
       summary:"Télétravail, peu de fibres au départ, puis amélioration progressive de l’alimentation, de l’hydratation et du confort digestif.",
       color:"fiber"
+    },
+    elodie: {
+      id:"elodie", name:"Élodie", icon:"🌿", age:31, scenario:"Soya et réactions cutanées",
+      summary:"Trois mois d’observations globales montrent des réactions cutanées et parfois digestives qui reviennent davantage après des repas contenant du soya.",
+      color:"soy"
     }
   };
 
@@ -94,6 +99,32 @@
         {icon:"📉",title:"Les inconforts diminuent",text:"Les ballonnements et maux de ventre sont beaucoup moins fréquents durant les huit dernières semaines qu’au début du journal.",confidence:{label:"Élevée",cls:"high"},basis:"Comparaison du début et de la fin de la période de 180 jours.",kind:"reference"},
         {icon:"🥣",title:"Une nouvelle routine est installée",text:"Le gruau, les fruits, les graines et les légumineuses apparaissent maintenant plusieurs fois par semaine.",confidence:{label:"Élevée",cls:"high"},basis:"Fréquence des aliments riches en fibres par période mensuelle.",kind:"reference"}
       ]
+    },
+    elodie: {
+      story: {
+        strength:"Tu notes les réactions qui apparaissent hors des repas, parfois le soir ou le lendemain, sans les attribuer automatiquement au dernier aliment mangé.",
+        habit:"Les poussées de démangeaisons, rougeurs ou eczéma sont plus fréquentes dans les 24 à 48 heures suivant une journée contenant du tofu, de l’edamame, du miso ou une boisson de soya.",
+        suggestion:"Présente ce journal à un professionnel de la santé avant de conclure à une allergie ou de modifier davantage ton alimentation. Une difficulté à respirer ou un gonflement de la gorge exige une aide urgente."
+      },
+      feelings: {
+        negative:[
+          {id:"itching",group:"symptom",label:"Démangeaisons",emoji:"🤚",count:19,trend:"down",summary:"Elles sont surtout consignées dans les observations globales, souvent plusieurs heures après une exposition possible.",occurrences:[]},
+          {id:"redness",group:"symptom",label:"Rougeurs ou poussée d’eczéma",emoji:"🌿",count:15,trend:"down",summary:"Les plaques sèches ou rouges peuvent durer une à plusieurs journées.",occurrences:[]},
+          {id:"hives",group:"symptom",label:"Urticaire",emoji:"🟥",count:8,trend:"down",summary:"Des plaques rouges qui démangent sont notées à quelques reprises, sans réaction grave simulée.",occurrences:[]},
+          {id:"nausea",group:"symptom",label:"Nausées ou inconfort digestif",emoji:"🤢",count:6,trend:"stable",summary:"Ces signes sont moins fréquents que les manifestations cutanées.",occurrences:[]}
+        ],
+        positive:[
+          {id:"feeling_good",group:"positive",label:"Peau plus calme",emoji:"😌",count:24,trend:"up",summary:"Les journées sans réaction deviennent plus fréquentes durant le dernier mois.",occurrences:[]}
+        ]
+      },
+      observations:[
+        {id:"elodie-soy-skin",icon:"🌿",title:"Soya et réactions cutanées retardées",text:"Les observations globales de démangeaisons, rougeurs, urticaire ou poussée d’eczéma apparaissent plus souvent dans les 48 heures suivant une journée contenant du soya.",statistic:"2.3",comparisonStatistic:"4.1",samples:{exposed:38,comparison:52,total:90},metrics:{strength:"strong"},confidence:{icon:"🌳",label:"Très forte tendance",cls:"high"},basis:"38 périodes suivant une exposition possible au soya ont été comparées à 52 journées sans exposition repérée. Les symptômes proviennent principalement des observations globales, pas seulement des ressentis après repas."},
+        {id:"elodie-soy-digestive",icon:"🤢",title:"Quelques réactions digestives",text:"Des nausées ou douleurs abdominales sont aussi consignées après certaines expositions, mais cette association est moins répétée que la tendance cutanée.",statistic:"3.0",comparisonStatistic:"4.0",samples:{exposed:38,comparison:52,total:90},metrics:{strength:"moderate"},confidence:{icon:"🌿",label:"Bonne tendance",cls:"medium"},basis:"Six observations digestives ont été relevées durant la période. Ce nombre demeure insuffisant pour tirer une conclusion clinique."}
+      ],
+      insights:[
+        {icon:"🔎",title:"Les observations globales révèlent le délai",text:"Plusieurs réactions sont notées le soir ou le lendemain d’un repas contenant du soya; elles auraient été difficiles à relier au seul ressenti immédiatement après le repas.",confidence:{label:"Élevée",cls:"high"},basis:"Chronologie de 90 jours combinant repas et observations globales.",kind:"reference"},
+        {icon:"📉",title:"Les poussées deviennent moins fréquentes",text:"Le dernier mois contient moins d’expositions possibles au soya et moins d’observations cutanées que les deux premiers mois.",confidence:{label:"Moyenne",cls:"medium"},basis:"Comparaison mensuelle du profil fictif; cette évolution ne confirme pas une allergie.",kind:"reference"}
+      ]
     }
   };
 
@@ -108,7 +139,7 @@
   function commonDay(store,date,seed,sleep,water,activity){
     store.days[date]={date,sleepHours:sleep,sleepTags:sleep<6.5?["frequent-wakings"]:[],sleepComment:"",water,activities:activity?[
       {id:`demo-a-${date}`,type:activity.type,minutes:activity.minutes,intensity:"moderate",at:`${date}T17:30:00`}
-    ]:[],meals:[],supplementsTaken:[],updatedAt:`${date}T21:00:00`};
+    ]:[],meals:[],observations:[],supplementsTaken:[],updatedAt:`${date}T21:00:00`};
     return store.days[date];
   }
   function buildMarie(store,offset,date,seed){
@@ -155,18 +186,46 @@
     day.meals.push(meal("sophie",date,"18:40","Souper",highFiber?(seed%2?"Chili aux haricots, riz brun et légumes":"Lentilles, légumes rôtis et quinoa"):(seed%2?"Pâtes sauce rosée":"Repas préparé et pain"),highFiber?4:2,digestive?["bloating","stomachache"]:["easy_digestion"],digestive?2:4,digestive?"Inconfort digestif en soirée.":""));
     if(rand(seed+5)<.35)day.meals.push(meal("sophie",date,"15:20","Collation",highFiber?"Pomme et amandes":"Biscuits et café",3,digestive?["bloating"]:["energy"],digestive?2:4));
   }
+  function buildElodie(store,offset,date,seed){
+    const phase=Math.floor((offset+89)/30),weekday=new Date(`${date}T12:00:00`).getDay();
+    const soyChance=[.62,.43,.20][Math.min(2,phase)],soy=rand(seed+3)<soyChance;
+    const day=commonDay(store,date,seed,Number((6.8+rand(seed)*1.1).toFixed(1)),5+Math.floor(rand(seed+2)*4),weekday===0?{type:"Marche",minutes:40}:null);
+    day.meals.push(meal("elodie",date,"07:35","Déjeuner",soy&&seed%4===0?"Bol de fruits, granola et boisson de soya":"Gruau, petits fruits et lait d’avoine",3,["feeling_good"],4));
+    const lunch=soy?(seed%2?"Bol de tofu, riz, edamame et légumes":"Salade de nouilles, légumes et vinaigrette au soya"):(seed%2?"Bol de poulet, riz et légumes":"Salade de quinoa, pois chiches et légumes");
+    const lunchMeal=meal("elodie",date,"12:25","Dîner",lunch,3,["feeling_good"],4);day.meals.push(lunchMeal);
+    const dinner=soy&&seed%3===0?"Saumon, légumes et sauce miso":"Poulet rôti, pommes de terre et légumes";
+    const dinnerMeal=meal("elodie",date,"18:45","Souper",dinner,3,["feeling_good"],4);day.meals.push(dinnerMeal);
+    if(rand(seed+8)<.28)day.meals.push(meal("elodie",date,"15:30","Collation",soy?"Yogourt de soya et bleuets":"Pomme et amandes",3,["energy"],4));
+
+    const previousKey=keyFor(offset-1),previous=store.days[previousKey];
+    const previousSoyMeals=(previous?.meals||[]).filter(m=>/(soya|tofu|edamame|miso)/i.test(m.description));
+    if(previousSoyMeals.length&&rand(seed+11)<[.64,.51,.38][Math.min(2,phase)]){
+      const variants=[
+        {tags:["itching","redness"],emoji:"🌿",duration:"several_days",notes:"Poussée d’eczéma et démangeaisons remarquées depuis ce matin, sans certitude sur le déclencheur."},
+        {tags:["hives","itching"],emoji:"🟥",duration:"few_hours",notes:"Plaques rouges qui démangent apparues en fin de journée. Aucun symptôme respiratoire."},
+        {tags:["redness","itching"],emoji:"🤚",duration:"day",notes:"Rougeurs et démangeaisons diffuses; début possiblement retardé par rapport aux repas d’hier."},
+        {tags:["nausea","stomachache"],emoji:"🤢",duration:"few_hours",notes:"Nausée et inconfort abdominal léger. Observation conservée séparément des repas."}
+      ];
+      const v=variants[seed%variants.length];
+      day.observations.push({id:`demo-elodie-observation-${date}`,date,time:seed%2?"10:40":"20:15",intensity:2+(seed%3),duration:v.duration,tags:v.tags,contexts:["food","unknown"],mealIds:previousSoyMeals.map(m=>m.id),notes:v.notes,createdAt:`${date}T10:40:00`,updatedAt:`${date}T20:15:00`});
+    }else if(!previousSoyMeals.length&&rand(seed+17)<.13){
+      day.observations.push({id:`demo-elodie-background-${date}`,date,time:"19:30",intensity:2,duration:"few_hours",tags:["redness","itching"],contexts:[seed%2?"environment":"stress","unknown"],mealIds:[],notes:"Rougeur légère sans exposition alimentaire évidente; le contexte demeure incertain.",createdAt:`${date}T19:30:00`,updatedAt:`${date}T19:30:00`});
+    }
+  }
   function create(profileId="marie"){
     const p=profiles[profileId]||profiles.marie;
-    const store={version:24,createdAt:new Date(Date.now()-180*DAY).toISOString(),updatedAt:new Date().toISOString(),settings:{waterGoal:8,theme:"system",showWelcome:false,insightsEnabled:true,nutritionObservations:true,macroTracking:true,generalRecommendations:true,showSources:true,professionalSupport:false,feelingReminders:false,feelingDelayHours:2,feelingMealTypes:["Déjeuner","Dîner","Souper"],supplements:[],demoMode:true,demoTourSeen:true,demoName:p.name,demoProfileId:p.id,demoReadOnly:true},favorites:[],days:{}};
+    const profileDays=p.id==="elodie"?90:180;
+    const store={version:24,createdAt:new Date(Date.now()-profileDays*DAY).toISOString(),updatedAt:new Date().toISOString(),settings:{waterGoal:8,theme:"system",showWelcome:false,insightsEnabled:true,nutritionObservations:true,macroTracking:true,generalRecommendations:true,showSources:true,professionalSupport:false,feelingReminders:false,feelingDelayHours:2,feelingMealTypes:["Déjeuner","Dîner","Souper"],supplements:[],demoMode:true,demoTourSeen:true,demoName:p.name,demoProfileId:p.id,demoReadOnly:true},favorites:[],days:{}};
     const favs={
       marie:[["Déjeuner rapide","Déjeuner","Cappuccino et toast au beurre d’arachide"],["Dîner de quart","Dîner","Sandwich, crudités et fruit"],["Pizza du vendredi","Souper","Pizza et salade"]],
       alex:[["Overnight oats","Déjeuner","Overnight oats, bleuets, chia et yogourt grec"],["Bol protéiné","Dîner","Poulet, quinoa et légumes"],["Collation entraînement","Collation","Banane et noix"]],
-      sophie:[["Gruau pomme-chia","Déjeuner","Gruau, pomme, chia et cannelle"],["Salade pois chiches","Dîner","Quinoa, pois chiches et légumes"],["Chili maison","Souper","Chili aux haricots et riz brun"]]
+      sophie:[["Gruau pomme-chia","Déjeuner","Gruau, pomme, chia et cannelle"],["Salade pois chiches","Dîner","Quinoa, pois chiches et légumes"],["Chili maison","Souper","Chili aux haricots et riz brun"]],
+      elodie:[["Gruau sans soya","Déjeuner","Gruau, petits fruits et lait d’avoine"],["Bol poulet-riz","Dîner","Poulet, riz et légumes"],["Souper simple","Souper","Poulet rôti, pommes de terre et légumes"]]
     }[p.id];
     store.favorites=favs.map((f,i)=>({id:`demo-${p.id}-fav-${i}`,name:f[0],type:f[1],description:f[2],usageCount:8+i*4,createdAt:store.createdAt,updatedAt:store.updatedAt}));
-    for(let offset=-179;offset<=0;offset++){
-      const date=keyFor(offset),seed=offset+700+(p.id==="alex"?1000:p.id==="sophie"?2000:0);
-      ({marie:buildMarie,alex:buildAlex,sophie:buildSophie}[p.id])(store,offset,date,seed);
+    for(let offset=-(profileDays-1);offset<=0;offset++){
+      const date=keyFor(offset),seed=offset+700+(p.id==="alex"?1000:p.id==="sophie"?2000:p.id==="elodie"?3000:0);
+      ({marie:buildMarie,alex:buildAlex,sophie:buildSophie,elodie:buildElodie}[p.id])(store,offset,date,seed);
     }
     return store;
   }
