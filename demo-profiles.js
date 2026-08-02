@@ -4,7 +4,7 @@
   const profiles = {
     marie: {
       id:"marie", name:"Marie", icon:"👩‍⚕️", age:34, scenario:"Produits laitiers",
-      summary:"Horaires variables, repas rapides et maux de tête qui diminuent après une réduction graduelle des produits laitiers.",
+      summary:"Horaires variables, repas rapides et inconforts digestifs qui diminuent après une réduction graduelle des produits laitiers.",
       color:"dairy"
     },
     alex: {
@@ -24,13 +24,17 @@
       story: {
         strength: "Tu cuisines davantage et tes repas sans produits laitiers sont devenus plus fréquents au fil des derniers mois.",
         habit: "Tu as progressivement remplacé plusieurs produits laitiers par des alternatives, surtout au déjeuner et dans tes collations.",
-        suggestion: "Continue cette transition encore quelques semaines et observe si la diminution récente des maux de tête se maintient."
+        suggestion: "Continue cette transition encore quelques semaines et observe si la diminution récente des inconforts digestifs se maintient."
       },
       feelings: {
         negative: [
-          {id:"headache",group:"symptom",label:"Maux de tête",emoji:"🤕",count:27,trend:"down",summary:"Ils sont nettement moins fréquents durant les deux derniers mois.",occurrences:[]},
-          {id:"bloating",group:"symptom",label:"Ballonnements",emoji:"🫧",count:12,trend:"down",summary:"Ils apparaissent surtout après certains repas riches en produits laitiers.",occurrences:[]},
-          {id:"fatigue",group:"symptom",label:"Fatigue",emoji:"😴",count:18,trend:"stable",summary:"Elle reste plus fréquente après les quarts tardifs et les nuits courtes.",occurrences:[]}
+          {id:"bloating",group:"symptom",label:"Ballonnements",emoji:"🫃",count:31,trend:"down",summary:"Ils apparaissent surtout après certains repas riches en produits laitiers.",occurrences:[]},
+          {id:"gas",group:"symptom",label:"Gaz",emoji:"💨",count:26,trend:"down",summary:"Les épisodes diminuent à mesure que les produits laitiers deviennent moins fréquents.",occurrences:[]},
+          {id:"cramps",group:"symptom",label:"Crampes abdominales",emoji:"😖",count:18,trend:"down",summary:"Elles accompagnent parfois les ballonnements et les gargouillis après le repas.",occurrences:[]},
+          {id:"diarrhea",group:"symptom",label:"Selles molles ou diarrhée",emoji:"💩",count:13,trend:"down",summary:"Ce symptôme est moins fréquent, mais revient dans certains épisodes digestifs.",occurrences:[]},
+          {id:"nausea",group:"symptom",label:"Nausées",emoji:"🤢",count:8,trend:"down",summary:"Elles sont occasionnelles et surtout notées avec un ventre très gonflé ou tendu.",occurrences:[]},
+          {id:"fatigue",group:"symptom",label:"Fatigue après le repas",emoji:"🥴",count:11,trend:"stable",summary:"Elle est parfois notée avec l’inconfort digestif, mais peut aussi être liée aux quarts tardifs.",occurrences:[]},
+          {id:"headache",group:"symptom",label:"Maux de tête",emoji:"🤕",count:4,trend:"stable",summary:"Mention occasionnelle et moins spécifique; le journal ne permet pas d’en tirer une conclusion.",occurrences:[]}
         ],
         positive: [
           {id:"feeling_good",group:"positive",label:"Je me sens bien",emoji:"😊",count:38,trend:"up",summary:"Ce ressenti apparaît plus souvent depuis la réduction des produits laitiers.",occurrences:[]},
@@ -38,11 +42,11 @@
         ]
       },
       observations: [
-        {id:"marie-dairy-headache",icon:"🥛",title:"Produits laitiers et énergie plus faible",text:"Les journées contenant plusieurs produits laitiers sont plus souvent associées à une énergie plus faible et à des maux de tête dans ce journal.",statistic:"2.5",comparisonStatistic:"3.7",samples:{exposed:52,comparison:113,total:165},metrics:{strength:"strong"},confidence:{icon:"🌳",label:"Très forte tendance",cls:"high"},basis:"52 journées avec produits laitiers ont été comparées à 113 journées sans cette exposition. Les maux de tête apparaissent aussi plus souvent dans le premier groupe."},
+        {id:"marie-dairy-digestion",icon:"🥛",title:"Produits laitiers et inconfort digestif",text:"Les journées contenant plusieurs produits laitiers sont plus souvent associées à des ballonnements, des gaz ou des crampes abdominales dans ce journal.",statistic:"2.5",comparisonStatistic:"3.7",samples:{exposed:52,comparison:113,total:165},metrics:{strength:"strong"},confidence:{icon:"🌳",label:"Très forte tendance",cls:"high"},basis:"52 journées avec produits laitiers ont été comparées à 113 journées sans cette exposition. Les inconforts digestifs apparaissent plus souvent dans le premier groupe."},
         {id:"marie-water-energy",icon:"💧",title:"Hydratation et meilleure énergie",text:"Les journées où l’hydratation atteint au moins six verres sont généralement accompagnées d’une meilleure énergie.",statistic:"3.8",comparisonStatistic:"2.9",samples:{exposed:74,comparison:91,total:165},metrics:{strength:"moderate"},confidence:{icon:"🌿",label:"Bonne tendance",cls:"medium"},basis:"L’énergie moyenne de 74 journées mieux hydratées a été comparée à celle de 91 journées moins hydratées."}
       ],
       insights: [
-        {icon:"📉",title:"Une amélioration récente se confirme",text:"Les maux de tête sont passés d’environ six par mois au début du journal à un ou deux durant chacun des deux derniers mois.",confidence:{label:"Élevée",cls:"high"},basis:"Comparaison des six périodes mensuelles du profil.",kind:"reference"},
+        {icon:"📉",title:"Les inconforts digestifs diminuent",text:"Les épisodes de ballonnements, gaz ou crampes sont passés d’environ sept par mois au début du journal à deux durant chacun des deux derniers mois.",confidence:{label:"Élevée",cls:"high"},basis:"Comparaison des six périodes mensuelles du profil.",kind:"reference"},
         {icon:"🏠",title:"Davantage de repas maison",text:"Les bols de riz, soupes, poissons et légumes remplacent progressivement plusieurs repas rapides du début.",confidence:{label:"Élevée",cls:"high"},basis:"Évolution des descriptions de repas sur 180 jours.",kind:"reference"}
       ]
     },
@@ -117,11 +121,17 @@
     if(missed)return;
     if(rand(seed+4)>.12) day.meals.push(meal("marie",date,late?"09:10":"06:35","Déjeuner",dairy?"Cappuccino et toast au beurre d’arachide":"Café noir, œufs et rôties",sleep>=7?4:2,sleep<6.5?["fatigue"]:["energy"],sleep>=7?4:2));
     const lunch=dairy?(rand(seed)>.5?"Sandwich au fromage, crudités et yogourt":"Pâtes crémeuses au poulet et légumes"):(rand(seed)>.5?"Bol de riz, poulet et légumes":"Soupe, sandwich à la dinde et fruit");
-    const headache=dairy&&rand(seed+7)<([.42,.40,.34,.30,.24,.20][Math.min(5,phase)]);
-    day.meals.push(meal("marie",date,"12:20","Dîner",lunch,dairy?2:(water>=6?4:3),headache?["headache"]:(water<5?["fatigue"]:["feeling_good"]),headache?2:4,headache?"Mal de tête apparu dans l’après-midi.":""));
+    const digestive=dairy&&rand(seed+7)<([.58,.53,.46,.38,.29,.20][Math.min(5,phase)]);
+    const symptomSets=[["bloating","gas"],["cramps","bloating"],["diarrhea","gas"],["nausea","bloating"]];
+    const digestiveTags=digestive?symptomSets[seed%symptomSets.length].slice():[];
+    if(digestive&&rand(seed+13)<.22)digestiveTags.push("fatigue");
+    const digestiveNotes=["Ballonnements et beaucoup de gaz après le repas.","Crampes, gargouillis et sensation de ventre tendu.","Selles molles avec sensation de bouillonnement dans le ventre.","Nausée légère et ventre très gonflé après le repas."];
+    day.meals.push(meal("marie",date,"12:20","Dîner",lunch,dairy?2:(water>=6?4:3),digestive?digestiveTags:(water<5?["fatigue"]:["feeling_good"]),digestive?2:4,digestive?digestiveNotes[seed%digestiveNotes.length]:""));
     const friday=weekday===5; const dinner=friday?(dairy?"Pizza au fromage et salade":"Pizza sans fromage et salade"):(dairy?"Poulet, pommes de terre et sauce crémeuse":"Saumon, pommes de terre et légumes");
-    day.meals.push(meal("marie",date,"19:05","Souper",dinner,dairy?2:4,dairy&&rand(seed+6)<.2?["bloating"]:["feeling_good"],dairy?3:4));
-    if(rand(seed+8)<.32) day.meals.push(meal("marie",date,"15:40","Collation",dairy?"Latte et muffin":"Pomme et amandes",3,headache?["headache"]:["energy"],headache?2:4));
+    const eveningDigestive=dairy&&rand(seed+6)<.2;
+    day.meals.push(meal("marie",date,"19:05","Souper",dinner,dairy?2:4,eveningDigestive?["bloating","gas"]:["feeling_good"],dairy?3:4,eveningDigestive?"Gargouillis et ventre gonflé en soirée.":""));
+    const postMealFatigue=digestive&&rand(seed+14)<.25;
+    if(rand(seed+8)<.32) day.meals.push(meal("marie",date,"15:40","Collation",dairy?"Latte et muffin":"Pomme et amandes",3,postMealFatigue?["fatigue"]:["energy"],digestive?3:4,postMealFatigue?"Fatigue et léger malaise avec l’inconfort digestif.":""));
   }
   function buildAlex(store,offset,date,seed){
     const weekday=new Date(`${date}T12:00:00`).getDay(); const missed=rand(seed+8)<.045;
