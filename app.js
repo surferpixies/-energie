@@ -1178,7 +1178,8 @@ function openBarcodeScanner(){resetBarcodeResult();$("#barcodeManualCode").value
 function closeBarcodeScanner(){stopBarcodeCamera();$("#barcodeDialog")?.close()}
 
 function makeRatings(containerId,value){const c=$(containerId),labels=['Très faible','Faible','Moyenne','Bonne','Excellente'],safe=clamp(value||3,1,5);c.innerHTML=`<div class="energy-slider-emojis"><span>😴</span><span>😄</span></div><input class="energy-range" type="range" min="1" max="5" step="1" value="${safe}" aria-label="Énergie avant le repas"><div class="energy-slider-value"><strong>${safe} / 5</strong><span>${labels[safe-1]}</span></div>`;c.dataset.value=safe;const input=c.querySelector('.energy-range'),valueEl=c.querySelector('.energy-slider-value strong'),labelEl=c.querySelector('.energy-slider-value span');const update=()=>{const v=Number(input.value);c.dataset.value=v;valueEl.textContent=`${v} / 5`;labelEl.textContent=labels[v-1];input.style.setProperty('--energy-progress',`${(v-1)/4*100}%`)};input.addEventListener('input',update);update()}
-function populateFavoriteSelect(type){const s=$("#favoriteMealSelect");if(!s)return;const favorites=[...db.favorites].filter(f=>!type||f.type===type).sort((a,b)=>b.usageCount-a.usageCount);s.innerHTML=`<option value="">Choisir un favori…</option>${favorites.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join('')}`;s.closest('label').hidden=!favorites.length}
+function favoriteMealTypesFor(type){if(type==="Dîner"||type==="Souper")return new Set(["Dîner","Souper"]);return new Set([type])}
+function populateFavoriteSelect(type){const s=$("#favoriteMealSelect");if(!s)return;const accepted=favoriteMealTypesFor(type),favorites=[...db.favorites].filter(f=>!type||accepted.has(f.type)).sort((a,b)=>b.usageCount-a.usageCount);s.innerHTML=`<option value="">Choisir un favori…</option>${favorites.map(f=>`<option value="${f.id}">${esc(f.name)}</option>`).join('')}`;s.closest('label').hidden=!favorites.length}
 function normalizedMealDescription(value){return String(value||'').trim().replace(/\s+/g,' ').replace(/\s*([,;])\s*/g,'$1 ').replace(/[.,;]+$/,'').trim()}
 function recentMealDescriptions(type,limit=8){const now=Date.now(),groups=new Map();allMeals().filter(m=>m.type===type).forEach(m=>{const name=normalizedMealDescription(m.description),key=name.toLocaleLowerCase('fr-CA');if(!name)return;const stamp=new Date(m.updatedAt||m.createdAt||`${m.date}T${m.time||'12:00'}`).getTime()||0,ageDays=Math.max(0,(now-stamp)/86400000),recency=1/(1+ageDays/30);const item=groups.get(key)||{name,count:0,last:0,score:0};item.count++;item.last=Math.max(item.last,stamp);item.score+=1+recency;groups.set(key,item)});return [...groups.values()].sort((a,b)=>b.score-a.score||b.last-a.last||a.name.localeCompare(b.name,'fr-CA')).slice(0,limit).map(x=>x.name)}
 function recentMealsHeading(type){return ({'Déjeuner':'Derniers déjeuners','Dîner':'Derniers dîners','Souper':'Derniers soupers','Collation':'Dernières collations','Boisson':'Dernières boissons'})[type]||'Derniers repas'}
@@ -1280,23 +1281,13 @@ function splashLocalePack(){
  };
  return packs[locale]||packs["fr-CA"]
 }
-function rotatingSplashIndex(length,kind){
- if(length<2)return 0;
- const locale=window.ENERGIE_LOCALE||"fr-CA",key=`energieSplashRotation_${todayKey()}_${locale}_${kind}`;
- let shown=[];try{shown=JSON.parse(localStorage.getItem(key)||"[]").filter(index=>Number.isInteger(index)&&index>=0&&index<length)}catch(_){shown=[]}
- let available=Array.from({length},(_,index)=>index).filter(index=>!shown.includes(index));
- if(!available.length){shown=[];available=Array.from({length},(_,index)=>index)}
- const randomValue=globalThis.crypto?.getRandomValues?globalThis.crypto.getRandomValues(new Uint32Array(1))[0]:Math.floor(Math.random()*4294967296),index=available[randomValue%available.length];
- shown.push(index);try{localStorage.setItem(key,JSON.stringify(shown))}catch(_){}
- return index
-}
 function initDailySplash(){
  const wrap=$("#splashDaily"),statusEl=$("#splashStatus"),labelEl=$("#splashTipLabel"),textEl=$("#splashTipText"),appHintIconEl=$("#splashAppHintIcon"),appHintLabelEl=$("#splashAppHintLabel"),appHintTextEl=$("#splashAppHintText");
  if(!wrap||!statusEl||!labelEl||!textEl||!appHintIconEl||!appHintLabelEl||!appHintTextEl)return;
  const pack=splashLocalePack(),days=Object.values(db.days||{}).filter(day=>day&&(day.meals?.length||day.sleepHours!=null||Number(day.water)>0||day.activities?.length)).length;
  statusEl.textContent=days===0?pack.status.empty:days===1?pack.status.one:days<14?pack.status.many(days):pack.status.growing(days);
  const seed=dateSeed(todayKey()),showFeatureTip=seed%3===0;
- const pool=showFeatureTip?pack.tips:pack.facts,index=rotatingSplashIndex(pool.length,showFeatureTip?"tip":"fact");
+ const pool=showFeatureTip?pack.tips:pack.facts,index=Math.floor(seed/3)%pool.length;
  labelEl.textContent=showFeatureTip?pack.labels.tip:pack.labels.fact;textEl.textContent=pool[index];
  const randomValue=globalThis.crypto?.getRandomValues?globalThis.crypto.getRandomValues(new Uint32Array(1))[0]:Math.floor(Math.random()*4294967296);
  const previousHint=Number(sessionStorage.getItem("energieLastSplashAppHint"));
@@ -1307,7 +1298,7 @@ function initDailySplash(){
  appHintIconEl.textContent=appHintIcons[appHintIndex]||"✨";
  appHintLabelEl.textContent=pack.labels.appHint;appHintTextEl.textContent=pack.appHints[appHintIndex];wrap.hidden=false;
 }
-function dismissSplash(){const splash=$("#splashScreen");if(!splash)return;const reduced=matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;const readingTime=reduced?6300:6900;setTimeout(()=>{splash.classList.add("is-hidden");setTimeout(()=>splash.remove(),420)},readingTime)}
+function dismissSplash(){const splash=$("#splashScreen");if(!splash)return;const reduced=matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;const readingTime=reduced?4800:5400;setTimeout(()=>{splash.classList.add("is-hidden");setTimeout(()=>splash.remove(),420)},readingTime)}
 let dialogScrollY=0;function syncDialogScrollLock(){const open=!!document.querySelector('dialog[open]');if(open&&!document.body.classList.contains('dialog-open')){dialogScrollY=window.scrollY;document.body.style.top=`-${dialogScrollY}px`;document.body.classList.add('dialog-open')}else if(!open&&document.body.classList.contains('dialog-open')){document.body.classList.remove('dialog-open');document.body.style.top='';window.scrollTo(0,dialogScrollY)}}new MutationObserver(syncDialogScrollLock).observe(document.body,{subtree:true,attributes:true,attributeFilter:['open']});
 async function loadDemoAccess(){
   hasDemoAccess=false;
