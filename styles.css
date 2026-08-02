@@ -713,3 +713,23 @@ body.demo-guide-open .bottom-nav{z-index:20}
 /* V3.18.3 — séparation visuelle du contenu du splash */
 .splash-daily{margin-top:clamp(28px,5vh,44px)}
 @media(max-height:700px){.splash-daily{margin-top:14px}}
+
+/* Mode démo : consultation complète sans modification */
+.demo-detail-readonly .meal-form-actions,
+.demo-detail-readonly .observation-form-actions {
+  display: none !important;
+}
+
+.demo-detail-readonly input:disabled,
+.demo-detail-readonly select:disabled,
+.demo-detail-readonly textarea:disabled,
+.demo-detail-readonly button:disabled {
+  opacity: 1;
+  -webkit-text-fill-color: currentColor;
+}
+
+.demo-detail-readonly textarea:disabled,
+.demo-detail-readonly input:disabled,
+.demo-detail-readonly select:disabled {
+  cursor: text;
+}
