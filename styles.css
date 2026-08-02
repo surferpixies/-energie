@@ -709,3 +709,7 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .splash-app-hint .splash-tip-label{font-size:.7rem}
 .splash-app-hint p{font-size:.81rem;line-height:1.54}
 @media(max-height:700px){.splash-brand{top:24px;gap:9px}.splash-brand img{width:78px;height:78px}.splash-daily{gap:12px;margin-top:2px}.splash-tip{padding-top:10px}.splash-status{font-size:.86rem}.splash-tip p,.splash-app-hint p{font-size:.76rem;line-height:1.42}}
+
+/* V3.18.3 — séparation visuelle du contenu du splash */
+.splash-daily{margin-top:clamp(28px,5vh,44px)}
+@media(max-height:700px){.splash-daily{margin-top:14px}}
