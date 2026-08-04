@@ -3575,9 +3575,10 @@
     return FEELING_CATEGORIES.map((category) => {
       const tags = FEELING_TAGS.filter((tag) => tag.category === category.id),
         hasSelected = tags.some((tag) => selected[tag.id]),
+        selectedCount = tags.filter((tag) => selected[tag.id]).length,
         alwaysClosed = ["positive", "digestion"].includes(category.id),
         open = !alwaysClosed && (category.open || hasSelected);
-      return `<details class="feeling-tag-group feeling-tag-group-${category.id}" ${open ? "open" : ""}><summary><span><b>${category.emoji}</b><strong>${esc(t(category.label))}</strong></span><small>${tags.length}</small><i aria-hidden="true">›</i></summary><div class="feeling-tag-group-body scored-feeling-group">${tags
+      return `<details class="feeling-tag-group feeling-tag-group-${category.id}" ${open ? "open" : ""}><summary><span><b>${category.emoji}</b><strong>${esc(t(category.label))}</strong></span><small class="feeling-category-count"><em data-scored-selected-count="${mode}">${selectedCount}</em>/${tags.length}</small><i aria-hidden="true">›</i></summary><div class="feeling-tag-group-body scored-feeling-group">${tags
         .map((tag) => {
           const score = selected[tag.id] || null,
             active = !!selected[tag.id];
@@ -3601,6 +3602,14 @@
           if (prompt)
             prompt.hidden =
               !active || !!item.querySelector("[data-scored-value].active");
+          const group = item.closest(".feeling-tag-group"),
+            count = group?.querySelector(
+              `[data-scored-selected-count="${mode}"]`,
+            );
+          if (count)
+            count.textContent = String(
+              group.querySelectorAll(".scored-feeling-item.active").length,
+            );
         }),
     );
     container.querySelectorAll(`[data-scored-value="${mode}"]`).forEach(

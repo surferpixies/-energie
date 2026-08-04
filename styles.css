@@ -97,6 +97,7 @@ dialog{border:0;border-radius:28px;background:transparent;padding:0;width:min(94
 .feeling-tag-group summary b{font-size:1.08rem}
 .feeling-tag-group summary strong{font-size:.88rem}
 .feeling-tag-group summary small{color:var(--muted);font-size:.68rem;font-weight:800}
+.feeling-category-count em{font-style:normal;font-weight:950;color:var(--text)}
 .feeling-tag-group summary i{font-style:normal;font-size:1.35rem;line-height:1;color:var(--muted);transition:transform .2s ease}
 .feeling-tag-group[open] summary i{transform:rotate(90deg)}
 .feeling-tag-group-body{display:flex;flex-wrap:wrap;gap:8px;padding:10px 11px 12px}
