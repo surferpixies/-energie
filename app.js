@@ -6794,6 +6794,8 @@
     setMealChanged(m);
     $("#feelingDialog").close();
     render();
+    if ($("#mealDialog").open && $("#mealId").value === m.id)
+      updateMealFeelingUi(m);
   };
   $("#globalObservationDate").onchange = () => refreshObservationMeals();
   $("#globalObservationTime").onchange = () => refreshObservationMeals();
