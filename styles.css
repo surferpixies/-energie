@@ -98,6 +98,7 @@ dialog{border:0;border-radius:28px;background:transparent;padding:0;width:min(94
 .feeling-tag-group summary strong{font-size:.88rem}
 .feeling-tag-group summary small{color:var(--muted);font-size:.68rem;font-weight:800}
 .feeling-category-count em{font-style:normal;font-weight:950;color:var(--text)}
+.feeling-quality-notice{display:grid;gap:3px;margin-top:10px;padding:10px 12px;border:1px solid color-mix(in srgb,#d69b2d 42%,var(--border));border-radius:13px;background:color-mix(in srgb,#f2b84b 12%,var(--surface));color:var(--text)}.feeling-quality-notice[hidden]{display:none}.feeling-quality-notice strong{font-size:.8rem}.feeling-quality-notice span{color:var(--muted);font-size:.72rem;line-height:1.4}.feeling-quality-notice.strong{border-color:color-mix(in srgb,#c97528 55%,var(--border));background:color-mix(in srgb,#e5923d 15%,var(--surface))}
 .feeling-tag-group summary i{font-style:normal;font-size:1.35rem;line-height:1;color:var(--muted);transition:transform .2s ease}
 .feeling-tag-group[open] summary i{transform:rotate(90deg)}
 .feeling-tag-group-body{display:flex;flex-wrap:wrap;gap:8px;padding:10px 11px 12px}

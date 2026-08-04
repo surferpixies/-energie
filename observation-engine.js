@@ -338,7 +338,14 @@
 
   function scoredFeelingObservations(days, locale, options) {
     const tags = (window.ENERGIE_FEELING_TAGS || []).filter(tag => tag.group === "symptom");
-    const meals = days.flatMap(day => day.meals || []).filter(meal => meal?.feeling);
+    const meals = days
+      .flatMap(day => day.meals || [])
+      .filter(
+        meal =>
+          meal?.feeling &&
+          !meal.feeling?.qualityReview?.excludedFromAnalysis &&
+          !meal.feelingsBeforeQuality?.excludedFromAnalysis
+      );
     if (!tags.length || !meals.length || !FOOD?.definitions) return [];
     const results = [];
     for (const category of FOOD.definitions) {

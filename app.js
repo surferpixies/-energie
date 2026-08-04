@@ -422,6 +422,8 @@
         5,
       ),
       feelingsBefore: beforeScores,
+      feelingsBeforeQuality:
+        m.feelingsBeforeQuality || rawFeeling?.beforeQuality || null,
       notes: m.notes || "",
       nutrition: normalNutrition(m.nutrition || m.macros),
       photoUrl: m.photoUrl || null,
@@ -925,6 +927,7 @@
                 ? {
                     ...(meal.feeling || {}),
                     beforeScores: normalizeFeelingScores(meal.feelingsBefore),
+                    beforeQuality: meal.feelingsBeforeQuality || null,
                   }
                 : null,
             feeling_notified_at: meal.feelingNotifiedAt || null,
@@ -3610,6 +3613,7 @@
             count.textContent = String(
               group.querySelectorAll(".scored-feeling-item.active").length,
             );
+          updateFeelingQualityNotice(container, mode);
         }),
     );
     container.querySelectorAll(`[data-scored-value="${mode}"]`).forEach(
@@ -3623,6 +3627,7 @@
             .closest(".scored-feeling-item")
             ?.querySelector(".feeling-score-prompt");
           if (prompt) prompt.hidden = true;
+          updateFeelingQualityNotice(container, mode);
         }),
     );
   }
@@ -3643,6 +3648,73 @@
       (item) => !item.querySelector(`[data-scored-value="${mode}"].active`),
     );
   }
+  function feelingQualityAssessment(container, mode) {
+    const activeCount = container?.querySelectorAll(
+        ".scored-feeling-item.active",
+      ).length || 0,
+      scores = collectScoredFeelingScores(container, mode),
+      values = Object.values(scores),
+      total = FEELING_TAGS.length,
+      many = activeCount >= 8,
+      halfOrMore = activeCount >= Math.ceil(total / 2),
+      uniform =
+        activeCount >= 8 &&
+        values.length === activeCount &&
+        new Set(values).size === 1;
+    let extremeCount = 0;
+    if (mode === "after") {
+      const before = normalizeFeelingScores(
+        allMeals().find((meal) => meal.id === feelingMealId)?.feelingsBefore,
+      );
+      extremeCount = Object.entries(scores).filter(
+        ([id, score]) => score - (before[id] || 0) >= 4,
+      ).length;
+    }
+    const extreme = extremeCount >= 8;
+    return {
+      activeCount,
+      total,
+      many,
+      halfOrMore,
+      uniform,
+      extreme,
+      stronglyAtypical: halfOrMore || uniform || extreme,
+    };
+  }
+  function updateFeelingQualityNotice(container, mode) {
+    const notice = $(
+      mode === "before"
+        ? "#beforeFeelingQualityNotice"
+        : "#afterFeelingQualityNotice",
+    );
+    if (!notice) return;
+    const quality = feelingQualityAssessment(container, mode);
+    notice.hidden = !quality.many;
+    notice.classList.toggle("strong", quality.stronglyAtypical);
+    notice.innerHTML = quality.stronglyAtypical
+      ? `<strong>Vérification recommandée</strong><span>Cette combinaison est inhabituelle. L’app te demandera de la confirmer avant de l’utiliser dans les observations.</span>`
+      : `<strong>${quality.activeCount} ressentis sélectionnés</strong><span>Prends un instant pour vérifier que chacun correspond bien à ce que tu ressens.</span>`;
+  }
+  function reviewFeelingQuality(quality) {
+    if (!quality.stronglyAtypical)
+      return { confirmed: false, excludedFromAnalysis: false, reasons: [] };
+    const reasons = [
+      quality.halfOrMore ? "half-or-more" : null,
+      quality.uniform ? "uniform-scores" : null,
+      quality.extreme ? "extreme-change" : null,
+    ].filter(Boolean);
+    const confirmed = confirm(
+      `Cette saisie contient une combinaison inhabituelle de ressentis.\n\nAppuie sur OK si elle est exacte et doit être incluse dans les observations. Appuie sur Annuler si tu n’es pas certain.`,
+    );
+    if (confirmed)
+      return { confirmed: true, excludedFromAnalysis: false, reasons };
+    const keepExcluded = confirm(
+      `Souhaites-tu quand même conserver cette saisie?\n\nElle restera dans ton journal, mais sera temporairement exclue des observations automatiques.`,
+    );
+    return keepExcluded
+      ? { confirmed: false, excludedFromAnalysis: true, reasons }
+      : null;
+  }
   function renderBeforeFeelingPicker(meal = null) {
     const container = $("#beforeFeelingTags");
     if (!container) return;
@@ -3651,6 +3723,7 @@
       feelingScoresFor(meal, "before"),
     );
     bindScoredFeelingPicker(container, "before");
+    updateFeelingQualityNotice(container, "before");
   }
   function isFeelingEligible(m) {
     return ["Déjeuner", "Dîner", "Souper", "Collation"].includes(m.type);
@@ -3707,6 +3780,7 @@
         : feelingScoresFor(m, "before");
     $("#feelingTags").innerHTML = scoredFeelingPickerHtml("after", afterScores);
     bindScoredFeelingPicker($("#feelingTags"), "after");
+    updateFeelingQualityNotice($("#feelingTags"), "after");
     $("#feelingCarryNotice").hidden =
       hasAfter || !Object.keys(afterScores).length;
     $("#feelingNotes").value = m.feeling?.notes || "";
@@ -6716,6 +6790,10 @@
     e.preventDefault();
     if (hasUnscoredFeelings($("#beforeFeelingTags"), "before"))
       return alert("Choisis une intensité de 1 à 5 pour chaque ressenti sélectionné.");
+    const beforeQuality = reviewFeelingQuality(
+      feelingQualityAssessment($("#beforeFeelingTags"), "before"),
+    );
+    if (!beforeQuality) return;
     const d = ensureDay(db, selectedDate),
       id = $("#mealId").value,
       old = d.meals.find((x) => x.id === id),
@@ -6738,6 +6816,7 @@
         fatigueBefore: old?.fatigueBefore || 0,
         fatigueAfter: old?.fatigueAfter || 0,
         feelingsBefore,
+        feelingsBeforeQuality: beforeQuality,
         notes: $("#mealNotes").value.trim(),
         photoLocal:
           photoData && photoData.startsWith("data:")
@@ -6776,6 +6855,10 @@
     if (!m) return;
     if (hasUnscoredFeelings($("#feelingTags"), "after"))
       return alert("Choisis une intensité de 1 à 5 pour chaque ressenti sélectionné.");
+    const qualityReview = reviewFeelingQuality(
+      feelingQualityAssessment($("#feelingTags"), "after"),
+    );
+    if (!qualityReview) return;
     const scores = collectScoredFeelingScores($("#feelingTags"), "after"),
       tags = Object.keys(scores),
       notes = $("#feelingNotes").value.trim();
@@ -6786,6 +6869,7 @@
       tags,
       scores,
       beforeScores: normalizeFeelingScores(m.feelingsBefore),
+      qualityReview,
       notes,
       recordedAt: new Date().toISOString(),
     };
