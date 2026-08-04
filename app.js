@@ -3592,7 +3592,7 @@
         .map((tag) => {
           const score = selected[tag.id] || null,
             active = !!selected[tag.id];
-          return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span>${tag.emoji}</span>${esc(t(tag.label))}</button><div class="feeling-score-prompt" ${active && !score ? "" : "hidden"}>Choisis l’intensité</div><div class="feeling-score-buttons" ${active ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n} sur 5">${n}</button>`).join("")}</div></div>`;
+          return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}" data-feeling-search-label="${esc(t(tag.label))}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span>${tag.emoji}</span>${esc(t(tag.label))}</button><div class="feeling-score-prompt" ${active && !score ? "" : "hidden"}>Choisis l’intensité</div><div class="feeling-score-buttons" ${active ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n} sur 5">${n}</button>`).join("")}</div></div>`;
         })
         .join("")}</div></details>`;
     }).join("");
@@ -3621,6 +3621,7 @@
               group.querySelectorAll(".scored-feeling-item.active").length,
             );
           updateFeelingQualityNotice(container, mode);
+          applyFeelingSearch(mode);
         }),
     );
     container.querySelectorAll(`[data-scored-value="${mode}"]`).forEach(
@@ -3649,6 +3650,70 @@
           scores[toggle.dataset.scoredTag] = Number(selected.dataset.score);
       });
     return scores;
+  }
+  function normalizeFeelingSearch(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase("fr-CA")
+      .trim();
+  }
+  function feelingSearchConfig(mode) {
+    return mode === "before"
+      ? {
+          input: $("#beforeFeelingSearch"),
+          clear: $("#clearBeforeFeelingSearch"),
+          empty: $("#beforeFeelingSearchEmpty"),
+          container: $("#beforeFeelingTags"),
+        }
+      : {
+          input: $("#afterFeelingSearch"),
+          clear: $("#clearAfterFeelingSearch"),
+          empty: $("#afterFeelingSearchEmpty"),
+          container: $("#feelingTags"),
+        };
+  }
+  function applyFeelingSearch(mode) {
+    const { input, clear, empty, container } = feelingSearchConfig(mode);
+    if (!input || !container) return;
+    const query = normalizeFeelingSearch(input.value);
+    let matches = 0;
+    container.querySelectorAll(".scored-feeling-item").forEach((item) => {
+      const matchesQuery =
+        !query ||
+        normalizeFeelingSearch(item.dataset.feelingSearchLabel).includes(query);
+      if (query && matchesQuery) matches += 1;
+      item.hidden = !!query && !matchesQuery && !item.classList.contains("active");
+    });
+    container.querySelectorAll(".feeling-tag-group").forEach((group) => {
+      if (query && group.dataset.searchWasOpen == null)
+        group.dataset.searchWasOpen = group.open ? "1" : "0";
+      const hasVisibleItem = [...group.querySelectorAll(".scored-feeling-item")].some(
+        (item) => !item.hidden,
+      );
+      group.hidden = !!query && !hasVisibleItem;
+      if (query && hasVisibleItem) group.open = true;
+      if (!query && group.dataset.searchWasOpen != null) {
+        group.open = group.dataset.searchWasOpen === "1";
+        delete group.dataset.searchWasOpen;
+        group.hidden = false;
+      }
+    });
+    if (clear) clear.hidden = !query;
+    if (empty) empty.hidden = !query || matches > 0;
+  }
+  function bindFeelingSearch(mode) {
+    const { input, clear } = feelingSearchConfig(mode);
+    if (!input) return;
+    input.value = "";
+    input.oninput = () => applyFeelingSearch(mode);
+    if (clear)
+      clear.onclick = () => {
+        input.value = "";
+        applyFeelingSearch(mode);
+        input.focus();
+      };
+    applyFeelingSearch(mode);
   }
   function hasUnscoredFeelings(container, mode) {
     return [...(container?.querySelectorAll(".scored-feeling-item.active") || [])].some(
@@ -3730,6 +3795,7 @@
       feelingScoresFor(meal, "before"),
     );
     bindScoredFeelingPicker(container, "before");
+    bindFeelingSearch("before");
     updateFeelingQualityNotice(container, "before");
   }
   function isFeelingEligible(m) {
@@ -3787,6 +3853,7 @@
         : feelingScoresFor(m, "before");
     $("#feelingTags").innerHTML = scoredFeelingPickerHtml("after", afterScores);
     bindScoredFeelingPicker($("#feelingTags"), "after");
+    bindFeelingSearch("after");
     updateFeelingQualityNotice($("#feelingTags"), "after");
     $("#feelingCarryNotice").hidden =
       hasAfter || !Object.keys(afterScores).length;
