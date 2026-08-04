@@ -3579,9 +3579,9 @@
         open = !alwaysClosed && (category.open || hasSelected);
       return `<details class="feeling-tag-group feeling-tag-group-${category.id}" ${open ? "open" : ""}><summary><span><b>${category.emoji}</b><strong>${esc(t(category.label))}</strong></span><small>${tags.length}</small><i aria-hidden="true">›</i></summary><div class="feeling-tag-group-body scored-feeling-group">${tags
         .map((tag) => {
-          const score = selected[tag.id] || 3,
+          const score = selected[tag.id] || null,
             active = !!selected[tag.id];
-          return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span>${tag.emoji}</span>${esc(t(tag.label))}</button><div class="feeling-score-buttons" ${active ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n} sur 5">${n}</button>`).join("")}</div></div>`;
+          return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span>${tag.emoji}</span>${esc(t(tag.label))}</button><div class="feeling-score-prompt" ${active && !score ? "" : "hidden"}>Choisis l’intensité</div><div class="feeling-score-buttons" ${active ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n} sur 5">${n}</button>`).join("")}</div></div>`;
         })
         .join("")}</div></details>`;
     }).join("");
@@ -3597,6 +3597,10 @@
           button.classList.toggle("active", active);
           button.setAttribute("aria-pressed", String(active));
           item.querySelector(".feeling-score-buttons").hidden = !active;
+          const prompt = item.querySelector(".feeling-score-prompt");
+          if (prompt)
+            prompt.hidden =
+              !active || !!item.querySelector("[data-scored-value].active");
         }),
     );
     container.querySelectorAll(`[data-scored-value="${mode}"]`).forEach(
@@ -3606,6 +3610,10 @@
           row
             .querySelectorAll("[data-score]")
             .forEach((x) => x.classList.toggle("active", x === button));
+          const prompt = button
+            .closest(".scored-feeling-item")
+            ?.querySelector(".feeling-score-prompt");
+          if (prompt) prompt.hidden = true;
         }),
     );
   }
@@ -3620,6 +3628,11 @@
           scores[toggle.dataset.scoredTag] = Number(selected.dataset.score);
       });
     return scores;
+  }
+  function hasUnscoredFeelings(container, mode) {
+    return [...(container?.querySelectorAll(".scored-feeling-item.active") || [])].some(
+      (item) => !item.querySelector(`[data-scored-value="${mode}"].active`),
+    );
   }
   function renderBeforeFeelingPicker(meal = null) {
     const container = $("#beforeFeelingTags");
@@ -6692,6 +6705,8 @@
     );
   $("#mealForm").onsubmit = (e) => {
     e.preventDefault();
+    if (hasUnscoredFeelings($("#beforeFeelingTags"), "before"))
+      return alert("Choisis une intensité de 1 à 5 pour chaque ressenti sélectionné.");
     const d = ensureDay(db, selectedDate),
       id = $("#mealId").value,
       old = d.meals.find((x) => x.id === id),
@@ -6750,6 +6765,8 @@
     e.preventDefault();
     const m = allMeals().find((x) => x.id === feelingMealId);
     if (!m) return;
+    if (hasUnscoredFeelings($("#feelingTags"), "after"))
+      return alert("Choisis une intensité de 1 à 5 pour chaque ressenti sélectionné.");
     const scores = collectScoredFeelingScores($("#feelingTags"), "after"),
       tags = Object.keys(scores),
       notes = $("#feelingNotes").value.trim();
