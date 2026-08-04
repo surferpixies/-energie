@@ -199,6 +199,7 @@
 
     const energyValues = meals.map(meal => extractMealEnergy(meal, options)).filter(Number.isFinite);
     const averageEnergy = extractDayEnergy(day, meals, options);
+    const hasUsableFeelings = meals.some(meal => meal?.feeling && (meal.feeling.recordedAt || meal.feeling.recorded_at || (meal.feeling.tags || []).length || Object.keys(scoreMap(meal.feeling.scores)).length));
 
     return {
       ...day,
@@ -207,7 +208,8 @@
       categoryCounts,
       energyValues,
       averageEnergy,
-      hasUsableEnergy: Number.isFinite(averageEnergy)
+      hasUsableEnergy: Number.isFinite(averageEnergy),
+      hasUsableFeelings
     };
   }
 
@@ -313,10 +315,77 @@
       .filter(Boolean);
   }
 
+  function scoreMap(value) {
+    const out = {};
+    if (!value || typeof value !== "object" || Array.isArray(value)) return out;
+    Object.entries(value).forEach(([id, raw]) => {
+      const score = Number(raw);
+      if (id && score >= 1 && score <= 5) out[id] = score;
+    });
+    return out;
+  }
+
+  function mealFeelingChange(meal, tagId) {
+    const after = scoreMap(meal?.feeling?.scores);
+    if (!Object.keys(after).length && Array.isArray(meal?.feeling?.tags)) {
+      const fallback = Math.min(5, Math.max(1, Number(meal.feeling.rating) || 3));
+      meal.feeling.tags.forEach(id => { after[id] = fallback; });
+    }
+    if (!Object.keys(after).length) return null;
+    const before = scoreMap(meal?.feelingsBefore || meal?.feeling?.beforeScores);
+    return (after[tagId] || 0) - (before[tagId] || 0);
+  }
+
+  function scoredFeelingObservations(days, locale, options) {
+    const tags = (window.ENERGIE_FEELING_TAGS || []).filter(tag => tag.group === "symptom");
+    const meals = days.flatMap(day => day.meals || []).filter(meal => meal?.feeling);
+    if (!tags.length || !meals.length || !FOOD?.definitions) return [];
+    const results = [];
+    for (const category of FOOD.definitions) {
+      const exposed = meals.filter(meal => (FOOD.categoryIdsForText?.(mealText(meal)) || []).includes(category.id));
+      const comparison = meals.filter(meal => !(FOOD.categoryIdsForText?.(mealText(meal)) || []).includes(category.id));
+      if (exposed.length < options.minimumExposedDays || comparison.length < options.minimumComparisonDays) continue;
+      for (const tag of tags) {
+        const exposedChanges = exposed.map(meal => mealFeelingChange(meal, tag.id)).filter(Number.isFinite);
+        const comparisonChanges = comparison.map(meal => mealFeelingChange(meal, tag.id)).filter(Number.isFinite);
+        if (exposedChanges.length < options.minimumExposedDays || comparisonChanges.length < options.minimumComparisonDays) continue;
+        const exposedAffected = exposedChanges.filter(value => value > 0).length;
+        const comparisonAffected = comparisonChanges.filter(value => value > 0).length;
+        if (exposedAffected < 4) continue;
+        const rateA = exposedAffected / exposedChanges.length;
+        const rateB = comparisonAffected / comparisonChanges.length;
+        const averageA = average(exposedChanges);
+        const averageB = average(comparisonChanges);
+        const difference = averageA - averageB;
+        if (rateA - rateB < 0.18 || difference < 0.35) continue;
+        const categoryLabel = FOOD.getCategoryLabel?.(category.id, locale) || category.label || category.id;
+        const score = difference * Math.log2(Math.min(exposedChanges.length, comparisonChanges.length) + 1);
+        results.push({
+          id:`food-feeling:${category.id}:${tag.id}`,
+          icon:tag.emoji || category.icon || "🔎",
+          title:`${categoryLabel} et ${String(tag.label || tag.id).toLowerCase()}`,
+          text:`« ${tag.label || tag.id} » augmente plus souvent après les repas contenant la catégorie « ${categoryLabel.toLowerCase()} » que dans les autres repas comparables.`,
+          statistic:averageA.toFixed(1).replace(".",","),
+          comparisonStatistic:averageB.toFixed(1).replace(".",","),
+          confidence:confidence(exposedChanges.length, comparisonChanges.length, difference, locale),
+          samples:{exposed:exposedChanges.length,comparison:comparisonChanges.length,total:exposedChanges.length+comparisonChanges.length},
+          metrics:{strength:trendStrength(difference,0),direction:"higher",difference,rateA,rateB},
+          score,
+          basis:`${exposedAffected} aggravations parmi ${exposedChanges.length} repas contenant « ${categoryLabel.toLowerCase()} », contre ${comparisonAffected} parmi ${comparisonChanges.length} autres repas. Le calcul compare le score après au score avant pour chaque ressenti.`,
+          kind:"food-category-feeling-change",
+          category:`food:${category.id}`,
+          categoryId:category.id,
+          feelingId:tag.id
+        });
+      }
+    }
+    return results;
+  }
+
   function journalMaturity(days, locale) {
     const text = localeText(locale);
     const documentedDays = days.filter(day => day.meals.length > 0).length;
-    const analyzableDays = days.filter(day => day.hasUsableEnergy && day.meals.length > 0).length;
+    const analyzableDays = days.filter(day => day.hasUsableFeelings && day.meals.length > 0).length;
 
     if (analyzableDays >= 30) {
       return {icon: "🌳", label: text.maturity.established, days: documentedDays, analyzableDays, level: "established"};
@@ -334,7 +403,7 @@
     const cutoff = Date.now() - Number(settings.lookbackDays) * DAY_MS;
     const recentDays = days.filter(day => dateValue(day.date) >= cutoff);
 
-    const candidates = foodObservations(recentDays, locale, settings)
+    const candidates = scoredFeelingObservations(recentDays, locale, settings)
       .sort((a, b) => b.score - a.score);
 
     const observations = [];
@@ -342,7 +411,7 @@
     const limit = Number(settings.limit) || DEFAULT_OPTIONS.limit;
 
     function exposureOverlap(firstId, secondId) {
-      const eligible = recentDays.filter(day => day.hasUsableEnergy && day.meals.length > 0);
+      const eligible = recentDays.filter(day => day.hasUsableFeelings && day.meals.length > 0);
       let intersection = 0;
       let union = 0;
       eligible.forEach(day => {
@@ -364,7 +433,7 @@
       if (observations.length >= limit) break;
     }
 
-    const analyzableDays = recentDays.filter(day => day.hasUsableEnergy && day.meals.length > 0).length;
+    const analyzableDays = recentDays.filter(day => day.hasUsableFeelings && day.meals.length > 0).length;
 
     return {
       version: VERSION,

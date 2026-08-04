@@ -130,12 +130,17 @@
 
   const rand = seed => { const x=Math.sin(seed*12.9898+78.233)*43758.5453; return x-Math.floor(x); };
   const keyFor = offset => { const d=new Date(); d.setHours(12,0,0,0); d.setDate(d.getDate()+offset); return d.toLocaleDateString("en-CA"); };
-  const meal = (profile,date,time,type,description,energy,tags=[],rating=3,notes="") => ({
-    id:`demo-${profile}-${date}-${time.replace(":","")}-${type}`, date,time,type,description,
-    fatigueBefore:energy,fatigueAfter:0,notes,
-    feeling:{rating,tags,notes:"",recordedAt:`${date}T${time}:00`},
-    createdAt:`${date}T${time}:00`,updatedAt:`${date}T${time}:00`
-  });
+  const POSITIVE_FEELINGS=new Set(["feeling_good","stable_energy","energy","satisfied","easy_digestion","light_after_meal","focus","good_mood","calm"]);
+  const meal = (profile,date,time,type,description,energy,tags=[],rating=3,notes="") => {
+    const scores=Object.fromEntries(tags.map(id=>[id,Math.max(1,Math.min(5,Number(rating)||3))]));
+    const feelingsBefore=Object.fromEntries(tags.filter(id=>!POSITIVE_FEELINGS.has(id)).map(id=>[id,Math.max(1,(scores[id]||3)-2)]));
+    return {
+      id:`demo-${profile}-${date}-${time.replace(":","")}-${type}`, date,time,type,description,
+      fatigueBefore:energy,fatigueAfter:0,feelingsBefore,notes,
+      feeling:{rating,tags,scores,beforeScores:feelingsBefore,notes:"",recordedAt:`${date}T${time}:00`},
+      createdAt:`${date}T${time}:00`,updatedAt:`${date}T${time}:00`
+    }
+  };
   function commonDay(store,date,seed,sleep,water,activity){
     store.days[date]={date,sleepHours:sleep,sleepTags:sleep<6.5?["frequent-wakings"]:[],sleepComment:"",water,activities:activity?[
       {id:`demo-a-${date}`,type:activity.type,minutes:activity.minutes,intensity:"moderate",at:`${date}T17:30:00`}

@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.18.3">
+  <link rel="stylesheet" href="styles.css?v=3.20.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -98,10 +98,7 @@
         <p id="nutritionEstimateNote" class="muted tiny">Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.</p>
         <button type="button" class="text-button nutrition-clear" id="clearMealNutrition">Effacer les valeurs</button>
       </section>
-      <div class="energy-picker">
-        <span>Énergie avant le repas</span>
-        <div id="fatigueBeforePicker" class="energy-slider" role="radiogroup" aria-label="Énergie avant le repas"></div>
-      </div>
+      <fieldset class="feeling-fieldset meal-before-feelings"><legend>Avant le repas <span class="muted tiny">(facultatif)</span></legend><p class="muted small">Sélectionne ce que tu ressens maintenant et indique l’intensité de chaque élément.</p><div id="beforeFeelingTags" class="feeling-tags scored-feeling-picker"></div></fieldset>
       <label>Photo facultative<input id="mealPhoto" type="file" accept="image/*" capture="environment"></label>
       <div id="photoPreviewWrap" class="photo-preview-wrap" hidden><img id="photoPreview" alt="Aperçu"><button type="button" id="removePhoto" class="secondary small">Retirer la photo</button></div>
       <label>Notes facultatives<textarea id="mealNotes" name="energie_meal_notes_value" autocomplete="one-time-code" autocapitalize="sentences" rows="2" placeholder="Contexte, digestion, humeur…"></textarea></label>
@@ -182,10 +179,10 @@
 
   <dialog id="feelingDialog">
     <form id="feelingForm" class="dialog-card feeling-dialog-card" autocomplete="off">
-      <div class="dialog-header"><div><p class="eyebrow">Après le repas</p><h2>😊 Ressenti</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
+      <div class="dialog-header"><div><p class="eyebrow">Après le repas</p><h2>😊 Ressentis après</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
       <div class="feeling-context"><span>🍽️</span><strong id="feelingMealContext"></strong></div>
-      <fieldset class="feeling-fieldset"><legend>Comment te sens-tu?</legend><div id="feelingRating" class="feeling-rating" role="radiogroup" aria-label="Ressenti général"></div></fieldset>
-      <fieldset class="feeling-fieldset"><legend>Qu’as-tu ressenti?</legend><p class="muted small">Sélectionne tous les éléments qui s’appliquent.</p><div id="feelingTags" class="feeling-tags"></div></fieldset>
+      <div id="feelingCarryNotice" class="notice info-notice" hidden><strong>Repris du ressenti avant</strong><p>Les mêmes éléments et intensités sont préremplis. Modifie-les, retire-les ou ajoute d’autres ressentis selon ton état actuel.</p></div>
+      <fieldset class="feeling-fieldset"><legend>Qu’as-tu ressenti après?</legend><p class="muted small">Chaque élément sélectionné possède sa propre intensité.</p><div id="feelingTags" class="feeling-tags scored-feeling-picker"></div></fieldset>
       <label>Autre chose? <textarea id="feelingNotes" name="energie_feeling_notes_value" autocomplete="one-time-code" autocapitalize="sentences" rows="3" placeholder="Notes facultatives"></textarea></label>
       <button type="submit" class="primary">Enregistrer le ressenti</button>
     </form>
@@ -342,10 +339,10 @@
   <script src="brain/parser.js?v=3.9.0"></script>
   <script src="brain/confidence.js?v=3.8.0"></script>
   <script src="brain/profile.js?v=3.8.0"></script>
-  <script src="brain/insight-engine.js?v=3.13.1"></script>
+  <script src="brain/insight-engine.js?v=3.20.0"></script>
   <script src="brain/index.js?v=3.12.0"></script>
-  <script src="observation-engine.js?v=3.8.0"></script>
-  <script src="demo-profiles.js?v=3.19.0"></script>
-  <script src="app.js?v=3.19.0"></script>
+  <script src="observation-engine.js?v=3.20.0"></script>
+  <script src="demo-profiles.js?v=3.20.0"></script>
+  <script src="app.js?v=3.20.0"></script>
 </body>
 </html>
