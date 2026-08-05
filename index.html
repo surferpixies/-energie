@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.24.2">
+  <link rel="stylesheet" href="styles.css?v=3.25.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -84,9 +84,12 @@
         <div id="recentFoodsList" class="recent-foods-list"></div>
       </section>
       <label class="meal-time-row" for="mealTime"><span class="meal-time-label"><span aria-hidden="true">🕒</span><span>Heure</span></span><input id="mealTime" type="time" name="energie_meal_clock_value" autocomplete="one-time-code" required></label>
-      <label>Ce que tu as mangé ou bu<textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea></label>
+      <div class="meal-description-field">
+        <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div>
+        <textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea>
+        <small id="mealFavoriteFeedback" class="meal-favorite-feedback" role="status" aria-live="polite" hidden></small>
+      </div>
       <button type="button" class="secondary barcode-scan-launch" id="openBarcodeScanner"><span aria-hidden="true">▥</span><span><strong>Scanner un produit</strong><small>Ajoute rapidement son nom au repas</small></span></button>
-      <button type="button" id="mealFavoriteToggle" class="meal-favorite-toggle" aria-pressed="false"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span><span><strong>Ajouter ce repas aux favoris</strong><small>Retrouve-le en un toucher la prochaine fois</small></span></button>
       <details id="mealFeelingsDetails" class="meal-feelings-card">
         <summary>
           <span class="meal-feelings-card-icon" aria-hidden="true">😊</span>
@@ -370,10 +373,10 @@
   <script src="brain/parser.js?v=3.9.0"></script>
   <script src="brain/confidence.js?v=3.8.0"></script>
   <script src="brain/profile.js?v=3.8.0"></script>
-  <script src="brain/insight-engine.js?v=3.24.2"></script>
+  <script src="brain/insight-engine.js?v=3.25.0"></script>
   <script src="brain/index.js?v=3.12.0"></script>
-  <script src="observation-engine.js?v=3.24.2"></script>
-  <script src="demo-profiles.js?v=3.24.2"></script>
-  <script src="app.js?v=3.24.2"></script>
+  <script src="observation-engine.js?v=3.25.0"></script>
+  <script src="demo-profiles.js?v=3.25.0"></script>
+  <script src="app.js?v=3.25.0"></script>
 </body>
 </html>

@@ -6424,12 +6424,32 @@
     button.setAttribute("aria-pressed", String(!!active));
     button.dataset.favoriteId = favoriteId || "";
     button.querySelector(".meal-favorite-toggle-icon").textContent = active ? "★" : "☆";
-    button.querySelector("strong").textContent = active
-      ? "Ce repas est dans mes favoris"
+    const label = active
+      ? "Retirer ce repas des favoris"
       : "Ajouter ce repas aux favoris";
-    button.querySelector("small").textContent = active
-      ? "Retouche ici pour le retirer"
-      : "Retrouve-le en un toucher la prochaine fois";
+    button.setAttribute("aria-label", label);
+    button.title = label;
+    const feedback = $("#mealFavoriteFeedback");
+    clearTimeout(favoriteFeedbackTimer);
+    if (feedback) {
+      feedback.classList.remove("is-visible");
+      feedback.hidden = true;
+    }
+  }
+  let favoriteFeedbackTimer = null;
+  function showMealFavoriteFeedback(active) {
+    const feedback = $("#mealFavoriteFeedback");
+    if (!feedback) return;
+    clearTimeout(favoriteFeedbackTimer);
+    feedback.textContent = active
+      ? "★ Sera ajouté aux favoris à l’enregistrement"
+      : "☆ Sera retiré des favoris à l’enregistrement";
+    feedback.hidden = false;
+    feedback.classList.add("is-visible");
+    favoriteFeedbackTimer = setTimeout(() => {
+      feedback.classList.remove("is-visible");
+      feedback.hidden = true;
+    }, 1800);
   }
   function applyFavoriteToMealForm(favorite) {
     if (!favorite) return;
@@ -7030,8 +7050,10 @@
   };
   $("#mealFavoriteToggle").onclick = () => {
     const button = $("#mealFavoriteToggle"),
-      active = button.getAttribute("aria-pressed") === "true";
-    setMealFavoriteToggle(!active, button.dataset.favoriteId);
+      active = button.getAttribute("aria-pressed") === "true",
+      next = !active;
+    setMealFavoriteToggle(next, button.dataset.favoriteId);
+    showMealFavoriteFeedback(next);
   };
   $("#estimateMealNutrition").onclick = estimateCurrentMealNutrition;
   $("#clearMealNutrition").onclick = () =>
