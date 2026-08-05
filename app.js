@@ -3196,6 +3196,7 @@
       label: "Rassasié",
       group: "positive",
       category: "positive",
+      afterOnly: true,
     },
     {
       id: "easy_digestion",
@@ -3210,6 +3211,7 @@
       label: "Léger après le repas",
       group: "positive",
       category: "positive",
+      afterOnly: true,
     },
     {
       id: "focus",
@@ -3323,6 +3325,7 @@
       label: "Faim rapidement après le repas",
       group: "symptom",
       category: "digestion",
+      afterOnly: true,
     },
     {
       id: "low_appetite",
@@ -3588,10 +3591,14 @@
       (meal?.feeling?.tags || []).map((id) => [id, fallback]),
     );
   }
+  function feelingTagsForMode(mode) {
+    return FEELING_TAGS.filter((tag) => mode !== "before" || !tag.afterOnly);
+  }
   function scoredFeelingPickerHtml(mode, scores = {}) {
-    const selected = normalizeFeelingScores(scores);
+    const selected = normalizeFeelingScores(scores),
+      availableTags = feelingTagsForMode(mode);
     return FEELING_CATEGORIES.map((category) => {
-      const tags = FEELING_TAGS.filter((tag) => tag.category === category.id),
+      const tags = availableTags.filter((tag) => tag.category === category.id),
         hasSelected = tags.some((tag) => selected[tag.id]),
         selectedCount = tags.filter((tag) => selected[tag.id]).length,
         alwaysClosed = ["positive", "digestion"].includes(category.id),
@@ -3734,7 +3741,7 @@
       ).length || 0,
       scores = collectScoredFeelingScores(container, mode),
       values = Object.values(scores),
-      total = FEELING_TAGS.length,
+      total = feelingTagsForMode(mode).length,
       many = activeCount >= 8,
       halfOrMore = activeCount >= Math.ceil(total / 2),
       uniform =
