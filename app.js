@@ -3698,7 +3698,7 @@
         !query ||
         normalizeFeelingSearch(item.dataset.feelingSearchLabel).includes(query);
       if (query && matchesQuery) matches += 1;
-      item.hidden = !!query && !matchesQuery && !item.classList.contains("active");
+      item.hidden = !!query && !matchesQuery;
     });
     container.querySelectorAll(".feeling-tag-group").forEach((group) => {
       if (query && group.dataset.searchWasOpen == null)
