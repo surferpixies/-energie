@@ -6632,11 +6632,17 @@
           .join("")
       : '<span class="meal-feeling-empty">Aucun ressenti</span>';
   }
-  function feelingScorePreviewText(scores = {}) {
+  function feelingCompactSummaryHtml(label, scores = {}) {
     const items = feelingScorePreviewItems(scores);
-    return items.length
-      ? items.map((item) => `${t(item.label)} ${item.score}/5`).join(" · ")
-      : "Aucun ressenti";
+    const rows = items.length
+      ? items
+          .map(
+            (item) =>
+              `<span class="meal-feelings-mini-item"><i aria-hidden="true">${item.emoji}</i><small>${esc(t(item.label))}</small><b>${item.score}/5</b></span>`,
+          )
+          .join("")
+      : '<span class="meal-feelings-mini-empty">Aucun ressenti</span>';
+    return `<span class="meal-feelings-mini-group"><strong>${label}</strong><span class="meal-feelings-mini-list">${rows}</span></span>`;
   }
   function updateMealFeelingsOverview(meal = null) {
     const collapsed = $("#mealFeelingsCollapsedPreview"),
@@ -6669,7 +6675,7 @@
         ? `${afterItems.length} ressenti${afterItems.length > 1 ? "s" : ""}`
         : "Aucun ressenti";
     collapsed.innerHTML = beforeItems.length || afterItems.length
-      ? `<span><b>Avant</b><small>${esc(feelingScorePreviewText(beforeScores))}</small></span><span><b>Après</b><small>${esc(feelingScorePreviewText(afterScores))}</small></span>`
+      ? `${feelingCompactSummaryHtml("Avant", beforeScores)}${feelingCompactSummaryHtml("Après", afterScores)}`
       : "<small>Aucun ressenti</small>";
   }
   function openMeal(id = null, presetType = null) {
