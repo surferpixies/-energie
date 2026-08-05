@@ -2947,13 +2947,14 @@
   }
   function mealCard(m, opts = {}) {
     const feeling = m.feeling;
+    const favorite = favoriteForMeal(m);
     const feelingEligible = isFeelingEligible(m);
     const beforeCount = Object.keys(feelingScoresFor(m, "before")).length;
     const afterCount = Object.keys(feelingScoresFor(m, "after")).length;
     const feelingPreview = feelingEligible
       ? `<div class="meal-feeling-preview ${feeling ? "is-set" : "is-empty"}">${feeling ? `<span>Après · ${afterCount} ressenti${afterCount > 1 ? "s" : ""}</span>` : `<span>Ressenti après</span><small>À noter</small>`}</div>`
       : "";
-    return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${m.photoUrl || m.photoLocal ? `<img src="${esc(m.photoUrl || m.photoLocal)}" alt="">` : mealIcon(m.type, m.description)}</div><div class="meal-card-body"><h3>${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${esc(t(m.type))}${opts.showDate ? ` · ${esc(formatDate(m.date))}` : ""}</div>${db.settings.macroTracking && m.nutrition ? `<div class="meal-macros">≈ ${esc(nutritionText(m.nutrition))}</div>` : ""}${feelingPreview}<div class="meal-footer">${beforeCount ? `<span class="chip">Avant · ${beforeCount}</span>` : ""}${feelingEligible ? `<button class="meal-feeling-inline ${feeling ? "is-set" : "is-empty"}" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? `Après · ${afterCount}` : "Ressenti après"}</button>` : ""}</div></div><div class="meal-actions">${feelingEligible ? `<button class="feeling-meal" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? "😊" : "＋😊"}</button>` : ""}<button class="favorite-meal" data-favorite="${m.id}" title="Ajouter aux favoris">☆</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div></article>`;
+    return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${m.photoUrl || m.photoLocal ? `<img src="${esc(m.photoUrl || m.photoLocal)}" alt="">` : mealIcon(m.type, m.description)}</div><div class="meal-card-body"><h3>${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${esc(t(m.type))}${opts.showDate ? ` · ${esc(formatDate(m.date))}` : ""}</div>${db.settings.macroTracking && m.nutrition ? `<div class="meal-macros">≈ ${esc(nutritionText(m.nutrition))}</div>` : ""}${feelingPreview}<div class="meal-footer">${beforeCount ? `<span class="chip">Avant · ${beforeCount}</span>` : ""}${feelingEligible ? `<button class="meal-feeling-inline ${feeling ? "is-set" : "is-empty"}" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? `Après · ${afterCount}` : "Ressenti après"}</button>` : ""}</div></div><div class="meal-actions">${feelingEligible ? `<button class="feeling-meal" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? "😊" : "＋😊"}</button>` : ""}<button class="favorite-meal ${favorite ? "is-favorite" : ""}" data-favorite="${m.id}" title="${favorite ? "Retirer des favoris" : "Ajouter aux favoris"}">${favorite ? "★" : "☆"}</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div></article>`;
   }
   function bindMealCards() {
     $$("[data-meal]").forEach(
@@ -2985,7 +2986,14 @@
             m = ensureDay(db, card.dataset.date).meals.find(
               (x) => x.id === b.dataset.favorite,
             );
-          if (m) createFavoriteFromMeal(m);
+          if (!m) return;
+          const favorite = favoriteForMeal(m);
+          if (favorite) {
+            if (confirm(`Retirer « ${favorite.name} » des favoris?`)) {
+              deleteFavoriteLocal(favorite);
+              render();
+            }
+          } else createFavoriteFromMeal(m);
         }),
     );
     $$("[data-feeling]").forEach(
@@ -6330,15 +6338,69 @@
       return new Set(["Dîner", "Souper"]);
     return new Set([type]);
   }
+  function favoriteForMeal(meal) {
+    if (!meal) return null;
+    const description = normalizedMealDescription(meal.description).toLocaleLowerCase("fr-CA"),
+      accepted = favoriteMealTypesFor(meal.type);
+    return db.favorites.find(
+      (f) =>
+        accepted.has(f.type) &&
+        normalizedMealDescription(f.description).toLocaleLowerCase("fr-CA") === description,
+    ) || null;
+  }
+  function favoritesForType(type) {
+    const accepted = favoriteMealTypesFor(type);
+    return [...db.favorites]
+      .filter((f) => !type || accepted.has(f.type))
+      .sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
+  }
   function populateFavoriteSelect(type) {
     const s = $("#favoriteMealSelect");
     if (!s) return;
-    const accepted = favoriteMealTypesFor(type),
-      favorites = [...db.favorites]
-        .filter((f) => !type || accepted.has(f.type))
-        .sort((a, b) => b.usageCount - a.usageCount);
+    const favorites = favoritesForType(type);
     s.innerHTML = `<option value="">Choisir un favori…</option>${favorites.map((f) => `<option value="${f.id}">${esc(f.name)}</option>`).join("")}`;
     s.closest("label").hidden = !favorites.length;
+  }
+  function setMealFavoriteToggle(active, favoriteId = "") {
+    const button = $("#mealFavoriteToggle");
+    if (!button) return;
+    button.setAttribute("aria-pressed", String(!!active));
+    button.dataset.favoriteId = favoriteId || "";
+    button.querySelector(".meal-favorite-toggle-icon").textContent = active ? "★" : "☆";
+    button.querySelector("strong").textContent = active
+      ? "Ce repas est dans mes favoris"
+      : "Ajouter ce repas aux favoris";
+    button.querySelector("small").textContent = active
+      ? "Retouche ici pour le retirer"
+      : "Retrouve-le en un toucher la prochaine fois";
+  }
+  function applyFavoriteToMealForm(favorite) {
+    if (!favorite) return;
+    $("#mealDescription").value = favorite.description;
+    $("#mealNotes").value = favorite.notes || "";
+    $("#favoriteMealSelect").value = favorite.id;
+    setMealFavoriteToggle(true, favorite.id);
+    favorite.usageCount = (favorite.usageCount || 0) + 1;
+    favorite.updatedAt = new Date().toISOString();
+    setFavoriteChanged(favorite);
+  }
+  function populateFavoriteQuickPicks(type) {
+    const section = $("#favoriteQuickSection"),
+      list = $("#favoriteQuickList"),
+      favorites = favoritesForType(type).slice(0, 8);
+    if (!section || !list) return;
+    section.hidden = !favorites.length;
+    list.innerHTML = favorites
+      .map((f) => `<button type="button" class="meal-quick-pick" data-quick-favorite="${f.id}" title="${esc(f.description)}"><span>${mealIcon(f.type, f.description)}</span><strong>${esc(f.name)}</strong></button>`)
+      .join("");
+    $$('[data-quick-favorite]').forEach(
+      (button) =>
+        (button.onclick = () => {
+          const favorite = db.favorites.find((f) => f.id === button.dataset.quickFavorite);
+          applyFavoriteToMealForm(favorite);
+          $$('[data-quick-favorite]').forEach((x) => x.classList.toggle("active", x === button));
+        }),
+    );
   }
   function normalizedMealDescription(value) {
     return String(value || "")
@@ -6408,9 +6470,11 @@
       (button) =>
         (button.onclick = () => {
           const name = items[Number(button.dataset.recentFood)] || "";
-          const field = $("#mealDescription"),
-            current = field.value.trim();
-          field.value = current ? `${current}, ${name}` : name;
+          const field = $("#mealDescription");
+          field.value = name;
+          $("#mealNotes").value = "";
+          setMealFavoriteToggle(false);
+          $$('[data-quick-favorite]').forEach((x) => x.classList.remove("active"));
           field.focus();
           field.setSelectionRange(field.value.length, field.value.length);
         }),
@@ -6471,6 +6535,7 @@
     $("#copyYesterdayDinner").hidden = value !== "Dîner";
     populateFavoriteSelect(value);
     $("#favoriteMealSelect").value = "";
+    populateFavoriteQuickPicks(value);
     populateRecentFoods(value);
     if (!["Déjeuner", "Dîner", "Souper"].includes(value))
       setMealSuggestion(null, value);
@@ -6535,6 +6600,9 @@
         : null;
     setMealSuggestion(editRecommendation, type);
     $("#mealNotes").value = m?.notes || "";
+    const favorite = favoriteForMeal(m);
+    setMealFavoriteToggle(!!favorite, favorite?.id || "");
+    $("#mealOptionalDetails").open = !!(m?.notes || m?.photoLocal || m?.photoUrl || m?.nutrition);
     $("#mealNutritionSection").hidden = !db.settings.macroTracking;
     fillNutritionInputs(
       m?.nutrition
@@ -6639,11 +6707,7 @@
     return canvas.toDataURL("image/jpeg", 0.78);
   }
   function createFavoriteFromMeal(m) {
-    const existing = db.favorites.find(
-      (f) =>
-        f.description.trim().toLowerCase() ===
-        m.description.trim().toLowerCase(),
-    );
+    const existing = favoriteForMeal(m);
     if (existing) {
       alert("Ce repas est déjà dans tes favoris.");
       return;
@@ -6666,11 +6730,7 @@
     if (!f) return;
     openMeal(null, f.type);
     $("#mealType").value = f.type;
-    $("#mealDescription").value = f.description;
-    $("#mealNotes").value = f.notes || "";
-    f.usageCount = (f.usageCount || 0) + 1;
-    f.updatedAt = new Date().toISOString();
-    setFavoriteChanged(f);
+    applyFavoriteToMealForm(f);
   }
 
   let globalObservationPhotoData = null;
@@ -6855,12 +6915,12 @@
   };
   $("#favoriteMealSelect").onchange = (e) => {
     const f = db.favorites.find((x) => x.id === e.target.value);
-    if (!f) return;
-    $("#mealDescription").value = f.description;
-    $("#mealNotes").value = f.notes || "";
-    f.usageCount = (f.usageCount || 0) + 1;
-    f.updatedAt = new Date().toISOString();
-    setFavoriteChanged(f);
+    applyFavoriteToMealForm(f);
+  };
+  $("#mealFavoriteToggle").onclick = () => {
+    const button = $("#mealFavoriteToggle"),
+      active = button.getAttribute("aria-pressed") === "true";
+    setMealFavoriteToggle(!active, button.dataset.favoriteId);
   };
   $("#estimateMealNutrition").onclick = estimateCurrentMealNutrition;
   $("#clearMealNutrition").onclick = () =>
@@ -6918,6 +6978,30 @@
     else d.meals.push(meal);
     const savedMeal = old || meal;
     setMealChanged(savedMeal);
+    const favoriteButton = $("#mealFavoriteToggle"),
+      wantsFavorite = favoriteButton.getAttribute("aria-pressed") === "true",
+      favoriteId = favoriteButton.dataset.favoriteId,
+      savedFavorite =
+        db.favorites.find((f) => f.id === favoriteId) ||
+        (wantsFavorite ? favoriteForMeal(savedMeal) : null);
+    if (wantsFavorite) {
+      if (savedFavorite) {
+        savedFavorite.description = savedMeal.description;
+        savedFavorite.notes = savedMeal.notes || "";
+        savedFavorite.type = savedMeal.type;
+        savedFavorite.updatedAt = new Date().toISOString();
+        setFavoriteChanged(savedFavorite);
+      } else {
+        const favorite = normalFavorite({
+          name: savedMeal.description.slice(0, 45),
+          type: savedMeal.type,
+          description: savedMeal.description,
+          notes: savedMeal.notes,
+        });
+        db.favorites.push(favorite);
+        setFavoriteChanged(favorite);
+      }
+    } else if (savedFavorite) deleteFavoriteLocal(savedFavorite);
     try {
       window.Brain?.learnMeal?.(savedMeal);
     } catch (memoryError) {
