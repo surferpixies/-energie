@@ -5,7 +5,7 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 27;
+  const CURRENT_VERSION = 28;
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => [...document.querySelectorAll(s)];
   const uid = () =>
@@ -210,6 +210,8 @@
     currentView = "today",
     selectedDate = todayKey(),
     syncState = "local",
+    syncBusy = false,
+    syncQueued = false,
     photoData = null,
     photoRemoved = false,
     authMode = "login",
@@ -304,6 +306,9 @@
     };
   }
   function ensureDay(store, key = todayKey()) {
+    const defaultSupplements = normalizeSupplements(
+      store.settings?.supplements || [],
+    );
     if (!store.days[key])
       store.days[key] = {
         date: key,
@@ -314,7 +319,7 @@
         activities: [],
         meals: [],
         observations: [],
-        supplementsTaken: [],
+        supplementsTaken: [...defaultSupplements],
         updatedAt: new Date().toISOString(),
       };
     const d = store.days[key];
@@ -328,12 +333,9 @@
     d.sleepTags = Array.isArray(d.sleepTags) ? d.sleepTags : [];
     d.sleepComment = typeof d.sleepComment === "string" ? d.sleepComment : "";
     d.water = Number(d.water) || 0;
-    const defaults = normalizeSupplements(store.settings?.supplements || []);
     d.supplementsTaken = normalizeSupplements(
       d.supplementsTaken || d.supplements || [],
     );
-    if (!d.supplementsTaken.length && defaults.length)
-      d.supplementsTaken = [...defaults];
     return d;
   }
   function normalNutrition(n) {
@@ -484,11 +486,9 @@
         day.observations = (d.observations || []).map((o) =>
           normalObservation(o, k),
         );
-        day.supplementsTaken = normalizeSupplements(
-          d.supplementsTaken || d.supplements || [],
-        );
-        if (!day.supplementsTaken.length && out.settings.supplements.length)
-          day.supplementsTaken = [...out.settings.supplements];
+        const savedSupplements = d.supplementsTaken ?? d.supplements;
+        if (savedSupplements != null)
+          day.supplementsTaken = normalizeSupplements(savedSupplements);
         day.updatedAt = d.updatedAt || new Date().toISOString();
       });
       return out;
@@ -768,6 +768,7 @@
   function enqueue(op) {
     if (db.settings.demoMode) return;
     const items = outbox();
+    op = { ...op, _queuedAt: `${Date.now()}-${uid()}` };
     const key = `${op.kind}:${op.id || op.date}`;
     const idx = items.findIndex((x) => `${x.kind}:${x.id || x.date}` === key);
     if (idx >= 0) items[idx] = op;
@@ -865,13 +866,36 @@
       .createSignedUrl(path, 3600);
     return error ? null : data.signedUrl;
   }
+  function syncOperationKey(op) {
+    return `${op.kind}:${op.id || op.date}`;
+  }
+  function syncOperationRevision(op) {
+    return op?._queuedAt || "legacy";
+  }
   async function syncNow() {
     if (db.settings.demoMode || !client || !session || !navigator.onLine)
       return;
+    if (syncBusy) {
+      syncQueued = true;
+      return;
+    }
+    syncBusy = true;
+    try {
+      await syncNowPass();
+    } finally {
+      syncBusy = false;
+      if (syncQueued) {
+        syncQueued = false;
+        queueMicrotask(() => syncNow());
+      }
+    }
+  }
+  async function syncNowPass() {
     syncState = "syncing";
     updateSyncBadge();
-    const remaining = [];
-    for (const op of outbox()) {
+    const operations = outbox(),
+      failed = [];
+    for (const op of operations) {
       try {
         if (op.kind === "day") {
           const d = ensureDay(db, op.date);
@@ -991,14 +1015,36 @@
         }
       } catch (e) {
         console.error("sync", e);
-        remaining.push(op);
+        failed.push(op);
       }
     }
-    setOutbox(remaining);
+    const failedRevisions = new Set(
+        failed.map(
+          (op) => `${syncOperationKey(op)}:${syncOperationRevision(op)}`,
+        ),
+      ),
+      processed = new Map(
+        operations.map((op) => [syncOperationKey(op), syncOperationRevision(op)]),
+      );
+    setOutbox(
+      outbox().filter((current) => {
+        const key = syncOperationKey(current),
+          processedRevision = processed.get(key),
+          currentRevision = syncOperationRevision(current);
+        if (processedRevision == null || currentRevision !== processedRevision)
+          return true;
+        return failedRevisions.has(`${key}:${currentRevision}`);
+      }),
+    );
     const memoryOk = await syncMemoryCloud();
-    syncState = remaining.length || !memoryOk ? "error" : "online";
+    const pending = outbox().length;
+    syncState = failed.length || !memoryOk
+      ? "error"
+      : pending
+        ? "pending"
+        : "online";
     updateSyncBadge();
-    if (!remaining.length) await pullCloud(false);
+    if (!failed.length && !pending) await pullCloud(false);
   }
   async function pullCloud(show = true) {
     if (db.settings.demoMode || !client || !session || !navigator.onLine)
@@ -1039,6 +1085,8 @@
         d.sleepComment = r.sleep_comment || "";
         d.water = r.water || 0;
         d.activities = (r.activities || []).map(normalizeActivity);
+        if (Array.isArray(r.supplements?.taken))
+          d.supplementsTaken = normalizeSupplements(r.supplements.taken);
         d.updatedAt = r.updated_at;
       }
     }
@@ -3637,6 +3685,7 @@
             );
           updateFeelingQualityNotice(container, mode);
           applyFeelingSearch(mode);
+          if (mode === "before") updateMealFeelingsOverview();
         }),
     );
     container.querySelectorAll(`[data-scored-value="${mode}"]`).forEach(
@@ -3651,6 +3700,7 @@
             ?.querySelector(".feeling-score-prompt");
           if (prompt) prompt.hidden = true;
           updateFeelingQualityNotice(container, mode);
+          if (mode === "before") updateMealFeelingsOverview();
         }),
     );
   }
@@ -6549,31 +6599,78 @@
   }
   function updateMealFeelingUi(meal) {
     const button = $("#mealFeelingButton"),
-      summary = $("#mealFeelingSummary");
-    if (!button || !summary) return;
+      unavailable = $("#mealFeelingUnavailable");
+    if (!button || !unavailable) return;
     const hasMeal = !!meal;
     button.hidden = !hasMeal;
-    if (!hasMeal) {
-      summary.textContent = "";
-      return;
+    unavailable.hidden = hasMeal;
+    if (hasMeal) {
+      button.textContent = meal.feeling
+        ? "Modifier les ressentis après"
+        : "Ajouter les ressentis après";
+      button.classList.toggle("is-set", !!meal.feeling);
+      button.classList.toggle("is-empty", !meal.feeling);
+      button.onclick = () => openFeeling(meal.id);
     }
-    const feeling = meal.feeling,
-      beforeCount = Object.keys(feelingScoresFor(meal, "before")).length,
-      afterCount = Object.keys(feelingScoresFor(meal, "after")).length;
-    const text = feeling
-      ? `${afterCount} ressenti${afterCount > 1 ? "s" : ""} après${beforeCount ? ` · ${beforeCount} avant` : ""}`
-      : beforeCount
-        ? `${beforeCount} avant · après à noter`
+    updateMealFeelingsOverview(meal);
+  }
+  function feelingScorePreviewItems(scores = {}) {
+    const normalized = normalizeFeelingScores(scores);
+    return FEELING_TAGS.filter((tag) => normalized[tag.id]).map((tag) => ({
+      ...tag,
+      score: normalized[tag.id],
+    }));
+  }
+  function feelingScorePreviewHtml(scores = {}) {
+    const items = feelingScorePreviewItems(scores);
+    return items.length
+      ? items
+          .map(
+            (item) =>
+              `<span class="meal-feeling-score-chip"><span>${item.emoji}</span>${esc(t(item.label))}<b>${item.score}/5</b></span>`,
+          )
+          .join("")
+      : '<span class="meal-feeling-empty">Aucun ressenti</span>';
+  }
+  function feelingScorePreviewText(scores = {}) {
+    const items = feelingScorePreviewItems(scores);
+    return items.length
+      ? items.map((item) => `${t(item.label)} ${item.score}/5`).join(" · ")
+      : "Aucun ressenti";
+  }
+  function updateMealFeelingsOverview(meal = null) {
+    const collapsed = $("#mealFeelingsCollapsedPreview"),
+      beforePreview = $("#beforeFeelingSelectedPreview"),
+      afterPreview = $("#afterFeelingSelectedPreview"),
+      beforeCount = $("#beforeFeelingCount"),
+      afterCount = $("#afterFeelingCount");
+    if (!collapsed || !beforePreview || !afterPreview) return;
+    const mealId = $("#mealId")?.value,
+      savedMeal =
+        meal ||
+        (mealId
+          ? ensureDay(db, selectedDate).meals.find((item) => item.id === mealId)
+          : null),
+      picker = $("#beforeFeelingTags"),
+      beforeScores = picker?.children.length
+        ? collectScoredFeelingScores(picker, "before")
+        : feelingScoresFor(savedMeal, "before"),
+      afterScores = feelingScoresFor(savedMeal, "after"),
+      beforeItems = feelingScorePreviewItems(beforeScores),
+      afterItems = feelingScorePreviewItems(afterScores);
+    beforePreview.innerHTML = feelingScorePreviewHtml(beforeScores);
+    afterPreview.innerHTML = feelingScorePreviewHtml(afterScores);
+    if (beforeCount)
+      beforeCount.textContent = beforeItems.length
+        ? `${beforeItems.length} ressenti${beforeItems.length > 1 ? "s" : ""}`
         : "Aucun ressenti";
-    summary.textContent = text;
-    button.textContent = feeling
-      ? "Modifier les ressentis après"
-      : "Ajouter les ressentis après";
-    button.classList.toggle("is-set", !!feeling);
-    button.classList.toggle("is-empty", !feeling);
-    button.onclick = () => {
-      if (meal?.id) openFeeling(meal.id);
-    };
+    if (afterCount)
+      afterCount.textContent = afterItems.length
+        ? `${afterItems.length} ressenti${afterItems.length > 1 ? "s" : ""}`
+        : "Aucun ressenti";
+    collapsed.innerHTML = beforeItems.length || afterItems.length
+      ? `<span><b>Avant</b><small>${esc(feelingScorePreviewText(beforeScores))}</small></span><span><b>Après</b><small>${esc(feelingScorePreviewText(afterScores))}</small></span>`
+      : "<small>Aucun ressenti</small>";
   }
   function openMeal(id = null, presetType = null) {
     const d = ensureDay(db, selectedDate),
@@ -6629,8 +6726,9 @@
         : null,
     );
     renderBeforeFeelingPicker(m);
+    $("#mealFeelingsDetails").open = false;
+    $("#beforeFeelingEditor").open = false;
     updateMealFeelingUi(m);
-    $("#mealFeelingButton").onclick = m ? () => openFeeling(m.id) : null;
     photoData = m?.photoLocal || m?.photoUrl || null;
     photoRemoved = false;
     showPhotoPreview();

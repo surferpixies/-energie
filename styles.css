@@ -302,10 +302,10 @@ body.demo-guide-open .bottom-nav{z-index:20}
 
 
 /* Scanner de codes-barres — V2.7.0 */
-.barcode-scan-launch{display:flex;align-items:center;gap:12px;width:100%;text-align:left;justify-content:flex-start;padding:12px 14px}
-.barcode-scan-launch>span:first-child{font-size:1.7rem;line-height:1;transform:rotate(90deg)}
-.barcode-scan-launch>span:last-child{display:flex;flex-direction:column;gap:2px}
-.barcode-scan-launch small{font-weight:400;color:var(--muted)}
+.barcode-scan-launch{display:flex;align-items:center;gap:9px;width:100%;min-height:0;text-align:left;justify-content:flex-start;padding:8px 11px;border-radius:13px}
+.barcode-scan-launch>span:first-child{font-size:1.18rem;line-height:1;transform:rotate(90deg)}
+.barcode-scan-launch>span:last-child{display:flex;flex-direction:column;gap:1px}
+.barcode-scan-launch strong{font-size:.78rem;line-height:1.15}.barcode-scan-launch small{font-size:.64rem;line-height:1.2;font-weight:400;color:var(--muted)}
 .barcode-dialog-card{width:min(92vw,520px)}
 .barcode-camera-panel{position:relative;overflow:hidden;min-height:245px;border-radius:18px;background:#111;display:grid;place-items:center}
 .barcode-camera-panel video{display:block;width:100%;height:280px;object-fit:cover;background:#111}
@@ -726,6 +726,19 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .favorite-meal.is-favorite{color:#d19d00;background:color-mix(in srgb,#f4c84b 12%,transparent)}
 .meal-optional-details{border:1px solid var(--border);border-radius:16px;background:var(--surface);overflow:hidden}.meal-optional-details>summary{list-style:none;display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:8px;padding:11px 12px;cursor:pointer}.meal-optional-details>summary::-webkit-details-marker{display:none}.meal-optional-details>summary>span:first-child{display:grid;place-items:center;width:26px;height:26px;border-radius:9px;background:var(--surface2);color:var(--accent);font-weight:900;transition:transform .18s ease}.meal-optional-details[open]>summary>span:first-child{transform:rotate(45deg)}.meal-optional-details>summary>span:last-child{display:grid;gap:1px}.meal-optional-details>summary strong{font-size:.8rem}.meal-optional-details>summary small{color:var(--muted);font-size:.64rem}.meal-optional-content{display:grid;gap:13px;padding:0 12px 13px;border-top:1px solid var(--border)}.meal-optional-content>.meal-nutrition-section{margin-top:12px}
 .meal-form-actions .primary{min-height:48px;font-size:.92rem}
+
+/* V3.24.0 — ressentis avant/après réunis dans une carte compacte */
+.meal-feelings-card{border:1px solid color-mix(in srgb,var(--accent) 24%,var(--border));border-radius:17px;background:color-mix(in srgb,var(--accent) 5%,var(--surface));overflow:hidden}
+.meal-feelings-card>summary{list-style:none;display:grid;grid-template-columns:38px minmax(0,1fr) 20px;align-items:center;gap:10px;padding:11px 12px;cursor:pointer}.meal-feelings-card>summary::-webkit-details-marker{display:none}
+.meal-feelings-card-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:var(--surface);font-size:1.18rem;box-shadow:0 3px 10px rgba(20,26,22,.05)}
+.meal-feelings-card-copy{display:grid;gap:4px;min-width:0}.meal-feelings-card-copy>strong{font-size:.84rem}.meal-feelings-chevron{color:var(--muted);font-size:1.35rem;transition:transform .18s ease}.meal-feelings-card[open] .meal-feelings-chevron{transform:rotate(90deg)}
+.meal-feelings-collapsed-preview{display:grid;gap:2px;min-width:0;color:var(--muted)}.meal-feelings-collapsed-preview>small{font-size:.67rem}.meal-feelings-collapsed-preview>span{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:baseline;gap:4px;min-width:0}.meal-feelings-collapsed-preview b{font-size:.62rem;color:var(--text)}.meal-feelings-collapsed-preview span small{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.64rem}
+.meal-feelings-card-content{display:grid;gap:10px;padding:0 11px 12px;border-top:1px solid var(--border)}
+.meal-feeling-period{display:grid;gap:8px;padding:11px;border:1px solid var(--border);border-radius:14px;background:var(--surface)}.meal-feeling-period:first-child{margin-top:11px}.meal-feeling-period-head>div{display:flex;align-items:center;justify-content:space-between;gap:10px}.meal-feeling-period-head span{font-size:.72rem;color:var(--muted);font-weight:800}.meal-feeling-period-head strong{font-size:.69rem;color:var(--accent-strong)}
+.meal-feeling-selected-preview{display:flex;flex-wrap:wrap;gap:6px}.meal-feeling-score-chip{display:inline-flex;align-items:center;gap:4px;padding:6px 8px;border:1px solid color-mix(in srgb,var(--accent) 18%,var(--border));border-radius:999px;background:color-mix(in srgb,var(--accent) 7%,var(--surface));font-size:.67rem;line-height:1.1}.meal-feeling-score-chip>b{font-size:.63rem;color:var(--accent-strong)}.meal-feeling-empty{color:var(--muted);font-size:.7rem}
+.meal-feeling-editor{border-top:1px solid var(--border);padding-top:7px}.meal-feeling-editor>summary{list-style:none;display:grid;grid-template-columns:24px minmax(0,1fr) 16px;align-items:center;gap:7px;cursor:pointer;color:var(--accent-strong)}.meal-feeling-editor>summary::-webkit-details-marker{display:none}.meal-feeling-editor>summary>span{display:grid;place-items:center;width:23px;height:23px;border-radius:8px;background:var(--surface2);font-weight:900}.meal-feeling-editor>summary>strong{font-size:.7rem}.meal-feeling-editor>summary>b{font-size:1rem;transition:transform .18s ease}.meal-feeling-editor[open]>summary>b{transform:rotate(90deg)}.meal-feeling-editor .meal-before-feelings{margin-top:9px;border:0;border-radius:12px;background:var(--surface2);padding:10px}
+.meal-feeling-after-button{justify-self:start}.meal-feeling-after-button[hidden],#mealFeelingUnavailable[hidden]{display:none!important}
+@media(max-width:360px){.meal-feelings-card>summary{grid-template-columns:34px minmax(0,1fr) 18px;padding-inline:9px}.meal-feelings-card-icon{width:33px;height:33px}.meal-feeling-period{padding:9px}.meal-feeling-score-chip{font-size:.63rem}}
 
 /* V3.18.3 — séparation visuelle du contenu du splash */
 .splash-daily{margin-top:clamp(28px,5vh,44px)}

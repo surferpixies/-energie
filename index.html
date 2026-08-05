@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.23.2">
+  <link rel="stylesheet" href="styles.css?v=3.24.1">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -85,11 +85,32 @@
       </section>
       <label class="meal-time-row" for="mealTime"><span class="meal-time-label"><span aria-hidden="true">🕒</span><span>Heure</span></span><input id="mealTime" type="time" name="energie_meal_clock_value" autocomplete="one-time-code" required></label>
       <label>Ce que tu as mangé ou bu<textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea></label>
-      <button type="button" id="mealFavoriteToggle" class="meal-favorite-toggle" aria-pressed="false"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span><span><strong>Ajouter ce repas aux favoris</strong><small>Retrouve-le en un toucher la prochaine fois</small></span></button>
-      <div class="meal-feeling-inline-row"><button type="button" class="secondary small" id="mealFeelingButton" hidden>Ajouter un ressenti</button><span id="mealFeelingSummary" class="meal-feeling-summary muted small"></span></div>
-      <div id="mealSuggestionWrap" class="meal-suggestion-wrap" hidden><button type="button" id="mealSuggestionToggle" class="meal-suggestion-toggle" aria-expanded="false">💡 Voir la suggestion</button><p id="mealSuggestionBody" class="meal-suggestion-body" hidden></p></div>
       <button type="button" class="secondary barcode-scan-launch" id="openBarcodeScanner"><span aria-hidden="true">▥</span><span><strong>Scanner un produit</strong><small>Ajoute rapidement son nom au repas</small></span></button>
-      <fieldset class="feeling-fieldset meal-before-feelings"><legend>Avant le repas <span class="muted tiny">(facultatif)</span></legend><p class="muted small">Sélectionne ce que tu ressens maintenant et indique l’intensité de chaque élément.</p><label class="feeling-search" for="beforeFeelingSearch"><span aria-hidden="true">🔎</span><input id="beforeFeelingSearch" type="search" autocomplete="off" placeholder="Rechercher un ressenti…"><button id="clearBeforeFeelingSearch" type="button" aria-label="Effacer la recherche" hidden>×</button></label><div id="beforeFeelingTags" class="feeling-tags scored-feeling-picker"></div><p id="beforeFeelingSearchEmpty" class="feeling-search-empty" hidden>Aucun ressenti trouvé.</p><div id="beforeFeelingQualityNotice" class="feeling-quality-notice" hidden></div></fieldset>
+      <button type="button" id="mealFavoriteToggle" class="meal-favorite-toggle" aria-pressed="false"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span><span><strong>Ajouter ce repas aux favoris</strong><small>Retrouve-le en un toucher la prochaine fois</small></span></button>
+      <details id="mealFeelingsDetails" class="meal-feelings-card">
+        <summary>
+          <span class="meal-feelings-card-icon" aria-hidden="true">😊</span>
+          <span class="meal-feelings-card-copy"><strong>Ressentis avant et après</strong><span id="mealFeelingsCollapsedPreview" class="meal-feelings-collapsed-preview"><small>Aucun ressenti</small></span></span>
+          <b class="meal-feelings-chevron" aria-hidden="true">›</b>
+        </summary>
+        <div class="meal-feelings-card-content">
+          <section class="meal-feeling-period meal-feeling-period-before">
+            <div class="meal-feeling-period-head"><div><span>Avant le repas</span><strong id="beforeFeelingCount">Aucun ressenti</strong></div></div>
+            <div id="beforeFeelingSelectedPreview" class="meal-feeling-selected-preview"><span class="meal-feeling-empty">Aucun ressenti</span></div>
+            <details id="beforeFeelingEditor" class="meal-feeling-editor">
+              <summary><span>＋</span><strong>Choisir ou modifier les ressentis avant</strong><b aria-hidden="true">›</b></summary>
+              <fieldset class="feeling-fieldset meal-before-feelings"><legend>Ressentis avant <span class="muted tiny">(facultatif)</span></legend><p class="muted small">Sélectionne ce que tu ressens maintenant et indique l’intensité de chaque élément.</p><label class="feeling-search" for="beforeFeelingSearch"><span aria-hidden="true">🔎</span><input id="beforeFeelingSearch" type="search" autocomplete="off" placeholder="Rechercher un ressenti…"><button id="clearBeforeFeelingSearch" type="button" aria-label="Effacer la recherche" hidden>×</button></label><div id="beforeFeelingTags" class="feeling-tags scored-feeling-picker"></div><p id="beforeFeelingSearchEmpty" class="feeling-search-empty" hidden>Aucun ressenti trouvé.</p><div id="beforeFeelingQualityNotice" class="feeling-quality-notice" hidden></div></fieldset>
+            </details>
+          </section>
+          <section class="meal-feeling-period meal-feeling-period-after">
+            <div class="meal-feeling-period-head"><div><span>Après le repas</span><strong id="afterFeelingCount">Aucun ressenti</strong></div></div>
+            <div id="afterFeelingSelectedPreview" class="meal-feeling-selected-preview"><span class="meal-feeling-empty">Aucun ressenti</span></div>
+            <button type="button" class="secondary small meal-feeling-after-button" id="mealFeelingButton" hidden>Ajouter les ressentis après</button>
+            <p id="mealFeelingUnavailable" class="muted tiny">Disponible après avoir enregistré le repas.</p>
+          </section>
+        </div>
+      </details>
+      <div id="mealSuggestionWrap" class="meal-suggestion-wrap" hidden><button type="button" id="mealSuggestionToggle" class="meal-suggestion-toggle" aria-expanded="false">💡 Voir la suggestion</button><p id="mealSuggestionBody" class="meal-suggestion-body" hidden></p></div>
       <details id="mealOptionalDetails" class="meal-optional-details">
         <summary><span>＋</span><span><strong>Photo, notes et nutrition</strong><small>Options facultatives</small></span></summary>
         <div class="meal-optional-content">
@@ -349,10 +370,10 @@
   <script src="brain/parser.js?v=3.9.0"></script>
   <script src="brain/confidence.js?v=3.8.0"></script>
   <script src="brain/profile.js?v=3.8.0"></script>
-  <script src="brain/insight-engine.js?v=3.23.2"></script>
+  <script src="brain/insight-engine.js?v=3.24.1"></script>
   <script src="brain/index.js?v=3.12.0"></script>
-  <script src="observation-engine.js?v=3.23.2"></script>
-  <script src="demo-profiles.js?v=3.23.2"></script>
-  <script src="app.js?v=3.23.2"></script>
+  <script src="observation-engine.js?v=3.24.1"></script>
+  <script src="demo-profiles.js?v=3.24.1"></script>
+  <script src="app.js?v=3.24.1"></script>
 </body>
 </html>
