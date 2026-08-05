@@ -1782,6 +1782,13 @@
     if (clean.includes("collation") || clean.includes("snack")) return "snack";
     return "other";
   }
+  function recommendationIsStillRelevant(recommendation, meal) {
+    if (!recommendation || !meal) return false;
+    const category = recommendation.category;
+    if (!["protein", "vegetables", "fruit", "fiber"].includes(category))
+      return true;
+    return !recommendationMealProfile(meal).flags[category];
+  }
   function chooseMealRecommendation(date, justSavedMeal) {
     if (
       !db.settings.generalRecommendations ||
@@ -5301,7 +5308,19 @@
     const groups = [
       {
         key: "protein",
-        label: "les protéines",
+        label: "des sources de protéines",
+        categories: [
+          "high_protein",
+          "plant_protein",
+          "eggs",
+          "poultry",
+          "red_meat",
+          "fish",
+          "seafood",
+          "legumes",
+        ],
+        nutrient: "protein",
+        nutrientMinimum: 10,
         words: [
           "oeuf",
           "œuf",
@@ -5326,7 +5345,18 @@
       },
       {
         key: "fibre",
-        label: "les fibres",
+        label: "des sources de fibres",
+        categories: [
+          "fruits",
+          "vegetables",
+          "legumes",
+          "whole_grains",
+          "nuts",
+          "seeds",
+          "high_fiber",
+        ],
+        nutrient: "fiber",
+        nutrientMinimum: 2,
         words: [
           "avoine",
           "gruau",
@@ -5346,7 +5376,8 @@
       },
       {
         key: "fruit",
-        label: "les fruits",
+        label: "des fruits",
+        categories: ["fruits"],
         words: [
           "pomme",
           "banane",
@@ -5367,7 +5398,8 @@
       },
       {
         key: "vegetable",
-        label: "les légumes",
+        label: "des légumes",
+        categories: ["vegetables"],
         words: [
           "brocoli",
           "salade",
@@ -5388,11 +5420,23 @@
     ];
     const counts = Object.fromEntries(groups.map((g) => [g.key, 0]));
     meals.forEach((meal) => {
-      const text =
-        `${meal.description || ""} ${meal.notes || ""}`.toLowerCase();
+      const rawText = `${meal.description || ""} ${meal.notes || ""}`;
+      const text = rawText.toLowerCase();
+      const categoryIds = new Set(
+        window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(rawText) || [],
+      );
+      const nutrition = normalNutrition(meal.nutrition) ||
+        estimateNutritionFromText(rawText);
       groups.forEach((group) => {
-        if (group.words.some((word) => text.includes(word)))
-          counts[group.key]++;
+        const categoryMatch = (group.categories || []).some((id) =>
+          categoryIds.has(id),
+        );
+        const nutrientMatch =
+          group.nutrient &&
+          Number.isFinite(Number(nutrition?.[group.nutrient])) &&
+          Number(nutrition[group.nutrient]) >= group.nutrientMinimum;
+        const wordMatch = group.words.some((word) => text.includes(word));
+        if (categoryMatch || nutrientMatch || wordMatch) counts[group.key]++;
       });
     });
     const total = Math.max(1, meals.length);
@@ -5409,21 +5453,34 @@
       .sort();
     const firstDate = mealDates[0] || null;
     const signals = dashboardNutritionSignals(meals);
-    const strongest = [...signals].sort((a, b) => b.ratio - a.ratio)[0];
-    const priority = [...signals].sort((a, b) => a.ratio - b.ratio)[0];
+    const ordered = [...signals].sort(
+      (a, b) => b.ratio - a.ratio || b.count - a.count,
+    );
+    const strongest = ordered[0];
     const enough = meals.length >= 3;
+    const enoughForPriority = meals.length >= 8;
+    const priority = enoughForPriority
+      ? [...signals]
+          .sort((a, b) => a.ratio - b.ratio || a.count - b.count)
+          .find((signal) => signal.ratio < 0.3)
+      : null;
+    const habitSignal = ordered.find(
+      (signal) => signal.key !== strongest?.key && signal.key !== priority?.key,
+    );
     const since = firstDate ? formatDate(firstDate) : "Pas encore commencé";
     const strength =
-      enough && strongest.count > 0
-        ? `Avec les données recueillies, ${strongest.label} apparaissent régulièrement dans tes repas.`
+      enough && strongest.count > 0 && strongest.ratio >= 0.4
+        ? `Avec les données recueillies, ${strongest.label} sont repérées dans ${strongest.count} repas sur ${meals.length}.`
         : "Chaque repas ajouté aidera Énergie à faire ressortir tes habitudes positives.";
     const habit =
-      enough && priority.count < meals.length
-        ? `Avec les données recueillies jusqu’à présent, ${priority.label} sont moins souvent repérées dans tes descriptions de repas.`
+      enough && habitSignal?.count > 0
+        ? `${habitSignal.label.charAt(0).toUpperCase() + habitSignal.label.slice(1)} apparaissent dans ${habitSignal.count} repas sur ${meals.length}, selon les aliments reconnus dans tes descriptions.`
         : "Ajoute encore quelques repas pour qu’une habitude claire puisse se dégager.";
-    const suggestion = enough
-      ? `Pour les prochains repas, tu pourrais simplement penser à intégrer davantage ${priority.label}, lorsque cela te convient.`
-      : "Continue simplement à noter tes repas; une suggestion plus personnalisée apparaîtra avec le temps.";
+    const suggestion = priority
+      ? `Une piste possible serait d’intégrer davantage ${priority.label}, lorsqu’il est pertinent pour toi de le faire.`
+      : enoughForPriority
+        ? "Aucune priorité alimentaire claire ne ressort pour l’instant. Continue à décrire tes repas pour préciser le portrait."
+        : "Continue simplement à noter tes repas; une suggestion plus personnalisée apparaîtra avec le temps.";
     return { since, strength, habit, suggestion };
   }
   function professionalDiscussionHtml(meals) {
@@ -6726,7 +6783,9 @@
     $("#mealDescription").value = m?.description || "";
     const editRecommendation =
       m && ["Déjeuner", "Dîner", "Souper"].includes(type)
-        ? chooseMealRecommendation(selectedDate, m)
+        ? recommendationIsStillRelevant(m.recommendation, m)
+          ? m.recommendation
+          : chooseMealRecommendation(selectedDate, m)
         : null;
     setMealSuggestion(editRecommendation, type);
     $("#mealNotes").value = m?.notes || "";
@@ -7103,13 +7162,13 @@
       },
       selectedDate,
     );
-    const recommendation = ["Déjeuner", "Dîner", "Souper"].includes(meal.type)
-      ? chooseMealRecommendation(selectedDate, meal)
-      : null;
-    meal.recommendation = recommendation || null;
     if (old) Object.assign(old, meal);
     else d.meals.push(meal);
     const savedMeal = old || meal;
+    const recommendation = ["Déjeuner", "Dîner", "Souper"].includes(savedMeal.type)
+      ? chooseMealRecommendation(selectedDate, savedMeal)
+      : null;
+    savedMeal.recommendation = recommendation || null;
     setMealChanged(savedMeal);
     const favoriteButton = $("#mealFavoriteToggle"),
       wantsFavorite = favoriteButton.getAttribute("aria-pressed") === "true",
