@@ -214,6 +214,8 @@
     syncQueued = false,
     photoData = null,
     photoRemoved = false,
+    mealNutritionPreviewTimer = null,
+    mealNutritionManuallyEdited = false,
     authMode = "login",
     feelingMealId = null,
     notificationTimer = null;
@@ -1561,6 +1563,30 @@
       return;
     }
     fillNutritionInputs(n);
+    mealNutritionManuallyEdited = false;
+  }
+  function scheduleAutomaticNutritionPreview() {
+    clearTimeout(mealNutritionPreviewTimer);
+    if (
+      !db.settings.macroTracking ||
+      db.settings.autoNutritionEstimates === false ||
+      mealNutritionManuallyEdited
+    )
+      return;
+    mealNutritionPreviewTimer = setTimeout(() => {
+      const description = $("#mealDescription")?.value.trim();
+      if (!description) {
+        fillNutritionInputs(null, "Décris le repas pour obtenir une estimation modifiable.");
+        return;
+      }
+      const nutrition = estimateNutritionFromText(description);
+      if (nutrition) fillNutritionInputs(nutrition);
+      else
+        fillNutritionInputs(
+          null,
+          "Aucune estimation fiable trouvée. Tu peux entrer les valeurs manuellement.",
+        );
+    }, 450);
   }
 
   // --- V3.0.3 : recommandations adaptées au prochain repas --------------------
@@ -6580,6 +6606,7 @@
   function applyFavoriteToMealForm(favorite) {
     if (!favorite) return;
     $("#mealDescription").value = favorite.description;
+    $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
     $("#mealNotes").value = favorite.notes || "";
     $("#favoriteMealSelect").value = favorite.id;
     setMealFavoriteToggle(true, favorite.id);
@@ -6675,6 +6702,7 @@
           const name = items[Number(button.dataset.recentFood)] || "";
           const field = $("#mealDescription");
           field.value = name;
+          field.dispatchEvent(new Event("input", { bubbles: true }));
           $("#mealNotes").value = "";
           setMealFavoriteToggle(false);
           $$('[data-quick-favorite]').forEach((x) => x.classList.remove("active"));
@@ -6888,6 +6916,7 @@
           })
         : null,
     );
+    mealNutritionManuallyEdited = m?.nutrition?.estimated === false;
     renderBeforeFeelingPicker(m);
     $("#mealFeelingsDetails").open = false;
     $("#beforeFeelingEditor").open = false;
@@ -7193,11 +7222,32 @@
     showMealFavoriteFeedback(next);
   };
   $("#estimateMealNutrition").onclick = estimateCurrentMealNutrition;
-  $("#clearMealNutrition").onclick = () =>
+  $("#mealDescription").addEventListener(
+    "input",
+    scheduleAutomaticNutritionPreview,
+  );
+  $$("#mealNutritionSection input").forEach((input) =>
+    input.addEventListener("input", () => {
+      mealNutritionManuallyEdited = true;
+      const section = $("#mealNutritionSection");
+      if (section) {
+        section.dataset.source = "manual";
+        section.dataset.estimated = "false";
+      }
+    }),
+  );
+  $("#clearMealNutrition").onclick = () => {
+    mealNutritionManuallyEdited = true;
     fillNutritionInputs(
       null,
       "Valeurs effacées. Tu peux les entrer manuellement ou relancer l’estimation.",
     );
+    const section = $("#mealNutritionSection");
+    if (section) {
+      section.dataset.source = "manual";
+      section.dataset.estimated = "false";
+    }
+  };
   $("#mealForm").onsubmit = (e) => {
     e.preventDefault();
     if (hasUnscoredFeelings($("#beforeFeelingTags"), "before"))
@@ -7223,7 +7273,8 @@
         description: $("#mealDescription").value.trim(),
         nutrition: db.settings.macroTracking
           ? nutritionFromInputs() ||
-            (db.settings.autoNutritionEstimates !== false
+            (db.settings.autoNutritionEstimates !== false &&
+            !mealNutritionManuallyEdited
               ? estimateNutritionFromText($("#mealDescription").value.trim())
               : null)
           : old?.nutrition || null,
@@ -7471,6 +7522,7 @@
     const m = previousDayMeal("Déjeuner");
     if (!m) return alert("Aucun déjeuner trouvé hier.");
     $("#mealDescription").value = m.description;
+    $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
     $("#mealNotes").value = m.notes || "";
     $("#mealDescription").focus();
   };
@@ -7478,6 +7530,7 @@
     const m = previousDayMeal("Souper");
     if (!m) return alert("Aucun souper trouvé hier.");
     $("#mealDescription").value = m.description;
+    $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
     $("#mealNotes").value = m.notes || "";
     $("#mealDescription").focus();
   };
