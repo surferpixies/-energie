@@ -2604,6 +2604,59 @@
       ? ""
       : new Intl.DateTimeFormat("fr-CA", { dateStyle: "medium", timeStyle: "short" }).format(date);
   }
+  function professionalTrendHtml() {
+    const profile = activeDemoProfile();
+    if (!professionalDemoMode || profile.id !== "elodie") return "";
+    const dates = Object.keys(db.days || {}).sort();
+    if (!dates.length) return "";
+    const soyPattern = /(soya|tofu|edamame|miso)/i;
+    const soyDates = new Set(dates.filter((date) =>
+      (db.days[date]?.meals || []).some((meal) => soyPattern.test(meal.description || "")),
+    ));
+    const previousDate = (date) => {
+      const value = new Date(`${date}T12:00:00`);
+      value.setDate(value.getDate() - 1);
+      return localDateKey(value);
+    };
+    const rows = dates.map((date) => {
+      const observations = db.days[date]?.observations || [];
+      return {
+        date,
+        exposed: soyDates.has(date) || soyDates.has(previousDate(date)),
+        direct: soyDates.has(date),
+        intensity: observations.length
+          ? observations.reduce((sum, item) => sum + (Number(item.intensity) || 0), 0) / observations.length
+          : 0,
+      };
+    });
+    const weeks = [];
+    rows.forEach((row, index) => {
+      const week = Math.floor(index / 7);
+      weeks[week] ||= { dates: [], exposed: [], clear: [], exposures: 0 };
+      weeks[week].dates.push(row.date);
+      weeks[week][row.exposed ? "exposed" : "clear"].push(row.intensity);
+      if (row.direct) weeks[week].exposures += 1;
+    });
+    const avg = (values) => values.length
+      ? values.reduce((sum, value) => sum + value, 0) / values.length
+      : null;
+    const points = weeks.map((week) => ({
+      label: new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "short" }).format(new Date(`${week.dates[0]}T12:00:00`)),
+      exposed: avg(week.exposed), clear: avg(week.clear), exposures: week.exposures,
+    }));
+    const allExposed = rows.filter((row) => row.exposed).map((row) => row.intensity);
+    const allClear = rows.filter((row) => !row.exposed).map((row) => row.intensity);
+    const width = 680, height = 250, left = 35, right = 14, top = 15, bottom = 40;
+    const x = (index) => left + index * (width - left - right) / Math.max(1, points.length - 1);
+    const y = (value) => top + (height - top - bottom) * (1 - Math.max(0, Math.min(5, value)) / 5);
+    const path = (key) => points.map((point, index) => point[key] == null ? "" :
+      `${index && points.slice(0, index).some((item) => item[key] != null) ? "L" : "M"}${x(index).toFixed(1)},${y(point[key]).toFixed(1)}`).join(" ");
+    const dots = (key) => points.map((point, index) => point[key] == null ? "" :
+      `<circle class="${key}" cx="${x(index)}" cy="${y(point[key])}" r="4"><title>${esc(point.label)} · ${key === "exposed" ? "Après soya" : "Sans soya"} : ${point[key].toFixed(1)}/5</title></circle>`).join("");
+    const grid = [0,1,2,3,4,5].map((value) => `<line x1="${left}" y1="${y(value)}" x2="${width-right}" y2="${y(value)}"/><text x="${left-8}" y="${y(value)+3}" text-anchor="end">${value}</text>`).join("");
+    const labels = points.map((point, index) => index % 2 && index !== points.length - 1 ? "" : `<text x="${x(index)}" y="${height-15}" text-anchor="middle">${esc(point.label)}</text>`).join("");
+    return `<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Première lecture du dossier</p><h2>🌿 Soya et évolution des réactions</h2><p>Comparaison hebdomadaire des observations globales dans les 24 à 48 heures suivant du soya repéré et pendant les périodes sans soya repéré.</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>après soya</small></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>sans soya</small></div><div><strong>${soyDates.size}</strong><small>jours avec soya</small></div></div><div class="professional-trend-legend"><span class="exposed">Après soya repéré</span><span class="clear">Sans soya repéré</span></div><div class="professional-trend-scroll"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Tendance des réactions avec et sans soya"><g class="trend-grid">${grid}</g><path class="trend-path exposed" d="${path("exposed")}"/><path class="trend-path clear" d="${path("clear")}"/><g class="trend-dots">${dots("exposed")}${dots("clear")}</g><g class="trend-labels">${labels}</g></svg></div><p class="muted tiny">Association tirée des repas et observations globales. Elle ne confirme pas une allergie et ne constitue pas un diagnostic.</p></section>`;
+  }
   function renderFollowup() {
     if (!db.settings.demoMode) {
       currentView = "profile";
@@ -2621,7 +2674,7 @@
     const cards = allNotes.length
       ? allNotes.map((note) => `<article class="card professional-note-card ${note.visibility === "private" ? "is-private" : "is-shared"}"><div class="professional-note-head"><span>${note.visibility === "private" ? "🔒 Note privée" : "👁️ Partagée avec le client"}</span><time>${esc(professionalNoteTime(note.createdAt))}</time></div><strong>${esc(note.contextLabel || "Suivi général")}</strong><p>${esc(note.content)}</p>${professionalDemoMode ? `<button type="button" class="text-button professional-note-delete" data-delete-professional-note="${note.id}">Supprimer</button>` : ""}</article>`).join("")
       : `<section class="card empty"><span>📝</span><p>Aucune note partagée n’est disponible pour ce suivi.</p></section>`;
-    $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">${professionalDemoMode ? "Espace professionnel · Démo" : "Suivi professionnel"}</p><h2>📝 Suivi de ${esc(profile.name)}</h2><p>${professionalDemoMode ? "Les notes privées et partagées sont visibles dans cet espace professionnel fictif." : "Les notes partagées par le professionnel apparaissent ici en lecture seule."}</p>${professionalDemoMode ? `<div class="dialog-actions"><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalDemo">Quitter le mode professionnel</button></div>` : ""}</section>${form}<section class="professional-followup"><div class="section-title"><h2>Chronologie</h2><span class="muted small">${allNotes.length} note${allNotes.length > 1 ? "s" : ""}</span></div><div class="stack">${cards}</div></section>`;
+    $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">${professionalDemoMode ? "Espace professionnel · Démo" : "Suivi professionnel"}</p><h2>📝 Suivi de ${esc(profile.name)}</h2><p>${professionalDemoMode ? "Les notes privées et partagées sont visibles dans cet espace professionnel fictif." : "Les notes partagées par le professionnel apparaissent ici en lecture seule."}</p>${professionalDemoMode ? `<div class="dialog-actions"><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalDemo">Quitter le mode professionnel</button></div>` : ""}</section>${professionalTrendHtml()}${form}<section class="professional-followup"><div class="section-title"><h2>Chronologie</h2><span class="muted small">${allNotes.length} note${allNotes.length > 1 ? "s" : ""}</span></div><div class="stack">${cards}</div></section>`;
     $("#switchProfessionalClient")?.addEventListener("click", openProfessionalClientPicker);
     $("#leaveProfessionalDemo")?.addEventListener("click", leaveDemoMode);
     $("#professionalNoteForm")?.addEventListener("submit", (event) => {
@@ -8219,7 +8272,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.29.2");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.29.3");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
