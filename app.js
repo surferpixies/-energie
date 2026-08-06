@@ -2780,7 +2780,7 @@
   function demoBannerHtml() {
     if (!db.settings.demoMode) return "";
     if (professionalDemoMode)
-      return `<section class="demo-mode-banner professional-mode-banner" id="demoModeBanner"><span><img src="assets/icon.svg" alt=""> <b>Mode professionnel · Démo</b></span><p>${activeDemoProfile().icon} Dossier de ${esc(activeDemoProfile().name)} · lecture seule</p><div><button type="button" id="switchProfessionalClientBanner">Changer</button><button type="button" id="leaveDemoQuick">Quitter</button></div></section>`;
+      return `<section class="demo-mode-banner professional-mode-banner" id="demoModeBanner"><span class="professional-client-current"><span aria-hidden="true">${activeDemoProfile().icon}</span><span><b>${esc(activeDemoProfile().name)}</b><small>Mode professionnel · Démo</small></span></span><p>Dossier de ${esc(activeDemoProfile().name)} · lecture seule</p><div><button type="button" id="switchProfessionalClientBanner">Changer</button><button type="button" id="leaveDemoQuick">Quitter</button></div></section>`;
     return `<section class="demo-mode-banner" id="demoModeBanner">
     <span><img src="assets/icon.svg" alt=""> <b>Mode démo · lecture seule</b></span>
     <p>${activeDemoProfile().icon} ${esc(activeDemoProfile().name)} — ${esc(activeDemoProfile().scenario)}</p>
