@@ -110,7 +110,7 @@
     { id:"processed_poultry", synonyms:["nuggets","chicken nuggets","charcuterie de dinde","turkey slices","deli turkey","hot dog de poulet","chicken hot dog"], categories:["poultry","processed_foods","ultra_processed","high_protein"] },
     { id:"beef", synonyms:["boeuf","beef","steak","hamburger patty","boulette de boeuf","ground beef","boeuf hache","roast beef"], categories:["red_meat","high_protein"] },
     { id:"pork", synonyms:["porc","pork","cotelette de porc","pork chop","filet de porc","pork tenderloin"], categories:["red_meat","high_protein"] },
-    { id:"processed_meat", synonyms:["bacon","jambon","ham","saucisse","sausage","pepperoni","salami","hot dog","charcuterie","deli meat"], categories:["red_meat","processed_foods","ultra_processed","high_protein"] },
+    { id:"processed_meat", synonyms:["bacon","jambon","ham","saucisse","sausage","pepperoni","salami","prosciutto","proscuitto","jambon prosciutto","hot dog","charcuterie","deli meat"], categories:["red_meat","processed_foods","ultra_processed","high_protein"] },
     { id:"salmon", synonyms:["saumon","salmon","truite","trout","sardine","sardines","maquereau","mackerel"], categories:["fish","healthy_fats","high_protein"] },
     { id:"white_fish", synonyms:["morue","cod","aiglefin","haddock","tilapia","sole","flétan","halibut","thon","tuna"], categories:["fish","high_protein"] },
     { id:"shellfish", synonyms:["crevette","crevettes","shrimp","prawn","homard","lobster","crabe","crab","moule","mussels","huitre","oyster","palourde","clam","petoncle","scallop"], categories:["seafood","high_protein"] },

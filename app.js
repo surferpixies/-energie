@@ -287,6 +287,7 @@
         insightsEnabled: true,
         nutritionObservations: true,
         macroTracking: true,
+        autoNutritionEstimates: true,
         generalRecommendations: true,
         showSources: true,
         professionalSupport: false,
@@ -1280,11 +1281,23 @@
     if (n.sodium != null) pieces.push(`${Math.round(n.sodium)} mg sodium`);
     return pieces.join(" · ");
   }
-  const FOOD_MACROS = Array.isArray(window.EnergieBrain?.legacyFoods)
+  const FOOD_MACROS_SOURCE = Array.isArray(window.EnergieBrain?.legacyFoods)
     ? window.EnergieBrain.legacyFoods
     : Array.isArray(window.ENERGIE_FOODS)
       ? window.ENERGIE_FOODS
       : [];
+  const FOOD_MACROS = [
+    ...FOOD_MACROS_SOURCE,
+    {
+      keys: ["prosciutto", "proscuitto", "jambon prosciutto"],
+      calories: 120,
+      protein: 18,
+      carbs: 0.5,
+      fat: 5,
+      portion: "60 g",
+      tags: ["protéine", "charcuterie"],
+    },
+  ];
   const FOOD_NUTRIENT_OVERRIDES = {
     thon: { fiber: 0, sugars: 0, sodium: 320 },
     "thon en conserve": { fiber: 0, sugars: 0, sodium: 320 },
@@ -1333,11 +1346,29 @@
     poutine: { fiber: 7, sugars: 3, sodium: 1600 },
     "soupe aux légumes": { fiber: 5, sugars: 8, sodium: 700 },
     "salade de pâtes": { fiber: 4, sugars: 5, sodium: 550 },
+    prosciutto: { fiber: 0, sugars: 0, sodium: 1050 },
   };
   function foodNutrients(food) {
     const key = normalizeFoodText(food?.keys?.[0] || "");
     const extra = FOOD_NUTRIENT_OVERRIDES[key] || {};
-    return { ...food, ...extra };
+    const categories = new Set(
+      window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(
+        (food?.keys || []).join(" "),
+      ) || [],
+    );
+    let inferredFiber = 0;
+    if (categories.has("legumes")) inferredFiber = 8;
+    else if (categories.has("whole_grains")) inferredFiber = 4;
+    else if (categories.has("nuts") || categories.has("seeds"))
+      inferredFiber = 3;
+    else if (categories.has("fruits")) inferredFiber = 3;
+    else if (categories.has("vegetables")) inferredFiber = 2.5;
+    else if (categories.has("refined_grains")) inferredFiber = 1;
+    return {
+      ...food,
+      fiber: extra.fiber ?? inferredFiber,
+      ...extra,
+    };
   }
 
   function normalizeFoodText(value) {
@@ -1546,6 +1577,8 @@
       "boeuf",
       "bœuf",
       "porc",
+      "prosciutto",
+      "proscuitto",
       "tofu",
       "tempeh",
       "lentille",
@@ -1717,25 +1750,52 @@
     const hasTag = (...wanted) =>
       wanted.some((tag) => tagSet.includes(normalizeFoodText(tag)));
     const normalizedText = recommendationNormalize(text);
+    const categoryIds = new Set(
+      window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(text) || [],
+    );
+    const hasCategory = (...wanted) =>
+      wanted.some((category) => categoryIds.has(category));
     const hasBeefProtein =
       /(boeuf|bœuf|viande hach|steak|hamburger|bifteck|sausage|saucisse)/i.test(
         normalizedText,
       );
     const flags = {
       protein:
+        hasCategory(
+          "high_protein",
+          "plant_protein",
+          "eggs",
+          "poultry",
+          "red_meat",
+          "fish",
+          "seafood",
+          "legumes",
+        ) ||
         hasTag("proteine", "protein") ||
         recommendationHas(text, RECOMMENDATION_WORDS.protein) ||
         (Number(nutrition?.protein) || 0) >= 12 ||
         hasBeefProtein,
       vegetables:
+        hasCategory("vegetables") ||
         hasTag("legume", "legumes", "vegetable", "vegetables") ||
         recommendationHas(text, RECOMMENDATION_WORDS.vegetables) ||
         /\b(legumes?|vegetables?|brocolis?|concombres?|tomates?|celeris?|carottes?|poivrons?|epinards?|courgettes?|choux|asperges?|champignons?|avocats?|aubergines?|betteraves?|haricots? verts?)\b/i.test(
           normalizedText,
         ),
       fruit:
-        hasTag("fruit") || recommendationHas(text, RECOMMENDATION_WORDS.fruit),
+        hasCategory("fruits") ||
+        hasTag("fruit") ||
+        recommendationHas(text, RECOMMENDATION_WORDS.fruit),
       fiber:
+        hasCategory(
+          "fruits",
+          "vegetables",
+          "legumes",
+          "whole_grains",
+          "nuts",
+          "seeds",
+          "high_fiber",
+        ) ||
         hasTag(
           "fibre",
           "fiber",
@@ -3989,7 +4049,9 @@
     const known = [];
     meals.forEach((meal) => {
       const saved = normalNutrition(meal.nutrition),
-        estimated = estimateNutritionFromText(meal.description || "");
+        estimated = db.settings.autoNutritionEstimates !== false
+          ? estimateNutritionFromText(meal.description || "")
+          : null;
       const nutrition = saved
         ? normalNutrition({
             ...estimated,
@@ -6037,7 +6099,7 @@
     })();
     const supplements = normalizeSupplements(db.settings?.supplements || []);
     $("#app").innerHTML =
-      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="off"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${["Déjeuner", "Dîner", "Souper", "Collation"].map((t) => `<label class="setting-option"><input type="checkbox" data-feeling-meal-type="${t}" ${(db.settings.feelingMealTypes || []).includes(t) ? "checked" : ""}><span>${mealIcon(t)} ${window.t(t)}</span></label>`).join("")}</div><label>Délai après le repas<select id="feelingDelay"><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option><option value="3" ${Number(db.settings.feelingDelayHours) === 3 ? "selected" : ""}>3 heures</option></select></label><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button><p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p></div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${hasDemoAccess ? demoProfileCardsHtml() : ``}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<section class="card"><h3>Sauvegarde supplémentaire</h3><p class="muted small">${backups} copie(s) locale(s) de sécurité.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></section></div>`;
+      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="off"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${["Déjeuner", "Dîner", "Souper", "Collation"].map((t) => `<label class="setting-option"><input type="checkbox" data-feeling-meal-type="${t}" ${(db.settings.feelingMealTypes || []).includes(t) ? "checked" : ""}><span>${mealIcon(t)} ${window.t(t)}</span></label>`).join("")}</div><label>Délai après le repas<select id="feelingDelay"><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option><option value="3" ${Number(db.settings.feelingDelayHours) === 3 ? "selected" : ""}>3 heures</option></select></label><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button><p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p></div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${hasDemoAccess ? demoProfileCardsHtml() : ``}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<section class="card"><h3>Sauvegarde supplémentaire</h3><p class="muted small">${backups} copie(s) locale(s) de sécurité.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></section></div>`;
     $("#signIn")?.addEventListener("click", () => {
       setAuthMode("login");
       $("#authMessage").textContent = "";
@@ -6085,7 +6147,14 @@
     );
     toggleSetting("#settingSeasonalIcons", "seasonalIcons");
     toggleSetting("#settingInsights", "insightsEnabled");
-    toggleSetting("#settingMacros", "macroTracking");
+    const macroToggle = $("#settingMacros");
+    if (macroToggle)
+      macroToggle.onchange = (e) => {
+        db.settings.macroTracking = e.target.checked;
+        saveLocal("parametre-macroTracking");
+        render();
+      };
+    toggleSetting("#settingAutoNutrition", "autoNutritionEstimates");
     toggleSetting("#settingNutrition", "nutritionObservations");
     toggleSetting("#settingRecommendations", "generalRecommendations");
     toggleSetting("#settingSources", "showSources");
@@ -6793,20 +6862,29 @@
     setMealFavoriteToggle(!!favorite, favorite?.id || "");
     $("#mealOptionalDetails").open = !!(m?.notes || m?.photoLocal || m?.photoUrl || m?.nutrition);
     $("#mealNutritionSection").hidden = !db.settings.macroTracking;
+    const automaticNutrition = db.settings.autoNutritionEstimates !== false;
     fillNutritionInputs(
       m?.nutrition
         ? normalNutrition({
-            ...estimateNutritionFromText(m.description || ""),
+            ...(automaticNutrition
+              ? estimateNutritionFromText(m.description || "")
+              : {}),
             ...m.nutrition,
             fiber:
               m.nutrition.fiber ??
-              estimateNutritionFromText(m.description || "")?.fiber,
+              (automaticNutrition
+                ? estimateNutritionFromText(m.description || "")?.fiber
+                : null),
             sugars:
               m.nutrition.sugars ??
-              estimateNutritionFromText(m.description || "")?.sugars,
+              (automaticNutrition
+                ? estimateNutritionFromText(m.description || "")?.sugars
+                : null),
             sodium:
               m.nutrition.sodium ??
-              estimateNutritionFromText(m.description || "")?.sodium,
+              (automaticNutrition
+                ? estimateNutritionFromText(m.description || "")?.sodium
+                : null),
           })
         : null,
     );
@@ -7145,7 +7223,9 @@
         description: $("#mealDescription").value.trim(),
         nutrition: db.settings.macroTracking
           ? nutritionFromInputs() ||
-            estimateNutritionFromText($("#mealDescription").value.trim())
+            (db.settings.autoNutritionEstimates !== false
+              ? estimateNutritionFromText($("#mealDescription").value.trim())
+              : null)
           : old?.nutrition || null,
         fatigueBefore: old?.fatigueBefore || 0,
         fatigueAfter: old?.fatigueAfter || 0,

@@ -765,3 +765,15 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .demo-detail-readonly select:disabled {
   cursor: text;
 }
+
+.toggle-row.setting-dependent {
+  margin-left: 12px;
+  padding-left: 12px;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+}
+.toggle-row.setting-dependent.is-disabled {
+  opacity: .45;
+}
+.toggle-row.setting-dependent.is-disabled input {
+  cursor: not-allowed;
+}
