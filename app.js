@@ -2692,21 +2692,24 @@
       : null;
     const points = weeks.map((week) => ({
       label: `Sem. ${new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "short" }).format(new Date(`${week.dates[0]}T12:00:00`))}`,
-      exposed: avg(week.exposed), clear: avg(week.clear), exposures: week.exposures,
+      discomfort: avg([...week.exposed, ...week.clear]),
+      exposures: week.exposures,
     }));
     const allExposed = rows.filter((row) => row.exposed).map((row) => row.intensity);
     const allClear = rows.filter((row) => !row.exposed).map((row) => row.intensity);
-    const width = 680, height = 250, left = 35, right = 14, top = 15, bottom = 40;
+    const width = 680, height = 270, left = 43, right = 14, top = 15, bottom = 63;
     const x = (index) => left + index * (width - left - right) / Math.max(1, points.length - 1);
     const y = (value) => top + (height - top - bottom) * (1 - Math.max(0, Math.min(5, value)) / 5);
-    const path = (key) => points.map((point, index) => point[key] == null ? "" :
-      `${index && points.slice(0, index).some((item) => item[key] != null) ? "L" : "M"}${x(index).toFixed(1)},${y(point[key]).toFixed(1)}`).join(" ");
-    const dots = (key) => points.map((point, index) => point[key] == null ? "" :
-      `<circle class="${key}" cx="${x(index)}" cy="${y(point[key])}" r="4"><title>${esc(point.label)} · ${esc(key === "exposed" ? config.primaryLabel : config.comparisonLabel)} : ${point[key].toFixed(1)}/5</title></circle>`).join("");
+    const linePath = points.map((point, index) => `${index ? "L" : "M"}${x(index).toFixed(1)},${y(point.discomfort || 0).toFixed(1)}`).join(" ");
+    const dots = points.map((point, index) => `<circle class="discomfort" cx="${x(index)}" cy="${y(point.discomfort || 0)}" r="4"><title>${esc(point.label)} · Inconfort moyen : ${(point.discomfort || 0).toFixed(1)}/5 · ${point.exposures} jour(s) repéré(s)</title></circle>`).join("");
     const grid = [0,1,2,3,4,5].map((value) => `<line x1="${left}" y1="${y(value)}" x2="${width-right}" y2="${y(value)}"/><text x="${left-8}" y="${y(value)+3}" text-anchor="end">${value}</text>`).join("");
     const labels = points.map((point, index) => index % 2 && index !== points.length - 1 ? "" : `<text x="${x(index)}" y="${height-15}" text-anchor="middle">${esc(point.label)}</text>`).join("");
-    const chart = `<div class="professional-trend-legend"><span class="exposed">${esc(config.primaryLabel)}</span><span class="clear">${esc(config.comparisonLabel)}</span></div><div class="professional-trend-scroll chart-scroll"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><g class="trend-grid">${grid}</g><path class="trend-path exposed" d="${path("exposed")}"/><path class="trend-path clear" d="${path("clear")}"/><g class="trend-dots">${dots("exposed")}${dots("clear")}</g><g class="trend-labels">${labels}</g></svg></div>`;
-    return `<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Première lecture du dossier</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-week-note"><strong>Chaque date indique le début d’une semaine.</strong><span>Les deux courbes regroupent des journées différentes de cette semaine; elles ne classent jamais une même journée dans les deux groupes.</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small></div></div>${chart}<button type="button" class="secondary professional-trend-expand" data-open-trend-fullscreen>↗ Agrandir le graphique</button><p class="muted tiny">${config.disclaimer}</p></section><dialog class="professional-trend-dialog" id="professionalTrendDialog"><div class="professional-trend-dialog-head"><div><small>Vue horizontale</small><strong>${config.title}</strong></div><button type="button" class="secondary" data-close-trend-fullscreen>Revenir au suivi ✕</button></div><div class="professional-trend-fullscreen-frame">${chart}</div><p class="muted tiny">Chaque repère correspond à une semaine et compare des journées distinctes.</p></dialog>`;
+    const exposureBars = points.map((point, index) => {
+      const barHeight = Math.max(2, point.exposures * 3);
+      return `<g class="trend-exposure"><rect x="${x(index)-5}" y="${height-bottom+10-barHeight}" width="10" height="${barHeight}" rx="3"/><text x="${x(index)}" y="${height-bottom+22}" text-anchor="middle">${point.exposures}</text></g>`;
+    }).join("");
+    const chart = `<div class="professional-trend-legend"><span class="discomfort">Niveau moyen d’inconfort</span><span class="exposure-count">Nombre de jours repérés</span></div><div class="professional-trend-scroll chart-scroll"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><text class="trend-y-title" x="14" y="${top + (height-top-bottom)/2}" text-anchor="middle" transform="rotate(-90 14 ${top + (height-top-bottom)/2})">Inconfort /5</text><g class="trend-grid">${grid}</g><path class="trend-path discomfort" d="${linePath}"/><g class="trend-dots">${dots}</g><g class="trend-exposures">${exposureBars}</g><g class="trend-labels">${labels}</g></svg></div>`;
+    return `<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Première lecture du dossier</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-week-note"><strong>Une seule courbe : l’évolution de l’inconfort.</strong><span>Chaque date est le début d’une semaine. Les petits nombres sous la courbe indiquent combien de journées de cette semaine contenaient l’élément suivi.</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small></div></div>${chart}<button type="button" class="secondary professional-trend-expand" data-open-trend-fullscreen>↗ Agrandir le graphique</button><p class="muted tiny">${config.disclaimer}</p></section><dialog class="professional-trend-dialog" id="professionalTrendDialog"><div class="professional-trend-dialog-head"><div><small>Vue horizontale</small><strong>${config.title}</strong></div><button type="button" class="secondary" data-close-trend-fullscreen>Revenir au suivi ✕</button></div><div class="professional-trend-fullscreen-frame">${chart}</div><p class="muted tiny">Axe vertical : inconfort moyen sur 5 · Axe horizontal : semaines dans l’ordre chronologique.</p></dialog>`;
   }
   function renderFollowup() {
     if (!db.settings.demoMode) {
@@ -2952,7 +2955,7 @@
         if (!control || !control.closest("#app")) return;
         if (
           control.closest(
-            "[data-open-demo-profile],#leaveDemoProfile,#leaveDemoQuick,#switchProfessionalClientBanner,#replayDemoTour,.nav-item,.brain-proof,.why-demo-insight,#previousDay,#nextDay,#goToday,#analysisPreviousDay,#analysisNextDay,#analysisGoLatest,[data-global-observation],[data-quick-meal][data-edit-meal],.professional-followup",
+            "[data-open-demo-profile],#leaveDemoProfile,#leaveDemoQuick,#switchProfessionalClientBanner,#replayDemoTour,.nav-item,.brain-proof,.why-demo-insight,#previousDay,#nextDay,#goToday,#analysisPreviousDay,#analysisNextDay,#analysisGoLatest,[data-global-observation],[data-quick-meal][data-edit-meal],.professional-followup,[data-open-trend-fullscreen],[data-close-trend-fullscreen]",
           )
         )
           return;
@@ -8336,7 +8339,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.29.6");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.29.7");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
