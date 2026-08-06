@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <title>Mise à jour d’Énergie</title>
+  <style>
+    body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:24px;box-sizing:border-box;background:#eef8e7;color:#173f2b;font:16px/1.45 system-ui,-apple-system,sans-serif;text-align:center}.card{width:min(420px,100%);padding:28px;box-sizing:border-box;border-radius:26px;background:#fffdf8;box-shadow:0 18px 50px rgba(23,63,43,.13)}.spinner{width:42px;height:42px;margin:0 auto 18px;border:5px solid #d6edca;border-top-color:#2fa55b;border-radius:50%;animation:spin .8s linear infinite}h1{font-size:1.25rem;margin:0 0 8px}p{margin:0;color:#64786b}@keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+</head>
+<body>
+  <main class="card"><div class="spinner" aria-hidden="true"></div><h1>Mise à jour d’Énergie</h1><p id="status">Suppression de l’ancienne version…</p></main>
+  <script>
+    (async () => {
+      try {
+        if ("serviceWorker" in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(registrations.map((registration) => registration.unregister()));
+        }
+        if ("caches" in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((key) => caches.delete(key)));
+        }
+        document.getElementById("status").textContent = "Nouvelle version prête. Réouverture…";
+      } catch (_) {
+        document.getElementById("status").textContent = "Réouverture de la nouvelle version…";
+      }
+      setTimeout(() => location.replace(`./?version=3.29.10&refresh=${Date.now()}`), 700);
+    })();
+  </script>
+</body>
+</html>
