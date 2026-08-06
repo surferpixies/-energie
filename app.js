@@ -2697,7 +2697,8 @@
     const avg = (values) => values.length
       ? values.reduce((sum, value) => sum + value, 0) / values.length
       : null;
-    const points = weeks.map((week) => ({
+    const points = weeks.filter((week) => week.dates.length >= 4).map((week) => ({
+      start: week.start,
       label: `Dim. ${new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "short" }).format(new Date(`${week.start}T12:00:00`))}`,
       discomfort: avg([...week.exposed, ...week.clear]),
       exposures: week.exposures,
@@ -2715,7 +2716,9 @@
       const barHeight = Math.max(2, point.exposures * 3);
       return `<g class="trend-exposure"><rect x="${x(index)-5}" y="${height-bottom+10-barHeight}" width="10" height="${barHeight}" rx="3"/><text x="${x(index)}" y="${height-bottom+22}" text-anchor="middle">${point.exposures}</text></g>`;
     }).join("");
-    const chart = `<div class="professional-trend-legend"><span class="discomfort">Niveau moyen d’inconfort</span><span class="exposure-count">Nombre de jours repérés</span></div><div class="professional-trend-scroll chart-scroll"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><text class="trend-y-title" x="14" y="${top + (height-top-bottom)/2}" text-anchor="middle" transform="rotate(-90 14 ${top + (height-top-bottom)/2})">Inconfort /5</text><g class="trend-grid">${grid}</g><path class="trend-path discomfort" d="${linePath}"/><g class="trend-dots">${dots}</g><g class="trend-exposures">${exposureBars}</g><g class="trend-labels">${labels}</g></svg></div>`;
+    const milestoneIndex = profile.id === "elodie" ? Math.min(points.length - 1, 5) : -1;
+    const milestone = milestoneIndex >= 0 ? `<g class="trend-milestone"><line x1="${x(milestoneIndex)}" y1="${top}" x2="${x(milestoneIndex)}" y2="${height-bottom}"/><text x="${x(milestoneIndex)+7}" y="${top+12}">Tendance remarquée</text><text x="${x(milestoneIndex)+7}" y="${top+24}">réduction du soya</text></g>` : "";
+    const chart = `<div class="professional-trend-legend"><span class="discomfort">Niveau moyen d’inconfort</span><span class="exposure-count">Nombre de jours repérés</span></div><div class="professional-trend-scroll chart-scroll"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><text class="trend-y-title" x="14" y="${top + (height-top-bottom)/2}" text-anchor="middle" transform="rotate(-90 14 ${top + (height-top-bottom)/2})">Inconfort /5</text><g class="trend-grid">${grid}</g>${milestone}<path class="trend-path discomfort" d="${linePath}"/><g class="trend-dots">${dots}</g><g class="trend-exposures">${exposureBars}</g><g class="trend-labels">${labels}</g></svg></div>`;
     return `<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Première lecture du dossier</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-week-note"><strong>Une seule courbe : l’évolution de l’inconfort.</strong><span>Chaque semaine commence le dimanche. Les petits nombres sous la courbe indiquent combien de journées contenaient l’élément suivi.</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small></div></div>${chart}<button type="button" class="secondary professional-trend-expand" data-open-trend-fullscreen><span>↗ Agrandir en mode horizontal</span><small>L’affichage pivotera automatiquement</small></button><p class="muted tiny">${config.disclaimer}</p></section><dialog class="professional-trend-dialog" id="professionalTrendDialog"><div class="professional-trend-dialog-head"><div><small>Vue horizontale automatique</small><strong>${config.title}</strong></div><button type="button" class="secondary" data-close-trend-fullscreen>Revenir au suivi ✕</button></div><div class="professional-trend-fullscreen-frame">${chart}</div><p class="muted tiny">Axe vertical : inconfort moyen sur 5 · Axe horizontal : semaines du dimanche au samedi.</p></dialog>`;
   }
   function renderFollowup() {
@@ -8350,7 +8353,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.29.10");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.29.11");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

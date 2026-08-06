@@ -192,8 +192,8 @@
     if(rand(seed+5)<.35)day.meals.push(meal("sophie",date,"15:20","Collation",highFiber?"Pomme et amandes":"Biscuits et café",3,digestive?["bloating"]:["energy"],digestive?2:4));
   }
   function buildElodie(store,offset,date,seed){
-    const phase=Math.floor((offset+89)/30),weekday=new Date(`${date}T12:00:00`).getDay();
-    const soyChance=[.62,.43,.20][Math.min(2,phase)],soy=rand(seed+3)<soyChance;
+    const week=Math.min(12,Math.floor((offset+89)/7)),weekday=new Date(`${date}T12:00:00`).getDay();
+    const soyChance=[.76,.82,.88,.84,.78,.70,.54,.38,.25,.16,.11,.08,.05][week],soy=rand(seed+3)<soyChance;
     const day=commonDay(store,date,seed,Number((6.8+rand(seed)*1.1).toFixed(1)),5+Math.floor(rand(seed+2)*4),weekday===0?{type:"Marche",minutes:40}:null);
     day.meals.push(meal("elodie",date,"07:35","Déjeuner",soy&&seed%4===0?"Bol de fruits, granola et boisson de soya":"Gruau, petits fruits et lait d’avoine",3,["feeling_good"],4));
     const lunch=soy?(seed%2?"Bol de tofu, riz, edamame et légumes":"Salade de nouilles, légumes et vinaigrette au soya"):(seed%2?"Bol de poulet, riz et légumes":"Salade de quinoa, pois chiches et légumes");
@@ -204,7 +204,8 @@
 
     const previousKey=keyFor(offset-1),previous=store.days[previousKey];
     const previousSoyMeals=(previous?.meals||[]).filter(m=>/(soya|tofu|edamame|miso)/i.test(m.description));
-    if(previousSoyMeals.length&&rand(seed+11)<[.64,.51,.38][Math.min(2,phase)]){
+    const reactionChance=[.78,.86,.93,.90,.87,.82,.68,.52,.36,.24,.16,.11,.08][week];
+    if(previousSoyMeals.length&&rand(seed+11)<reactionChance){
       const variants=[
         {tags:["itching","redness"],emoji:"🌿",duration:"several_days",notes:"Poussée d’eczéma et démangeaisons remarquées depuis ce matin, sans certitude sur le déclencheur."},
         {tags:["hives","itching"],emoji:"🟥",duration:"few_hours",notes:"Plaques rouges qui démangent apparues en fin de journée. Aucun symptôme respiratoire."},
@@ -212,8 +213,11 @@
         {tags:["nausea","stomachache"],emoji:"🤢",duration:"few_hours",notes:"Nausée et inconfort abdominal léger. Observation conservée séparément des repas."}
       ];
       const v=variants[seed%variants.length];
-      day.observations.push({id:`demo-elodie-observation-${date}`,date,time:seed%2?"10:40":"20:15",intensity:2+(seed%3),duration:v.duration,tags:v.tags,contexts:["food","unknown"],mealIds:previousSoyMeals.map(m=>m.id),notes:v.notes,createdAt:`${date}T10:40:00`,updatedAt:`${date}T20:15:00`});
-    }else if(!previousSoyMeals.length&&rand(seed+17)<.13){
+      const intensityBase=[3,3,4,4,4,4,3,3,2,2,2,1,1][week];
+      const intensity=Math.max(1,Math.min(5,intensityBase+(rand(seed+19)>.58?1:0)));
+      const learningNote=week>=6?" La fréquence du soya est réduite depuis que la chronologie des réactions a commencé à ressortir.":"";
+      day.observations.push({id:`demo-elodie-observation-${date}`,date,time:seed%2?"10:40":"20:15",intensity,duration:v.duration,tags:v.tags,contexts:["food","unknown"],mealIds:previousSoyMeals.map(m=>m.id),notes:v.notes+learningNote,createdAt:`${date}T10:40:00`,updatedAt:`${date}T20:15:00`});
+    }else if(!previousSoyMeals.length&&rand(seed+17)<(week<6?.16:.08)){
       day.observations.push({id:`demo-elodie-background-${date}`,date,time:"19:30",intensity:2,duration:"few_hours",tags:["redness","itching"],contexts:[seed%2?"environment":"stress","unknown"],mealIds:[],notes:"Rougeur légère sans exposition alimentaire évidente; le contexte demeure incertain.",createdAt:`${date}T19:30:00`,updatedAt:`${date}T19:30:00`});
     }
   }
