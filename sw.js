@@ -1,4 +1,30 @@
-const CACHE="energie-v3.6.0";const ASSETS=["./","./index.html","./styles.css?v=3.6.0","./foods.js?v=3.6.0","./food-categories.js?v=3.6.0","./observation-engine.js?v=3.6.0","./app.js?v=3.6.0","./i18n.js?v=3.6.0","./config.js?v=3.6.0","./manifest.webmanifest","./assets/icon.svg","./assets/icon-192.png","./assets/icon-512.png","./assets/apple-touch-icon.png"];
-self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
-self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;const u=new URL(e.request.url);if(u.origin!==location.origin)return;const isAppShell=["/","/index.html","/foods.js","/food-categories.js","/observation-engine.js","/app.js","/i18n.js","/styles.css","/config.js"].some(x=>u.pathname.endsWith(x));if(isAppShell){e.respondWith(fetch(e.request,{cache:"no-store"}).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r}).catch(()=>caches.match(e.request).then(r=>r||caches.match("./index.html"))));return}e.respondWith(caches.match(e.request).then(cached=>cached||fetch(e.request).then(r=>{const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return r})))})
+const CACHE_NAME = "energie-runtime-v3.29.8";
+
+self.addEventListener("install", () => self.skipWaiting());
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then(() => self.clients.claim()),
+  );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
+
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET" || new URL(event.request.url).origin !== self.location.origin) return;
+  event.respondWith(
+    fetch(event.request, { cache: "no-store" })
+      .then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request)),
+  );
+});
