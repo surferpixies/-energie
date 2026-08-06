@@ -2691,7 +2691,7 @@
       ? values.reduce((sum, value) => sum + value, 0) / values.length
       : null;
     const points = weeks.map((week) => ({
-      label: new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "short" }).format(new Date(`${week.dates[0]}T12:00:00`)),
+      label: `Sem. ${new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "short" }).format(new Date(`${week.dates[0]}T12:00:00`))}`,
       exposed: avg(week.exposed), clear: avg(week.clear), exposures: week.exposures,
     }));
     const allExposed = rows.filter((row) => row.exposed).map((row) => row.intensity);
@@ -2705,7 +2705,8 @@
       `<circle class="${key}" cx="${x(index)}" cy="${y(point[key])}" r="4"><title>${esc(point.label)} · ${esc(key === "exposed" ? config.primaryLabel : config.comparisonLabel)} : ${point[key].toFixed(1)}/5</title></circle>`).join("");
     const grid = [0,1,2,3,4,5].map((value) => `<line x1="${left}" y1="${y(value)}" x2="${width-right}" y2="${y(value)}"/><text x="${left-8}" y="${y(value)+3}" text-anchor="end">${value}</text>`).join("");
     const labels = points.map((point, index) => index % 2 && index !== points.length - 1 ? "" : `<text x="${x(index)}" y="${height-15}" text-anchor="middle">${esc(point.label)}</text>`).join("");
-    return `<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Première lecture du dossier</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small></div></div><div class="professional-trend-legend"><span class="exposed">${esc(config.primaryLabel)}</span><span class="clear">${esc(config.comparisonLabel)}</span></div><div class="professional-trend-scroll"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><g class="trend-grid">${grid}</g><path class="trend-path exposed" d="${path("exposed")}"/><path class="trend-path clear" d="${path("clear")}"/><g class="trend-dots">${dots("exposed")}${dots("clear")}</g><g class="trend-labels">${labels}</g></svg></div><p class="muted tiny">${config.disclaimer}</p></section>`;
+    const chart = `<div class="professional-trend-legend"><span class="exposed">${esc(config.primaryLabel)}</span><span class="clear">${esc(config.comparisonLabel)}</span></div><div class="professional-trend-scroll chart-scroll"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><g class="trend-grid">${grid}</g><path class="trend-path exposed" d="${path("exposed")}"/><path class="trend-path clear" d="${path("clear")}"/><g class="trend-dots">${dots("exposed")}${dots("clear")}</g><g class="trend-labels">${labels}</g></svg></div>`;
+    return `<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Première lecture du dossier</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-week-note"><strong>Chaque date indique le début d’une semaine.</strong><span>Les deux courbes regroupent des journées différentes de cette semaine; elles ne classent jamais une même journée dans les deux groupes.</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small></div></div>${chart}<button type="button" class="secondary professional-trend-expand" data-open-trend-fullscreen>↗ Agrandir le graphique</button><p class="muted tiny">${config.disclaimer}</p></section><dialog class="professional-trend-dialog" id="professionalTrendDialog"><div class="professional-trend-dialog-head"><div><small>Vue horizontale</small><strong>${config.title}</strong></div><button type="button" class="secondary" data-close-trend-fullscreen>Revenir au suivi ✕</button></div><div class="professional-trend-fullscreen-frame">${chart}</div><p class="muted tiny">Chaque repère correspond à une semaine et compare des journées distinctes.</p></dialog>`;
   }
   function renderFollowup() {
     if (!db.settings.demoMode) {
@@ -2727,6 +2728,19 @@
     $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">${professionalDemoMode ? "Espace professionnel · Démo" : "Suivi professionnel"}</p><h2>📝 Suivi de ${esc(profile.name)}</h2><p>${professionalDemoMode ? "Les notes privées et partagées sont visibles dans cet espace professionnel fictif." : "Les notes partagées par le professionnel apparaissent ici en lecture seule."}</p>${professionalDemoMode ? `<div class="dialog-actions"><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalDemo">Quitter le mode professionnel</button></div>` : ""}</section>${professionalTrendHtml()}${form}<section class="professional-followup"><div class="section-title"><h2>Chronologie</h2><span class="muted small">${allNotes.length} note${allNotes.length > 1 ? "s" : ""}</span></div><div class="stack">${cards}</div></section>`;
     $("#switchProfessionalClient")?.addEventListener("click", openProfessionalClientPicker);
     $("#leaveProfessionalDemo")?.addEventListener("click", leaveDemoMode);
+    $("[data-open-trend-fullscreen]")?.addEventListener("click", async () => {
+      const dialog = $("#professionalTrendDialog");
+      if (!dialog) return;
+      dialog.showModal();
+      try { await dialog.requestFullscreen?.(); } catch (_) {}
+      try { await screen.orientation?.lock?.("landscape"); } catch (_) {}
+    });
+    $("[data-close-trend-fullscreen]")?.addEventListener("click", async () => {
+      const dialog = $("#professionalTrendDialog");
+      try { screen.orientation?.unlock?.(); } catch (_) {}
+      try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (_) {}
+      dialog?.close();
+    });
     $("#professionalNoteForm")?.addEventListener("submit", (event) => {
       event.preventDefault();
       const rawContext = $("#professionalNoteContext").value.split("|");
@@ -8322,7 +8336,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.29.5");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.29.6");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
