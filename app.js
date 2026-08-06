@@ -2606,27 +2606,77 @@
   }
   function professionalTrendHtml() {
     const profile = activeDemoProfile();
-    if (!professionalDemoMode || profile.id !== "elodie") return "";
+    if (!db.settings.demoMode) return "";
+    const configs = {
+      elodie: {
+        pattern: /(soya|tofu|edamame|miso)/i,
+        delayed: true,
+        title: "🌿 Soya et évolution des réactions",
+        description: "Comparaison hebdomadaire des observations globales dans les 24 à 48 heures suivant du soya repéré et pendant les périodes sans soya repéré.",
+        primaryLabel: "Après soya repéré",
+        comparisonLabel: "Sans soya repéré",
+        metricLabel: "jours avec soya",
+        disclaimer: "Association tirée des repas et observations globales. Elle ne confirme pas une allergie et ne constitue pas un diagnostic.",
+        intensity: (day) => {
+          const observations = day.observations || [];
+          return observations.length
+            ? observations.reduce((sum, item) => sum + (Number(item.intensity) || 0), 0) / observations.length
+            : 0;
+        },
+      },
+      marie: {
+        pattern: /(lait|lactose|fromage|yogourt|cr[eè]me|cr[eé]meuse|cappuccino|latte|pizza au fromage|sauce cr[eè]meuse)/i,
+        delayed: false,
+        title: "🥛 Produits laitiers et inconfort digestif",
+        description: "Comparaison hebdomadaire de l’inconfort digestif les journées contenant des produits laitiers repérés et les journées sans produits laitiers repérés.",
+        primaryLabel: "Avec produits laitiers",
+        comparisonLabel: "Sans produits laitiers",
+        metricLabel: "jours avec produits laitiers",
+        disclaimer: "Association tirée des descriptions de repas et des ressentis digestifs. Elle ne confirme pas une intolérance et ne constitue pas un diagnostic.",
+        intensity: (day) => {
+          const digestive = new Set(["bloating", "gas", "cramps", "diarrhea", "nausea", "stomachache"]);
+          const scores = (day.meals || []).flatMap((meal) =>
+            (meal.feeling?.tags || []).filter((tag) => digestive.has(tag)).map((tag) => Number(meal.feeling?.scores?.[tag] ?? meal.feeling?.rating ?? 3)),
+          );
+          return scores.length ? scores.reduce((sum, score) => sum + (6 - score), 0) / scores.length : 0;
+        },
+      },
+      sophie: {
+        pattern: /(gruau|pomme|chia|quinoa|pois chiches|chili|haricots|riz brun|l[eé]gumes|lentilles|amandes)/i,
+        delayed: false,
+        title: "🌾 Fibres et confort digestif",
+        description: "Comparaison hebdomadaire de l’inconfort digestif durant les journées où des aliments riches en fibres sont repérés et celles où ils sont moins présents.",
+        primaryLabel: "Fibres bien présentes",
+        comparisonLabel: "Fibres moins présentes",
+        metricLabel: "jours riches en fibres",
+        disclaimer: "Association tirée des descriptions de repas et des ressentis digestifs. La présence réelle de fibres demeure une estimation et non une mesure nutritionnelle précise.",
+        intensity: (day) => {
+          const digestive = new Set(["bloating", "gas", "cramps", "diarrhea", "nausea", "stomachache"]);
+          const scores = (day.meals || []).flatMap((meal) =>
+            (meal.feeling?.tags || []).filter((tag) => digestive.has(tag)).map((tag) => Number(meal.feeling?.scores?.[tag] ?? meal.feeling?.rating ?? 3)),
+          );
+          return scores.length ? scores.reduce((sum, score) => sum + (6 - score), 0) / scores.length : 0;
+        },
+      },
+    };
+    const config = configs[profile.id];
+    if (!config) return "";
     const dates = Object.keys(db.days || {}).sort();
     if (!dates.length) return "";
-    const soyPattern = /(soya|tofu|edamame|miso)/i;
-    const soyDates = new Set(dates.filter((date) =>
-      (db.days[date]?.meals || []).some((meal) => soyPattern.test(meal.description || "")),
+    const primaryDates = new Set(dates.filter((date) =>
+      (db.days[date]?.meals || []).some((meal) => config.pattern.test(meal.description || "")),
     ));
     const previousDate = (date) => {
       const value = new Date(`${date}T12:00:00`);
       value.setDate(value.getDate() - 1);
-      return localDateKey(value);
+      return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
     };
     const rows = dates.map((date) => {
-      const observations = db.days[date]?.observations || [];
       return {
         date,
-        exposed: soyDates.has(date) || soyDates.has(previousDate(date)),
-        direct: soyDates.has(date),
-        intensity: observations.length
-          ? observations.reduce((sum, item) => sum + (Number(item.intensity) || 0), 0) / observations.length
-          : 0,
+        exposed: primaryDates.has(date) || (config.delayed && primaryDates.has(previousDate(date))),
+        direct: primaryDates.has(date),
+        intensity: config.intensity(db.days[date] || {}),
       };
     });
     const weeks = [];
@@ -2652,10 +2702,10 @@
     const path = (key) => points.map((point, index) => point[key] == null ? "" :
       `${index && points.slice(0, index).some((item) => item[key] != null) ? "L" : "M"}${x(index).toFixed(1)},${y(point[key]).toFixed(1)}`).join(" ");
     const dots = (key) => points.map((point, index) => point[key] == null ? "" :
-      `<circle class="${key}" cx="${x(index)}" cy="${y(point[key])}" r="4"><title>${esc(point.label)} · ${key === "exposed" ? "Après soya" : "Sans soya"} : ${point[key].toFixed(1)}/5</title></circle>`).join("");
+      `<circle class="${key}" cx="${x(index)}" cy="${y(point[key])}" r="4"><title>${esc(point.label)} · ${esc(key === "exposed" ? config.primaryLabel : config.comparisonLabel)} : ${point[key].toFixed(1)}/5</title></circle>`).join("");
     const grid = [0,1,2,3,4,5].map((value) => `<line x1="${left}" y1="${y(value)}" x2="${width-right}" y2="${y(value)}"/><text x="${left-8}" y="${y(value)+3}" text-anchor="end">${value}</text>`).join("");
     const labels = points.map((point, index) => index % 2 && index !== points.length - 1 ? "" : `<text x="${x(index)}" y="${height-15}" text-anchor="middle">${esc(point.label)}</text>`).join("");
-    return `<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Première lecture du dossier</p><h2>🌿 Soya et évolution des réactions</h2><p>Comparaison hebdomadaire des observations globales dans les 24 à 48 heures suivant du soya repéré et pendant les périodes sans soya repéré.</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>après soya</small></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>sans soya</small></div><div><strong>${soyDates.size}</strong><small>jours avec soya</small></div></div><div class="professional-trend-legend"><span class="exposed">Après soya repéré</span><span class="clear">Sans soya repéré</span></div><div class="professional-trend-scroll"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Tendance des réactions avec et sans soya"><g class="trend-grid">${grid}</g><path class="trend-path exposed" d="${path("exposed")}"/><path class="trend-path clear" d="${path("clear")}"/><g class="trend-dots">${dots("exposed")}${dots("clear")}</g><g class="trend-labels">${labels}</g></svg></div><p class="muted tiny">Association tirée des repas et observations globales. Elle ne confirme pas une allergie et ne constitue pas un diagnostic.</p></section>`;
+    return `<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Première lecture du dossier</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small></div></div><div class="professional-trend-legend"><span class="exposed">${esc(config.primaryLabel)}</span><span class="clear">${esc(config.comparisonLabel)}</span></div><div class="professional-trend-scroll"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><g class="trend-grid">${grid}</g><path class="trend-path exposed" d="${path("exposed")}"/><path class="trend-path clear" d="${path("clear")}"/><g class="trend-dots">${dots("exposed")}${dots("clear")}</g><g class="trend-labels">${labels}</g></svg></div><p class="muted tiny">${config.disclaimer}</p></section>`;
   }
   function renderFollowup() {
     if (!db.settings.demoMode) {
@@ -8272,7 +8322,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.29.3");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.29.5");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
