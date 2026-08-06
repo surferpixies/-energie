@@ -1563,6 +1563,8 @@
       return;
     }
     fillNutritionInputs(n);
+    const optionalDetails = $("#mealOptionalDetails");
+    if (optionalDetails) optionalDetails.open = true;
     mealNutritionManuallyEdited = false;
   }
   function scheduleAutomaticNutritionPreview() {
@@ -1580,7 +1582,11 @@
         return;
       }
       const nutrition = estimateNutritionFromText(description);
-      if (nutrition) fillNutritionInputs(nutrition);
+      if (nutrition) {
+        fillNutritionInputs(nutrition);
+        const optionalDetails = $("#mealOptionalDetails");
+        if (optionalDetails) optionalDetails.open = true;
+      }
       else
         fillNutritionInputs(
           null,
