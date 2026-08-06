@@ -3351,6 +3351,16 @@
     return `<button type="button" class="card journal-brain-card" id="openJournalBrain" aria-label="Ouvrir le Cerveau"><span class="journal-brain-visual" aria-hidden="true"><span class="journal-brain-plant">${state.plant}</span><span class="journal-brain-icon">🧠</span></span><span class="journal-brain-copy"><span class="journal-brain-top"><span><small>${esc(state.eyebrow)}</small><strong>${esc(state.title)}</strong></span><b>›</b></span><span class="journal-brain-message">${esc(state.text)}</span><span class="journal-brain-progress"><i><em style="width:${state.progress}%"></em></i><small>${state.plant} ${esc(state.label)} · ${state.days} journée${state.days !== 1 ? "s" : ""}</small></span></span></button>`;
   }
   function render() {
+    if (
+      db.settings?.demoMode &&
+      db.settings?.demoProfileId === "elodie" &&
+      db.settings?.demoDataVersion !== "elodie-soya-v2"
+    ) {
+      db = createDemoDB("elodie");
+      selectedDate = demoLandingDate("elodie");
+      buildDemoBrainMemory(db);
+      try { saveLocal("demo-data-refresh"); } catch (_) {}
+    }
     if (selectedDate > todayKey()) selectedDate = todayKey();
     document.documentElement.dataset.theme =
       db.settings.theme === "dark" ? "dark" : "";
@@ -8353,7 +8363,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.29.11");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.29.12");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

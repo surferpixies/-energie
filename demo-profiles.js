@@ -224,7 +224,7 @@
   function create(profileId="marie"){
     const p=profiles[profileId]||profiles.marie;
     const profileDays=p.id==="elodie"?90:180;
-    const store={version:24,createdAt:new Date(Date.now()-profileDays*DAY).toISOString(),updatedAt:new Date().toISOString(),settings:{waterGoal:8,theme:"system",showWelcome:false,insightsEnabled:true,nutritionObservations:true,macroTracking:true,generalRecommendations:true,showSources:true,professionalSupport:false,feelingReminders:false,feelingDelayHours:2,feelingMealTypes:["Déjeuner","Dîner","Souper"],supplements:[],demoMode:true,demoTourSeen:true,demoName:p.name,demoProfileId:p.id,demoReadOnly:true},favorites:[],days:{}};
+    const store={version:24,createdAt:new Date(Date.now()-profileDays*DAY).toISOString(),updatedAt:new Date().toISOString(),settings:{waterGoal:8,theme:"system",showWelcome:false,insightsEnabled:true,nutritionObservations:true,macroTracking:true,generalRecommendations:true,showSources:true,professionalSupport:false,feelingReminders:false,feelingDelayHours:2,feelingMealTypes:["Déjeuner","Dîner","Souper"],supplements:[],demoMode:true,demoTourSeen:true,demoName:p.name,demoProfileId:p.id,demoReadOnly:true,demoDataVersion:p.id==="elodie"?"elodie-soya-v2":"base-v1"},favorites:[],days:{}};
     const favs={
       marie:[["Déjeuner rapide","Déjeuner","Cappuccino et toast au beurre d’arachide"],["Dîner de quart","Dîner","Sandwich, crudités et fruit"],["Pizza du vendredi","Souper","Pizza et salade"]],
       alex:[["Overnight oats","Déjeuner","Overnight oats, bleuets, chia et yogourt grec"],["Bol protéiné","Dîner","Poulet, quinoa et légumes"],["Collation entraînement","Collation","Banane et noix"]],
