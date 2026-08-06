@@ -220,6 +220,7 @@
     feelingMealId = null,
     notificationTimer = null;
   let hasDemoAccess = false;
+  let professionalDemoMode = false;
   let barcodeReader = null,
     barcodeControls = null,
     barcodeBusy = false,
@@ -2510,6 +2511,149 @@
       positiveCount: positive.reduce((sum, item) => sum + (item.count || 0), 0),
     };
   }
+  const PROFESSIONAL_NOTES_KEY = "energieProfessionalDemoNotesV1";
+  function readProfessionalNotes() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(PROFESSIONAL_NOTES_KEY) || "null");
+      if (Array.isArray(saved)) return saved;
+    } catch (_) {}
+    const now = Date.now();
+    const defaults = [
+      ["marie", "shared", "Poursuivre la consignation des repas contenant des produits laitiers et noter précisément le délai des inconforts digestifs."],
+      ["marie", "private", "Revoir avec Marie la précision des portions lors de la prochaine rencontre."],
+      ["alex", "shared", "Observer si la régularité des repas les journées actives influence les ressentis de fin de journée."],
+      ["alex", "private", "Valider les objectifs du suivi avant de proposer de nouveaux changements."],
+      ["sophie", "shared", "Continuer à documenter le sommeil et l’hydratation afin de comparer les journées semblables."],
+      ["sophie", "private", "Vérifier si certaines journées de travail expliquent une partie des variations observées."],
+      ["elodie", "shared", "Noter les réactions globales avec leur heure d’apparition, même lorsqu’elles surviennent le lendemain."],
+      ["elodie", "private", "Aborder la possibilité d’une évaluation médicale si les réactions se répètent."],
+    ].map(([clientId, visibility, content], index) => ({
+      id: `demo-note-${clientId}-${visibility}`,
+      clientId,
+      visibility,
+      contextType: "global",
+      contextId: "",
+      contextDate: "",
+      contextLabel: "Suivi général",
+      content,
+      createdAt: new Date(now - (index + 1) * 86400000).toISOString(),
+      updatedAt: new Date(now - (index + 1) * 86400000).toISOString(),
+    }));
+    try {
+      localStorage.setItem(PROFESSIONAL_NOTES_KEY, JSON.stringify(defaults));
+    } catch (_) {}
+    return defaults;
+  }
+  function writeProfessionalNotes(notes) {
+    try {
+      localStorage.setItem(PROFESSIONAL_NOTES_KEY, JSON.stringify(notes));
+    } catch (_) {}
+  }
+  function professionalDemoEntryHtml() {
+    if (!hasDemoAccess || db.settings.demoMode) return "";
+    return `<section class="card professional-demo-entry"><div><p class="eyebrow">Prototype local</p><h3>👩‍⚕️ Mode professionnel — Démo</h3><p class="muted small">Consulte les quatre dossiers fictifs en lecture seule et expérimente le suivi professionnel.</p></div><button type="button" class="primary" id="openProfessionalDemo">Ouvrir l’espace professionnel</button></section>`;
+  }
+  function professionalClientPickerHtml() {
+    const profiles = Object.values(window.EnergieDemoProfiles?.profiles || {});
+    return profiles
+      .map((profile) => `<button type="button" class="professional-client-option ${db.settings.demoProfileId === profile.id ? "is-active" : ""}" data-professional-client="${profile.id}"><span>${profile.icon}</span><span><strong>${esc(profile.name)}</strong><small>${esc(profile.scenario)}</small></span><b>›</b></button>`)
+      .join("");
+  }
+  function openProfessionalClientPicker() {
+    const dialog = $("#professionalClientDialog"),
+      list = $("#professionalClientList");
+    if (!dialog || !list) return;
+    list.innerHTML = professionalClientPickerHtml();
+    $$('[data-professional-client]').forEach((button) =>
+      button.addEventListener("click", () => {
+        professionalDemoMode = true;
+        dialog.close();
+        switchDemoProfile(button.dataset.professionalClient);
+      }),
+    );
+    dialog.showModal();
+  }
+  function startProfessionalDemo() {
+    professionalDemoMode = true;
+    openProfessionalClientPicker();
+  }
+  function professionalContextOptionsHtml() {
+    const options = [`<option value="global|||Suivi général">Suivi général</option>`];
+    const dates = Object.keys(db.days || {}).sort().reverse().slice(0, 30);
+    dates.forEach((date) => {
+      const day = db.days[date] || {};
+      options.push(`<option value="day||${date}|Journée du ${esc(formatDate(date))}">📅 Journée · ${esc(formatDate(date))}</option>`);
+      if (day.water != null)
+        options.push(`<option value="hydration||${date}|Hydratation du ${esc(formatDate(date))}">💧 Hydratation · ${esc(formatDate(date))}</option>`);
+      if (day.sleepHours != null)
+        options.push(`<option value="sleep||${date}|Sommeil du ${esc(formatDate(date))}">😴 Sommeil · ${esc(formatDate(date))}</option>`);
+      if ((day.activities || []).length)
+        options.push(`<option value="activity||${date}|Activité du ${esc(formatDate(date))}">🚶 Activité · ${esc(formatDate(date))}</option>`);
+      (day.observations || []).forEach((observation) =>
+        options.push(`<option value="observation|${observation.id}|${date}|Observation globale du ${esc(formatDate(date))}">🌿 Observation globale · ${esc(formatDate(date))}</option>`),
+      );
+      (day.meals || []).forEach((meal) =>
+        options.push(`<option value="meal|${meal.id}|${date}|${esc(meal.type)} — ${esc(meal.description)}">${mealIcon(meal.type, meal.description)} ${esc(meal.type)} · ${esc(meal.description)}</option>`),
+      );
+    });
+    return options.join("");
+  }
+  function professionalNoteTime(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? ""
+      : new Intl.DateTimeFormat("fr-CA", { dateStyle: "medium", timeStyle: "short" }).format(date);
+  }
+  function renderFollowup() {
+    if (!db.settings.demoMode) {
+      currentView = "profile";
+      render();
+      return;
+    }
+    const profile = activeDemoProfile();
+    const allNotes = readProfessionalNotes()
+      .filter((note) => note.clientId === profile.id)
+      .filter((note) => professionalDemoMode || note.visibility === "shared")
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    const form = professionalDemoMode
+      ? `<form id="professionalNoteForm" class="card professional-followup professional-note-form"><div><p class="eyebrow">Nouvelle note</p><h3>Ajouter au suivi de ${esc(profile.name)}</h3></div><label>Visibilité<select id="professionalNoteVisibility"><option value="shared">Partagée avec le client</option><option value="private">Privée — professionnel seulement</option></select></label><label>Contexte<select id="professionalNoteContext">${professionalContextOptionsHtml()}</select></label><label>Note<textarea id="professionalNoteContent" rows="4" required placeholder="Écrire une observation ou une piste de suivi…"></textarea></label><button type="submit" class="primary">Enregistrer la note</button></form>`
+      : "";
+    const cards = allNotes.length
+      ? allNotes.map((note) => `<article class="card professional-note-card ${note.visibility === "private" ? "is-private" : "is-shared"}"><div class="professional-note-head"><span>${note.visibility === "private" ? "🔒 Note privée" : "👁️ Partagée avec le client"}</span><time>${esc(professionalNoteTime(note.createdAt))}</time></div><strong>${esc(note.contextLabel || "Suivi général")}</strong><p>${esc(note.content)}</p>${professionalDemoMode ? `<button type="button" class="text-button professional-note-delete" data-delete-professional-note="${note.id}">Supprimer</button>` : ""}</article>`).join("")
+      : `<section class="card empty"><span>📝</span><p>Aucune note partagée n’est disponible pour ce suivi.</p></section>`;
+    $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">${professionalDemoMode ? "Espace professionnel · Démo" : "Suivi professionnel"}</p><h2>📝 Suivi de ${esc(profile.name)}</h2><p>${professionalDemoMode ? "Les notes privées et partagées sont visibles dans cet espace professionnel fictif." : "Les notes partagées par le professionnel apparaissent ici en lecture seule."}</p>${professionalDemoMode ? `<div class="dialog-actions"><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalDemo">Quitter le mode professionnel</button></div>` : ""}</section>${form}<section class="professional-followup"><div class="section-title"><h2>Chronologie</h2><span class="muted small">${allNotes.length} note${allNotes.length > 1 ? "s" : ""}</span></div><div class="stack">${cards}</div></section>`;
+    $("#switchProfessionalClient")?.addEventListener("click", openProfessionalClientPicker);
+    $("#leaveProfessionalDemo")?.addEventListener("click", leaveDemoMode);
+    $("#professionalNoteForm")?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const rawContext = $("#professionalNoteContext").value.split("|");
+      const content = $("#professionalNoteContent").value.trim();
+      if (!content) return;
+      const now = new Date().toISOString();
+      const notes = readProfessionalNotes();
+      notes.push({
+        id: uid(),
+        clientId: profile.id,
+        visibility: $("#professionalNoteVisibility").value === "private" ? "private" : "shared",
+        contextType: rawContext[0] || "global",
+        contextId: rawContext[1] || "",
+        contextDate: rawContext[2] || "",
+        contextLabel: rawContext[3] || "Suivi général",
+        content,
+        createdAt: now,
+        updatedAt: now,
+      });
+      writeProfessionalNotes(notes);
+      renderFollowup();
+    });
+    $$('[data-delete-professional-note]').forEach((button) =>
+      button.addEventListener("click", () => {
+        if (!confirm("Supprimer cette note de suivi?")) return;
+        writeProfessionalNotes(readProfessionalNotes().filter((note) => note.id !== button.dataset.deleteProfessionalNote));
+        renderFollowup();
+      }),
+    );
+  }
   function demoProfileCardsHtml() {
     const profiles = Object.values(window.EnergieDemoProfiles?.profiles || {});
     return `<details class="card demo-selector-card demo-selector-panel"><summary><span><small class="eyebrow">Accès privé</small><strong>Profils de démonstration</strong><small>Quatre parcours fictifs, toujours en lecture seule</small></span><span class="demo-selector-meta"><b>${profiles.length} profils</b><i aria-hidden="true">›</i></span></summary><div class="demo-selector-content"><div class="demo-profile-grid">${profiles.map((profile) => `<article class="demo-person-card ${db.settings.demoMode && db.settings.demoProfileId === profile.id ? "is-active" : ""}"><div class="demo-person-head"><span class="demo-person-avatar">${profile.icon}</span><div><h4>${esc(profile.name)}</h4><small>${esc(profile.scenario)}</small></div></div><p>${esc(profile.summary)}</p><button class="${db.settings.demoMode && db.settings.demoProfileId === profile.id ? "secondary" : "primary"} small" type="button" data-open-demo-profile="${profile.id}">${db.settings.demoMode && db.settings.demoProfileId === profile.id ? "Profil ouvert" : "Explorer"}</button></article>`).join("")}</div></div></details>`;
@@ -2635,6 +2779,8 @@
   }
   function demoBannerHtml() {
     if (!db.settings.demoMode) return "";
+    if (professionalDemoMode)
+      return `<section class="demo-mode-banner professional-mode-banner" id="demoModeBanner"><span><img src="assets/icon.svg" alt=""> <b>Mode professionnel · Démo</b></span><p>${activeDemoProfile().icon} Dossier de ${esc(activeDemoProfile().name)} · lecture seule</p><div><button type="button" id="switchProfessionalClientBanner">Changer</button><button type="button" id="leaveDemoQuick">Quitter</button></div></section>`;
     return `<section class="demo-mode-banner" id="demoModeBanner">
     <span><img src="assets/icon.svg" alt=""> <b>Mode démo · lecture seule</b></span>
     <p>${activeDemoProfile().icon} ${esc(activeDemoProfile().name)} — ${esc(activeDemoProfile().scenario)}</p>
@@ -2643,6 +2789,7 @@
   }
   function bindDemoChrome() {
     $("#leaveDemoQuick")?.addEventListener("click", leaveDemoMode);
+    $("#switchProfessionalClientBanner")?.addEventListener("click", openProfessionalClientPicker);
     $$(".why-demo-insight").forEach((button) =>
       button.addEventListener("click", () => {
         const details = {
@@ -2688,7 +2835,7 @@
         if (!control || !control.closest("#app")) return;
         if (
           control.closest(
-            "[data-open-demo-profile],#leaveDemoProfile,#leaveDemoQuick,#replayDemoTour,.nav-item,.brain-proof,.why-demo-insight,#previousDay,#nextDay,#goToday,#analysisPreviousDay,#analysisNextDay,#analysisGoLatest,[data-global-observation],[data-quick-meal][data-edit-meal]",
+            "[data-open-demo-profile],#leaveDemoProfile,#leaveDemoQuick,#switchProfessionalClientBanner,#replayDemoTour,.nav-item,.brain-proof,.why-demo-insight,#previousDay,#nextDay,#goToday,#analysisPreviousDay,#analysisNextDay,#analysisGoLatest,[data-global-observation],[data-quick-meal][data-edit-meal],.professional-followup",
           )
         )
           return;
@@ -2704,6 +2851,7 @@
       "submit",
       (event) => {
         if (!db.settings?.demoMode || !db.settings?.demoReadOnly) return;
+        if (event.target.matches("#professionalNoteForm")) return;
         if (
           event.target.closest("#app") ||
           event.target.matches(
@@ -2861,6 +3009,7 @@
       console.warn("Restauration impossible", error);
     }
     db = restored || freshDB();
+    professionalDemoMode = false;
     db.settings.showWelcome = false;
     db.settings.demoMode = false;
     db.settings.demoTourSeen = true;
@@ -3076,6 +3225,11 @@
       currentView === "today"
         ? formatDate(selectedDate)
         : formatDate(todayKey());
+    const showFollowup = !!db.settings.demoMode;
+    const followupNav = $('[data-view="followup"]');
+    if (followupNav) followupNav.hidden = !showFollowup;
+    $(".bottom-nav")?.classList.toggle("has-followup", showFollowup);
+    if (!showFollowup && currentView === "followup") currentView = "today";
     $$(".nav-item").forEach((b) =>
       b.classList.toggle("active", b.dataset.view === currentView),
     );
@@ -3086,6 +3240,7 @@
         history: renderHistory,
         insights: renderInsights,
         brain: renderBrain,
+        followup: renderFollowup,
         profile: renderProfile,
       })[currentView] || renderToday
     )();
@@ -3254,7 +3409,11 @@
       { passive: true },
     );
   }
-  const VIEW_SWIPE_ORDER = ["today", "history", "insights", "brain", "profile"];
+  function viewSwipeOrder() {
+    return db.settings.demoMode
+      ? ["today", "history", "insights", "brain", "followup", "profile"]
+      : ["today", "history", "insights", "brain", "profile"];
+  }
   function bindViewSwipe() {
     const target = $("#app");
     if (!target || target.dataset.viewSwipeBound === "1") return;
@@ -3289,12 +3448,13 @@
           )
         )
           return;
-        const index = VIEW_SWIPE_ORDER.indexOf(currentView);
+        const order = viewSwipeOrder();
+        const index = order.indexOf(currentView);
         if (index < 0) return;
         const nextIndex = dx < 0 ? index + 1 : index - 1;
-        if (nextIndex < 0 || nextIndex >= VIEW_SWIPE_ORDER.length) return;
+        if (nextIndex < 0 || nextIndex >= order.length) return;
         const was = currentView;
-        currentView = VIEW_SWIPE_ORDER[nextIndex];
+        currentView = order[nextIndex];
         if (currentView === "today" && was !== "today")
           selectedDate = todayKey();
         render();
@@ -6131,7 +6291,7 @@
     })();
     const supplements = normalizeSupplements(db.settings?.supplements || []);
     $("#app").innerHTML =
-      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="off"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${["Déjeuner", "Dîner", "Souper", "Collation"].map((t) => `<label class="setting-option"><input type="checkbox" data-feeling-meal-type="${t}" ${(db.settings.feelingMealTypes || []).includes(t) ? "checked" : ""}><span>${mealIcon(t)} ${window.t(t)}</span></label>`).join("")}</div><label>Délai après le repas<select id="feelingDelay"><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option><option value="3" ${Number(db.settings.feelingDelayHours) === 3 ? "selected" : ""}>3 heures</option></select></label><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button><p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p></div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${hasDemoAccess ? demoProfileCardsHtml() : ``}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<section class="card"><h3>Sauvegarde supplémentaire</h3><p class="muted small">${backups} copie(s) locale(s) de sécurité.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></section></div>`;
+      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="off"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${["Déjeuner", "Dîner", "Souper", "Collation"].map((t) => `<label class="setting-option"><input type="checkbox" data-feeling-meal-type="${t}" ${(db.settings.feelingMealTypes || []).includes(t) ? "checked" : ""}><span>${mealIcon(t)} ${window.t(t)}</span></label>`).join("")}</div><label>Délai après le repas<select id="feelingDelay"><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option><option value="3" ${Number(db.settings.feelingDelayHours) === 3 ? "selected" : ""}>3 heures</option></select></label><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button><p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p></div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${professionalDemoEntryHtml()}${hasDemoAccess ? demoProfileCardsHtml() : ``}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<section class="card"><h3>Sauvegarde supplémentaire</h3><p class="muted small">${backups} copie(s) locale(s) de sécurité.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></section></div>`;
     $("#signIn")?.addEventListener("click", () => {
       setAuthMode("login");
       $("#authMessage").textContent = "";
@@ -6227,6 +6387,7 @@
     $("#launchDemoProfile")?.addEventListener("click", () =>
       showExperienceLaunchIfNeeded(true),
     );
+    $("#openProfessionalDemo")?.addEventListener("click", startProfessionalDemo);
     $$(`[data-open-demo-profile]`).forEach((button) =>
       button.addEventListener("click", () =>
         switchDemoProfile(button.dataset.openDemoProfile),
@@ -7727,6 +7888,10 @@
     db.settings.theme = db.settings.theme === "dark" ? "system" : "dark";
     saveLocal("theme");
     render();
+  };
+  $("#closeProfessionalPicker").onclick = () => {
+    $("#professionalClientDialog")?.close();
+    if (!db.settings.demoMode) professionalDemoMode = false;
   };
   $$(".nav-item").forEach(
     (b) =>
