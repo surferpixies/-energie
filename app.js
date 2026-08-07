@@ -6431,13 +6431,14 @@
   function physiologicalContextHtml() {
     const allowed = new Set(["none", "menstrual", "pregnancy"]),
       context = allowed.has(db.settings?.physiologicalContext) ? db.settings.physiologicalContext : "none",
-      label = context === "menstrual" ? "Cycle menstruel" : context === "pregnancy" ? "Grossesse" : "Non activé";
+      label = context === "menstrual" ? "Cycle menstruel" : context === "pregnancy" ? "Grossesse" : "Non activé",
+      icon = context === "pregnancy" ? "👶" : "🌙";
     const fields = context === "menstrual"
       ? `<label class="physiological-date-field"><span>Début des dernières menstruations</span><input type="date" id="menstrualLastStart" max="${todayKey()}" value="${esc(db.settings?.menstrualLastStart || "")}"></label><p class="muted tiny">Cette date servira éventuellement à comparer des périodes semblables, sans attribuer automatiquement un ressenti au cycle.</p>`
       : context === "pregnancy"
         ? `<label class="physiological-date-field"><span>Date prévue d’accouchement <small>(facultative)</small></span><input type="date" id="pregnancyDueDate" value="${esc(db.settings?.pregnancyDueDate || "")}"></label><p class="muted tiny">Cette information servira éventuellement à situer le contexte. Énergie ne remplace pas le suivi médical.</p>`
         : `<div class="physiological-empty"><span aria-hidden="true">○</span><p>Aucun contexte physiologique n’est utilisé.</p></div>`;
-    return `<details class="card physiological-context-card"><summary><span class="physiological-context-title"><b aria-hidden="true">🌙</b><span><strong>Contexte physiologique</strong><small>Cycle menstruel ou grossesse · facultatif</small></span></span><span class="physiological-context-meta"><b>${esc(label)}</b><i aria-hidden="true">›</i></span></summary><div class="physiological-context-content"><p class="muted small">Ces renseignements sensibles restent facultatifs. Ils sont enregistrés avec ton profil, mais ne modifient pas encore les analyses.</p><label class="physiological-context-select"><span>Contexte à prendre en compte</span><select id="physiologicalContext"><option value="none" ${context === "none" ? "selected" : ""}>Aucun</option><option value="menstrual" ${context === "menstrual" ? "selected" : ""}>Cycle menstruel</option><option value="pregnancy" ${context === "pregnancy" ? "selected" : ""}>Grossesse</option></select></label><div class="physiological-context-fields">${fields}</div><p class="physiological-context-privacy">🔒 Énergie ne tente jamais de déduire une grossesse ou un cycle à partir des repas et ressentis.</p></div></details>`;
+    return `<details class="card physiological-context-card"><summary><span class="physiological-context-title"><b aria-hidden="true">${icon}</b><span><strong>Contexte physiologique</strong><small>Cycle menstruel ou grossesse · facultatif</small></span></span><span class="physiological-context-meta"><b>${esc(label)}</b><i aria-hidden="true">›</i></span></summary><div class="physiological-context-content"><p class="muted small">Ces renseignements sensibles restent facultatifs. Ils sont enregistrés avec ton profil, mais ne modifient pas encore les analyses.</p><label class="physiological-context-select"><span>Contexte à prendre en compte</span><select id="physiologicalContext"><option value="none" ${context === "none" ? "selected" : ""}>Aucun</option><option value="menstrual" ${context === "menstrual" ? "selected" : ""}>Cycle menstruel</option><option value="pregnancy" ${context === "pregnancy" ? "selected" : ""}>Grossesse</option></select></label><div class="physiological-context-fields">${fields}</div><p class="physiological-context-privacy">🔒 Énergie ne tente jamais de déduire une grossesse ou un cycle à partir des repas et ressentis.</p></div></details>`;
   }
 
   function renderProfile() {
@@ -8395,7 +8396,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.30.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.30.1");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
