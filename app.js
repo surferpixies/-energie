@@ -216,6 +216,7 @@
     photoRemoved = false,
     mealNutritionPreviewTimer = null,
     mealNutritionManuallyEdited = false,
+    mealFoodReview = null,
     authMode = "login",
     feelingMealId = null,
     notificationTimer = null;
@@ -435,6 +436,8 @@
         m.feelingsBeforeQuality || rawFeeling?.beforeQuality || null,
       notes: m.notes || "",
       nutrition: normalNutrition(m.nutrition || m.macros),
+      foodReview:
+        m.foodReview || m.food_review || rawFeeling?.foodReview || null,
       photoUrl: m.photoUrl || null,
       photoPath: m.photoPath || null,
       photoLocal: m.photoLocal || m.photo || m.image || null,
@@ -961,11 +964,12 @@
             photo_path: meal.photoPath || null,
             feeling:
               Object.keys(normalizeFeelingScores(meal.feelingsBefore)).length ||
-              meal.feeling
+              meal.feeling || meal.foodReview
                 ? {
                     ...(meal.feeling || {}),
                     beforeScores: normalizeFeelingScores(meal.feelingsBefore),
                     beforeQuality: meal.feelingsBeforeQuality || null,
+                    foodReview: meal.foodReview || null,
                   }
                 : null,
             feeling_notified_at: meal.feelingNotifiedAt || null,
@@ -1447,9 +1451,84 @@
     }
     return output;
   }
+  function mealCompositionAnalysis(text) {
+    const categoryIds =
+      window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(text) || [];
+    return window.ENERGIE_DISH_KNOWLEDGE?.analyze?.(text, categoryIds) || null;
+  }
+  function compositionTraitChip(trait, certainty) {
+    const labels = window.ENERGIE_DISH_KNOWLEDGE?.labels || {},
+      label = labels[trait] || trait.replaceAll("_", " "),
+      certaintyLabel = {
+        confirmed: "confirmé",
+        probable: "probable",
+        possible: "possible",
+      }[certainty];
+    return `<span class="composition-trait composition-${certainty}"><strong>${esc(label)}</strong><small>${certaintyLabel}</small></span>`;
+  }
+  function updateMealCompositionReview() {
+    const section = $("#mealCompositionReview"),
+      summary = $("#mealCompositionSummary"),
+      actions = $("#mealCompositionActions"),
+      description = $("#mealDescription")?.value.trim() || "";
+    if (!section || !summary || !actions) return;
+    if (description.length < 3) {
+      section.hidden = true;
+      return;
+    }
+    if (mealFoodReview?.description !== description)
+      mealFoodReview = { description, acknowledgedGaps: false };
+    const analysis = mealCompositionAnalysis(description);
+    if (!analysis) {
+      section.hidden = true;
+      return;
+    }
+    const visibleTraits = ["protein", "fiber", "dairy", "soy", "gluten", "eggs", "nuts"];
+    const chips = visibleTraits
+      .map((trait) => {
+        const certainty = analysis.status(trait);
+        return certainty === "unknown" ? "" : compositionTraitChip(trait, certainty);
+      })
+      .filter(Boolean)
+      .join("");
+    const missing = ["protein", "fiber"].filter(
+      (trait) => analysis.status(trait) === "unknown",
+    );
+    const title = analysis.dish
+      ? `<strong>🍽️ ${esc(analysis.dish.name)} reconnu</strong><small>Composition habituelle — la recette peut varier</small>`
+      : `<strong>🔎 Éléments reconnus</strong><small>Selon les ingrédients écrits</small>`;
+    const ingredients = analysis.dish?.ingredients?.length
+      ? `<p class="composition-basis">Habituellement : ${analysis.dish.ingredients.map(esc).join(", ")}.</p>`
+      : "";
+    const missingHtml = missing.length
+      ? `<div class="composition-missing"><strong>${missing.map((trait) => `${trait === "protein" ? "Protéines" : "Fibres"} non détectées`).join(" · ")}</strong><p>Ce repas n’en contient peut-être pas, ou sa description manque de précision.</p></div>`
+      : "";
+    const acknowledged = mealFoodReview?.acknowledgedGaps && missing.length;
+    summary.innerHTML = `<div class="composition-heading">${title}</div>${chips ? `<div class="composition-traits">${chips}</div>` : ""}${ingredients}${missingHtml}${acknowledged ? '<p class="composition-kept">✓ Description conservée telle quelle</p>' : ""}<p class="composition-note">Pour des observations plus précises, indique les principaux ingrédients, surtout les sauces, produits laitiers, soya, noix et substitutions.</p>`;
+    actions.hidden = !missing.length || !!acknowledged;
+    section.hidden = false;
+  }
   function estimateNutritionFromText(text) {
+    const recognizedDish = mealCompositionAnalysis(text)?.dish;
+    if (recognizedDish?.nutrition && !/[+,;\n\r|]/.test(String(text || "")))
+      return normalNutrition({
+        ...recognizedDish.nutrition,
+        source: "energie-dish-knowledge",
+        confidence: "low",
+        basis: `${recognizedDish.name} · recette habituelle`,
+        estimated: true,
+      });
     const segments = splitMealIngredients(text);
-    if (!segments.length) return null;
+    if (!segments.length) {
+      if (!recognizedDish?.nutrition) return null;
+      return normalNutrition({
+        ...recognizedDish.nutrition,
+        source: "energie-dish-knowledge",
+        confidence: "low",
+        basis: `${recognizedDish.name} · recette habituelle`,
+        estimated: true,
+      });
+    }
     const matched = segments
       .map((segment) => ({ segment, food: foodMatchForSegment(segment) }))
       .filter((x) => x.food);
@@ -1573,6 +1652,7 @@
   }
   function scheduleAutomaticNutritionPreview() {
     clearTimeout(mealNutritionPreviewTimer);
+    updateMealCompositionReview();
     if (
       !db.settings.macroTracking ||
       db.settings.autoNutritionEstimates === false ||
@@ -1789,6 +1869,9 @@
     const categoryIds = new Set(
       window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(text) || [],
     );
+    const composition = mealCompositionAnalysis(text);
+    const compositionHas = (trait) =>
+      ["confirmed", "probable"].includes(composition?.status?.(trait));
     const hasCategory = (...wanted) =>
       wanted.some((category) => categoryIds.has(category));
     const hasBeefProtein =
@@ -1797,6 +1880,7 @@
       );
     const flags = {
       protein:
+        compositionHas("protein") ||
         hasCategory(
           "high_protein",
           "plant_protein",
@@ -1812,6 +1896,7 @@
         (Number(nutrition?.protein) || 0) >= 12 ||
         hasBeefProtein,
       vegetables:
+        compositionHas("vegetables") ||
         hasCategory("vegetables") ||
         hasTag("legume", "legumes", "vegetable", "vegetables") ||
         recommendationHas(text, RECOMMENDATION_WORDS.vegetables) ||
@@ -1823,6 +1908,7 @@
         hasTag("fruit") ||
         recommendationHas(text, RECOMMENDATION_WORDS.fruit),
       fiber:
+        compositionHas("fiber") ||
         hasCategory(
           "fruits",
           "vegetables",
@@ -1857,11 +1943,12 @@
         : nutrition?.confidence === "medium"
           ? 1
           : 0;
+    const dishConfidence = composition?.dish ? 1 : 0;
     return {
       meal,
       flags,
       nutrition,
-      confidence: Math.min(3, wordHits + nutritionConfidence),
+      confidence: Math.min(3, wordHits + nutritionConfidence + dishConfidence),
     };
   }
   function recommendationMealMoment(type) {
@@ -7231,6 +7318,9 @@
     updateMealDialogType(type);
     $("#mealTime").value = m?.time || new Date().toTimeString().slice(0, 5);
     $("#mealDescription").value = m?.description || "";
+    mealFoodReview = m?.foodReview
+      ? { ...m.foodReview }
+      : { description: m?.description || "", acknowledgedGaps: false };
     const editRecommendation =
       m && ["Déjeuner", "Dîner", "Souper"].includes(type)
         ? recommendationIsStillRelevant(m.recommendation, m)
@@ -7274,6 +7364,7 @@
     $("#mealFeelingsDetails").open = false;
     $("#beforeFeelingEditor").open = false;
     updateMealFeelingUi(m);
+    updateMealCompositionReview();
     photoData = m?.photoLocal || m?.photoUrl || null;
     photoRemoved = false;
     showPhotoPreview();
@@ -7579,6 +7670,16 @@
     "input",
     scheduleAutomaticNutritionPreview,
   );
+  $("#completeMealDescription").onclick = () => {
+    $("#mealDescription")?.focus();
+    const field = $("#mealDescription");
+    if (field) field.setSelectionRange(field.value.length, field.value.length);
+  };
+  $("#keepMealDescription").onclick = () => {
+    const description = $("#mealDescription")?.value.trim() || "";
+    mealFoodReview = { description, acknowledgedGaps: true };
+    updateMealCompositionReview();
+  };
   $$("#mealNutritionSection input").forEach((input) =>
     input.addEventListener("input", () => {
       mealNutritionManuallyEdited = true;
@@ -7631,6 +7732,10 @@
               ? estimateNutritionFromText($("#mealDescription").value.trim())
               : null)
           : old?.nutrition || null,
+        foodReview:
+          mealFoodReview?.description === $("#mealDescription").value.trim()
+            ? { ...mealFoodReview }
+            : null,
         fatigueBefore: old?.fatigueBefore || 0,
         fatigueAfter: old?.fatigueAfter || 0,
         feelingsBefore,
@@ -8405,7 +8510,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.30.3");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.31.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
