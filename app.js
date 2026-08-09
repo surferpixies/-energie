@@ -7126,9 +7126,7 @@
     button.hidden = !hasMeal;
     unavailable.hidden = hasMeal;
     if (hasMeal) {
-      button.textContent = meal.feeling
-        ? "Modifier les ressentis après"
-        : "Ajouter les ressentis après";
+      button.innerHTML = `<span aria-hidden="true">${meal.feeling ? "✎" : "＋"}</span><strong>${meal.feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}</strong><b aria-hidden="true">›</b>`;
       button.classList.toggle("is-set", !!meal.feeling);
       button.classList.toggle("is-empty", !meal.feeling);
       button.onclick = () => openFeeling(meal.id);
@@ -7170,7 +7168,9 @@
       beforePreview = $("#beforeFeelingSelectedPreview"),
       afterPreview = $("#afterFeelingSelectedPreview"),
       beforeCount = $("#beforeFeelingCount"),
-      afterCount = $("#afterFeelingCount");
+      afterCount = $("#afterFeelingCount"),
+      beforeActionLabel = $("#beforeFeelingActionLabel"),
+      beforeActionIcon = $("#beforeFeelingEditor > summary > span");
     if (!collapsed || !beforePreview || !afterPreview) return;
     const mealId = $("#mealId")?.value,
       savedMeal =
@@ -7191,6 +7191,12 @@
       beforeCount.textContent = beforeItems.length
         ? `${beforeItems.length} ressenti${beforeItems.length > 1 ? "s" : ""}`
         : "Aucun ressenti";
+    if (beforeActionLabel)
+      beforeActionLabel.textContent = beforeItems.length
+        ? "Modifier les ressentis avant"
+        : "Ajouter les ressentis avant";
+    if (beforeActionIcon)
+      beforeActionIcon.textContent = beforeItems.length ? "✎" : "＋";
     if (afterCount)
       afterCount.textContent = afterItems.length
         ? `${afterItems.length} ressenti${afterItems.length > 1 ? "s" : ""}`
@@ -8399,7 +8405,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.30.2");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.30.3");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

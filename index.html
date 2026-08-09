@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.30.2">
+  <link rel="stylesheet" href="styles.css?v=3.30.3">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -102,14 +102,14 @@
             <div class="meal-feeling-period-head"><div><span>Avant le repas</span><strong id="beforeFeelingCount">Aucun ressenti</strong></div></div>
             <div id="beforeFeelingSelectedPreview" class="meal-feeling-selected-preview"><span class="meal-feeling-empty">Aucun ressenti</span></div>
             <details id="beforeFeelingEditor" class="meal-feeling-editor">
-              <summary><span>＋</span><strong>Choisir ou modifier les ressentis avant</strong><b aria-hidden="true">›</b></summary>
+              <summary class="meal-feeling-action"><span aria-hidden="true">＋</span><strong id="beforeFeelingActionLabel">Ajouter les ressentis avant</strong><b aria-hidden="true">›</b></summary>
               <fieldset class="feeling-fieldset meal-before-feelings"><legend>Ressentis avant <span class="muted tiny">(facultatif)</span></legend><p class="muted small">Sélectionne ce que tu ressens maintenant et indique l’intensité de chaque élément.</p><label class="feeling-search" for="beforeFeelingSearch"><span aria-hidden="true">🔎</span><input id="beforeFeelingSearch" type="search" autocomplete="off" placeholder="Rechercher un ressenti…"><button id="clearBeforeFeelingSearch" type="button" aria-label="Effacer la recherche" hidden>×</button></label><div id="beforeFeelingTags" class="feeling-tags scored-feeling-picker"></div><p id="beforeFeelingSearchEmpty" class="feeling-search-empty" hidden>Aucun ressenti trouvé.</p><div id="beforeFeelingQualityNotice" class="feeling-quality-notice" hidden></div></fieldset>
             </details>
           </section>
           <section class="meal-feeling-period meal-feeling-period-after">
             <div class="meal-feeling-period-head"><div><span>Après le repas</span><strong id="afterFeelingCount">Aucun ressenti</strong></div></div>
             <div id="afterFeelingSelectedPreview" class="meal-feeling-selected-preview"><span class="meal-feeling-empty">Aucun ressenti</span></div>
-            <button type="button" class="secondary small meal-feeling-after-button" id="mealFeelingButton" hidden>Ajouter les ressentis après</button>
+            <button type="button" class="meal-feeling-action meal-feeling-after-button" id="mealFeelingButton" hidden><span aria-hidden="true">＋</span><strong>Ajouter les ressentis après</strong><b aria-hidden="true">›</b></button>
             <p id="mealFeelingUnavailable" class="muted tiny">Disponible après avoir enregistré le repas.</p>
           </section>
         </div>
@@ -382,10 +382,10 @@
   <script src="brain/parser.js?v=3.9.0"></script>
   <script src="brain/confidence.js?v=3.8.0"></script>
   <script src="brain/profile.js?v=3.8.0"></script>
-  <script src="brain/insight-engine.js?v=3.30.2"></script>
+  <script src="brain/insight-engine.js?v=3.30.3"></script>
   <script src="brain/index.js?v=3.12.0"></script>
-  <script src="observation-engine.js?v=3.30.2"></script>
-  <script src="demo-profiles.js?v=3.30.2"></script>
-  <script src="app.js?v=3.30.2"></script>
+  <script src="observation-engine.js?v=3.30.3"></script>
+  <script src="demo-profiles.js?v=3.30.3"></script>
+  <script src="app.js?v=3.30.3"></script>
 </body>
 </html>
