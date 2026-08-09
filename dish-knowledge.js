@@ -49,10 +49,10 @@
   ];
 
   const LABELS = {
-    protein:"Protéines", fiber:"Fibres", dairy:"Produits laitiers", soy:"Soya", gluten:"Gluten", eggs:"Œufs", nuts:"Noix", sesame:"Sésame", legumes:"Légumineuses", vegetables:"Légumes", fruits:"Fruits", red_meat:"Viande rouge", poultry:"Volaille", fish:"Poisson", seafood:"Fruits de mer", plant_protein:"Protéines végétales", refined_grains:"Grains raffinés", whole_grains:"Grains entiers", processed_foods:"Aliments transformés", fried_foods:"Aliments frits", sugary_foods:"Aliments sucrés"
+    protein:"Protéines", fiber:"Fibres", carbs:"Glucides", carbs_low:"Glucides en petite quantité", dairy:"Produits laitiers", soy:"Soya", gluten:"Gluten", eggs:"Œufs", nuts:"Noix", sesame:"Sésame", legumes:"Légumineuses", vegetables:"Légumes", fruits:"Fruits", red_meat:"Viande rouge", poultry:"Volaille", fish:"Poisson", seafood:"Fruits de mer", plant_protein:"Protéines végétales", refined_grains:"Grains raffinés", whole_grains:"Grains entiers", processed_foods:"Aliments transformés", fried_foods:"Aliments frits", sugary_foods:"Aliments sucrés"
   };
   const CATEGORY_TO_TRAITS = {
-    dairy:["dairy","protein"], soy:["soy","protein"], gluten:["gluten"], eggs:["eggs","protein"], nuts:["nuts","protein","fiber"], legumes:["legumes","protein","fiber"], plant_protein:["plant_protein","protein"], high_protein:["protein"], high_fiber:["fiber"], direct_protein:["protein"], direct_fiber:["fiber"], vegetables:["vegetables","fiber"], fruits:["fruits","fiber"], whole_grains:["whole_grains","fiber"], red_meat:["red_meat","protein"], poultry:["poultry","protein"], fish:["fish","protein"], seafood:["seafood","protein"], refined_grains:["refined_grains"], processed_foods:["processed_foods"], fried_foods:["fried_foods"], sugary_foods:["sugary_foods"]
+    dairy:["dairy","protein"], soy:["soy","protein"], gluten:["gluten"], eggs:["eggs","protein"], nuts:["nuts","protein","fiber"], legumes:["legumes","protein","fiber","carbs"], plant_protein:["plant_protein","protein"], high_protein:["protein"], high_fiber:["fiber"], direct_protein:["protein"], direct_fiber:["fiber"], direct_carbs:["carbs"], direct_carbs_low:["carbs_low"], vegetables:["vegetables","fiber","carbs_low"], fruits:["fruits","fiber","carbs"], whole_grains:["whole_grains","fiber","carbs"], starches:["carbs"], red_meat:["red_meat","protein"], poultry:["poultry","protein"], fish:["fish","protein"], seafood:["seafood","protein"], refined_grains:["refined_grains","carbs"], processed_foods:["processed_foods"], fried_foods:["fried_foods"], sugary_foods:["sugary_foods","carbs"]
   };
 
   const normalize = value => String(value || "").toLocaleLowerCase("fr-CA").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g," ").replace(/[^a-z0-9]+/g," ").replace(/\s+/g," ").trim();
@@ -88,6 +88,9 @@
     excluded.forEach(trait => explicit.delete(trait));
     const probable = new Set((dish?.probable || []).filter(trait => !explicit.has(trait) && !excluded.has(trait)));
     const possible = new Set((dish?.possible || []).filter(trait => !explicit.has(trait) && !probable.has(trait) && !excluded.has(trait)));
+    if (dish?.nutrition?.carbs >= 15 && !explicit.has("carbs") && !excluded.has("carbs")) probable.add("carbs");
+    if (explicit.has("carbs")) explicit.delete("carbs_low");
+    if (probable.has("carbs")) probable.delete("carbs_low");
     return {
       dish: dish ? {id:dish.id, name:dish.names[0], ingredients:[...dish.ingredients], nutrition:{...dish.nutrition}} : null,
       confirmed:[...explicit], probable:[...probable], possible:[...possible], excluded:[...excluded],

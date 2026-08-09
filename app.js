@@ -1452,13 +1452,17 @@
     return output;
   }
   function mealCompositionAnalysis(text) {
-    const categoryIds = new Set(
-      window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(text) || [],
-    );
+    const knownDish = window.ENERGIE_DISH_KNOWLEDGE?.findDish?.(text),
+      hasExplicitIngredientList = /[+,;\n\r|]|\b(avec|with)\b/i.test(String(text || "")),
+      categoryIds = new Set(
+        knownDish && !hasExplicitIngredientList
+          ? []
+          : window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(text) || [],
+      );
     // Réconcilie automatiquement l'ancien catalogue de macros avec la
     // taxonomie d'observation. Ainsi, un aliment connu comme « céleri » ne
     // devient pas invisible simplement parce qu'il manque dans une autre liste.
-    splitMealIngredients(text).forEach((segment) => {
+    (knownDish && !hasExplicitIngredientList ? [] : splitMealIngredients(text)).forEach((segment) => {
       const food = foodMatchForSegment(segment);
       if (!food) return;
       const tags = (food.tags || []).map(normalizeFoodText),
@@ -1485,6 +1489,10 @@
         categoryIds.add("dairy");
       if ((Number(nutrients?.fiber) || 0) >= 1)
         categoryIds.add("direct_fiber");
+      if ((Number(nutrients?.carbs) || 0) >= 10)
+        categoryIds.add("direct_carbs");
+      else if ((Number(nutrients?.carbs) || 0) > 0)
+        categoryIds.add("direct_carbs_low");
     });
     return (
       window.ENERGIE_DISH_KNOWLEDGE?.analyze?.(text, [...categoryIds]) || null
@@ -1493,11 +1501,11 @@
   function compositionTraitChip(trait, certainty) {
     const labels = window.ENERGIE_DISH_KNOWLEDGE?.labels || {},
       label = labels[trait] || trait.replaceAll("_", " "),
-      certaintyLabel = {
+      certaintyLabel = trait === "carbs_low" ? "faible quantité" : ({
         confirmed: "confirmé",
         probable: "probable",
         possible: "possible",
-      }[certainty];
+      }[certainty]);
     return `<span class="composition-trait composition-${certainty}"><strong>${esc(label)}</strong><small>${certaintyLabel}</small></span>`;
   }
   function updateMealCompositionReview() {
@@ -1517,7 +1525,7 @@
       section.hidden = true;
       return;
     }
-    const visibleTraits = ["protein", "fiber", "dairy", "soy", "gluten", "eggs", "nuts"];
+    const visibleTraits = ["protein", "fiber", "carbs", "dairy", "soy", "gluten", "eggs", "nuts"];
     const chips = visibleTraits
       .map((trait) => {
         const certainty = analysis.status(trait);
@@ -1525,20 +1533,28 @@
       })
       .filter(Boolean)
       .join("");
-    const missing = ["protein", "fiber"].filter(
+    const lowCarbs = analysis.status("carbs") === "unknown" && analysis.status("carbs_low") !== "unknown"
+      ? compositionTraitChip("carbs_low", analysis.status("carbs_low"))
+      : "";
+    const missing = ["protein", "fiber", "carbs"].filter(
       (trait) => analysis.status(trait) === "unknown",
-    );
+    ).filter((trait) => trait !== "carbs" || !lowCarbs);
     const title = analysis.dish
       ? `<strong>🍽️ ${esc(analysis.dish.name)} reconnu</strong><small>Composition habituelle — la recette peut varier</small>`
       : `<strong>🔎 Éléments reconnus</strong><small>Selon les ingrédients écrits</small>`;
     const ingredients = analysis.dish?.ingredients?.length
       ? `<p class="composition-basis">Habituellement : ${analysis.dish.ingredients.map(esc).join(", ")}.</p>`
       : "";
+    const missingLabels = {
+      protein: "Source de protéines non détectée",
+      fiber: "Source de fibres non détectée",
+      carbs: "Source notable de glucides non détectée",
+    };
     const missingHtml = missing.length
-      ? `<div class="composition-missing"><strong>${missing.map((trait) => `${trait === "protein" ? "Protéines" : "Fibres"} non détectées`).join(" · ")}</strong><p>Ce repas n’en contient peut-être pas, ou sa description manque de précision.</p></div>`
+      ? `<div class="composition-missing"><strong>${missing.map((trait) => missingLabels[trait]).join(" · ")}</strong><p>Ce repas n’en contient peut-être pas, ou sa description manque de précision.</p></div>`
       : "";
     const acknowledged = mealFoodReview?.acknowledgedGaps && missing.length;
-    summary.innerHTML = `<div class="composition-heading">${title}</div>${chips ? `<div class="composition-traits">${chips}</div>` : ""}${ingredients}${missingHtml}${acknowledged ? '<p class="composition-kept">✓ Description conservée telle quelle</p>' : ""}<p class="composition-note">Pour des observations plus précises, indique les principaux ingrédients, surtout les sauces, produits laitiers, soya, noix et substitutions.</p>`;
+    summary.innerHTML = `<div class="composition-heading">${title}</div>${chips || lowCarbs ? `<div class="composition-traits">${chips}${lowCarbs}</div>` : ""}${ingredients}${missingHtml}${acknowledged ? '<p class="composition-kept">✓ Description conservée telle quelle</p>' : ""}<p class="composition-note">Pour des observations plus précises, indique les principaux ingrédients, surtout les sauces, produits laitiers, soya, noix et substitutions.</p>`;
     actions.hidden = !missing.length || !!acknowledged;
     section.hidden = false;
   }
@@ -8544,7 +8560,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.31.1");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.31.2");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
