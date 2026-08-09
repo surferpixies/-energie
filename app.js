@@ -1452,9 +1452,43 @@
     return output;
   }
   function mealCompositionAnalysis(text) {
-    const categoryIds =
-      window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(text) || [];
-    return window.ENERGIE_DISH_KNOWLEDGE?.analyze?.(text, categoryIds) || null;
+    const categoryIds = new Set(
+      window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(text) || [],
+    );
+    // Réconcilie automatiquement l'ancien catalogue de macros avec la
+    // taxonomie d'observation. Ainsi, un aliment connu comme « céleri » ne
+    // devient pas invisible simplement parce qu'il manque dans une autre liste.
+    splitMealIngredients(text).forEach((segment) => {
+      const food = foodMatchForSegment(segment);
+      if (!food) return;
+      const tags = (food.tags || []).map(normalizeFoodText),
+        nutrients = foodNutrients(food),
+        foodText = normalizeFoodText((food.keys || []).join(" "));
+      if (tags.some((tag) => ["legume", "vegetable"].includes(tag))) {
+        categoryIds.add("vegetables");
+        categoryIds.add("direct_fiber");
+      }
+      if (tags.some((tag) => ["fruit", "fruits"].includes(tag))) {
+        categoryIds.add("fruits");
+        categoryIds.add("direct_fiber");
+      }
+      if (tags.some((tag) => ["proteine", "protein"].includes(tag)))
+        categoryIds.add("direct_protein");
+      const isPlantMilk = /\b(lait de soya|soy milk|lait de soja|lait d amande|almond milk|lait d avoine|oat milk|lait de coco|coconut milk)\b/.test(foodText);
+      if (/\b(lait de soya|lait de soja|soy milk)\b/.test(foodText)) {
+        categoryIds.add("soy");
+        categoryIds.add("direct_protein");
+      }
+      if (/\b(lait d amande|almond milk)\b/.test(foodText))
+        categoryIds.add("nuts");
+      if (tags.some((tag) => ["produit laitier", "dairy"].includes(tag)) && !isPlantMilk)
+        categoryIds.add("dairy");
+      if ((Number(nutrients?.fiber) || 0) >= 1)
+        categoryIds.add("direct_fiber");
+    });
+    return (
+      window.ENERGIE_DISH_KNOWLEDGE?.analyze?.(text, [...categoryIds]) || null
+    );
   }
   function compositionTraitChip(trait, certainty) {
     const labels = window.ENERGIE_DISH_KNOWLEDGE?.labels || {},
@@ -8510,7 +8544,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.31.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.31.1");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
