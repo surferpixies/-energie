@@ -1617,7 +1617,7 @@
       ? `<div class="composition-missing"><strong>${missing.map((trait) => missingLabels[trait]).join(" · ")}</strong><p>Ce repas n’en contient peut-être pas, ou sa description manque de précision.</p></div>`
       : "";
     const acknowledged = mealFoodReview?.acknowledgedGaps && missing.length;
-    summary.innerHTML = `<div class="composition-heading">${title}</div>${chips || lowCarbs ? `<div class="composition-traits">${chips}${lowCarbs}</div>` : ""}${ingredients}${missingHtml}${acknowledged ? '<p class="composition-kept">✓ Description conservée telle quelle</p>' : ""}<p class="composition-note">Pour des observations plus précises, indique les principaux ingrédients, surtout les sauces, produits laitiers, soya, noix et substitutions.</p>`;
+    summary.innerHTML = `<div class="composition-heading">${title}</div>${chips || lowCarbs ? `<div class="composition-traits">${chips}${lowCarbs}</div>` : ""}${ingredients}${missingHtml}${acknowledged ? '<p class="composition-kept">✓ Description conservée telle quelle</p>' : ""}`;
     actions.hidden = !missing.length || !!acknowledged;
     section.hidden = false;
   }
@@ -8710,7 +8710,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.33.4");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.34.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
