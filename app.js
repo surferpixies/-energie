@@ -2855,6 +2855,8 @@
         comparisonLabel: "Sans soya repéré",
         metricLabel: "jours avec soya",
         disclaimer: "Association tirée des repas et observations globales. Elle ne confirme pas une allergie et ne constitue pas un diagnostic.",
+        milestoneWeek: 5,
+        milestoneLines: ["Tendance remarquée", "réduction du soya"],
         intensity: (day) => {
           const observations = day.observations || [];
           return observations.length
@@ -2871,6 +2873,8 @@
         comparisonLabel: "Sans produits laitiers",
         metricLabel: "jours avec produits laitiers",
         disclaimer: "Association tirée des descriptions de repas et des ressentis digestifs. Elle ne confirme pas une intolérance et ne constitue pas un diagnostic.",
+        milestoneWeek: 10,
+        milestoneLines: ["Observation du journal", "réduction des produits laitiers"],
         intensity: (day) => {
           const digestive = new Set(["bloating", "gas", "cramps", "diarrhea", "nausea", "stomachache"]);
           const scores = (day.meals || []).flatMap((meal) =>
@@ -2888,6 +2892,8 @@
         comparisonLabel: "Fibres moins présentes",
         metricLabel: "jours riches en fibres",
         disclaimer: "Association tirée des descriptions de repas et des ressentis digestifs. La présence réelle de fibres demeure une estimation et non une mesure nutritionnelle précise.",
+        milestoneWeek: 15,
+        milestoneLines: ["Observation du journal", "augmentation progressive des fibres"],
         intensity: (day) => {
           const digestive = new Set(["bloating", "gas", "cramps", "diarrhea", "nausea", "stomachache"]);
           const scores = (day.meals || []).flatMap((meal) =>
@@ -2954,8 +2960,8 @@
       const barHeight = Math.max(2, point.exposures * 3);
       return `<g class="trend-exposure"><rect x="${x(index)-5}" y="${height-bottom+10-barHeight}" width="10" height="${barHeight}" rx="3"/><text x="${x(index)}" y="${height-bottom+22}" text-anchor="middle">${point.exposures}</text></g>`;
     }).join("");
-    const milestoneIndex = profile.id === "elodie" ? Math.min(points.length - 1, 5) : -1;
-    const milestone = milestoneIndex >= 0 ? `<g class="trend-milestone"><line x1="${x(milestoneIndex)}" y1="${top}" x2="${x(milestoneIndex)}" y2="${height-bottom}"/><text x="${x(milestoneIndex)+7}" y="${top+12}">Tendance remarquée</text><text x="${x(milestoneIndex)+7}" y="${top+24}">réduction du soya</text></g>` : "";
+    const milestoneIndex = Math.min(points.length - 1, Number(config.milestoneWeek ?? -1));
+    const milestone = milestoneIndex >= 0 ? `<g class="trend-milestone"><line x1="${x(milestoneIndex)}" y1="${top}" x2="${x(milestoneIndex)}" y2="${height-bottom}"/><text x="${x(milestoneIndex)+7}" y="${top+12}">${esc(config.milestoneLines[0])}</text><text x="${x(milestoneIndex)+7}" y="${top+24}">${esc(config.milestoneLines[1])}</text></g>` : "";
     const chart = `<div class="professional-trend-legend"><span class="discomfort">Niveau moyen d’inconfort</span><span class="exposure-count">Nombre de jours repérés</span></div><div class="professional-trend-scroll chart-scroll"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><text class="trend-y-title" x="14" y="${top + (height-top-bottom)/2}" text-anchor="middle" transform="rotate(-90 14 ${top + (height-top-bottom)/2})">Inconfort /5</text><g class="trend-grid">${grid}</g>${milestone}<path class="trend-path discomfort" d="${linePath}"/><g class="trend-dots">${dots}</g><g class="trend-exposures">${exposureBars}</g><g class="trend-labels">${labels}</g></svg></div>`;
     return `<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Première lecture du dossier</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-week-note"><strong>Une seule courbe : l’évolution de l’inconfort.</strong><span>Chaque semaine commence le dimanche. Les petits nombres sous la courbe indiquent combien de journées contenaient l’élément suivi.</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small></div></div>${chart}<button type="button" class="secondary professional-trend-expand" data-open-trend-fullscreen><span>↗ Agrandir en mode horizontal</span><small>L’affichage pivotera automatiquement</small></button><p class="muted tiny">${config.disclaimer}</p></section><dialog class="professional-trend-dialog" id="professionalTrendDialog"><div class="professional-trend-dialog-head"><div><small>Vue horizontale automatique</small><strong>${config.title}</strong></div><button type="button" class="secondary" data-close-trend-fullscreen>Revenir au suivi ✕</button></div><div class="professional-trend-fullscreen-frame">${chart}</div><p class="muted tiny">Axe vertical : inconfort moyen sur 5 · Axe horizontal : semaines du dimanche au samedi.</p></dialog>`;
   }
@@ -3589,13 +3595,15 @@
     return `<button type="button" class="card journal-brain-card" id="openJournalBrain" aria-label="Ouvrir le Cerveau"><span class="journal-brain-visual" aria-hidden="true"><span class="journal-brain-plant">${state.plant}</span><span class="journal-brain-icon">🧠</span></span><span class="journal-brain-copy"><span class="journal-brain-top"><span><small>${esc(state.eyebrow)}</small><strong>${esc(state.title)}</strong></span><b>›</b></span><span class="journal-brain-message">${esc(state.text)}</span><span class="journal-brain-progress"><i><em style="width:${state.progress}%"></em></i><small>${state.plant} ${esc(state.label)} · ${state.days} journée${state.days !== 1 ? "s" : ""}</small></span></span></button>`;
   }
   function render() {
+    const demoDataVersions = { marie: "marie-dairy-v2", sophie: "sophie-fiber-v2", elodie: "elodie-soya-v2" };
+    const activeDemoId = db.settings?.demoProfileId;
     if (
       db.settings?.demoMode &&
-      db.settings?.demoProfileId === "elodie" &&
-      db.settings?.demoDataVersion !== "elodie-soya-v2"
+      demoDataVersions[activeDemoId] &&
+      db.settings?.demoDataVersion !== demoDataVersions[activeDemoId]
     ) {
-      db = createDemoDB("elodie");
-      selectedDate = demoLandingDate("elodie");
+      db = createDemoDB(activeDemoId);
+      selectedDate = demoLandingDate(activeDemoId);
       buildDemoBrainMemory(db);
       try { saveLocal("demo-data-refresh"); } catch (_) {}
     }
@@ -8746,7 +8754,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.34.5");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.35.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

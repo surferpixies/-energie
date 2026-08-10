@@ -148,24 +148,27 @@
     return store.days[date];
   }
   function buildMarie(store,offset,date,seed){
-    const phase=Math.floor((offset+179)/30); const weekday=new Date(`${date}T12:00:00`).getDay();
+    const elapsed=offset+179,week=Math.min(25,Math.floor(elapsed/7)),phase=Math.floor(elapsed/30); const weekday=new Date(`${date}T12:00:00`).getDay();
     const shift=(seed%7===0||seed%11===0); const late=shift&&rand(seed)>.45;
-    const dairyChance=[.78,.72,.60,.42,.25,.18][Math.min(5,phase)];
+    const dairyChance=week<5?.82:week<10?.76:week<14?.55:week<19?.34:.20;
     const dairy=rand(seed+3)<dairyChance; const missed=rand(seed+9)<.075;
     const sleep=Number((late?5.7+rand(seed)*.7:6.6+rand(seed)*1.4).toFixed(1));
     const water=3+Math.floor(rand(seed+2)*5); const day=commonDay(store,date,seed,sleep,water,weekday===0?{type:"Marche",minutes:35}:null);
     if(missed)return;
     if(rand(seed+4)>.12) day.meals.push(meal("marie",date,late?"09:10":"06:35","Déjeuner",dairy?"Cappuccino et toast au beurre d’arachide":"Café noir, œufs et rôties",sleep>=7?4:2,sleep<6.5?["fatigue"]:["energy"],sleep>=7?4:2));
     const lunch=dairy?(rand(seed)>.5?"Sandwich au fromage, crudités et yogourt":"Pâtes crémeuses au poulet et légumes"):(rand(seed)>.5?"Bol de riz, poulet et légumes":"Soupe, sandwich à la dinde et fruit");
-    const digestive=dairy&&rand(seed+7)<([.58,.53,.46,.38,.29,.20][Math.min(5,phase)]);
+    const digestiveChance=week<4?.66:week<9?.76:week<12?.64:week<16?.45:week<21?.30:.18;
+    const digestive=dairy&&rand(seed+7)<digestiveChance;
     const symptomSets=[["bloating","gas"],["cramps","bloating"],["diarrhea","gas"],["nausea","bloating"]];
     const digestiveTags=digestive?symptomSets[seed%symptomSets.length].slice():[];
     if(digestive&&rand(seed+13)<.22)digestiveTags.push("fatigue");
     const digestiveNotes=["Ballonnements et beaucoup de gaz après le repas.","Crampes, gargouillis et sensation de ventre tendu.","Selles molles avec sensation de bouillonnement dans le ventre.","Nausée légère et ventre très gonflé après le repas."];
-    day.meals.push(meal("marie",date,"12:20","Dîner",lunch,dairy?2:(water>=6?4:3),digestive?digestiveTags:(water<5?["fatigue"]:["feeling_good"]),digestive?2:4,digestive?digestiveNotes[seed%digestiveNotes.length]:""));
+    const digestiveScore=digestive?(week<10?(rand(seed+18)>.48?1:2):week<17?2:3):4;
+    day.meals.push(meal("marie",date,"12:20","Dîner",lunch,dairy?2:(water>=6?4:3),digestive?digestiveTags:(water<5?["fatigue"]:["feeling_good"]),digestiveScore,digestive?digestiveNotes[seed%digestiveNotes.length]:""));
     const friday=weekday===5; const dinner=friday?(dairy?"Pizza au fromage et salade":"Pizza sans fromage et salade"):(dairy?"Poulet, pommes de terre et sauce crémeuse":"Saumon, pommes de terre et légumes");
-    const eveningDigestive=dairy&&rand(seed+6)<.2;
-    day.meals.push(meal("marie",date,"19:05","Souper",dinner,dairy?2:4,eveningDigestive?["bloating","gas"]:["feeling_good"],dairy?3:4,eveningDigestive?"Gargouillis et ventre gonflé en soirée.":""));
+    const eveningDigestive=dairy&&rand(seed+6)<(week<10?.38:week<17?.24:.11);
+    day.meals.push(meal("marie",date,"19:05","Souper",dinner,dairy?2:4,eveningDigestive?["bloating","gas"]:["feeling_good"],eveningDigestive?(week<10?2:3):4,eveningDigestive?"Gargouillis et ventre gonflé en soirée.":""));
+    if(week===10&&weekday===0)day.observations.push({id:`demo-marie-observation-${date}`,date,time:"20:00",intensity:3,duration:"several_days",tags:["bloating","gas","cramps"],contexts:["food"],mealIds:[],notes:"Après avoir revu le journal, Marie commence à réduire graduellement les produits laitiers afin d’observer l’évolution de ses inconforts digestifs.",createdAt:`${date}T20:00:00`,updatedAt:`${date}T20:00:00`});
     const postMealFatigue=digestive&&rand(seed+14)<.25;
     if(rand(seed+8)<.32) day.meals.push(meal("marie",date,"15:40","Collation",dairy?"Latte et muffin":"Pomme et amandes",3,postMealFatigue?["fatigue"]:["energy"],digestive?3:4,postMealFatigue?"Fatigue et léger malaise avec l’inconfort digestif.":""));
   }
@@ -180,15 +183,18 @@
     if(active||rand(seed+5)<.4)day.meals.push(meal("alex",date,"15:30","Collation","Banane, noix et fromage cottage",4,["energy"],4));
   }
   function buildSophie(store,offset,date,seed){
-    const phase=Math.floor((offset+179)/30); const weekday=new Date(`${date}T12:00:00`).getDay(); const missed=rand(seed+10)<.08;
+    const elapsed=offset+179,week=Math.min(25,Math.floor(elapsed/7)),phase=Math.floor(elapsed/30); const weekday=new Date(`${date}T12:00:00`).getDay(); const missed=rand(seed+10)<.08;
     const sleep=Number((6.7+rand(seed)*1.2).toFixed(1)); const water=Math.min(9,3+phase+Math.floor(rand(seed+2)*3));
     const active=phase>=2&&[2,4,0].includes(weekday); const day=commonDay(store,date,seed,sleep,water,active?{type:"Marche",minutes:25+phase*4}:null);
     if(missed)return;
-    const highFiber=rand(seed+4)<[.08,.18,.35,.55,.70,.78][Math.min(5,phase)];
+    const highFiber=rand(seed+4)<(week<7?.12:week<14?.20:week<18?.46:week<22?.68:.82);
     day.meals.push(meal("sophie",date,"08:05","Déjeuner",highFiber?"Gruau, pomme, graines de chia et cannelle":"Rôties blanches et café",highFiber?4:2,sleep<6.5?["fatigue"]:["feeling_good"],3));
     day.meals.push(meal("sophie",date,"12:35","Dîner",highFiber?"Salade de quinoa, pois chiches, concombre et feta":"Sandwich jambon-fromage et croustilles",highFiber?4:2,[],3));
-    const digestive=!highFiber&&rand(seed+7)<.42 || (highFiber&&phase<2&&rand(seed+7)<.22);
-    day.meals.push(meal("sophie",date,"18:40","Souper",highFiber?(seed%2?"Chili aux haricots, riz brun et légumes":"Lentilles, légumes rôtis et quinoa"):(seed%2?"Pâtes sauce rosée":"Repas préparé et pain"),highFiber?4:2,digestive?["bloating","stomachache"]:["easy_digestion"],digestive?2:4,digestive?"Inconfort digestif en soirée.":""));
+    const digestiveChance=week<6?.58:week<13?.66:week<16?.72:week<20?.43:week<23?.28:.16;
+    const digestive=rand(seed+7)<(highFiber&&week>=16?digestiveChance*.55:digestiveChance);
+    const digestiveScore=digestive?(week<14?(rand(seed+16)>.55?1:2):week<19?2:3):4;
+    day.meals.push(meal("sophie",date,"18:40","Souper",highFiber?(seed%2?"Chili aux haricots, riz brun et légumes":"Lentilles, légumes rôtis et quinoa"):(seed%2?"Pâtes sauce rosée":"Repas préparé et pain"),highFiber?4:2,digestive?["bloating","stomachache"]:["easy_digestion"],digestiveScore,digestive?"Inconfort digestif en soirée.":""));
+    if(week===15&&weekday===0)day.observations.push({id:`demo-sophie-observation-${date}`,date,time:"19:45",intensity:3,duration:"several_days",tags:["bloating","stomachache"],contexts:["food","hydration"],mealIds:[],notes:"Sophie commence à augmenter les fibres progressivement, avec davantage d’eau, après avoir remarqué leur faible présence dans son journal.",createdAt:`${date}T19:45:00`,updatedAt:`${date}T19:45:00`});
     if(rand(seed+5)<.35)day.meals.push(meal("sophie",date,"15:20","Collation",highFiber?"Pomme et amandes":"Biscuits et café",3,digestive?["bloating"]:["energy"],digestive?2:4));
   }
   function buildElodie(store,offset,date,seed){
@@ -224,7 +230,8 @@
   function create(profileId="marie"){
     const p=profiles[profileId]||profiles.marie;
     const profileDays=p.id==="elodie"?90:180;
-    const store={version:24,createdAt:new Date(Date.now()-profileDays*DAY).toISOString(),updatedAt:new Date().toISOString(),settings:{waterGoal:8,theme:"system",showWelcome:false,insightsEnabled:true,nutritionObservations:true,macroTracking:true,generalRecommendations:true,showSources:true,professionalSupport:false,feelingReminders:false,feelingDelayHours:2,feelingMealTypes:["Déjeuner","Dîner","Souper"],supplements:[],demoMode:true,demoTourSeen:true,demoName:p.name,demoProfileId:p.id,demoReadOnly:true,demoDataVersion:p.id==="elodie"?"elodie-soya-v2":"base-v1"},favorites:[],days:{}};
+    const demoVersions={marie:"marie-dairy-v2",alex:"base-v1",sophie:"sophie-fiber-v2",elodie:"elodie-soya-v2"};
+    const store={version:24,createdAt:new Date(Date.now()-profileDays*DAY).toISOString(),updatedAt:new Date().toISOString(),settings:{waterGoal:8,theme:"system",showWelcome:false,insightsEnabled:true,nutritionObservations:true,macroTracking:true,generalRecommendations:true,showSources:true,professionalSupport:false,feelingReminders:false,feelingDelayHours:2,feelingMealTypes:["Déjeuner","Dîner","Souper"],supplements:[],demoMode:true,demoTourSeen:true,demoName:p.name,demoProfileId:p.id,demoReadOnly:true,demoDataVersion:demoVersions[p.id]},favorites:[],days:{}};
     const favs={
       marie:[["Déjeuner rapide","Déjeuner","Cappuccino et toast au beurre d’arachide"],["Dîner de quart","Dîner","Sandwich, crudités et fruit"],["Pizza du vendredi","Souper","Pizza et salade"]],
       alex:[["Overnight oats","Déjeuner","Overnight oats, bleuets, chia et yogourt grec"],["Bol protéiné","Dîner","Poulet, quinoa et légumes"],["Collation entraînement","Collation","Banane et noix"]],
