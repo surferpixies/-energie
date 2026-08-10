@@ -227,6 +227,7 @@
     barcodeBusy = false,
     barcodeLastCode = "",
     barcodeLastProduct = null;
+  let selectedRecentSnackId = null;
 
   function normalizeSupplements(value) {
     return [
@@ -3611,12 +3612,70 @@
       .sort((a, b) => a.time.localeCompare(b.time));
     return type === "Collation" ? list : list.slice(0, 1);
   }
+  function recentUniqueSnacks(limit = 10) {
+    const seen = new Set();
+    return allMeals()
+      .filter((meal) => meal.type === "Collation" && meal.description?.trim())
+      .sort((a, b) =>
+        `${b.date}T${b.time || "00:00"}`.localeCompare(
+          `${a.date}T${a.time || "00:00"}`,
+        ),
+      )
+      .filter((meal) => {
+        const key = normalizeFoodText(meal.description);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, limit);
+  }
+  function addRecentSnack(source) {
+    if (!source) return;
+    const now = new Date(),
+      meal = normalMeal(
+        {
+          date: selectedDate,
+          type: "Collation",
+          time: now.toTimeString().slice(0, 5),
+          description: source.description,
+          // Les notes peuvent contenir un ancien contexte digestif ou émotionnel;
+          // elles ne sont donc jamais recopiées lors d'un ajout rapide.
+          notes: "",
+          nutrition: source.nutrition ? { ...source.nutrition } : null,
+          feelingsBefore: {},
+          feelingsBeforeQuality: null,
+          feeling: null,
+          photoLocal: null,
+          photoUrl: null,
+          photoPath: null,
+          foodReview: null,
+          recommendation: null,
+          feelingNotifiedAt: null,
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+        },
+        selectedDate,
+      );
+    ensureDay(db, selectedDate).meals.push(meal);
+    setMealChanged(meal);
+    try {
+      window.Brain?.learnMeal?.(meal);
+    } catch (memoryError) {
+      console.warn("Mémoire alimentaire", memoryError);
+    }
+    $("#snackManagerDialog").close();
+    render();
+  }
   function openSnackManager() {
     const d = ensureDay(db, selectedDate),
       snacks = d.meals
         .filter((m) => m.type === "Collation")
         .sort((a, b) => a.time.localeCompare(b.time)),
-      list = $("#snackManagerList");
+      list = $("#snackManagerList"),
+      recentList = $("#recentSnackList"),
+      addSelected = $("#addSelectedSnack"),
+      recentSnacks = recentUniqueSnacks();
+    selectedRecentSnackId = null;
     list.innerHTML = snacks.length
       ? snacks
           .map(
@@ -3625,6 +3684,38 @@
           )
           .join("")
       : '<p class="muted small">Aucune collation enregistrée.</p>';
+    recentList.innerHTML = recentSnacks.length
+      ? recentSnacks
+          .map((meal) => {
+            const dateLabel =
+              meal.date === todayKey()
+                ? "Aujourd’hui"
+                : localDate(meal.date).toLocaleDateString("fr-CA", {
+                    day: "numeric",
+                    month: "short",
+                  });
+            return `<button type="button" class="recent-snack-choice" data-recent-snack="${meal.id}" aria-pressed="false"><span class="recent-snack-radio" aria-hidden="true"></span><span class="recent-snack-icon">${mealIcon("Collation", meal.description)}</span><span class="recent-snack-copy"><strong>${esc(meal.description)}</strong><small>Dernière fois · ${esc(dateLabel)} à ${esc(meal.time || "")}</small></span></button>`;
+          })
+          .join("")
+      : '<p class="muted small recent-snack-empty">Tes collations récentes apparaîtront ici.</p>';
+    addSelected.disabled = true;
+    $$('[data-recent-snack]').forEach((button) => {
+      button.onclick = () => {
+        selectedRecentSnackId = button.dataset.recentSnack;
+        $$('[data-recent-snack]').forEach((item) => {
+          const selected = item === button;
+          item.classList.toggle("is-selected", selected);
+          item.setAttribute("aria-pressed", String(selected));
+        });
+        addSelected.disabled = false;
+      };
+    });
+    addSelected.onclick = () => {
+      const source = recentSnacks.find(
+        (meal) => meal.id === selectedRecentSnackId,
+      );
+      addRecentSnack(source);
+    };
     $$("[data-edit-snack]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -8573,7 +8664,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.32.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.33.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

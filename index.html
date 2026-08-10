@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.31.0">
+  <link rel="stylesheet" href="styles.css?v=3.33.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -154,7 +154,13 @@
     <section class="dialog-card snack-manager-card">
       <div class="dialog-header"><div><p class="eyebrow">Aujourd’hui</p><h2>Mes collations</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
       <div id="snackManagerList" class="snack-manager-list"></div>
-      <button type="button" class="primary" id="addAnotherSnack">＋ Ajouter une collation</button>
+      <section class="recent-snacks-section">
+        <div class="recent-snacks-heading"><div><strong>Collations récentes</strong><small>Sélectionne une collation que tu reprends souvent</small></div><span aria-hidden="true">↻</span></div>
+        <div id="recentSnackList" class="recent-snack-list"></div>
+        <button type="button" class="secondary recent-snack-add" id="addSelectedSnack" disabled>Ajouter cette collation</button>
+      </section>
+      <div class="snack-manager-divider"><span>ou</span></div>
+      <button type="button" class="primary" id="addAnotherSnack">＋ Ajouter une nouvelle collation</button>
     </section>
   </dialog>
 
@@ -394,6 +400,6 @@
   <script src="brain/index.js?v=3.12.0"></script>
   <script src="observation-engine.js?v=3.30.2"></script>
   <script src="demo-profiles.js?v=3.30.2"></script>
-  <script src="app.js?v=3.32.0"></script>
+  <script src="app.js?v=3.33.0"></script>
 </body>
 </html>
