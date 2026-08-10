@@ -603,6 +603,33 @@
     }
     return true;
   }
+  function clearLocalJournalAfterSignOut() {
+    try {
+      [
+        APP_KEY,
+        `${APP_KEY}_shadow`,
+        BACKUP_KEY,
+        OUTBOX_KEY,
+        DEMO_BACKUP_KEY,
+        DEMO_MEMORY_BACKUP_KEY,
+      ].forEach((key) => localStorage.removeItem(key));
+    } catch (error) {
+      console.warn("Nettoyage local après déconnexion incomplet", error);
+    }
+    db = freshDB();
+    db.settings.showWelcome = false;
+    professionalDemoMode = false;
+    currentView = "today";
+    selectedDate = todayKey();
+    try {
+      window.Brain?.replaceMemoryState?.({
+        version: 1,
+        settings: {},
+        memories: [],
+        updatedAt: new Date().toISOString(),
+      });
+    } catch (_) {}
+  }
   const MEMORY_CLOUD_TABLE = "user_food_memory";
   let memorySyncTimer = null,
     memorySyncBusy = false;
@@ -6826,8 +6853,19 @@
       await pullCloud();
     });
     $("#signOut")?.addEventListener("click", async () => {
-      await client.auth.signOut();
+      if (!confirm("Se déconnecter de ce compte? La copie locale sera retirée de cet appareil après vérification de la synchronisation.")) return;
+      if (outbox().length) await syncNow();
+      if (outbox().length) {
+        alert("La déconnexion est suspendue : certaines données ne sont pas encore sauvegardées. Vérifie ta connexion et réessaie.");
+        return;
+      }
+      const { error } = await client.auth.signOut();
+      if (error) {
+        alert(`La déconnexion n’a pas abouti : ${error.message || "réessaie dans un moment"}.`);
+        return;
+      }
       session = null;
+      clearLocalJournalAfterSignOut();
       render();
     });
     $("#physiologicalContext")?.addEventListener("change", (event) => {
@@ -8786,7 +8824,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.35.5");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.35.6");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
