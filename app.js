@@ -553,6 +553,20 @@
     }
   }
   let db = load();
+  function isStorageQuotaError(error) {
+    return (
+      error?.name === "QuotaExceededError" ||
+      error?.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+      error?.code === 22 ||
+      error?.code === 1014
+    );
+  }
+  function freeLocalStorageForJournal() {
+    try {
+      localStorage.removeItem(`${APP_KEY}_shadow`);
+      localStorage.removeItem(BACKUP_KEY);
+    } catch (_) {}
+  }
   function saveLocal(reason = "local") {
     const demoPersistenceAllowed = /demo|visite/i.test(String(reason));
     if (
@@ -564,8 +578,30 @@
     db.version = CURRENT_VERSION;
     db.updatedAt = new Date().toISOString();
     const txt = JSON.stringify(db);
-    localStorage.setItem(APP_KEY, txt);
-    localStorage.setItem(`${APP_KEY}_shadow`, txt);
+    let saved = false;
+    try {
+      localStorage.setItem(APP_KEY, txt);
+      saved = true;
+    } catch (error) {
+      if (!isStorageQuotaError(error)) throw error;
+      freeLocalStorageForJournal();
+      try {
+        localStorage.setItem(APP_KEY, txt);
+        saved = true;
+      } catch (retryError) {
+        console.error("Sauvegarde locale principale impossible", retryError);
+      }
+    }
+    if (!saved) return false;
+    try {
+      localStorage.setItem(`${APP_KEY}_shadow`, txt);
+    } catch (error) {
+      // La copie secondaire ne doit jamais empêcher l'interface de terminer
+      // une action lorsque la sauvegarde principale a bien réussi.
+      try { localStorage.removeItem(`${APP_KEY}_shadow`); } catch (_) {}
+      console.warn("Copie locale secondaire ignorée", error);
+    }
+    return true;
   }
   const MEMORY_CLOUD_TABLE = "user_food_memory";
   let memorySyncTimer = null,
@@ -785,8 +821,22 @@
     }
   }
   function setOutbox(items) {
-    localStorage.setItem(OUTBOX_KEY, JSON.stringify(items));
+    try {
+      localStorage.setItem(OUTBOX_KEY, JSON.stringify(items));
+    } catch (error) {
+      if (!isStorageQuotaError(error)) throw error;
+      freeLocalStorageForJournal();
+      try {
+        localStorage.setItem(OUTBOX_KEY, JSON.stringify(items));
+      } catch (retryError) {
+        syncState = "error";
+        console.error("File de synchronisation locale impossible", retryError);
+        updateSyncBadge();
+        return false;
+      }
+    }
     updateSyncBadge();
+    return true;
   }
   function enqueue(op) {
     if (db.settings.demoMode) return;
@@ -796,7 +846,7 @@
     const idx = items.findIndex((x) => `${x.kind}:${x.id || x.date}` === key);
     if (idx >= 0) items[idx] = op;
     else items.push(op);
-    setOutbox(items);
+    if (!setOutbox(items)) return;
     syncState = "pending";
     updateSyncBadge();
     if (session && navigator.onLine) syncNow();
@@ -8664,7 +8714,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.33.1");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.33.2");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
