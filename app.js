@@ -1585,7 +1585,7 @@
               missing: "non détecté",
             }[certainty]),
       statusIcon = certainty === "confirmed" ? "✓" : certainty === "missing" ? "×" : "?";
-    return `<span class="composition-trait composition-${certainty}" title="${esc(label)} · ${esc(certaintyLabel)}" aria-label="${esc(label)}, ${esc(certaintyLabel)}"><strong aria-hidden="true">${icons[trait] || "•"}</strong><small aria-hidden="true">${statusIcon}</small></span>`;
+    return `<span class="composition-trait composition-${certainty}" title="${esc(label)} · ${esc(certaintyLabel)}" aria-label="${esc(label)}, ${esc(certaintyLabel)}"><span class="composition-trait-top" aria-hidden="true"><strong>${icons[trait] || "•"}</strong><small>${statusIcon}</small></span><em aria-hidden="true">${esc(label)}</em></span>`;
   }
   function updateMealCompositionReview() {
     const section = $("#mealCompositionReview"),
@@ -8725,7 +8725,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.34.2");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.34.3");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

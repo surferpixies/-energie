@@ -758,6 +758,9 @@ body.demo-guide-open .bottom-nav{z-index:20}
 /* V3.34.2 — rangée reconnue et légende mieux aérées */
 .composition-traits{width:100%;justify-content:space-between;gap:7px;padding:2px 1px}.composition-trait{min-width:44px;padding:6px 8px;gap:4px}.composition-trait strong{font-size:.92rem}.composition-trait small{width:15px;height:15px;font-size:.72rem}.composition-legend{width:100%;justify-content:space-between;gap:10px;padding:5px 4px 3px;font-size:.55rem}.composition-legend b{width:12px;height:12px;font-size:.55rem}
 
+/* V3.34.3 — libellés sous les icônes et séparateur de légende */
+.composition-trait{min-width:55px;flex-direction:column;gap:3px;padding:6px 7px 5px}.composition-trait-top{display:flex;align-items:center;justify-content:center;gap:4px}.composition-trait em{display:block;max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:.49rem;line-height:1;font-style:normal;font-weight:800;text-align:center}.composition-legend{margin-top:2px;padding:7px 4px 3px;border-top:1px solid color-mix(in srgb,var(--border) 82%,transparent)}
+
 /* V3.18.3 — séparation visuelle du contenu du splash */
 .splash-daily{margin-top:clamp(28px,5vh,44px)}
 @media(max-height:700px){.splash-daily{margin-top:14px}}
