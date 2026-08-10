@@ -1153,7 +1153,8 @@
     }
     for (const r of dr.data || []) {
       const d = ensureDay(db, r.log_date);
-      if (!d.updatedAt || new Date(r.updated_at) >= new Date(d.updatedAt)) {
+      const remoteIsNewer = !d.updatedAt || new Date(r.updated_at) >= new Date(d.updatedAt);
+      if (remoteIsNewer) {
         d.sleepHours = r.sleep_hours;
         d.sleepTags = Array.isArray(r.sleep_tags) ? r.sleep_tags : [];
         d.sleepComment = r.sleep_comment || "";
@@ -1162,6 +1163,18 @@
         if (Array.isArray(r.supplements?.taken))
           d.supplementsTaken = normalizeSupplements(r.supplements.taken);
         d.updatedAt = r.updated_at;
+      } else {
+        // Un repas local peut rendre la journée artificiellement "plus récente"
+        // que son journal quotidien. On récupère quand même les champs absents
+        // au lieu de masquer sommeil, eau et activité déjà sauvegardés au nuage.
+        if (d.sleepHours == null && r.sleep_hours != null) d.sleepHours = r.sleep_hours;
+        if (!(d.sleepTags || []).length && Array.isArray(r.sleep_tags)) d.sleepTags = r.sleep_tags;
+        if (!d.sleepComment && r.sleep_comment) d.sleepComment = r.sleep_comment;
+        if (!(Number(d.water) > 0) && Number(r.water) > 0) d.water = Number(r.water);
+        if (!(d.activities || []).length && Array.isArray(r.activities))
+          d.activities = r.activities.map(normalizeActivity);
+        if (!(d.supplementsTaken || []).length && Array.isArray(r.supplements?.taken))
+          d.supplementsTaken = normalizeSupplements(r.supplements.taken);
       }
     }
     for (const r of mr.data || []) {
@@ -2962,7 +2975,7 @@
     const x = (index) => left + index * (width - left - right) / Math.max(1, points.length - 1);
     const y = (value) => top + (height - top - bottom) * (1 - Math.max(0, Math.min(5, value)) / 5);
     const linePath = points.map((point, index) => `${index ? "L" : "M"}${x(index).toFixed(1)},${y(point.discomfort || 0).toFixed(1)}`).join(" ");
-    const dots = points.map((point, index) => `<circle class="discomfort" cx="${x(index)}" cy="${y(point.discomfort || 0)}" r="4"><title>${esc(point.label)} · Inconfort moyen : ${(point.discomfort || 0).toFixed(1)}/5 · ${point.exposures} jour(s) repéré(s)</title></circle>`).join("");
+    const dots = points.map((point, index) => `<circle class="discomfort" cx="${x(index)}" cy="${y(point.discomfort || 0)}" r="5"><title>${esc(point.label)} · Inconfort moyen : ${(point.discomfort || 0).toFixed(1)}/5 · ${point.exposures} jour(s) repéré(s)</title></circle>`).join("");
     const pointValues = points.map((point, index) => {
       const value = point.discomfort || 0;
       return `<text x="${x(index)}" y="${Math.max(top + 9, y(value) - 9)}" text-anchor="middle">${value.toFixed(1)}</text>`;
@@ -2975,7 +2988,7 @@
     }).join("");
     const milestoneIndex = Math.min(points.length - 1, Number(config.milestoneWeek ?? -1));
     const milestone = milestoneIndex >= 0 ? `<g class="trend-milestone"><line x1="${x(milestoneIndex)}" y1="${top}" x2="${x(milestoneIndex)}" y2="${height-bottom}"/><text x="${x(milestoneIndex)+7}" y="${top+12}">${esc(config.milestoneLines[0])}</text><text x="${x(milestoneIndex)+7}" y="${top+24}">${esc(config.milestoneLines[1])}</text></g>` : "";
-    const chart = `<div class="professional-trend-legend"><span class="discomfort">Valeur au-dessus : inconfort moyen /5</span><span class="exposure-count">Nombre en dessous : journées repérées</span></div><div class="professional-trend-scroll chart-scroll"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><text class="trend-y-title" x="14" y="${top + (height-top-bottom)/2}" text-anchor="middle" transform="rotate(-90 14 ${top + (height-top-bottom)/2})">Inconfort /5</text><g class="trend-grid">${grid}</g>${milestone}<path class="trend-path discomfort" d="${linePath}"/><g class="trend-dots">${dots}</g><g class="trend-point-values">${pointValues}</g><g class="trend-exposures">${exposureBars}</g><g class="trend-labels">${labels}</g></svg></div>`;
+    const chart = `<div class="professional-trend-legend"><span class="discomfort">Valeur au-dessus : inconfort moyen /5</span><span class="exposure-count">Nombre en dessous : journées repérées</span></div><div class="professional-trend-scroll chart-scroll"><svg style="--trend-width:${width}px" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><text class="trend-y-title" x="14" y="${top + (height-top-bottom)/2}" text-anchor="middle" transform="rotate(-90 14 ${top + (height-top-bottom)/2})">Inconfort /5</text><g class="trend-grid">${grid}</g>${milestone}<path class="trend-path discomfort" d="${linePath}"/><g class="trend-dots">${dots}</g><g class="trend-point-values">${pointValues}</g><g class="trend-exposures">${exposureBars}</g><g class="trend-labels">${labels}</g></svg></div>`;
     return `<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Première lecture du dossier</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-week-note"><strong>Une seule courbe : l’évolution de l’inconfort.</strong><span>Chaque semaine commence le dimanche. La valeur au-dessus de chaque point indique l’inconfort moyen sur 5; le nombre sous la courbe indique combien de journées contenaient l’élément suivi.</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small><p>${esc(config.primaryHelp)}</p></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small><p>${esc(config.comparisonHelp)}</p></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small><p>${esc(config.metricHelp)}</p></div></div>${chart}<button type="button" class="secondary professional-trend-expand" data-open-trend-fullscreen><span>↗ Agrandir en mode horizontal</span><small>L’affichage pivotera automatiquement</small></button><p class="muted tiny">${config.disclaimer}</p></section><dialog class="professional-trend-dialog" id="professionalTrendDialog"><div class="professional-trend-dialog-head"><div><small>Vue horizontale automatique</small><strong>${config.title}</strong></div><button type="button" class="secondary" data-close-trend-fullscreen>Revenir au suivi ✕</button></div><div class="professional-trend-fullscreen-frame">${chart}</div><p class="muted tiny">Axe vertical : inconfort moyen sur 5 · Axe horizontal : semaines du dimanche au samedi.</p></dialog>`;
   }
   function renderFollowup() {
@@ -3001,12 +3014,13 @@
     $("[data-open-trend-fullscreen]")?.addEventListener("click", async () => {
       const dialog = $("#professionalTrendDialog");
       if (!dialog) return;
+      const openedInPortrait = window.innerHeight > window.innerWidth;
       dialog.showModal();
+      if (openedInPortrait) dialog.classList.add("is-css-landscape");
       let landscapeLocked = false;
       try { await dialog.requestFullscreen?.(); } catch (_) {}
       try { await screen.orientation?.lock?.("landscape"); landscapeLocked = true; } catch (_) {}
-      if (!landscapeLocked && matchMedia("(orientation: portrait)").matches)
-        dialog.classList.add("is-css-landscape");
+      if (landscapeLocked) dialog.classList.remove("is-css-landscape");
     });
     $("[data-close-trend-fullscreen]")?.addEventListener("click", async () => {
       const dialog = $("#professionalTrendDialog");
@@ -3069,8 +3083,9 @@
       );
     if (!db.settings.demoMode) {
       try {
-        if (!localStorage.getItem(DEMO_BACKUP_KEY))
-          localStorage.setItem(DEMO_BACKUP_KEY, JSON.stringify(db));
+        // Toujours remplacer une ancienne copie : elle peut provenir d'une
+        // session démo interrompue et ne plus représenter le journal actuel.
+        localStorage.setItem(DEMO_BACKUP_KEY, JSON.stringify(db));
       } catch (error) {
         console.warn("Copie avant démo non enregistrée", error);
       }
@@ -3365,8 +3380,7 @@
   }
   function startDemoMode(profileId = "marie") {
     try {
-      if (!localStorage.getItem(DEMO_BACKUP_KEY))
-        localStorage.setItem(DEMO_BACKUP_KEY, JSON.stringify(db));
+      localStorage.setItem(DEMO_BACKUP_KEY, JSON.stringify(db));
     } catch (error) {
       console.warn("Copie avant démo non enregistrée", error);
     }
@@ -3407,13 +3421,16 @@
     restoreRealBrainMemory();
     try {
       localStorage.removeItem(DEMO_BACKUP_KEY);
-      localStorage.removeItem(OUTBOX_KEY);
     } catch (_) {}
     selectedDate = todayKey();
     currentView = "today";
     saveLocal("fin-demo");
     closeDemoGuide();
     render();
+    if (session && navigator.onLine) {
+      if (outbox().length) syncNow();
+      else pullCloud(true);
+    }
   }
   function clearDemoTourTarget() {
     $$(".demo-focus").forEach((el) => el.classList.remove("demo-focus"));
@@ -8767,7 +8784,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.35.1");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.35.2");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
