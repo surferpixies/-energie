@@ -349,6 +349,9 @@ body.demo-guide-open .bottom-nav{z-index:20}
 /* V3.33.1 — collations prises aujourd'hui ultra compactes dans le popup */
 .snack-manager-list{gap:5px;margin:4px 0 10px}.snack-manager-item{min-height:40px;border-radius:11px;gap:3px}.snack-manager-main{min-width:0;gap:7px;padding:6px 4px 6px 9px}.snack-manager-main>span:first-child{flex:0 0 auto;font-size:18px;line-height:1}.snack-manager-main>span:last-child{min-width:0}.snack-manager-main strong{font-size:.72rem;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.snack-manager-main small{margin-top:1px;font-size:.58rem;line-height:1;color:var(--muted)}.snack-manager-delete{min-width:36px;min-height:36px;margin-right:2px;border-radius:9px;font-size:15px;padding:5px}
 
+/* V3.33.4 — action d'ajout rapide plus évidente après sélection */
+.recent-snack-add:not(:disabled){border-color:var(--accent);background:var(--accent);color:#fff;font-weight:900;box-shadow:0 7px 16px color-mix(in srgb,var(--accent) 24%,transparent);transform:translateY(-1px)}.recent-snack-add:not(:disabled):active{transform:translateY(0);box-shadow:0 3px 8px color-mix(in srgb,var(--accent) 18%,transparent)}
+
 /* V3.0.3 — recommandations contextuelles après un repas */
 .meal-recommendation-toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));z-index:1200;width:min(92vw,430px);display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:16px 42px 16px 16px;border:1px solid color-mix(in srgb,var(--accent,#7a243d) 22%,transparent);border-radius:20px;background:color-mix(in srgb,var(--surface,#fff) 94%,transparent);box-shadow:0 18px 50px rgba(34,18,24,.18);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);opacity:0;transform:translate(-50%,14px) scale(.98);transition:opacity .24s ease,transform .24s ease;color:var(--text,#251c20)}
 .meal-recommendation-toast.is-visible{opacity:1;transform:translate(-50%,0) scale(1)}
