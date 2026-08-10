@@ -1564,12 +1564,28 @@
   function compositionTraitChip(trait, certainty) {
     const labels = window.ENERGIE_DISH_KNOWLEDGE?.labels || {},
       label = labels[trait] || trait.replaceAll("_", " "),
-      certaintyLabel = trait === "carbs_low" ? "faible quantité" : ({
-        confirmed: "confirmé",
-        probable: "probable",
-        possible: "possible",
-      }[certainty]);
-    return `<span class="composition-trait composition-${certainty}"><strong>${esc(label)}</strong><small>${certaintyLabel}</small></span>`;
+      icons = {
+        protein: "🥩",
+        fiber: "🌿",
+        carbs: "🍞",
+        carbs_low: "🍞",
+        dairy: "🥛",
+        soy: "🫘",
+        gluten: "🌾",
+        eggs: "🥚",
+        nuts: "🥜",
+      },
+      certaintyLabel =
+        trait === "carbs_low"
+          ? "faible quantité probable"
+          : ({
+              confirmed: "confirmé",
+              probable: "probable",
+              possible: "possible",
+              missing: "non détecté",
+            }[certainty]),
+      statusIcon = certainty === "confirmed" ? "✓" : certainty === "missing" ? "×" : "?";
+    return `<span class="composition-trait composition-${certainty}" title="${esc(label)} · ${esc(certaintyLabel)}" aria-label="${esc(label)}, ${esc(certaintyLabel)}"><strong aria-hidden="true">${icons[trait] || "•"}</strong><small aria-hidden="true">${statusIcon}</small></span>`;
   }
   function updateMealCompositionReview() {
     const section = $("#mealCompositionReview"),
@@ -1588,36 +1604,35 @@
       section.hidden = true;
       return;
     }
-    const visibleTraits = ["protein", "fiber", "carbs", "dairy", "soy", "gluten", "eggs", "nuts"];
-    const chips = visibleTraits
-      .map((trait) => {
-        const certainty = analysis.status(trait);
-        return certainty === "unknown" ? "" : compositionTraitChip(trait, certainty);
-      })
-      .filter(Boolean)
-      .join("");
     const lowCarbs = analysis.status("carbs") === "unknown" && analysis.status("carbs_low") !== "unknown"
       ? compositionTraitChip("carbs_low", analysis.status("carbs_low"))
       : "";
     const missing = ["protein", "fiber", "carbs"].filter(
       (trait) => analysis.status(trait) === "unknown",
     ).filter((trait) => trait !== "carbs" || !lowCarbs);
+    const coreTraits = new Set(["protein", "fiber", "carbs"]),
+      visibleTraits = ["protein", "fiber", "carbs", "dairy", "soy", "gluten", "eggs", "nuts"],
+      chips = visibleTraits
+        .map((trait) => {
+          const certainty = analysis.status(trait);
+          if (trait === "carbs" && certainty === "unknown" && lowCarbs)
+            return lowCarbs;
+          if (certainty === "unknown")
+            return coreTraits.has(trait)
+              ? compositionTraitChip(trait, "missing")
+              : "";
+          return compositionTraitChip(trait, certainty);
+        })
+        .filter(Boolean)
+        .join("");
     const title = analysis.dish
       ? `<strong>🍽️ ${esc(analysis.dish.name)} reconnu</strong><small>Composition habituelle — la recette peut varier</small>`
       : `<strong>🔎 Éléments reconnus</strong><small>Selon les ingrédients écrits</small>`;
     const ingredients = analysis.dish?.ingredients?.length
       ? `<p class="composition-basis">Habituellement : ${analysis.dish.ingredients.map(esc).join(", ")}.</p>`
       : "";
-    const missingLabels = {
-      protein: "Source de protéines non détectée",
-      fiber: "Source de fibres non détectée",
-      carbs: "Source notable de glucides non détectée",
-    };
-    const missingHtml = missing.length
-      ? `<div class="composition-missing"><strong>${missing.map((trait) => missingLabels[trait]).join(" · ")}</strong><p>Ce repas n’en contient peut-être pas, ou sa description manque de précision.</p></div>`
-      : "";
     const acknowledged = mealFoodReview?.acknowledgedGaps && missing.length;
-    summary.innerHTML = `<div class="composition-heading">${title}</div>${chips || lowCarbs ? `<div class="composition-traits">${chips}${lowCarbs}</div>` : ""}${ingredients}${missingHtml}${acknowledged ? '<p class="composition-kept">✓ Description conservée telle quelle</p>' : ""}`;
+    summary.innerHTML = `<div class="composition-heading">${title}</div>${chips ? `<div class="composition-traits">${chips}</div><div class="composition-legend" aria-label="Légende des éléments reconnus"><span class="is-confirmed"><b>✓</b> confirmé</span><span class="is-probable"><b>?</b> probable</span><span class="is-missing"><b>×</b> non détecté</span></div>` : ""}${ingredients}${acknowledged ? '<p class="composition-kept">✓ Description conservée telle quelle</p>' : ""}`;
     actions.hidden = !missing.length || !!acknowledged;
     section.hidden = false;
   }
@@ -8710,7 +8725,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.34.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.34.1");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
