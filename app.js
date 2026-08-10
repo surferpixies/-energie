@@ -5060,11 +5060,7 @@
         (b.onclick = () => {
           const type = b.dataset.quickMeal,
             edit = b.dataset.editMeal;
-          if (
-            type === "Collation" &&
-            mealTypeSummary(meals, "Collation").length
-          )
-            openSnackManager();
+          if (type === "Collation") openSnackManager();
           else if (edit) openMeal(edit);
           else openMeal(null, type);
         }),
@@ -8714,7 +8710,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.33.2");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.33.3");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
