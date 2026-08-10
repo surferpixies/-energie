@@ -1561,9 +1561,36 @@
       window.ENERGIE_DISH_KNOWLEDGE?.analyze?.(text, [...categoryIds]) || null
     );
   }
+  function mealCompositionUi() {
+    const packs = {
+      "fr-CA": {
+        labels: { protein: "Protéines", fiber: "Fibres", carbs: "Glucides", carbs_low: "Peu de glucides", dairy: "Laitiers", soy: "Soya", gluten: "Gluten", eggs: "Œufs", nuts: "Noix" },
+        status: { confirmed: "confirmé", probable: "probable", possible: "possible", missing: "non détecté" },
+        hint: "Plus ta description est précise — ingrédients, sauces et accompagnements — plus les observations d’Énergie seront pertinentes.", recognized: "Éléments reconnus", written: "Selon les ingrédients écrits", usual: "Composition habituelle — la recette peut varier", recognizedSuffix: "reconnu", usually: "Habituellement", kept: "Description conservée telle quelle", complete: "Préciser le repas", continue: "Continuer ainsi",
+      },
+      "fr-FR": {
+        labels: { protein: "Protéines", fiber: "Fibres", carbs: "Glucides", carbs_low: "Peu de glucides", dairy: "Laitiers", soy: "Soja", gluten: "Gluten", eggs: "Œufs", nuts: "Noix" },
+        status: { confirmed: "confirmé", probable: "probable", possible: "possible", missing: "non détecté" },
+        hint: "Plus ta description est précise — ingrédients, sauces et accompagnements — plus les observations d’Énergie seront pertinentes.", recognized: "Éléments reconnus", written: "Selon les ingrédients indiqués", usual: "Composition habituelle — la recette peut varier", recognizedSuffix: "reconnu", usually: "Habituellement", kept: "Description conservée telle quelle", complete: "Préciser le repas", continue: "Continuer ainsi",
+      },
+      en: {
+        labels: { protein: "Protein", fiber: "Fiber", carbs: "Carbs", carbs_low: "Low carbs", dairy: "Dairy", soy: "Soy", gluten: "Gluten", eggs: "Eggs", nuts: "Nuts" },
+        status: { confirmed: "confirmed", probable: "probable", possible: "possible", missing: "not detected" },
+        hint: "The more precise your description — ingredients, sauces and sides — the more relevant Énergie’s observations will be.", recognized: "Recognized elements", written: "Based on the ingredients entered", usual: "Typical composition — recipes may vary", recognizedSuffix: "recognized", usually: "Usually", kept: "Description kept as entered", complete: "Add meal details", continue: "Continue as is",
+      },
+    };
+    return packs[window.ENERGIE_LOCALE || "fr-CA"] || packs["fr-CA"];
+  }
+  function applyMealCompositionLocale() {
+    const ui = mealCompositionUi(), hint = $("#mealPrecisionHintText"), complete = $("#completeMealDescription"), keep = $("#keepMealDescription");
+    if (hint) hint.textContent = ui.hint;
+    if (complete) complete.textContent = ui.complete;
+    if (keep) keep.textContent = ui.continue;
+  }
   function compositionTraitChip(trait, certainty) {
-    const labels = window.ENERGIE_DISH_KNOWLEDGE?.labels || {},
-      label = labels[trait] || trait.replaceAll("_", " "),
+    const ui = mealCompositionUi(),
+      fallbackLabels = window.ENERGIE_DISH_KNOWLEDGE?.labels || {},
+      label = ui.labels[trait] || fallbackLabels[trait] || trait.replaceAll("_", " "),
       icons = {
         protein: "🥩",
         fiber: "🌿",
@@ -1575,21 +1602,13 @@
         eggs: "🥚",
         nuts: "🥜",
       },
-      certaintyLabel =
-        trait === "carbs_low"
-          ? "faible quantité probable"
-          : ({
-              confirmed: "confirmé",
-              probable: "probable",
-              possible: "possible",
-              missing: "non détecté",
-            }[certainty]),
+      certaintyLabel = ui.status[certainty],
       statusIcon = certainty === "confirmed" ? "✓" : certainty === "missing" ? "×" : "?",
-      compactLabel = trait === "dairy" ? "Laitiers" : label;
+      compactLabel = label;
     return `<span class="composition-trait composition-${certainty}" title="${esc(label)} · ${esc(certaintyLabel)}" aria-label="${esc(label)}, ${esc(certaintyLabel)}"><span class="composition-trait-top" aria-hidden="true"><strong>${icons[trait] || "•"}</strong><small>${statusIcon}</small></span><em aria-hidden="true">${esc(compactLabel)}</em></span>`;
   }
   function updateMealCompositionReview() {
-    const section = $("#mealCompositionReview"),
+    const ui = mealCompositionUi(), section = $("#mealCompositionReview"),
       summary = $("#mealCompositionSummary"),
       actions = $("#mealCompositionActions"),
       description = $("#mealDescription")?.value.trim() || "";
@@ -1627,13 +1646,13 @@
         .filter(Boolean)
         .join("");
     const title = analysis.dish
-      ? `<strong>🍽️ ${esc(analysis.dish.name)} reconnu</strong><small>Composition habituelle — la recette peut varier</small>`
-      : `<strong>🔎 Éléments reconnus</strong><small>Selon les ingrédients écrits</small>`;
+      ? `<strong>🍽️ ${esc(analysis.dish.name)} ${esc(ui.recognizedSuffix)}</strong><small>${esc(ui.usual)}</small>`
+      : `<strong>🔎 ${esc(ui.recognized)}</strong><small>${esc(ui.written)}</small>`;
     const ingredients = analysis.dish?.ingredients?.length
-      ? `<p class="composition-basis">Habituellement : ${analysis.dish.ingredients.map(esc).join(", ")}.</p>`
+      ? `<p class="composition-basis">${esc(ui.usually)} : ${analysis.dish.ingredients.map(esc).join(", ")}.</p>`
       : "";
     const acknowledged = mealFoodReview?.acknowledgedGaps && missing.length;
-    summary.innerHTML = `<div class="composition-heading">${title}</div>${chips ? `<div class="composition-traits">${chips}</div><div class="composition-legend" aria-label="Légende des éléments reconnus"><span class="is-confirmed"><b>✓</b> confirmé</span><span class="is-probable"><b>?</b> probable</span><span class="is-missing"><b>×</b> non détecté</span></div>` : ""}${ingredients}${acknowledged ? '<p class="composition-kept">✓ Description conservée telle quelle</p>' : ""}`;
+    summary.innerHTML = `<div class="composition-heading">${title}</div>${chips ? `<div class="composition-traits">${chips}</div><div class="composition-legend"><span class="is-confirmed"><b>✓</b> ${esc(ui.status.confirmed)}</span><span class="is-probable"><b>?</b> ${esc(ui.status.probable)}</span><span class="is-missing"><b>×</b> ${esc(ui.status.missing)}</span></div>` : ""}${ingredients}${acknowledged ? `<p class="composition-kept">✓ ${esc(ui.kept)}</p>` : ""}`;
     actions.hidden = !missing.length || !!acknowledged;
     section.hidden = false;
   }
@@ -7509,6 +7528,7 @@
       : "<small>Aucun ressenti</small>";
   }
   function openMeal(id = null, presetType = null) {
+    applyMealCompositionLocale();
     const d = ensureDay(db, selectedDate),
       m = id ? d.meals.find((x) => x.id === id) : null,
       type = m?.type || presetType || "Déjeuner",
@@ -8726,7 +8746,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.34.4");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.34.5");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

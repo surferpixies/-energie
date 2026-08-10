@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.34.4">
+  <link rel="stylesheet" href="styles.css?v=3.34.5">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -88,7 +88,7 @@
       <div class="meal-description-field">
         <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div>
         <textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea>
-        <p class="meal-precision-hint"><span aria-hidden="true">💡</span><span>Plus ta description est précise — ingrédients, sauces et accompagnements — plus les observations d’Énergie seront pertinentes.</span></p>
+        <p class="meal-precision-hint"><span aria-hidden="true">💡</span><span id="mealPrecisionHintText">Plus ta description est précise — ingrédients, sauces et accompagnements — plus les observations d’Énergie seront pertinentes.</span></p>
         <small id="mealFavoriteFeedback" class="meal-favorite-feedback" role="status" aria-live="polite" hidden></small>
       </div>
       <section id="mealCompositionReview" class="meal-composition-review" hidden aria-live="polite">
@@ -401,6 +401,6 @@
   <script src="brain/index.js?v=3.12.0"></script>
   <script src="observation-engine.js?v=3.30.2"></script>
   <script src="demo-profiles.js?v=3.30.2"></script>
-  <script src="app.js?v=3.34.4"></script>
+  <script src="app.js?v=3.34.5"></script>
 </body>
 </html>
