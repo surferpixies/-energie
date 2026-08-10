@@ -3014,18 +3014,11 @@
     $("[data-open-trend-fullscreen]")?.addEventListener("click", async () => {
       const dialog = $("#professionalTrendDialog");
       if (!dialog) return;
-      const openedInPortrait = window.innerHeight > window.innerWidth;
       dialog.showModal();
-      if (openedInPortrait) dialog.classList.add("is-css-landscape");
-      let landscapeLocked = false;
-      try { await dialog.requestFullscreen?.(); } catch (_) {}
-      try { await screen.orientation?.lock?.("landscape"); landscapeLocked = true; } catch (_) {}
-      if (landscapeLocked) dialog.classList.remove("is-css-landscape");
     });
     $("[data-close-trend-fullscreen]")?.addEventListener("click", async () => {
       const dialog = $("#professionalTrendDialog");
       dialog?.classList.remove("is-css-landscape");
-      try { screen.orientation?.unlock?.(); } catch (_) {}
       try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (_) {}
       dialog?.close();
     });
@@ -8784,7 +8777,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.35.3");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.35.4");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
