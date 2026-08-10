@@ -3275,6 +3275,9 @@
     bindDemoChrome();
   }
   const EXPERIENCE_KEY = "energieExperienceV260";
+  // Temporairement désactivé pendant les essais avec la nutritionniste.
+  // Les profils fictifs demeurent accessibles manuellement dans Profil.
+  const FIRST_LAUNCH_DEMO_ENABLED = false;
   const demoTourSteps = [
     {
       view: "today",
@@ -3349,6 +3352,12 @@
   }
   function showExperienceLaunchIfNeeded(force = false) {
     if (db.settings.demoMode) return;
+    if (!FIRST_LAUNCH_DEMO_ENABLED) {
+      markExperienceSeen();
+      const launch = $("#experienceLaunch");
+      if (launch) launch.hidden = true;
+      return;
+    }
     let seen = false;
     try {
       seen = localStorage.getItem(EXPERIENCE_KEY) === "1";
@@ -3368,7 +3377,7 @@
     db.settings.demoTourSeen = true;
     saveLocal("premiere-ouverture-journal");
     currentView = "today";
-    selectedDate = demoLandingDate(profileId);
+    selectedDate = todayKey();
     render();
   }
   function startDemoMode(profileId = "marie") {
@@ -8777,7 +8786,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.35.4");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.35.5");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
