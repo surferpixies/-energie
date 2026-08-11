@@ -3749,7 +3749,7 @@
     return `<button type="button" class="card journal-brain-card" id="openJournalBrain" aria-label="Ouvrir le Cerveau"><span class="journal-brain-visual" aria-hidden="true"><span class="journal-brain-plant">${state.plant}</span><span class="journal-brain-icon">🧠</span></span><span class="journal-brain-copy"><span class="journal-brain-top"><span><small>${esc(state.eyebrow)}</small><strong>${esc(state.title)}</strong></span><b>›</b></span><span class="journal-brain-message">${esc(state.text)}</span><span class="journal-brain-progress"><i><em style="width:${state.progress}%"></em></i><small>${state.plant} ${esc(state.label)} · ${state.days} journée${state.days !== 1 ? "s" : ""}</small></span></span></button>`;
   }
   function render() {
-    const demoDataVersions = { marie: "marie-dairy-v2", sophie: "sophie-fiber-v2", elodie: "elodie-soya-v2" };
+    const demoDataVersions = { marie: "marie-dairy-v3", sophie: "sophie-fiber-v2", elodie: "elodie-soya-v2" };
     const activeDemoId = db.settings?.demoProfileId;
     if (
       db.settings?.demoMode &&
@@ -5381,7 +5381,7 @@
             const c = dayMealCounts(meals);
             return `🍽️ ${c.main}/3${c.snacks ? ` · 🍎 ${c.snacks} collation${c.snacks > 1 ? "s" : ""}` : ""}${c.extras ? ` · ＋${c.extras}` : ""}`;
           })()
-        : `🍽️ ${stats.count}`;
+        : `🍽️ ${stats.count} entrées`;
     return `<div class="timeline-stats"><span>${mealLabel}</span>${stats.feelings ? `<span>😊 ${stats.feelings} après</span>` : ""}${stats.fav ? `<span>⭐ ${stats.fav}</span>` : ""}${scope === "day" && stats.first ? `<span>🕒 ${stats.first}${stats.last !== stats.first ? "–" + stats.last : ""}</span>` : ""}</div>`;
   }
   function dayInsight(meals) {
@@ -5427,7 +5427,7 @@
     const tiles = [
       scope === "day"
         ? `<div><span>🍽️</span><strong>${dayCounts.main}/3</strong><small>repas principaux</small></div>`
-        : `<div><span>🍽️</span><strong>${stats.count}</strong><small>repas</small></div>`,
+        : `<div><span>🍽️</span><strong>${stats.count}</strong><small>repas et collations</small></div>`,
       `<div><span>⚡</span><strong>${stats.avg == null ? "—" : stats.avg.toFixed(1) + "/5"}</strong><small>fatigue moyenne</small></div>`,
     ];
     if (scope === "day" && dayCounts.snacks)
@@ -5724,7 +5724,7 @@
         Math.round((localDate(todayKey()) - localDate(first)) / 86400000) + 1,
       ),
       months = new Set(dates.map(monthKey)).size;
-    return `<section class="journey-card card"><div><p class="eyebrow">Ton parcours</p><h3>${days} jour${days > 1 ? "s" : ""} de suivi</h3><p class="muted small">Depuis le ${esc(localDate(first).toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" }))}</p></div><div class="journey-numbers"><span><strong>${meals.length}</strong><small>repas</small></span><span><strong>${new Set(dates).size}</strong><small>journées</small></span><span><strong>${months}</strong><small>mois</small></span></div></section>`;
+    return `<section class="journey-card card"><div><p class="eyebrow">Ton parcours</p><h3>${days} jour${days > 1 ? "s" : ""} de suivi</h3><p class="muted small">Depuis le ${esc(localDate(first).toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" }))}</p></div><div class="journey-numbers"><span><strong>${meals.length}</strong><small>repas et collations</small></span><span><strong>${new Set(dates).size}</strong><small>journées</small></span><span><strong>${months}</strong><small>mois</small></span></div></section>`;
   }
   function renderHistoryDay(date, meals, open = false) {
     const stats = { ...periodStats(meals), ...dayContext(date) },
@@ -5753,9 +5753,12 @@
           weekKeys = Object.keys(weeks).sort().reverse(),
           monthMeals = weekKeys.flatMap((k) => weeks[k]),
           stats = periodStats(monthMeals);
-        return `<details class="timeline-month" ${mi === 0 ? "open" : ""}><summary><div><span class="timeline-month-label">${esc(monthLabel(mk))}</span>${miniStatsHtml(stats, "month")}</div><span class="timeline-chevron">›</span></summary><div class="timeline-month-body"><section class="period-summary month-summary"><p>${esc(periodObservation(stats, "month"))}</p>${summaryTiles(stats, "month")}</section>${weekKeys.map((wk, wi) => renderHistoryWeek(wk, weeks[wk], mi === 0 && wi === 0)).join("")}</div></details>`;
+        return `<details class="timeline-month"><summary><div><span class="timeline-month-label">${esc(monthLabel(mk))}</span>${miniStatsHtml(stats, "month")}</div><span class="timeline-chevron">›</span></summary><div class="timeline-month-body"><section class="period-summary month-summary"><p>${esc(periodObservation(stats, "month"))}</p>${summaryTiles(stats, "month")}</section>${weekKeys.map((wk) => renderHistoryWeek(wk, weeks[wk], false)).join("")}</div></details>`;
       })
       .join("")}</div>`;
+  }
+  function historyEntryCountLabel(count) {
+    return `${count} entrée${count !== 1 ? "s" : ""} · repas et collations`;
   }
   function renderHistory() {
     const meals = allMeals().sort((a, b) =>
@@ -5771,6 +5774,7 @@
     ];
     $("#app").innerHTML =
       `<section class="hero"><p class="eyebrow">Smart Timeline</p><h2>Ton historique, organisé naturellement</h2><p>Les repas sont regroupés par journée, semaine et mois pour rester faciles à consulter avec le temps.</p></section><section class="card search-card"><div class="history-search-row"><input id="mealSearch" type="search" placeholder="Rechercher un aliment, une note ou une date…" autocomplete="off"><button type="button" class="history-filter-toggle" id="historyFilterToggle" aria-expanded="false" aria-controls="historyFilterPanel"><span>Filtres</span><b>⌄</b></button></div><div id="historyFilterPanel" class="history-filter-panel" hidden><div class="filter-label">Période</div><div class="filter-row"><button class="filter-chip active" data-range="all">Tout</button><button class="filter-chip" data-range="7">7 jours</button><button class="filter-chip" data-range="30">Ce mois</button><button class="filter-chip" data-range="365">Cette année</button></div><div class="filter-label">Type de repas</div><div class="filter-row">${types.map((mealType, i) => `<button class="filter-chip ${i === 0 ? "active" : ""}" data-type="${esc(mealType)}">${esc(t(mealType))}</button>`).join("")}</div><div class="filter-row"><button class="filter-chip" data-special="favorite">⭐ Favoris</button></div></div></section><section class="section-title"><h2>Chronologie</h2><span id="resultCount" class="muted small">${meals.length} repas</span></section><div id="historyResults">${renderHistoryGroups(meals)}</div>`;
+    $("#resultCount").textContent = historyEntryCountLabel(meals.length);
     const filterToggle = $("#historyFilterToggle"),
       filterPanel = $("#historyFilterPanel");
     filterToggle.onclick = () => {
@@ -5797,7 +5801,7 @@
             .toLowerCase()
             .includes(q),
       );
-      $("#resultCount").textContent = `${filtered.length} repas`;
+      $("#resultCount").textContent = historyEntryCountLabel(filtered.length);
       $("#historyResults").innerHTML = renderHistoryGroups(filtered);
       bindMealCards();
     };
@@ -6602,8 +6606,8 @@
     return `${brainGrowthHeaderHtml(maturity)}<section class="discovery-section food-observations-section"><div class="discovery-heading"><div><p class="eyebrow">Observations alimentaires</p><h2>Ce que tes repas semblent révéler</h2></div><span class="discovery-count">${observations.length}/3</span></div><div class="discovery-grid">${cards}</div><p class="discovery-disclaimer">Ces observations comparent uniquement les journées de ton propre historique. Elles décrivent des associations possibles, ne prouvent aucune cause et ne constituent jamais un diagnostic.</p></section>`;
   }
   function discoveryComparisonHtml(x) {
-    const scored=x.kind==="food-category-feeling-change",unit=scored?" point":"/5",item=scored?"repas":"journée";
-    return `<div class="observation-comparison" aria-label="Comparaison"><div><span>Avec</span><strong>${esc(x.statistic)}${unit}</strong><small>${x.samples.exposed} ${item}${x.samples.exposed!==1?"s":""}</small></div><div class="observation-vs">vs</div><div><span>Sans</span><strong>${esc(x.comparisonStatistic)}${unit}</strong><small>${x.samples.comparison} ${item}${x.samples.comparison!==1?"s":""}</small></div></div>`;
+    const scored=x.kind==="food-category-feeling-change",unit=scored?" point":"/5",item=scored?"repas":"journée",labels=Array.isArray(x.comparisonLabels)?x.comparisonLabels:["Avec","Sans"];
+    return `<div class="observation-comparison" aria-label="Comparaison"><div><span>${esc(labels[0])}</span><strong>${esc(x.statistic)}${unit}</strong><small>${x.samples.exposed} ${item}${x.samples.exposed!==1?"s":""}</small></div><div class="observation-vs">vs</div><div><span>${esc(labels[1])}</span><strong>${esc(x.comparisonStatistic)}${unit}</strong><small>${x.samples.comparison} ${item}${x.samples.comparison!==1?"s":""}</small></div></div>`;
   }
   function openDiscoveryWhy(x) {
     $("#sourceTitle").textContent = "Pourquoi cette tendance apparaît-elle?";
@@ -6644,6 +6648,142 @@
     return allMeals().filter(
       (m) => !db.settings?.demoMode || m.date <= selectedDate,
     );
+  }
+  function demoReferenceObservationsFromJournal(profileId) {
+    const digestiveTags = new Set([
+        "bloating", "gas", "cramps", "diarrhea", "nausea", "stomachache",
+      ]),
+      digestiveIntensity = (day) => {
+        const scores = (day.meals || []).flatMap((meal) =>
+          (meal.feeling?.tags || [])
+            .filter((tag) => digestiveTags.has(tag))
+            .map((tag) =>
+              Number(meal.feeling?.scores?.[tag] ?? meal.feeling?.rating ?? 3),
+            ),
+        );
+        return scores.length
+          ? scores.reduce((sum, score) => sum + (6 - score), 0) / scores.length
+          : 0;
+      },
+      configs = {
+        marie: {
+          pattern: /(lait|lactose|fromage|yogourt|cr[eè]me|cr[eé]meuse|cappuccino|latte|pizza au fromage|sauce cr[eè]meuse)/i,
+          delayed: false,
+          icon: "🥛",
+          title: "Produits laitiers et inconfort digestif",
+          intensity: digestiveIntensity,
+          text: (withValue, withoutValue) =>
+            `L’inconfort digestif moyen est de ${withValue}/5 les journées avec produits laitiers repérés, comparativement à ${withoutValue}/5 durant les autres journées.`,
+          basis: (withCount, withoutCount) =>
+            `${withCount} journées avec produits laitiers repérés ont été comparées à ${withoutCount} journées sans produit laitier repéré. Les valeurs proviennent directement des ressentis digestifs du dossier fictif.`,
+        },
+        sophie: {
+          pattern: /(gruau|pomme|chia|quinoa|pois chiches|chili|haricots|riz brun|l[eé]gumes|lentilles|amandes)/i,
+          delayed: false,
+          icon: "🌾",
+          title: "Fibres et confort digestif",
+          intensity: digestiveIntensity,
+          text: (withValue, withoutValue) =>
+            `L’inconfort digestif moyen est de ${withValue}/5 lorsque les sources de fibres sont clairement présentes, comparativement à ${withoutValue}/5 lorsqu’elles le sont moins.`,
+          basis: (withCount, withoutCount) =>
+            `${withCount} journées contenant des sources de fibres clairement repérées ont été comparées à ${withoutCount} autres journées du dossier fictif.`,
+        },
+        elodie: {
+          pattern: /(soya|tofu|edamame|miso)/i,
+          delayed: true,
+          icon: "🌿",
+          title: "Soya et réactions retardées",
+          intensity: (day) => {
+            const observations = day.observations || [];
+            return observations.length
+              ? observations.reduce(
+                  (sum, item) => sum + (Number(item.intensity) || 0),
+                  0,
+                ) / observations.length
+              : 0;
+          },
+          text: (withValue, withoutValue) =>
+            `L’inconfort global moyen est de ${withValue}/5 durant les journées avec soya repéré ou le lendemain, comparativement à ${withoutValue}/5 sans exposition récente repérée.`,
+          basis: (withCount, withoutCount) =>
+            `${withCount} journées situées pendant ou après une exposition possible au soya ont été comparées à ${withoutCount} journées sans exposition récente repérée. Les symptômes proviennent surtout des observations globales.`,
+        },
+      },
+      config = configs[profileId];
+    if (!config) return [];
+    const dates = Object.keys(db.days || {})
+        .filter((date) => date <= selectedDate)
+        .sort(),
+      directDates = new Set(
+        dates.filter((date) =>
+          (db.days[date]?.meals || []).some((meal) =>
+            config.pattern.test(meal.description || ""),
+          ),
+        ),
+      ),
+      previousDate = (date) => addDaysKey(date, -1),
+      rows = dates.map((date) => ({
+        date,
+        exposed:
+          directDates.has(date) ||
+          (config.delayed && directDates.has(previousDate(date))),
+        intensity: config.intensity(db.days[date] || {}),
+      })),
+      average = (values) =>
+        values.length
+          ? values.reduce((sum, value) => sum + value, 0) / values.length
+          : 0,
+      exposed = rows.filter((row) => row.exposed),
+      comparison = rows.filter((row) => !row.exposed),
+      exposedValue = average(exposed.map((row) => row.intensity)).toFixed(1),
+      comparisonValue = average(
+        comparison.map((row) => row.intensity),
+      ).toFixed(1),
+      confidence = {
+        icon: "🌳",
+        label: "Très forte tendance",
+        cls: "high",
+      },
+      exposureCard = {
+        id: `${profileId}-dynamic-exposure`,
+        icon: config.icon,
+        title: config.title,
+        text: config.text(exposedValue, comparisonValue),
+        statistic: exposedValue,
+        comparisonStatistic: comparisonValue,
+        samples: {
+          exposed: exposed.length,
+          comparison: comparison.length,
+          total: rows.length,
+        },
+        metrics: { strength: "strong" },
+        confidence,
+        basis: config.basis(exposed.length, comparison.length),
+      };
+    const segmentSize = Math.max(1, Math.floor(rows.length / 3)),
+      beginning = rows.slice(0, segmentSize),
+      recent = rows.slice(-segmentSize),
+      beginningValue = average(
+        beginning.map((row) => row.intensity),
+      ).toFixed(1),
+      recentValue = average(recent.map((row) => row.intensity)).toFixed(1),
+      progressionCard = {
+        id: `${profileId}-dynamic-progression`,
+        icon: "📉",
+        title: "Évolution de l’inconfort dans le temps",
+        text: `L’inconfort moyen passe de ${beginningValue}/5 au début du suivi à ${recentValue}/5 durant la période récente. Cette évolution correspond à celle montrée dans le graphique.`,
+        statistic: beginningValue,
+        comparisonStatistic: recentValue,
+        comparisonLabels: ["Début", "Période récente"],
+        samples: {
+          exposed: beginning.length,
+          comparison: recent.length,
+          total: beginning.length + recent.length,
+        },
+        metrics: { strength: "strong" },
+        confidence,
+        basis: `Comparaison des ${beginning.length} premières journées et des ${recent.length} journées les plus récentes du dossier fictif.`,
+      };
+    return rows.length ? [exposureCard, progressionCard] : [];
   }
   function renderInsights() {
     const realMeals = mealsThroughSelectedDate(),
@@ -6729,9 +6869,14 @@
       story = referenceBrain
         ? { ...computedStory, ...referenceBrain.story }
         : computedStory;
+    const dynamicDemoObservations = referenceBrain
+      ? demoReferenceObservationsFromJournal(
+          db.settings.demoProfileId || "marie",
+        ).slice(0, referenceBrain.observations?.length || 0)
+      : null;
     const discoveryReport = referenceBrain
       ? {
-          observations: referenceBrain.observations || [],
+          observations: dynamicDemoObservations || [],
           maturity: {
             icon: "🌳",
             label: "Journal riche",
@@ -6956,11 +7101,15 @@
   }
   function brainCoverageMetric(icon, label, value, total, help) {
     const pct = total ? Math.round(value / total * 100) : 0;
-    return `<div class="brain-coverage-row"><span class="brain-coverage-icon">${icon}</span><div><strong>${esc(label)}</strong><small>${esc(help)}</small><i><em style="width:${pct}%"></em></i></div><b>${value}/${total}<small>${pct}%</small></b></div>`;
+    const preciseHelp = String(help || "").replace(
+      /^Repas /,
+      "Repas et collations ",
+    );
+    return `<div class="brain-coverage-row"><span class="brain-coverage-icon">${icon}</span><div><strong>${esc(label)}</strong><small>${esc(preciseHelp)}</small><i><em style="width:${pct}%"></em></i></div><b>${value}/${total}<small>${pct}%</small></b></div>`;
   }
   function brainNutritionCoverage(label, value, total, icon) {
     const pct = total ? Math.round(value / total * 100) : 0;
-    return `<div class="brain-nutrition-signal"><span>${icon}</span><strong>${esc(label)}</strong><b>${pct}%</b><small>${value} repas sur ${total}</small></div>`;
+    return `<div class="brain-nutrition-signal"><span>${icon}</span><strong>${esc(label)}</strong><b>${pct}%</b><small>${value} entrées sur ${total}</small></div>`;
   }
   function renderBrain() {
     const data = brainCoverageData(60), dayTotal = data.dayTotal, mealTotal = data.mealTotal;
@@ -6974,6 +7123,17 @@
       : `<p class="muted">Aucun supplément n’est configuré dans Profil.</p>`;
     $("#app").innerHTML =
       `${analysisDateNavigatorHtml()}<section class="hero brain-hero"><p class="eyebrow">🧠 Ce qu’Énergie peut réellement analyser</p><h2>Qualité de ton journal</h2><p>${message}</p><div class="brain-confidence"><div class="brain-ring" style="--p:${data.quality}"><strong>${data.quality}%</strong></div><div><strong>Couverture des données</strong><p class="muted small">Calculée sur les 60 derniers jours. Cette jauge mesure la présence des informations, pas la qualité de tes habitudes.</p></div></div><div class="brain-summary-grid"><div class="brain-stat"><strong>${dayTotal}</strong><small>journées documentées</small></div><div class="brain-stat"><strong>${mealTotal}</strong><small>repas consignés</small></div><div class="brain-stat"><strong>${data.counts.after}</strong><small>ressentis après</small></div></div></section><div class="stack"><section class="card"><div class="brain-section-head"><div><h2>📋 Qualité des données</h2><p class="muted small">Couverture durant les 60 derniers jours documentés.</p></div></div><div class="brain-coverage-list">${brainCoverageMetric("🙂", "Ressentis avant", data.counts.before, mealTotal, "Repas possédant au moins un ressenti avant")}${brainCoverageMetric("🧠", "Ressentis après", data.counts.after, mealTotal, "Repas possédant au moins un ressenti après")}${brainCoverageMetric("😴", "Sommeil", data.counts.sleep, dayTotal, "Journées où le sommeil est documenté")}${brainCoverageMetric("💧", "Hydratation", data.counts.water, dayTotal, "Journées où l’eau est documentée")}${brainCoverageMetric("🚶", "Activité", data.counts.activity, dayTotal, "Journées comprenant une activité")}</div></section><section class="card"><div class="brain-section-head"><div><h2>🥗 Données alimentaires reconnaissables</h2><p class="muted small">Présence détectable dans les descriptions ou estimations — aucune évaluation de quantité.</p></div></div><div class="brain-nutrition-grid">${brainNutritionCoverage("Protéines", data.counts.protein, mealTotal, "🥚")}${brainNutritionCoverage("Fibres", data.counts.fiber, mealTotal, "🌾")}${brainNutritionCoverage("Glucides", data.counts.carbs, mealTotal, "🍞")}${brainNutritionCoverage("Sucres estimables", data.counts.sugars, mealTotal, "🍓")}${brainNutritionCoverage("Sodium estimable", data.counts.sodium, mealTotal, "🧂")}</div><p class="muted tiny brain-coverage-note">Ces pourcentages indiquent seulement dans combien de repas la donnée peut être reconnue ou estimée. Ils ne signifient pas que l’apport est suffisant ou excessif.</p></section><section class="card"><div class="brain-section-head"><div><h2>💊 Suppléments</h2><p class="muted small">Régularité des cases cochées sur les journées documentées.</p></div></div>${supplementsHtml}<p class="muted tiny brain-coverage-note">Une case cochée indique ce qui a été consigné dans Énergie; elle ne confirme pas la prise réelle.</p></section><section class="card"><div class="brain-section-head"><div><h2>🍎 Aliments fréquents</h2><p class="muted small">Aliments explicitement reconnus dans les repas des 60 derniers jours.</p></div></div>${data.foods.length ? `<div class="brain-favorites">${data.foods.map(([name, count]) => `<div class="brain-food"><strong>${esc(name)}</strong><span>${count} apparition${count > 1 ? "s" : ""}</span></div>`).join("")}</div>` : `<p class="muted">J’ai besoin de descriptions un peu plus détaillées pour identifier les aliments fréquents.</p>`}</section><section class="card"><h2>🌱 En apprentissage</h2><p>${mealTotal ? `Énergie dispose de ${mealTotal} repas sur cette période. Continue surtout à préciser les ingrédients et à noter les ressentis après les repas : ce sont les données les plus utiles pour produire des observations fiables.` : "Commence simplement à remplir ton journal. Cette section indiquera progressivement quelles données deviennent suffisamment complètes pour être analysées."}</p><p class="muted small">Les associations et tendances possibles demeurent dans l’onglet Observations afin d’éviter les répétitions.</p></section></div>`;
+    const brainMealLabel = $(".brain-summary-grid .brain-stat:nth-child(2) small");
+    if (brainMealLabel) brainMealLabel.textContent = "repas et collations consignés";
+    const nutritionCoverageNote = $(
+      ".brain-nutrition-grid + .brain-coverage-note",
+    );
+    if (nutritionCoverageNote)
+      nutritionCoverageNote.textContent =
+        "Ces pourcentages indiquent seulement dans combien d’entrées — repas ou collations — la donnée peut être reconnue ou estimée. Ils ne signifient pas que l’apport est suffisant ou excessif.";
+    const learningParagraph = $("#app .stack > section.card:last-child > p:first-of-type");
+    if (learningParagraph && mealTotal)
+      learningParagraph.textContent = `Énergie dispose de ${mealTotal} repas et collations sur cette période. Continue surtout à préciser les ingrédients et à noter les ressentis après les entrées alimentaires : ce sont les données les plus utiles pour produire des observations fiables.`;
     bindAnalysisDateNavigator();
   }
 
@@ -9002,7 +9162,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.36.4");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.36.5");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

@@ -158,12 +158,16 @@
     if(rand(seed+4)>.12) day.meals.push(meal("marie",date,late?"09:10":"06:35","Déjeuner",dairy?"Cappuccino et toast au beurre d’arachide":"Café noir, œufs et rôties",sleep>=7?4:2,sleep<6.5?["fatigue"]:["energy"],sleep>=7?4:2));
     const lunch=dairy?(rand(seed)>.5?"Sandwich au fromage, crudités et yogourt":"Pâtes crémeuses au poulet et légumes"):(rand(seed)>.5?"Bol de riz, poulet et légumes":"Soupe, sandwich à la dinde et fruit");
     const digestiveChance=week<4?.66:week<9?.76:week<12?.64:week<16?.45:week<21?.30:.18;
-    const digestive=dairy&&rand(seed+7)<digestiveChance;
+    const dairyDigestive=dairy&&rand(seed+7)<digestiveChance;
+    // Quelques inconforts existent aussi sans produit laitier afin que le
+    // dossier demeure réaliste et que l'association ne paraisse pas absolue.
+    const backgroundDigestive=!dairy&&rand(seed+23)<.07;
+    const digestive=dairyDigestive||backgroundDigestive;
     const symptomSets=[["bloating","gas"],["cramps","bloating"],["diarrhea","gas"],["nausea","bloating"]];
     const digestiveTags=digestive?symptomSets[seed%symptomSets.length].slice():[];
     if(digestive&&rand(seed+13)<.22)digestiveTags.push("fatigue");
     const digestiveNotes=["Ballonnements et beaucoup de gaz après le repas.","Crampes, gargouillis et sensation de ventre tendu.","Selles molles avec sensation de bouillonnement dans le ventre.","Nausée légère et ventre très gonflé après le repas."];
-    const digestiveScore=digestive?(week<10?(rand(seed+18)>.48?1:2):week<17?2:3):4;
+    const digestiveScore=digestive?(backgroundDigestive?3:(week<10?(rand(seed+18)>.48?1:2):week<17?2:3)):4;
     day.meals.push(meal("marie",date,"12:20","Dîner",lunch,dairy?2:(water>=6?4:3),digestive?digestiveTags:(water<5?["fatigue"]:["feeling_good"]),digestiveScore,digestive?digestiveNotes[seed%digestiveNotes.length]:""));
     const friday=weekday===5; const dinner=friday?(dairy?"Pizza au fromage et salade":"Pizza sans fromage et salade"):(dairy?"Poulet, pommes de terre et sauce crémeuse":"Saumon, pommes de terre et légumes");
     const eveningDigestive=dairy&&rand(seed+6)<(week<10?.38:week<17?.24:.11);
@@ -230,7 +234,7 @@
   function create(profileId="marie"){
     const p=profiles[profileId]||profiles.marie;
     const profileDays=p.id==="elodie"?90:180;
-    const demoVersions={marie:"marie-dairy-v2",alex:"base-v1",sophie:"sophie-fiber-v2",elodie:"elodie-soya-v2"};
+    const demoVersions={marie:"marie-dairy-v3",alex:"base-v1",sophie:"sophie-fiber-v2",elodie:"elodie-soya-v2"};
     const store={version:24,createdAt:new Date(Date.now()-profileDays*DAY).toISOString(),updatedAt:new Date().toISOString(),settings:{waterGoal:8,theme:"system",showWelcome:false,insightsEnabled:true,nutritionObservations:true,macroTracking:true,generalRecommendations:true,showSources:true,professionalSupport:false,feelingReminders:false,feelingDelayHours:2,feelingMealTypes:["Déjeuner","Dîner","Souper"],supplements:[],demoMode:true,demoTourSeen:true,demoName:p.name,demoProfileId:p.id,demoReadOnly:true,demoDataVersion:demoVersions[p.id]},favorites:[],days:{}};
     const favs={
       marie:[["Déjeuner rapide","Déjeuner","Cappuccino et toast au beurre d’arachide"],["Dîner de quart","Dîner","Sandwich, crudités et fruit"],["Pizza du vendredi","Souper","Pizza et salade"]],
