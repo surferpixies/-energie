@@ -9162,7 +9162,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.36.5");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.36.6");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

@@ -817,3 +817,37 @@ body.demo-guide-open .bottom-nav{z-index:20}
 /* V3.36.3 — aucun débordement des éléments reconnus et icônes de suppléments */
 .composition-traits{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;box-sizing:border-box;gap:6px;overflow:visible;padding:2px 0}.composition-trait{box-sizing:border-box;min-width:0;width:100%;padding-inline:4px}.composition-trait em{max-width:100%;font-size:.47rem}.composition-legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));box-sizing:border-box;white-space:normal;gap:5px 8px}.composition-legend span{min-width:0;white-space:nowrap}.supplement-toggle-name{display:flex;align-items:center;gap:8px;min-width:0}.supplement-toggle-name i{font-style:normal;font-size:1rem}.supplement-chip-icon{font-size:.95rem;line-height:1}@media(max-width:360px){.composition-traits{grid-template-columns:repeat(3,minmax(0,1fr))}.composition-legend{font-size:.5rem}}
 .professional-trend-scroll svg{width:var(--trend-width,100%)!important;min-width:var(--trend-width,570px)!important}.professional-trend-fullscreen-frame svg{width:var(--trend-width,900px)!important;min-width:var(--trend-width,900px)!important}.trend-point-values text{font-size:11px}
+
+/* V3.36.6 — logo du splash plus présent et contenu à mi-écran */
+.splash-brand{
+  top:0;
+  height:100dvh;
+  box-sizing:border-box;
+  padding-top:max(42px,calc(env(safe-area-inset-top) + 24px));
+  gap:14px;
+}
+.splash-brand img{
+  width:clamp(122px,16vh,148px);
+  height:clamp(122px,16vh,148px);
+  border-radius:32px;
+}
+.splash-brand strong{font-size:clamp(1.68rem,5vw,2rem)}
+.splash-daily{
+  position:absolute;
+  top:50dvh;
+  left:50%;
+  width:100%;
+  margin-top:0;
+  transform:translateX(-50%);
+}
+@media(max-height:700px){
+  .splash-brand{top:0;padding-top:max(24px,calc(env(safe-area-inset-top) + 12px));gap:9px}
+  .splash-brand img{width:104px;height:104px;border-radius:27px}
+  .splash-brand strong{font-size:1.5rem}
+  .splash-daily{top:44dvh;margin-top:0}
+}
+@media(max-height:600px){
+  .splash-brand img{width:88px;height:88px;border-radius:23px}
+  .splash-brand strong{font-size:1.35rem}
+  .splash-daily{top:39dvh}
+}
