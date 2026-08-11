@@ -301,6 +301,7 @@
         feelingDelayPreferenceSet: false,
         feelingMealTypes: ["Déjeuner", "Dîner", "Souper"],
         supplements: [],
+        supplementsUpdatedAt: "",
         demoMode: false,
         demoTourSeen: false,
         demoName: "Marie",
@@ -1010,6 +1011,7 @@
             supplements: {
               taken: d.supplementsTaken || [],
               defaults: db.settings.supplements || [],
+              defaultsUpdatedAt: db.settings.supplementsUpdatedAt || db.updatedAt,
             },
             updated_at: d.updatedAt,
           };
@@ -1178,6 +1180,58 @@
       updateSyncBadge();
       return;
     }
+    // La configuration des suppléments voyage avec le journal quotidien.
+    // Les anciennes versions n'avaient pas d'horodatage de configuration :
+    // dans ce cas seulement, une dernière liste non vide peut réparer une
+    // disparition locale accidentelle.
+    const remoteSupplementCandidates = (dr.data || [])
+      .filter((row) => Array.isArray(row.supplements?.defaults))
+      .map((row) => ({
+        values: normalizeSupplements(row.supplements.defaults),
+        versioned: !!(
+          row.supplements.defaultsUpdatedAt ||
+          row.supplements.defaults_updated_at
+        ),
+        updatedAt:
+          row.supplements.defaultsUpdatedAt ||
+          row.supplements.defaults_updated_at ||
+          row.updated_at ||
+          `${row.log_date}T00:00:00.000Z`,
+      }))
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    let recoveredLegacySupplements = false;
+    const localSupplements = normalizeSupplements(
+        db.settings.supplements || [],
+      ),
+      localUpdatedAt = db.settings.supplementsUpdatedAt || "",
+      hasVersionedRemote = remoteSupplementCandidates.some(
+        (item) => item.versioned,
+      ),
+      remoteSupplementSettings =
+        !localUpdatedAt && !localSupplements.length && !hasVersionedRemote
+          ? remoteSupplementCandidates.find((item) => item.values.length) ||
+            remoteSupplementCandidates[0]
+          : remoteSupplementCandidates[0];
+    if (remoteSupplementSettings) {
+      if (!localUpdatedAt && localSupplements.length) {
+        // Une liste locale héritée et non vide ne doit jamais être effacée
+        // par une ancienne journée distante.
+        db.settings.supplementsUpdatedAt = new Date().toISOString();
+      } else if (
+        !localUpdatedAt ||
+        new Date(remoteSupplementSettings.updatedAt) >= new Date(localUpdatedAt)
+      ) {
+        db.settings.supplements = remoteSupplementSettings.values;
+        recoveredLegacySupplements =
+          !localUpdatedAt &&
+          !localSupplements.length &&
+          !hasVersionedRemote &&
+          remoteSupplementSettings.values.length > 0;
+        db.settings.supplementsUpdatedAt = recoveredLegacySupplements
+          ? new Date().toISOString()
+          : remoteSupplementSettings.updatedAt;
+      }
+    }
     for (const r of dr.data || []) {
       const d = ensureDay(db, r.log_date);
       const remoteIsNewer = !d.updatedAt || new Date(r.updated_at) >= new Date(d.updatedAt);
@@ -1252,6 +1306,12 @@
         db.favorites[i] = remote;
     }
     saveLocal("retour-cloud");
+    if (recoveredLegacySupplements) {
+      const recoveryDay = ensureDay(db, todayKey());
+      recoveryDay.updatedAt = db.settings.supplementsUpdatedAt;
+      saveLocal("recuperation-supplements");
+      enqueue({ kind: "day", date: todayKey() });
+    }
     const memoryOk = await pullMemoryCloud();
     syncState = memoryOk ? "online" : "error";
     updateSyncBadge();
@@ -6962,7 +7022,8 @@
         ...normalizeSupplements(db.settings?.supplements || []),
         name,
       ]);
-      saveLocal("supplements");
+      db.settings.supplementsUpdatedAt = new Date().toISOString();
+      setDayChanged(todayKey());
       renderProfile();
     };
     $$("[data-delete-supplement]").forEach(
@@ -6972,12 +7033,22 @@
           db.settings.supplements = normalizeSupplements(
             (db.settings.supplements || []).filter((item) => item !== name),
           );
-          Object.values(db.days).forEach((day) => {
+          const changedDates = [];
+          Object.entries(db.days).forEach(([date, day]) => {
+            const before = normalizeSupplements(day.supplementsTaken || []);
             day.supplementsTaken = normalizeSupplements(
-              (day.supplementsTaken || []).filter((item) => item !== name),
+              before.filter((item) => item !== name),
             );
+            if (day.supplementsTaken.length !== before.length) {
+              day.updatedAt = new Date().toISOString();
+              changedDates.push(date);
+            }
           });
-          saveLocal("supplements");
+          db.settings.supplementsUpdatedAt = new Date().toISOString();
+          setDayChanged(todayKey());
+          changedDates
+            .filter((date) => date !== todayKey())
+            .forEach((date) => enqueue({ kind: "day", date }));
           renderProfile();
         }),
     );
@@ -8889,7 +8960,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.36.1");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.36.2");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
