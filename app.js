@@ -3397,6 +3397,9 @@
   // Temporairement désactivé pendant les essais avec la nutritionniste.
   // Les profils fictifs demeurent accessibles manuellement dans Profil.
   const FIRST_LAUNCH_DEMO_ENABLED = false;
+  // Accès temporairement ouvert à tous les comptes connectés pour les essais
+  // avec les professionnels. Remettre à false pour réactiver has_demo_access.
+  const DEMO_ACCESS_FOR_ALL_ACCOUNTS = true;
   const demoTourSteps = [
     {
       view: "today",
@@ -8947,7 +8950,12 @@
   });
   async function loadDemoAccess() {
     hasDemoAccess = false;
-    if (!client || !session) return false;
+    if (!session) return false;
+    if (DEMO_ACCESS_FOR_ALL_ACCOUNTS) {
+      hasDemoAccess = true;
+      return true;
+    }
+    if (!client) return false;
     try {
       const { data, error } = await client
         .from("profiles")
@@ -8994,7 +9002,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.36.3");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.36.4");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
