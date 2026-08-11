@@ -6797,22 +6797,87 @@
       return `<section class="card"><div class="brain-section-head"><div><h2>🔎 Observations personnalisées</h2><p class="muted small">Le moteur compare ton propre historique avec prudence.</p></div></div><div class="brain-insight-empty"><span>🌱</span><h3>Le Cerveau rassemble encore des preuves</h3><p class="muted">Il faut plusieurs journées comparables dans chaque groupe avant qu’une association apparaisse. Aucune conclusion ne sera forcée.</p></div></section>`;
     return `<section><div class="brain-section-head"><div><h2>🔎 Observations personnalisées</h2><p class="muted small">Associations détectées dans ${report.analyzedDays} journées récentes.</p></div><span class="muted small">${report.insights.length}</span></div><div class="brain-insight-grid">${report.insights.map(brainInsightCard).join("")}</div><p class="discovery-disclaimer">Ces observations décrivent des associations dans ton propre journal. Elles ne prouvent aucune cause et ne remplacent jamais un avis médical.</p></section>`;
   }
+  function brainCoverageData(windowDays = 60) {
+    const anchorKey = db.settings?.demoMode ? selectedDate : todayKey(),
+      anchor = new Date(`${anchorKey}T12:00:00`),
+      first = new Date(anchor);
+    first.setDate(first.getDate() - (windowDays - 1));
+    const firstKey = first.toLocaleDateString("en-CA"),
+      entries = Object.entries(db.days || {})
+        .filter(([date]) => date >= firstKey && date <= anchorKey)
+        .sort(([a], [b]) => a.localeCompare(b)),
+      documented = entries.filter(([, day]) =>
+        (day.meals || []).length || day.sleepHours != null || Number(day.water) > 0 ||
+        (day.activities || []).length || (day.observations || []).length,
+      ),
+      meals = documented.flatMap(([, day]) => day.meals || []),
+      percent = (value, total) => total ? Math.round(value / total * 100) : 0;
+    const counts = {
+      before: meals.filter((meal) => Object.keys(normalizeFeelingScores(meal.feelingsBefore)).length).length,
+      after: meals.filter((meal) => meal.feeling && Object.keys(normalizeFeelingScores(meal.feeling.scores)).length).length,
+      sleep: documented.filter(([, day]) => day.sleepHours != null).length,
+      water: documented.filter(([, day]) => Number(day.water) > 0).length,
+      activity: documented.filter(([, day]) => (day.activities || []).length).length,
+      precise: 0,
+      protein: 0,
+      fiber: 0,
+      carbs: 0,
+      sugars: 0,
+      sodium: 0,
+    };
+    const foodCounts = {};
+    meals.forEach((meal) => {
+      const composition = mealCompositionAnalysis(meal.description || ""),
+        recognized = (trait) => ["confirmed", "probable"].includes(composition?.status?.(trait));
+      if (composition && ["protein", "fiber", "carbs"].some(recognized)) counts.precise += 1;
+      if (recognized("protein")) counts.protein += 1;
+      if (recognized("fiber")) counts.fiber += 1;
+      if (recognized("carbs") || recognized("carbs_low")) counts.carbs += 1;
+      if (meal.nutrition?.sugars != null) counts.sugars += 1;
+      if (meal.nutrition?.sodium != null) counts.sodium += 1;
+      const parsedFoods = window.EnergieBrainModules?.parser?.parseMeal?.(meal.description || "", { memory: false })?.foods || [];
+      const names = new Set(parsedFoods.map((item) =>
+        item.food?.names?.["fr-CA"] || item.matchedAlias || item.id,
+      ).filter(Boolean));
+      names.forEach((name) => { foodCounts[name] = (foodCounts[name] || 0) + 1; });
+    });
+    const mealTotal = meals.length, dayTotal = documented.length,
+      coverageParts = [
+        mealTotal ? percent(counts.before, mealTotal) : null,
+        mealTotal ? percent(counts.after, mealTotal) : null,
+        dayTotal ? percent(counts.sleep, dayTotal) : null,
+        dayTotal ? percent(counts.water, dayTotal) : null,
+        mealTotal ? percent(counts.precise, mealTotal) : null,
+      ].filter((value) => value != null),
+      quality = coverageParts.length ? Math.round(coverageParts.reduce((sum, value) => sum + value, 0) / coverageParts.length) : 0,
+      foods = Object.entries(foodCounts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 8),
+      configuredSupplements = normalizeSupplements(db.settings?.supplements || []),
+      supplements = configuredSupplements.map((name) => {
+        const taken = documented.filter(([, day]) => normalizeSupplements(day.supplementsTaken || []).includes(name)).length;
+        return { name, taken, total: dayTotal, percent: percent(taken, dayTotal) };
+      });
+    return { windowDays, dayTotal, mealTotal, counts, percent, quality, foods, supplements };
+  }
+  function brainCoverageMetric(icon, label, value, total, help) {
+    const pct = total ? Math.round(value / total * 100) : 0;
+    return `<div class="brain-coverage-row"><span class="brain-coverage-icon">${icon}</span><div><strong>${esc(label)}</strong><small>${esc(help)}</small><i><em style="width:${pct}%"></em></i></div><b>${value}/${total}<small>${pct}%</small></b></div>`;
+  }
+  function brainNutritionCoverage(label, value, total, icon) {
+    const pct = total ? Math.round(value / total * 100) : 0;
+    return `<div class="brain-nutrition-signal"><span>${icon}</span><strong>${esc(label)}</strong><b>${pct}%</b><small>${value} repas sur ${total}</small></div>`;
+  }
   function renderBrain() {
-    const data = brainKnowledgeData();
-    const memories = data.memories;
-    const recent = [...memories]
-      .sort((a, b) => new Date(b.firstSeenAt) - new Date(a.firstSeenAt))
-      .slice(0, 6);
-    const reliable = memories.filter((m) => (m.confidence || 0) >= 0.68).length;
-    const learning = Math.max(0, memories.length - reliable);
-    const message =
-      data.global >= 75
-        ? "Le Cerveau connaît maintenant assez bien plusieurs de tes habitudes alimentaires."
-        : data.global >= 40
-          ? "Le Cerveau commence à relier tes différentes façons de nommer et de composer tes repas."
-          : "Chaque repas ajouté aide le Cerveau à mieux comprendre tes habitudes.";
+    const data = brainCoverageData(60), dayTotal = data.dayTotal, mealTotal = data.mealTotal;
+    const message = data.quality >= 75
+      ? "Ton journal contient une base solide pour produire des observations prudentes."
+      : data.quality >= 40
+        ? "Plusieurs données sont déjà exploitables, mais certaines périodes restent incomplètes."
+        : "Le Cerveau apprend encore : quelques notes régulières rendront les futures observations plus fiables.";
+    const supplementsHtml = data.supplements.length
+      ? `<div class="brain-supplement-grid">${data.supplements.map((item) => `<div class="brain-supplement-row"><span>💊</span><div><strong>${esc(item.name)}</strong><small>${item.taken} journée${item.taken !== 1 ? "s" : ""} cochée${item.taken !== 1 ? "s" : ""} sur ${item.total}</small><i><em style="width:${item.percent}%"></em></i></div><b>${item.percent}%</b></div>`).join("")}</div>`
+      : `<p class="muted">Aucun supplément n’est configuré dans Profil.</p>`;
     $("#app").innerHTML =
-      `${analysisDateNavigatorHtml()}<section class="hero brain-hero"><p class="eyebrow">🧠 Ce que le Cerveau connaît de toi</p><h2>Ta mémoire alimentaire personnelle</h2><p>${message}</p><div class="brain-confidence"><div class="brain-ring" style="--p:${data.global}"><strong>${data.global}%</strong></div><div><strong>Connaissance de tes habitudes</strong><p class="muted small">Cette jauge augmente avec la répétition, la variété et la précision des repas appris.</p></div></div><div class="brain-summary-grid"><div class="brain-stat"><strong>${memories.length}</strong><small>repas appris</small></div><div class="brain-stat"><strong>${data.totalUses}</strong><small>utilisations</small></div><div class="brain-stat"><strong>${reliable}</strong><small>bien connus</small></div></div></section>${!memories.length ? `<section class="card brain-empty"><span>🌱</span><h3>Le Cerveau commence tout juste</h3><p class="muted">Ajoute naturellement tes repas. Après quelques répétitions, tes recettes et habitudes apparaîtront ici.</p></section>` : `<div class="stack">${brainInsightsHtml()}<section><div class="brain-section-head"><div><h2>🥣 Repas appris</h2><p class="muted small">Les recettes que le Cerveau reconnaît déjà.</p></div><span class="muted small">${memories.length}</span></div><div class="brain-meal-grid">${memories.slice(0, 12).map(renderBrainMealCard).join("")}</div>${memories.length > 12 ? `<p class="muted small" style="text-align:center">${memories.length - 12} autres repas continuent d’être appris en arrière-plan.</p>` : ""}</section><section class="card"><div class="brain-section-head"><div><h2>🍎 Aliments fréquents</h2><p class="muted small">Observés dans tes recettes apprises.</p></div></div>${data.foods.length ? `<div class="brain-favorites">${data.foods.map(([name, count]) => `<div class="brain-food"><strong>${esc(name)}</strong><span>${count} apparition${count > 1 ? "s" : ""}</span></div>`).join("")}</div>` : `<p class="muted">J’ai besoin de descriptions un peu plus détaillées pour identifier tes aliments fréquents.</p>`}</section><section class="card"><h2>🌱 En apprentissage</h2><p>${learning ? `Je suis encore en train de préciser ${learning} repas appris. Quelques nouvelles utilisations m’aideront à distinguer ce qui est toujours présent de ce qui varie.` : "Les repas affichés ici ont maintenant une base suffisamment solide pour être reconnus avec confiance."}</p></section><section class="card"><h2>📅 Chronologie</h2><div class="brain-timeline">${recent.map((m) => `<div class="brain-event"><time>${brainRelativeDate(m.firstSeenAt)}</time><p>Le Cerveau a commencé à apprendre <strong>${esc(m.label)}</strong>.</p></div>`).join("")}</div></section></div>`}`;
+      `${analysisDateNavigatorHtml()}<section class="hero brain-hero"><p class="eyebrow">🧠 Ce qu’Énergie peut réellement analyser</p><h2>Qualité de ton journal</h2><p>${message}</p><div class="brain-confidence"><div class="brain-ring" style="--p:${data.quality}"><strong>${data.quality}%</strong></div><div><strong>Couverture des données</strong><p class="muted small">Calculée sur les 60 derniers jours. Cette jauge mesure la présence des informations, pas la qualité de tes habitudes.</p></div></div><div class="brain-summary-grid"><div class="brain-stat"><strong>${dayTotal}</strong><small>journées documentées</small></div><div class="brain-stat"><strong>${mealTotal}</strong><small>repas consignés</small></div><div class="brain-stat"><strong>${data.counts.after}</strong><small>ressentis après</small></div></div></section><div class="stack"><section class="card"><div class="brain-section-head"><div><h2>📋 Qualité des données</h2><p class="muted small">Couverture durant les 60 derniers jours documentés.</p></div></div><div class="brain-coverage-list">${brainCoverageMetric("🙂", "Ressentis avant", data.counts.before, mealTotal, "Repas possédant au moins un ressenti avant")}${brainCoverageMetric("🧠", "Ressentis après", data.counts.after, mealTotal, "Repas possédant au moins un ressenti après")}${brainCoverageMetric("😴", "Sommeil", data.counts.sleep, dayTotal, "Journées où le sommeil est documenté")}${brainCoverageMetric("💧", "Hydratation", data.counts.water, dayTotal, "Journées où l’eau est documentée")}${brainCoverageMetric("🚶", "Activité", data.counts.activity, dayTotal, "Journées comprenant une activité")}</div></section><section class="card"><div class="brain-section-head"><div><h2>🥗 Données alimentaires reconnaissables</h2><p class="muted small">Présence détectable dans les descriptions ou estimations — aucune évaluation de quantité.</p></div></div><div class="brain-nutrition-grid">${brainNutritionCoverage("Protéines", data.counts.protein, mealTotal, "🥚")}${brainNutritionCoverage("Fibres", data.counts.fiber, mealTotal, "🌾")}${brainNutritionCoverage("Glucides", data.counts.carbs, mealTotal, "🍞")}${brainNutritionCoverage("Sucres estimables", data.counts.sugars, mealTotal, "🍓")}${brainNutritionCoverage("Sodium estimable", data.counts.sodium, mealTotal, "🧂")}</div><p class="muted tiny brain-coverage-note">Ces pourcentages indiquent seulement dans combien de repas la donnée peut être reconnue ou estimée. Ils ne signifient pas que l’apport est suffisant ou excessif.</p></section><section class="card"><div class="brain-section-head"><div><h2>💊 Suppléments</h2><p class="muted small">Régularité des cases cochées sur les journées documentées.</p></div></div>${supplementsHtml}<p class="muted tiny brain-coverage-note">Une case cochée indique ce qui a été consigné dans Énergie; elle ne confirme pas la prise réelle.</p></section><section class="card"><div class="brain-section-head"><div><h2>🍎 Aliments fréquents</h2><p class="muted small">Aliments explicitement reconnus dans les repas des 60 derniers jours.</p></div></div>${data.foods.length ? `<div class="brain-favorites">${data.foods.map(([name, count]) => `<div class="brain-food"><strong>${esc(name)}</strong><span>${count} apparition${count > 1 ? "s" : ""}</span></div>`).join("")}</div>` : `<p class="muted">J’ai besoin de descriptions un peu plus détaillées pour identifier les aliments fréquents.</p>`}</section><section class="card"><h2>🌱 En apprentissage</h2><p>${mealTotal ? `Énergie dispose de ${mealTotal} repas sur cette période. Continue surtout à préciser les ingrédients et à noter les ressentis après les repas : ce sont les données les plus utiles pour produire des observations fiables.` : "Commence simplement à remplir ton journal. Cette section indiquera progressivement quelles données deviennent suffisamment complètes pour être analysées."}</p><p class="muted small">Les associations et tendances possibles demeurent dans l’onglet Observations afin d’éviter les répétitions.</p></section></div>`;
     bindAnalysisDateNavigator();
   }
 
@@ -8824,7 +8889,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.35.6");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.36.1");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
