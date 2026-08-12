@@ -853,3 +853,83 @@ body.demo-guide-open .bottom-nav{z-index:20}
   .splash-brand strong{font-size:1.35rem}
   .splash-daily{top:39dvh}
 }
+
+/* V3.36.8 — entrée séquencée pomme, éclair, nom et messages */
+.splash-logo{
+  position:relative;
+  display:block;
+  width:clamp(122px,16vh,148px);
+  height:clamp(122px,16vh,148px);
+  opacity:0;
+  transform:translateY(-12px) scale(.86);
+  animation:splashAppleIn .72s cubic-bezier(.2,.82,.28,1.18) .08s forwards;
+}
+.splash-logo img{
+  display:block;
+  width:100%;
+  height:100%;
+  border-radius:32px;
+  opacity:1;
+  animation:none;
+}
+.splash-lightning-cover{
+  position:absolute;
+  z-index:2;
+  top:29%;
+  left:36%;
+  width:34%;
+  height:49%;
+  background:#fffdf4;
+  clip-path:polygon(58% 0,18% 52%,46% 52%,33% 100%,84% 40%,57% 40%);
+  filter:drop-shadow(0 0 5px #fffdf4);
+  opacity:1;
+  animation:splashLightningReveal .5s ease .82s forwards;
+}
+.splash-logo::after{
+  content:"";
+  position:absolute;
+  z-index:3;
+  inset:25%;
+  border-radius:50%;
+  background:rgba(255,212,64,.34);
+  filter:blur(14px);
+  opacity:0;
+  pointer-events:none;
+  animation:splashLightningGlow .65s ease .92s forwards;
+}
+.splash-brand>strong{
+  opacity:0;
+  transform:translateY(7px);
+  animation:splashNameIn .55s cubic-bezier(.2,.75,.3,1) 1.34s forwards;
+}
+.splash-status{animation-delay:2.02s}
+.splash-tip{animation-delay:2.62s}
+.splash-app-hint{animation-delay:3.24s}
+@keyframes splashAppleIn{
+  0%{opacity:0;transform:translateY(-12px) scale(.86)}
+  70%{opacity:1;transform:translateY(1px) scale(1.025)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes splashLightningReveal{from{opacity:1}to{opacity:0}}
+@keyframes splashLightningGlow{
+  0%{opacity:0;transform:scale(.6)}
+  42%{opacity:1;transform:scale(1.08)}
+  100%{opacity:0;transform:scale(1.38)}
+}
+@keyframes splashNameIn{
+  from{opacity:0;transform:translateY(7px);filter:blur(3px)}
+  to{opacity:1;transform:translateY(0);filter:blur(0)}
+}
+@media(max-height:700px){
+  .splash-logo{width:104px;height:104px}
+  .splash-logo img{border-radius:27px}
+}
+@media(max-height:600px){
+  .splash-logo{width:88px;height:88px}
+  .splash-logo img{border-radius:23px}
+}
+@media(prefers-reduced-motion:reduce){
+  .splash-logo,.splash-brand>strong{opacity:1;transform:none;animation:none}
+  .splash-logo img{opacity:1;animation:none}
+  .splash-lightning-cover,.splash-logo::after{display:none;animation:none}
+}
