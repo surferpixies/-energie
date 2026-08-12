@@ -825,6 +825,8 @@ body.demo-guide-open .bottom-nav{z-index:20}
   box-sizing:border-box;
   padding-top:max(42px,calc(env(safe-area-inset-top) + 24px));
   gap:14px;
+  align-content:start;
+  grid-auto-rows:max-content;
 }
 .splash-brand img{
   width:clamp(122px,16vh,148px);
