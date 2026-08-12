@@ -933,3 +933,11 @@ body.demo-guide-open .bottom-nav{z-index:20}
   .splash-logo img{opacity:1;animation:none}
   .splash-lightning-cover,.splash-logo::after{display:none;animation:none}
 }
+
+/* V3.36.9 — animation épurée du logo complet, sans masque ni flash */
+.splash-lightning-cover,.splash-logo::after{display:none!important;animation:none!important}
+.splash-logo{animation:splashAppleIn .72s cubic-bezier(.2,.82,.28,1.12) .08s forwards}
+.splash-brand>strong{animation-delay:.92s}
+.splash-status{animation-delay:1.55s}
+.splash-tip{animation-delay:2.15s}
+.splash-app-hint{animation-delay:2.78s}
