@@ -2974,6 +2974,7 @@
       ? ""
       : new Intl.DateTimeFormat("fr-CA", { dateStyle: "medium", timeStyle: "short" }).format(date);
   }
+  let professionalTrendWeekDetails = [];
   function professionalTrendHtml() {
     const profile = activeDemoProfile();
     if (!db.settings.demoMode) return "";
@@ -2992,6 +2993,9 @@
         disclaimer: "Association tirée des repas et observations globales. Elle ne confirme pas une allergie et ne constitue pas un diagnostic.",
         milestoneWeek: 5,
         milestoneLines: ["Tendance remarquée", "réduction du soya"],
+        summarySubject: "les réactions observées après du soya repéré",
+        summaryAction: "la réduction du soya",
+        symptomIds: ["itching", "redness", "hives", "nausea", "stomachache"],
         intensity: (day) => {
           const observations = day.observations || [];
           return observations.length
@@ -3013,6 +3017,9 @@
         disclaimer: "Association tirée des descriptions de repas et des ressentis digestifs. Elle ne confirme pas une intolérance et ne constitue pas un diagnostic.",
         milestoneWeek: 10,
         milestoneLines: ["Observation du journal", "réduction des produits laitiers"],
+        summarySubject: "les inconforts digestifs associés aux produits laitiers repérés",
+        summaryAction: "la réduction graduelle des produits laitiers",
+        symptomIds: ["bloating", "gas", "cramps", "diarrhea", "nausea", "stomachache"],
         intensity: (day) => {
           const digestive = new Set(["bloating", "gas", "cramps", "diarrhea", "nausea", "stomachache"]);
           const scores = (day.meals || []).flatMap((meal) =>
@@ -3035,6 +3042,9 @@
         disclaimer: "Association tirée des descriptions de repas et des ressentis digestifs. La présence réelle de fibres demeure une estimation et non une mesure nutritionnelle précise.",
         milestoneWeek: 15,
         milestoneLines: ["Observation du journal", "augmentation progressive des fibres"],
+        summarySubject: "les inconforts digestifs",
+        summaryAction: "l’augmentation progressive des fibres et de l’hydratation",
+        symptomIds: ["bloating", "gas", "cramps", "stomachache", "nausea"],
         intensity: (day) => {
           const digestive = new Set(["bloating", "gas", "cramps", "diarrhea", "nausea", "stomachache"]);
           const scores = (day.meals || []).flatMap((meal) =>
@@ -3072,11 +3082,20 @@
     const weekMap = new Map();
     rows.forEach((row) => {
       const key = weekStart(row.date);
-      if (!weekMap.has(key)) weekMap.set(key, { start: key, dates: [], exposed: [], clear: [], exposures: 0 });
+      if (!weekMap.has(key)) weekMap.set(key, { start: key, dates: [], exposed: [], clear: [], exposures: 0, mealCount: 0, symptoms: {} });
       const week = weekMap.get(key);
       week.dates.push(row.date);
       week[row.exposed ? "exposed" : "clear"].push(row.intensity);
       if (row.direct) week.exposures += 1;
+      const day = db.days[row.date] || {};
+      week.mealCount += (day.meals || []).length;
+      const tags = [
+        ...(day.observations || []).flatMap((item) => item.tags || []),
+        ...(day.meals || []).flatMap((meal) => meal.feeling?.tags || []),
+      ];
+      tags.filter((id) => config.symptomIds.includes(id)).forEach((id) => {
+        week.symptoms[id] = (week.symptoms[id] || 0) + 1;
+      });
     });
     const weeks = [...weekMap.values()].sort((a, b) => a.start.localeCompare(b.start));
     const avg = (values) => values.length
@@ -3087,6 +3106,8 @@
       label: `Dim. ${new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "short" }).format(new Date(`${week.start}T12:00:00`))}`,
       discomfort: avg([...week.exposed, ...week.clear]),
       exposures: week.exposures,
+      mealCount: week.mealCount,
+      symptoms: week.symptoms,
     }));
     const allExposed = rows.filter((row) => row.exposed).map((row) => row.intensity);
     const allClear = rows.filter((row) => !row.exposed).map((row) => row.intensity);
@@ -3107,8 +3128,26 @@
     }).join("");
     const milestoneIndex = Math.min(points.length - 1, Number(config.milestoneWeek ?? -1));
     const milestone = milestoneIndex >= 0 ? `<g class="trend-milestone"><line x1="${x(milestoneIndex)}" y1="${top}" x2="${x(milestoneIndex)}" y2="${height-bottom}"/><text x="${x(milestoneIndex)+7}" y="${top+12}">${esc(config.milestoneLines[0])}</text><text x="${x(milestoneIndex)+7}" y="${top+24}">${esc(config.milestoneLines[1])}</text></g>` : "";
-    const chart = `<div class="professional-trend-legend"><span class="discomfort">Valeur au-dessus : inconfort moyen /5</span><span class="exposure-count">Nombre en dessous : journées repérées</span></div><div class="professional-trend-scroll chart-scroll"><svg style="--trend-width:${width}px" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><text class="trend-y-title" x="14" y="${top + (height-top-bottom)/2}" text-anchor="middle" transform="rotate(-90 14 ${top + (height-top-bottom)/2})">Inconfort /5</text><g class="trend-grid">${grid}</g>${milestone}<path class="trend-path discomfort" d="${linePath}"/><g class="trend-dots">${dots}</g><g class="trend-point-values">${pointValues}</g><g class="trend-exposures">${exposureBars}</g><g class="trend-labels">${labels}</g></svg></div>`;
-    return `<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Première lecture du dossier</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-week-note"><strong>Une seule courbe : l’évolution de l’inconfort.</strong><span>Chaque semaine commence le dimanche. La valeur au-dessus de chaque point indique l’inconfort moyen sur 5; le nombre sous la courbe indique combien de journées contenaient l’élément suivi.</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small><p>${esc(config.primaryHelp)}</p></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small><p>${esc(config.comparisonHelp)}</p></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small><p>${esc(config.metricHelp)}</p></div></div>${chart}<button type="button" class="secondary professional-trend-expand" data-open-trend-fullscreen><span>↗ Agrandir le graphique</span><small>Tournez votre téléphone horizontalement pour une meilleure vue</small></button><p class="muted tiny">${config.disclaimer}</p></section><dialog class="professional-trend-dialog" id="professionalTrendDialog"><div class="professional-trend-dialog-head"><div><small>Graphique agrandi · Tournez le téléphone au besoin</small><strong>${config.title}</strong></div><button type="button" class="secondary" data-close-trend-fullscreen>Revenir au suivi ✕</button></div><div class="professional-trend-fullscreen-frame">${chart}</div><p class="muted tiny">Axe vertical : inconfort moyen sur 5 · Axe horizontal : semaines du dimanche au samedi.</p></dialog>`;
+    const hitAreas = points.map((point, index) => `<g class="trend-week-hit" data-trend-week-detail="${index}" role="button" tabindex="0" aria-label="Voir le détail de ${esc(point.label)}"><rect x="${Math.max(left, x(index)-28)}" y="${top}" width="56" height="${height-top-10}" rx="8"/></g>`).join("");
+    const chart = `<div class="professional-trend-legend"><span class="discomfort">Valeur au-dessus : inconfort moyen /5</span><span class="exposure-count">Nombre en dessous : journées repérées</span></div><div class="professional-trend-scroll chart-scroll"><svg style="--trend-width:${width}px" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><text class="trend-y-title" x="14" y="${top + (height-top-bottom)/2}" text-anchor="middle" transform="rotate(-90 14 ${top + (height-top-bottom)/2})">Inconfort /5</text><g class="trend-grid">${grid}</g>${milestone}<path class="trend-path discomfort" d="${linePath}"/><g class="trend-dots">${dots}</g><g class="trend-point-values">${pointValues}</g><g class="trend-exposures">${exposureBars}</g><g class="trend-labels">${labels}</g><g class="trend-week-hits">${hitAreas}</g></svg></div>`;
+    const endOfWeek = (start) => { const date = new Date(`${start}T12:00:00`); date.setDate(date.getDate() + 6); return date; };
+    professionalTrendWeekDetails = points.map((point) => ({
+      period: `${new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "long" }).format(new Date(`${point.start}T12:00:00`))} au ${new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "long" }).format(endOfWeek(point.start))}`,
+      discomfort: `${(point.discomfort || 0).toFixed(1)}/5`,
+      exposures: point.exposures,
+      exposureLabel: config.metricLabel,
+      meals: point.mealCount,
+      symptoms: Object.entries(point.symptoms || {}).sort((a,b) => b[1]-a[1]).slice(0,3).map(([id]) => FEELING_TAGS.find((tag) => tag.id === id)).filter(Boolean).map((tag) => `${tag.emoji} ${t(tag.label)}`),
+    }));
+    const baseline = avg(points.slice(0, Math.max(1, milestoneIndex)).map((point) => point.discomfort || 0)) || 0;
+    const recent = avg(points.slice(-Math.min(4, points.length)).map((point) => point.discomfort || 0)) || 0;
+    const improvement = baseline - recent;
+    const confidenceHigh = points.length >= 10 && Math.abs(improvement) >= .7;
+    const confidenceLabel = confidenceHigh ? "Élevée" : "Modérée";
+    const directionText = improvement >= .35 ? `diminuent de ${Math.abs(improvement).toFixed(1)} point en moyenne` : improvement <= -.35 ? `augmentent de ${Math.abs(improvement).toFixed(1)} point en moyenne` : "demeurent relativement stables";
+    const summary = `<section class="card professional-case-summary"><div class="professional-case-summary-head"><span>🧠</span><div><p class="eyebrow">Résumé professionnel du dossier</p><h2>Tendance principale détectée</h2></div><span class="confidence-pill ${confidenceHigh ? "high" : "medium"}">Confiance ${confidenceLabel.toLowerCase()}</span></div><p class="professional-case-summary-text">Sur la période observée, ${esc(config.summarySubject)} ${directionText} depuis ${esc(config.summaryAction)}. Cette évolution constitue une piste à explorer avec ${esc(profile.name)}, sans établir de lien de cause à effet.</p><div class="professional-case-summary-metrics"><div><small>Au début</small><strong>${baseline.toFixed(1)}/5</strong><span>inconfort moyen</span></div><div><small>Dernières semaines</small><strong>${recent.toFixed(1)}/5</strong><span>inconfort moyen</span></div><div><small>Qualité de lecture</small><strong>${confidenceLabel}</strong><span>${points.length} semaines analysées</span></div></div><p class="professional-case-summary-caution">⚕️ Résumé d’aide à la consultation — il ne constitue pas un diagnostic.</p></section>`;
+    const weekDialog = `<dialog class="professional-week-dialog" id="professionalTrendWeekDialog"><div class="professional-week-dialog-card"><div class="professional-week-dialog-head"><div><p class="eyebrow">Détail de la semaine</p><h3 id="professionalWeekPeriod"></h3></div><button type="button" class="icon-button" data-close-trend-week aria-label="Fermer">✕</button></div><div class="professional-week-detail-grid"><div><span>📈</span><small>Inconfort moyen</small><strong id="professionalWeekDiscomfort">—</strong></div><div><span>🔎</span><small id="professionalWeekExposureLabel">Journées repérées</small><strong id="professionalWeekExposures">—</strong></div><div><span>🍽️</span><small>Repas et collations</small><strong id="professionalWeekMeals">—</strong></div></div><div class="professional-week-symptoms"><small>Symptômes dominants consignés</small><div id="professionalWeekSymptoms"></div></div><p class="muted tiny">Touchez une autre semaine du graphique pour comparer son portrait.</p></div></dialog>`;
+    return `${summary}<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Évolution dans le temps</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-week-note"><strong>Touchez une semaine pour voir son détail.</strong><span>Chaque semaine commence le dimanche. La valeur au-dessus de chaque point indique l’inconfort moyen sur 5; le nombre sous la courbe indique combien de journées contenaient l’élément suivi.</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small><p>${esc(config.primaryHelp)}</p></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small><p>${esc(config.comparisonHelp)}</p></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small><p>${esc(config.metricHelp)}</p></div></div>${chart}<button type="button" class="secondary professional-trend-expand" data-open-trend-fullscreen><span>↗ Agrandir le graphique</span><small>Tournez votre téléphone horizontalement pour une meilleure vue</small></button><p class="muted tiny">${config.disclaimer}</p></section><dialog class="professional-trend-dialog" id="professionalTrendDialog"><div class="professional-trend-dialog-head"><div><small>Graphique agrandi · Touchez une semaine pour l’explorer</small><strong>${config.title}</strong></div><button type="button" class="secondary" data-close-trend-fullscreen>Revenir au suivi ✕</button></div><div class="professional-trend-fullscreen-frame">${chart}</div><p class="muted tiny">Axe vertical : inconfort moyen sur 5 · Axe horizontal : semaines du dimanche au samedi.</p></dialog>${weekDialog}`;
   }
   function renderFollowup() {
     if (!db.settings.demoMode) {
@@ -3141,6 +3180,33 @@
       try { if (document.fullscreenElement) await document.exitFullscreen(); } catch (_) {}
       dialog?.close();
     });
+    const openTrendWeekDetail = (index) => {
+      const detail = professionalTrendWeekDetails[Number(index)];
+      const dialog = $("#professionalTrendWeekDialog");
+      if (!detail || !dialog) return;
+      $("#professionalWeekPeriod").textContent = detail.period;
+      $("#professionalWeekDiscomfort").textContent = detail.discomfort;
+      $("#professionalWeekExposureLabel").textContent = detail.exposureLabel;
+      $("#professionalWeekExposures").textContent = String(detail.exposures);
+      $("#professionalWeekMeals").textContent = String(detail.meals);
+      const symptoms = $("#professionalWeekSymptoms");
+      symptoms.innerHTML = "";
+      (detail.symptoms.length ? detail.symptoms : ["Aucun symptôme dominant"]).forEach((label) => {
+        const chip = document.createElement("span");
+        chip.textContent = label;
+        symptoms.appendChild(chip);
+      });
+      dialog.showModal();
+    };
+    $$('[data-trend-week-detail]').forEach((target) => {
+      target.addEventListener("click", () => openTrendWeekDetail(target.dataset.trendWeekDetail));
+      target.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        openTrendWeekDetail(target.dataset.trendWeekDetail);
+      });
+    });
+    $("[data-close-trend-week]")?.addEventListener("click", () => $("#professionalTrendWeekDialog")?.close());
     $("#professionalNoteForm")?.addEventListener("submit", (event) => {
       event.preventDefault();
       const rawContext = $("#professionalNoteContext").value.split("|");
@@ -3353,7 +3419,7 @@
         if (!control || !control.closest("#app")) return;
         if (
           control.closest(
-            "[data-open-demo-profile],#leaveDemoProfile,#leaveDemoQuick,#switchProfessionalClientBanner,#replayDemoTour,.nav-item,.brain-proof,.why-demo-insight,#previousDay,#nextDay,#goToday,#analysisPreviousDay,#analysisNextDay,#analysisGoLatest,[data-global-observation],[data-quick-meal][data-edit-meal],.professional-followup,[data-open-trend-fullscreen],[data-close-trend-fullscreen]",
+            "[data-open-demo-profile],#leaveDemoProfile,#leaveDemoQuick,#switchProfessionalClientBanner,#replayDemoTour,.nav-item,.brain-proof,.why-demo-insight,#previousDay,#nextDay,#goToday,#analysisPreviousDay,#analysisNextDay,#analysisGoLatest,[data-global-observation],[data-quick-meal][data-edit-meal],.professional-followup,[data-open-trend-fullscreen],[data-close-trend-fullscreen],[data-trend-week-detail],[data-close-trend-week]",
           )
         )
           return;
@@ -9162,7 +9228,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.36.9");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.37.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
