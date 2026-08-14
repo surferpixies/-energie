@@ -42,7 +42,7 @@
           {id:"headache",group:"symptom",label:"Maux de tête",emoji:"🤕",count:4,trend:"stable",summary:"Mention occasionnelle et moins spécifique; le journal ne permet pas d’en tirer une conclusion.",occurrences:[]}
         ],
         positive: [
-          {id:"feeling_good",group:"positive",label:"Bien-être général",emoji:"😊",count:62,trend:"up",summary:"Ce ressenti apparaît plus souvent depuis la réduction des produits laitiers.",occurrences:[]}
+          {id:"feeling_good",group:"neutral",label:"Rien de particulier",emoji:"👌",count:62,trend:"up",summary:"Les repas sans inconfort particulier deviennent plus fréquents depuis la réduction des produits laitiers.",occurrences:[]}
         ]
       },
       observations: [
@@ -63,7 +63,7 @@
       feelings: {
         negative: [],
         positive: [
-          {id:"feeling_good",group:"positive",label:"Bien-être général",emoji:"😊",count:145,trend:"stable",summary:"Ce ressenti demeure fréquent et stable pendant toute la période.",occurrences:[]}
+          {id:"feeling_good",group:"neutral",label:"Rien de particulier",emoji:"👌",count:145,trend:"stable",summary:"Les repas sans ressenti particulier demeurent fréquents et stables pendant toute la période.",occurrences:[]}
         ]
       },
       observations: [],
@@ -84,8 +84,7 @@
           {id:"stomachache",group:"symptom",label:"Mal de ventre",emoji:"🤢",count:19,trend:"down",summary:"Les épisodes diminuent à mesure que l’hydratation et les fibres deviennent plus régulières.",occurrences:[]}
         ],
         positive: [
-          {id:"easy_digestion",group:"positive",label:"Digestion confortable ou sensation de légèreté",emoji:"🌿",count:42,trend:"up",summary:"Cette mention est beaucoup plus fréquente durant les deux derniers mois.",occurrences:[]},
-          {id:"feeling_good",group:"positive",label:"Bien-être général",emoji:"😊",count:26,trend:"up",summary:"Le bien-être général augmente avec la nouvelle routine alimentaire.",occurrences:[]}
+          {id:"feeling_good",group:"neutral",label:"Rien de particulier",emoji:"👌",count:68,trend:"up",summary:"Les repas sans inconfort particulier deviennent plus fréquents avec la nouvelle routine alimentaire.",occurrences:[]}
         ]
       },
       observations: [
@@ -110,7 +109,7 @@
           {id:"nausea",group:"symptom",label:"Nausées ou inconfort digestif",emoji:"🤢",count:6,trend:"stable",summary:"Ces signes sont moins fréquents que les manifestations cutanées.",occurrences:[]}
         ],
         positive:[
-          {id:"feeling_good",group:"positive",label:"Peau plus calme",emoji:"😌",count:24,trend:"up",summary:"Les journées sans réaction deviennent plus fréquentes durant le dernier mois.",occurrences:[]}
+          {id:"feeling_good",group:"neutral",label:"Rien de particulier",emoji:"👌",count:24,trend:"up",summary:"Les journées sans réaction particulière deviennent plus fréquentes durant le dernier mois.",occurrences:[]}
         ]
       },
       observations:[

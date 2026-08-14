@@ -5,13 +5,16 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 35;
+  const CURRENT_VERSION = 36;
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
     good_mood: "feeling_good",
     calm: "feeling_good",
     light_after_meal: "easy_digestion",
+    satisfied: "feeling_good",
+    easy_digestion: "feeling_good",
+    focus: "feeling_good",
     cramps: "stomachache",
     slow_digestion: "heaviness",
     energy_drop: "fatigue",
@@ -4311,7 +4314,7 @@
     );
   }
   const FEELING_CATEGORIES = [
-    { id: "positive", emoji: "😊", label: "Bien-être et satisfaction" },
+    { id: "positive", emoji: "👌", label: "Ressenti général" },
     { id: "digestion", emoji: "🍽️", label: "Digestion" },
     { id: "energy_state", emoji: "⚡", label: "Énergie et état général" },
     { id: "head_senses", emoji: "🧠", label: "Tête, concentration et sens" },
@@ -4330,15 +4333,16 @@
       label: "Aucun des ressentis suivis",
       group: "neutral",
       category: "positive",
-      fixedScore: 5,
+      fixedScore: 3,
       scopedOnly: true,
     },
     {
       id: "feeling_good",
-      emoji: "😊",
-      label: "Bien-être général",
-      group: "positive",
+      emoji: "👌",
+      label: "Rien de particulier",
+      group: "neutral",
       category: "positive",
+      fixedScore: 3,
     },
     {
       id: "stable_energy",
@@ -4363,6 +4367,7 @@
       group: "positive",
       category: "positive",
       afterOnly: true,
+      deprecated: true,
     },
     {
       id: "easy_digestion",
@@ -4370,6 +4375,7 @@
       label: "Digestion confortable ou sensation de légèreté",
       group: "positive",
       category: "positive",
+      deprecated: true,
     },
     {
       id: "light_after_meal",
@@ -4386,6 +4392,7 @@
       label: "Bonne concentration",
       group: "positive",
       category: "positive",
+      deprecated: true,
     },
     {
       id: "good_mood",
@@ -4811,7 +4818,7 @@
         .map((tag) => {
           const score = selected[tag.id] || null,
             active = !!selected[tag.id];
-          return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}" ${tag.fixedScore ? `data-fixed-score="${tag.fixedScore}"` : ""} data-feeling-search-label="${esc(t(tag.label))}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span>${tag.emoji}</span>${esc(t(tag.label))}</button><div class="feeling-score-prompt" ${tag.fixedScore || !active || score ? "hidden" : ""}>Choisis l’intensité</div><div class="feeling-score-buttons" ${active && !tag.fixedScore ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n} sur 5">${n}</button>`).join("")}</div></div>`;
+          return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}" ${tag.fixedScore ? `data-fixed-score="${tag.fixedScore}"` : ""} data-feeling-search-label="${esc(t(tag.label))}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span class="feeling-tag-icon">${tag.emoji}</span><span class="feeling-tag-label">${esc(t(tag.label))}</span></button><div class="feeling-score-prompt" ${tag.fixedScore || !active || score ? "hidden" : ""}>Choisis l’intensité</div><div class="feeling-score-buttons" ${active && !tag.fixedScore ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n} sur 5">${n}</button>`).join("")}</div></div>`;
         })
         .join("")}</div></details>`;
     }).join("");
@@ -5777,7 +5784,7 @@
             : [];
         meal.feeling.tags.forEach((tag) => {
           const meta = tagMeta[tag];
-          if (!meta || meta.scopedOnly) return;
+          if (!meta || meta.scopedOnly || !["symptom", "positive"].includes(meta.group)) return;
           const bucket =
             meta.group === "symptom" ? groups.negative : groups.positive;
           const entry = bucket[tag] || {
@@ -8454,7 +8461,7 @@
       const open =
         !alwaysClosed &&
         (category.open || tags.some((tag) => chosen.has(tag.id)));
-      return `<details class="feeling-tag-group feeling-tag-group-${category.id}" ${open ? "open" : ""}><summary><span><b>${category.emoji}</b><strong>${esc(t(category.label))}</strong></span><small>${tags.length}</small><i aria-hidden="true">›</i></summary><div class="feeling-tag-group-body">${tags.map((tag) => `<button type="button" class="feeling-tag ${chosen.has(tag.id) ? "active" : ""}" data-observation-tag="${tag.id}"><span>${tag.emoji}</span>${esc(t(tag.label))}</button>`).join("")}</div></details>`;
+      return `<details class="feeling-tag-group feeling-tag-group-${category.id}" ${open ? "open" : ""}><summary><span><b>${category.emoji}</b><strong>${esc(t(category.label))}</strong></span><small>${tags.length}</small><i aria-hidden="true">›</i></summary><div class="feeling-tag-group-body">${tags.map((tag) => `<button type="button" class="feeling-tag ${chosen.has(tag.id) ? "active" : ""}" data-observation-tag="${tag.id}"><span class="feeling-tag-icon">${tag.emoji}</span><span class="feeling-tag-label">${esc(t(tag.label))}</span></button>`).join("")}</div></details>`;
     }).join("");
   }
   function recentObservationMeals(date, time, selected = []) {
@@ -9484,7 +9491,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.41.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.41.1");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
