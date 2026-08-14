@@ -5,7 +5,7 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 36;
+  const CURRENT_VERSION = 37;
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -3019,7 +3019,7 @@
       plan = activeProfessionalTrackingPlan(),
       chosen = new Set(plan?.feelingIds || []),
       groups = FEELING_CATEGORIES.map((category) => {
-        const tags = FEELING_TAGS.filter((tag) => tag.category === category.id && !tag.scopedOnly && !tag.deprecated);
+        const tags = FEELING_TAGS.filter((tag) => tag.category === category.id && tag.id !== "feeling_good" && !tag.scopedOnly && !tag.deprecated);
         if (!tags.length) return "";
         return `<details class="tracking-plan-group" ${tags.some((tag) => chosen.has(tag.id)) ? "open" : ""}><summary><span>${category.emoji} ${esc(t(category.label))}</span><small>${tags.filter((tag) => chosen.has(tag.id)).length}/${tags.length}</small></summary><div class="tracking-plan-options">${tags.map((tag) => `<label><input type="checkbox" data-tracking-feeling="${tag.id}" ${chosen.has(tag.id) ? "checked" : ""}><span>${tag.emoji} ${esc(t(tag.label))}</span></label>`).join("")}</div></details>`;
       }).join("");
@@ -3028,7 +3028,7 @@
   function clientTrackingPlanSummaryHtml() {
     const plan = activeProfessionalTrackingPlan();
     if (!plan) return "";
-    const tags = (plan.feelingIds || []).map((id) => FEELING_TAGS.find((tag) => tag.id === id)).filter(Boolean);
+    const tags = (plan.feelingIds || []).filter((id) => id !== "feeling_good").map((id) => FEELING_TAGS.find((tag) => tag.id === id)).filter(Boolean);
     return `<section class="card client-tracking-summary"><p class="eyebrow">Plan convenu avec le professionnel</p><h3>🎯 Mes ressentis à observer</h3><div>${tags.map((tag) => `<span>${tag.emoji} ${esc(t(tag.label))}</span>`).join("")}</div><p class="muted tiny">Cette sélection simplifie la saisie. Tes anciennes observations demeurent dans ton historique.</p></section>`;
   }
   function professionalDemoEntryHtml() {
@@ -4801,27 +4801,32 @@
       if (mode === "before" && tag.afterOnly) return false;
       if (tag.deprecated && !selected.has(tag.id)) return false;
       if (!plan) return !tag.scopedOnly;
+      if (tag.id === "feeling_good" && !selected.has(tag.id)) return false;
       return tag.scopedOnly || plan.feelingIds.includes(tag.id) || selected.has(tag.id);
     });
   }
   function scoredFeelingPickerHtml(mode, scores = {}) {
     const selected = normalizeFeelingScores(scores),
       availableTags = feelingTagsForMode(mode, Object.keys(selected));
-    return FEELING_CATEGORIES.map((category) => {
+    const tagHtml = (tag) => {
+      const score = selected[tag.id] || null,
+        active = !!selected[tag.id];
+      return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}" ${tag.fixedScore ? `data-fixed-score="${tag.fixedScore}"` : ""} data-feeling-search-label="${esc(t(tag.label))}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span class="feeling-tag-icon">${tag.emoji}</span><span class="feeling-tag-label">${esc(t(tag.label))}</span></button><div class="feeling-score-prompt" ${tag.fixedScore || !active || score ? "hidden" : ""}>Choisis l’intensité</div><div class="feeling-score-buttons" ${active && !tag.fixedScore ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n} sur 5">${n}</button>`).join("")}</div></div>`;
+    };
+    const standaloneTags = availableTags.filter((tag) => tag.category === "positive"),
+      standalone = standaloneTags.length
+        ? `<div class="standalone-feeling-choice">${standaloneTags.map(tagHtml).join("")}</div>`
+        : "";
+    const categories = FEELING_CATEGORIES.filter((category) => category.id !== "positive").map((category) => {
       const tags = availableTags.filter((tag) => tag.category === category.id),
         hasSelected = tags.some((tag) => selected[tag.id]),
         selectedCount = tags.filter((tag) => selected[tag.id]).length,
-        alwaysClosed = ["positive", "digestion"].includes(category.id),
+        alwaysClosed = category.id === "digestion",
         open = !alwaysClosed && (category.open || hasSelected);
       if (!tags.length) return "";
-      return `<details class="feeling-tag-group feeling-tag-group-${category.id}" ${open ? "open" : ""}><summary><span><b>${category.emoji}</b><strong>${esc(t(category.label))}</strong></span><small class="feeling-category-count"><em data-scored-selected-count="${mode}">${selectedCount}</em>/${tags.length}</small><i aria-hidden="true">›</i></summary><div class="feeling-tag-group-body scored-feeling-group">${tags
-        .map((tag) => {
-          const score = selected[tag.id] || null,
-            active = !!selected[tag.id];
-          return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}" ${tag.fixedScore ? `data-fixed-score="${tag.fixedScore}"` : ""} data-feeling-search-label="${esc(t(tag.label))}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span class="feeling-tag-icon">${tag.emoji}</span><span class="feeling-tag-label">${esc(t(tag.label))}</span></button><div class="feeling-score-prompt" ${tag.fixedScore || !active || score ? "hidden" : ""}>Choisis l’intensité</div><div class="feeling-score-buttons" ${active && !tag.fixedScore ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n} sur 5">${n}</button>`).join("")}</div></div>`;
-        })
-        .join("")}</div></details>`;
+      return `<details class="feeling-tag-group feeling-tag-group-${category.id}" ${open ? "open" : ""}><summary><span><b>${category.emoji}</b><strong>${esc(t(category.label))}</strong></span><small class="feeling-category-count"><em data-scored-selected-count="${mode}">${selectedCount}</em>/${tags.length}</small><i aria-hidden="true">›</i></summary><div class="feeling-tag-group-body scored-feeling-group">${tags.map(tagHtml).join("")}</div></details>`;
     }).join("");
+    return `${standalone}${categories}`;
   }
   function bindScoredFeelingPicker(container, mode) {
     if (!container) return;
@@ -8454,15 +8459,20 @@
   function observationTagPickerHtml(selected) {
     const chosen = new Set(selected || []),
       availableTags = feelingTagsForMode("global", [...chosen]);
-    return FEELING_CATEGORIES.map((category) => {
+    const standaloneTags = availableTags.filter((tag) => tag.category === "positive"),
+      standalone = standaloneTags.length
+        ? `<div class="standalone-feeling-choice">${standaloneTags.map((tag) => `<button type="button" class="feeling-tag ${chosen.has(tag.id) ? "active" : ""}" data-observation-tag="${tag.id}"><span class="feeling-tag-icon">${tag.emoji}</span><span class="feeling-tag-label">${esc(t(tag.label))}</span></button>`).join("")}</div>`
+        : "";
+    const categories = FEELING_CATEGORIES.filter((category) => category.id !== "positive").map((category) => {
       const tags = availableTags.filter((tag) => tag.category === category.id),
-        alwaysClosed = ["positive", "digestion"].includes(category.id);
+        alwaysClosed = category.id === "digestion";
       if (!tags.length) return "";
       const open =
         !alwaysClosed &&
         (category.open || tags.some((tag) => chosen.has(tag.id)));
       return `<details class="feeling-tag-group feeling-tag-group-${category.id}" ${open ? "open" : ""}><summary><span><b>${category.emoji}</b><strong>${esc(t(category.label))}</strong></span><small>${tags.length}</small><i aria-hidden="true">›</i></summary><div class="feeling-tag-group-body">${tags.map((tag) => `<button type="button" class="feeling-tag ${chosen.has(tag.id) ? "active" : ""}" data-observation-tag="${tag.id}"><span class="feeling-tag-icon">${tag.emoji}</span><span class="feeling-tag-label">${esc(t(tag.label))}</span></button>`).join("")}</div></details>`;
     }).join("");
+    return `${standalone}${categories}`;
   }
   function recentObservationMeals(date, time, selected = []) {
     const end = new Date(`${date}T${time || "23:59"}:00`).getTime(),
@@ -9491,7 +9501,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.41.1");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.41.2");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
