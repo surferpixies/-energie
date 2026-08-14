@@ -5,7 +5,7 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 32;
+  const CURRENT_VERSION = 33;
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => [...document.querySelectorAll(s)];
   const uid = () =>
@@ -2997,7 +2997,10 @@
   function openProfessionalClientPicker() {
     const dialog = $("#professionalClientDialog"),
       list = $("#professionalClientList");
-    if (!dialog || !list) return;
+    if (!dialog || !list) {
+      alert("La liste des clients n’a pas pu être ouverte. Recharge l’application puis réessaie.");
+      return;
+    }
     list.innerHTML = professionalClientPickerHtml();
     $$('[data-professional-client]').forEach((button) =>
       button.addEventListener("click", () => {
@@ -3006,7 +3009,11 @@
         switchDemoProfile(button.dataset.professionalClient);
       }),
     );
-    dialog.showModal();
+    try {
+      if (!dialog.open) dialog.showModal();
+    } catch (_) {
+      dialog.setAttribute("open", "");
+    }
   }
   function startProfessionalDemo() {
     professionalDemoMode = true;
@@ -4742,6 +4749,7 @@
   }
   function bindScoredFeelingPicker(container, mode) {
     if (!container) return;
+    bindCompactFeelingGroups(container);
     container.querySelectorAll(`[data-scored-toggle="${mode}"]`).forEach(
       (button) =>
         (button.onclick = () => {
@@ -4786,6 +4794,21 @@
           if (mode === "before") updateMealFeelingsOverview();
         }),
     );
+  }
+  function bindCompactFeelingGroups(container) {
+    if (!container) return;
+    container.classList.add("compact-feeling-categories");
+    const groups = [...container.querySelectorAll(".feeling-tag-group")],
+      initiallyOpen = groups.filter((group) => group.open);
+    initiallyOpen.slice(1).forEach((group) => { group.open = false; });
+    groups.forEach((group) => {
+      group.addEventListener("toggle", () => {
+        if (!group.open) return;
+        container.querySelectorAll(".feeling-tag-group[open]").forEach((other) => {
+          if (other !== group) other.open = false;
+        });
+      });
+    });
   }
   function collectScoredFeelingScores(container, mode) {
     const scores = {};
@@ -7499,7 +7522,6 @@
     $("#launchDemoProfile")?.addEventListener("click", () =>
       showExperienceLaunchIfNeeded(true),
     );
-    $("#openProfessionalDemo")?.addEventListener("click", startProfessionalDemo);
     $$(`[data-open-demo-profile]`).forEach((button) =>
       button.addEventListener("click", () =>
         switchDemoProfile(button.dataset.openDemoProfile),
@@ -8445,6 +8467,7 @@
     $("#globalObservationDuration").value = o.duration;
     $("#globalObservationNotes").value = o.notes || "";
     $("#globalObservationTags").innerHTML = observationTagPickerHtml(o.tags);
+    bindCompactFeelingGroups($("#globalObservationTags"));
     $$("[data-observation-tag]").forEach(
       (b) => (b.onclick = () => b.classList.toggle("active")),
     );
@@ -9392,7 +9415,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.39.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.39.1");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -9408,6 +9431,13 @@
       }
     });
   }
+
+  // Filet de sécurité pour les boutons recréés lors d'un rendu ou d'une synchro.
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest("#openProfessionalDemo")) return;
+    event.preventDefault();
+    startProfessionalDemo();
+  });
 
   initDailySplash();
   dismissSplash();
