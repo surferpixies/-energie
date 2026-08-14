@@ -5,22 +5,41 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 34;
+  const CURRENT_VERSION = 35;
   const FEELING_ALIASES = {
     energy: "stable_energy",
+    stable_energy: "feeling_good",
+    good_mood: "feeling_good",
+    calm: "feeling_good",
+    light_after_meal: "easy_digestion",
     cramps: "stomachache",
     slow_digestion: "heaviness",
     energy_drop: "fatigue",
+    sleepiness: "fatigue",
+    dizziness: "weakness",
+    trembling: "weakness",
     poor_focus: "brain_fog",
     migraine: "headache",
     sound_sensitivity: "light_sensitivity",
     smell_sensitivity: "light_sensitivity",
     sneezing: "congestion",
+    redness: "itching",
     anxiety: "stress",
+    low_mood: "irritability",
     sugar_craving: "craving",
     chills: "hot_flash",
+    vomiting: "nausea",
+    urgent_stool: "diarrhea",
+    frequent_urination: "unusual_thirst",
   };
-  const canonicalFeelingId = (id) => FEELING_ALIASES[id] || id;
+  function canonicalFeelingId(id) {
+    let current = id, guard = 0;
+    while (FEELING_ALIASES[current] && guard < 10) {
+      current = FEELING_ALIASES[current];
+      guard += 1;
+    }
+    return current;
+  }
   function normalizeFeelingIds(ids = []) {
     return [...new Set((Array.isArray(ids) ? ids : []).map(canonicalFeelingId).filter(Boolean))];
   }
@@ -3092,7 +3111,7 @@
         milestoneLines: ["Tendance remarquée", "réduction du soya"],
         summarySubject: "les réactions observées après du soya repéré",
         summaryAction: "la réduction du soya",
-        symptomIds: ["itching", "redness", "hives", "nausea", "stomachache"],
+        symptomIds: ["itching", "hives", "nausea", "stomachache"],
         intensity: (day) => {
           const observations = day.observations || [];
           return observations.length
@@ -4316,8 +4335,8 @@
     },
     {
       id: "feeling_good",
-      emoji: "💪",
-      label: "Je me sens bien",
+      emoji: "😊",
+      label: "Bien-être général",
       group: "positive",
       category: "positive",
     },
@@ -4327,6 +4346,7 @@
       label: "Bonne énergie",
       group: "positive",
       category: "positive",
+      deprecated: true,
     },
     {
       id: "energy",
@@ -4347,7 +4367,7 @@
     {
       id: "easy_digestion",
       emoji: "😌",
-      label: "Digestion confortable",
+      label: "Digestion confortable ou sensation de légèreté",
       group: "positive",
       category: "positive",
     },
@@ -4358,6 +4378,7 @@
       group: "positive",
       category: "positive",
       afterOnly: true,
+      deprecated: true,
     },
     {
       id: "focus",
@@ -4372,6 +4393,7 @@
       label: "Bonne humeur",
       group: "positive",
       category: "positive",
+      deprecated: true,
     },
     {
       id: "calm",
@@ -4379,6 +4401,7 @@
       label: "Calme ou détendu",
       group: "positive",
       category: "positive",
+      deprecated: true,
     },
 
     {
@@ -4420,7 +4443,7 @@
     {
       id: "nausea",
       emoji: "🤮",
-      label: "Nausées",
+      label: "Nausées ou vomissements",
       group: "symptom",
       category: "digestion",
     },
@@ -4430,11 +4453,12 @@
       label: "Vomissements",
       group: "symptom",
       category: "digestion",
+      deprecated: true,
     },
     {
       id: "diarrhea",
       emoji: "🚻",
-      label: "Diarrhée",
+      label: "Diarrhée ou selles urgentes",
       group: "symptom",
       category: "digestion",
     },
@@ -4451,6 +4475,7 @@
       label: "Selles urgentes",
       group: "symptom",
       category: "digestion",
+      deprecated: true,
     },
     {
       id: "heaviness",
@@ -4486,7 +4511,7 @@
     {
       id: "fatigue",
       emoji: "😴",
-      label: "Fatigue ou manque d’énergie",
+      label: "Fatigue, manque d’énergie ou envie de dormir",
       group: "symptom",
       category: "energy_state",
     },
@@ -4496,6 +4521,7 @@
       label: "Somnolence ou envie de dormir",
       group: "symptom",
       category: "energy_state",
+      deprecated: true,
     },
     {
       id: "energy_drop",
@@ -4508,7 +4534,7 @@
     {
       id: "weakness",
       emoji: "🫠",
-      label: "Faiblesse",
+      label: "Faiblesse, étourdissements ou tremblements",
       group: "symptom",
       category: "energy_state",
     },
@@ -4518,6 +4544,7 @@
       label: "Étourdissements",
       group: "symptom",
       category: "energy_state",
+      deprecated: true,
     },
     {
       id: "trembling",
@@ -4525,6 +4552,7 @@
       label: "Tremblements",
       group: "symptom",
       category: "energy_state",
+      deprecated: true,
     },
     {
       id: "brain_fog",
@@ -4591,7 +4619,7 @@
     {
       id: "itching",
       emoji: "🫳",
-      label: "Démangeaisons",
+      label: "Démangeaisons ou rougeurs",
       group: "symptom",
       category: "reactions",
     },
@@ -4601,6 +4629,7 @@
       label: "Rougeurs",
       group: "symptom",
       category: "reactions",
+      deprecated: true,
     },
     {
       id: "hives",
@@ -4642,7 +4671,7 @@
     {
       id: "irritability",
       emoji: "😠",
-      label: "Irritabilité",
+      label: "Irritabilité ou humeur basse",
       group: "symptom",
       category: "mood",
     },
@@ -4667,6 +4696,7 @@
       label: "Humeur basse",
       group: "symptom",
       category: "mood",
+      deprecated: true,
     },
     {
       id: "sugar_craving",
@@ -4709,7 +4739,7 @@
     {
       id: "unusual_thirst",
       emoji: "💧",
-      label: "Soif inhabituelle",
+      label: "Soif ou urines inhabituelles",
       group: "symptom",
       category: "other_physical",
     },
@@ -4719,6 +4749,7 @@
       label: "Envie fréquente d’uriner",
       group: "symptom",
       category: "other_physical",
+      deprecated: true,
     },
     {
       id: "muscle_pain",
@@ -9453,7 +9484,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.40.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.41.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

@@ -35,15 +35,14 @@
         negative: [
           {id:"bloating",group:"symptom",label:"Ballonnements",emoji:"🫃",count:31,trend:"down",summary:"Ils apparaissent surtout après certains repas riches en produits laitiers.",occurrences:[]},
           {id:"gas",group:"symptom",label:"Gaz",emoji:"💨",count:26,trend:"down",summary:"Les épisodes diminuent à mesure que les produits laitiers deviennent moins fréquents.",occurrences:[]},
-          {id:"cramps",group:"symptom",label:"Crampes abdominales",emoji:"😖",count:18,trend:"down",summary:"Elles accompagnent parfois les ballonnements et les gargouillis après le repas.",occurrences:[]},
+          {id:"stomachache",group:"symptom",label:"Douleurs ou crampes abdominales",emoji:"😖",count:18,trend:"down",summary:"Elles accompagnent parfois les ballonnements et les gargouillis après le repas.",occurrences:[]},
           {id:"diarrhea",group:"symptom",label:"Selles molles ou diarrhée",emoji:"💩",count:13,trend:"down",summary:"Ce symptôme est moins fréquent, mais revient dans certains épisodes digestifs.",occurrences:[]},
           {id:"nausea",group:"symptom",label:"Nausées",emoji:"🤢",count:8,trend:"down",summary:"Elles sont occasionnelles et surtout notées avec un ventre très gonflé ou tendu.",occurrences:[]},
           {id:"fatigue",group:"symptom",label:"Fatigue après le repas",emoji:"🥴",count:11,trend:"stable",summary:"Elle est parfois notée avec l’inconfort digestif, mais peut aussi être liée aux quarts tardifs.",occurrences:[]},
           {id:"headache",group:"symptom",label:"Maux de tête",emoji:"🤕",count:4,trend:"stable",summary:"Mention occasionnelle et moins spécifique; le journal ne permet pas d’en tirer une conclusion.",occurrences:[]}
         ],
         positive: [
-          {id:"feeling_good",group:"positive",label:"Je me sens bien",emoji:"😊",count:38,trend:"up",summary:"Ce ressenti apparaît plus souvent depuis la réduction des produits laitiers.",occurrences:[]},
-          {id:"energy",group:"positive",label:"Énergie",emoji:"⚡",count:24,trend:"up",summary:"Les mentions d’énergie positive augmentent durant les dernières semaines.",occurrences:[]}
+          {id:"feeling_good",group:"positive",label:"Bien-être général",emoji:"😊",count:62,trend:"up",summary:"Ce ressenti apparaît plus souvent depuis la réduction des produits laitiers.",occurrences:[]}
         ]
       },
       observations: [
@@ -64,9 +63,7 @@
       feelings: {
         negative: [],
         positive: [
-          {id:"energy",group:"positive",label:"Énergie",emoji:"⚡",count:62,trend:"stable",summary:"L’énergie positive demeure régulière pendant toute la période.",occurrences:[]},
-          {id:"feeling_good",group:"positive",label:"Je me sens bien",emoji:"😊",count:54,trend:"stable",summary:"Ce ressenti est fréquent sans variation préoccupante.",occurrences:[]},
-          {id:"good_mood",group:"positive",label:"Bonne humeur",emoji:"😄",count:29,trend:"stable",summary:"Elle apparaît souvent les journées comprenant une activité physique.",occurrences:[]}
+          {id:"feeling_good",group:"positive",label:"Bien-être général",emoji:"😊",count:145,trend:"stable",summary:"Ce ressenti demeure fréquent et stable pendant toute la période.",occurrences:[]}
         ]
       },
       observations: [],
@@ -87,8 +84,8 @@
           {id:"stomachache",group:"symptom",label:"Mal de ventre",emoji:"🤢",count:19,trend:"down",summary:"Les épisodes diminuent à mesure que l’hydratation et les fibres deviennent plus régulières.",occurrences:[]}
         ],
         positive: [
-          {id:"easy_digestion",group:"positive",label:"Digestion facile",emoji:"🌿",count:42,trend:"up",summary:"Cette mention est beaucoup plus fréquente durant les deux derniers mois.",occurrences:[]},
-          {id:"energy",group:"positive",label:"Énergie",emoji:"⚡",count:26,trend:"up",summary:"L’énergie positive augmente avec la nouvelle routine alimentaire.",occurrences:[]}
+          {id:"easy_digestion",group:"positive",label:"Digestion confortable ou sensation de légèreté",emoji:"🌿",count:42,trend:"up",summary:"Cette mention est beaucoup plus fréquente durant les deux derniers mois.",occurrences:[]},
+          {id:"feeling_good",group:"positive",label:"Bien-être général",emoji:"😊",count:26,trend:"up",summary:"Le bien-être général augmente avec la nouvelle routine alimentaire.",occurrences:[]}
         ]
       },
       observations: [
@@ -108,8 +105,7 @@
       },
       feelings: {
         negative:[
-          {id:"itching",group:"symptom",label:"Démangeaisons",emoji:"🤚",count:19,trend:"down",summary:"Elles sont surtout consignées dans les observations globales, souvent plusieurs heures après une exposition possible.",occurrences:[]},
-          {id:"redness",group:"symptom",label:"Rougeurs ou poussée d’eczéma",emoji:"🌿",count:15,trend:"down",summary:"Les plaques sèches ou rouges peuvent durer une à plusieurs journées.",occurrences:[]},
+          {id:"itching",group:"symptom",label:"Démangeaisons ou rougeurs",emoji:"🤚",count:34,trend:"down",summary:"Elles sont surtout consignées dans les observations globales, souvent plusieurs heures après une exposition possible.",occurrences:[]},
           {id:"hives",group:"symptom",label:"Urticaire",emoji:"🟥",count:8,trend:"down",summary:"Des plaques rouges qui démangent sont notées à quelques reprises, sans réaction grave simulée.",occurrences:[]},
           {id:"nausea",group:"symptom",label:"Nausées ou inconfort digestif",emoji:"🤢",count:6,trend:"stable",summary:"Ces signes sont moins fréquents que les manifestations cutanées.",occurrences:[]}
         ],
