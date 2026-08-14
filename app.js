@@ -5,7 +5,7 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 31;
+  const CURRENT_VERSION = 32;
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => [...document.querySelectorAll(s)];
   const uid = () =>
@@ -2936,6 +2936,54 @@
       localStorage.setItem(PROFESSIONAL_NOTES_KEY, JSON.stringify(notes));
     } catch (_) {}
   }
+  const PROFESSIONAL_TRACKING_PLANS_KEY = "energieProfessionalTrackingPlansV1";
+  function defaultProfessionalTrackingPlans() {
+    return {
+      marie: ["bloating", "gas", "stomachache", "cramps", "reflux", "nausea", "diarrhea", "constipation", "urgent_stool", "heaviness", "slow_digestion"],
+      sophie: ["bloating", "gas", "stomachache", "cramps", "constipation", "urgent_stool", "heaviness", "slow_digestion", "fatigue"],
+      elodie: ["itching", "redness", "hives", "swelling", "congestion", "sneezing", "throat_irritation", "nausea", "stomachache", "diarrhea"],
+      alex: ["feeling_good", "stable_energy", "energy", "focus", "good_mood", "fatigue", "sleepiness", "energy_drop", "brain_fog", "poor_focus"],
+    };
+  }
+  function readProfessionalTrackingPlans() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(PROFESSIONAL_TRACKING_PLANS_KEY) || "null");
+      if (saved && typeof saved === "object") return saved;
+    } catch (_) {}
+    const defaults = Object.fromEntries(
+      Object.entries(defaultProfessionalTrackingPlans()).map(([clientId, feelingIds]) => [clientId, {
+        clientId,
+        feelingIds,
+        updatedAt: new Date().toISOString(),
+      }]),
+    );
+    try { localStorage.setItem(PROFESSIONAL_TRACKING_PLANS_KEY, JSON.stringify(defaults)); } catch (_) {}
+    return defaults;
+  }
+  function writeProfessionalTrackingPlans(plans) {
+    try { localStorage.setItem(PROFESSIONAL_TRACKING_PLANS_KEY, JSON.stringify(plans)); } catch (_) {}
+  }
+  function activeProfessionalTrackingPlan() {
+    if (!db.settings?.demoMode || !db.settings?.demoProfileId) return null;
+    return readProfessionalTrackingPlans()[db.settings.demoProfileId] || null;
+  }
+  function professionalTrackingPlanHtml() {
+    const profile = activeDemoProfile(),
+      plan = activeProfessionalTrackingPlan(),
+      chosen = new Set(plan?.feelingIds || []),
+      groups = FEELING_CATEGORIES.map((category) => {
+        const tags = FEELING_TAGS.filter((tag) => tag.category === category.id && !tag.scopedOnly);
+        if (!tags.length) return "";
+        return `<details class="tracking-plan-group" ${tags.some((tag) => chosen.has(tag.id)) ? "open" : ""}><summary><span>${category.emoji} ${esc(t(category.label))}</span><small>${tags.filter((tag) => chosen.has(tag.id)).length}/${tags.length}</small></summary><div class="tracking-plan-options">${tags.map((tag) => `<label><input type="checkbox" data-tracking-feeling="${tag.id}" ${chosen.has(tag.id) ? "checked" : ""}><span>${tag.emoji} ${esc(t(tag.label))}</span></label>`).join("")}</div></details>`;
+      }).join("");
+    return `<form id="professionalTrackingPlanForm" class="card professional-tracking-plan"><div class="professional-tracking-plan-head"><div><p class="eyebrow">Plan de suivi personnalisé</p><h2>🎯 Ressentis suivis avec ${esc(profile.name)}</h2></div><strong id="trackingPlanCount">${chosen.size} sélectionnés</strong></div><p class="muted small">Le client ne verra que ces ressentis avant et après les repas ainsi que dans les observations globales. Les anciennes données demeurent conservées.</p><div class="tracking-plan-actions"><button type="button" class="text-button" id="selectAllTrackingFeelings">Tout sélectionner</button><button type="button" class="text-button" id="clearTrackingFeelings">Tout retirer</button></div><div class="tracking-plan-groups">${groups}</div><p class="tracking-plan-permanent">✅ « Aucun des ressentis suivis » et ✍️ « Autre chose à signaler » demeurent toujours disponibles.</p><button type="submit" class="primary">Enregistrer le plan de suivi</button></form>`;
+  }
+  function clientTrackingPlanSummaryHtml() {
+    const plan = activeProfessionalTrackingPlan();
+    if (!plan) return "";
+    const tags = (plan.feelingIds || []).map((id) => FEELING_TAGS.find((tag) => tag.id === id)).filter(Boolean);
+    return `<section class="card client-tracking-summary"><p class="eyebrow">Plan convenu avec le professionnel</p><h3>🎯 Mes ressentis à observer</h3><div>${tags.map((tag) => `<span>${tag.emoji} ${esc(t(tag.label))}</span>`).join("")}</div><p class="muted tiny">Cette sélection simplifie la saisie. Tes anciennes observations demeurent dans ton historique.</p></section>`;
+  }
   function professionalDemoEntryHtml() {
     if (!hasDemoAccess || db.settings.demoMode) return "";
     return `<section class="card professional-demo-entry"><div><p class="eyebrow">Prototype local</p><h3>👩‍⚕️ Mode professionnel — Démo</h3><p class="muted small">Consulte les quatre dossiers fictifs en lecture seule et expérimente le suivi professionnel.</p></div><button type="button" class="primary" id="openProfessionalDemo">Ouvrir l’espace professionnel</button></section>`;
@@ -3183,7 +3231,10 @@
     const cards = allNotes.length
       ? allNotes.map((note) => `<article class="card professional-note-card ${note.visibility === "private" ? "is-private" : "is-shared"}"><div class="professional-note-head"><span>${note.visibility === "private" ? "🔒 Note privée" : "👁️ Partagée avec le client"}</span><time>${esc(professionalNoteTime(note.createdAt))}</time></div><strong>${esc(note.contextLabel || "Suivi général")}</strong><p>${esc(note.content)}</p>${professionalDemoMode ? `<button type="button" class="text-button professional-note-delete" data-delete-professional-note="${note.id}">Supprimer</button>` : ""}</article>`).join("")
       : `<section class="card empty"><span>📝</span><p>Aucune note partagée n’est disponible pour ce suivi.</p></section>`;
-    $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">${professionalDemoMode ? "Espace professionnel · Démo" : "Suivi professionnel"}</p><h2>📝 Suivi de ${esc(profile.name)}</h2><p>${professionalDemoMode ? "Les notes privées et partagées sont visibles dans cet espace professionnel fictif." : "Les notes partagées par le professionnel apparaissent ici en lecture seule."}</p>${professionalDemoMode ? `<div class="dialog-actions"><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalDemo">Quitter le mode professionnel</button></div>` : ""}</section>${professionalTrendHtml()}${form}<section class="professional-followup"><div class="section-title"><h2>Chronologie</h2><span class="muted small">${allNotes.length} note${allNotes.length > 1 ? "s" : ""}</span></div><div class="stack">${cards}</div></section>`;
+    const trackingPlanPanel = professionalDemoMode
+      ? professionalTrackingPlanHtml()
+      : clientTrackingPlanSummaryHtml();
+    $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">${professionalDemoMode ? "Espace professionnel · Démo" : "Suivi professionnel"}</p><h2>📝 Suivi de ${esc(profile.name)}</h2><p>${professionalDemoMode ? "Les notes privées et partagées sont visibles dans cet espace professionnel fictif." : "Les notes partagées par le professionnel apparaissent ici en lecture seule."}</p>${professionalDemoMode ? `<div class="dialog-actions"><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalDemo">Quitter le mode professionnel</button></div>` : ""}</section>${professionalTrendHtml()}${trackingPlanPanel}${form}<section class="professional-followup"><div class="section-title"><h2>Chronologie</h2><span class="muted small">${allNotes.length} note${allNotes.length > 1 ? "s" : ""}</span></div><div class="stack">${cards}</div></section>`;
     $("#switchProfessionalClient")?.addEventListener("click", openProfessionalClientPicker);
     $("#leaveProfessionalDemo")?.addEventListener("click", leaveDemoMode);
     $("[data-open-trend-fullscreen]")?.addEventListener("click", async () => {
@@ -3224,6 +3275,34 @@
       });
     });
     $("[data-close-trend-week]")?.addEventListener("click", () => $("#professionalTrendWeekDialog")?.close());
+    const updateTrackingPlanCount = () => {
+      const count = $$("[data-tracking-feeling]:checked").length,
+        target = $("#trackingPlanCount");
+      if (target) target.textContent = `${count} sélectionné${count > 1 ? "s" : ""}`;
+      $$(".tracking-plan-group").forEach((group) => {
+        const small = group.querySelector("summary small"),
+          inputs = [...group.querySelectorAll("[data-tracking-feeling]")];
+        if (small) small.textContent = `${inputs.filter((input) => input.checked).length}/${inputs.length}`;
+      });
+    };
+    $$("[data-tracking-feeling]").forEach((input) => input.addEventListener("change", updateTrackingPlanCount));
+    $("#selectAllTrackingFeelings")?.addEventListener("click", () => {
+      $$("[data-tracking-feeling]").forEach((input) => { input.checked = true; });
+      updateTrackingPlanCount();
+    });
+    $("#clearTrackingFeelings")?.addEventListener("click", () => {
+      $$("[data-tracking-feeling]").forEach((input) => { input.checked = false; });
+      updateTrackingPlanCount();
+    });
+    $("#professionalTrackingPlanForm")?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const feelingIds = $$("[data-tracking-feeling]:checked").map((input) => input.dataset.trackingFeeling);
+      if (!feelingIds.length) return alert("Sélectionne au moins un ressenti à suivre.");
+      const plans = readProfessionalTrackingPlans();
+      plans[profile.id] = { clientId: profile.id, feelingIds, updatedAt: new Date().toISOString() };
+      writeProfessionalTrackingPlans(plans);
+      renderFollowup();
+    });
     $("#professionalNoteForm")?.addEventListener("submit", (event) => {
       event.preventDefault();
       const rawContext = $("#professionalNoteContext").value.split("|");
@@ -4181,19 +4260,28 @@
     );
   }
   const FEELING_CATEGORIES = [
-    { id: "positive", emoji: "😊", label: "Ressentis positifs" },
+    { id: "positive", emoji: "😊", label: "Bien-être et satisfaction" },
     { id: "digestion", emoji: "🍽️", label: "Digestion" },
     { id: "energy_state", emoji: "⚡", label: "Énergie et état général" },
-    { id: "head_senses", emoji: "🧠", label: "Tête et sens" },
+    { id: "head_senses", emoji: "🧠", label: "Tête, concentration et sens" },
     {
       id: "reactions",
       emoji: "🌿",
-      label: "Réactions cutanées et respiratoires",
+      label: "Peau et respiration",
     },
-    { id: "mood", emoji: "❤️", label: "Humeur et envies" },
+    { id: "mood", emoji: "❤️", label: "Humeur, envies et alimentation" },
     { id: "other_physical", emoji: "🩺", label: "Autres signes physiques" },
   ];
   const FEELING_TAGS = [
+    {
+      id: "no_tracked_symptoms",
+      emoji: "✅",
+      label: "Aucun des ressentis suivis",
+      group: "neutral",
+      category: "positive",
+      fixedScore: 5,
+      scopedOnly: true,
+    },
     {
       id: "feeling_good",
       emoji: "💪",
@@ -4595,6 +4683,14 @@
       group: "symptom",
       category: "other_physical",
     },
+    {
+      id: "other_report",
+      emoji: "✍️",
+      label: "Autre chose à signaler",
+      group: "neutral",
+      category: "other_physical",
+      scopedOnly: true,
+    },
   ];
   window.ENERGIE_FEELING_TAGS = FEELING_TAGS.map((tag) => ({ ...tag }));
   function feelingEmoji(r) {
@@ -4616,23 +4712,30 @@
       (meal?.feeling?.tags || []).map((id) => [id, fallback]),
     );
   }
-  function feelingTagsForMode(mode) {
-    return FEELING_TAGS.filter((tag) => mode !== "before" || !tag.afterOnly);
+  function feelingTagsForMode(mode, selectedIds = []) {
+    const plan = activeProfessionalTrackingPlan(),
+      selected = new Set(selectedIds || []);
+    return FEELING_TAGS.filter((tag) => {
+      if (mode === "before" && tag.afterOnly) return false;
+      if (!plan) return !tag.scopedOnly;
+      return tag.scopedOnly || plan.feelingIds.includes(tag.id) || selected.has(tag.id);
+    });
   }
   function scoredFeelingPickerHtml(mode, scores = {}) {
     const selected = normalizeFeelingScores(scores),
-      availableTags = feelingTagsForMode(mode);
+      availableTags = feelingTagsForMode(mode, Object.keys(selected));
     return FEELING_CATEGORIES.map((category) => {
       const tags = availableTags.filter((tag) => tag.category === category.id),
         hasSelected = tags.some((tag) => selected[tag.id]),
         selectedCount = tags.filter((tag) => selected[tag.id]).length,
         alwaysClosed = ["positive", "digestion"].includes(category.id),
         open = !alwaysClosed && (category.open || hasSelected);
+      if (!tags.length) return "";
       return `<details class="feeling-tag-group feeling-tag-group-${category.id}" ${open ? "open" : ""}><summary><span><b>${category.emoji}</b><strong>${esc(t(category.label))}</strong></span><small class="feeling-category-count"><em data-scored-selected-count="${mode}">${selectedCount}</em>/${tags.length}</small><i aria-hidden="true">›</i></summary><div class="feeling-tag-group-body scored-feeling-group">${tags
         .map((tag) => {
           const score = selected[tag.id] || null,
             active = !!selected[tag.id];
-          return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}" data-feeling-search-label="${esc(t(tag.label))}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span>${tag.emoji}</span>${esc(t(tag.label))}</button><div class="feeling-score-prompt" ${active && !score ? "" : "hidden"}>Choisis l’intensité</div><div class="feeling-score-buttons" ${active ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n} sur 5">${n}</button>`).join("")}</div></div>`;
+          return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}" ${tag.fixedScore ? `data-fixed-score="${tag.fixedScore}"` : ""} data-feeling-search-label="${esc(t(tag.label))}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span>${tag.emoji}</span>${esc(t(tag.label))}</button><div class="feeling-score-prompt" ${tag.fixedScore || !active || score ? "hidden" : ""}>Choisis l’intensité</div><div class="feeling-score-buttons" ${active && !tag.fixedScore ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n} sur 5">${n}</button>`).join("")}</div></div>`;
         })
         .join("")}</div></details>`;
     }).join("");
@@ -4647,11 +4750,14 @@
           item.classList.toggle("active", active);
           button.classList.toggle("active", active);
           button.setAttribute("aria-pressed", String(active));
-          item.querySelector(".feeling-score-buttons").hidden = !active;
+          item.querySelector(".feeling-score-buttons").hidden =
+            !active || !!item.dataset.fixedScore;
           const prompt = item.querySelector(".feeling-score-prompt");
           if (prompt)
             prompt.hidden =
-              !active || !!item.querySelector("[data-scored-value].active");
+              !active ||
+              !!item.dataset.fixedScore ||
+              !!item.querySelector("[data-scored-value].active");
           const group = item.closest(".feeling-tag-group"),
             count = group?.querySelector(
               `[data-scored-selected-count="${mode}"]`,
@@ -4688,8 +4794,10 @@
       .forEach((item) => {
         const toggle = item.querySelector(`[data-scored-toggle="${mode}"]`),
           selected = item.querySelector(`[data-scored-value="${mode}"].active`);
-        if (toggle && selected)
-          scores[toggle.dataset.scoredTag] = Number(selected.dataset.score);
+        if (toggle && (selected || item.dataset.fixedScore))
+          scores[toggle.dataset.scoredTag] = Number(
+            selected?.dataset.score || item.dataset.fixedScore,
+          );
       });
     return scores;
   }
@@ -4759,7 +4867,7 @@
   }
   function hasUnscoredFeelings(container, mode) {
     return [...(container?.querySelectorAll(".scored-feeling-item.active") || [])].some(
-      (item) => !item.querySelector(`[data-scored-value="${mode}"].active`),
+      (item) => !item.dataset.fixedScore && !item.querySelector(`[data-scored-value="${mode}"].active`),
     );
   }
   function feelingQualityAssessment(container, mode) {
@@ -5577,7 +5685,7 @@
             : [];
         meal.feeling.tags.forEach((tag) => {
           const meta = tagMeta[tag];
-          if (!meta) return;
+          if (!meta || meta.scopedOnly) return;
           const bucket =
             meta.group === "symptom" ? groups.negative : groups.positive;
           const entry = bucket[tag] || {
@@ -8246,10 +8354,12 @@
     return null;
   }
   function observationTagPickerHtml(selected) {
-    const chosen = new Set(selected || []);
+    const chosen = new Set(selected || []),
+      availableTags = feelingTagsForMode("global", [...chosen]);
     return FEELING_CATEGORIES.map((category) => {
-      const tags = FEELING_TAGS.filter((tag) => tag.category === category.id),
+      const tags = availableTags.filter((tag) => tag.category === category.id),
         alwaysClosed = ["positive", "digestion"].includes(category.id);
+      if (!tags.length) return "";
       const open =
         !alwaysClosed &&
         (category.open || tags.some((tag) => chosen.has(tag.id)));
@@ -9282,7 +9392,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.38.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.39.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
