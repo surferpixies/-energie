@@ -5,7 +5,7 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 38;
+  const CURRENT_VERSION = 39;
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -4316,15 +4316,15 @@
   const FEELING_CATEGORIES = [
     { id: "positive", emoji: "👌", label: "Ressenti général" },
     { id: "digestion", emoji: "🍽️", label: "Digestion" },
-    { id: "energy_state", emoji: "⚡", label: "Énergie et état général" },
-    { id: "head_senses", emoji: "🧠", label: "Tête, concentration et sens" },
+    { id: "energy_state", emoji: "⚡", label: "Énergie" },
+    { id: "head_senses", emoji: "🧠", label: "Tête et sens" },
     {
       id: "reactions",
       emoji: "🌿",
       label: "Peau et respiration",
     },
-    { id: "mood", emoji: "❤️", label: "Humeur, envies et alimentation" },
-    { id: "other_physical", emoji: "🩺", label: "Autres signes physiques" },
+    { id: "mood", emoji: "❤️", label: "Humeur et envies" },
+    { id: "other_physical", emoji: "🩺", label: "Autres signes" },
   ];
   const FEELING_TAGS = [
     {
@@ -9501,7 +9501,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.41.3");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.41.4");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

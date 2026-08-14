@@ -971,3 +971,6 @@ body.demo-guide-open .bottom-nav{z-index:20}
 
 /* V3.41.3 — titres de catégories complets sur iPhone */
 @media(max-width:520px){.compact-feeling-categories>.feeling-tag-group:not([open])>summary{height:100px;min-height:100px;max-height:100px;align-content:center}.compact-feeling-categories>.feeling-tag-group:not([open])>summary strong{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:4;line-clamp:4;font-size:.68rem;line-height:1.22}.compact-feeling-categories>.feeling-tag-group:not([open])>summary>span{align-items:start}.compact-feeling-categories>.feeling-tag-group:not([open])>summary small{align-self:start}}
+
+/* V3.41.4 — catégories courtes plutôt que retours de ligne forcés */
+@media(max-width:520px){.compact-feeling-categories>.feeling-tag-group:not([open])>summary{height:76px;min-height:76px;max-height:76px;align-content:center}.compact-feeling-categories>.feeling-tag-group:not([open])>summary strong{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;font-size:.72rem;line-height:1.2}.compact-feeling-categories>.feeling-tag-group:not([open])>summary>span{align-items:center}.compact-feeling-categories>.feeling-tag-group:not([open])>summary small{align-self:center}}
