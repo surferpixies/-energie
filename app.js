@@ -5,7 +5,7 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 30;
+  const CURRENT_VERSION = 31;
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => [...document.querySelectorAll(s)];
   const uid = () =>
@@ -222,6 +222,16 @@
     notificationTimer = null;
   let hasDemoAccess = false;
   let professionalDemoMode = false;
+  const EATING_REASON_IDS = new Set([
+    "hunger", "routine", "craving", "pleasure", "social",
+    "emotion", "boredom", "energy", "activity", "other",
+  ]);
+  function normalizeEatingReasons(value) {
+    return [...new Set(Array.isArray(value) ? value : [])].filter((id) => EATING_REASON_IDS.has(id));
+  }
+  function nutritionVisibleToViewer() {
+    return !!professionalDemoMode;
+  }
   let barcodeReader = null,
     barcodeControls = null,
     barcodeBusy = false,
@@ -469,6 +479,12 @@
       feelingsBefore: beforeScores,
       feelingsBeforeQuality:
         m.feelingsBeforeQuality || rawFeeling?.beforeQuality || null,
+      eatingReasons: normalizeEatingReasons(
+        m.eatingReasons || m.eating_reasons || rawFeeling?.eatingReasons,
+      ),
+      eatingReasonOther: String(
+        m.eatingReasonOther || m.eating_reason_other || rawFeeling?.eatingReasonOther || "",
+      ).trim().slice(0, 160),
       notes: m.notes || "",
       nutrition: normalNutrition(m.nutrition || m.macros),
       foodReview:
@@ -1088,12 +1104,14 @@
             photo_path: meal.photoPath || null,
             feeling:
               Object.keys(normalizeFeelingScores(meal.feelingsBefore)).length ||
-              meal.feeling || meal.foodReview
+              meal.feeling || meal.foodReview || meal.eatingReasons?.length || meal.eatingReasonOther
                 ? {
                     ...(meal.feeling || {}),
                     beforeScores: normalizeFeelingScores(meal.feelingsBefore),
                     beforeQuality: meal.feelingsBeforeQuality || null,
                     foodReview: meal.foodReview || null,
+                    eatingReasons: normalizeEatingReasons(meal.eatingReasons),
+                    eatingReasonOther: meal.eatingReasonOther || "",
                   }
                 : null,
             feeling_notified_at: meal.feelingNotifiedAt || null,
@@ -1927,14 +1945,13 @@
     }
     fillNutritionInputs(n);
     const optionalDetails = $("#mealOptionalDetails");
-    if (optionalDetails) optionalDetails.open = true;
+    if (optionalDetails && nutritionVisibleToViewer()) optionalDetails.open = true;
     mealNutritionManuallyEdited = false;
   }
   function scheduleAutomaticNutritionPreview() {
     clearTimeout(mealNutritionPreviewTimer);
     updateMealCompositionReview();
     if (
-      !db.settings.macroTracking ||
       db.settings.autoNutritionEstimates === false ||
       mealNutritionManuallyEdited
     )
@@ -1949,7 +1966,7 @@
       if (nutrition) {
         fillNutritionInputs(nutrition);
         const optionalDetails = $("#mealOptionalDetails");
-        if (optionalDetails) optionalDetails.open = true;
+        if (optionalDetails && nutritionVisibleToViewer()) optionalDetails.open = true;
       }
       else
         fillNutritionInputs(
@@ -3867,7 +3884,7 @@
     const feelingPreview = feelingEligible
       ? `<div class="meal-feeling-preview ${feeling ? "is-set" : "is-empty"}">${feeling ? `<span>Après · ${afterCount} ressenti${afterCount > 1 ? "s" : ""}</span>` : `<span>Ressenti après</span><small>À noter</small>`}</div>`
       : "";
-    return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${m.photoUrl || m.photoLocal ? `<img src="${esc(m.photoUrl || m.photoLocal)}" alt="">` : mealIcon(m.type, m.description)}</div><div class="meal-card-body"><h3>${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${esc(t(m.type))}${opts.showDate ? ` · ${esc(formatDate(m.date))}` : ""}</div>${db.settings.macroTracking && m.nutrition ? `<div class="meal-macros">≈ ${esc(nutritionText(m.nutrition))}</div>` : ""}${feelingPreview}<div class="meal-footer">${beforeCount ? `<span class="chip">Avant · ${beforeCount}</span>` : ""}${feelingEligible ? `<button class="meal-feeling-inline ${feeling ? "is-set" : "is-empty"}" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? `Après · ${afterCount}` : "Ressenti après"}</button>` : ""}</div></div><div class="meal-actions">${feelingEligible ? `<button class="feeling-meal" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? "😊" : "＋😊"}</button>` : ""}<button class="favorite-meal ${favorite ? "is-favorite" : ""}" data-favorite="${m.id}" title="${favorite ? "Retirer des favoris" : "Ajouter aux favoris"}">${favorite ? "★" : "☆"}</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div></article>`;
+    return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${m.photoUrl || m.photoLocal ? `<img src="${esc(m.photoUrl || m.photoLocal)}" alt="">` : mealIcon(m.type, m.description)}</div><div class="meal-card-body"><h3>${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${esc(t(m.type))}${opts.showDate ? ` · ${esc(formatDate(m.date))}` : ""}</div>${nutritionVisibleToViewer() && m.nutrition ? `<div class="meal-macros">≈ ${esc(nutritionText(m.nutrition))}</div>` : ""}${feelingPreview}<div class="meal-footer">${beforeCount ? `<span class="chip">Avant · ${beforeCount}</span>` : ""}${feelingEligible ? `<button class="meal-feeling-inline ${feeling ? "is-set" : "is-empty"}" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? `Après · ${afterCount}` : "Ressenti après"}</button>` : ""}</div></div><div class="meal-actions">${feelingEligible ? `<button class="feeling-meal" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? "😊" : "＋😊"}</button>` : ""}<button class="favorite-meal ${favorite ? "is-favorite" : ""}" data-favorite="${m.id}" title="${favorite ? "Retirer des favoris" : "Ajouter aux favoris"}">${favorite ? "★" : "☆"}</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div></article>`;
   }
   function bindMealCards() {
     $$("[data-meal]").forEach(
@@ -4938,6 +4955,7 @@
   }
 
   function dailyMacroSummaryHtml(meals) {
+    if (!nutritionVisibleToViewer()) return "";
     if (!Array.isArray(meals) || !meals.length) return "";
     const known = [];
     meals.forEach((meal) => {
@@ -7225,9 +7243,16 @@
         return 0;
       }
     })();
-    const supplements = normalizeSupplements(db.settings?.supplements || []);
+    const supplements = normalizeSupplements(db.settings?.supplements || []),
+      nutritionSettingsHtml = nutritionVisibleToViewer()
+        ? `<div class="notice info-notice"><strong>Estimations nutritionnelles professionnelles</strong><p>Les calories et nutriments sont calculés pour soutenir l’analyse professionnelle, mais demeurent cachés au client.</p></div>`
+        : `<div class="notice info-notice"><strong>Une expérience sans chiffres nutritionnels</strong><p>Les calories et nutriments sont volontairement cachés. Ils peuvent être analysés dans l’espace professionnel sans influencer ton rapport à l’alimentation.</p></div>`;
     $("#app").innerHTML =
       `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="off"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${["Déjeuner", "Dîner", "Souper", "Collation"].map((t) => `<label class="setting-option"><input type="checkbox" data-feeling-meal-type="${t}" ${(db.settings.feelingMealTypes || []).includes(t) ? "checked" : ""}><span>${mealIcon(t)} ${window.t(t)}</span></label>`).join("")}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button><p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p></div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${professionalDemoEntryHtml()}${hasDemoAccess ? demoProfileCardsHtml() : ``}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<section class="card"><h3>Sauvegarde supplémentaire</h3><p class="muted small">${backups} copie(s) locale(s) de sécurité.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></section></div>`;
+    const nutritionAnchor = $("#settingNutrition")?.closest("label");
+    if (nutritionAnchor) nutritionAnchor.insertAdjacentHTML("beforebegin", nutritionSettingsHtml);
+    $("#settingMacros")?.closest("label")?.remove();
+    if (!nutritionVisibleToViewer()) $("#settingAutoNutrition")?.closest("label")?.remove();
     $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", physiologicalContextHtml());
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -7483,7 +7508,7 @@
     if (base && Number.isFinite(grams) && grams > 0)
       barcodeLastProduct.nutrition = scaleNutritionPer100g(base, grams);
     const preview = $("#barcodeNutritionPreview");
-    if (preview && db.settings.macroTracking && barcodeLastProduct.nutrition) {
+    if (preview && nutritionVisibleToViewer() && barcodeLastProduct.nutrition) {
       preview.hidden = false;
       preview.innerHTML = `<strong>≈ ${esc(nutritionText(barcodeLastProduct.nutrition))}</strong><small>${esc(barcodeLastProduct.nutrition.basis || "portion indiquée")} · modifiable après l’ajout</small>`;
     }
@@ -7496,7 +7521,7 @@
     if (portionWrap && portionInput) {
       const suggested = product.servingGrams || 100;
       portionInput.value = String(Math.round(suggested));
-      portionWrap.hidden = !product.nutritionPer100g;
+      portionWrap.hidden = !nutritionVisibleToViewer() || !product.nutritionPer100g;
     }
     const result = $("#barcodeResult"),
       name = $("#barcodeProductName"),
@@ -7520,7 +7545,7 @@
       image.removeAttribute("src");
     }
     if (product.nutritionPer100g) updateBarcodePortion();
-    if (db.settings.macroTracking && product.nutrition) {
+    if (nutritionVisibleToViewer() && product.nutrition) {
       preview.hidden = false;
       preview.innerHTML = `<strong>≈ ${esc(nutritionText(product.nutrition))}</strong><small>${esc(product.nutrition.basis || "portion indiquée")} · modifiable après l’ajout</small>`;
     } else preview.hidden = true;
@@ -8004,6 +8029,23 @@
       ? `${feelingCompactSummaryHtml("Avant", beforeScores)}${feelingCompactSummaryHtml("Après", afterScores)}`
       : "<small>Aucun ressenti</small>";
   }
+  function collectEatingReasons() {
+    return normalizeEatingReasons(
+      $$('#mealForm input[name="eatingReason"]:checked').map((input) => input.value),
+    );
+  }
+  function updateEatingReasonUi() {
+    const selected = collectEatingReasons(),
+      otherSelected = selected.includes("other"),
+      otherWrap = $("#eatingReasonOtherWrap"),
+      summary = $("#eatingReasonSummary");
+    if (otherWrap) otherWrap.hidden = !otherSelected;
+    if (!otherSelected && $("#eatingReasonOther")) $("#eatingReasonOther").value = "";
+    if (summary)
+      summary.textContent = selected.length
+        ? `${selected.length} raison${selected.length > 1 ? "s" : ""} sélectionnée${selected.length > 1 ? "s" : ""}`
+        : "Facultatif · plusieurs réponses possibles";
+  }
   function openMeal(id = null, presetType = null) {
     applyMealCompositionLocale();
     const d = ensureDay(db, selectedDate),
@@ -8031,6 +8073,13 @@
     updateMealDialogType(type);
     $("#mealTime").value = m?.time || new Date().toTimeString().slice(0, 5);
     $("#mealDescription").value = m?.description || "";
+    const selectedReasons = new Set(normalizeEatingReasons(m?.eatingReasons));
+    $$('#mealForm input[name="eatingReason"]').forEach((input) => {
+      input.checked = selectedReasons.has(input.value);
+    });
+    $("#eatingReasonOther").value = m?.eatingReasonOther || "";
+    updateEatingReasonUi();
+    $("#eatingReasonDetails").open = !m || selectedReasons.size > 0 || !!m?.eatingReasonOther;
     mealFoodReview = m?.foodReview
       ? { ...m.foodReview }
       : { description: m?.description || "", acknowledgedGaps: false };
@@ -8044,8 +8093,9 @@
     $("#mealNotes").value = m?.notes || "";
     const favorite = favoriteForMeal(m);
     setMealFavoriteToggle(!!favorite, favorite?.id || "");
-    $("#mealOptionalDetails").open = !!(m?.notes || m?.photoLocal || m?.photoUrl || m?.nutrition);
-    $("#mealNutritionSection").hidden = !db.settings.macroTracking;
+    $("#mealOptionalDetails").open = !!(m?.notes || m?.photoLocal || m?.photoUrl || (nutritionVisibleToViewer() && m?.nutrition));
+    $("#mealOptionalTitle").textContent = nutritionVisibleToViewer() ? "Photo, notes et nutrition" : "Photo et notes";
+    $("#mealNutritionSection").hidden = !nutritionVisibleToViewer();
     const automaticNutrition = db.settings.autoNutritionEstimates !== false;
     fillNutritionInputs(
       m?.nutrition
@@ -8333,7 +8383,7 @@
       return;
     }
     appendScannedFood(name);
-    if (db.settings.macroTracking && barcodeLastProduct?.nutrition)
+    if (barcodeLastProduct?.nutrition)
       fillNutritionInputs(
         mergeNutrition(nutritionFromInputs(), barcodeLastProduct.nutrition),
       );
@@ -8378,6 +8428,9 @@
     setMealFavoriteToggle(next, button.dataset.favoriteId);
     showMealFavoriteFeedback(next);
   };
+  $$('#mealForm input[name="eatingReason"]').forEach((input) =>
+    input.addEventListener("change", updateEatingReasonUi),
+  );
   $("#estimateMealNutrition").onclick = estimateCurrentMealNutrition;
   $("#mealDescription").addEventListener(
     "input",
@@ -8438,13 +8491,10 @@
         type: $("#mealType").value,
         time: $("#mealTime").value,
         description: $("#mealDescription").value.trim(),
-        nutrition: db.settings.macroTracking
-          ? nutritionFromInputs() ||
-            (db.settings.autoNutritionEstimates !== false &&
-            !mealNutritionManuallyEdited
-              ? estimateNutritionFromText($("#mealDescription").value.trim())
-              : null)
-          : old?.nutrition || null,
+        nutrition: nutritionFromInputs() ||
+          (db.settings.autoNutritionEstimates !== false && !mealNutritionManuallyEdited
+            ? estimateNutritionFromText($("#mealDescription").value.trim())
+            : old?.nutrition || null),
         foodReview:
           mealFoodReview?.description === $("#mealDescription").value.trim()
             ? { ...mealFoodReview }
@@ -8453,6 +8503,10 @@
         fatigueAfter: old?.fatigueAfter || 0,
         feelingsBefore,
         feelingsBeforeQuality: beforeQuality,
+        eatingReasons: collectEatingReasons(),
+        eatingReasonOther: collectEatingReasons().includes("other")
+          ? $("#eatingReasonOther").value.trim().slice(0, 160)
+          : "",
         notes: $("#mealNotes").value.trim(),
         photoLocal:
           photoData && photoData.startsWith("data:")
@@ -9228,7 +9282,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.37.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.38.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

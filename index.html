@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.37.0">
+  <link rel="stylesheet" href="styles.css?v=3.38.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -100,6 +100,25 @@
           <button type="button" class="text-button" id="keepMealDescription">Continuer ainsi</button>
         </div>
       </section>
+      <details id="eatingReasonDetails" class="eating-reason-card" open>
+        <summary><span aria-hidden="true">💭</span><span><strong>Qu’est-ce qui t’a amené à manger?</strong><small id="eatingReasonSummary">Facultatif · plusieurs réponses possibles</small></span><b aria-hidden="true">›</b></summary>
+        <div class="eating-reason-content">
+          <p class="muted small">Il n’y a pas de bonne ou de mauvaise réponse. Choisis simplement ce qui correspond à ce moment.</p>
+          <div class="eating-reason-grid">
+            <label><input type="checkbox" name="eatingReason" value="hunger"><span>😋 J’avais faim</span></label>
+            <label><input type="checkbox" name="eatingReason" value="routine"><span>🕒 C’était l’heure</span></label>
+            <label><input type="checkbox" name="eatingReason" value="craving"><span>👀 La nourriture m’a donné envie</span></label>
+            <label><input type="checkbox" name="eatingReason" value="pleasure"><span>😊 Pour le plaisir</span></label>
+            <label><input type="checkbox" name="eatingReason" value="social"><span>👥 Pour partager un moment</span></label>
+            <label><input type="checkbox" name="eatingReason" value="emotion"><span>🌦️ À cause d’une émotion</span></label>
+            <label><input type="checkbox" name="eatingReason" value="boredom"><span>😴 Je m’ennuyais</span></label>
+            <label><input type="checkbox" name="eatingReason" value="energy"><span>⚡ Pour avoir de l’énergie</span></label>
+            <label><input type="checkbox" name="eatingReason" value="activity"><span>🏃 Avant ou après une activité</span></label>
+            <label><input type="checkbox" name="eatingReason" value="other"><span>✍️ Autre raison</span></label>
+          </div>
+          <label id="eatingReasonOtherWrap" class="eating-reason-other" hidden>Autre raison<input id="eatingReasonOther" type="text" maxlength="160" autocomplete="off" placeholder="Écris-la en quelques mots"></label>
+        </div>
+      </details>
       <button type="button" class="secondary barcode-scan-launch" id="openBarcodeScanner"><span aria-hidden="true">▥</span><span><strong>Scanner un produit</strong><small>Ajoute rapidement son nom au repas</small></span></button>
       <details id="mealFeelingsDetails" class="meal-feelings-card">
         <summary>
@@ -126,7 +145,7 @@
       </details>
       <div id="mealSuggestionWrap" class="meal-suggestion-wrap" hidden><button type="button" id="mealSuggestionToggle" class="meal-suggestion-toggle" aria-expanded="false">💡 Voir la suggestion</button><p id="mealSuggestionBody" class="meal-suggestion-body" hidden></p></div>
       <details id="mealOptionalDetails" class="meal-optional-details">
-        <summary><span>＋</span><span><strong>Photo, notes et nutrition</strong><small>Options facultatives</small></span></summary>
+        <summary><span>＋</span><span><strong id="mealOptionalTitle">Photo et notes</strong><small>Options facultatives</small></span></summary>
         <div class="meal-optional-content">
           <section id="mealNutritionSection" class="meal-nutrition-section" hidden>
             <div class="meal-nutrition-heading"><div><span class="eyebrow">Nutrition facultative</span><strong>Estimation nutritionnelle</strong></div><button type="button" class="secondary small" id="estimateMealNutrition">Estimer</button></div>
@@ -402,7 +421,7 @@
   <script src="brain/insight-engine.js?v=3.30.2"></script>
   <script src="brain/index.js?v=3.12.0"></script>
   <script src="observation-engine.js?v=3.30.2"></script>
-  <script src="demo-profiles.js?v=3.37.0"></script>
-  <script src="app.js?v=3.37.0"></script>
+  <script src="demo-profiles.js?v=3.38.0"></script>
+  <script src="app.js?v=3.38.0"></script>
 </body>
 </html>
