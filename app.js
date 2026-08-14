@@ -5,7 +5,25 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 33;
+  const CURRENT_VERSION = 34;
+  const FEELING_ALIASES = {
+    energy: "stable_energy",
+    cramps: "stomachache",
+    slow_digestion: "heaviness",
+    energy_drop: "fatigue",
+    poor_focus: "brain_fog",
+    migraine: "headache",
+    sound_sensitivity: "light_sensitivity",
+    smell_sensitivity: "light_sensitivity",
+    sneezing: "congestion",
+    anxiety: "stress",
+    sugar_craving: "craving",
+    chills: "hot_flash",
+  };
+  const canonicalFeelingId = (id) => FEELING_ALIASES[id] || id;
+  function normalizeFeelingIds(ids = []) {
+    return [...new Set((Array.isArray(ids) ? ids : []).map(canonicalFeelingId).filter(Boolean))];
+  }
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => [...document.querySelectorAll(s)];
   const uid = () =>
@@ -308,7 +326,7 @@
       ).slice(0, 5),
       intensity: Math.min(5, Math.max(1, Number(o.intensity) || 3)),
       duration: OBSERVATION_DURATIONS[o.duration] ? o.duration : "unknown",
-      tags: Array.isArray(o.tags) ? o.tags : [],
+      tags: normalizeFeelingIds(o.tags),
       contexts: Array.isArray(o.contexts) ? o.contexts : [],
       mealIds: Array.isArray(o.mealIds) ? o.mealIds : [],
       notes: typeof o.notes === "string" ? o.notes : "",
@@ -427,7 +445,9 @@
     if (value && typeof value === "object" && !Array.isArray(value))
       Object.entries(value).forEach(([id, score]) => {
         const n = Number(score);
-        if (id && n >= 1 && n <= 5) out[id] = Math.round(n);
+        const canonicalId = canonicalFeelingId(id);
+        if (canonicalId && n >= 1 && n <= 5)
+          out[canonicalId] = Math.max(out[canonicalId] || 0, Math.round(n));
       });
     return out;
   }
@@ -448,12 +468,12 @@
       );
     const legacyAfterScores =
       rawFeeling && !Object.keys(normalizeFeelingScores(rawFeeling.scores)).length
-        ? Object.fromEntries(
+        ? normalizeFeelingScores(Object.fromEntries(
             (rawFeeling.tags || []).map((id) => [
               id,
               Math.min(5, Math.max(1, Number(rawFeeling.rating) || 3)),
             ]),
-          )
+          ))
         : normalizeFeelingScores(rawFeeling?.scores);
     const feeling = hasAfter
       ? {
@@ -2948,12 +2968,17 @@
   function readProfessionalTrackingPlans() {
     try {
       const saved = JSON.parse(localStorage.getItem(PROFESSIONAL_TRACKING_PLANS_KEY) || "null");
-      if (saved && typeof saved === "object") return saved;
+      if (saved && typeof saved === "object") {
+        Object.values(saved).forEach((plan) => {
+          if (plan) plan.feelingIds = normalizeFeelingIds(plan.feelingIds);
+        });
+        return saved;
+      }
     } catch (_) {}
     const defaults = Object.fromEntries(
       Object.entries(defaultProfessionalTrackingPlans()).map(([clientId, feelingIds]) => [clientId, {
         clientId,
-        feelingIds,
+        feelingIds: normalizeFeelingIds(feelingIds),
         updatedAt: new Date().toISOString(),
       }]),
     );
@@ -2972,7 +2997,7 @@
       plan = activeProfessionalTrackingPlan(),
       chosen = new Set(plan?.feelingIds || []),
       groups = FEELING_CATEGORIES.map((category) => {
-        const tags = FEELING_TAGS.filter((tag) => tag.category === category.id && !tag.scopedOnly);
+        const tags = FEELING_TAGS.filter((tag) => tag.category === category.id && !tag.scopedOnly && !tag.deprecated);
         if (!tags.length) return "";
         return `<details class="tracking-plan-group" ${tags.some((tag) => chosen.has(tag.id)) ? "open" : ""}><summary><span>${category.emoji} ${esc(t(category.label))}</span><small>${tags.filter((tag) => chosen.has(tag.id)).length}/${tags.length}</small></summary><div class="tracking-plan-options">${tags.map((tag) => `<label><input type="checkbox" data-tracking-feeling="${tag.id}" ${chosen.has(tag.id) ? "checked" : ""}><span>${tag.emoji} ${esc(t(tag.label))}</span></label>`).join("")}</div></details>`;
       }).join("");
@@ -4299,7 +4324,7 @@
     {
       id: "stable_energy",
       emoji: "🔋",
-      label: "Énergie stable",
+      label: "Bonne énergie",
       group: "positive",
       category: "positive",
     },
@@ -4309,6 +4334,7 @@
       label: "Plus énergique",
       group: "positive",
       category: "positive",
+      deprecated: true,
     },
     {
       id: "satisfied",
@@ -4372,7 +4398,7 @@
     {
       id: "stomachache",
       emoji: "🤢",
-      label: "Douleur abdominale",
+      label: "Douleurs ou crampes abdominales",
       group: "symptom",
       category: "digestion",
     },
@@ -4382,6 +4408,7 @@
       label: "Crampes abdominales",
       group: "symptom",
       category: "digestion",
+      deprecated: true,
     },
     {
       id: "reflux",
@@ -4428,7 +4455,7 @@
     {
       id: "heaviness",
       emoji: "🪨",
-      label: "Sensation de lourdeur",
+      label: "Lourdeur ou digestion lente",
       group: "symptom",
       category: "digestion",
     },
@@ -4438,6 +4465,7 @@
       label: "Digestion lente",
       group: "symptom",
       category: "digestion",
+      deprecated: true,
     },
     {
       id: "hungry_soon",
@@ -4458,14 +4486,14 @@
     {
       id: "fatigue",
       emoji: "😴",
-      label: "Fatigue",
+      label: "Fatigue ou manque d’énergie",
       group: "symptom",
       category: "energy_state",
     },
     {
       id: "sleepiness",
       emoji: "🥱",
-      label: "Somnolence",
+      label: "Somnolence ou envie de dormir",
       group: "symptom",
       category: "energy_state",
     },
@@ -4475,6 +4503,7 @@
       label: "Baisse d’énergie",
       group: "symptom",
       category: "energy_state",
+      deprecated: true,
     },
     {
       id: "weakness",
@@ -4500,7 +4529,7 @@
     {
       id: "brain_fog",
       emoji: "🌫️",
-      label: "Brouillard mental",
+      label: "Brouillard mental ou concentration difficile",
       group: "symptom",
       category: "energy_state",
     },
@@ -4510,12 +4539,13 @@
       label: "Difficulté à se concentrer",
       group: "symptom",
       category: "energy_state",
+      deprecated: true,
     },
 
     {
       id: "headache",
       emoji: "🤕",
-      label: "Mal de tête",
+      label: "Mal de tête ou migraine",
       group: "symptom",
       category: "head_senses",
     },
@@ -4525,11 +4555,12 @@
       label: "Migraine",
       group: "symptom",
       category: "head_senses",
+      deprecated: true,
     },
     {
       id: "light_sensitivity",
       emoji: "☀️",
-      label: "Sensibilité à la lumière",
+      label: "Sensibilité à la lumière, au bruit ou aux odeurs",
       group: "symptom",
       category: "head_senses",
     },
@@ -4539,6 +4570,7 @@
       label: "Sensibilité au bruit",
       group: "symptom",
       category: "head_senses",
+      deprecated: true,
     },
     {
       id: "smell_sensitivity",
@@ -4546,6 +4578,7 @@
       label: "Sensibilité aux odeurs",
       group: "symptom",
       category: "head_senses",
+      deprecated: true,
     },
     {
       id: "blurred_vision",
@@ -4586,7 +4619,7 @@
     {
       id: "congestion",
       emoji: "🤧",
-      label: "Nez congestionné",
+      label: "Congestion ou éternuements",
       group: "symptom",
       category: "reactions",
     },
@@ -4596,6 +4629,7 @@
       label: "Éternuements",
       group: "symptom",
       category: "reactions",
+      deprecated: true,
     },
     {
       id: "throat_irritation",
@@ -4615,7 +4649,7 @@
     {
       id: "stress",
       emoji: "😥",
-      label: "Stress",
+      label: "Stress ou anxiété",
       group: "symptom",
       category: "mood",
     },
@@ -4625,6 +4659,7 @@
       label: "Anxiété",
       group: "symptom",
       category: "mood",
+      deprecated: true,
     },
     {
       id: "low_mood",
@@ -4639,11 +4674,12 @@
       label: "Envie intense de sucre",
       group: "symptom",
       category: "mood",
+      deprecated: true,
     },
     {
       id: "craving",
       emoji: "🍪",
-      label: "Fringale",
+      label: "Fringale ou envie de sucre",
       group: "symptom",
       category: "mood",
     },
@@ -4658,7 +4694,7 @@
     {
       id: "hot_flash",
       emoji: "🥵",
-      label: "Bouffées de chaleur",
+      label: "Variation inhabituelle de température",
       group: "symptom",
       category: "other_physical",
     },
@@ -4668,6 +4704,7 @@
       label: "Frissons",
       group: "symptom",
       category: "other_physical",
+      deprecated: true,
     },
     {
       id: "unusual_thirst",
@@ -4724,6 +4761,7 @@
       selected = new Set(selectedIds || []);
     return FEELING_TAGS.filter((tag) => {
       if (mode === "before" && tag.afterOnly) return false;
+      if (tag.deprecated && !selected.has(tag.id)) return false;
       if (!plan) return !tag.scopedOnly;
       return tag.scopedOnly || plan.feelingIds.includes(tag.id) || selected.has(tag.id);
     });
@@ -9415,7 +9453,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.39.1");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.40.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
