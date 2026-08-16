@@ -5,7 +5,7 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 42;
+  const CURRENT_VERSION = 43;
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -262,29 +262,33 @@
     notificationTimer = null;
   let hasDemoAccess = false;
   let professionalDemoMode = false;
-  const EATING_REASON_IDS = new Set(["hunger", "boredom", "pleasure", "other"]);
+  const EATING_REASON_IDS = new Set(["hunger", "routine", "boredom", "pleasure", "other"]);
   const LEGACY_EATING_REASON_LABELS = {
-    routine: "c’était l’heure de manger",
     social: "pour partager un moment",
     emotion: "à cause d’une émotion",
     energy: "pour avoir de l’énergie",
     activity: "avant ou après une activité",
   };
-  function normalizeEatingReasons(value) {
-    const raw = [...new Set(Array.isArray(value) ? value : [])], out = [];
+  function normalizedEatingReasonState(value, existing = "") {
+    const raw = [...new Set(Array.isArray(value) ? value : [])], out = [],
+      currentParts = String(existing || "").split(";").map((part) => part.trim()).filter(Boolean),
+      recoveredRoutine = raw.includes("routine") || currentParts.some((part) => /^c[’']était l’heure de manger$/i.test(part)),
+      current = currentParts.filter((part) => !/^c[’']était l’heure de manger$/i.test(part)).join("; "),
+      legacy = raw.map((id) => LEGACY_EATING_REASON_LABELS[id]).filter(Boolean),
+      otherText = [current, ...legacy.filter((label) => !current.toLocaleLowerCase("fr-CA").includes(label.toLocaleLowerCase("fr-CA")))]
+        .filter(Boolean).join("; ").slice(0, 160);
     if (raw.includes("hunger")) out.push("hunger");
+    if (recoveredRoutine) out.push("routine");
     if (raw.includes("boredom")) out.push("boredom");
     if (raw.includes("pleasure") || raw.includes("craving")) out.push("pleasure");
-    if (raw.includes("other") || raw.some((id) => LEGACY_EATING_REASON_LABELS[id])) out.push("other");
-    return out;
+    if (otherText || (raw.includes("other") && !recoveredRoutine)) out.push("other");
+    return { reasons: out, other: otherText };
+  }
+  function normalizeEatingReasons(value) {
+    return normalizedEatingReasonState(value).reasons;
   }
   function legacyEatingReasonOther(value, existing = "") {
-    const current = String(existing || "").trim();
-    const legacy = [...new Set(Array.isArray(value) ? value : [])]
-      .map((id) => LEGACY_EATING_REASON_LABELS[id])
-      .filter(Boolean);
-    return [current, ...legacy.filter((label) => !current.toLocaleLowerCase("fr-CA").includes(label.toLocaleLowerCase("fr-CA")))]
-      .filter(Boolean).join("; ").slice(0, 160);
+    return normalizedEatingReasonState(value, existing).other;
   }
   function nutritionVisibleToViewer() {
     return !!professionalDemoMode;
@@ -524,7 +528,11 @@
           scores: legacyAfterScores,
           beforeScores,
         }
-      : null;
+      : null,
+      eatingReasonState = normalizedEatingReasonState(
+        m.eatingReasons || m.eating_reasons || rawFeeling?.eatingReasons,
+        m.eatingReasonOther || m.eating_reason_other || rawFeeling?.eatingReasonOther || "",
+      );
     return {
       id: m.id || uid(),
       date: m.date || date,
@@ -541,13 +549,8 @@
       feelingsBefore: beforeScores,
       feelingsBeforeQuality:
         m.feelingsBeforeQuality || rawFeeling?.beforeQuality || null,
-      eatingReasons: normalizeEatingReasons(
-        m.eatingReasons || m.eating_reasons || rawFeeling?.eatingReasons,
-      ),
-      eatingReasonOther: legacyEatingReasonOther(
-        m.eatingReasons || m.eating_reasons || rawFeeling?.eatingReasons,
-        m.eatingReasonOther || m.eating_reason_other || rawFeeling?.eatingReasonOther || "",
-      ),
+      eatingReasons: eatingReasonState.reasons,
+      eatingReasonOther: eatingReasonState.other,
       notes: m.notes || "",
       nutrition: normalNutrition(m.nutrition || m.macros),
       foodReview:
@@ -4250,7 +4253,10 @@
         : "+";
     const actionLabel =
       main && type !== "Collation" ? `Modifier ${type}` : `Ajouter ${type}`;
-    return `<button class="meal-quick-card ${done ? "is-complete" : ""}" data-quick-meal="${esc(type)}" ${main && type !== "Collation" ? `data-edit-meal="${main.id}"` : ""} aria-label="${esc(actionLabel)}"><span class="meal-quick-icon">${done && type !== "Collation" ? "✓" : icon}</span><span><strong>${esc(t(type))}</strong><small>${subtitle}</small></span><span class="meal-quick-action">${actionIcon}</span></button>`;
+    const visibleChanges = main
+      ? feelingChangesHtml(feelingScoresFor(main, "before"), feelingScoresFor(main, "after"), !!main.feeling, true)
+      : "";
+    return `<button class="meal-quick-card ${done ? "is-complete" : ""} ${visibleChanges ? "has-feeling-changes" : ""}" data-quick-meal="${esc(type)}" ${main && type !== "Collation" ? `data-edit-meal="${main.id}"` : ""} aria-label="${esc(actionLabel)}"><span class="meal-quick-icon">${done && type !== "Collation" ? "✓" : icon}</span><span><strong>${esc(t(type))}</strong><small>${subtitle}</small></span><span class="meal-quick-action">${actionIcon}</span>${visibleChanges ? `<span class="meal-quick-feeling-changes">${visibleChanges}</span>` : ""}</button>`;
   }
   function changeJournalDay(offset) {
     const nextDate = addDaysKey(selectedDate, offset);
@@ -9623,7 +9629,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.42.2");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.42.3");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.42.2">
+  <link rel="stylesheet" href="styles.css?v=3.42.3">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -106,11 +106,12 @@
           <p class="muted small">Il n’y a pas de bonne ou de mauvaise réponse. Choisis simplement ce qui correspond à ce moment.</p>
           <div class="eating-reason-grid">
             <label><input type="checkbox" name="eatingReason" value="hunger"><span>😋 J’avais faim</span></label>
+            <label><input type="checkbox" name="eatingReason" value="routine"><span>🕒 C’était l’heure de manger</span></label>
             <label><input type="checkbox" name="eatingReason" value="boredom"><span>😴 Je m’ennuyais</span></label>
             <label><input type="checkbox" name="eatingReason" value="pleasure"><span>😋 Par gourmandise</span></label>
-            <label class="eating-reason-other-choice"><input type="checkbox" name="eatingReason" value="other"><span>✍️ Autre raison <small>(heure de manger, énergie, activité, émotion, moment social, etc.)</small></span></label>
+            <label class="eating-reason-other-choice"><input type="checkbox" name="eatingReason" value="other"><span>✍️ Autre raison <small>(énergie, activité, émotion, moment social, etc.)</small></span></label>
           </div>
-          <label id="eatingReasonOtherWrap" class="eating-reason-other" hidden>Précise la raison<input id="eatingReasonOther" type="text" maxlength="160" autocomplete="off" placeholder="Ex. c’était l’heure, pour avoir de l’énergie…"></label>
+          <label id="eatingReasonOtherWrap" class="eating-reason-other" hidden>Précise la raison<input id="eatingReasonOther" type="text" maxlength="160" autocomplete="off" placeholder="Ex. pour avoir de l’énergie, après une activité…"></label>
         </div>
       </details>
       <button type="button" class="secondary barcode-scan-launch" id="openBarcodeScanner"><span aria-hidden="true">▥</span><span><strong>Scanner un produit</strong><small>Ajoute rapidement son nom au repas</small></span></button>
@@ -416,7 +417,7 @@
   <script src="brain/insight-engine.js?v=3.30.2"></script>
   <script src="brain/index.js?v=3.12.0"></script>
   <script src="observation-engine.js?v=3.30.2"></script>
-  <script src="demo-profiles.js?v=3.42.2"></script>
-  <script src="app.js?v=3.42.2"></script>
+  <script src="demo-profiles.js?v=3.42.3"></script>
+  <script src="app.js?v=3.42.3"></script>
 </body>
 </html>
