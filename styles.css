@@ -948,7 +948,7 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .splash-lightning-cover,.splash-logo::after{display:none!important;animation:none!important}
 .splash-logo{animation:splashAppleIn .72s cubic-bezier(.2,.82,.28,1.12) .08s forwards}
 .splash-brand>strong{animation-delay:.92s}
-.splash-subtitle{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:-8px;color:#73947d;font-size:clamp(.68rem,2.4vw,.78rem);font-weight:650;letter-spacing:.025em;opacity:0;transform:translateY(4px);animation:splashNameIn .45s ease 1.18s forwards}.splash-subtitle i{color:#4fa765;font-style:normal}.splash-subtitle-result{color:#24713f;font-weight:650}[data-theme="dark"] .splash-subtitle{color:#9fbea8}[data-theme="dark"] .splash-subtitle i{color:#79b888}[data-theme="dark"] .splash-subtitle-result{color:#b7ddb9}
+.splash-subtitle{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:-8px;color:#73947d;font-size:clamp(.68rem,2.4vw,.78rem);font-weight:650;letter-spacing:.025em;opacity:0;transform:translateY(4px);animation:splashNameIn .45s ease 1.18s forwards}.splash-subtitle i{color:#4fa765;font-style:normal}.splash-subtitle-result{color:inherit;font-weight:inherit}[data-theme="dark"] .splash-subtitle{color:#9fbea8}[data-theme="dark"] .splash-subtitle i{color:#79b888}
 .splash-status{animation-delay:1.55s}
 .splash-tip{animation-delay:2.15s}
 .splash-app-hint{animation-delay:2.78s}
