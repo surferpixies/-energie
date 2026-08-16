@@ -5,7 +5,7 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 44;
+  const CURRENT_VERSION = 45;
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -254,6 +254,7 @@
     syncQueued = false,
     photoData = null,
     photoRemoved = false,
+    mealAiSuggestionText = "",
     mealNutritionPreviewTimer = null,
     mealNutritionManuallyEdited = false,
     mealFoodReview = null,
@@ -8469,6 +8470,9 @@
     updateMealCompositionReview();
     photoData = m?.photoLocal || m?.photoUrl || null;
     photoRemoved = false;
+    hideMealAiSuggestion();
+    setMealAiPhotoStatus("La description IA doit être vérifiée et corrigée au besoin.");
+    $("#mealPhoto").value = "";
     showPhotoPreview();
     setDemoDetailReadOnly("#mealForm", readOnly);
     $("#mealDialog").showModal();
@@ -8548,6 +8552,55 @@
     canvas.height = Math.round(img.height * scale);
     canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
     return canvas.toDataURL("image/jpeg", 0.78);
+  }
+  function setMealAiPhotoStatus(message, state = "") {
+    const el = $("#mealAiPhotoStatus");
+    el.textContent = message;
+    el.className = `meal-ai-photo-status${state ? ` is-${state}` : ""}`;
+  }
+  function hideMealAiSuggestion() {
+    mealAiSuggestionText = "";
+    $("#mealAiSuggestion").hidden = true;
+  }
+  function useMealAiSuggestion() {
+    if (!mealAiSuggestionText) return;
+    $("#mealDescription").value = mealAiSuggestionText;
+    $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
+    hideMealAiSuggestion();
+    setMealAiPhotoStatus("Description ajoutée — vérifie-la et corrige-la au besoin.", "success");
+    $("#mealDescription").focus();
+  }
+  async function analyzeMealPhotoWithAI(imageData) {
+    if (!client || !session) {
+      setMealAiPhotoStatus("Connecte-toi pour utiliser l’analyse de photo par IA.", "error");
+      return;
+    }
+    setMealAiPhotoStatus("Analyse de la photo en cours…", "loading");
+    hideMealAiSuggestion();
+    try {
+      const comma = imageData.indexOf(",");
+      const { data, error } = await client.functions.invoke("analyze-meal-photo", {
+        body: {
+          imageBase64: comma >= 0 ? imageData.slice(comma + 1) : imageData,
+          mimeType: "image/jpeg",
+          locale: "fr-CA",
+        },
+      });
+      if (error) throw error;
+      const description = String(data?.description || "").trim();
+      if (!description) throw new Error("Réponse vide");
+      mealAiSuggestionText = description;
+      if (!$("#mealDescription").value.trim()) {
+        useMealAiSuggestion();
+      } else {
+        $("#mealAiSuggestionText").textContent = description;
+        $("#mealAiSuggestion").hidden = false;
+        setMealAiPhotoStatus("Une suggestion est prête sans remplacer ton texte.", "success");
+      }
+    } catch (error) {
+      console.warn("Analyse IA de la photo impossible", error);
+      setMealAiPhotoStatus("Analyse IA indisponible. Ta photo est quand même conservée.", "error");
+    }
   }
   function createFavoriteFromMeal(m) {
     const existing = favoriteForMeal(m);
@@ -8755,14 +8808,29 @@
 
   $("#mealSuggestionToggle").onclick = toggleMealSuggestion;
   $("#mealPhoto").onchange = async (e) => {
-    photoData = await fileToDataUrl(e.target.files[0]);
-    photoRemoved = false;
-    showPhotoPreview();
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      photoData = await fileToDataUrl(file);
+      photoRemoved = false;
+      showPhotoPreview();
+      await analyzeMealPhotoWithAI(photoData);
+    } catch (error) {
+      console.warn("Photo illisible", error);
+      setMealAiPhotoStatus("Cette photo n’a pas pu être lue. Essaie-en une autre.", "error");
+    }
   };
   $("#removePhoto").onclick = () => {
     photoData = null;
     photoRemoved = true;
+    hideMealAiSuggestion();
+    setMealAiPhotoStatus("La description IA doit être vérifiée et corrigée au besoin.");
     showPhotoPreview();
+  };
+  $("#useMealAiSuggestion").onclick = useMealAiSuggestion;
+  $("#dismissMealAiSuggestion").onclick = () => {
+    hideMealAiSuggestion();
+    setMealAiPhotoStatus("Suggestion ignorée. Ton texte est conservé.");
   };
   $("#favoriteMealSelect").onchange = (e) => {
     const f = db.favorites.find((x) => x.id === e.target.value);
@@ -9629,7 +9697,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.43.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.44.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

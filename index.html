@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.43.0">
+  <link rel="stylesheet" href="styles.css?v=3.44.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -89,14 +89,22 @@
       <label class="meal-time-row" for="mealTime"><span class="meal-time-label"><span aria-hidden="true">🕒</span><span>Heure</span></span><input id="mealTime" type="time" name="energie_meal_clock_value" autocomplete="one-time-code" required></label>
       <div class="meal-description-field">
         <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div>
-        <textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea>
+        <div class="meal-description-composer">
+          <textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea>
+          <div class="meal-description-toolbar">
+            <div class="meal-composer-actions">
+              <label class="meal-composer-action meal-photo-action"><input id="mealPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><strong>Photo IA</strong></label>
+              <button type="button" class="meal-composer-action meal-barcode-action" id="openBarcodeScanner"><span aria-hidden="true">▥</span><strong>Scanner</strong></button>
+            </div>
+            <small id="mealAiPhotoStatus" class="meal-ai-photo-status" role="status" aria-live="polite">La description IA doit être vérifiée et corrigée au besoin.</small>
+          </div>
+        </div>
         <p class="meal-precision-hint"><span aria-hidden="true">💡</span><span id="mealPrecisionHintText">Plus ta description est précise — ingrédients, sauces et accompagnements — plus les observations d’Énergie seront pertinentes.</span></p>
         <small id="mealFavoriteFeedback" class="meal-favorite-feedback" role="status" aria-live="polite" hidden></small>
-        <div class="meal-capture-tools">
-          <label class="meal-capture-action meal-photo-action"><input id="mealPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><span><strong>Photo du repas</strong><small>Pour la description par IA</small></span></label>
-          <button type="button" class="meal-capture-action meal-barcode-action" id="openBarcodeScanner"><span aria-hidden="true">▥</span><span><strong>Code-barres</strong><small>Produit emballé</small></span></button>
+        <div id="mealAiSuggestion" class="meal-ai-suggestion" hidden>
+          <div><span aria-hidden="true">✨</span><span><strong>Suggestion de l’IA</strong><small id="mealAiSuggestionText"></small></span></div>
+          <div><button type="button" id="useMealAiSuggestion" class="secondary small">Utiliser</button><button type="button" id="dismissMealAiSuggestion" class="text-button small">Ignorer</button></div>
         </div>
-        <p class="meal-ai-photo-note"><span aria-hidden="true">✨</span><span>L’analyse Gemini sera activée après sa configuration sécurisée. La description proposée par l’IA devra toujours être vérifiée et corrigée au besoin.</span></p>
         <div id="photoPreviewWrap" class="photo-preview-wrap meal-photo-preview" hidden><img id="photoPreview" alt="Aperçu du repas"><button type="button" id="removePhoto" class="secondary small">Retirer la photo</button></div>
       </div>
       <section id="mealCompositionReview" class="meal-composition-review" hidden aria-live="polite">
@@ -420,7 +428,7 @@
   <script src="brain/insight-engine.js?v=3.30.2"></script>
   <script src="brain/index.js?v=3.12.0"></script>
   <script src="observation-engine.js?v=3.30.2"></script>
-  <script src="demo-profiles.js?v=3.43.0"></script>
-  <script src="app.js?v=3.43.0"></script>
+  <script src="demo-profiles.js?v=3.44.0"></script>
+  <script src="app.js?v=3.44.0"></script>
 </body>
 </html>
