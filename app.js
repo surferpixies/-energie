@@ -5,7 +5,7 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 40;
+  const CURRENT_VERSION = 42;
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -262,12 +262,29 @@
     notificationTimer = null;
   let hasDemoAccess = false;
   let professionalDemoMode = false;
-  const EATING_REASON_IDS = new Set([
-    "hunger", "routine", "craving", "pleasure", "social",
-    "emotion", "boredom", "energy", "activity", "other",
-  ]);
+  const EATING_REASON_IDS = new Set(["hunger", "boredom", "pleasure", "other"]);
+  const LEGACY_EATING_REASON_LABELS = {
+    routine: "c’était l’heure de manger",
+    social: "pour partager un moment",
+    emotion: "à cause d’une émotion",
+    energy: "pour avoir de l’énergie",
+    activity: "avant ou après une activité",
+  };
   function normalizeEatingReasons(value) {
-    return [...new Set(Array.isArray(value) ? value : [])].filter((id) => EATING_REASON_IDS.has(id));
+    const raw = [...new Set(Array.isArray(value) ? value : [])], out = [];
+    if (raw.includes("hunger")) out.push("hunger");
+    if (raw.includes("boredom")) out.push("boredom");
+    if (raw.includes("pleasure") || raw.includes("craving")) out.push("pleasure");
+    if (raw.includes("other") || raw.some((id) => LEGACY_EATING_REASON_LABELS[id])) out.push("other");
+    return out;
+  }
+  function legacyEatingReasonOther(value, existing = "") {
+    const current = String(existing || "").trim();
+    const legacy = [...new Set(Array.isArray(value) ? value : [])]
+      .map((id) => LEGACY_EATING_REASON_LABELS[id])
+      .filter(Boolean);
+    return [current, ...legacy.filter((label) => !current.toLocaleLowerCase("fr-CA").includes(label.toLocaleLowerCase("fr-CA")))]
+      .filter(Boolean).join("; ").slice(0, 160);
   }
   function nutritionVisibleToViewer() {
     return !!professionalDemoMode;
@@ -527,9 +544,10 @@
       eatingReasons: normalizeEatingReasons(
         m.eatingReasons || m.eating_reasons || rawFeeling?.eatingReasons,
       ),
-      eatingReasonOther: String(
+      eatingReasonOther: legacyEatingReasonOther(
+        m.eatingReasons || m.eating_reasons || rawFeeling?.eatingReasons,
         m.eatingReasonOther || m.eating_reason_other || rawFeeling?.eatingReasonOther || "",
-      ).trim().slice(0, 160),
+      ),
       notes: m.notes || "",
       nutrition: normalNutrition(m.nutrition || m.macros),
       foodReview:
@@ -4020,7 +4038,13 @@
     const feelingPreview = feelingEligible
       ? `<div class="meal-feeling-preview ${feeling ? "is-set" : "is-empty"}">${feeling ? `<span>Après · ${afterCount} ressenti${afterCount > 1 ? "s" : ""}</span>` : `<span>Ressenti après</span><small>À noter</small>`}</div>`
       : "";
-    return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${m.photoUrl || m.photoLocal ? `<img src="${esc(m.photoUrl || m.photoLocal)}" alt="">` : mealIcon(m.type, m.description)}</div><div class="meal-card-body"><h3>${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${esc(t(m.type))}${opts.showDate ? ` · ${esc(formatDate(m.date))}` : ""}</div>${nutritionVisibleToViewer() && m.nutrition ? `<div class="meal-macros">≈ ${esc(nutritionText(m.nutrition))}</div>` : ""}${feelingPreview}<div class="meal-footer">${beforeCount ? `<span class="chip">Avant · ${beforeCount}</span>` : ""}${feelingEligible ? `<button class="meal-feeling-inline ${feeling ? "is-set" : "is-empty"}" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? `Après · ${afterCount}` : "Ressenti après"}</button>` : ""}</div></div><div class="meal-actions">${feelingEligible ? `<button class="feeling-meal" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? "😊" : "＋😊"}</button>` : ""}<button class="favorite-meal ${favorite ? "is-favorite" : ""}" data-favorite="${m.id}" title="${favorite ? "Retirer des favoris" : "Ajouter aux favoris"}">${favorite ? "★" : "☆"}</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div></article>`;
+    const visibleChanges = feelingChangesHtml(
+      feelingScoresFor(m, "before"),
+      feelingScoresFor(m, "after"),
+      !!m.feeling,
+      true,
+    );
+    return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${m.photoUrl || m.photoLocal ? `<img src="${esc(m.photoUrl || m.photoLocal)}" alt="">` : mealIcon(m.type, m.description)}</div><div class="meal-card-body"><h3>${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${esc(t(m.type))}${opts.showDate ? ` · ${esc(formatDate(m.date))}` : ""}</div>${nutritionVisibleToViewer() && m.nutrition ? `<div class="meal-macros">≈ ${esc(nutritionText(m.nutrition))}</div>` : ""}${feelingPreview}<div class="meal-footer">${beforeCount ? `<span class="chip">Avant · ${beforeCount}</span>` : ""}${feelingEligible ? `<button class="meal-feeling-inline ${feeling ? "is-set" : "is-empty"}" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? `Après · ${afterCount}` : "Ressenti après"}</button>` : ""}</div>${visibleChanges ? `<div class="meal-card-feeling-changes">${visibleChanges}</div>` : ""}</div><div class="meal-actions">${feelingEligible ? `<button class="feeling-meal" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? "😊" : "＋😊"}</button>` : ""}<button class="favorite-meal ${favorite ? "is-favorite" : ""}" data-favorite="${m.id}" title="${favorite ? "Retirer des favoris" : "Ajouter aux favoris"}">${favorite ? "★" : "☆"}</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div></article>`;
   }
   function bindMealCards() {
     $$("[data-meal]").forEach(
@@ -8228,7 +8252,28 @@
     if (items.length === 1 && items[0].score === 0) return "Rien de particulier";
     return `${items.length} ressenti${items.length > 1 ? "s" : ""}`;
   }
-  function feelingChangesHtml(beforeScores = {}, afterScores = {}, afterRecorded = false) {
+  function compactFeelingLabel(tag) {
+    const labels = {
+      stomachache: "Douleurs abdominales",
+      reflux: "Reflux",
+      nausea: "Nausées",
+      diarrhea: "Diarrhée",
+      heaviness: "Digestion lente",
+      fatigue: "Fatigue",
+      weakness: "Faiblesse / étourdissements",
+      brain_fog: "Concentration difficile",
+      headache: "Mal de tête",
+      light_sensitivity: "Sensibilité sensorielle",
+      itching: "Démangeaisons",
+      congestion: "Congestion",
+      irritability: "Irritabilité",
+      stress: "Stress / anxiété",
+      craving: "Fringale",
+      hot_flash: "Variation de température",
+    };
+    return labels[tag.id] || t(tag.label);
+  }
+  function feelingChangesHtml(beforeScores = {}, afterScores = {}, afterRecorded = false, compact = false) {
     const before = normalizeFeelingScores(beforeScores),
       after = normalizeFeelingScores(afterScores),
       neutralIds = new Set(["feeling_good", "no_tracked_symptoms"]),
@@ -8264,9 +8309,14 @@
         tone = "improved"; arrow = "↘";
         label = delta === -1 ? "Légère amélioration" : delta <= -3 ? "Amélioration marquée" : "Amélioration";
       }
-      rows.push(`<span class="feeling-change ${tone}"><i aria-hidden="true">${arrow}</i><span><strong>${tag.emoji} ${esc(t(tag.label))}</strong><small>${label}</small></span><b>${start} → ${end}</b></span>`);
+      rows.push(compact
+        ? `<span class="feeling-change-pill ${tone}" title="${esc(label)}"><i aria-hidden="true">${arrow}</i><span>${tag.emoji} ${esc(compactFeelingLabel(tag))}</span><b>${start}→${end}</b></span>`
+        : `<span class="feeling-change ${tone}"><i aria-hidden="true">${arrow}</i><span><strong>${tag.emoji} ${esc(t(tag.label))}</strong><small>${label}</small></span><b>${start} → ${end}</b></span>`);
     });
-    return rows.length ? `<span class="feeling-changes"><strong>Évolution après le repas</strong>${rows.join("")}<small class="feeling-change-caution">Ces changements décrivent une évolution autour du repas, sans établir qu’il en est la cause.</small></span>` : "";
+    if (!rows.length) return "";
+    return compact
+      ? `<span class="feeling-change-pills"><strong>Évolution</strong><span>${rows.join("")}</span></span>`
+      : `<span class="feeling-changes"><strong>Évolution après le repas</strong>${rows.join("")}<small class="feeling-change-caution">Ces changements décrivent une évolution autour du repas, sans établir qu’il en est la cause.</small></span>`;
   }
   function updateMealFeelingsOverview(meal = null) {
     const collapsed = $("#mealFeelingsCollapsedPreview"),
@@ -9573,7 +9623,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.42.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.42.2");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

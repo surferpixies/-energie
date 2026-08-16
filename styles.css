@@ -994,3 +994,10 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .feeling-change.appeared>i,.feeling-change.appeared>b{color:#175cd3}.feeling-change.appeared>i{background:#dbeafe}
 .feeling-change.stable>i,.feeling-change.stable>b{color:var(--muted)}.feeling-change.stable>i{background:var(--surface)}
 .feeling-change-caution{font-size:.52rem;line-height:1.35;color:var(--muted)}
+
+/* V3.42.1 — évolution visible dans le Journal et motifs simplifiés */
+.meal-card-feeling-changes{margin-top:3px}.meal-card-feeling-changes .feeling-changes{gap:5px;padding-top:7px}.meal-card-feeling-changes .feeling-change{padding:6px 7px}.meal-card-feeling-changes .feeling-change-caution{display:none}
+.eating-reason-other-choice{grid-column:1/-1}.eating-reason-other-choice span{align-items:flex-start!important;gap:4px;flex-wrap:wrap}.eating-reason-other-choice small{color:var(--muted);font-size:.57rem;font-weight:650;line-height:1.25}
+
+/* V3.42.2 — pastilles compactes d'évolution dans les cartes du Journal */
+.feeling-change-pills{display:grid;gap:5px;padding-top:7px;border-top:1px solid var(--border)}.feeling-change-pills>strong{font-size:.59rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.feeling-change-pills>span{display:flex;flex-wrap:wrap;gap:5px}.feeling-change-pill{display:inline-flex;align-items:center;gap:4px;max-width:100%;padding:5px 7px;border-radius:999px;border:1px solid transparent;font-size:.58rem;font-weight:800;line-height:1.15}.feeling-change-pill>i{font-style:normal;font-size:.68rem}.feeling-change-pill>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.feeling-change-pill>b{font-size:.58rem;white-space:nowrap}.feeling-change-pill.worse{color:#9f1d14;background:#fee4e2;border-color:#fecdca}.feeling-change-pill.slightly-worse{color:#93480d;background:#fef0c7;border-color:#fedf89}.feeling-change-pill.improved{color:#067647;background:#dcfae6;border-color:#abefc6}.feeling-change-pill.appeared{color:#175cd3;background:#dbeafe;border-color:#b2ccff}.feeling-change-pill.stable{color:var(--muted);background:var(--surface2);border-color:var(--border)}
