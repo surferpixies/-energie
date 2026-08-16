@@ -5,7 +5,7 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 43;
+  const CURRENT_VERSION = 44;
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -8432,8 +8432,8 @@
     $("#mealNotes").value = m?.notes || "";
     const favorite = favoriteForMeal(m);
     setMealFavoriteToggle(!!favorite, favorite?.id || "");
-    $("#mealOptionalDetails").open = !!(m?.notes || m?.photoLocal || m?.photoUrl || (nutritionVisibleToViewer() && m?.nutrition));
-    $("#mealOptionalTitle").textContent = nutritionVisibleToViewer() ? "Photo, notes et nutrition" : "Photo et notes";
+    $("#mealOptionalDetails").open = !!(m?.notes || (nutritionVisibleToViewer() && m?.nutrition));
+    $("#mealOptionalTitle").textContent = nutritionVisibleToViewer() ? "Notes et nutrition" : "Notes";
     $("#mealNutritionSection").hidden = !nutritionVisibleToViewer();
     const automaticNutrition = db.settings.autoNutritionEstimates !== false;
     fillNutritionInputs(
@@ -9629,7 +9629,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.42.3");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.43.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

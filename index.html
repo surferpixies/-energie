@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.42.3">
+  <link rel="stylesheet" href="styles.css?v=3.43.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -92,6 +92,12 @@
         <textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea>
         <p class="meal-precision-hint"><span aria-hidden="true">💡</span><span id="mealPrecisionHintText">Plus ta description est précise — ingrédients, sauces et accompagnements — plus les observations d’Énergie seront pertinentes.</span></p>
         <small id="mealFavoriteFeedback" class="meal-favorite-feedback" role="status" aria-live="polite" hidden></small>
+        <div class="meal-capture-tools">
+          <label class="meal-capture-action meal-photo-action"><input id="mealPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><span><strong>Photo du repas</strong><small>Pour la description par IA</small></span></label>
+          <button type="button" class="meal-capture-action meal-barcode-action" id="openBarcodeScanner"><span aria-hidden="true">▥</span><span><strong>Code-barres</strong><small>Produit emballé</small></span></button>
+        </div>
+        <p class="meal-ai-photo-note"><span aria-hidden="true">✨</span><span>L’analyse Gemini sera activée après sa configuration sécurisée. La description proposée par l’IA devra toujours être vérifiée et corrigée au besoin.</span></p>
+        <div id="photoPreviewWrap" class="photo-preview-wrap meal-photo-preview" hidden><img id="photoPreview" alt="Aperçu du repas"><button type="button" id="removePhoto" class="secondary small">Retirer la photo</button></div>
       </div>
       <section id="mealCompositionReview" class="meal-composition-review" hidden aria-live="polite">
         <div id="mealCompositionSummary"></div>
@@ -114,7 +120,6 @@
           <label id="eatingReasonOtherWrap" class="eating-reason-other" hidden>Précise la raison<input id="eatingReasonOther" type="text" maxlength="160" autocomplete="off" placeholder="Ex. pour avoir de l’énergie, après une activité…"></label>
         </div>
       </details>
-      <button type="button" class="secondary barcode-scan-launch" id="openBarcodeScanner"><span aria-hidden="true">▥</span><span><strong>Scanner un produit</strong><small>Ajoute rapidement son nom au repas</small></span></button>
       <details id="mealFeelingsDetails" class="meal-feelings-card">
         <summary>
           <span class="meal-feelings-card-icon" aria-hidden="true">😊</span>
@@ -141,7 +146,7 @@
       </details>
       <div id="mealSuggestionWrap" class="meal-suggestion-wrap" hidden><button type="button" id="mealSuggestionToggle" class="meal-suggestion-toggle" aria-expanded="false">💡 Voir la suggestion</button><p id="mealSuggestionBody" class="meal-suggestion-body" hidden></p></div>
       <details id="mealOptionalDetails" class="meal-optional-details">
-        <summary><span>＋</span><span><strong id="mealOptionalTitle">Photo et notes</strong><small>Options facultatives</small></span></summary>
+        <summary><span>＋</span><span><strong id="mealOptionalTitle">Notes</strong><small>Options facultatives</small></span></summary>
         <div class="meal-optional-content">
           <section id="mealNutritionSection" class="meal-nutrition-section" hidden>
             <div class="meal-nutrition-heading"><div><span class="eyebrow">Nutrition facultative</span><strong>Estimation nutritionnelle</strong></div><button type="button" class="secondary small" id="estimateMealNutrition">Estimer</button></div>
@@ -157,8 +162,6 @@
             <p id="nutritionEstimateNote" class="muted tiny">Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.</p>
             <button type="button" class="text-button nutrition-clear" id="clearMealNutrition">Effacer les valeurs</button>
           </section>
-          <label>Photo facultative<input id="mealPhoto" type="file" accept="image/*" capture="environment"></label>
-          <div id="photoPreviewWrap" class="photo-preview-wrap" hidden><img id="photoPreview" alt="Aperçu"><button type="button" id="removePhoto" class="secondary small">Retirer la photo</button></div>
           <label>Notes facultatives<textarea id="mealNotes" name="energie_meal_notes_value" autocomplete="one-time-code" autocapitalize="sentences" rows="2" placeholder="Contexte, digestion, humeur…"></textarea></label>
         </div>
       </details>
@@ -417,7 +420,7 @@
   <script src="brain/insight-engine.js?v=3.30.2"></script>
   <script src="brain/index.js?v=3.12.0"></script>
   <script src="observation-engine.js?v=3.30.2"></script>
-  <script src="demo-profiles.js?v=3.42.3"></script>
-  <script src="app.js?v=3.42.3"></script>
+  <script src="demo-profiles.js?v=3.43.0"></script>
+  <script src="app.js?v=3.43.0"></script>
 </body>
 </html>
