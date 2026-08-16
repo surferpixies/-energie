@@ -5,7 +5,7 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 45;
+  const CURRENT_VERSION = 46;
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -298,8 +298,10 @@
     barcodeControls = null,
     barcodeBusy = false,
     barcodeLastCode = "",
-    barcodeLastProduct = null;
+    barcodeLastProduct = null,
+    barcodeTargetInputId = "mealDescription";
   let selectedRecentSnackId = null;
+  let quickSnackPhotoData = null;
 
   function normalizeSupplements(value) {
     return [
@@ -4161,6 +4163,81 @@
     $("#snackManagerDialog").close();
     render();
   }
+  function setQuickSnackAiStatus(message, state = "") {
+    const el = $("#quickSnackAiStatus");
+    if (!el) return;
+    el.textContent = message;
+    el.className = state ? `is-${state}` : "";
+  }
+  function updateQuickSnackUi() {
+    const description = $("#quickSnackDescription")?.value.trim() || "";
+    $("#saveQuickSnack").disabled = !description;
+    const preview = $("#quickSnackPhotoPreview");
+    preview.hidden = !quickSnackPhotoData;
+    if (quickSnackPhotoData) $("#quickSnackPhotoImage").src = quickSnackPhotoData;
+  }
+  async function analyzeQuickSnackPhoto(imageData) {
+    if (!client || !session) {
+      setQuickSnackAiStatus("Connecte-toi pour utiliser l’analyse IA.", "error");
+      return;
+    }
+    setQuickSnackAiStatus("Analyse de la photo en cours…", "loading");
+    try {
+      const comma = imageData.indexOf(",");
+      const { data, error } = await client.functions.invoke("analyze-meal-photo", {
+        body: {
+          imageBase64: comma >= 0 ? imageData.slice(comma + 1) : imageData,
+          mimeType: "image/jpeg",
+          locale: "fr-CA",
+        },
+      });
+      if (error) throw error;
+      const description = String(data?.description || "").trim();
+      if (!description) throw new Error("Réponse vide");
+      const field = $("#quickSnackDescription");
+      if (!field.value.trim()) field.value = description;
+      else if (!field.value.toLocaleLowerCase("fr-CA").includes(description.toLocaleLowerCase("fr-CA")))
+        field.value = `${field.value.trim().replace(/[\s,;]+$/, "")}, ${description}`;
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+      setQuickSnackAiStatus("Description ajoutée — corrige-la au besoin.", "success");
+    } catch (error) {
+      console.warn("Analyse IA de la collation impossible", error);
+      setQuickSnackAiStatus("Analyse indisponible. La photo est quand même conservée.", "error");
+    }
+  }
+  function saveQuickSnack() {
+    const description = $("#quickSnackDescription").value.trim();
+    if (!description) return;
+    const now = new Date(),
+      meal = normalMeal({
+        date: selectedDate,
+        type: "Collation",
+        time: now.toTimeString().slice(0, 5),
+        description,
+        notes: "",
+        nutrition: null,
+        feelingsBefore: {},
+        feelingsBeforeQuality: null,
+        feeling: null,
+        photoLocal: quickSnackPhotoData,
+        photoUrl: null,
+        photoPath: null,
+        foodReview: null,
+        recommendation: null,
+        feelingNotifiedAt: null,
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+      }, selectedDate);
+    ensureDay(db, selectedDate).meals.push(meal);
+    setMealChanged(meal);
+    try {
+      window.Brain?.learnMeal?.(meal);
+    } catch (error) {
+      console.warn("Mémoire alimentaire", error);
+    }
+    $("#snackManagerDialog").close();
+    render();
+  }
   function openSnackManager() {
     const d = ensureDay(db, selectedDate),
       snacks = d.meals
@@ -4171,6 +4248,11 @@
       addSelected = $("#addSelectedSnack"),
       recentSnacks = recentUniqueSnacks();
     selectedRecentSnackId = null;
+    quickSnackPhotoData = null;
+    $("#quickSnackDescription").value = "";
+    $("#quickSnackPhoto").value = "";
+    setQuickSnackAiStatus("Vérifie toujours la description proposée.");
+    updateQuickSnackUi();
     list.innerHTML = snacks.length
       ? snacks
           .map(
@@ -4211,6 +4293,27 @@
       );
       addRecentSnack(source);
     };
+    $("#quickSnackDescription").oninput = updateQuickSnackUi;
+    $("#quickSnackPhoto").onchange = async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        quickSnackPhotoData = await fileToDataUrl(file);
+        updateQuickSnackUi();
+        await analyzeQuickSnackPhoto(quickSnackPhotoData);
+      } catch (error) {
+        console.warn("Photo de collation illisible", error);
+        setQuickSnackAiStatus("Cette photo n’a pas pu être lue.", "error");
+      }
+    };
+    $("#removeQuickSnackPhoto").onclick = () => {
+      quickSnackPhotoData = null;
+      $("#quickSnackPhoto").value = "";
+      setQuickSnackAiStatus("Vérifie toujours la description proposée.");
+      updateQuickSnackUi();
+    };
+    $("#quickSnackBarcode").onclick = () => openBarcodeScanner("quickSnackDescription");
+    $("#saveQuickSnack").onclick = saveQuickSnack;
     $$("[data-edit-snack]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -7728,7 +7831,7 @@
     $("#barcodeProductImage").removeAttribute("src");
   }
   function appendScannedFood(name) {
-    const input = $("#mealDescription"),
+    const input = $(`#${barcodeTargetInputId}`),
       clean = String(name || "").trim();
     if (!input || !clean) return;
     const current = input.value.trim();
@@ -7969,7 +8072,8 @@
       stopBarcodeCamera();
     }
   }
-  function openBarcodeScanner() {
+  function openBarcodeScanner(targetInputId = "mealDescription") {
+    barcodeTargetInputId = targetInputId;
     resetBarcodeResult();
     $("#barcodeManualCode").value = "";
     $("#barcodeDialog").showModal();
@@ -8764,7 +8868,7 @@
     $("#globalObservationDialog").showModal();
   }
 
-  $("#openBarcodeScanner").onclick = openBarcodeScanner;
+  $("#openBarcodeScanner").onclick = () => openBarcodeScanner("mealDescription");
   $("#closeBarcodeScanner").onclick = closeBarcodeScanner;
   $("#retryBarcodeCamera").onclick = startBarcodeCamera;
   $("#lookupBarcodeManual").onclick = () =>
@@ -8783,7 +8887,7 @@
       return;
     }
     appendScannedFood(name);
-    if (barcodeLastProduct?.nutrition)
+    if (barcodeTargetInputId === "mealDescription" && barcodeLastProduct?.nutrition)
       fillNutritionInputs(
         mergeNutrition(nutritionFromInputs(), barcodeLastProduct.nutrition),
       );
@@ -8802,7 +8906,8 @@
           null,
       });
     closeBarcodeScanner();
-    $("#mealDescription").focus();
+    $(`#${barcodeTargetInputId}`)?.focus();
+    if (barcodeTargetInputId === "quickSnackDescription") updateQuickSnackUi();
   };
   $("#barcodeDialog").addEventListener("close", stopBarcodeCamera);
 
@@ -9697,7 +9802,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.44.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.45.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

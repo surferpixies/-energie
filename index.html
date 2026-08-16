@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.44.0">
+  <link rel="stylesheet" href="styles.css?v=3.45.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -183,13 +183,29 @@
     <section class="dialog-card snack-manager-card">
       <div class="dialog-header"><div><p class="eyebrow">Aujourd’hui</p><h2>Mes collations</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
       <div id="snackManagerList" class="snack-manager-list"></div>
+      <section class="quick-snack-section">
+        <label for="quickSnackDescription">Ajouter rapidement</label>
+        <div class="quick-snack-composer">
+          <textarea id="quickSnackDescription" rows="2" autocapitalize="sentences" autocomplete="off" placeholder="Ex. pomme et quelques amandes"></textarea>
+          <div class="quick-snack-toolbar">
+            <div>
+              <label class="meal-composer-action meal-photo-action"><input id="quickSnackPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><strong>Photo IA</strong></label>
+              <button type="button" class="meal-composer-action meal-barcode-action" id="quickSnackBarcode"><span aria-hidden="true">▥</span><strong>Scanner</strong></button>
+            </div>
+            <small id="quickSnackAiStatus" role="status" aria-live="polite">Vérifie toujours la description proposée.</small>
+          </div>
+        </div>
+        <div id="quickSnackPhotoPreview" class="quick-snack-photo-preview" hidden><img id="quickSnackPhotoImage" alt="Aperçu de la collation"><button type="button" id="removeQuickSnackPhoto" class="text-button small">Retirer</button></div>
+        <button type="button" class="primary" id="saveQuickSnack" disabled>Ajouter la collation</button>
+      </section>
+      <div class="snack-manager-divider"><span>ou reprendre une collation</span></div>
       <section class="recent-snacks-section">
         <div class="recent-snacks-heading"><div><strong>Collations récentes</strong><small>Sélectionne une collation que tu reprends souvent</small></div><span aria-hidden="true">↻</span></div>
         <div id="recentSnackList" class="recent-snack-list"></div>
         <button type="button" class="secondary recent-snack-add" id="addSelectedSnack" disabled>Ajouter cette collation</button>
       </section>
-      <div class="snack-manager-divider"><span>ou</span></div>
-      <button type="button" class="primary" id="addAnotherSnack">＋ Ajouter une nouvelle collation</button>
+      <div class="snack-manager-divider"><span>plus d’options</span></div>
+      <button type="button" class="secondary" id="addAnotherSnack">＋ Ajouter avec les ressentis et les détails</button>
     </section>
   </dialog>
 
@@ -428,7 +444,7 @@
   <script src="brain/insight-engine.js?v=3.30.2"></script>
   <script src="brain/index.js?v=3.12.0"></script>
   <script src="observation-engine.js?v=3.30.2"></script>
-  <script src="demo-profiles.js?v=3.44.0"></script>
-  <script src="app.js?v=3.44.0"></script>
+  <script src="demo-profiles.js?v=3.45.0"></script>
+  <script src="app.js?v=3.45.0"></script>
 </body>
 </html>
