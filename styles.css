@@ -974,3 +974,10 @@ body.demo-guide-open .bottom-nav{z-index:20}
 
 /* V3.41.4 — catégories courtes plutôt que retours de ligne forcés */
 @media(max-width:520px){.compact-feeling-categories>.feeling-tag-group:not([open])>summary{height:76px;min-height:76px;max-height:76px;align-content:center}.compact-feeling-categories>.feeling-tag-group:not([open])>summary strong{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;font-size:.72rem;line-height:1.2}.compact-feeling-categories>.feeling-tag-group:not([open])>summary>span{align-items:center}.compact-feeling-categories>.feeling-tag-group:not([open])>summary small{align-self:center}}
+
+/* V3.41.5 — suppléments quotidiens compacts sur deux colonnes */
+.supplement-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.supplement-toggle{min-width:0;gap:7px;padding:8px;border-radius:12px}
+.supplement-toggle input{flex:0 0 auto;width:16px;height:16px}
+.supplement-toggle-name{gap:6px;min-width:0;font-size:.72rem;line-height:1.2;overflow-wrap:anywhere}
+.supplement-toggle-name i{flex:0 0 auto;font-size:.9rem}

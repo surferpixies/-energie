@@ -5368,6 +5368,9 @@
     };
   }
   function weeklyTrendSummaryHtml(endDate) {
+    return "";
+    /* Conservé temporairement dans le code pour faciliter une éventuelle
+       réactivation, mais retiré de l'interface du Journal depuis la v3.41.5. */
     const current = weeklyTrendPeriod(endDate, 0),
       previous = weeklyTrendPeriod(endDate, 7);
     const decimal = (value) =>
@@ -9501,7 +9504,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.41.4");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.41.5");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
