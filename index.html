@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.41.5">
+  <link rel="stylesheet" href="styles.css?v=3.42.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -128,7 +128,7 @@
         </summary>
         <div class="meal-feelings-card-content">
           <section class="meal-feeling-period meal-feeling-period-before">
-            <div class="meal-feeling-period-head"><div><span>Avant le repas</span><strong id="beforeFeelingCount">Aucun ressenti</strong></div></div>
+            <div class="meal-feeling-period-head"><div><span>Avant le repas</span><strong id="beforeFeelingCount">Non consigné</strong></div></div>
             <div id="beforeFeelingSelectedPreview" class="meal-feeling-selected-preview"><span class="meal-feeling-empty">Aucun ressenti</span></div>
             <details id="beforeFeelingEditor" class="meal-feeling-editor">
               <summary class="meal-feeling-action"><span aria-hidden="true">＋</span><strong id="beforeFeelingActionLabel">Ajouter les ressentis avant</strong><b aria-hidden="true">›</b></summary>
@@ -136,11 +136,12 @@
             </details>
           </section>
           <section class="meal-feeling-period meal-feeling-period-after">
-            <div class="meal-feeling-period-head"><div><span>Après le repas</span><strong id="afterFeelingCount">Aucun ressenti</strong></div></div>
+            <div class="meal-feeling-period-head"><div><span>Après le repas</span><strong id="afterFeelingCount">Non consigné</strong></div></div>
             <div id="afterFeelingSelectedPreview" class="meal-feeling-selected-preview"><span class="meal-feeling-empty">Aucun ressenti</span></div>
             <button type="button" class="meal-feeling-action meal-feeling-after-button" id="mealFeelingButton" hidden><span aria-hidden="true">＋</span><strong>Ajouter les ressentis après</strong><b aria-hidden="true">›</b></button>
             <p id="mealFeelingUnavailable" class="muted tiny">Disponible après avoir enregistré le repas.</p>
           </section>
+          <div id="mealFeelingChanges" class="meal-feeling-changes-preview" hidden></div>
         </div>
       </details>
       <div id="mealSuggestionWrap" class="meal-suggestion-wrap" hidden><button type="button" id="mealSuggestionToggle" class="meal-suggestion-toggle" aria-expanded="false">💡 Voir la suggestion</button><p id="mealSuggestionBody" class="meal-suggestion-body" hidden></p></div>
@@ -421,7 +422,7 @@
   <script src="brain/insight-engine.js?v=3.30.2"></script>
   <script src="brain/index.js?v=3.12.0"></script>
   <script src="observation-engine.js?v=3.30.2"></script>
-  <script src="demo-profiles.js?v=3.41.5"></script>
-  <script src="app.js?v=3.41.5"></script>
+  <script src="demo-profiles.js?v=3.42.0"></script>
+  <script src="app.js?v=3.42.0"></script>
 </body>
 </html>

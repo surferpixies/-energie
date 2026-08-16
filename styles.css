@@ -981,3 +981,16 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .supplement-toggle input{flex:0 0 auto;width:16px;height:16px}
 .supplement-toggle-name{gap:6px;min-width:0;font-size:.72rem;line-height:1.2;overflow-wrap:anywhere}
 .supplement-toggle-name i{flex:0 0 auto;font-size:.9rem}
+
+/* V3.42.0 — évolution automatique des ressentis avant/après */
+.feeling-changes{display:grid;grid-column:1/-1;gap:6px;width:100%;margin-top:4px;padding-top:9px;border-top:1px solid var(--border)}
+.feeling-changes>strong{font-size:.67rem;color:var(--text)}
+.feeling-change{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:7px;padding:7px 8px;border-radius:11px;background:var(--surface2)}
+.feeling-change>i{display:grid;place-items:center;width:24px;height:24px;border-radius:8px;font-style:normal;font-weight:900}
+.feeling-change>span{display:grid;gap:1px;min-width:0}.feeling-change>span strong{font-size:.62rem}.feeling-change>span small{font-size:.54rem;color:var(--muted)}
+.feeling-change>b{font-size:.66rem;white-space:nowrap}.feeling-change.worse>i,.feeling-change.worse>b{color:#b42318}.feeling-change.worse>i{background:#fee4e2}
+.feeling-change.slightly-worse>i,.feeling-change.slightly-worse>b{color:#b54708}.feeling-change.slightly-worse>i{background:#fef0c7}
+.feeling-change.improved>i,.feeling-change.improved>b{color:#067647}.feeling-change.improved>i{background:#dcfae6}
+.feeling-change.appeared>i,.feeling-change.appeared>b{color:#175cd3}.feeling-change.appeared>i{background:#dbeafe}
+.feeling-change.stable>i,.feeling-change.stable>b{color:var(--muted)}.feeling-change.stable>i{background:var(--surface)}
+.feeling-change-caution{font-size:.52rem;line-height:1.35;color:var(--muted)}

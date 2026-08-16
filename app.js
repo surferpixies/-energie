@@ -5,7 +5,7 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 39;
+  const CURRENT_VERSION = 40;
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -468,7 +468,10 @@
       Object.entries(value).forEach(([id, score]) => {
         const n = Number(score);
         const canonicalId = canonicalFeelingId(id);
-        if (canonicalId && n >= 1 && n <= 5)
+        const confirmedNone = ["feeling_good", "no_tracked_symptoms"].includes(canonicalId);
+        if (canonicalId && confirmedNone && n >= 0 && n <= 5)
+          out[canonicalId] = 0;
+        else if (canonicalId && n >= 1 && n <= 5)
           out[canonicalId] = Math.max(out[canonicalId] || 0, Math.round(n));
       });
     return out;
@@ -4333,7 +4336,7 @@
       label: "Aucun des ressentis suivis",
       group: "neutral",
       category: "positive",
-      fixedScore: 3,
+      fixedScore: 0,
       scopedOnly: true,
     },
     {
@@ -4342,7 +4345,7 @@
       label: "Rien de particulier",
       group: "neutral",
       category: "positive",
-      fixedScore: 3,
+      fixedScore: 0,
     },
     {
       id: "stable_energy",
@@ -4779,7 +4782,9 @@
     return ["", "😞", "😐", "🙂", "😄", "😁"][Number(r) || 0] || "🙂";
   }
   function averageFeelingScore(scores = {}) {
-    const values = Object.values(normalizeFeelingScores(scores));
+    const values = Object.entries(normalizeFeelingScores(scores))
+      .filter(([id]) => !["feeling_good", "no_tracked_symptoms"].includes(id))
+      .map(([, score]) => score);
     return values.length
       ? Math.round(values.reduce((sum, n) => sum + n, 0) / values.length)
       : null;
@@ -4809,9 +4814,10 @@
     const selected = normalizeFeelingScores(scores),
       availableTags = feelingTagsForMode(mode, Object.keys(selected));
     const tagHtml = (tag) => {
-      const score = selected[tag.id] || null,
-        active = !!selected[tag.id];
-      return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}" ${tag.fixedScore ? `data-fixed-score="${tag.fixedScore}"` : ""} data-feeling-search-label="${esc(t(tag.label))}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span class="feeling-tag-icon">${tag.emoji}</span><span class="feeling-tag-label">${esc(t(tag.label))}</span></button><div class="feeling-score-prompt" ${tag.fixedScore || !active || score ? "hidden" : ""}>Choisis l’intensité</div><div class="feeling-score-buttons" ${active && !tag.fixedScore ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n} sur 5">${n}</button>`).join("")}</div></div>`;
+      const active = Object.prototype.hasOwnProperty.call(selected, tag.id),
+        score = active ? selected[tag.id] : null,
+        fixed = tag.fixedScore != null;
+      return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}" ${fixed ? `data-fixed-score="${tag.fixedScore}"` : ""} data-feeling-search-label="${esc(t(tag.label))}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span class="feeling-tag-icon">${tag.emoji}</span><span class="feeling-tag-label">${esc(t(tag.label))}</span></button><div class="feeling-score-prompt" ${fixed || !active || score ? "hidden" : ""}>Choisis l’intensité</div><div class="feeling-score-buttons" ${active && !fixed ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n} sur 5">${n}</button>`).join("")}</div></div>`;
     };
     const standaloneTags = availableTags.filter((tag) => tag.category === "positive"),
       standalone = standaloneTags.length
@@ -4819,8 +4825,8 @@
         : "";
     const categories = FEELING_CATEGORIES.filter((category) => category.id !== "positive").map((category) => {
       const tags = availableTags.filter((tag) => tag.category === category.id),
-        hasSelected = tags.some((tag) => selected[tag.id]),
-        selectedCount = tags.filter((tag) => selected[tag.id]).length,
+        hasSelected = tags.some((tag) => Object.prototype.hasOwnProperty.call(selected, tag.id)),
+        selectedCount = tags.filter((tag) => Object.prototype.hasOwnProperty.call(selected, tag.id)).length,
         alwaysClosed = category.id === "digestion",
         open = !alwaysClosed && (category.open || hasSelected);
       if (!tags.length) return "";
@@ -4836,6 +4842,22 @@
         (button.onclick = () => {
           const item = button.closest(".scored-feeling-item"),
             active = !item.classList.contains("active");
+          if (active) {
+            const selectedId = button.dataset.scoredTag,
+              neutralIds = new Set(["feeling_good", "no_tracked_symptoms"]),
+              selectingNone = neutralIds.has(selectedId);
+            container.querySelectorAll(".scored-feeling-item.active").forEach((other) => {
+              const otherId = other.querySelector(`[data-scored-toggle="${mode}"]`)?.dataset.scoredTag;
+              if ((selectingNone && other !== item) || (!selectingNone && neutralIds.has(otherId))) {
+                other.classList.remove("active");
+                const otherToggle = other.querySelector(`[data-scored-toggle="${mode}"]`);
+                otherToggle?.classList.remove("active");
+                otherToggle?.setAttribute("aria-pressed", "false");
+                const otherButtons = other.querySelector(".feeling-score-buttons");
+                if (otherButtons) otherButtons.hidden = true;
+              }
+            });
+          }
           item.classList.toggle("active", active);
           button.classList.toggle("active", active);
           button.setAttribute("aria-pressed", String(active));
@@ -8173,7 +8195,7 @@
   }
   function feelingScorePreviewItems(scores = {}) {
     const normalized = normalizeFeelingScores(scores);
-    return FEELING_TAGS.filter((tag) => normalized[tag.id]).map((tag) => ({
+    return FEELING_TAGS.filter((tag) => Object.prototype.hasOwnProperty.call(normalized, tag.id)).map((tag) => ({
       ...tag,
       score: normalized[tag.id],
     }));
@@ -8184,7 +8206,7 @@
       ? items
           .map(
             (item) =>
-              `<span class="meal-feeling-score-chip"><span>${item.emoji}</span>${esc(t(item.label))}<b>${item.score}/5</b></span>`,
+              `<span class="meal-feeling-score-chip"><span>${item.emoji}</span>${esc(t(item.label))}${item.score === 0 ? "" : `<b>${item.score}/5</b>`}</span>`,
           )
           .join("")
       : '<span class="meal-feeling-empty">Aucun ressenti</span>';
@@ -8195,11 +8217,56 @@
       ? items
           .map(
             (item) =>
-              `<span class="meal-feelings-mini-item"><i aria-hidden="true">${item.emoji}</i><small>${esc(t(item.label))}</small><b>${item.score}/5</b></span>`,
+              `<span class="meal-feelings-mini-item"><i aria-hidden="true">${item.emoji}</i><small>${esc(t(item.label))}</small>${item.score === 0 ? "" : `<b>${item.score}/5</b>`}</span>`,
           )
           .join("")
       : '<span class="meal-feelings-mini-empty">Aucun ressenti</span>';
     return `<span class="meal-feelings-mini-group"><strong>${label}</strong><span class="meal-feelings-mini-list">${rows}</span></span>`;
+  }
+  function feelingSelectionCountLabel(items = []) {
+    if (!items.length) return "Non consigné";
+    if (items.length === 1 && items[0].score === 0) return "Rien de particulier";
+    return `${items.length} ressenti${items.length > 1 ? "s" : ""}`;
+  }
+  function feelingChangesHtml(beforeScores = {}, afterScores = {}, afterRecorded = false) {
+    const before = normalizeFeelingScores(beforeScores),
+      after = normalizeFeelingScores(afterScores),
+      neutralIds = new Set(["feeling_good", "no_tracked_symptoms"]),
+      beforeKnown = Object.keys(before).length > 0,
+      afterKnown = afterRecorded && Object.keys(after).length > 0;
+    if (!beforeKnown || !afterKnown) return "";
+    const beforeNone = Object.keys(before).some((id) => neutralIds.has(id) && before[id] === 0),
+      afterNone = Object.keys(after).some((id) => neutralIds.has(id) && after[id] === 0),
+      ids = new Set([
+        ...Object.keys(before).filter((id) => !neutralIds.has(id)),
+        ...Object.keys(after).filter((id) => !neutralIds.has(id)),
+      ]),
+      rows = [];
+    ids.forEach((id) => {
+      const tag = FEELING_TAGS.find((item) => item.id === id);
+      if (!tag) return;
+      const hasBefore = Object.prototype.hasOwnProperty.call(before, id),
+        hasAfter = Object.prototype.hasOwnProperty.call(after, id),
+        start = hasBefore ? before[id] : beforeNone ? 0 : null,
+        end = hasAfter ? after[id] : afterNone ? 0 : null;
+      if (start == null || end == null) return;
+      const delta = end - start;
+      let tone = "stable", arrow = "→", label = "Stable";
+      if (start === 0 && end > 0) {
+        tone = "appeared"; arrow = "●"; label = "Apparu après";
+      } else if (start > 0 && end === 0) {
+        tone = "improved"; arrow = "✓"; label = "Disparu après";
+      } else if (delta > 0) {
+        tone = delta === 1 ? "slightly-worse" : "worse";
+        arrow = "↗";
+        label = delta === 1 ? "Légère aggravation" : delta >= 3 ? "Aggravation marquée" : "Aggravation";
+      } else if (delta < 0) {
+        tone = "improved"; arrow = "↘";
+        label = delta === -1 ? "Légère amélioration" : delta <= -3 ? "Amélioration marquée" : "Amélioration";
+      }
+      rows.push(`<span class="feeling-change ${tone}"><i aria-hidden="true">${arrow}</i><span><strong>${tag.emoji} ${esc(t(tag.label))}</strong><small>${label}</small></span><b>${start} → ${end}</b></span>`);
+    });
+    return rows.length ? `<span class="feeling-changes"><strong>Évolution après le repas</strong>${rows.join("")}<small class="feeling-change-caution">Ces changements décrivent une évolution autour du repas, sans établir qu’il en est la cause.</small></span>` : "";
   }
   function updateMealFeelingsOverview(meal = null) {
     const collapsed = $("#mealFeelingsCollapsedPreview"),
@@ -8207,6 +8274,7 @@
       afterPreview = $("#afterFeelingSelectedPreview"),
       beforeCount = $("#beforeFeelingCount"),
       afterCount = $("#afterFeelingCount"),
+      changesPreview = $("#mealFeelingChanges"),
       beforeActionLabel = $("#beforeFeelingActionLabel"),
       beforeActionIcon = $("#beforeFeelingEditor > summary > span");
     if (!collapsed || !beforePreview || !afterPreview) return;
@@ -8226,9 +8294,7 @@
     beforePreview.innerHTML = feelingScorePreviewHtml(beforeScores);
     afterPreview.innerHTML = feelingScorePreviewHtml(afterScores);
     if (beforeCount)
-      beforeCount.textContent = beforeItems.length
-        ? `${beforeItems.length} ressenti${beforeItems.length > 1 ? "s" : ""}`
-        : "Aucun ressenti";
+      beforeCount.textContent = feelingSelectionCountLabel(beforeItems);
     if (beforeActionLabel)
       beforeActionLabel.textContent = beforeItems.length
         ? "Modifier les ressentis avant"
@@ -8236,9 +8302,12 @@
     if (beforeActionIcon)
       beforeActionIcon.textContent = beforeItems.length ? "✎" : "＋";
     if (afterCount)
-      afterCount.textContent = afterItems.length
-        ? `${afterItems.length} ressenti${afterItems.length > 1 ? "s" : ""}`
-        : "Aucun ressenti";
+      afterCount.textContent = feelingSelectionCountLabel(afterItems);
+    const changes = feelingChangesHtml(beforeScores, afterScores, !!savedMeal?.feeling);
+    if (changesPreview) {
+      changesPreview.innerHTML = changes;
+      changesPreview.hidden = !changes;
+    }
     collapsed.innerHTML = beforeItems.length || afterItems.length
       ? `${feelingCompactSummaryHtml("Avant", beforeScores)}${feelingCompactSummaryHtml("Après", afterScores)}`
       : "<small>Aucun ressenti</small>";
@@ -8801,7 +8870,7 @@
     if (!tags.length && !notes && !Object.keys(normalizeFeelingScores(m.feelingsBefore)).length)
       return alert("Sélectionne au moins un ressenti ou ajoute une note.");
     m.feeling = {
-      rating: averageFeelingScore(scores) || 3,
+      rating: averageFeelingScore(scores) ?? 0,
       tags,
       scores,
       beforeScores: normalizeFeelingScores(m.feelingsBefore),
@@ -9504,7 +9573,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.41.5");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.42.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
