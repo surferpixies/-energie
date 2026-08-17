@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.45.7">
+  <link rel="stylesheet" href="styles.css?v=3.46.1">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -308,6 +308,18 @@
     </form>
   </dialog>
 
+  <dialog id="trackedFeelingsDialog" class="tracked-feelings-dialog">
+    <form id="trackedFeelingsForm" class="dialog-card tracked-feelings-card">
+      <div class="dialog-header"><div><p class="eyebrow">Le cœur d’Énergie</p><h2>Mes ressentis suivis</h2></div><button type="button" class="icon-button" id="closeTrackedFeelings" aria-label="Fermer">✕</button></div>
+      <p>Choisis uniquement les ressentis que tu veux comprendre. Ce sont les seuls qui apparaîtront lors de tes saisies.</p>
+      <div class="tracked-feelings-reassurance"><span aria-hidden="true">🔒</span><span>Tu pourras modifier cette sélection en tout temps. Ton ancien historique ne sera jamais supprimé.</span></div>
+      <div class="tracked-feelings-toolbar"><strong id="trackedFeelingsCount">0 sélectionné</strong><button type="button" class="text-button" id="clearTrackedFeelings">Tout retirer</button></div>
+      <div id="trackedFeelingsChoices" class="tracked-feelings-choices"></div>
+      <p id="trackedFeelingsError" class="form-error" hidden>Choisis au moins un ressenti à suivre.</p>
+      <div class="dialog-actions"><button type="submit" class="primary">Enregistrer mes ressentis</button></div>
+    </form>
+  </dialog>
+
   <section id="experienceLaunch" class="experience-launch" hidden aria-labelledby="experienceTitle">
     <div class="experience-launch-card">
       <div class="experience-brand">
@@ -445,7 +457,7 @@
   <script src="brain/insight-engine.js?v=3.30.2"></script>
   <script src="brain/index.js?v=3.12.0"></script>
   <script src="observation-engine.js?v=3.30.2"></script>
-  <script src="demo-profiles.js?v=3.45.7"></script>
-  <script src="app.js?v=3.45.7"></script>
+  <script src="demo-profiles.js?v=3.46.1"></script>
+  <script src="app.js?v=3.46.1"></script>
 </body>
 </html>
