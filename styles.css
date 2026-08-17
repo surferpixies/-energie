@@ -1021,3 +1021,6 @@ body.demo-guide-open .bottom-nav{z-index:20}
 
 /* V3.46.1 — sélection et rappels réunis dans la même section Ressenti */
 .tracked-feelings-profile{display:grid;gap:10px;margin:13px 0;padding:12px;border:1px solid color-mix(in srgb,var(--accent) 18%,var(--border));border-radius:15px;background:color-mix(in srgb,var(--accent) 5%,var(--surface2))}.tracked-feelings-profile-head h4{margin:3px 0 0;font-size:.9rem}.tracked-feelings-profile-head>strong{background:var(--surface);color:var(--text)}
+
+/* V3.46.2 — catégories sans hauteur artificielle dans le sélecteur */
+.tracked-feelings-choices{max-height:none;overflow:visible}.tracked-feelings-group{overflow:visible}.tracked-feelings-group>div{grid-auto-rows:auto}.tracked-feelings-group label,.tracked-feelings-group label span{height:auto;max-height:none;overflow:visible}.tracked-feelings-group label span{min-height:52px;white-space:normal;text-overflow:clip}.tracked-feelings-card{overflow-y:auto;overscroll-behavior:contain}
