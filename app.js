@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 58;
-  const APP_RELEASE = "3.47.0";
+  const CURRENT_VERSION = 59;
+  const APP_RELEASE = "3.47.1";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -6257,10 +6257,10 @@
       .join("")}</div></div>`;
   }
   function historyNegativeFeelingHtml(stats) {
-    return `<section class="card history-feelings-card">${feelingObservationSectionHtml(stats.negative || [], "Observations négatives", "Aucun signalement", "Les symptômes enregistrés ici apparaîtront automatiquement ici.", 6, 3)}${feelingObservationSectionHtml(stats.positive || [], "Observations positives", "Aucun signalement", "Les états positifs enregistrés ici apparaîtront automatiquement ici.", 6, 3)}</section>`;
+    return `<section class="card history-feelings-card">${feelingObservationSectionHtml(stats.negative || [], "Observations basées sur tes ressentis", "Aucun ressenti observé", "Les ressentis enregistrés après tes repas apparaîtront automatiquement ici.", 6, 3)}</section>`;
   }
   function dashboardNegativeFeelingHtml(stats) {
-    return `<section class="card wide dashboard-feelings-card"><div class="dashboard-feelings-sections">${feelingObservationSectionHtml(stats.negative || [], "Observations négatives", "Aucun signalement", "Les symptômes enregistrés ici apparaîtront automatiquement ici.")}${feelingObservationSectionHtml(stats.positive || [], "Observations positives", "Aucun signalement", "Les états positifs enregistrés ici apparaîtront automatiquement ici.")}</div></section>`;
+    return `<section class="card wide dashboard-feelings-card"><div class="dashboard-feelings-sections">${feelingObservationSectionHtml(stats.negative || [], "Observations basées sur tes ressentis", "Aucun ressenti observé", "Les ressentis enregistrés après tes repas apparaîtront automatiquement ici.")}</div></section>`;
   }
   function journeySummary(meals) {
     if (!meals.length) return "";
@@ -9936,7 +9936,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.47.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.47.1");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
