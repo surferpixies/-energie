@@ -333,7 +333,8 @@
     }
     if (!Object.keys(after).length) return null;
     const before = scoreMap(meal?.feelingsBefore || meal?.feeling?.beforeScores);
-    return (after[tagId] || 0) - (before[tagId] || 0);
+    if (!Object.prototype.hasOwnProperty.call(after, tagId) || !Object.prototype.hasOwnProperty.call(before, tagId)) return null;
+    return after[tagId] - before[tagId];
   }
 
   function scoredFeelingObservations(days, locale, options) {
@@ -367,6 +368,19 @@
         if (rateA - rateB < 0.18 || difference < 0.35) continue;
         const categoryLabel = FOOD.getCategoryLabel?.(category.id, locale) || category.label || category.id;
         const score = difference * Math.log2(Math.min(exposedChanges.length, comparisonChanges.length) + 1);
+        const relatedMeals = exposed
+          .map(meal => ({meal, change:mealFeelingChange(meal, tag.id)}))
+          .filter(item => Number.isFinite(item.change) && item.change > 0)
+          .sort((a,b) => b.change - a.change || String(b.meal.date || "").localeCompare(String(a.meal.date || "")))
+          .slice(0,12)
+          .map(item => ({
+            id:item.meal.id,
+            date:item.meal.date,
+            time:item.meal.time,
+            type:item.meal.type,
+            description:item.meal.description,
+            change:item.change
+          }));
         results.push({
           id:`food-feeling:${category.id}:${tag.id}`,
           icon:tag.emoji || category.icon || "🔎",
@@ -377,6 +391,8 @@
           confidence:confidence(exposedChanges.length, comparisonChanges.length, difference, locale),
           samples:{exposed:exposedChanges.length,comparison:comparisonChanges.length,total:exposedChanges.length+comparisonChanges.length},
           metrics:{strength:trendStrength(difference,0),direction:"higher",difference,rateA,rateB},
+          evidence:{exposedAffected,comparisonAffected,exposedRate:rateA,comparisonRate:rateB},
+          relatedMeals,
           score,
           basis:`${exposedAffected} aggravations parmi ${exposedChanges.length} repas contenant « ${categoryLabel.toLowerCase()} », contre ${comparisonAffected} parmi ${comparisonChanges.length} autres repas. Le calcul compare le score après au score avant pour chaque ressenti.`,
           kind:"food-category-feeling-change",

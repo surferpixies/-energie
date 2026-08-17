@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 57;
-  const APP_RELEASE = "3.46.3";
+  const CURRENT_VERSION = 58;
+  const APP_RELEASE = "3.47.0";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -7053,10 +7053,24 @@
   }
   function observationStrengthLabel(strength) {
     return strength === "strong"
-      ? "Tendance forte"
+      ? "Tendance plus solide"
       : strength === "moderate"
-        ? "Tendance modérée"
-        : "Tendance légère";
+        ? "Tendance répétée"
+        : "Début de piste";
+  }
+
+  function observationEvidenceHtml(x, index) {
+    const feelingChange = x.kind === "food-category-feeling-change",
+      evidence = x.evidence || {},
+      difference = Number(x.metrics?.difference),
+      differenceText = Number.isFinite(difference)
+        ? `${difference > 0 ? "+" : ""}${difference.toFixed(1).replace(".", ",")} point${Math.abs(difference) === 1 ? "" : "s"}`
+        : "Comparaison disponible",
+      exposedRate = Number(evidence.exposedRate),
+      comparisonRate = Number(evidence.comparisonRate),
+      hasRates = Number.isFinite(exposedRate) && Number.isFinite(comparisonRate),
+      relatedCount = Array.isArray(x.relatedMeals) ? x.relatedMeals.length : 0;
+    return `<details class="observation-evidence"><summary><span>Voir les preuves</span><span aria-hidden="true">⌄</span></summary><div class="observation-evidence-body"><div class="observation-proof-grid"><div><small>Comparés</small><strong>${x.samples?.total || 0}</strong><span>${feelingChange ? "repas avec avant + après" : "journées analysées"}</span></div><div><small>Écart observé</small><strong>${esc(differenceText)}</strong><span>dans ton propre journal</span></div><div><small>Confiance</small><strong>${esc(observationStrengthLabel(x.metrics?.strength))}</strong><span>selon la répétition</span></div></div>${hasRates ? `<div class="observation-rate-proof"><strong>Aggravations observées</strong><div><span>Avec la catégorie <b>${Math.round(exposedRate * 100)} %</b></span><span>Autres repas <b>${Math.round(comparisonRate * 100)} %</b></span></div></div>` : ""}<p class="observation-basis">${esc(x.basis || "Cette observation utilise uniquement les données disponibles dans ton journal.")}</p><div class="observation-proof-actions">${relatedCount ? `<button class="secondary small related-discovery-meals" data-discovery="${index}">Voir les repas concernés (${relatedCount})</button>` : ""}<button class="text-button why-discovery" data-discovery="${index}">Comment c’est calculé</button></div></div></details>`;
   }
   function brainGrowthState(maturity) {
     const days = Math.max(0, Number(maturity?.analyzableDays) || 0);
@@ -7146,7 +7160,7 @@
       ? observations
           .map(
             (x, i) =>
-              `<article class="card observation-card discovery-card observation-${x.confidence.cls}">${x.isNew ? `<div class="observation-new-badge">✨ Nouvelle tendance détectée</div>` : ""}<div class="discovery-card-top"><div class="discovery-icon">${x.icon}</div><div class="observation-badges"><span class="observation-strength">${observationStrengthLabel(x.metrics?.strength)}</span><span class="discovery-level ${x.confidence.cls}">${x.confidence.icon} ${esc(x.confidence.label)}</span></div></div><h3>${esc(x.title)}</h3><p class="observation-text">${esc(x.text)}</p>${discoveryComparisonHtml(x)}<div class="discovery-meta"><span>${x.samples.total} ${x.kind === "food-category-feeling-change" ? "repas comparés" : "journées analysées"}</span><button class="text-button why-discovery" data-discovery="${i}">Pourquoi je vois ceci?</button></div></article>`,
+              `<article class="card observation-card discovery-card observation-${x.confidence.cls}">${x.isNew ? `<div class="observation-new-badge">✨ Nouvelle tendance détectée</div>` : ""}<div class="discovery-card-top"><div class="discovery-icon">${x.icon}</div><div class="observation-badges"><span class="observation-strength">${observationStrengthLabel(x.metrics?.strength)}</span><span class="discovery-level ${x.confidence.cls}">${x.confidence.icon} ${esc(x.confidence.label)}</span></div></div><h3>${esc(x.title)}</h3><p class="observation-text">${esc(x.text)}</p>${discoveryComparisonHtml(x)}${observationEvidenceHtml(x, i)}</article>`,
           )
           .join("")
       : `<section class="card discovery-empty observation-empty"><div class="food-art">${mature ? "🔎" : "🌱"}</div><h3>${mature ? "Aucune association assez nette pour le moment" : "Les premières tendances se préparent"}</h3><p>${mature ? "Le journal contient beaucoup de données, mais aucune différence suffisamment claire et répétée ne ressort actuellement. Le Cerveau préfère ne pas créer une tendance artificielle." : "Continue simplement à remplir ton journal. Le cerveau d’Énergie compare déjà tes journées, mais préfère attendre avant de montrer une observation trop fragile."}</p></section>`;
@@ -7160,6 +7174,20 @@
     $("#sourceTitle").textContent = "Pourquoi cette tendance apparaît-elle?";
     $("#sourceContent").innerHTML =
       `<p>${esc(x.basis || "Cette tendance utilise uniquement les données disponibles dans ton journal.")}</p>${discoveryComparisonHtml(x)}<div class="notice"><strong>À interpréter avec prudence</strong><p>Une association ne signifie pas que cet aliment ou cette catégorie est la cause du changement observé. Le sommeil, l’hydratation, les portions, le moment des repas et d’autres facteurs peuvent varier.</p></div><h3>Comment cette observation est calculée</h3><p class="muted small">Énergie classe les descriptions de repas par catégories et compare, pour chaque ressenti, son intensité après le repas à son intensité avant. Seuls les écarts répétés avec assez de repas comparables sont conservés.</p><p class="muted small">Le moteur préfère ne rien afficher lorsque les données sont insuffisantes ou que la différence est trop faible.</p>`;
+    $("#sourceDialog").showModal();
+  }
+  function openDiscoveryMeals(x) {
+    const meals = Array.isArray(x?.relatedMeals) ? x.relatedMeals : [];
+    $("#sourceTitle").textContent = "Repas derrière cette observation";
+    $("#sourceContent").innerHTML = meals.length
+      ? `<p class="muted small">Voici les repas où le ressenti suivi s’est détérioré après le repas. Touche un repas pour revoir sa fiche.</p><div class="observation-related-list">${meals.map((meal) => `<button type="button" class="observation-related-meal" data-related-meal="${esc(meal.id || "")}"><span>${mealIcon(meal.type, meal.description)}</span><div><strong>${esc(meal.description || "Repas sans description")}</strong><small>${esc(formatDate(meal.date))}${meal.time ? ` · ${esc(meal.time)}` : ""}</small></div><b>+${esc(String(meal.change).replace(".", ","))}</b></button>`).join("")}</div><p class="muted small">Cette liste montre les repas associés à la tendance; elle ne prouve pas qu’un aliment en est la cause.</p>`
+      : `<p>Aucun repas précis n’est disponible pour cette observation.</p>`;
+    [...$("#sourceContent").querySelectorAll(".observation-related-meal")].forEach((button) => {
+      button.onclick = () => {
+        $("#sourceDialog").close();
+        openMeal(button.dataset.relatedMeal);
+      };
+    });
     $("#sourceDialog").showModal();
   }
   function analysisDateNavigatorHtml() {
@@ -7475,6 +7503,15 @@
           openDiscoveryWhy(
             discoveryReport.observations[Number(b.dataset.discovery)],
           )),
+    );
+    $$(".related-discovery-meals").forEach(
+      (b) =>
+        (b.onclick = (event) => {
+          event.preventDefault();
+          openDiscoveryMeals(
+            discoveryReport.observations[Number(b.dataset.discovery)],
+          );
+        }),
     );
     bindAnalysisDateNavigator();
   }
@@ -9899,7 +9936,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.46.3");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.47.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
