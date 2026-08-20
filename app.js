@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 62;
-  const APP_RELEASE = "3.49.1";
+  const CURRENT_VERSION = 63;
+  const APP_RELEASE = "3.50.0";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -267,6 +267,13 @@
   let hasDemoAccess = false;
   let professionalDemoMode = false;
   const EATING_REASON_IDS = new Set(["hunger", "routine", "boredom", "pleasure", "other"]);
+  const EATING_REASON_META = [
+    { id: "hunger", icon: "😋", label: "J’avais faim" },
+    { id: "routine", icon: "🕒", label: "C’était l’heure de manger" },
+    { id: "boredom", icon: "😴", label: "Je m’ennuyais" },
+    { id: "pleasure", icon: "✨", label: "Par gourmandise" },
+    { id: "other", icon: "✍️", label: "Autre raison" },
+  ];
   const LEGACY_EATING_REASON_LABELS = {
     social: "pour partager un moment",
     emotion: "à cause d’une émotion",
@@ -7781,7 +7788,10 @@
       sugars: 0,
       sodium: 0,
     };
-    const foodCounts = {};
+    const foodCounts = {},
+      reasonCounts = Object.fromEntries(
+        EATING_REASON_META.map((reason) => [reason.id, 0]),
+      );
     meals.forEach((meal) => {
       const composition = mealCompositionAnalysis(meal.description || ""),
         recognized = (trait) => ["confirmed", "probable"].includes(composition?.status?.(trait));
@@ -7796,8 +7806,15 @@
         item.food?.names?.["fr-CA"] || item.matchedAlias || item.id,
       ).filter(Boolean));
       names.forEach((name) => { foodCounts[name] = (foodCounts[name] || 0) + 1; });
+      normalizeEatingReasons(meal.eatingReasons).forEach((reason) => {
+        if (Object.prototype.hasOwnProperty.call(reasonCounts, reason))
+          reasonCounts[reason] += 1;
+      });
     });
     const mealTotal = meals.length, dayTotal = documented.length,
+      reasonDocumented = meals.filter(
+        (meal) => normalizeEatingReasons(meal.eatingReasons).length,
+      ).length,
       coverageParts = [
         mealTotal ? percent(counts.before, mealTotal) : null,
         mealTotal ? percent(counts.after, mealTotal) : null,
@@ -7812,7 +7829,16 @@
         const taken = documented.filter(([, day]) => normalizeSupplements(day.supplementsTaken || []).includes(name)).length;
         return { name, taken, total: dayTotal, percent: percent(taken, dayTotal) };
       });
-    return { windowDays, dayTotal, mealTotal, counts, percent, quality, foods, supplements };
+    const eatingReasons = {
+      documented: reasonDocumented,
+      coverage: percent(reasonDocumented, mealTotal),
+      items: EATING_REASON_META.map((reason) => ({
+        ...reason,
+        count: reasonCounts[reason.id],
+        percent: percent(reasonCounts[reason.id], reasonDocumented),
+      })),
+    };
+    return { windowDays, dayTotal, mealTotal, counts, percent, quality, foods, supplements, eatingReasons };
   }
   function brainCoverageMetric(icon, label, value, total, help) {
     const pct = total ? Math.round(value / total * 100) : 0;
@@ -7826,6 +7852,13 @@
     const pct = total ? Math.round(value / total * 100) : 0;
     return `<div class="brain-nutrition-signal"><span>${icon}</span><strong>${esc(label)}</strong><b>${pct}%</b><small>${value} entrées sur ${total}</small></div>`;
   }
+  function brainEatingReasonsHtml(data, mealTotal) {
+    const reasons = data.eatingReasons,
+      documented = reasons?.documented || 0;
+    if (!documented)
+      return `<section class="card brain-eating-reasons-card"><div class="brain-section-head"><div><h2>💭 Ce qui t’amène à manger</h2><p class="muted small">Répartition des raisons consignées durant les ${data.windowDays} derniers jours.</p></div></div><div class="brain-reasons-empty"><span>🌱</span><div><strong>Aucune raison consignée pour le moment</strong><p>Cette question demeure facultative. Les réponses apparaîtront ici sans être qualifiées de bonnes ou de mauvaises.</p></div></div></section>`;
+    return `<section class="card brain-eating-reasons-card"><div class="brain-section-head"><div><h2>💭 Ce qui t’amène à manger</h2><p class="muted small">Répartition des raisons consignées durant les ${data.windowDays} derniers jours.</p></div><span class="brain-reasons-coverage">${reasons.coverage}% documenté</span></div><div class="brain-reasons-summary"><strong>${documented}/${mealTotal}</strong><span>repas et collations avec au moins une raison</span></div><div class="brain-reasons-list">${reasons.items.map((reason) => `<div class="brain-reason-row"><span class="brain-reason-icon">${reason.icon}</span><div><strong>${esc(reason.label)}</strong><i><em style="width:${reason.percent}%"></em></i></div><b>${reason.count}<small>${reason.percent}%</small></b></div>`).join("")}</div><p class="muted tiny brain-reasons-note">Plusieurs raisons peuvent être sélectionnées pour un même repas; les pourcentages peuvent donc dépasser 100 % au total. Cette répartition décrit seulement ce que tu as consigné.</p></section>`;
+  }
   function renderBrain() {
     const data = brainCoverageData(60), dayTotal = data.dayTotal, mealTotal = data.mealTotal;
     const message = data.quality >= 75
@@ -7837,7 +7870,7 @@
       ? `<div class="brain-supplement-grid">${data.supplements.map((item) => `<div class="brain-supplement-row"><span>${supplementIcon(item.name)}</span><div><strong>${esc(item.name)}</strong><small>${item.taken} journée${item.taken !== 1 ? "s" : ""} cochée${item.taken !== 1 ? "s" : ""} sur ${item.total}</small><i><em style="width:${item.percent}%"></em></i></div><b>${item.percent}%</b></div>`).join("")}</div>`
       : `<p class="muted">Aucun supplément n’est configuré dans Profil.</p>`;
     $("#app").innerHTML =
-      `${analysisDateNavigatorHtml()}<section class="hero brain-hero"><p class="eyebrow">🧠 Ce qu’Énergie peut réellement analyser</p><h2>Qualité de ton journal</h2><p>${message}</p><div class="brain-confidence"><div class="brain-ring" style="--p:${data.quality}"><strong>${data.quality}%</strong></div><div><strong>Couverture des données</strong><p class="muted small">Calculée sur les 60 derniers jours. Cette jauge mesure la présence des informations, pas la qualité de tes habitudes.</p></div></div><div class="brain-summary-grid"><div class="brain-stat"><strong>${dayTotal}</strong><small>journées documentées</small></div><div class="brain-stat"><strong>${mealTotal}</strong><small>repas consignés</small></div><div class="brain-stat"><strong>${data.counts.after}</strong><small>ressentis après</small></div></div></section><div class="stack"><section class="card"><div class="brain-section-head"><div><h2>📋 Qualité des données</h2><p class="muted small">Couverture durant les 60 derniers jours documentés.</p></div></div><div class="brain-coverage-list">${brainCoverageMetric("🙂", "Ressentis avant", data.counts.before, mealTotal, "Repas possédant au moins un ressenti avant")}${brainCoverageMetric("🧠", "Ressentis après", data.counts.after, mealTotal, "Repas possédant au moins un ressenti après")}${brainCoverageMetric("😴", "Sommeil", data.counts.sleep, dayTotal, "Journées où le sommeil est documenté")}${brainCoverageMetric("💧", "Hydratation", data.counts.water, dayTotal, "Journées où l’eau est documentée")}${brainCoverageMetric("🚶", "Activité", data.counts.activity, dayTotal, "Journées comprenant une activité")}</div></section><section class="card"><div class="brain-section-head"><div><h2>🥗 Données alimentaires reconnaissables</h2><p class="muted small">Présence détectable dans les descriptions ou estimations — aucune évaluation de quantité.</p></div></div><div class="brain-nutrition-grid">${brainNutritionCoverage("Protéines", data.counts.protein, mealTotal, "🥚")}${brainNutritionCoverage("Fibres", data.counts.fiber, mealTotal, "🌾")}${brainNutritionCoverage("Glucides", data.counts.carbs, mealTotal, "🍞")}${brainNutritionCoverage("Sucres estimables", data.counts.sugars, mealTotal, "🍓")}${brainNutritionCoverage("Sodium estimable", data.counts.sodium, mealTotal, "🧂")}</div><p class="muted tiny brain-coverage-note">Ces pourcentages indiquent seulement dans combien de repas la donnée peut être reconnue ou estimée. Ils ne signifient pas que l’apport est suffisant ou excessif.</p></section><section class="card"><div class="brain-section-head"><div><h2>💊 Suppléments</h2><p class="muted small">Régularité des cases cochées sur les journées documentées.</p></div></div>${supplementsHtml}<p class="muted tiny brain-coverage-note">Une case cochée indique ce qui a été consigné dans Énergie; elle ne confirme pas la prise réelle.</p></section><section class="card"><div class="brain-section-head"><div><h2>🍎 Aliments fréquents</h2><p class="muted small">Aliments explicitement reconnus dans les repas des 60 derniers jours.</p></div></div>${data.foods.length ? `<div class="brain-favorites">${data.foods.map(([name, count]) => `<div class="brain-food"><strong>${esc(name)}</strong><span>${count} apparition${count > 1 ? "s" : ""}</span></div>`).join("")}</div>` : `<p class="muted">J’ai besoin de descriptions un peu plus détaillées pour identifier les aliments fréquents.</p>`}</section><section class="card"><h2>🌱 En apprentissage</h2><p>${mealTotal ? `Énergie dispose de ${mealTotal} repas sur cette période. Continue surtout à préciser les ingrédients et à noter les ressentis après les repas : ce sont les données les plus utiles pour produire des observations fiables.` : "Commence simplement à remplir ton journal. Cette section indiquera progressivement quelles données deviennent suffisamment complètes pour être analysées."}</p><p class="muted small">Les associations et tendances possibles demeurent dans l’onglet Observations afin d’éviter les répétitions.</p></section></div>`;
+      `${analysisDateNavigatorHtml()}<section class="hero brain-hero"><p class="eyebrow">🧠 Ce qu’Énergie peut réellement analyser</p><h2>Qualité de ton journal</h2><p>${message}</p><div class="brain-confidence"><div class="brain-ring" style="--p:${data.quality}"><strong>${data.quality}%</strong></div><div><strong>Couverture des données</strong><p class="muted small">Calculée sur les 60 derniers jours. Cette jauge mesure la présence des informations, pas la qualité de tes habitudes.</p></div></div><div class="brain-summary-grid"><div class="brain-stat"><strong>${dayTotal}</strong><small>journées documentées</small></div><div class="brain-stat"><strong>${mealTotal}</strong><small>repas consignés</small></div><div class="brain-stat"><strong>${data.counts.after}</strong><small>ressentis après</small></div></div></section><div class="stack"><section class="card"><div class="brain-section-head"><div><h2>📋 Qualité des données</h2><p class="muted small">Couverture durant les 60 derniers jours documentés.</p></div></div><div class="brain-coverage-list">${brainCoverageMetric("🙂", "Ressentis avant", data.counts.before, mealTotal, "Repas possédant au moins un ressenti avant")}${brainCoverageMetric("🧠", "Ressentis après", data.counts.after, mealTotal, "Repas possédant au moins un ressenti après")}${brainCoverageMetric("😴", "Sommeil", data.counts.sleep, dayTotal, "Journées où le sommeil est documenté")}${brainCoverageMetric("💧", "Hydratation", data.counts.water, dayTotal, "Journées où l’eau est documentée")}${brainCoverageMetric("🚶", "Activité", data.counts.activity, dayTotal, "Journées comprenant une activité")}</div></section>${brainEatingReasonsHtml(data, mealTotal)}<section class="card"><div class="brain-section-head"><div><h2>🥗 Données alimentaires reconnaissables</h2><p class="muted small">Présence détectable dans les descriptions ou estimations — aucune évaluation de quantité.</p></div></div><div class="brain-nutrition-grid">${brainNutritionCoverage("Protéines", data.counts.protein, mealTotal, "🥚")}${brainNutritionCoverage("Fibres", data.counts.fiber, mealTotal, "🌾")}${brainNutritionCoverage("Glucides", data.counts.carbs, mealTotal, "🍞")}${brainNutritionCoverage("Sucres estimables", data.counts.sugars, mealTotal, "🍓")}${brainNutritionCoverage("Sodium estimable", data.counts.sodium, mealTotal, "🧂")}</div><p class="muted tiny brain-coverage-note">Ces pourcentages indiquent seulement dans combien de repas la donnée peut être reconnue ou estimée. Ils ne signifient pas que l’apport est suffisant ou excessif.</p></section><section class="card"><div class="brain-section-head"><div><h2>💊 Suppléments</h2><p class="muted small">Régularité des cases cochées sur les journées documentées.</p></div></div>${supplementsHtml}<p class="muted tiny brain-coverage-note">Une case cochée indique ce qui a été consigné dans Énergie; elle ne confirme pas la prise réelle.</p></section><section class="card"><div class="brain-section-head"><div><h2>🍎 Aliments fréquents</h2><p class="muted small">Aliments explicitement reconnus dans les repas des 60 derniers jours.</p></div></div>${data.foods.length ? `<div class="brain-favorites">${data.foods.map(([name, count]) => `<div class="brain-food"><strong>${esc(name)}</strong><span>${count} apparition${count > 1 ? "s" : ""}</span></div>`).join("")}</div>` : `<p class="muted">J’ai besoin de descriptions un peu plus détaillées pour identifier les aliments fréquents.</p>`}</section><section class="card"><h2>🌱 En apprentissage</h2><p>${mealTotal ? `Énergie dispose de ${mealTotal} repas sur cette période. Continue surtout à préciser les ingrédients et à noter les ressentis après les repas : ce sont les données les plus utiles pour produire des observations fiables.` : "Commence simplement à remplir ton journal. Cette section indiquera progressivement quelles données deviennent suffisamment complètes pour être analysées."}</p><p class="muted small">Les associations et tendances possibles demeurent dans l’onglet Observations afin d’éviter les répétitions.</p></section></div>`;
     const brainMealLabel = $(".brain-summary-grid .brain-stat:nth-child(2) small");
     if (brainMealLabel) brainMealLabel.textContent = "repas et collations consignés";
     const nutritionCoverageNote = $(
@@ -10289,7 +10322,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.49.1");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.50.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
