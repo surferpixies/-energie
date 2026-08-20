@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 60;
-  const APP_RELEASE = "3.48.0";
+  const CURRENT_VERSION = 61;
+  const APP_RELEASE = "3.49.0";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -9951,6 +9951,123 @@
     } catch (_) {}
     return index;
   }
+  function splashMealMoment(meal) {
+    return `${meal?.date || ""}T${meal?.time || "00:00"}`;
+  }
+  function splashObservationConfirmationDate(observation, meals) {
+    if (!observation?.categoryId || !observation?.feelingId) return null;
+    return meals
+      .filter((meal) =>
+        mealCategoryIdsForResponse(meal).includes(observation.categoryId),
+      )
+      .filter((meal) =>
+        comparableFeelingDeltas(meal).some(
+          (row) => row.id === observation.feelingId && row.delta > 0,
+        ),
+      )
+      .map((meal) => meal.date)
+      .filter(Boolean)
+      .sort()
+      .at(-1) || null;
+  }
+  function splashObservationCandidate() {
+    if (db.settings?.demoMode && db.settings?.demoReadOnly) return null;
+    const meals = allMeals().filter((meal) => meal?.date),
+      latestMeal = meals.slice().sort((a, b) =>
+        splashMealMoment(b).localeCompare(splashMealMoment(a)),
+      )[0],
+      recentCutoff = addDaysKey(todayKey(), -3),
+      recentChanges = meals
+        .filter((meal) => meal.feeling && meal.date >= recentCutoff)
+        .map((meal) => ({
+          meal,
+          change: comparableFeelingDeltas(meal).find(
+            (row) => row.tag?.group === "symptom" && Math.abs(row.delta) >= 2,
+          ),
+        }))
+        .filter((item) => item.change)
+        .sort((a, b) =>
+          splashMealMoment(b.meal).localeCompare(splashMealMoment(a.meal)),
+        );
+    if (recentChanges.length) {
+      const { meal, change } = recentChanges[0],
+        moment = meal.id === latestMeal?.id
+          ? "À ton dernier repas"
+          : meal.date === todayKey()
+            ? "Aujourd’hui"
+            : meal.date === addDaysKey(todayKey(), -1)
+              ? "Hier"
+              : `Lors du repas du ${formatDate(meal.date)}`;
+      return {
+        kind: "change",
+        label: "Le Cerveau a remarqué",
+        title: `${change.tag.emoji} ${t(change.tag.label)} · ${change.start}/5 → ${change.end}/5`,
+        text: `${moment}, « ${t(change.tag.label).toLowerCase()} » est passé de ${change.start}/5 à ${change.end}/5. Le Cerveau garde cette évolution en mémoire pour voir si elle se répète.`,
+        dateText: `Ressenti enregistré le ${formatDate(meal.date)}`,
+      };
+    }
+    if (
+      db.settings?.insightsEnabled === false ||
+      !window.EnergieObservationEngine ||
+      meals.length < 2
+    )
+      return null;
+    let report;
+    try {
+      report = window.EnergieObservationEngine.analyze(db, {
+        meals,
+        limit: 3,
+        lookbackDays: 180,
+        locale: window.ENERGIE_LOCALE || "fr-CA",
+      });
+    } catch (_) {
+      return null;
+    }
+    const observations = markAndDetectNewObservations(
+        report?.observations || [],
+      ),
+      seen = observationFirstSeenMap(),
+      strengthRank = { strong: 3, moderate: 2, slight: 1 },
+      candidates = observations.map((observation) => ({
+        observation,
+        confirmationDate: splashObservationConfirmationDate(
+          observation,
+          meals,
+        ),
+        detectedDate: String(seen[observation.id] || "").slice(0, 10),
+      }));
+    if (!candidates.length) return null;
+    const observationCutoff = addDaysKey(todayKey(), -7),
+      recent = candidates
+        .filter(
+          (item) =>
+            (item.confirmationDate || item.detectedDate) >= observationCutoff,
+        )
+        .sort((a, b) =>
+          (b.confirmationDate || b.detectedDate).localeCompare(
+            a.confirmationDate || a.detectedDate,
+          ),
+        ),
+      chosen = recent[0] || candidates.sort((a, b) =>
+        (strengthRank[b.observation.metrics?.strength] || 0) -
+          (strengthRank[a.observation.metrics?.strength] || 0) ||
+        Number(b.observation.samples?.total || 0) -
+          Number(a.observation.samples?.total || 0),
+      )[0],
+      date = chosen.confirmationDate || chosen.detectedDate,
+      isRecent = recent.includes(chosen);
+    return {
+      kind: "observation",
+      label: isRecent
+        ? "Observation mise à jour"
+        : "Ton observation la plus solide",
+      title: chosen.observation.title,
+      text: chosen.observation.text,
+      dateText: date
+        ? `${chosen.confirmationDate ? "Dernière confirmation" : "Détectée"} le ${formatDate(date)}`
+        : "Observation tirée de ton propre historique",
+    };
+  }
   function initDailySplash() {
     const wrap = $("#splashDaily"),
       statusEl = $("#splashStatus"),
@@ -9958,7 +10075,12 @@
       textEl = $("#splashTipText"),
       appHintIconEl = $("#splashAppHintIcon"),
       appHintLabelEl = $("#splashAppHintLabel"),
-      appHintTextEl = $("#splashAppHintText");
+      appHintTextEl = $("#splashAppHintText"),
+      observationEl = $("#splashObservation"),
+      observationLabelEl = $("#splashObservationLabel"),
+      observationTitleEl = $("#splashObservationTitle"),
+      observationTextEl = $("#splashObservationText"),
+      observationDateEl = $("#splashObservationDate");
     if (
       !wrap ||
       !statusEl ||
@@ -9966,7 +10088,12 @@
       !textEl ||
       !appHintIconEl ||
       !appHintLabelEl ||
-      !appHintTextEl
+      !appHintTextEl ||
+      !observationEl ||
+      !observationLabelEl ||
+      !observationTitleEl ||
+      !observationTextEl ||
+      !observationDateEl
     )
       return;
     const pack = splashLocalePack(),
@@ -9986,6 +10113,26 @@
           : days < 14
             ? pack.status.many(days)
             : pack.status.growing(days);
+    const observation = splashObservationCandidate();
+    if (observation) {
+      observationLabelEl.textContent = observation.label;
+      observationTitleEl.textContent = observation.title;
+      observationTextEl.textContent = observation.text;
+      observationDateEl.textContent = observation.dateText;
+      observationEl.hidden = false;
+      statusEl.hidden = true;
+      observationEl.closest("#splashScreen")?.classList.add(
+        "has-splash-observation",
+      );
+      observationEl.closest("#splashScreen")?.setAttribute(
+        "data-has-observation",
+        "true",
+      );
+      $(".splash-tip").hidden = true;
+      $(".splash-app-hint").hidden = true;
+      wrap.hidden = false;
+      return;
+    }
     const seed = dateSeed(todayKey()),
       showFeatureTip = seed % 3 === 0;
     const pool = showFeatureTip ? pack.tips : pack.facts,
@@ -10021,15 +10168,41 @@
     appHintTextEl.textContent = pack.appHints[appHintIndex];
     wrap.hidden = false;
   }
+  let splashDismissTimer = null;
+  function hideSplashNow() {
+    const splash = $("#splashScreen");
+    if (!splash) return;
+    if (splashDismissTimer) clearTimeout(splashDismissTimer);
+    splashDismissTimer = null;
+    if (splash.classList.contains("is-hidden")) return;
+    splash.classList.add("is-hidden");
+    setTimeout(() => splash.remove(), 420);
+  }
   function dismissSplash() {
     const splash = $("#splashScreen");
     if (!splash) return;
     const reduced = matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-    const readingTime = reduced ? 6300 : 6900;
-    setTimeout(() => {
-      splash.classList.add("is-hidden");
-      setTimeout(() => splash.remove(), 420);
-    }, readingTime);
+    const hasObservation = splash.dataset.hasObservation === "true",
+      readingTime = hasObservation
+        ? reduced
+          ? 7600
+          : 8400
+        : reduced
+          ? 6300
+          : 6900;
+    if (hasObservation) {
+      splash.onclick = (event) => {
+        if (event.target.closest("#openSplashObservation")) return;
+        hideSplashNow();
+      };
+      $("#openSplashObservation").onclick = (event) => {
+        event.stopPropagation();
+        currentView = "insights";
+        render();
+        hideSplashNow();
+      };
+    }
+    splashDismissTimer = setTimeout(hideSplashNow, readingTime);
   }
   let dialogScrollY = 0;
   function syncDialogScrollLock() {
@@ -10103,7 +10276,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.48.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.49.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

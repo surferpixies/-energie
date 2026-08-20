@@ -11,18 +11,26 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.48.0">
+  <link rel="stylesheet" href="styles.css?v=3.49.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
     <div class="splash-brand">
       <span class="splash-logo" aria-hidden="true">
         <img src="assets/icon.svg" alt="">
+        <span id="splashObservationEye" class="splash-observation-eye">👁️</span>
       </span>
       <strong>Énergie</strong>
       <span class="splash-subtitle"><span>Repas</span><i>•</i><span>Ressentis</span><i>•</i><span class="splash-subtitle-result">Observations</span></span>
       <div id="splashDaily" class="splash-daily" hidden>
         <p id="splashStatus" class="splash-status"></p>
+        <section id="splashObservation" class="splash-observation" hidden>
+          <p id="splashObservationLabel" class="splash-observation-label"></p>
+          <h2 id="splashObservationTitle"></h2>
+          <p id="splashObservationText"></p>
+          <small id="splashObservationDate"></small>
+          <button id="openSplashObservation" type="button">Voir dans Observations</button>
+        </section>
         <div class="splash-tip">
           <span id="splashTipLabel" class="splash-tip-label"></span>
           <p id="splashTipText"></p>
@@ -482,8 +490,8 @@
   <script src="brain/profile.js?v=3.8.0"></script>
   <script src="brain/insight-engine.js?v=3.30.2"></script>
   <script src="brain/index.js?v=3.12.0"></script>
-  <script src="observation-engine.js?v=3.48.0"></script>
-  <script src="demo-profiles.js?v=3.48.0"></script>
-  <script src="app.js?v=3.48.0"></script>
+  <script src="observation-engine.js?v=3.49.0"></script>
+  <script src="demo-profiles.js?v=3.49.0"></script>
+  <script src="app.js?v=3.49.0"></script>
 </body>
 </html>
