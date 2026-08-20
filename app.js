@@ -5,11 +5,12 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 61;
-  const APP_RELEASE = "3.49.0";
+  const CURRENT_VERSION = 62;
+  const APP_RELEASE = "3.49.1";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
+    feeling_good: "no_tracked_symptoms",
     good_mood: "feeling_good",
     calm: "feeling_good",
     light_after_meal: "easy_digestion",
@@ -3076,7 +3077,7 @@
         if (!tags.length) return "";
         return `<details class="tracking-plan-group" ${tags.some((tag) => chosen.has(tag.id)) ? "open" : ""}><summary><span>${category.emoji} ${esc(t(category.label))}</span><small>${tags.filter((tag) => chosen.has(tag.id)).length}/${tags.length}</small></summary><div class="tracking-plan-options">${tags.map((tag) => `<label><input type="checkbox" data-tracking-feeling="${tag.id}" ${chosen.has(tag.id) ? "checked" : ""}><span>${tag.emoji} ${esc(t(tag.label))}</span></label>`).join("")}</div></details>`;
       }).join("");
-    return `<form id="professionalTrackingPlanForm" class="card professional-tracking-plan"><div class="professional-tracking-plan-head"><div><p class="eyebrow">Plan de suivi personnalisé</p><h2>🎯 Ressentis suivis avec ${esc(profile.name)}</h2></div><strong id="trackingPlanCount">${chosen.size} sélectionnés</strong></div><p class="muted small">Le client ne verra que ces ressentis avant et après les repas ainsi que dans les observations globales. Les anciennes données demeurent conservées.</p><div class="tracking-plan-actions"><button type="button" class="text-button" id="selectAllTrackingFeelings">Tout sélectionner</button><button type="button" class="text-button" id="clearTrackingFeelings">Tout retirer</button></div><div class="tracking-plan-groups">${groups}</div><p class="tracking-plan-permanent">✅ « Aucun des ressentis suivis » et ✍️ « Autre chose à signaler » demeurent toujours disponibles.</p><button type="submit" class="primary">Enregistrer le plan de suivi</button></form>`;
+    return `<form id="professionalTrackingPlanForm" class="card professional-tracking-plan"><div class="professional-tracking-plan-head"><div><p class="eyebrow">Plan de suivi personnalisé</p><h2>🎯 Ressentis suivis avec ${esc(profile.name)}</h2></div><strong id="trackingPlanCount">${chosen.size} sélectionnés</strong></div><p class="muted small">Le client ne verra que ces ressentis avant et après les repas ainsi que dans les observations globales. Les anciennes données demeurent conservées.</p><div class="tracking-plan-actions"><button type="button" class="text-button" id="selectAllTrackingFeelings">Tout sélectionner</button><button type="button" class="text-button" id="clearTrackingFeelings">Tout retirer</button></div><div class="tracking-plan-groups">${groups}</div><p class="tracking-plan-permanent">✅ « Tout va bien — rien de particulier » et ✍️ « Autre chose à signaler » demeurent toujours disponibles.</p><button type="submit" class="primary">Enregistrer le plan de suivi</button></form>`;
   }
   function clientTrackingPlanSummaryHtml() {
     const plan = activeProfessionalTrackingPlan();
@@ -4494,7 +4495,9 @@
     {
       id: "no_tracked_symptoms",
       emoji: "✅",
-      label: "Aucun des ressentis suivis",
+      label: (window.ENERGIE_LOCALE || "fr-CA").startsWith("en")
+        ? "Everything feels fine — nothing in particular"
+        : "Tout va bien — rien de particulier",
       group: "neutral",
       category: "positive",
       fixedScore: 0,
@@ -4503,10 +4506,11 @@
     {
       id: "feeling_good",
       emoji: "👌",
-      label: "Rien de particulier",
+      label: "Tout va bien — rien de particulier",
       group: "neutral",
       category: "positive",
       fixedScore: 0,
+      deprecated: true,
     },
     {
       id: "stable_energy",
@@ -5012,6 +5016,9 @@
       ? Math.round(values.reduce((sum, n) => sum + n, 0) / values.length)
       : null;
   }
+  function feelingEndpointLabel(score) {
+    return Number(score) === 0 ? "Absent" : `${score}/5`;
+  }
   function feelingScoresFor(meal, period = "after") {
     if (period === "before")
       return normalizeFeelingScores(meal?.feelingsBefore);
@@ -5446,7 +5453,7 @@
       text = !hasBefore
         ? "Comme tu ne te souvenais pas de ton état avant le repas, aucune évolution n’a été inventée. Cette donnée demeure utile comme ressenti après."
         : main
-          ? `${main.tag.emoji} ${t(main.tag.label)} est passé de ${main.start}/5 à ${main.end}/5 après ce repas.`
+          ? `${main.tag.emoji} ${t(main.tag.label)} est passé de ${feelingEndpointLabel(main.start)} à ${feelingEndpointLabel(main.end)} après ce repas.`
           : "Tes ressentis avant et après sont conservés. Les prochaines saisies aideront à reconnaître ce qui se répète.";
     $("#energyResponseTitle").textContent = title;
     $("#energyResponseText").textContent = text;
@@ -8618,7 +8625,7 @@
   }
   function feelingSelectionCountLabel(items = []) {
     if (!items.length) return "Non consigné";
-    if (items.length === 1 && items[0].score === 0) return "Rien de particulier";
+    if (items.length === 1 && items[0].score === 0) return "Tout va bien";
     return `${items.length} ressenti${items.length > 1 ? "s" : ""}`;
   }
   function compactFeelingLabel(tag) {
@@ -8678,9 +8685,15 @@
         tone = "improved"; arrow = "↘";
         label = delta === -1 ? "Légère amélioration" : delta <= -3 ? "Amélioration marquée" : "Amélioration";
       }
+      const compactTransition = start === 0
+          ? `Absent→${end}/5`
+          : end === 0
+            ? `${start}/5→Absent`
+            : `${start}→${end}`,
+        fullTransition = `${feelingEndpointLabel(start)} → ${feelingEndpointLabel(end)}`;
       rows.push(compact
-        ? `<span class="feeling-change-pill ${tone}" title="${esc(label)}"><i aria-hidden="true">${arrow}</i><span>${tag.emoji} ${esc(compactFeelingLabel(tag))}</span><b>${start}→${end}</b></span>`
-        : `<span class="feeling-change ${tone}"><i aria-hidden="true">${arrow}</i><span><strong>${tag.emoji} ${esc(t(tag.label))}</strong><small>${label}</small></span><b>${start} → ${end}</b></span>`);
+        ? `<span class="feeling-change-pill ${tone}" title="${esc(label)}"><i aria-hidden="true">${arrow}</i><span>${tag.emoji} ${esc(compactFeelingLabel(tag))}</span><b>${compactTransition}</b></span>`
+        : `<span class="feeling-change ${tone}"><i aria-hidden="true">${arrow}</i><span><strong>${tag.emoji} ${esc(t(tag.label))}</strong><small>${label}</small></span><b>${fullTransition}</b></span>`);
     });
     if (!rows.length) return "";
     return compact
@@ -10001,8 +10014,8 @@
       return {
         kind: "change",
         label: "Le Cerveau a remarqué",
-        title: `${change.tag.emoji} ${t(change.tag.label)} · ${change.start}/5 → ${change.end}/5`,
-        text: `${moment}, « ${t(change.tag.label).toLowerCase()} » est passé de ${change.start}/5 à ${change.end}/5. Le Cerveau garde cette évolution en mémoire pour voir si elle se répète.`,
+        title: `${change.tag.emoji} ${t(change.tag.label)} · ${feelingEndpointLabel(change.start)} → ${feelingEndpointLabel(change.end)}`,
+        text: `${moment}, « ${t(change.tag.label).toLowerCase()} » est passé de ${feelingEndpointLabel(change.start)} à ${feelingEndpointLabel(change.end)}. Le Cerveau garde cette évolution en mémoire pour voir si elle se répète.`,
         dateText: `Ressenti enregistré le ${formatDate(meal.date)}`,
       };
     }
@@ -10276,7 +10289,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.49.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.49.1");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
