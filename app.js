@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 59;
-  const APP_RELEASE = "3.47.1";
+  const CURRENT_VERSION = 60;
+  const APP_RELEASE = "3.48.0";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -261,6 +261,7 @@
     mealFoodReview = null,
     authMode = "login",
     feelingMealId = null,
+    missingBeforeMealId = null,
     notificationTimer = null;
   let hasDemoAccess = false;
   let professionalDemoMode = false;
@@ -5362,6 +5363,129 @@
     $("#feelingNotes").value = m.feeling?.notes || "";
     $("#feelingDialog").showModal();
   }
+  function comparableFeelingDeltas(meal) {
+    const before = feelingScoresFor(meal, "before"),
+      after = feelingScoresFor(meal, "after"),
+      neutralIds = new Set(["feeling_good", "no_tracked_symptoms"]),
+      beforeNone = Object.keys(before).some((id) => neutralIds.has(id) && before[id] === 0),
+      afterNone = Object.keys(after).some((id) => neutralIds.has(id) && after[id] === 0),
+      ids = new Set([
+        ...Object.keys(before).filter((id) => !neutralIds.has(id)),
+        ...Object.keys(after).filter((id) => !neutralIds.has(id)),
+      ]),
+      rows = [];
+    ids.forEach((id) => {
+      const tag = FEELING_TAGS.find((item) => item.id === id),
+        hasBefore = Object.prototype.hasOwnProperty.call(before, id),
+        hasAfter = Object.prototype.hasOwnProperty.call(after, id),
+        start = hasBefore ? before[id] : beforeNone ? 0 : null,
+        end = hasAfter ? after[id] : afterNone ? 0 : null;
+      if (!tag || start == null || end == null) return;
+      rows.push({ id, tag, start, end, delta: end - start });
+    });
+    return rows.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+  }
+  function mealCategoryIdsForResponse(meal) {
+    try {
+      return window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(
+        meal?.description || "",
+      ) || [];
+    } catch (_) {
+      return [];
+    }
+  }
+  function energyResponseHistoryHtml(meal, mainChange) {
+    if (!mainChange)
+      return `<span aria-hidden="true">🌱</span><p><strong>Une nouvelle donnée pour ton journal</strong><small>Énergie pourra la relier à d’autres repas lorsque davantage de comparaisons seront disponibles.</small></p>`;
+    const categories = new Set(mealCategoryIdsForResponse(meal));
+    if (!categories.size)
+      return `<span aria-hidden="true">🌱</span><p><strong>Cette comparaison enrichit ton historique</strong><small>Elle aidera Énergie à reconnaître les évolutions qui se répètent avec le temps.</small></p>`;
+    const mealMoment = `${meal.date || ""}T${meal.time || "00:00"}`,
+      comparable = allMeals()
+      .filter((candidate) => candidate.id !== meal.id && candidate.feeling)
+      .filter(
+        (candidate) =>
+          `${candidate.date || ""}T${candidate.time || "00:00"}` < mealMoment,
+      )
+      .filter((candidate) =>
+        mealCategoryIdsForResponse(candidate).some((id) => categories.has(id)),
+      )
+      .map((candidate) =>
+        comparableFeelingDeltas(candidate).find(
+          (row) => row.id === mainChange.id,
+        ),
+      )
+      .filter(Boolean),
+      direction = Math.sign(mainChange.delta),
+      sameDirection = comparable.filter(
+        (row) => Math.sign(row.delta) === direction,
+      ).length;
+    if (comparable.length >= 2 && direction !== 0)
+      return `<span aria-hidden="true">🔎</span><p><strong>${sameDirection} sur ${comparable.length} repas comparables</strong><small>ont montré une évolution dans le même sens pour « ${esc(t(mainChange.tag.label).toLowerCase())} ». C’est une répétition possible, pas une preuve de cause.</small></p>`;
+    return `<span aria-hidden="true">🌱</span><p><strong>Cette comparaison enrichit ton historique</strong><small>Énergie attendra que cette évolution se répète avant d’en faire une observation.</small></p>`;
+  }
+  function showMealEnergyResponse(meal) {
+    if (!meal?.feeling) return;
+    const rows = comparableFeelingDeltas(meal),
+      main = rows[0],
+      hasBefore = Object.keys(feelingScoresFor(meal, "before")).length > 0,
+      positiveFeeling = main?.tag?.group === "positive",
+      title = !hasBefore
+        ? "Ton ressenti après est bien enregistré"
+        : !main
+          ? "Énergie vient d’apprendre quelque chose"
+          : main.delta > 0
+            ? positiveFeeling
+              ? "Une évolution positive après ce repas"
+              : "Un changement à garder à l’œil"
+            : main.delta < 0
+              ? positiveFeeling
+                ? "Un changement à garder à l’œil"
+                : "Une amélioration après ce repas"
+              : "Un ressenti demeuré stable",
+      text = !hasBefore
+        ? "Comme tu ne te souvenais pas de ton état avant le repas, aucune évolution n’a été inventée. Cette donnée demeure utile comme ressenti après."
+        : main
+          ? `${main.tag.emoji} ${t(main.tag.label)} est passé de ${main.start}/5 à ${main.end}/5 après ce repas.`
+          : "Tes ressentis avant et après sont conservés. Les prochaines saisies aideront à reconnaître ce qui se répète.";
+    $("#energyResponseTitle").textContent = title;
+    $("#energyResponseText").textContent = text;
+    const changes = hasBefore
+      ? feelingChangesHtml(
+          feelingScoresFor(meal, "before"),
+          feelingScoresFor(meal, "after"),
+          true,
+        )
+      : "";
+    $("#energyResponseChanges").innerHTML = changes;
+    $("#energyResponseChanges").hidden = !changes;
+    $("#energyResponseHistory").innerHTML = energyResponseHistoryHtml(
+      meal,
+      main,
+    );
+    $("#energyResponseDialog").showModal();
+  }
+  function openMissingBeforeDialog(meal) {
+    missingBeforeMealId = meal.id;
+    $("#missingBeforeTags").innerHTML = scoredFeelingPickerHtml("before", {});
+    bindScoredFeelingPicker($("#missingBeforeTags"), "before");
+    updateFeelingQualityNotice($("#missingBeforeTags"), "before");
+    $("#missingBeforeError").hidden = true;
+    $("#missingBeforeDialog").showModal();
+  }
+  function finishAfterFeelingFlow(meal) {
+    const hasBefore = Object.keys(feelingScoresFor(meal, "before")).length,
+      hasAfter = Object.keys(feelingScoresFor(meal, "after")).length;
+    if (hasBefore || !hasAfter)
+      showMealEnergyResponse(meal);
+    else openMissingBeforeDialog(meal);
+  }
+  function skipMissingBefore() {
+    const meal = allMeals().find((item) => item.id === missingBeforeMealId);
+    if ($("#missingBeforeDialog").open) $("#missingBeforeDialog").close();
+    missingBeforeMealId = null;
+    if (meal) setTimeout(() => showMealEnergyResponse(meal), 120);
+  }
   async function requestFeelingNotifications() {
     if (!("Notification" in window)) return false;
     if (Notification.permission === "granted") return true;
@@ -9248,7 +9372,50 @@
     render();
     if ($("#mealDialog").open && $("#mealId").value === m.id)
       updateMealFeelingUi(m);
+    setTimeout(() => finishAfterFeelingFlow(m), 180);
   };
+  $("#missingBeforeForm").onsubmit = (e) => {
+    e.preventDefault();
+    const meal = allMeals().find((item) => item.id === missingBeforeMealId);
+    if (!meal) return $("#missingBeforeDialog").close();
+    if (hasUnscoredFeelings($("#missingBeforeTags"), "before")) {
+      $("#missingBeforeError").hidden = false;
+      return;
+    }
+    const scores = collectScoredFeelingScores($("#missingBeforeTags"), "before");
+    if (!Object.keys(scores).length) {
+      $("#missingBeforeError").hidden = false;
+      return;
+    }
+    const quality = reviewFeelingQuality(
+      feelingQualityAssessment($("#missingBeforeTags"), "before"),
+    );
+    if (!quality) return;
+    const recordedAt = new Date().toISOString();
+    meal.feelingsBefore = scores;
+    meal.feelingsBeforeQuality = {
+      ...quality,
+      retrospective: true,
+      recordedAt,
+    };
+    if (meal.feeling) meal.feeling.beforeScores = scores;
+    meal.updatedAt = recordedAt;
+    setMealChanged(meal);
+    $("#missingBeforeDialog").close();
+    missingBeforeMealId = null;
+    render();
+    if ($("#mealDialog").open && $("#mealId").value === meal.id)
+      updateMealFeelingUi(meal);
+    setTimeout(() => showMealEnergyResponse(meal), 180);
+  };
+  $("#skipMissingBefore").onclick = skipMissingBefore;
+  $("#closeMissingBefore").onclick = skipMissingBefore;
+  $("#missingBeforeDialog").addEventListener("cancel", (event) => {
+    event.preventDefault();
+    skipMissingBefore();
+  });
+  $("#finishEnergyResponse").onclick = () => $("#energyResponseDialog").close();
+  $("#closeEnergyResponse").onclick = () => $("#energyResponseDialog").close();
   $("#globalObservationDate").onchange = () => refreshObservationMeals();
   $("#globalObservationTime").onchange = () => refreshObservationMeals();
   $("#globalObservationPhoto").onchange = async (e) => {
@@ -9936,7 +10103,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.47.1");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.48.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
