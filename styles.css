@@ -1042,3 +1042,6 @@ body.demo-guide-open .bottom-nav{z-index:20}
 
 /* V3.52.0 — regroupement et conseil permanent dans le splash */
 .observation-collections-stack{display:grid;gap:10px;margin-bottom:18px}.observation-collections-stack>.observation-collection-fold{margin:0}.has-splash-observation .splash-app-hint{padding-top:12px;border-top:1px solid var(--border)}.has-splash-observation .splash-app-hint-icon{filter:drop-shadow(0 3px 6px rgba(218,166,28,.22))}.has-splash-observation .splash-app-hint .splash-tip-label{color:var(--accent-strong)}@media(max-height:700px){.has-splash-observation .splash-app-hint{gap:4px;padding-top:8px}.has-splash-observation .splash-app-hint p{font-size:.69rem;line-height:1.35}}
+
+/* V3.52.1 — ancienneté discrète dans le compte */
+.profile-account-since{margin:5px 0 0;color:var(--muted);font-size:.65rem;line-height:1.35;font-weight:650}
