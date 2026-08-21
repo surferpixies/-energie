@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 64;
-  const APP_RELEASE = "3.51.0";
+  const CURRENT_VERSION = 65;
+  const APP_RELEASE = "3.52.0";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -7310,7 +7310,7 @@
     const remaining = state.next ? Math.max(0, state.next - days) : 0;
     return `<section class="card energy-brain-card"><div class="energy-brain-visual" aria-hidden="true"><span class="energy-brain-plant">${state.plant}</span><span class="energy-brain-icon">🧠</span></div><div class="energy-brain-content"><p class="eyebrow">Le cerveau d’Énergie</p><h2>${esc(state.title)}</h2><p>${esc(state.text)}</p><div class="energy-brain-progress"><div class="energy-brain-progress-head"><strong>${state.plant} ${days} journée${days !== 1 ? "s" : ""} analysée${days !== 1 ? "s" : ""}</strong>${state.next ? `<span>${remaining} restante${remaining !== 1 ? "s" : ""}</span>` : `<span>Analyse avancée</span>`}</div><div class="energy-brain-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}"><span style="width:${progress}%"></span></div>${state.next ? `<small>${esc(state.label)} · ${days} / ${state.next}</small>` : `<small>La croissance continue avec chaque nouvelle journée.</small>`}</div></div></section>`;
   }
-  function discoverySectionHtml(report) {
+  function discoverySectionHtml(report, feelingStats) {
     const maturity = report?.maturity || {
       icon: "🌱",
       label: "Ton journal apprend encore",
@@ -7329,7 +7329,7 @@
           )
           .join("")
       : `<section class="card discovery-empty observation-empty"><div class="food-art">${mature ? "🔎" : "🌱"}</div><h3>${mature ? "Aucune association assez nette pour le moment" : "Les premières tendances se préparent"}</h3><p>${mature ? "Le journal contient beaucoup de données, mais aucune différence suffisamment claire et répétée ne ressort actuellement. Le Cerveau préfère ne pas créer une tendance artificielle." : "Continue simplement à remplir ton journal. Le cerveau d’Énergie compare déjà tes journées, mais préfère attendre avant de montrer une observation trop fragile."}</p></section>`;
-    return `${brainGrowthHeaderHtml(maturity)}<details class="card wide observation-collection-fold attention-observations-fold"><summary><span class="observation-fold-icon" aria-hidden="true">👁️</span><span class="observation-fold-copy"><strong>Observations auxquelles porter une attention</strong><small>Tendances suffisamment répétées pour mériter une surveillance</small></span><b>${observations.length}</b><em aria-hidden="true">›</em></summary><div class="observation-collection-body"><p class="observation-collection-explanation"><strong>Des tendances à suivre dans le temps.</strong> Elles reposent sur des différences retrouvées dans plusieurs repas comparables. Elles méritent une attention, mais ne prouvent aucune cause et ne constituent jamais un diagnostic.</p><section class="discovery-section food-observations-section"><div class="discovery-grid">${cards}</div></section></div></details>`;
+    return `${brainGrowthHeaderHtml(maturity)}<div class="observation-collections-stack"><details class="card wide observation-collection-fold attention-observations-fold"><summary><span class="observation-fold-icon" aria-hidden="true">👁️</span><span class="observation-fold-copy"><strong>Observations auxquelles porter une attention</strong><small>Tendances suffisamment répétées pour mériter une surveillance</small></span><b>${observations.length}</b><em aria-hidden="true">›</em></summary><div class="observation-collection-body"><p class="observation-collection-explanation"><strong>Des tendances à suivre dans le temps.</strong> Elles reposent sur des différences retrouvées dans plusieurs repas comparables. Elles méritent une attention, mais ne prouvent aucune cause et ne constituent jamais un diagnostic.</p><section class="discovery-section food-observations-section"><div class="discovery-grid">${cards}</div></section></div></details>${dashboardNegativeFeelingHtml(feelingStats || { negative: [] })}</div>`;
   }
   function discoveryComparisonHtml(x) {
     const scored=x.kind==="food-category-feeling-change",unit=scored?" point":"/5",item=scored?"repas":"journée",labels=Array.isArray(x.comparisonLabels)?x.comparisonLabels:["Avec","Sans"];
@@ -7654,7 +7654,7 @@
         ? `<section class="preview-banner"><div><strong>${usePreview ? "👀 Mode aperçu activé" : "📊 Tes vraies données"}</strong><p>${usePreview ? "Des données exemples montrent la présentation. Elles ne sont jamais sauvegardées." : "Les observations utilisent seulement tes repas enregistrés."}</p></div><button class="secondary small" id="togglePreview">${usePreview ? "Voir mes données" : "Voir l’aperçu"}</button></section>`
         : "";
     $("#app").innerHTML =
-      `${analysisDateNavigatorHtml()}<section class="hero"><p class="eyebrow">Tableau intelligent</p><h2>Ce qu’Énergie apprend sur toi</h2><p>Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer leurs causes.</p></section>${previewBanner}${discoverySectionHtml(discoveryReport)}<div class="grid dashboard-overview"><section class="card stat-card compact-stat-card compact-row-card dashboard-hero-card"><div class="stat-card-heading"><span>🍎</span><div><h3>Tu utilises Énergie depuis</h3><p class="muted small">Date de départ du journal</p></div></div><div class="metric metric-small">${esc(story.since)}</div></section><section class="card stat-card dashboard-mini-card"><span>⭐</span><h3>Point fort</h3><p>${esc(story.strength)}</p></section><section class="card stat-card dashboard-mini-card"><span>💡</span><h3>Habitude observée</h3><p>${esc(story.habit)}</p></section><section class="card stat-card dashboard-mini-card"><span>🎯</span><h3>Suggestion principale</h3><p>${esc(story.suggestion)}</p></section></div>${dashboardNegativeFeelingHtml(negativeFeelings)}${professionalDiscussionHtml(meals)}<div class="section-title"><h2>🧠 Autres observations</h2><span class="muted small">${insights.length} carte${insights.length > 1 ? "s" : ""}</span></div><div class="insight-grid">${insights.length ? insights.map(insightHtml).join("") : `<section class="card empty wide"><div class="food-art">🧠</div><p>${db.settings.insightsEnabled ? "Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles." : "Les observations sont désactivées dans les paramètres."}</p></section>`}</div>${demoDiscoveryHtml()}${usePreview && !db.settings.demoMode ? '<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>' : ""}`;
+      `${analysisDateNavigatorHtml()}<section class="hero"><p class="eyebrow">Tableau intelligent</p><h2>Ce qu’Énergie apprend sur toi</h2><p>Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer leurs causes.</p></section>${previewBanner}${discoverySectionHtml(discoveryReport, negativeFeelings)}<div class="grid dashboard-overview"><section class="card stat-card compact-stat-card compact-row-card dashboard-hero-card"><div class="stat-card-heading"><span>🍎</span><div><h3>Tu utilises Énergie depuis</h3><p class="muted small">Date de départ du journal</p></div></div><div class="metric metric-small">${esc(story.since)}</div></section><section class="card stat-card dashboard-mini-card"><span>⭐</span><h3>Point fort</h3><p>${esc(story.strength)}</p></section><section class="card stat-card dashboard-mini-card"><span>💡</span><h3>Habitude observée</h3><p>${esc(story.habit)}</p></section><section class="card stat-card dashboard-mini-card"><span>🎯</span><h3>Suggestion principale</h3><p>${esc(story.suggestion)}</p></section></div>${professionalDiscussionHtml(meals)}<div class="section-title"><h2>🧠 Autres observations</h2><span class="muted small">${insights.length} carte${insights.length > 1 ? "s" : ""}</span></div><div class="insight-grid">${insights.length ? insights.map(insightHtml).join("") : `<section class="card empty wide"><div class="food-art">🧠</div><p>${db.settings.insightsEnabled ? "Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles." : "Les observations sont désactivées dans les paramètres."}</p></section>`}</div>${demoDiscoveryHtml()}${usePreview && !db.settings.demoMode ? '<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>' : ""}`;
     $("#togglePreview")?.addEventListener("click", () => {
       sessionStorage.setItem("dashboardPreview", usePreview ? "off" : "on");
       renderInsights();
@@ -9875,7 +9875,7 @@
         labels: {
           fact: "Saviez-vous que…",
           tip: "Astuce Énergie",
-          appHint: "À découvrir",
+          appHint: "Conseil d’utilisation",
         },
         facts: [
           "Les fibres et les protéines contribuent souvent à une satiété plus durable.",
@@ -9905,6 +9905,21 @@
           "Les estimations nutritionnelles sont approximatives et servent surtout à comparer les habitudes dans le temps.",
           "Le Cerveau devient plus pertinent à mesure que ton historique s’allonge et que tes entrées restent régulières.",
           "Tu peux revenir modifier une journée passée afin de garder ton historique aussi fidèle que possible.",
+          "Indique « Tout va bien — rien de particulier » avant un repas pour que les changements apparus après soient comparables.",
+          "Note seulement les ressentis réellement présents : une saisie simple et fidèle vaut mieux qu’une longue liste approximative.",
+          "Utilise la photo IA comme point de départ, puis corrige le texte si un aliment a été mal reconnu.",
+          "Le lecteur de code-barres est pratique pour identifier rapidement un produit emballé.",
+          "Ajoute tes ressentis après le délai qui te semble le plus représentatif plutôt qu’immédiatement par automatisme.",
+          "Dans Toutes les observations, tu retrouveras même les événements isolés qui ne forment pas encore une tendance.",
+          "La section À surveiller est volontairement plus sélective : elle attend qu’une association se répète.",
+          "Une variation rouge signifie qu’un ressenti s’est intensifié; elle ne désigne pas automatiquement le repas comme cause.",
+          "Inscris ce qui t’a amené à manger pour aider le Cerveau à distinguer la faim, l’habitude et la gourmandise.",
+          "Les notes libres sont utiles pour conserver un détail important que les choix proposés ne couvrent pas.",
+          "Active les rappels de ressentis dans ton Profil si tu oublies souvent de compléter l’après-repas.",
+          "Consulte le Journal d’une journée passée pour compléter une information oubliée ou corriger une saisie.",
+          "Plusieurs petites saisies régulières apprennent davantage au Cerveau qu’une seule journée remplie dans les moindres détails.",
+          "Le nombre sur une section d’observations indique combien d’éléments elle contient avant même de l’ouvrir.",
+          "Les Favoris sont idéaux pour tes déjeuners et collations récurrents : tu pourras ensuite ajuster seulement ce qui change.",
         ],
       },
       "fr-FR": {
@@ -9918,7 +9933,7 @@
         labels: {
           fact: "Le saviez-vous ?",
           tip: "Astuce Énergie",
-          appHint: "À découvrir",
+          appHint: "Conseil d’utilisation",
         },
         facts: [
           "Les fibres et les protéines contribuent souvent à une satiété plus durable.",
@@ -9961,7 +9976,7 @@
         labels: {
           fact: "Did you know?",
           tip: "Energy tip",
-          appHint: "Discover",
+          appHint: "App tip",
         },
         facts: [
           "Fiber and protein often contribute to longer-lasting fullness.",
@@ -10028,6 +10043,35 @@
   function splashMealMoment(meal) {
     return `${meal?.date || ""}T${meal?.time || "00:00"}`;
   }
+  const SPLASH_OBSERVATION_WINDOW_KEY = "energieSplashObservationWindowV1";
+  const SPLASH_OBSERVATION_WINDOW_MS = 24 * 60 * 60 * 1000;
+  function splashObservationWithinWindow(candidate) {
+    if (!candidate?.id) return null;
+    const viewer = session?.user?.id || "local";
+    let state = {};
+    try {
+      state =
+        JSON.parse(localStorage.getItem(SPLASH_OBSERVATION_WINDOW_KEY) || "{}") ||
+        {};
+    } catch (_) {
+      state = {};
+    }
+    const key = `${viewer}:${candidate.id}`,
+      now = Date.now(),
+      recorded = Number(state[key]);
+    if (Number.isFinite(recorded) && now - recorded >= SPLASH_OBSERVATION_WINDOW_MS)
+      return null;
+    if (!Number.isFinite(recorded)) {
+      state[key] = now;
+      try {
+        localStorage.setItem(
+          SPLASH_OBSERVATION_WINDOW_KEY,
+          JSON.stringify(state),
+        );
+      } catch (_) {}
+    }
+    return candidate;
+  }
   function splashObservationConfirmationDate(observation, meals) {
     if (!observation?.categoryId || !observation?.feelingId) return null;
     return meals
@@ -10050,13 +10094,12 @@
       latestMeal = meals.slice().sort((a, b) =>
         splashMealMoment(b).localeCompare(splashMealMoment(a)),
       )[0],
-      recentCutoff = addDaysKey(todayKey(), -3),
       recentChanges = meals
-        .filter((meal) => meal.feeling && meal.date >= recentCutoff)
+        .filter((meal) => meal.feeling)
         .map((meal) => ({
           meal,
           change: comparableFeelingDeltas(meal).find(
-            (row) => row.tag?.group === "symptom" && Math.abs(row.delta) >= 2,
+            (row) => row.tag?.group === "symptom" && row.delta > 0,
           ),
         }))
         .filter((item) => item.change)
@@ -10072,13 +10115,14 @@
             : meal.date === addDaysKey(todayKey(), -1)
               ? "Hier"
               : `Lors du repas du ${formatDate(meal.date)}`;
-      return {
+      return splashObservationWithinWindow({
+        id: `meal:${meal.id}:${change.id}:${change.start}:${change.end}`,
         kind: "change",
         label: "Le Cerveau a remarqué",
         title: `${change.tag.emoji} ${t(change.tag.label)} · ${feelingEndpointLabel(change.start)} → ${feelingEndpointLabel(change.end)}`,
         text: `${moment}, « ${t(change.tag.label).toLowerCase()} » est passé de ${feelingEndpointLabel(change.start)} à ${feelingEndpointLabel(change.end)}. Le Cerveau garde cette évolution en mémoire pour voir si elle se répète.`,
         dateText: `Ressenti enregistré le ${formatDate(meal.date)}`,
-      };
+      });
     }
     if (
       db.settings?.insightsEnabled === false ||
@@ -10130,7 +10174,8 @@
       )[0],
       date = chosen.confirmationDate || chosen.detectedDate,
       isRecent = recent.includes(chosen);
-    return {
+    return splashObservationWithinWindow({
+      id: `trend:${chosen.observation.id}:${date || "undated"}`,
       kind: "observation",
       label: isRecent
         ? "Observation mise à jour"
@@ -10140,7 +10185,7 @@
       dateText: date
         ? `${chosen.confirmationDate ? "Dernière confirmation" : "Détectée"} le ${formatDate(date)}`
         : "Observation tirée de ton propre historique",
-    };
+    });
   }
   function initDailySplash() {
     const wrap = $("#splashDaily"),
@@ -10187,26 +10232,6 @@
           : days < 14
             ? pack.status.many(days)
             : pack.status.growing(days);
-    const observation = splashObservationCandidate();
-    if (observation) {
-      observationLabelEl.textContent = observation.label;
-      observationTitleEl.textContent = observation.title;
-      observationTextEl.textContent = observation.text;
-      observationDateEl.textContent = observation.dateText;
-      observationEl.hidden = false;
-      statusEl.hidden = true;
-      observationEl.closest("#splashScreen")?.classList.add(
-        "has-splash-observation",
-      );
-      observationEl.closest("#splashScreen")?.setAttribute(
-        "data-has-observation",
-        "true",
-      );
-      $(".splash-tip").hidden = true;
-      $(".splash-app-hint").hidden = true;
-      wrap.hidden = false;
-      return;
-    }
     const seed = dateSeed(todayKey()),
       showFeatureTip = seed % 3 === 0;
     const pool = showFeatureTip ? pack.tips : pack.facts,
@@ -10225,21 +10250,26 @@
         (appHintIndex + 1 + (randomValue % (pack.appHints.length - 1))) %
         pack.appHints.length;
     sessionStorage.setItem("energieLastSplashAppHint", String(appHintIndex));
-    const appHintIcons = [
-      "🧠",
-      "⚙️",
-      "📝",
-      "📈",
-      "📊",
-      "😊",
-      "⭐",
-      "🧮",
-      "🧠",
-      "🗓️",
-    ];
-    appHintIconEl.textContent = appHintIcons[appHintIndex] || "✨";
+    appHintIconEl.textContent = "💡";
     appHintLabelEl.textContent = pack.labels.appHint;
     appHintTextEl.textContent = pack.appHints[appHintIndex];
+    const observation = splashObservationCandidate();
+    if (observation) {
+      observationLabelEl.textContent = observation.label;
+      observationTitleEl.textContent = observation.title;
+      observationTextEl.textContent = observation.text;
+      observationDateEl.textContent = observation.dateText;
+      observationEl.hidden = false;
+      statusEl.hidden = true;
+      observationEl.closest("#splashScreen")?.classList.add(
+        "has-splash-observation",
+      );
+      observationEl.closest("#splashScreen")?.setAttribute(
+        "data-has-observation",
+        "true",
+      );
+      $(".splash-tip").hidden = true;
+    }
     wrap.hidden = false;
   }
   let splashDismissTimer = null;
@@ -10323,6 +10353,8 @@
   async function initAuth() {
     if (!client) {
       render();
+      initDailySplash();
+      dismissSplash();
       setTimeout(showExperienceLaunchIfNeeded, 120);
       return;
     }
@@ -10345,12 +10377,14 @@
       }
     }
     render();
+    initDailySplash();
+    dismissSplash();
     setTimeout(showExperienceLaunchIfNeeded, 120);
   }
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.51.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.52.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -10374,8 +10408,6 @@
     startProfessionalDemo();
   });
 
-  initDailySplash();
-  dismissSplash();
   initAuth();
   scheduleFeelingChecks();
 
