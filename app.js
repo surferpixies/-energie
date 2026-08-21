@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 63;
-  const APP_RELEASE = "3.50.0";
+  const CURRENT_VERSION = 64;
+  const APP_RELEASE = "3.51.0";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -6146,9 +6146,11 @@
     return `Ce résumé repose uniquement sur les données que tu as enregistrées.`;
   }
   function historyNegativeFeelingStats(meals, days = 30) {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - days + 1);
-    cutoff.setHours(0, 0, 0, 0);
+    const cutoff = days == null ? null : new Date();
+    if (cutoff) {
+      cutoff.setDate(cutoff.getDate() - days + 1);
+      cutoff.setHours(0, 0, 0, 0);
+    }
     const tagMeta = Object.fromEntries(
       FEELING_TAGS.map((tag) => [tag.id, tag]),
     );
@@ -6167,7 +6169,7 @@
       )
       .forEach((meal) => {
         const occurrenceDate = new Date(`${meal.date}T12:00:00`);
-        if (occurrenceDate < cutoff) return;
+        if (cutoff && occurrenceDate < cutoff) return;
         const dayMeals = (byDate[meal.date] || [])
           .slice()
           .sort((a, b) => a.time.localeCompare(b.time));
@@ -6190,12 +6192,30 @@
             occurrences: [],
           };
           entry.count += 1;
+          const beforeScores = feelingScoresFor(meal, "before");
+          const afterScores = feelingScoresFor(meal, "after");
+          const beforeNeutral =
+            beforeScores.no_tracked_symptoms === 0 ||
+            beforeScores.feeling_good === 0;
+          const beforeValue = Object.prototype.hasOwnProperty.call(
+            beforeScores,
+            tag,
+          )
+            ? Number(beforeScores[tag])
+            : beforeNeutral
+              ? 0
+              : null;
+          const afterValue = Number(
+            afterScores[tag] ?? meal.feeling.rating ?? 3,
+          );
           entry.occurrences.push({
             date: meal.date,
             mealDescription: meal.description || "Repas",
             mealTime: meal.time || "12:00",
             mealType: t(meal.type),
-            rating: feelingScoresFor(meal,"after")[tag]||meal.feeling.rating||3,
+            rating: afterValue,
+            beforeValue,
+            afterValue,
             notes: meal.feeling.notes || "",
             priorMeals: priorMeals.map(({ description, time, type }) => ({
               description,
@@ -6386,10 +6406,13 @@
         (item) =>
           `<details class="history-feeling-detail feeling-observation-detail"><summary><span class="history-feeling-detail-title">${item.emoji} ${esc(item.label)}</span><b>${item.count}</b></summary><div class="history-feeling-detail-body">${item.occurrences
             .slice(0, occurrenceLimit)
-            .map(
-              (occ) =>
-                `<article class="history-feeling-occurrence feeling-observation-occurrence"><div class="history-feeling-occurrence-head"><strong>${esc(formatDate(occ.date))}</strong><span>${esc(occ.mealTime)} · ${esc(occ.mealType)}</span></div><div class="feeling-occurrence-summary"><strong>${esc(occ.mealDescription)}</strong><span>Ressenti ${occ.rating}/5${occ.notes ? ` · ${esc(occ.notes)}` : ""}</span></div>${feelingOccurrenceContextHtml(occ, averages)}</article>`,
-            )
+            .map((occ) => {
+              const evolution =
+                occ.beforeValue == null
+                  ? `Avant non consigné · Après ${feelingEndpointLabel(occ.afterValue)}`
+                  : `${feelingEndpointLabel(occ.beforeValue)} → ${feelingEndpointLabel(occ.afterValue)}`;
+              return `<article class="history-feeling-occurrence feeling-observation-occurrence"><div class="history-feeling-occurrence-head"><strong>${esc(formatDate(occ.date))}</strong><span>${esc(occ.mealTime)} · ${esc(occ.mealType)}</span></div><div class="feeling-occurrence-summary"><strong>${esc(occ.mealDescription)}</strong><span>${esc(evolution)}${occ.notes ? ` · ${esc(occ.notes)}` : ""}</span></div>${feelingOccurrenceContextHtml(occ, averages)}</article>`;
+            })
             .join("")}</div></details>`,
       )
       .join("")}</div></div>`;
@@ -6398,7 +6421,11 @@
     return `<section class="card history-feelings-card">${feelingObservationSectionHtml(stats.negative || [], "Observations basées sur tes ressentis", "Aucun ressenti observé", "Les ressentis enregistrés après tes repas apparaîtront automatiquement ici.", 6, 3)}</section>`;
   }
   function dashboardNegativeFeelingHtml(stats) {
-    return `<section class="card wide dashboard-feelings-card"><div class="dashboard-feelings-sections">${feelingObservationSectionHtml(stats.negative || [], "Observations basées sur tes ressentis", "Aucun ressenti observé", "Les ressentis enregistrés après tes repas apparaîtront automatiquement ici.")}</div></section>`;
+    const count = (stats.negative || []).reduce(
+      (sum, item) => sum + item.count,
+      0,
+    );
+    return `<details class="card wide observation-collection-fold all-observations-fold"><summary><span class="observation-fold-icon" aria-hidden="true">🗂️</span><span class="observation-fold-copy"><strong>Toutes les observations</strong><small>Toutes les saisies, isolées ou répétées</small></span><b>${count}</b><em aria-hidden="true">›</em></summary><div class="observation-collection-body"><p class="observation-collection-explanation"><strong>Des faits consignés, pas encore des tendances.</strong> Cette section rassemble tous les ressentis enregistrés après tes repas. Un événement peut donc apparaître ici dès sa première saisie, sans que cela signifie qu’il se répète.</p>${feelingObservationSectionHtml(stats.negative || [], "Historique complet", "Aucun ressenti observé", "Les ressentis enregistrés après tes repas apparaîtront automatiquement ici.", Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER)}</div></details>`;
   }
   function journeySummary(meals) {
     if (!meals.length) return "";
@@ -7302,7 +7329,7 @@
           )
           .join("")
       : `<section class="card discovery-empty observation-empty"><div class="food-art">${mature ? "🔎" : "🌱"}</div><h3>${mature ? "Aucune association assez nette pour le moment" : "Les premières tendances se préparent"}</h3><p>${mature ? "Le journal contient beaucoup de données, mais aucune différence suffisamment claire et répétée ne ressort actuellement. Le Cerveau préfère ne pas créer une tendance artificielle." : "Continue simplement à remplir ton journal. Le cerveau d’Énergie compare déjà tes journées, mais préfère attendre avant de montrer une observation trop fragile."}</p></section>`;
-    return `${brainGrowthHeaderHtml(maturity)}<section class="discovery-section food-observations-section"><div class="discovery-heading"><div><p class="eyebrow">Observations alimentaires</p><h2>Ce que tes repas semblent révéler</h2></div><span class="discovery-count">${observations.length}/3</span></div><div class="discovery-grid">${cards}</div><p class="discovery-disclaimer">Ces observations comparent uniquement les journées de ton propre historique. Elles décrivent des associations possibles, ne prouvent aucune cause et ne constituent jamais un diagnostic.</p></section>`;
+    return `${brainGrowthHeaderHtml(maturity)}<details class="card wide observation-collection-fold attention-observations-fold"><summary><span class="observation-fold-icon" aria-hidden="true">👁️</span><span class="observation-fold-copy"><strong>Observations auxquelles porter une attention</strong><small>Tendances suffisamment répétées pour mériter une surveillance</small></span><b>${observations.length}</b><em aria-hidden="true">›</em></summary><div class="observation-collection-body"><p class="observation-collection-explanation"><strong>Des tendances à suivre dans le temps.</strong> Elles reposent sur des différences retrouvées dans plusieurs repas comparables. Elles méritent une attention, mais ne prouvent aucune cause et ne constituent jamais un diagnostic.</p><section class="discovery-section food-observations-section"><div class="discovery-grid">${cards}</div></section></div></details>`;
   }
   function discoveryComparisonHtml(x) {
     const scored=x.kind==="food-category-feeling-change",unit=scored?" point":"/5",item=scored?"repas":"journée",labels=Array.isArray(x.comparisonLabels)?x.comparisonLabels:["Avec","Sans"];
@@ -7615,9 +7642,10 @@
               analyzableDays: 0,
             },
           };
-    const negativeFeelings =
-      referenceFeelingStats(referenceBrain) ||
-      historyNegativeFeelingStats(meals);
+    const feelingMeals = referenceBrain ? meals : realMeals,
+      negativeFeelings =
+        referenceFeelingStats(referenceBrain) ||
+        historyNegativeFeelingStats(feelingMeals, null);
     const insights = db.settings.insightsEnabled
       ? referenceBrain?.insights || buildPersonalInsights(meals)
       : [];
@@ -10322,7 +10350,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.50.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.51.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
