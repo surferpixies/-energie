@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 67;
-  const APP_RELEASE = "3.52.2";
+  const CURRENT_VERSION = 68;
+  const APP_RELEASE = "3.53.0";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -6420,12 +6420,38 @@
   function historyNegativeFeelingHtml(stats) {
     return `<section class="card history-feelings-card">${feelingObservationSectionHtml(stats.negative || [], "Observations basées sur tes ressentis", "Aucun ressenti observé", "Les ressentis enregistrés après tes repas apparaîtront automatiquement ici.", 6, 3)}</section>`;
   }
+  let lazyAllObservationStats = null;
   function dashboardNegativeFeelingHtml(stats) {
+    lazyAllObservationStats = stats;
     const count = (stats.negative || []).reduce(
       (sum, item) => sum + item.count,
       0,
     );
-    return `<details class="card wide observation-collection-fold all-observations-fold"><summary><span class="observation-fold-icon" aria-hidden="true">🗂️</span><span class="observation-fold-copy"><strong>Toutes les observations</strong><small>Toutes les saisies, isolées ou répétées</small></span><b>${count}</b><em aria-hidden="true">›</em></summary><div class="observation-collection-body"><p class="observation-collection-explanation"><strong>Des faits consignés, pas encore des tendances.</strong> Cette section rassemble tous les ressentis enregistrés après tes repas. Un événement peut donc apparaître ici dès sa première saisie, sans que cela signifie qu’il se répète.</p>${feelingObservationSectionHtml(stats.negative || [], "Historique complet", "Aucun ressenti observé", "Les ressentis enregistrés après tes repas apparaîtront automatiquement ici.", Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER)}</div></details>`;
+    return `<details class="card wide observation-collection-fold all-observations-fold"><summary><span class="observation-fold-icon" aria-hidden="true">🗂️</span><span class="observation-fold-copy"><strong>Toutes les observations</strong><small>Toutes les saisies, isolées ou répétées</small></span><b>${count}</b><em aria-hidden="true">›</em></summary><div class="observation-collection-body"><p class="observation-collection-explanation"><strong>Des faits consignés, pas encore des tendances.</strong> Cette section rassemble tous les ressentis enregistrés après tes repas. Un événement peut donc apparaître ici dès sa première saisie, sans que cela signifie qu’il se répète.</p><div id="allObservationsLazyContent" class="all-observations-lazy-placeholder"><span aria-hidden="true">🗂️</span><p>Ouvre cette section pour charger l’historique complet.</p></div></div></details>`;
+  }
+  function bindLazyAllObservations() {
+    const fold = $(".all-observations-fold"),
+      target = $("#allObservationsLazyContent");
+    if (!fold || !target) return;
+    fold.addEventListener("toggle", () => {
+      if (!fold.open || target.dataset.loaded === "true") return;
+      target.innerHTML = `<span class="mini-loader" aria-hidden="true">🧠</span><p>Je rassemble tes observations…</p>`;
+      requestAnimationFrame(() =>
+        setTimeout(() => {
+          if (!target.isConnected) return;
+          target.dataset.loaded = "true";
+          target.classList.remove("all-observations-lazy-placeholder");
+          target.innerHTML = feelingObservationSectionHtml(
+            lazyAllObservationStats?.negative || [],
+            "Historique complet",
+            "Aucun ressenti observé",
+            "Les ressentis enregistrés après tes repas apparaîtront automatiquement ici.",
+            Number.MAX_SAFE_INTEGER,
+            Number.MAX_SAFE_INTEGER,
+          );
+        }, 0),
+      );
+    });
   }
   function journeySummary(meals) {
     if (!meals.length) return "";
@@ -7525,7 +7551,20 @@
       };
     return rows.length ? [exposureCard, progressionCard] : [];
   }
+  let insightsRenderRequest = 0,
+    insightsComputationCache = null;
   function renderInsights() {
+    const request = ++insightsRenderRequest;
+    $("#app").innerHTML = `<section class="hero observations-loading-hero"><p class="eyebrow">Cerveau et observations</p><h2>J’ouvre tes observations…</h2><p>Les informations déjà calculées apparaîtront dans un instant.</p></section><section class="card observations-loading-card" aria-live="polite"><span class="observations-loading-brain" aria-hidden="true">🧠</span><div><strong>Analyse de ton journal</strong><small>Énergie rassemble tes ressentis et tes tendances.</small></div><i aria-hidden="true"></i></section>`;
+    requestAnimationFrame(() =>
+      setTimeout(() => {
+        if (request !== insightsRenderRequest || currentView !== "insights")
+          return;
+        renderInsightsContent();
+      }, 0),
+    );
+  }
+  function renderInsightsContent() {
     const realMeals = mealsThroughSelectedDate(),
       referenceBrain = activeReferenceBrain(),
       usePreview =
@@ -7605,50 +7644,69 @@
       },
     ];
     const meals = usePreview ? demo : realMeals,
-      computedStory = dashboardStory(meals),
-      story = referenceBrain
-        ? { ...computedStory, ...referenceBrain.story }
-        : computedStory;
-    const dynamicDemoObservations = referenceBrain
-      ? demoReferenceObservationsFromJournal(
-          db.settings.demoProfileId || "marie",
-        ).slice(0, referenceBrain.observations?.length || 0)
-      : null;
-    const discoveryReport = referenceBrain
-      ? {
-          observations: dynamicDemoObservations || [],
-          maturity: {
-            icon: "🌳",
-            label: "Journal riche",
-            days: Object.keys(db.days || {}).length,
-            analyzableDays: Object.keys(db.days || {}).filter(
-              (date) => (db.days[date]?.meals || []).length,
-            ).length,
-          },
-        }
-      : db.settings.insightsEnabled && window.EnergieObservationEngine
-        ? window.EnergieObservationEngine.analyze(db, {
-            meals,
-            limit: 3,
-            lookbackDays: 180,
-            locale: window.ENERGIE_LOCALE || "fr-CA",
-          })
-        : {
-            observations: [],
-            maturity: {
-              icon: "🌱",
-              label: "Ton journal apprend encore",
-              days: 0,
-              analyzableDays: 0,
-            },
-          };
-    const feelingMeals = referenceBrain ? meals : realMeals,
-      negativeFeelings =
-        referenceFeelingStats(referenceBrain) ||
-        historyNegativeFeelingStats(feelingMeals, null);
-    const insights = db.settings.insightsEnabled
-      ? referenceBrain?.insights || buildPersonalInsights(meals)
-      : [];
+      computationKey = [
+        db.updatedAt || "initial",
+        selectedDate,
+        db.settings?.demoMode ? db.settings?.demoProfileId || "demo" : "user",
+        usePreview ? "preview" : "real",
+        db.settings?.insightsEnabled === false ? "off" : "on",
+        window.ENERGIE_LOCALE || "fr-CA",
+      ].join("|");
+    if (insightsComputationCache?.key !== computationKey) {
+      const computedStory = dashboardStory(meals),
+        story = referenceBrain
+          ? { ...computedStory, ...referenceBrain.story }
+          : computedStory,
+        dynamicDemoObservations = referenceBrain
+          ? demoReferenceObservationsFromJournal(
+              db.settings.demoProfileId || "marie",
+            ).slice(0, referenceBrain.observations?.length || 0)
+          : null,
+        discoveryReport = referenceBrain
+          ? {
+              observations: dynamicDemoObservations || [],
+              maturity: {
+                icon: "🌳",
+                label: "Journal riche",
+                days: Object.keys(db.days || {}).length,
+                analyzableDays: Object.keys(db.days || {}).filter(
+                  (date) => (db.days[date]?.meals || []).length,
+                ).length,
+              },
+            }
+          : db.settings.insightsEnabled && window.EnergieObservationEngine
+            ? window.EnergieObservationEngine.analyze(db, {
+                meals,
+                limit: 3,
+                lookbackDays: 180,
+                locale: window.ENERGIE_LOCALE || "fr-CA",
+              })
+            : {
+                observations: [],
+                maturity: {
+                  icon: "🌱",
+                  label: "Ton journal apprend encore",
+                  days: 0,
+                  analyzableDays: 0,
+                },
+              },
+        feelingMeals = referenceBrain ? meals : realMeals,
+        negativeFeelings =
+          referenceFeelingStats(referenceBrain) ||
+          historyNegativeFeelingStats(feelingMeals, null),
+        insights = db.settings.insightsEnabled
+          ? referenceBrain?.insights || buildPersonalInsights(meals)
+          : [];
+      insightsComputationCache = {
+        key: computationKey,
+        story,
+        discoveryReport,
+        negativeFeelings,
+        insights,
+      };
+    }
+    const { story, discoveryReport, negativeFeelings, insights } =
+      insightsComputationCache;
     const previewBanner =
       realMeals.length < 8
         ? `<section class="preview-banner"><div><strong>${usePreview ? "👀 Mode aperçu activé" : "📊 Tes vraies données"}</strong><p>${usePreview ? "Des données exemples montrent la présentation. Elles ne sont jamais sauvegardées." : "Les observations utilisent seulement tes repas enregistrés."}</p></div><button class="secondary small" id="togglePreview">${usePreview ? "Voir mes données" : "Voir l’aperçu"}</button></section>`
@@ -7681,6 +7739,10 @@
         }),
     );
     bindAnalysisDateNavigator();
+    bindLazyAllObservations();
+    decorateSupplementIcons();
+    renderDemoChrome();
+    bindViewSwipe();
   }
   function toggleSetting(id, key) {
     $(id).onchange = (e) => {
@@ -10400,7 +10462,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.52.2");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.53.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
