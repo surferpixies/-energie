@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 66;
-  const APP_RELEASE = "3.52.1";
+  const CURRENT_VERSION = 67;
+  const APP_RELEASE = "3.52.2";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -7942,7 +7942,7 @@
         .filter(Boolean)
         .sort()[0],
       profileSinceHtml = profileFirstDate
-        ? `<p class="profile-account-since">Tu utilises Énergie depuis ${esc(formatDate(profileFirstDate))}</p>`
+        ? `<p class="profile-account-since">Tu utilises Énergie depuis ${esc(formatCalendarDate(profileFirstDate))}</p>`
         : "",
       nutritionSettingsHtml = nutritionVisibleToViewer()
         ? `<div class="notice info-notice"><strong>Estimations nutritionnelles professionnelles</strong><p>Les calories et nutriments sont calculés pour soutenir l’analyse professionnelle, mais demeurent cachés au client.</p></div>`
@@ -8097,7 +8097,10 @@
           : "Les notifications ne sont pas autorisées dans ce navigateur.",
       );
     });
-    $("#showWelcomeAgain").onclick = () => $("#welcomeDialog").showModal();
+    $("#showWelcomeAgain")?.addEventListener("click", () => {
+      const dialog = $("#welcomeDialog");
+      if (dialog && !dialog.open) dialog.showModal();
+    });
     $("#launchDemoProfile")?.addEventListener("click", () =>
       showExperienceLaunchIfNeeded(true),
     );
@@ -10397,7 +10400,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.52.1");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.52.2");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -10416,6 +10419,13 @@
 
   // Filet de sécurité pour les boutons recréés lors d'un rendu ou d'une synchro.
   document.addEventListener("click", (event) => {
+    const informationButton = event.target.closest("#showWelcomeAgain");
+    if (informationButton) {
+      event.preventDefault();
+      const dialog = $("#welcomeDialog");
+      if (dialog && !dialog.open) dialog.showModal();
+      return;
+    }
     if (!event.target.closest("#openProfessionalDemo")) return;
     event.preventDefault();
     startProfessionalDemo();
