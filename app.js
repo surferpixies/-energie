@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.54.1";
+  const APP_RELEASE = "3.55.0";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -7338,6 +7338,234 @@
     const remaining = state.next ? Math.max(0, state.next - days) : 0;
     return `<section class="card energy-brain-card"><div class="energy-brain-visual" aria-hidden="true"><span class="energy-brain-plant">${state.plant}</span><span class="energy-brain-icon">🧠</span></div><div class="energy-brain-content"><p class="eyebrow">Le cerveau d’Énergie</p><h2>${esc(state.title)}</h2><p>${esc(state.text)}</p><div class="energy-brain-progress"><div class="energy-brain-progress-head"><strong>${state.plant} ${days} journée${days !== 1 ? "s" : ""} analysée${days !== 1 ? "s" : ""}</strong>${state.next ? `<span>${remaining} restante${remaining !== 1 ? "s" : ""}</span>` : `<span>Analyse avancée</span>`}</div><div class="energy-brain-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}"><span style="width:${progress}%"></span></div>${state.next ? `<small>${esc(state.label)} · ${days} / ${state.next}</small>` : `<small>La croissance continue avec chaque nouvelle journée.</small>`}</div></div></section>`;
   }
+  let portraitPeriodDays = 7;
+  function portraitWindow(days = portraitPeriodDays) {
+    const endKey = db.settings?.demoMode ? selectedDate : todayKey(),
+      startKey = addDaysKey(endKey, -(days - 1)),
+      meals = mealsThroughSelectedDate().filter(
+        (meal) => meal.date >= startKey && meal.date <= endKey,
+      ),
+      dates = Object.keys(db.days || {}).filter(
+        (date) => date >= startKey && date <= endKey,
+      );
+    return { days, startKey, endKey, meals, dates };
+  }
+  function portraitPeriodLabel(windowData) {
+    const short = (key) =>
+      localDate(key).toLocaleDateString("fr-CA", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    return `${short(windowData.startKey)} au ${short(windowData.endKey)}`;
+  }
+  function portraitEvolutionRows(stats) {
+    return (stats.negative || [])
+      .map((item) => {
+        const comparable = item.occurrences.filter(
+            (occ) => occ.beforeValue != null && occ.afterValue != null,
+          ),
+          worsened = comparable.filter(
+            (occ) => Number(occ.afterValue) > Number(occ.beforeValue),
+          ),
+          deltas = comparable.map(
+            (occ) => Number(occ.afterValue) - Number(occ.beforeValue),
+          ),
+          delta = deltas.length
+            ? deltas.reduce((sum, value) => sum + value, 0) / deltas.length
+            : null,
+          afterValues = item.occurrences
+            .map((occ) => Number(occ.afterValue))
+            .filter(Number.isFinite),
+          averageAfter = afterValues.length
+            ? afterValues.reduce((sum, value) => sum + value, 0) /
+              afterValues.length
+            : null;
+        return { ...item, comparable, worsened, delta, averageAfter };
+      })
+      .sort(
+        (a, b) =>
+          b.worsened.length - a.worsened.length ||
+          b.count - a.count ||
+          (b.delta || 0) - (a.delta || 0),
+      );
+  }
+  function portraitReasons(meals) {
+    const counts = Object.fromEntries(
+      EATING_REASON_META.map((reason) => [reason.id, 0]),
+    );
+    let documented = 0;
+    meals.forEach((meal) => {
+      const reasons = normalizeEatingReasons(meal.eatingReasons);
+      if (reasons.length) documented++;
+      reasons.forEach((reason) => {
+        if (Object.prototype.hasOwnProperty.call(counts, reason)) counts[reason]++;
+      });
+    });
+    return {
+      documented,
+      items: EATING_REASON_META.map((reason) => ({
+        ...reason,
+        count: counts[reason.id],
+      }))
+        .filter((reason) => reason.count)
+        .sort((a, b) => b.count - a.count),
+    };
+  }
+  function portraitReportData(days = portraitPeriodDays) {
+    const windowData = portraitWindow(days),
+      stats = historyNegativeFeelingStats(windowData.meals, null),
+      evolutionRows = portraitEvolutionRows(stats),
+      reasons = portraitReasons(windowData.meals),
+      beforeAfterMeals = windowData.meals.filter((meal) => {
+        const before = feelingScoresFor(meal, "before"),
+          after = feelingScoresFor(meal, "after");
+        return Object.keys(before).length && Object.keys(after).length;
+      }).length,
+      observations =
+        db.settings.insightsEnabled && window.EnergieObservationEngine
+          ? window.EnergieObservationEngine.analyze(db, {
+              meals: windowData.meals,
+              limit: 3,
+              lookbackDays: days,
+              locale: window.ENERGIE_LOCALE || "fr-CA",
+            })?.observations || []
+          : [],
+      documentedDates = new Set(windowData.meals.map((meal) => meal.date));
+    return {
+      ...windowData,
+      stats,
+      evolutionRows,
+      reasons,
+      beforeAfterMeals,
+      observations,
+      documentedDays: documentedDates.size,
+    };
+  }
+  function portraitPeriodSelectorHtml(days) {
+    return `<div class="portrait-periods" role="group" aria-label="Période du portrait">${[
+      [7, "1 sem."],
+      [14, "2 sem."],
+      [21, "3 sem."],
+      [30, "1 mois"],
+    ]
+      .map(
+        ([value, label]) =>
+          `<button type="button" data-portrait-days="${value}" class="${days === value ? "active" : ""}">${label}</button>`,
+      )
+      .join("")}</div>`;
+  }
+  function portraitReportHtml(data) {
+    const topFeelings = data.evolutionRows.slice(0, 4),
+      recentOccurrences = data.evolutionRows
+        .flatMap((item) =>
+          item.occurrences.map((occ) => ({ ...occ, item })),
+        )
+        .sort((a, b) =>
+          `${b.date} ${b.mealTime}`.localeCompare(`${a.date} ${a.mealTime}`),
+        )
+        .slice(0, 3),
+      hasEnough = data.meals.length >= 5 && data.documentedDays >= 3,
+      feelingsHtml = topFeelings.length
+        ? topFeelings
+            .map((item) => {
+              const delta = item.delta,
+                state = delta == null ? "neutral" : delta > 0 ? "worse" : delta < 0 ? "better" : "neutral",
+                deltaText =
+                  delta == null
+                    ? "Avant incomplet"
+                    : delta > 0
+                      ? `+${delta.toFixed(1).replace(".", ",")} en moyenne`
+                      : delta < 0
+                        ? `${delta.toFixed(1).replace(".", ",")} en moyenne`
+                        : "Stable";
+              return `<article class="portrait-feeling-row ${state}"><span>${item.emoji}</span><div><strong>${esc(item.label)}</strong><small>${item.count} signalement${item.count !== 1 ? "s" : ""} · après ${item.averageAfter?.toFixed(1).replace(".", ",") || "—"}/5</small></div><b>${esc(deltaText)}</b></article>`;
+            })
+            .join("")
+        : `<div class="portrait-empty"><span>🌿</span><p>Aucun ressenti particulier n’a été signalé après un repas durant cette période.</p></div>`,
+      observationsHtml = data.observations.length
+        ? data.observations
+            .slice(0, 3)
+            .map(
+              (observation) =>
+                `<article class="portrait-attention-item"><span>${observation.icon || "👁️"}</span><div><strong>${esc(observation.title)}</strong><p>${esc(observation.text)}</p></div></article>`,
+            )
+            .join("")
+        : `<div class="portrait-empty compact"><span>🌱</span><p>Aucune tendance suffisamment répétée ne ressort dans cette période.</p></div>`,
+      reasonsHtml = data.reasons.items.length
+        ? data.reasons.items
+            .slice(0, 5)
+            .map(
+              (reason) =>
+                `<span><i>${reason.icon}</i>${esc(reason.label)}<b>${reason.count}</b></span>`,
+            )
+            .join("")
+        : `<p class="muted small">Aucune raison de manger n’a été consignée durant cette période.</p>`,
+      recentHtml = recentOccurrences.length
+        ? recentOccurrences
+            .map((occ) => {
+              const evolution =
+                occ.beforeValue == null
+                  ? `Avant non consigné → ${occ.afterValue}/5`
+                  : `${occ.beforeValue}/5 → ${occ.afterValue}/5`;
+              return `<article><time>${esc(formatDate(occ.date))}</time><div><strong>${occ.item.emoji} ${esc(occ.item.label)}</strong><small>${esc(occ.mealType)} · ${esc(occ.mealDescription)}</small></div><b>${esc(evolution)}</b></article>`;
+            })
+            .join("")
+        : `<p class="muted small">Aucun exemple à afficher pour cette période.</p>`;
+    return `<section class="portrait-sheet"><header class="portrait-sheet-header"><div class="portrait-logo">⚡</div><div><p>Mon portrait Énergie</p><h2>${data.days === 30 ? "Dernier mois" : `${data.days} derniers jours`}</h2><span>${esc(portraitPeriodLabel(data))}</span></div><div class="portrait-sheet-mark">Repas <i>•</i> Ressentis <i>•</i> Observations</div></header>${!hasEnough ? `<div class="portrait-data-notice"><span>🌱</span><div><strong>Portrait encore partiel</strong><p>${data.meals.length ? "Quelques saisies supplémentaires rendront ce résumé plus représentatif. Tu peux aussi choisir une période plus longue." : "Aucun repas n’est documenté durant cette période. Essaie une période plus longue."}</p></div></div>` : ""}<div class="portrait-metrics"><article><span>🍽️</span><strong>${data.meals.length}</strong><small>repas et collations</small></article><article><span>📅</span><strong>${data.documentedDays}/${data.days}</strong><small>journées documentées</small></article><article><span>↕️</span><strong>${data.beforeAfterMeals}</strong><small>repas avec avant + après</small></article><article><span>👁️</span><strong>${data.stats.negativeCount}</strong><small>ressentis signalés après</small></article></div><section class="portrait-section"><div class="portrait-section-title"><span>↕️</span><div><h3>Évolution des ressentis</h3><p>Ce qui a été consigné avant et après les repas</p></div></div><div class="portrait-feeling-list">${feelingsHtml}</div></section><section class="portrait-section portrait-attention"><div class="portrait-section-title"><span>👁️</span><div><h3>Observations auxquelles porter attention</h3><p>Seulement les situations suffisamment répétées</p></div></div><div class="portrait-attention-list">${observationsHtml}</div></section><div class="portrait-two-columns"><section class="portrait-section"><div class="portrait-section-title"><span>💭</span><div><h3>Ce qui m’amène à manger</h3><p>${data.reasons.documented}/${data.meals.length || 0} repas documentés</p></div></div><div class="portrait-reasons">${reasonsHtml}</div></section><section class="portrait-section"><div class="portrait-section-title"><span>🗓️</span><div><h3>Exemples récents</h3><p>Pour faciliter la discussion</p></div></div><div class="portrait-examples">${recentHtml}</div></section></div><footer class="portrait-disclaimer"><strong>À propos de ce portrait</strong><p>Ce résumé reprend uniquement les informations consignées dans Énergie. Il aide à préparer une conversation et ne constitue ni un diagnostic, ni une preuve de causalité, ni un remplacement d’un avis professionnel.</p><span>Généré le ${new Date().toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}</span></footer></section>`;
+  }
+  function portraitEntryHtml() {
+    return `<section class="card energy-portrait-entry"><div class="portrait-entry-art" aria-hidden="true"><span>👁️</span><i>⚡</i></div><div class="portrait-entry-copy"><p class="eyebrow">Nouveau · résumé de consultation</p><h2>Mon portrait Énergie</h2><p>Transforme tes repas et tes ressentis en un résumé clair à montrer à un professionnel.</p><div class="portrait-entry-tags"><span>↕️ Évolutions</span><span>👁️ Observations</span><span>💭 Contextes</span></div></div><button type="button" id="openEnergyPortrait" class="primary portrait-entry-button">Préparer ma consultation <span>→</span></button></section>`;
+  }
+  function ensurePortraitDialog() {
+    let dialog = $("#energyPortraitDialog");
+    if (dialog) return dialog;
+    dialog = document.createElement("dialog");
+    dialog.id = "energyPortraitDialog";
+    dialog.className = "energy-portrait-dialog";
+    dialog.innerHTML = `<div class="portrait-dialog-shell"><div class="portrait-dialog-toolbar"><button type="button" class="icon-button" id="closeEnergyPortrait" aria-label="Fermer">✕</button><div><strong>Mon portrait Énergie</strong><small>Choisis la période à résumer</small></div><div class="portrait-toolbar-actions"><button type="button" class="secondary small" id="shareEnergyPortrait">Partager</button><button type="button" class="primary small" id="printEnergyPortrait">PDF / Imprimer</button></div></div><div id="energyPortraitPeriods"></div><div id="energyPortraitReport"></div></div>`;
+    document.body.appendChild(dialog);
+    $("#closeEnergyPortrait").onclick = () => dialog.close();
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+    $("#printEnergyPortrait").onclick = () => window.print();
+    $("#shareEnergyPortrait").onclick = async () => {
+      const data = portraitReportData(),
+        top = data.evolutionRows[0],
+        text = `Mon portrait Énergie — ${portraitPeriodLabel(data)}\n${data.meals.length} repas et collations · ${data.documentedDays} journées documentées${top ? `\nRessenti le plus signalé : ${top.label} (${top.count} fois)` : ""}\n\nCe résumé décrit uniquement les informations consignées et ne constitue pas un diagnostic.`;
+      try {
+        if (navigator.share) await navigator.share({ title: "Mon portrait Énergie", text });
+        else {
+          await navigator.clipboard.writeText(text);
+          alert("Le résumé a été copié.");
+        }
+      } catch (error) {
+        if (error?.name !== "AbortError") alert("Le partage n’est pas disponible sur cet appareil.");
+      }
+    };
+    return dialog;
+  }
+  function refreshPortraitDialog() {
+    const data = portraitReportData(portraitPeriodDays);
+    $("#energyPortraitPeriods").innerHTML = portraitPeriodSelectorHtml(
+      portraitPeriodDays,
+    );
+    $("#energyPortraitReport").innerHTML = portraitReportHtml(data);
+    $("#energyPortraitPeriods")
+      .querySelectorAll("[data-portrait-days]")
+      .forEach((button) => {
+        button.onclick = () => {
+          portraitPeriodDays = Number(button.dataset.portraitDays) || 7;
+          refreshPortraitDialog();
+        };
+      });
+  }
+  function openEnergyPortrait() {
+    const dialog = ensurePortraitDialog();
+    refreshPortraitDialog();
+    dialog.showModal();
+  }
   function discoverySectionHtml(report, feelingStats) {
     const maturity = report?.maturity || {
       icon: "🌱",
@@ -7357,7 +7585,7 @@
           )
           .join("")
       : `<section class="card discovery-empty observation-empty"><div class="food-art">${mature ? "🔎" : "🌱"}</div><h3>${mature ? "Aucune association assez nette pour le moment" : "Les premières tendances se préparent"}</h3><p>${mature ? "Le journal contient beaucoup de données, mais aucune différence suffisamment claire et répétée ne ressort actuellement. Le Cerveau préfère ne pas créer une tendance artificielle." : "Continue simplement à remplir ton journal. Le cerveau d’Énergie compare déjà tes journées, mais préfère attendre avant de montrer une observation trop fragile."}</p></section>`;
-    return `${brainGrowthHeaderHtml(maturity)}<div class="observation-collections-stack"><details class="card wide observation-collection-fold attention-observations-fold"><summary><span class="observation-fold-icon" aria-hidden="true">👁️</span><span class="observation-fold-copy"><strong>Observations auxquelles porter une attention</strong><small>Tendances suffisamment répétées pour mériter une surveillance</small></span><b>${observations.length}</b><em aria-hidden="true">›</em></summary><div class="observation-collection-body"><p class="observation-collection-explanation"><strong>Des tendances à suivre dans le temps.</strong> Elles reposent sur des différences retrouvées dans plusieurs repas comparables. Elles méritent une attention, mais ne prouvent aucune cause et ne constituent jamais un diagnostic.</p><section class="discovery-section food-observations-section"><div class="discovery-grid">${cards}</div></section></div></details>${dashboardNegativeFeelingHtml(feelingStats || { negative: [] })}</div>`;
+    return `${portraitEntryHtml()}${brainGrowthHeaderHtml(maturity)}<div class="observation-collections-stack"><details class="card wide observation-collection-fold attention-observations-fold"><summary><span class="observation-fold-icon" aria-hidden="true">👁️</span><span class="observation-fold-copy"><strong>Observations auxquelles porter une attention</strong><small>Tendances suffisamment répétées pour mériter une surveillance</small></span><b>${observations.length}</b><em aria-hidden="true">›</em></summary><div class="observation-collection-body"><p class="observation-collection-explanation"><strong>Des tendances à suivre dans le temps.</strong> Elles reposent sur des différences retrouvées dans plusieurs repas comparables. Elles méritent une attention, mais ne prouvent aucune cause et ne constituent jamais un diagnostic.</p><section class="discovery-section food-observations-section"><div class="discovery-grid">${cards}</div></section></div></details>${dashboardNegativeFeelingHtml(feelingStats || { negative: [] })}</div>`;
   }
   function discoveryComparisonHtml(x) {
     const scored=x.kind==="food-category-feeling-change",unit=scored?" point":"/5",item=scored?"repas":"journée",labels=Array.isArray(x.comparisonLabels)?x.comparisonLabels:["Avec","Sans"];
@@ -7742,6 +7970,7 @@
     );
     bindAnalysisDateNavigator();
     bindLazyAllObservations();
+    $("#openEnergyPortrait")?.addEventListener("click", openEnergyPortrait);
     decorateSupplementIcons();
     renderDemoChrome();
     bindViewSwipe();
@@ -10552,7 +10781,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.54.1");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
