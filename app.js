@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 68;
-  const APP_RELEASE = "3.53.0";
+  const CURRENT_VERSION = 69;
+  const APP_RELEASE = "3.54.0";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -261,6 +261,8 @@
     mealNutritionManuallyEdited = false,
     mealFoodReview = null,
     authMode = "login",
+    pendingSignupEmail = "",
+    confirmationResendAvailableAt = 0,
     feelingMealId = null,
     missingBeforeMealId = null,
     notificationTimer = null;
@@ -9779,6 +9781,11 @@
       confirmInput = $("#authPasswordConfirm");
     $("#loginTab").classList.toggle("active", !signup);
     $("#signupTab").classList.toggle("active", signup);
+    $("#loginTab").setAttribute("aria-selected", String(!signup));
+    $("#signupTab").setAttribute("aria-selected", String(signup));
+    $("#authTabs").hidden = false;
+    $("#authCredentialsStep").hidden = false;
+    $("#authConfirmationStep").hidden = true;
     $("#authTitle").textContent = signup ? "Créer un compte" : "Connexion";
     $("#authSubmit").textContent = signup ? "Créer mon compte" : "Me connecter";
     $("#confirmPasswordLabel").hidden = !signup;
@@ -9788,9 +9795,29 @@
       ? "new-password"
       : "current-password";
     $("#forgotPassword").hidden = signup;
+    $("#authStepIntro").textContent = signup
+      ? "Crée ton compte en trois étapes : remplis les champs, confirme ton courriel, puis connecte-toi."
+      : "Entre les informations de ton compte pour te connecter.";
+    $("#passwordMatchHint").textContent = "";
     $("#authMessage").textContent = signup
-      ? "Après l’inscription, confirme le courriel de Supabase."
+      ? "Tu recevras ensuite un courriel de confirmation."
       : "La connexion se fait directement dans l’application.";
+  }
+  function setAuthBusy(busy) {
+    const button = $("#authSubmit");
+    if (!button) return;
+    button.disabled = busy;
+    button.classList.toggle("is-loading", busy);
+  }
+  function showSignupConfirmation(email) {
+    pendingSignupEmail = email;
+    $("#authTabs").hidden = true;
+    $("#authCredentialsStep").hidden = true;
+    $("#authConfirmationStep").hidden = false;
+    $("#authConfirmationEmail").textContent = email;
+    $("#resendConfirmationMessage").textContent = "";
+    $("#authMessage").textContent = "Ton compte est créé; il reste seulement à confirmer ton adresse.";
+    $("#authTitle").textContent = "Compte créé";
   }
   function friendlyAuthError(error) {
     const text = (error?.message || "").toLowerCase();
@@ -9806,6 +9833,26 @@
   }
   $("#loginTab").onclick = () => setAuthMode("login");
   $("#signupTab").onclick = () => setAuthMode("signup");
+  $("#authPasswordConfirm").addEventListener("input", () => {
+    if (authMode !== "signup") return;
+    const password = $("#authPassword").value,
+      confirmation = $("#authPasswordConfirm").value,
+      hint = $("#passwordMatchHint");
+    if (!confirmation) {
+      hint.textContent = "";
+      hint.className = "auth-field-hint";
+      return;
+    }
+    const matches = password === confirmation;
+    hint.textContent = matches
+      ? "✓ Les mots de passe correspondent"
+      : "Les mots de passe ne correspondent pas encore";
+    hint.className = `auth-field-hint ${matches ? "is-valid" : "is-invalid"}`;
+  });
+  $("#authPassword").addEventListener("input", () => {
+    if (authMode === "signup" && $("#authPasswordConfirm").value)
+      $("#authPasswordConfirm").dispatchEvent(new Event("input"));
+  });
   $("#authForm").onsubmit = async (e) => {
     e.preventDefault();
     if (!client) return;
@@ -9813,8 +9860,7 @@
       password = $("#authPassword").value,
       confirm = $("#authPasswordConfirm").value,
       msg = $("#authMessage");
-    msg.textContent =
-      authMode === "signup" ? "Création du compte…" : "Connexion…";
+    msg.textContent = authMode === "signup" ? "Création du compte…" : "Connexion…";
     if (password.length < 8) {
       msg.textContent = "Le mot de passe doit contenir au moins 8 caractères.";
       return;
@@ -9823,41 +9869,85 @@
       msg.textContent = "Les deux mots de passe ne sont pas identiques.";
       return;
     }
-    if (authMode === "signup") {
-      const { data, error } = await client.auth.signUp({
-        email,
-        password,
+    setAuthBusy(true);
+    try {
+      if (authMode === "signup") {
+        const { data, error } = await client.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: `${location.origin}${location.pathname}` },
+        });
+        if (error) {
+          msg.textContent = friendlyAuthError(error);
+          return;
+        }
+        if (data.session) {
+          session = data.session;
+          $("#authDialog").close();
+          await seedCloudFromLocal();
+          render();
+        } else {
+          showSignupConfirmation(email);
+        }
+      } else {
+        const { data, error } = await client.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) {
+          if ((error.message || "").toLowerCase().includes("email not confirmed"))
+            showSignupConfirmation(email);
+          else msg.textContent = friendlyAuthError(error);
+          return;
+        }
+        session = data.session;
+        $("#authDialog").close();
+        await loadDemoAccess();
+        await pullCloud(false);
+        await syncNow();
+        render();
+      }
+    } catch (_) {
+      msg.textContent = "Impossible de joindre le service pour le moment. Vérifie ta connexion et réessaie.";
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+  $("#confirmationGoLogin").onclick = () => {
+    const email = pendingSignupEmail;
+    setAuthMode("login");
+    $("#authEmail").value = email;
+    $("#authPassword").value = "";
+    $("#authPassword").focus();
+    $("#authMessage").textContent = "Courriel confirmé? Entre ton mot de passe pour te connecter.";
+  };
+  $("#resendConfirmation").onclick = async () => {
+    const message = $("#resendConfirmationMessage"),
+      button = $("#resendConfirmation"),
+      now = Date.now();
+    if (!pendingSignupEmail) return;
+    if (now < confirmationResendAvailableAt) {
+      message.textContent = "Attends quelques secondes avant un nouvel envoi.";
+      return;
+    }
+    button.disabled = true;
+    message.textContent = "Envoi en cours…";
+    try {
+      const { error } = await client.auth.resend({
+        type: "signup",
+        email: pendingSignupEmail,
         options: { emailRedirectTo: `${location.origin}${location.pathname}` },
       });
       if (error) {
-        msg.textContent = friendlyAuthError(error);
+        message.textContent = friendlyAuthError(error);
         return;
       }
-      if (data.session) {
-        session = data.session;
-        $("#authDialog").close();
-        await seedCloudFromLocal();
-        render();
-      } else {
-        msg.textContent =
-          "Compte créé. Confirme le courriel, puis connecte-toi.";
-        setAuthMode("login");
-      }
-    } else {
-      const { data, error } = await client.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) {
-        msg.textContent = friendlyAuthError(error);
-        return;
-      }
-      session = data.session;
-      $("#authDialog").close();
-      await loadDemoAccess();
-      await pullCloud(false);
-      await syncNow();
-      render();
+      confirmationResendAvailableAt = Date.now() + 30000;
+      message.textContent = "Nouveau courriel envoyé. Vérifie aussi tes indésirables.";
+    } catch (_) {
+      message.textContent = "L’envoi a échoué. Vérifie ta connexion et réessaie.";
+    } finally {
+      button.disabled = false;
     }
   };
   $("#forgotPassword").onclick = async () => {
@@ -10462,7 +10552,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.53.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.54.0");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.53.0">
+  <link rel="stylesheet" href="styles.css?v=3.54.0">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -422,12 +422,13 @@
         <div><strong>Énergie</strong><span>Connexion directe dans l’app iPhone</span></div>
       </div>
 
-      <div class="auth-tabs" role="tablist" aria-label="Type de connexion">
-        <button type="button" class="auth-tab active" id="loginTab" role="tab">Connexion</button>
-        <button type="button" class="auth-tab" id="signupTab" role="tab">Créer un compte</button>
+      <div class="auth-tabs" id="authTabs" role="tablist" aria-label="Type de connexion">
+        <button type="button" class="auth-tab active" id="loginTab" role="tab" aria-selected="true">J’ai un compte</button>
+        <button type="button" class="auth-tab" id="signupTab" role="tab" aria-selected="false">Je crée mon compte</button>
       </div>
 
-      <section class="auth-step">
+      <section class="auth-step" id="authCredentialsStep">
+        <p id="authStepIntro" class="auth-step-intro">Entre les informations de ton compte pour te connecter.</p>
         <label>Adresse courriel
           <input id="authEmail" type="email" autocomplete="email" required placeholder="toi@exemple.com">
         </label>
@@ -436,9 +437,21 @@
         </label>
         <label id="confirmPasswordLabel" hidden>Confirmer le mot de passe
           <input id="authPasswordConfirm" type="password" autocomplete="new-password" minlength="8" placeholder="Répète le mot de passe">
+          <small id="passwordMatchHint" class="auth-field-hint"></small>
         </label>
         <button type="submit" class="primary" id="authSubmit">Me connecter</button>
         <button type="button" class="text-button" id="forgotPassword">Mot de passe oublié ou compte créé avec un lien magique?</button>
+      </section>
+
+      <section id="authConfirmationStep" class="auth-confirmation-step" hidden>
+        <span class="auth-confirmation-icon" aria-hidden="true">✉️</span>
+        <div><p class="eyebrow">Dernière étape</p><h3>Vérifie ton courriel</h3></div>
+        <p>Nous avons envoyé un lien de confirmation à :</p>
+        <strong id="authConfirmationEmail"></strong>
+        <div class="auth-confirmation-help"><span aria-hidden="true">🔎</span><p>Le courriel peut prendre quelques minutes. Vérifie aussi les dossiers <strong>Indésirables</strong> ou <strong>Promotions</strong>.</p></div>
+        <button type="button" class="secondary" id="resendConfirmation">Renvoyer le courriel</button>
+        <button type="button" class="text-button" id="confirmationGoLogin">J’ai confirmé mon courriel — me connecter</button>
+        <p id="resendConfirmationMessage" class="small muted" aria-live="polite"></p>
       </section>
 
       <p id="authMessage" class="small muted" aria-live="polite"></p>
@@ -490,8 +503,8 @@
   <script src="brain/profile.js?v=3.8.0"></script>
   <script src="brain/insight-engine.js?v=3.30.2"></script>
   <script src="brain/index.js?v=3.12.0"></script>
-  <script src="observation-engine.js?v=3.53.0"></script>
-  <script src="demo-profiles.js?v=3.53.0"></script>
-  <script src="app.js?v=3.53.0"></script>
+  <script src="observation-engine.js?v=3.54.0"></script>
+  <script src="demo-profiles.js?v=3.54.0"></script>
+  <script src="app.js?v=3.54.0"></script>
 </body>
 </html>
