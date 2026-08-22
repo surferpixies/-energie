@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.0";
+  const APP_RELEASE = "3.55.1";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -6212,9 +6212,15 @@
           );
           entry.occurrences.push({
             date: meal.date,
+            mealId: meal.id,
             mealDescription: meal.description || "Repas",
             mealTime: meal.time || "12:00",
             mealType: t(meal.type),
+            feelingRecordedAt: meal.feeling?.recordedAt || null,
+            beforeRecordedAt:
+              meal.feelingsBeforeQuality?.recordedAt ||
+              meal.feeling?.beforeQuality?.recordedAt ||
+              null,
             rating: afterValue,
             beforeValue,
             afterValue,
@@ -7431,7 +7437,22 @@
               locale: window.ENERGIE_LOCALE || "fr-CA",
             })?.observations || []
           : [],
-      documentedDates = new Set(windowData.meals.map((meal) => meal.date));
+      documentedDates = new Set(windowData.meals.map((meal) => meal.date)),
+      globalObservations = Object.entries(db.days || {})
+        .filter(
+          ([date]) => date >= windowData.startKey && date <= windowData.endKey,
+        )
+        .flatMap(([date, day]) =>
+          (day.observations || []).map((observation) => ({
+            ...observation,
+            date: observation.date || date,
+          })),
+        )
+        .sort((a, b) =>
+          `${b.date} ${b.time || ""}`.localeCompare(
+            `${a.date} ${a.time || ""}`,
+          ),
+        );
     return {
       ...windowData,
       stats,
@@ -7439,6 +7460,7 @@
       reasons,
       beforeAfterMeals,
       observations,
+      globalObservations,
       documentedDays: documentedDates.size,
     };
   }
@@ -7454,6 +7476,85 @@
           `<button type="button" data-portrait-days="${value}" class="${days === value ? "active" : ""}">${label}</button>`,
       )
       .join("")}</div>`;
+  }
+  function portraitRecordedDateTime(value) {
+    if (!value) return null;
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return null;
+    return date.toLocaleString("fr-CA", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+  function portraitFeelingDelay(occurrence) {
+    const recorded = Date.parse(occurrence.feelingRecordedAt || ""),
+      meal = new Date(
+        `${occurrence.date}T${occurrence.mealTime || "12:00"}:00`,
+      ).getTime();
+    if (!Number.isFinite(recorded) || !Number.isFinite(meal) || recorded < meal)
+      return null;
+    const minutes = Math.round((recorded - meal) / 60000);
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60),
+      rest = minutes % 60;
+    return `${hours} h${rest ? ` ${String(rest).padStart(2, "0")}` : ""}`;
+  }
+  function portraitEvolutionDetailsHtml(data) {
+    if (!data.evolutionRows.length)
+      return `<div class="portrait-empty"><span>🌿</span><p>Aucune évolution de ressenti liée à un repas pendant cette période.</p></div>`;
+    return data.evolutionRows
+      .map((item, itemIndex) => {
+        const occurrences = item.occurrences
+          .slice()
+          .sort((a, b) =>
+            `${b.date} ${b.mealTime}`.localeCompare(
+              `${a.date} ${a.mealTime}`,
+            ),
+          )
+          .map((occ) => {
+            const afterAt = portraitRecordedDateTime(occ.feelingRecordedAt),
+              beforeAt = portraitRecordedDateTime(occ.beforeRecordedAt),
+              delay = portraitFeelingDelay(occ),
+              evolution =
+                occ.beforeValue == null
+                  ? `Avant non consigné → ${occ.afterValue}/5`
+                  : `${occ.beforeValue}/5 → ${occ.afterValue}/5`;
+            return `<article class="portrait-evolution-occurrence"><div class="portrait-occurrence-heading"><div><time>${esc(formatCalendarDate(occ.date))} · repas à ${esc(occ.mealTime)}</time><strong>${mealIcon(occ.mealType, occ.mealDescription)} ${esc(occ.mealType)}</strong></div><b>${esc(evolution)}</b></div><p class="portrait-full-meal">${esc(occ.mealDescription)}</p><div class="portrait-time-grid"><span><small>Repas</small><strong>${esc(formatCalendarDate(occ.date))} à ${esc(occ.mealTime)}</strong></span><span><small>Ressenti avant</small><strong>${beforeAt ? esc(beforeAt) : "Heure non disponible"}</strong></span><span><small>Ressenti après</small><strong>${afterAt ? esc(afterAt) : "Heure non disponible"}</strong></span><span><small>Délai repas → ressenti après</small><strong>${delay ? esc(delay) : "Non calculable"}</strong></span></div>${occ.notes ? `<p class="portrait-occurrence-note"><b>Note :</b> ${esc(occ.notes)}</p>` : ""}</article>`;
+          })
+          .join("");
+        return `<details class="portrait-evolution-group" ${itemIndex === 0 ? "open" : ""}><summary><span>${item.emoji}</span><div><strong>${esc(item.label)}</strong><small>${item.count} occurrence${item.count !== 1 ? "s" : ""}</small></div><em>›</em></summary><div class="portrait-evolution-occurrences">${occurrences}</div></details>`;
+      })
+      .join("");
+  }
+  function portraitGlobalObservationsHtml(data) {
+    if (!data.globalObservations.length)
+      return `<div class="portrait-empty compact"><span>🌿</span><p>Aucun ressenti hors repas n’a été consigné durant cette période.</p></div>`;
+    const tagMeta = Object.fromEntries(
+      FEELING_TAGS.map((tag) => [tag.id, tag]),
+    );
+    return data.globalObservations
+      .map((observation) => {
+        const tags = (observation.tags || [])
+            .map((id) => tagMeta[id])
+            .filter(Boolean),
+          contexts = (observation.contexts || [])
+            .map((id) => OBSERVATION_CONTEXTS[id])
+            .filter(Boolean),
+          relatedMeals = (observation.mealIds || [])
+            .map((id) => data.meals.find((meal) => meal.id === id))
+            .filter(Boolean),
+          title = tags.length
+            ? tags.map((tag) => `${tag.emoji} ${t(tag.label)}`).join(" · ")
+            : "Ressenti hors repas";
+        return `<article class="portrait-global-occurrence"><div class="portrait-occurrence-heading"><div><time>${esc(formatCalendarDate(observation.date))} à ${esc(observation.time || "—")}</time><strong>${esc(title)}</strong></div><b>${observation.intensity}/5</b></div><div class="portrait-global-meta"><span>Durée : <b>${esc(OBSERVATION_DURATIONS[observation.duration] || "Inconnue")}</b></span>${contexts.length ? `<span>Contexte : <b>${esc(contexts.join(" · "))}</b></span>` : ""}</div>${relatedMeals.length ? `<div class="portrait-related-meals"><small>Repas associés manuellement</small>${relatedMeals.map((meal) => `<p><b>${esc(formatCalendarDate(meal.date))} à ${esc(meal.time)}</b> — ${esc(meal.description)}</p>`).join("")}</div>` : `<p class="portrait-no-related-meal">Aucun repas associé manuellement.</p>`}${observation.notes ? `<p class="portrait-occurrence-note"><b>Note :</b> ${esc(observation.notes)}</p>` : ""}</article>`;
+      })
+      .join("");
+  }
+  function portraitDetailSectionsHtml(data) {
+    return `<section class="portrait-section portrait-detail-section"><div class="portrait-section-title"><span>🍽️</span><div><h3>Détail de chaque évolution</h3><p>Heures du repas et des ressentis, délai et repas complet</p></div></div><div class="portrait-evolution-groups">${portraitEvolutionDetailsHtml(data)}</div></section><section class="portrait-section portrait-global-section"><div class="portrait-section-title"><span>🔎</span><div><h3>Ressentis observés hors repas</h3><p>Observations saisies séparément et repas associés manuellement</p></div></div><div class="portrait-global-list">${portraitGlobalObservationsHtml(data)}</div></section>`;
   }
   function portraitReportHtml(data) {
     const topFeelings = data.evolutionRows.slice(0, 4),
@@ -7552,6 +7653,13 @@
       portraitPeriodDays,
     );
     $("#energyPortraitReport").innerHTML = portraitReportHtml(data);
+    const footer = $("#energyPortraitReport .portrait-disclaimer");
+    if (footer) {
+      const details = document.createElement("div");
+      details.className = "portrait-added-details";
+      details.innerHTML = portraitDetailSectionsHtml(data);
+      footer.before(details);
+    }
     $("#energyPortraitPeriods")
       .querySelectorAll("[data-portrait-days]")
       .forEach((button) => {
@@ -9643,7 +9751,13 @@
       feelingsBefore = collectScoredFeelingScores(
         $("#beforeFeelingTags"),
         "before",
-      );
+      ),
+      oldBeforeScores = normalizeFeelingScores(old?.feelingsBefore),
+      beforeChanged =
+        JSON.stringify(oldBeforeScores) !== JSON.stringify(feelingsBefore),
+      beforeRecordedAt =
+        old?.feelingsBeforeQuality?.recordedAt ||
+        (!old || beforeChanged ? new Date().toISOString() : null);
     const meal = normalMeal(
       {
         ...old,
@@ -9663,7 +9777,10 @@
         fatigueBefore: old?.fatigueBefore || 0,
         fatigueAfter: old?.fatigueAfter || 0,
         feelingsBefore,
-        feelingsBeforeQuality: beforeQuality,
+        feelingsBeforeQuality: {
+          ...beforeQuality,
+          recordedAt: beforeRecordedAt,
+        },
         eatingReasons: collectEatingReasons(),
         eatingReasonOther: collectEatingReasons().includes("other")
           ? $("#eatingReasonOther").value.trim().slice(0, 160)
@@ -9739,6 +9856,7 @@
       notes = $("#feelingNotes").value.trim();
     if (!tags.length && !notes && !Object.keys(normalizeFeelingScores(m.feelingsBefore)).length)
       return alert("Sélectionne au moins un ressenti ou ajoute une note.");
+    const feelingSavedAt = new Date().toISOString();
     m.feeling = {
       rating: averageFeelingScore(scores) ?? 0,
       tags,
@@ -9746,10 +9864,11 @@
       beforeScores: normalizeFeelingScores(m.feelingsBefore),
       qualityReview,
       notes,
-      recordedAt: new Date().toISOString(),
+      recordedAt: m.feeling?.recordedAt || feelingSavedAt,
+      updatedAt: feelingSavedAt,
     };
-    m.updatedAt = new Date().toISOString();
-    m.feelingNotifiedAt = m.feelingNotifiedAt || new Date().toISOString();
+    m.updatedAt = feelingSavedAt;
+    m.feelingNotifiedAt = m.feelingNotifiedAt || feelingSavedAt;
     setMealChanged(m);
     $("#feelingDialog").close();
     render();
@@ -10781,7 +10900,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.0");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.1");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
