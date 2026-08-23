@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.9";
+  const APP_RELEASE = "3.55.10";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -7786,11 +7786,11 @@
   function secondaryObservationSectionHtml(report) {
     const items = (report?.secondaryObservations || []).slice(0, 8);
     if (!items.length) return "";
-    return `<details class="card wide observation-collection-fold secondary-observations-fold"><summary><span class="observation-fold-icon" aria-hidden="true">🔎</span><span class="observation-fold-copy"><strong>Autres observations possibles</strong><small>Pistes moins fortes ou qui chevauchent une tendance principale</small></span><b>${items.length}</b><em aria-hidden="true">›</em></summary><div class="observation-collection-body"><p class="observation-collection-explanation"><strong>Des pistes secondaires, conservées avec transparence.</strong> Elles satisfont les critères minimaux, mais sont moins prioritaires ou concernent presque les mêmes repas qu’une observation principale.</p><div class="secondary-observation-list">${items.map((item) => { const overlappingLabel = item.overlapsCategoryId ? window.ENERGIE_FOOD_CATEGORIES?.getCategoryLabel?.(item.overlapsCategoryId, window.ENERGIE_LOCALE || "fr-CA") : ""; const reason = item.secondaryReason === "overlap" ? `Chevauche largement « ${overlappingLabel || "une tendance principale"} »` : "Moins forte que les observations principales"; return `<article class="secondary-observation-card"><div><span>${item.icon || "🔎"}</span><div><strong>${esc(item.title)}</strong><small>${esc(reason)}</small></div></div><p>${esc(item.text)}</p>${discoveryComparisonHtml(item)}${secondaryObservationEvidenceHtml(item)}<p class="secondary-observation-caution">Piste à continuer d’observer; elle ne prouve aucune cause.</p></article>`; }).join("")}</div></div></details>`;
+    return `<details class="card wide observation-collection-fold secondary-observations-fold"><summary><span class="observation-fold-icon" aria-hidden="true">🔎</span><span class="observation-fold-copy"><strong>Autres observations possibles</strong><small>Pistes moins fortes ou qui chevauchent une tendance principale</small></span><b>${items.length}</b><em aria-hidden="true">›</em></summary><div class="observation-collection-body"><p class="observation-collection-explanation"><strong>Des pistes secondaires, conservées avec transparence.</strong> Elles satisfont les critères minimaux, mais sont moins prioritaires ou concernent presque les mêmes repas qu’une observation principale.</p><div class="secondary-observation-list">${items.map((item, index) => { const overlappingLabel = item.overlapsCategoryId ? window.ENERGIE_FOOD_CATEGORIES?.getCategoryLabel?.(item.overlapsCategoryId, window.ENERGIE_LOCALE || "fr-CA") : ""; const reason = item.secondaryReason === "overlap" ? `Chevauche largement « ${overlappingLabel || "une tendance principale"} »` : "Moins forte que les observations principales"; return `<article class="secondary-observation-card"><div><span>${item.icon || "🔎"}</span><div><strong>${esc(item.title)}</strong><small>${esc(reason)}</small></div></div><p>${esc(item.text)}</p>${discoveryComparisonHtml(item)}${secondaryObservationEvidenceHtml(item, index)}<p class="secondary-observation-caution">Piste à continuer d’observer; elle ne prouve aucune cause.</p></article>`; }).join("")}</div></div></details>`;
   }
-  function secondaryObservationEvidenceHtml(item) {
+  function secondaryObservationEvidenceHtml(item, index) {
     const evidence = item.evidence || {}, difference = Number(item.metrics?.difference), differenceText = Number.isFinite(difference) ? `${difference > 0 ? "+" : ""}${difference.toFixed(1).replace(".", ",")} point${Math.abs(difference) === 1 ? "" : "s"}` : "Comparaison disponible", exposedRate = Number(evidence.exposedRate), comparisonRate = Number(evidence.comparisonRate), hasRates = Number.isFinite(exposedRate) && Number.isFinite(comparisonRate), relatedCount = Array.isArray(item.relatedMeals) ? item.relatedMeals.length : 0;
-    return `<details class="observation-evidence secondary-observation-evidence"><summary><span>Voir les preuves</span><span aria-hidden="true">⌄</span></summary><div class="observation-evidence-body"><div class="observation-proof-grid"><div><small>Comparés</small><strong>${item.samples?.total || 0}</strong><span>repas avec avant + après</span></div><div><small>Écart observé</small><strong>${esc(differenceText)}</strong><span>dans ton propre journal</span></div><div><small>Confiance</small><strong>${esc(observationStrengthLabel(item.metrics?.strength))}</strong><span>selon la répétition</span></div></div>${hasRates ? `<div class="observation-rate-proof"><strong>Aggravations observées</strong><div><span>Avec la catégorie <b>${Math.round(exposedRate * 100)} %</b></span><span>Autres repas <b>${Math.round(comparisonRate * 100)} %</b></span></div></div>` : ""}<p class="observation-basis">${esc(item.basis || "Cette piste utilise uniquement les données disponibles dans ton journal.")}</p>${relatedCount ? `<p class="secondary-evidence-meals">${relatedCount} repas concerné${relatedCount > 1 ? "s" : ""} est${relatedCount > 1 ? " sont" : ""} aussi inclus dans le portrait de consultation.</p>` : ""}</div></details>`;
+    return `<details class="observation-evidence secondary-observation-evidence"><summary><span>Voir les preuves</span><span aria-hidden="true">⌄</span></summary><div class="observation-evidence-body"><div class="observation-proof-grid"><div><small>Comparés</small><strong>${item.samples?.total || 0}</strong><span>repas avec avant + après</span></div><div><small>Écart observé</small><strong>${esc(differenceText)}</strong><span>dans ton propre journal</span></div><div><small>Confiance</small><strong>${esc(observationStrengthLabel(item.metrics?.strength))}</strong><span>selon la répétition</span></div></div>${hasRates ? `<div class="observation-rate-proof"><strong>Aggravations observées</strong><div><span>Avec la catégorie <b>${Math.round(exposedRate * 100)} %</b></span><span>Autres repas <b>${Math.round(comparisonRate * 100)} %</b></span></div></div>` : ""}<p class="observation-basis">${esc(item.basis || "Cette piste utilise uniquement les données disponibles dans ton journal.")}</p><div class="observation-proof-actions">${relatedCount ? `<button class="secondary small related-secondary-observation-meals" data-secondary-observation="${index}">Voir les repas concernés (${relatedCount})</button>` : ""}<button class="text-button why-secondary-observation" data-secondary-observation="${index}">Comment c’est calculé</button></div></div></details>`;
   }
   function discoveryComparisonHtml(x) {
     const scored=x.kind==="food-category-feeling-change",unit=scored?" point":"/5",item=scored?"repas":"journée",labels=Array.isArray(x.comparisonLabels)?x.comparisonLabels:["Avec","Sans"];
@@ -8204,6 +8204,26 @@
           event.preventDefault();
           openDiscoveryMeals(
             discoveryReport.observations[Number(b.dataset.discovery)],
+          );
+        }),
+    );
+    $$(".why-secondary-observation").forEach(
+      (button) =>
+        (button.onclick = () =>
+          openDiscoveryWhy(
+            discoveryReport.secondaryObservations[
+              Number(button.dataset.secondaryObservation)
+            ],
+          )),
+    );
+    $$(".related-secondary-observation-meals").forEach(
+      (button) =>
+        (button.onclick = (event) => {
+          event.preventDefault();
+          openDiscoveryMeals(
+            discoveryReport.secondaryObservations[
+              Number(button.dataset.secondaryObservation)
+            ],
           );
         }),
     );
@@ -11035,7 +11055,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.9");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.10");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
