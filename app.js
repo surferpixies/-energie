@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.6";
+  const APP_RELEASE = "3.55.7";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -7418,6 +7418,24 @@
         .sort((a, b) => b.count - a.count),
     };
   }
+  function canonicalObservationReport(meals) {
+    return db.settings.insightsEnabled && window.EnergieObservationEngine
+      ? window.EnergieObservationEngine.analyze(db, {
+          meals,
+          limit: 3,
+          lookbackDays: 180,
+          locale: window.ENERGIE_LOCALE || "fr-CA",
+        })
+      : {
+          observations: [],
+          maturity: {
+            icon: "🌱",
+            label: "Ton journal apprend encore",
+            days: 0,
+            analyzableDays: 0,
+          },
+        };
+  }
   function portraitReportData(days = portraitPeriodDays) {
     const windowData = portraitWindow(days),
       stats = historyNegativeFeelingStats(windowData.meals, null),
@@ -7428,15 +7446,19 @@
           after = feelingScoresFor(meal, "after");
         return Object.keys(before).length && Object.keys(after).length;
       }).length,
-      observations =
-        db.settings.insightsEnabled && window.EnergieObservationEngine
-          ? window.EnergieObservationEngine.analyze(db, {
-              meals: windowData.meals,
-              limit: 3,
-              lookbackDays: days,
-              locale: window.ENERGIE_LOCALE || "fr-CA",
-            })?.observations || []
-          : [],
+      canonicalObservations = canonicalObservationReport(
+        mealsThroughSelectedDate(),
+      ).observations || [],
+      observations = canonicalObservations
+        .map((observation) => ({
+          ...observation,
+          relatedMeals: (observation.relatedMeals || []).filter(
+            (meal) =>
+              meal.date >= windowData.startKey &&
+              meal.date <= windowData.endKey,
+          ),
+        }))
+        .filter((observation) => observation.relatedMeals.length),
       documentedDates = new Set(windowData.meals.map((meal) => meal.date)),
       globalObservations = Object.entries(db.days || {})
         .filter(
@@ -7546,7 +7568,7 @@
             return `<article class="portrait-evolution-occurrence"><div class="portrait-occurrence-heading"><time><span aria-hidden="true">📅</span>${esc(formatCalendarDate(occ.date))}</time><b>${esc(evolution)}</b></div><p class="portrait-full-meal">${highlightedMeal}</p>${matched ? `<p class="portrait-highlight-legend">Élément observé : <mark>${esc(matched)}</mark></p>` : ""}<div class="portrait-time-grid"><span><small>Ressenti avant</small><strong>${beforeAt ? esc(beforeAt) : "Heure non disponible"}</strong></span><span><small>Repas · ${mealIcon(occ.mealType, occ.mealDescription)} ${esc(occ.mealType)}</small><strong>${esc(formatCalendarDate(occ.date))} à ${esc(occ.mealTime)}</strong></span><span><small>Ressenti après</small><strong>${afterAt ? esc(afterAt) : "Heure non disponible"}</strong></span><span><small>Délai repas → ressenti après</small><strong>${delay ? esc(delay) : "Non calculable"}</strong></span></div>${occ.notes ? `<p class="portrait-occurrence-note"><b>Note :</b> ${esc(occ.notes)}</p>` : ""}</article>`;
           })
           .join("");
-        return `<details class="portrait-evolution-group portrait-green-evolution" ${itemIndex === 0 ? "open" : ""}><summary><span>${item.emoji}</span><div><strong>${esc(item.label)}</strong><small>${item.count} occurrence${item.count !== 1 ? "s" : ""}${observation ? ` · observation à surveiller` : ""}</small></div><em>›</em></summary>${observation ? `<div class="portrait-integrated-observation"><span>👁️ Observation à surveiller</span><strong>${esc(categoryLabel)}</strong><p>${esc(observation.text)}</p></div>` : ""}<div class="portrait-evolution-occurrences">${occurrences}</div></details>`;
+        return `<details class="portrait-evolution-group portrait-green-evolution" ${itemIndex === 0 ? "open" : ""}><summary><span>${item.emoji}</span><div><strong>${esc(item.label)}</strong><small>${item.count} occurrence${item.count !== 1 ? "s" : ""}${observation ? ` · observation à surveiller` : ""}</small></div><em>›</em></summary>${observation ? `<div class="portrait-integrated-observation"><span>👁️ Même observation que dans l’onglet Observations</span><strong>${esc(categoryLabel)}</strong><p>${esc(observation.text)}</p></div>` : ""}<div class="portrait-evolution-occurrences">${occurrences}</div></details>`;
       })
       .join("");
   }
@@ -7718,7 +7740,7 @@
         globalSection = details.querySelector(".portrait-global-section");
       if (evolutionSection) {
         evolutionSection.classList.add("portrait-combined-evolution");
-        evolutionSection.innerHTML = `<div class="portrait-section-title"><span>↕️</span><div><h3>Évolution des ressentis</h3><p>Chaque évolution, son repas complet et les éléments observés</p></div></div><div class="portrait-evolution-groups">${portraitEvolutionDetailsHtml(data)}</div>`;
+        evolutionSection.innerHTML = `<div class="portrait-section-title"><span>↕️</span><div><h3>Évolution des ressentis</h3><p>Les tendances sont identiques à l’onglet Observations; la période filtre seulement les repas présentés.</p></div></div><div class="portrait-evolution-groups">${portraitEvolutionDetailsHtml(data)}</div>`;
       }
       attentionSection?.remove();
       detailSection?.remove();
@@ -8108,22 +8130,7 @@
                 ).length,
               },
             }
-          : db.settings.insightsEnabled && window.EnergieObservationEngine
-            ? window.EnergieObservationEngine.analyze(db, {
-                meals,
-                limit: 3,
-                lookbackDays: 180,
-                locale: window.ENERGIE_LOCALE || "fr-CA",
-              })
-            : {
-                observations: [],
-                maturity: {
-                  icon: "🌱",
-                  label: "Ton journal apprend encore",
-                  days: 0,
-                  analyzableDays: 0,
-                },
-              },
+          : canonicalObservationReport(meals),
         feelingMeals = referenceBrain ? meals : realMeals,
         negativeFeelings =
           referenceFeelingStats(referenceBrain) ||
@@ -11000,7 +11007,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.6");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.7");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
