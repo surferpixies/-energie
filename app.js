@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.8";
+  const APP_RELEASE = "3.55.9";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -7533,15 +7533,13 @@
       return `<div class="portrait-empty"><span>🌿</span><p>Aucune évolution de ressenti liée à un repas pendant cette période.</p></div>`;
     return data.evolutionRows
       .map((item, itemIndex) => {
-        const observation = data.observations.find(
+        const observations = data.observations.filter(
             (candidate) => candidate.feelingId === item.id,
           ),
-          categoryLabel = observation
-            ? window.ENERGIE_FOOD_CATEGORIES?.getCategoryLabel?.(
-                observation.categoryId,
-                window.ENERGIE_LOCALE || "fr-CA",
-              ) || observation.categoryId
-            : "",
+          primaryCount = observations.filter(
+            (observation) => !observation.isSecondary,
+          ).length,
+          secondaryCount = observations.length - primaryCount,
           occurrences = item.occurrences
           .slice()
           .sort((a, b) =>
@@ -7553,29 +7551,20 @@
             const afterAt = portraitRecordedDateTime(occ.feelingRecordedAt),
               beforeAt = portraitRecordedDateTime(occ.beforeRecordedAt),
               delay = portraitFeelingDelay(occ),
-              highlightedMeal = observation
-                ? highlightedObservationMeal(
-                    occ.mealDescription,
-                    observation.categoryId,
-                  )
-                : esc(occ.mealDescription),
-              matched = observation
-                ? observationCategoryMatch(
-                    occ.mealDescription,
-                    observation.categoryId,
-                  )
-                : "",
+              mealHighlight = highlightedObservationMealCategories(
+                occ.mealDescription,
+                observations,
+              ),
               evolution =
                 occ.beforeValue == null
                   ? `Avant non consigné → ${occ.afterValue}/5`
                   : `${occ.beforeValue}/5 → ${occ.afterValue}/5`;
-            return `<article class="portrait-evolution-occurrence"><div class="portrait-occurrence-heading"><time><span aria-hidden="true">📅</span>${esc(formatCalendarDate(occ.date))}</time><b>${esc(evolution)}</b></div><p class="portrait-full-meal">${highlightedMeal}</p>${matched ? `<p class="portrait-highlight-legend">Élément observé : <mark>${esc(matched)}</mark></p>` : ""}<div class="portrait-time-grid"><span><small>Ressenti avant</small><strong>${beforeAt ? esc(beforeAt) : "Heure non disponible"}</strong></span><span><small>Repas · ${mealIcon(occ.mealType, occ.mealDescription)} ${esc(occ.mealType)}</small><strong>${esc(formatCalendarDate(occ.date))} à ${esc(occ.mealTime)}</strong></span><span><small>Ressenti après</small><strong>${afterAt ? esc(afterAt) : "Heure non disponible"}</strong></span><span><small>Délai repas → ressenti après</small><strong>${delay ? esc(delay) : "Non calculable"}</strong></span></div>${occ.notes ? `<p class="portrait-occurrence-note"><b>Note :</b> ${esc(occ.notes)}</p>` : ""}</article>`;
+            return `<article class="portrait-evolution-occurrence"><div class="portrait-occurrence-heading"><time><span aria-hidden="true">📅</span>${esc(formatCalendarDate(occ.date))}</time><b>${esc(evolution)}</b></div><p class="portrait-full-meal">${mealHighlight.html}</p>${mealHighlight.matches.length ? `<p class="portrait-highlight-legend"><span>Éléments observés :</span>${mealHighlight.matches.map((match) => `<mark class="${match.isSecondary ? "is-secondary" : "is-primary"}">${esc(match.term)}</mark>`).join("")}</p>` : ""}<div class="portrait-time-grid"><span><small>Ressenti avant</small><strong>${beforeAt ? esc(beforeAt) : "Heure non disponible"}</strong></span><span><small>Repas · ${mealIcon(occ.mealType, occ.mealDescription)} ${esc(occ.mealType)}</small><strong>${esc(formatCalendarDate(occ.date))} à ${esc(occ.mealTime)}</strong></span><span><small>Ressenti après</small><strong>${afterAt ? esc(afterAt) : "Heure non disponible"}</strong></span><span><small>Délai repas → ressenti après</small><strong>${delay ? esc(delay) : "Non calculable"}</strong></span></div>${occ.notes ? `<p class="portrait-occurrence-note"><b>Note :</b> ${esc(occ.notes)}</p>` : ""}</article>`;
           })
           .join("");
-        const observationLevel = observation?.isSecondary
-          ? "piste secondaire"
-          : "observation à surveiller";
-        return `<details class="portrait-evolution-group portrait-green-evolution ${observation?.isSecondary ? "is-secondary" : ""}" ${itemIndex === 0 ? "open" : ""}><summary><span>${item.emoji}</span><div><strong>${esc(item.label)}</strong><small>${item.count} occurrence${item.count !== 1 ? "s" : ""}${observation ? ` · ${observationLevel}` : ""}</small></div><em>›</em></summary>${observation ? `<div class="portrait-integrated-observation"><span>${observation.isSecondary ? "🔎 Piste secondaire dans l’onglet Observations" : "👁️ Même observation que dans l’onglet Observations"}</span><strong>${esc(categoryLabel)}</strong><p>${esc(observation.text)}</p></div>` : ""}<div class="portrait-evolution-occurrences">${occurrences}</div></details>`;
+        const observationSummary = [primaryCount ? `${primaryCount} observation${primaryCount > 1 ? "s" : ""} à surveiller` : "", secondaryCount ? `${secondaryCount} piste${secondaryCount > 1 ? "s" : ""} secondaire${secondaryCount > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · "),
+          observationCards = observations.map((observation) => { const categoryLabel = window.ENERGIE_FOOD_CATEGORIES?.getCategoryLabel?.(observation.categoryId, window.ENERGIE_LOCALE || "fr-CA") || observation.categoryId; return `<div class="portrait-integrated-observation ${observation.isSecondary ? "is-secondary" : ""}"><span>${observation.isSecondary ? "🔎 Piste secondaire" : "👁️ Observation à surveiller"}</span><strong>${esc(categoryLabel)}</strong><p>${esc(observation.text)}</p></div>`; }).join("");
+        return `<details class="portrait-evolution-group portrait-green-evolution ${observations.length && !primaryCount ? "is-secondary" : ""}" ${itemIndex === 0 ? "open" : ""}><summary><span>${item.emoji}</span><div><strong>${esc(item.label)}</strong><small>${item.count} occurrence${item.count !== 1 ? "s" : ""}${observationSummary ? ` · ${esc(observationSummary)}` : ""}</small></div><em>›</em></summary>${observationCards ? `<div class="portrait-integrated-observations">${observationCards}</div>` : ""}<div class="portrait-evolution-occurrences">${occurrences}</div></details>`;
       })
       .join("");
   }
@@ -7797,7 +7786,11 @@
   function secondaryObservationSectionHtml(report) {
     const items = (report?.secondaryObservations || []).slice(0, 8);
     if (!items.length) return "";
-    return `<details class="card wide observation-collection-fold secondary-observations-fold"><summary><span class="observation-fold-icon" aria-hidden="true">🔎</span><span class="observation-fold-copy"><strong>Autres observations possibles</strong><small>Pistes moins fortes ou qui chevauchent une tendance principale</small></span><b>${items.length}</b><em aria-hidden="true">›</em></summary><div class="observation-collection-body"><p class="observation-collection-explanation"><strong>Des pistes secondaires, conservées avec transparence.</strong> Elles satisfont les critères minimaux, mais sont moins prioritaires ou concernent presque les mêmes repas qu’une observation principale.</p><div class="secondary-observation-list">${items.map((item) => { const overlappingLabel = item.overlapsCategoryId ? window.ENERGIE_FOOD_CATEGORIES?.getCategoryLabel?.(item.overlapsCategoryId, window.ENERGIE_LOCALE || "fr-CA") : ""; const reason = item.secondaryReason === "overlap" ? `Chevauche largement « ${overlappingLabel || "une tendance principale"} »` : "Moins forte que les observations principales"; return `<article class="secondary-observation-card"><div><span>${item.icon || "🔎"}</span><div><strong>${esc(item.title)}</strong><small>${esc(reason)}</small></div></div><p>${esc(item.text)}</p>${discoveryComparisonHtml(item)}<p class="secondary-observation-caution">Piste à continuer d’observer; elle ne prouve aucune cause.</p></article>`; }).join("")}</div></div></details>`;
+    return `<details class="card wide observation-collection-fold secondary-observations-fold"><summary><span class="observation-fold-icon" aria-hidden="true">🔎</span><span class="observation-fold-copy"><strong>Autres observations possibles</strong><small>Pistes moins fortes ou qui chevauchent une tendance principale</small></span><b>${items.length}</b><em aria-hidden="true">›</em></summary><div class="observation-collection-body"><p class="observation-collection-explanation"><strong>Des pistes secondaires, conservées avec transparence.</strong> Elles satisfont les critères minimaux, mais sont moins prioritaires ou concernent presque les mêmes repas qu’une observation principale.</p><div class="secondary-observation-list">${items.map((item) => { const overlappingLabel = item.overlapsCategoryId ? window.ENERGIE_FOOD_CATEGORIES?.getCategoryLabel?.(item.overlapsCategoryId, window.ENERGIE_LOCALE || "fr-CA") : ""; const reason = item.secondaryReason === "overlap" ? `Chevauche largement « ${overlappingLabel || "une tendance principale"} »` : "Moins forte que les observations principales"; return `<article class="secondary-observation-card"><div><span>${item.icon || "🔎"}</span><div><strong>${esc(item.title)}</strong><small>${esc(reason)}</small></div></div><p>${esc(item.text)}</p>${discoveryComparisonHtml(item)}${secondaryObservationEvidenceHtml(item)}<p class="secondary-observation-caution">Piste à continuer d’observer; elle ne prouve aucune cause.</p></article>`; }).join("")}</div></div></details>`;
+  }
+  function secondaryObservationEvidenceHtml(item) {
+    const evidence = item.evidence || {}, difference = Number(item.metrics?.difference), differenceText = Number.isFinite(difference) ? `${difference > 0 ? "+" : ""}${difference.toFixed(1).replace(".", ",")} point${Math.abs(difference) === 1 ? "" : "s"}` : "Comparaison disponible", exposedRate = Number(evidence.exposedRate), comparisonRate = Number(evidence.comparisonRate), hasRates = Number.isFinite(exposedRate) && Number.isFinite(comparisonRate), relatedCount = Array.isArray(item.relatedMeals) ? item.relatedMeals.length : 0;
+    return `<details class="observation-evidence secondary-observation-evidence"><summary><span>Voir les preuves</span><span aria-hidden="true">⌄</span></summary><div class="observation-evidence-body"><div class="observation-proof-grid"><div><small>Comparés</small><strong>${item.samples?.total || 0}</strong><span>repas avec avant + après</span></div><div><small>Écart observé</small><strong>${esc(differenceText)}</strong><span>dans ton propre journal</span></div><div><small>Confiance</small><strong>${esc(observationStrengthLabel(item.metrics?.strength))}</strong><span>selon la répétition</span></div></div>${hasRates ? `<div class="observation-rate-proof"><strong>Aggravations observées</strong><div><span>Avec la catégorie <b>${Math.round(exposedRate * 100)} %</b></span><span>Autres repas <b>${Math.round(comparisonRate * 100)} %</b></span></div></div>` : ""}<p class="observation-basis">${esc(item.basis || "Cette piste utilise uniquement les données disponibles dans ton journal.")}</p>${relatedCount ? `<p class="secondary-evidence-meals">${relatedCount} repas concerné${relatedCount > 1 ? "s" : ""} est${relatedCount > 1 ? " sont" : ""} aussi inclus dans le portrait de consultation.</p>` : ""}</div></details>`;
   }
   function discoveryComparisonHtml(x) {
     const scored=x.kind==="food-category-feeling-change",unit=scored?" point":"/5",item=scored?"repas":"journée",labels=Array.isArray(x.comparisonLabels)?x.comparisonLabels:["Avec","Sans"];
@@ -7833,6 +7826,22 @@
     );
     if (index < 0) return esc(text);
     return `${esc(text.slice(0, index))}<mark>${esc(text.slice(index, index + match.length))}</mark>${esc(text.slice(index + match.length))}`;
+  }
+  function highlightedObservationMealCategories(description, observations) {
+    const text = String(description || "Repas sans description"), ranges = [], matches = [];
+    for (const observation of observations || []) {
+      const term = observationCategoryMatch(text, observation.categoryId);
+      if (!term) continue;
+      const index = text.toLocaleLowerCase("fr-CA").indexOf(term.toLocaleLowerCase("fr-CA"));
+      if (index < 0) continue;
+      matches.push({ term, isSecondary: Boolean(observation.isSecondary) });
+      ranges.push({ start: index, end: index + term.length, isSecondary: Boolean(observation.isSecondary) });
+    }
+    const uniqueMatches = matches.filter((match, index, list) => list.findIndex((candidate) => candidate.term.toLocaleLowerCase("fr-CA") === match.term.toLocaleLowerCase("fr-CA") && candidate.isSecondary === match.isSecondary) === index), accepted = ranges.sort((a, b) => a.start - b.start || b.end - a.end).filter((range, index, list) => !list.slice(0, index).some((candidate) => candidate.start <= range.start && candidate.end > range.start));
+    let cursor = 0, html = "";
+    for (const range of accepted) { html += esc(text.slice(cursor, range.start)); html += `<mark class="${range.isSecondary ? "is-secondary" : "is-primary"}">${esc(text.slice(range.start, range.end))}</mark>`; cursor = range.end; }
+    html += esc(text.slice(cursor));
+    return { html, matches: uniqueMatches };
   }
   function openDiscoveryMeals(x) {
     const meals = Array.isArray(x?.relatedMeals) ? x.relatedMeals : [];
@@ -11026,7 +11035,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.8");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.9");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
