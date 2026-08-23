@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.5";
+  const APP_RELEASE = "3.55.6";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -7507,7 +7507,16 @@
       return `<div class="portrait-empty"><span>🌿</span><p>Aucune évolution de ressenti liée à un repas pendant cette période.</p></div>`;
     return data.evolutionRows
       .map((item, itemIndex) => {
-        const occurrences = item.occurrences
+        const observation = data.observations.find(
+            (candidate) => candidate.feelingId === item.id,
+          ),
+          categoryLabel = observation
+            ? window.ENERGIE_FOOD_CATEGORIES?.getCategoryLabel?.(
+                observation.categoryId,
+                window.ENERGIE_LOCALE || "fr-CA",
+              ) || observation.categoryId
+            : "",
+          occurrences = item.occurrences
           .slice()
           .sort((a, b) =>
             `${b.date} ${b.mealTime}`.localeCompare(
@@ -7518,14 +7527,26 @@
             const afterAt = portraitRecordedDateTime(occ.feelingRecordedAt),
               beforeAt = portraitRecordedDateTime(occ.beforeRecordedAt),
               delay = portraitFeelingDelay(occ),
+              highlightedMeal = observation
+                ? highlightedObservationMeal(
+                    occ.mealDescription,
+                    observation.categoryId,
+                  )
+                : esc(occ.mealDescription),
+              matched = observation
+                ? observationCategoryMatch(
+                    occ.mealDescription,
+                    observation.categoryId,
+                  )
+                : "",
               evolution =
                 occ.beforeValue == null
                   ? `Avant non consigné → ${occ.afterValue}/5`
                   : `${occ.beforeValue}/5 → ${occ.afterValue}/5`;
-            return `<article class="portrait-evolution-occurrence"><div class="portrait-occurrence-heading"><time><span aria-hidden="true">📅</span>${esc(formatCalendarDate(occ.date))}</time><b>${esc(evolution)}</b></div><p class="portrait-full-meal">${esc(occ.mealDescription)}</p><div class="portrait-time-grid"><span><small>Ressenti avant</small><strong>${beforeAt ? esc(beforeAt) : "Heure non disponible"}</strong></span><span><small>Repas · ${mealIcon(occ.mealType, occ.mealDescription)} ${esc(occ.mealType)}</small><strong>${esc(formatCalendarDate(occ.date))} à ${esc(occ.mealTime)}</strong></span><span><small>Ressenti après</small><strong>${afterAt ? esc(afterAt) : "Heure non disponible"}</strong></span><span><small>Délai repas → ressenti après</small><strong>${delay ? esc(delay) : "Non calculable"}</strong></span></div>${occ.notes ? `<p class="portrait-occurrence-note"><b>Note :</b> ${esc(occ.notes)}</p>` : ""}</article>`;
+            return `<article class="portrait-evolution-occurrence"><div class="portrait-occurrence-heading"><time><span aria-hidden="true">📅</span>${esc(formatCalendarDate(occ.date))}</time><b>${esc(evolution)}</b></div><p class="portrait-full-meal">${highlightedMeal}</p>${matched ? `<p class="portrait-highlight-legend">Élément observé : <mark>${esc(matched)}</mark></p>` : ""}<div class="portrait-time-grid"><span><small>Ressenti avant</small><strong>${beforeAt ? esc(beforeAt) : "Heure non disponible"}</strong></span><span><small>Repas · ${mealIcon(occ.mealType, occ.mealDescription)} ${esc(occ.mealType)}</small><strong>${esc(formatCalendarDate(occ.date))} à ${esc(occ.mealTime)}</strong></span><span><small>Ressenti après</small><strong>${afterAt ? esc(afterAt) : "Heure non disponible"}</strong></span><span><small>Délai repas → ressenti après</small><strong>${delay ? esc(delay) : "Non calculable"}</strong></span></div>${occ.notes ? `<p class="portrait-occurrence-note"><b>Note :</b> ${esc(occ.notes)}</p>` : ""}</article>`;
           })
           .join("");
-        return `<details class="portrait-evolution-group" ${itemIndex === 0 ? "open" : ""}><summary><span>${item.emoji}</span><div><strong>${esc(item.label)}</strong><small>${item.count} occurrence${item.count !== 1 ? "s" : ""}</small></div><em>›</em></summary><div class="portrait-evolution-occurrences">${occurrences}</div></details>`;
+        return `<details class="portrait-evolution-group portrait-green-evolution" ${itemIndex === 0 ? "open" : ""}><summary><span>${item.emoji}</span><div><strong>${esc(item.label)}</strong><small>${item.count} occurrence${item.count !== 1 ? "s" : ""}${observation ? ` · observation à surveiller` : ""}</small></div><em>›</em></summary>${observation ? `<div class="portrait-integrated-observation"><span>👁️ Observation à surveiller</span><strong>${esc(categoryLabel)}</strong><p>${esc(observation.text)}</p></div>` : ""}<div class="portrait-evolution-occurrences">${occurrences}</div></details>`;
       })
       .join("");
   }
@@ -7679,6 +7700,35 @@
       details.className = "portrait-added-details";
       details.innerHTML = portraitDetailSectionsHtml(data);
       footer.before(details);
+      const sheet = footer.closest(".portrait-sheet"),
+        directSections = sheet
+          ? [...sheet.children].filter((child) =>
+              child.classList.contains("portrait-section"),
+            )
+          : [],
+        evolutionSection = directSections.find(
+          (section) => !section.classList.contains("portrait-attention"),
+        ),
+        attentionSection = directSections.find((section) =>
+          section.classList.contains("portrait-attention"),
+        ),
+        twoColumns = sheet?.querySelector(":scope > .portrait-two-columns"),
+        reasonsSection = twoColumns?.querySelector(":scope > .portrait-section:first-child"),
+        detailSection = details.querySelector(".portrait-detail-section"),
+        globalSection = details.querySelector(".portrait-global-section");
+      if (evolutionSection) {
+        evolutionSection.classList.add("portrait-combined-evolution");
+        evolutionSection.innerHTML = `<div class="portrait-section-title"><span>↕️</span><div><h3>Évolution des ressentis</h3><p>Chaque évolution, son repas complet et les éléments observés</p></div></div><div class="portrait-evolution-groups">${portraitEvolutionDetailsHtml(data)}</div>`;
+      }
+      attentionSection?.remove();
+      detailSection?.remove();
+      if (globalSection) footer.before(globalSection);
+      if (reasonsSection) {
+        reasonsSection.classList.add("portrait-reasons-section");
+        footer.before(reasonsSection);
+      }
+      twoColumns?.remove();
+      if (!details.children.length) details.remove();
     }
     $("#energyPortraitPeriods")
       .querySelectorAll("[data-portrait-days]")
@@ -10950,7 +11000,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.5");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.6");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
