@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.4";
+  const APP_RELEASE = "3.55.5";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -7556,6 +7556,26 @@
   function portraitDetailSectionsHtml(data) {
     return `<section class="portrait-section portrait-detail-section"><div class="portrait-section-title"><span>🍽️</span><div><h3>Détail de chaque évolution</h3><p>Heures du repas et des ressentis, délai et repas complet</p></div></div><div class="portrait-evolution-groups">${portraitEvolutionDetailsHtml(data)}</div></section><section class="portrait-section portrait-global-section"><div class="portrait-section-title"><span>🔎</span><div><h3>Ressentis observés hors repas</h3><p>Observations saisies séparément et repas associés manuellement</p></div></div><div class="portrait-global-list">${portraitGlobalObservationsHtml(data)}</div></section>`;
   }
+  function portraitAttentionMealsHtml(observation) {
+    const meals = Array.isArray(observation?.relatedMeals)
+      ? observation.relatedMeals
+      : [];
+    if (!meals.length) return "";
+    const categoryLabel =
+      window.ENERGIE_FOOD_CATEGORIES?.getCategoryLabel?.(
+        observation.categoryId,
+        window.ENERGIE_LOCALE || "fr-CA",
+      ) || "élément observé";
+    return `<details class="portrait-attention-meals" open><summary><span>🍽️ Repas qui alimentent cette observation</span><b>${meals.length}</b></summary><div>${meals
+      .map((meal) => {
+        const matched = observationCategoryMatch(
+          meal.description,
+          observation.categoryId,
+        );
+        return `<article><div class="portrait-attention-meal-head"><strong>${mealIcon(meal.type, meal.description)} ${esc(t(meal.type || "Repas"))}</strong><time>${esc(formatCalendarDate(meal.date))}${meal.time ? ` à ${esc(meal.time)}` : ""}</time></div><p>${highlightedObservationMeal(meal.description, observation.categoryId)}</p><div><span>Élément observé : <b>${esc(matched || categoryLabel)}</b></span><em>+${esc(String(meal.change).replace(".", ","))}</em></div></article>`;
+      })
+      .join("")}</div><small>Les éléments surlignés sont présents dans les repas associés; cela ne prouve pas qu’ils causent le ressenti.</small></details>`;
+  }
   function portraitReportHtml(data) {
     const topFeelings = data.evolutionRows.slice(0, 4),
       recentOccurrences = data.evolutionRows
@@ -7589,7 +7609,7 @@
             .slice(0, 3)
             .map(
               (observation) =>
-                `<article class="portrait-attention-item"><span>${observation.icon || "👁️"}</span><div><strong>${esc(observation.title)}</strong><p>${esc(observation.text)}</p></div></article>`,
+                `<article class="portrait-attention-item"><span>${observation.icon || "👁️"}</span><div><strong>${esc(observation.title)}</strong><p>${esc(observation.text)}</p>${portraitAttentionMealsHtml(observation)}</div></article>`,
             )
             .join("")
         : `<div class="portrait-empty compact"><span>🌱</span><p>Aucune tendance suffisamment répétée ne ressort dans cette période.</p></div>`,
@@ -10930,7 +10950,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.4");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.5");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
