@@ -320,7 +320,10 @@
     if (!value || typeof value !== "object" || Array.isArray(value)) return out;
     Object.entries(value).forEach(([id, raw]) => {
       const score = Number(raw);
-      if (id && score >= 1 && score <= 5) out[id] = score;
+      const confirmsNoSymptom =
+        id === "feeling_good" || id === "no_tracked_symptoms";
+      if (id && confirmsNoSymptom && score === 0) out[id] = 0;
+      else if (id && score >= 1 && score <= 5) out[id] = score;
     });
     return out;
   }
@@ -331,10 +334,23 @@
       const fallback = Math.min(5, Math.max(1, Number(meal.feeling.rating) || 3));
       meal.feeling.tags.forEach(id => { after[id] = fallback; });
     }
-    if (!Object.keys(after).length) return null;
     const before = scoreMap(meal?.feelingsBefore || meal?.feeling?.beforeScores);
-    if (!Object.prototype.hasOwnProperty.call(after, tagId) || !Object.prototype.hasOwnProperty.call(before, tagId)) return null;
-    return after[tagId] - before[tagId];
+    const beforeConfirmsNoSymptom =
+        before.feeling_good === 0 || before.no_tracked_symptoms === 0,
+      afterConfirmsNoSymptom =
+        after.feeling_good === 0 || after.no_tracked_symptoms === 0,
+      beforeValue = Object.prototype.hasOwnProperty.call(before, tagId)
+        ? before[tagId]
+        : beforeConfirmsNoSymptom
+          ? 0
+          : null,
+      afterValue = Object.prototype.hasOwnProperty.call(after, tagId)
+        ? after[tagId]
+        : afterConfirmsNoSymptom
+          ? 0
+          : null;
+    if (beforeValue == null || afterValue == null) return null;
+    return afterValue - beforeValue;
   }
 
   function scoredFeelingObservations(days, locale, options) {
