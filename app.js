@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.7";
+  const APP_RELEASE = "3.55.8";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -7446,9 +7446,13 @@
           after = feelingScoresFor(meal, "after");
         return Object.keys(before).length && Object.keys(after).length;
       }).length,
-      canonicalObservations = canonicalObservationReport(
-        mealsThroughSelectedDate(),
-      ).observations || [],
+      canonicalReport = canonicalObservationReport(mealsThroughSelectedDate()),
+      canonicalObservations = [
+        ...(canonicalReport.observations || []),
+        ...(canonicalReport.secondaryObservations || []).map(
+          (observation) => ({ ...observation, isSecondary: true }),
+        ),
+      ],
       observations = canonicalObservations
         .map((observation) => ({
           ...observation,
@@ -7568,7 +7572,10 @@
             return `<article class="portrait-evolution-occurrence"><div class="portrait-occurrence-heading"><time><span aria-hidden="true">📅</span>${esc(formatCalendarDate(occ.date))}</time><b>${esc(evolution)}</b></div><p class="portrait-full-meal">${highlightedMeal}</p>${matched ? `<p class="portrait-highlight-legend">Élément observé : <mark>${esc(matched)}</mark></p>` : ""}<div class="portrait-time-grid"><span><small>Ressenti avant</small><strong>${beforeAt ? esc(beforeAt) : "Heure non disponible"}</strong></span><span><small>Repas · ${mealIcon(occ.mealType, occ.mealDescription)} ${esc(occ.mealType)}</small><strong>${esc(formatCalendarDate(occ.date))} à ${esc(occ.mealTime)}</strong></span><span><small>Ressenti après</small><strong>${afterAt ? esc(afterAt) : "Heure non disponible"}</strong></span><span><small>Délai repas → ressenti après</small><strong>${delay ? esc(delay) : "Non calculable"}</strong></span></div>${occ.notes ? `<p class="portrait-occurrence-note"><b>Note :</b> ${esc(occ.notes)}</p>` : ""}</article>`;
           })
           .join("");
-        return `<details class="portrait-evolution-group portrait-green-evolution" ${itemIndex === 0 ? "open" : ""}><summary><span>${item.emoji}</span><div><strong>${esc(item.label)}</strong><small>${item.count} occurrence${item.count !== 1 ? "s" : ""}${observation ? ` · observation à surveiller` : ""}</small></div><em>›</em></summary>${observation ? `<div class="portrait-integrated-observation"><span>👁️ Même observation que dans l’onglet Observations</span><strong>${esc(categoryLabel)}</strong><p>${esc(observation.text)}</p></div>` : ""}<div class="portrait-evolution-occurrences">${occurrences}</div></details>`;
+        const observationLevel = observation?.isSecondary
+          ? "piste secondaire"
+          : "observation à surveiller";
+        return `<details class="portrait-evolution-group portrait-green-evolution ${observation?.isSecondary ? "is-secondary" : ""}" ${itemIndex === 0 ? "open" : ""}><summary><span>${item.emoji}</span><div><strong>${esc(item.label)}</strong><small>${item.count} occurrence${item.count !== 1 ? "s" : ""}${observation ? ` · ${observationLevel}` : ""}</small></div><em>›</em></summary>${observation ? `<div class="portrait-integrated-observation"><span>${observation.isSecondary ? "🔎 Piste secondaire dans l’onglet Observations" : "👁️ Même observation que dans l’onglet Observations"}</span><strong>${esc(categoryLabel)}</strong><p>${esc(observation.text)}</p></div>` : ""}<div class="portrait-evolution-occurrences">${occurrences}</div></details>`;
       })
       .join("");
   }
@@ -7786,6 +7793,11 @@
           .join("")
       : `<section class="card discovery-empty observation-empty"><div class="food-art">${mature ? "🔎" : "🌱"}</div><h3>${mature ? "Aucune association assez nette pour le moment" : "Les premières tendances se préparent"}</h3><p>${mature ? "Le journal contient beaucoup de données, mais aucune différence suffisamment claire et répétée ne ressort actuellement. Le Cerveau préfère ne pas créer une tendance artificielle." : "Continue simplement à remplir ton journal. Le cerveau d’Énergie compare déjà tes journées, mais préfère attendre avant de montrer une observation trop fragile."}</p></section>`;
     return `${portraitEntryHtml()}${brainGrowthHeaderHtml(maturity)}<div class="observation-collections-stack"><details class="card wide observation-collection-fold attention-observations-fold"><summary><span class="observation-fold-icon" aria-hidden="true">👁️</span><span class="observation-fold-copy"><strong>Observations auxquelles porter une attention</strong><small>Tendances suffisamment répétées pour mériter une surveillance</small></span><b>${observations.length}</b><em aria-hidden="true">›</em></summary><div class="observation-collection-body"><p class="observation-collection-explanation"><strong>Des tendances à suivre dans le temps.</strong> Elles reposent sur des différences retrouvées dans plusieurs repas comparables. Elles méritent une attention, mais ne prouvent aucune cause et ne constituent jamais un diagnostic.</p><section class="discovery-section food-observations-section"><div class="discovery-grid">${cards}</div></section></div></details>${dashboardNegativeFeelingHtml(feelingStats || { negative: [] })}</div>`;
+  }
+  function secondaryObservationSectionHtml(report) {
+    const items = (report?.secondaryObservations || []).slice(0, 8);
+    if (!items.length) return "";
+    return `<details class="card wide observation-collection-fold secondary-observations-fold"><summary><span class="observation-fold-icon" aria-hidden="true">🔎</span><span class="observation-fold-copy"><strong>Autres observations possibles</strong><small>Pistes moins fortes ou qui chevauchent une tendance principale</small></span><b>${items.length}</b><em aria-hidden="true">›</em></summary><div class="observation-collection-body"><p class="observation-collection-explanation"><strong>Des pistes secondaires, conservées avec transparence.</strong> Elles satisfont les critères minimaux, mais sont moins prioritaires ou concernent presque les mêmes repas qu’une observation principale.</p><div class="secondary-observation-list">${items.map((item) => { const overlappingLabel = item.overlapsCategoryId ? window.ENERGIE_FOOD_CATEGORIES?.getCategoryLabel?.(item.overlapsCategoryId, window.ENERGIE_LOCALE || "fr-CA") : ""; const reason = item.secondaryReason === "overlap" ? `Chevauche largement « ${overlappingLabel || "une tendance principale"} »` : "Moins forte que les observations principales"; return `<article class="secondary-observation-card"><div><span>${item.icon || "🔎"}</span><div><strong>${esc(item.title)}</strong><small>${esc(reason)}</small></div></div><p>${esc(item.text)}</p>${discoveryComparisonHtml(item)}<p class="secondary-observation-caution">Piste à continuer d’observer; elle ne prouve aucune cause.</p></article>`; }).join("")}</div></div></details>`;
   }
   function discoveryComparisonHtml(x) {
     const scored=x.kind==="food-category-feeling-change",unit=scored?" point":"/5",item=scored?"repas":"journée",labels=Array.isArray(x.comparisonLabels)?x.comparisonLabels:["Avec","Sans"];
@@ -8154,6 +8166,13 @@
         : "";
     $("#app").innerHTML =
       `${analysisDateNavigatorHtml()}<section class="hero"><p class="eyebrow">Tableau intelligent</p><h2>Ce qu’Énergie apprend sur toi</h2><p>Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer leurs causes.</p></section>${previewBanner}${discoverySectionHtml(discoveryReport, negativeFeelings)}<div class="grid dashboard-overview"><section class="card stat-card compact-stat-card compact-row-card dashboard-hero-card"><div class="stat-card-heading"><span>🍎</span><div><h3>Tu utilises Énergie depuis</h3><p class="muted small">Date de départ du journal</p></div></div><div class="metric metric-small">${esc(story.since)}</div></section><section class="card stat-card dashboard-mini-card"><span>⭐</span><h3>Point fort</h3><p>${esc(story.strength)}</p></section><section class="card stat-card dashboard-mini-card"><span>💡</span><h3>Habitude observée</h3><p>${esc(story.habit)}</p></section><section class="card stat-card dashboard-mini-card"><span>🎯</span><h3>Suggestion principale</h3><p>${esc(story.suggestion)}</p></section></div>${professionalDiscussionHtml(meals)}<div class="section-title"><h2>🧠 Autres observations</h2><span class="muted small">${insights.length} carte${insights.length > 1 ? "s" : ""}</span></div><div class="insight-grid">${insights.length ? insights.map(insightHtml).join("") : `<section class="card empty wide"><div class="food-art">🧠</div><p>${db.settings.insightsEnabled ? "Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles." : "Les observations sont désactivées dans les paramètres."}</p></section>`}</div>${demoDiscoveryHtml()}${usePreview && !db.settings.demoMode ? '<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>' : ""}`;
+    const primaryObservationFold = $(".attention-observations-fold"),
+      secondaryObservationHtml = secondaryObservationSectionHtml(discoveryReport);
+    if (primaryObservationFold && secondaryObservationHtml)
+      primaryObservationFold.insertAdjacentHTML(
+        "afterend",
+        secondaryObservationHtml,
+      );
     $("#togglePreview")?.addEventListener("click", () => {
       sessionStorage.setItem("dashboardPreview", usePreview ? "off" : "on");
       renderInsights();
@@ -11007,7 +11026,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.7");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.8");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

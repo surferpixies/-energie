@@ -464,6 +464,7 @@
       );
 
     const observations = [];
+    const secondaryObservations = [];
     const selectedCategoryIds = [];
     const limit = Number(settings.limit) || DEFAULT_OPTIONS.limit;
 
@@ -481,13 +482,26 @@
     }
 
     for (const candidate of candidates) {
-      const duplicatesExistingPattern = selectedCategoryIds.some(categoryId =>
+      const overlappingCategoryId = selectedCategoryIds.find(categoryId =>
         exposureOverlap(candidate.categoryId, categoryId) >= 0.85
       );
-      if (duplicatesExistingPattern) continue;
-      observations.push(candidate);
-      selectedCategoryIds.push(candidate.categoryId);
-      if (observations.length >= limit) break;
+      if (overlappingCategoryId) {
+        secondaryObservations.push({
+          ...candidate,
+          secondaryReason: "overlap",
+          overlapsCategoryId: overlappingCategoryId
+        });
+        continue;
+      }
+      if (observations.length < limit) {
+        observations.push(candidate);
+        selectedCategoryIds.push(candidate.categoryId);
+      } else {
+        secondaryObservations.push({
+          ...candidate,
+          secondaryReason: "lower-ranked"
+        });
+      }
     }
 
     const analyzableDays = recentDays.filter(day => day.hasUsableFeelings && day.meals.length > 0).length;
@@ -499,6 +513,7 @@
       locale,
       maturity: journalMaturity(recentDays, locale),
       observations,
+      secondaryObservations,
       analyzedDays: recentDays.length,
       analyzableDays,
       candidateCount: candidates.length,
