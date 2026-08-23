@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.3";
+  const APP_RELEASE = "3.55.4";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -7705,16 +7705,42 @@
       `<p>${esc(x.basis || "Cette tendance utilise uniquement les données disponibles dans ton journal.")}</p>${discoveryComparisonHtml(x)}<div class="notice"><strong>À interpréter avec prudence</strong><p>Une association ne signifie pas que cet aliment ou cette catégorie est la cause du changement observé. Le sommeil, l’hydratation, les portions, le moment des repas et d’autres facteurs peuvent varier.</p></div><h3>Comment cette observation est calculée</h3><p class="muted small">Énergie classe les descriptions de repas par catégories et compare, pour chaque ressenti, son intensité après le repas à son intensité avant. Seuls les écarts répétés avec assez de repas comparables sont conservés.</p><p class="muted small">Le moteur préfère ne rien afficher lorsque les données sont insuffisantes ou que la différence est trop faible.</p>`;
     $("#sourceDialog").showModal();
   }
+  function observationCategoryMatch(description, categoryId) {
+    const category = (window.ENERGIE_FOOD_CATEGORIES?.definitions || []).find(
+        (item) => item.id === categoryId,
+      ),
+      terms = [...new Set(category?.terms || [])]
+        .filter(Boolean)
+        .sort((a, b) => String(b).length - String(a).length),
+      text = String(description || "");
+    for (const term of terms) {
+      const escapedTerm = String(term).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+        match = text.match(new RegExp(`(^|[^\\p{L}\\p{N}])(${escapedTerm})(?=$|[^\\p{L}\\p{N}])`, "iu"));
+      if (match?.[2]) return match[2];
+    }
+    return "";
+  }
+  function highlightedObservationMeal(description, categoryId) {
+    const text = String(description || "Repas sans description"),
+      match = observationCategoryMatch(text, categoryId);
+    if (!match) return esc(text);
+    const index = text.toLocaleLowerCase("fr-CA").indexOf(
+      match.toLocaleLowerCase("fr-CA"),
+    );
+    if (index < 0) return esc(text);
+    return `${esc(text.slice(0, index))}<mark>${esc(text.slice(index, index + match.length))}</mark>${esc(text.slice(index + match.length))}`;
+  }
   function openDiscoveryMeals(x) {
     const meals = Array.isArray(x?.relatedMeals) ? x.relatedMeals : [];
     $("#sourceTitle").textContent = "Repas derrière cette observation";
     $("#sourceContent").innerHTML = meals.length
-      ? `<p class="muted small">Voici les repas où le ressenti suivi s’est détérioré après le repas. Touche un repas pour revoir sa fiche.</p><div class="observation-related-list">${meals.map((meal) => `<button type="button" class="observation-related-meal" data-related-meal="${esc(meal.id || "")}"><span>${mealIcon(meal.type, meal.description)}</span><div><strong>${esc(meal.description || "Repas sans description")}</strong><small>${esc(formatDate(meal.date))}${meal.time ? ` · ${esc(meal.time)}` : ""}</small></div><b>+${esc(String(meal.change).replace(".", ","))}</b></button>`).join("")}</div><p class="muted small">Cette liste montre les repas associés à la tendance; elle ne prouve pas qu’un aliment en est la cause.</p>`
+      ? `<p class="muted small">Voici les repas où le ressenti suivi s’est détérioré. L’élément reconnu est mis en évidence, mais l’ensemble du repas demeure visible pour conserver son contexte.</p><div class="observation-related-list">${meals.map((meal) => { const matched = observationCategoryMatch(meal.description, x?.categoryId); return `<button type="button" class="observation-related-meal" data-related-meal="${esc(meal.id || "")}" data-related-date="${esc(meal.date || "")}"><span>${mealIcon(meal.type, meal.description)}</span><div><small class="observation-related-meta"><b>${esc(t(meal.type || "Repas"))}</b><span>${esc(formatCalendarDate(meal.date))}${meal.time ? ` à ${esc(meal.time)}` : ""}</span></small><strong>${highlightedObservationMeal(meal.description, x?.categoryId)}</strong>${matched ? `<em>Élément observé : <mark>${esc(matched)}</mark></em>` : ""}</div><b>+${esc(String(meal.change).replace(".", ","))}</b></button>`; }).join("")}</div><p class="muted small">Cette liste montre des repas associés à la tendance; elle ne prouve pas qu’un aliment est la cause du ressenti.</p>`
       : `<p>Aucun repas précis n’est disponible pour cette observation.</p>`;
     [...$("#sourceContent").querySelectorAll(".observation-related-meal")].forEach((button) => {
       button.onclick = () => {
         $("#sourceDialog").close();
-        openMeal(button.dataset.relatedMeal);
+        selectedDate = button.dataset.relatedDate || selectedDate;
+        openMeal(button.dataset.relatedMeal, null, true);
       };
     });
     $("#sourceDialog").showModal();
@@ -9239,12 +9265,16 @@
         ? `${selected.length} raison${selected.length > 1 ? "s" : ""} sélectionnée${selected.length > 1 ? "s" : ""}`
         : "Facultatif · plusieurs réponses possibles";
   }
-  function openMeal(id = null, presetType = null) {
+  function openMeal(id = null, presetType = null, forceReadOnly = false) {
     applyMealCompositionLocale();
     const d = ensureDay(db, selectedDate),
       m = id ? d.meals.find((x) => x.id === id) : null,
       type = m?.type || presetType || "Déjeuner",
-      readOnly = !!(db.settings?.demoMode && db.settings?.demoReadOnly && m);
+      readOnly = !!(
+        m &&
+        (forceReadOnly ||
+          (db.settings?.demoMode && db.settings?.demoReadOnly))
+      );
     setDemoDetailReadOnly("#mealForm", false);
     $("#mealDialogTitle").textContent = readOnly
       ? "Détails du repas"
@@ -10900,7 +10930,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.3");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.4");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

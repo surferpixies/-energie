@@ -5,6 +5,20 @@
   const VERSION = 3;
   const DEFAULT_LOCALE = "fr-CA";
   const DAY_MS = 86400000;
+  const CATEGORY_PRIORITY = Object.freeze({
+    dairy: 100,
+    soy: 95,
+    gluten: 90,
+    eggs: 85,
+    nuts: 85,
+    seafood: 85,
+    fish: 80,
+    caffeine: 75,
+    alcohol: 75,
+    fermented: 25,
+    processed_foods: 15,
+    ultra_processed: 10
+  });
 
   const DEFAULT_OPTIONS = Object.freeze({
     lookbackDays: 180,
@@ -443,7 +457,11 @@
     const recentDays = days.filter(day => dateValue(day.date) >= cutoff);
 
     const candidates = scoredFeelingObservations(recentDays, locale, settings)
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) =>
+        b.score - a.score ||
+        (CATEGORY_PRIORITY[b.categoryId] || 50) -
+          (CATEGORY_PRIORITY[a.categoryId] || 50)
+      );
 
     const observations = [];
     const selectedCategoryIds = [];
