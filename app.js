@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.18";
+  const APP_RELEASE = "3.55.20";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -463,6 +463,8 @@
     );
     d.sleepTags = Array.isArray(d.sleepTags) ? d.sleepTags : [];
     d.sleepComment = typeof d.sleepComment === "string" ? d.sleepComment : "";
+    d.formDrafts =
+      d.formDrafts && typeof d.formDrafts === "object" ? d.formDrafts : {};
     d.water = Number(d.water) || 0;
     d.supplementsTaken = normalizeSupplements(
       d.supplementsTaken || d.supplements || [],
@@ -633,6 +635,10 @@
             ? d.sleep_tags
             : [];
         day.sleepComment = d.sleepComment ?? d.sleep_comment ?? "";
+        day.formDrafts =
+          d.formDrafts && typeof d.formDrafts === "object"
+            ? { ...d.formDrafts }
+            : {};
         day.water = Number(d.water ?? d.waterGlasses ?? d.eau ?? 0) || 0;
         day.activities = (Array.isArray(d.activities) ? d.activities : []).map(
           normalizeActivity,
@@ -756,6 +762,268 @@
       console.warn("Copie locale secondaire ignorée", error);
     }
     return true;
+  }
+  const AUTOSAVE_FORM_IDS = new Set([
+    "mealForm",
+    "sleepForm",
+    "activityForm",
+    "feelingForm",
+    "missingBeforeForm",
+    "globalObservationForm",
+    "trackedFeelingsForm",
+  ]);
+  const formAutosaveTimers = new Map();
+  function formDraftDate(form) {
+    if (form.id === "globalObservationForm")
+      return $("#globalObservationDate")?.value || selectedDate;
+    const meal =
+      form.id === "feelingForm"
+        ? allMeals().find((item) => item.id === feelingMealId)
+        : form.id === "missingBeforeForm"
+          ? allMeals().find((item) => item.id === missingBeforeMealId)
+          : null;
+    return meal?.date || selectedDate || todayKey();
+  }
+  function formDraftContext(form) {
+    if (form.dataset.autosaveContext) return form.dataset.autosaveContext;
+    if (form.id === "mealForm") return $("#mealId")?.value || "nouveau";
+    if (form.id === "feelingForm") return feelingMealId || "nouveau";
+    if (form.id === "missingBeforeForm")
+      return missingBeforeMealId || "nouveau";
+    if (form.id === "trackedFeelingsForm") return "profil";
+    return "journee";
+  }
+  function formDraftKey(form) {
+    return `${form.id}:${formDraftContext(form)}`;
+  }
+  function formDraftSnapshot(form) {
+    const controls = [...form.querySelectorAll("input,select,textarea")]
+        .filter(
+          (control) =>
+            !["file", "password", "submit", "button"].includes(
+              String(control.type || "").toLowerCase(),
+            ),
+        )
+        .map((control) => ({
+          value: control.value,
+          checked: Boolean(control.checked),
+        })),
+      buttons = [...form.querySelectorAll("button")].map((button) => ({
+        active: button.classList.contains("active"),
+        ariaPressed: button.getAttribute("aria-pressed"),
+      })),
+      scoredItems = [...form.querySelectorAll("[data-scored-item].active")].map(
+        (item) => item.dataset.scoredItem,
+      );
+    return {
+      at: new Date().toISOString(),
+      controls,
+      buttons,
+      scoredItems,
+    };
+  }
+  function formDraftStore(form) {
+    const date = formDraftDate(form),
+      day = ensureDay(db, date),
+      key = formDraftKey(form);
+    day.formDrafts[key] = formDraftSnapshot(form);
+    day.updatedAt = new Date().toISOString();
+    saveLocal(`brouillon-${form.id}`);
+    enqueue({ kind: "day", date });
+    return true;
+  }
+  function formAutosaveStatus(form, state, text) {
+    const status = form.querySelector(".form-autosave-status");
+    if (!status) return;
+    status.className = `form-autosave-status ${state || ""}`.trim();
+    status.textContent = text;
+  }
+  function scheduleFormAutosave(form) {
+    if (!AUTOSAVE_FORM_IDS.has(form?.id) || !form.closest("dialog[open]"))
+      return;
+    formAutosaveStatus(form, "saving", "Synchronisation…");
+    clearTimeout(formAutosaveTimers.get(form));
+    formAutosaveTimers.set(
+      form,
+      setTimeout(() => {
+        try {
+          formDraftStore(form);
+          formAutosaveStatus(form, "saved", "Sauvegardé ✓");
+        } catch (error) {
+          console.warn("Brouillon automatique", error);
+          formAutosaveStatus(form, "error", "Sauvegarde à reprendre");
+        }
+      }, 900),
+    );
+  }
+  function formDraftRead(form) {
+    const day = ensureDay(db, formDraftDate(form));
+    return day.formDrafts?.[formDraftKey(form)] || null;
+  }
+  function restoreFormDraft(form) {
+    if (!AUTOSAVE_FORM_IDS.has(form?.id)) return;
+    const draft = formDraftRead(form);
+    if (!draft) {
+      formAutosaveStatus(form, "ready", "Sauvegarde automatique active");
+      return;
+    }
+    const controls = [...form.querySelectorAll("input,select,textarea")].filter(
+      (control) =>
+        !["file", "password", "submit", "button"].includes(
+          String(control.type || "").toLowerCase(),
+        ),
+    );
+    controls.forEach((control, index) => {
+      const saved = draft.controls?.[index];
+      if (!saved) return;
+      if (["checkbox", "radio"].includes(control.type))
+        control.checked = Boolean(saved.checked);
+      else control.value = saved.value ?? "";
+    });
+    [...form.querySelectorAll("button")].forEach((button, index) => {
+      const saved = draft.buttons?.[index];
+      if (typeof saved === "boolean") button.classList.toggle("active", saved);
+      else if (saved) {
+        button.classList.toggle("active", Boolean(saved.active));
+        if (saved.ariaPressed != null)
+          button.setAttribute("aria-pressed", saved.ariaPressed);
+      }
+    });
+    const activeItems = new Set(draft.scoredItems || []);
+    form.querySelectorAll("[data-scored-item]").forEach((item) => {
+      const active = activeItems.has(item.dataset.scoredItem),
+        toggle = item.querySelector("[data-scored-toggle]"),
+        scoreButtons = item.querySelector(".feeling-score-buttons"),
+        prompt = item.querySelector(".feeling-score-prompt");
+      item.classList.toggle("active", active);
+      toggle?.classList.toggle("active", active);
+      toggle?.setAttribute("aria-pressed", String(active));
+      if (scoreButtons) scoreButtons.hidden = !active || !!item.dataset.fixedScore;
+      if (prompt)
+        prompt.hidden =
+          !active ||
+          !!item.dataset.fixedScore ||
+          !!item.querySelector("[data-scored-value].active");
+    });
+    if (form.id === "mealForm") {
+      updateEatingReasonUi();
+      updateMealFeelingsOverview();
+      updateMealCompositionReview();
+    }
+    if (form.id === "activityForm") updateActivityEstimate();
+    if (["feelingForm", "missingBeforeForm"].includes(form.id))
+      updateFeelingQualityNotice(
+        form.querySelector(".scored-feeling-picker"),
+        form.id === "feelingForm" ? "after" : "before",
+      );
+    if (form.id === "trackedFeelingsForm")
+      updateTrackedFeelingsDialogCount();
+    formAutosaveStatus(form, "saved", "Brouillon restauré ✓");
+  }
+  function clearFormDraft(form) {
+    clearTimeout(formAutosaveTimers.get(form));
+    const date = formDraftDate(form),
+      day = ensureDay(db, date),
+      key = formDraftKey(form);
+    if (!day.formDrafts?.[key]) return;
+    delete day.formDrafts[key];
+    day.updatedAt = new Date().toISOString();
+    saveLocal(`brouillon-termine-${form.id}`);
+    enqueue({ kind: "day", date });
+  }
+  function prepareAutosaveForm(form) {
+    if (!AUTOSAVE_FORM_IDS.has(form?.id) || form.dataset.autosaveReady) return;
+    form.dataset.autosaveReady = "true";
+    const submit = form.querySelector('button[type="submit"]');
+    if (submit) {
+      const labels = {
+        mealForm: "Terminer",
+        sleepForm: "Terminer",
+        activityForm: "Terminer",
+        feelingForm: "Terminer",
+        globalObservationForm: "Terminer",
+        trackedFeelingsForm: "Terminer",
+      };
+      if (labels[form.id]) submit.textContent = labels[form.id];
+      let actions = submit.parentElement;
+      if (
+        !actions?.matches(
+          ".dialog-actions,.meal-form-actions,.missing-before-actions,.observation-form-actions,.autosave-form-actions",
+        )
+      ) {
+        actions = document.createElement("div");
+        actions.className = "autosave-form-actions";
+        submit.before(actions);
+        actions.append(submit);
+      }
+      actions.classList.add("autosave-form-actions");
+      if (!actions.querySelector(".form-autosave-status"))
+        actions.insertAdjacentHTML(
+          "afterbegin",
+          '<span class="form-autosave-status ready" aria-live="polite">Sauvegarde automatique active</span>',
+        );
+    }
+    form.addEventListener("input", () => scheduleFormAutosave(form));
+    form.addEventListener("change", () => scheduleFormAutosave(form));
+    form.addEventListener("click", (event) => {
+      if (
+        event.target.closest(
+          "[data-scored-toggle],[data-scored-value],[data-activity],[data-intensity],[data-observation-tag],[data-observation-intensity],.observation-contexts label,.eating-reason-grid label,.sleep-marker-option",
+        )
+      )
+        setTimeout(() => scheduleFormAutosave(form), 0);
+    });
+    form.addEventListener("submit", () => {
+      setTimeout(() => {
+        if (!form.closest("dialog")?.open) clearFormDraft(form);
+      }, 0);
+    });
+  }
+  function autosaveFormCanFinish(form) {
+    if (!form || form.classList.contains("demo-detail-readonly")) return false;
+    if (!form.checkValidity()) return false;
+    if (form.id === "mealForm")
+      return Boolean($("#mealTime")?.value) && Boolean($("#mealDescription")?.value.trim()) && !hasUnscoredFeelings($("#beforeFeelingTags"), "before");
+    if (form.id === "activityForm") {
+      const minutes = parseAppNumber($("#activityMinutes")?.value), actualRaw = $("#activityActualCalories")?.value.trim() || "", actual = actualRaw ? parseAppNumber(actualRaw) : null;
+      return Boolean($("#activityType")?.value) && minutes >= 1 && minutes <= 1440 && (actualRaw === "" || (actual != null && actual >= 0 && actual <= 10000));
+    }
+    if (form.id === "feelingForm") {
+      const meal = allMeals().find((item) => item.id === feelingMealId), scores = collectScoredFeelingScores($("#feelingTags"), "after"), notes = $("#feelingNotes")?.value.trim() || "";
+      return !hasUnscoredFeelings($("#feelingTags"), "after") && (Object.keys(scores).length > 0 || Boolean(notes) || Object.keys(normalizeFeelingScores(meal?.feelingsBefore)).length > 0);
+    }
+    if (form.id === "missingBeforeForm")
+      return !hasUnscoredFeelings($("#missingBeforeTags"), "before") && Object.keys(collectScoredFeelingScores($("#missingBeforeTags"), "before")).length > 0;
+    if (form.id === "globalObservationForm") {
+      const date = $("#globalObservationDate")?.value || "", time = $("#globalObservationTime")?.value || "", tags = $$('[data-observation-tag].active').length, notes = $("#globalObservationNotes")?.value.trim() || "";
+      return Boolean(date && time && date <= todayKey() && (tags || notes));
+    }
+    if (form.id === "trackedFeelingsForm")
+      return $$('[data-tracked-feeling]:checked').length > 0;
+    return true;
+  }
+  function smartCloseDialog(button) {
+    const dialog = button?.closest("dialog"), form = dialog?.querySelector("form");
+    if (!dialog) return;
+    if (form && AUTOSAVE_FORM_IDS.has(form.id)) {
+      scheduleFormAutosave(form);
+      if (autosaveFormCanFinish(form)) {
+        form.requestSubmit();
+        return;
+      }
+    }
+    dialog.close();
+  }
+  function installFormAutosave() {
+    AUTOSAVE_FORM_IDS.forEach((id) => prepareAutosaveForm($(`#${id}`)));
+    const nativeShowModal = HTMLDialogElement.prototype.showModal;
+    HTMLDialogElement.prototype.showModal = function (...args) {
+      const result = nativeShowModal.apply(this, args),
+        form = this.querySelector("form");
+      if (form && AUTOSAVE_FORM_IDS.has(form.id))
+        setTimeout(() => restoreFormDraft(form), 0);
+      return result;
+    };
   }
   function clearLocalJournalAfterSignOut() {
     try {
@@ -1165,6 +1433,7 @@
               taken: d.supplementsTaken || [],
               defaults: db.settings.supplements || [],
               defaultsUpdatedAt: db.settings.supplementsUpdatedAt || db.updatedAt,
+              formDrafts: d.formDrafts || {},
             },
             updated_at: d.updatedAt,
           };
@@ -1398,6 +1667,11 @@
         d.activities = (r.activities || []).map(normalizeActivity);
         if (Array.isArray(r.supplements?.taken))
           d.supplementsTaken = normalizeSupplements(r.supplements.taken);
+        if (
+          r.supplements?.formDrafts &&
+          typeof r.supplements.formDrafts === "object"
+        )
+          d.formDrafts = { ...r.supplements.formDrafts };
         d.updatedAt = r.updated_at;
       } else {
         // Un repas local peut rendre la journée artificiellement "plus récente"
@@ -1411,6 +1685,18 @@
           d.activities = r.activities.map(normalizeActivity);
         if (!(d.supplementsTaken || []).length && Array.isArray(r.supplements?.taken))
           d.supplementsTaken = normalizeSupplements(r.supplements.taken);
+        if (
+          r.supplements?.formDrafts &&
+          typeof r.supplements.formDrafts === "object"
+        ) {
+          Object.entries(r.supplements.formDrafts).forEach(([key, draft]) => {
+            const local = d.formDrafts?.[key],
+              remoteAt = Date.parse(draft?.at || ""),
+              localAt = Date.parse(local?.at || "");
+            if (!local || (Number.isFinite(remoteAt) && remoteAt > localAt))
+              d.formDrafts[key] = draft;
+          });
+        }
       }
     }
     for (const r of mr.data || []) {
@@ -4997,7 +5283,8 @@
     updateTrackedFeelingsDialogCount();
     dialog.showModal();
   }
-  $("#closeTrackedFeelings").onclick = () => $("#trackedFeelingsDialog").close();
+  $("#closeTrackedFeelings").onclick = (event) =>
+    smartCloseDialog(event.currentTarget);
   $("#trackedFeelingsDialog").addEventListener("cancel", (event) => {
     if (event.currentTarget.dataset.firstRun === "true") event.preventDefault();
   });
@@ -8514,7 +8801,7 @@
     $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", physiologicalContextHtml());
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.55.18" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.55.20" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -9736,6 +10023,9 @@
         found
       );
     setDemoDetailReadOnly("#globalObservationForm", false);
+    $("#globalObservationForm").dataset.autosaveContext = found
+      ? o.id
+      : "nouveau";
     $("#globalObservationId").value = o.id;
     $("#globalObservationDate").value = o.date;
     $("#globalObservationDate").max = todayKey();
@@ -10067,7 +10357,8 @@
     setTimeout(() => showMealEnergyResponse(meal), 180);
   };
   $("#skipMissingBefore").onclick = skipMissingBefore;
-  $("#closeMissingBefore").onclick = skipMissingBefore;
+  $("#closeMissingBefore").onclick = (event) =>
+    smartCloseDialog(event.currentTarget);
   $("#missingBeforeDialog").addEventListener("cancel", (event) => {
     event.preventDefault();
     skipMissingBefore();
@@ -10271,7 +10562,7 @@
     startDemoTour();
   };
   $$(".close-dialog").forEach(
-    (b) => (b.onclick = () => b.closest("dialog").close()),
+    (b) => (b.onclick = () => smartCloseDialog(b)),
   );
   document.addEventListener("click", (event) => {
     const add = event.target.closest("#addGlobalObservation"),
@@ -11056,7 +11347,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.18");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.20");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
@@ -11087,6 +11378,7 @@
     startProfessionalDemo();
   });
 
+  installFormAutosave();
   initAuth();
   scheduleFeelingChecks();
 
