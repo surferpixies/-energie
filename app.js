@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.12";
+  const APP_RELEASE = "3.55.13";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -11052,7 +11052,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.12");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.13");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
