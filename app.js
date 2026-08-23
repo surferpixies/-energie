@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.11";
+  const APP_RELEASE = "3.55.12";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -5066,16 +5066,13 @@
       standalone = standaloneTags.length
         ? `<div class="standalone-feeling-choice">${standaloneTags.map(tagHtml).join("")}</div>`
         : "";
-    const categories = FEELING_CATEGORIES.filter((category) => category.id !== "positive").map((category) => {
-      const tags = availableTags.filter((tag) => tag.category === category.id),
-        hasSelected = tags.some((tag) => Object.prototype.hasOwnProperty.call(selected, tag.id)),
-        selectedCount = tags.filter((tag) => Object.prototype.hasOwnProperty.call(selected, tag.id)).length,
-        alwaysClosed = category.id === "digestion",
-        open = !alwaysClosed && (category.open || hasSelected);
-      if (!tags.length) return "";
-      return `<details class="feeling-tag-group feeling-tag-group-${category.id}" ${open ? "open" : ""}><summary><span><b>${category.emoji}</b><strong>${esc(t(category.label))}</strong></span><small class="feeling-category-count"><em data-scored-selected-count="${mode}">${selectedCount}</em>/${tags.length}</small><i aria-hidden="true">›</i></summary><div class="feeling-tag-group-body scored-feeling-group">${tags.map(tagHtml).join("")}</div></details>`;
-    }).join("");
-    return `${standalone}${categories}`;
+    const directTags = availableTags.filter(
+        (tag) => tag.category !== "positive",
+      ),
+      direct = directTags.length
+        ? `<div class="direct-feeling-list scored-feeling-group">${directTags.map(tagHtml).join("")}</div>`
+        : "";
+    return `${standalone}${direct}`;
   }
   function bindScoredFeelingPicker(container, mode) {
     if (!container) return;
@@ -9472,8 +9469,8 @@
     );
     mealNutritionManuallyEdited = m?.nutrition?.estimated === false;
     renderBeforeFeelingPicker(m);
-    $("#mealFeelingsDetails").open = false;
-    $("#beforeFeelingEditor").open = false;
+    $("#mealFeelingsDetails").open = true;
+    $("#beforeFeelingEditor").open = true;
     updateMealFeelingUi(m);
     updateMealCompositionReview();
     photoData = m?.photoLocal || m?.photoUrl || null;
@@ -11055,7 +11052,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.11");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.12");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
