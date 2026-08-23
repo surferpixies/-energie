@@ -1,4 +1,4 @@
-/* Mon portrait Énergie — v3.55.13 */
+/* Mon portrait Énergie — v3.55.14 */
 .energy-portrait-entry{position:relative;display:grid;grid-template-columns:78px minmax(0,1fr);gap:16px;align-items:center;margin:0 0 16px;padding:20px;overflow:hidden;border-color:color-mix(in srgb,var(--accent) 36%,var(--border));background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 13%,var(--surface)),color-mix(in srgb,var(--accent2) 13%,var(--surface)))}
 .energy-portrait-entry:after{content:"";position:absolute;right:-55px;bottom:-75px;width:180px;height:180px;border-radius:50%;background:color-mix(in srgb,var(--accent) 8%,transparent);pointer-events:none}
 .portrait-entry-art{position:relative;width:72px;height:72px;display:grid;place-items:center;border-radius:24px;background:linear-gradient(145deg,#fff,var(--soft));box-shadow:0 12px 28px rgba(26,73,43,.12)}
