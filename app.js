@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.23";
+  const APP_RELEASE = "3.55.25";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -1725,7 +1725,7 @@
       else if (
         new Date(remote.updatedAt) >= new Date(d.meals[i].updatedAt || 0)
       )
-        d.meals[i] = { ...d.meals[i], ...remote };
+        Object.assign(d.meals[i], remote);
     }
     for (const r of fr.data || []) {
       const remote = normalFavorite({
@@ -5717,12 +5717,24 @@
   }
   function showMealEnergyResponse(meal) {
     if (!meal?.feeling) return;
-    const rows = comparableFeelingDeltas(meal),
+    const beforeScores = feelingScoresFor(meal, "before"),
+      afterScores = feelingScoresFor(meal, "after"),
+      neutralIds = new Set(["feeling_good", "no_tracked_symptoms"]),
+      hasBefore = Object.keys(beforeScores).length > 0,
+      hasAfter = Object.keys(afterScores).length > 0,
+      onlyNeutral =
+        hasBefore &&
+        hasAfter &&
+        [...Object.keys(beforeScores), ...Object.keys(afterScores)].every((id) =>
+          neutralIds.has(id),
+        ),
+      rows = comparableFeelingDeltas(meal),
       main = rows[0],
-      hasBefore = Object.keys(feelingScoresFor(meal, "before")).length > 0,
       positiveFeeling = main?.tag?.group === "positive",
       title = !hasBefore
         ? "Ton ressenti après est bien enregistré"
+        : onlyNeutral
+          ? "Tout va bien est bien enregistré"
         : !main
           ? "Énergie vient d’apprendre quelque chose"
           : main.delta > 0
@@ -5736,24 +5748,28 @@
               : "Un ressenti demeuré stable",
       text = !hasBefore
         ? "Comme tu ne te souvenais pas de ton état avant le repas, aucune évolution n’a été inventée. Cette donnée demeure utile comme ressenti après."
+        : onlyNeutral
+          ? "Tu n’as signalé rien de particulier avant ni après ce repas. Énergie conserve simplement cette confirmation dans ton journal."
         : main
           ? `${main.tag.emoji} ${t(main.tag.label)} est passé de ${feelingEndpointLabel(main.start)} à ${feelingEndpointLabel(main.end)} après ce repas.`
           : "Tes ressentis avant et après sont conservés. Les prochaines saisies aideront à reconnaître ce qui se répète.";
+    // Une confirmation stable n'a pas besoin d'interrompre la saisie.
+    // La réponse visuelle est réservée à une évolution réellement mesurable.
+    if (!hasBefore || !hasAfter || !main || main.delta === 0) return;
     $("#energyResponseTitle").textContent = title;
     $("#energyResponseText").textContent = text;
     const changes = hasBefore
       ? feelingChangesHtml(
-          feelingScoresFor(meal, "before"),
-          feelingScoresFor(meal, "after"),
+          beforeScores,
+          afterScores,
           true,
         )
       : "";
     $("#energyResponseChanges").innerHTML = changes;
     $("#energyResponseChanges").hidden = !changes;
-    $("#energyResponseHistory").innerHTML = energyResponseHistoryHtml(
-      meal,
-      main,
-    );
+    $("#energyResponseHistory").innerHTML = onlyNeutral
+      ? `<span aria-hidden="true">✅</span><p><strong>Aucun changement signalé</strong><small>Cette confirmation complète ton journal sans créer d’observation particulière.</small></p>`
+      : energyResponseHistoryHtml(meal, main);
     $("#energyResponseDialog").showModal();
   }
   function openMissingBeforeDialog(meal, continuation = "summary") {
@@ -5773,7 +5789,29 @@
     $("#missingBeforeDialog").showModal();
   }
   function finishAfterFeelingFlow(meal) {
-    const currentMeal = allMeals().find((item) => item.id === meal?.id) || meal,
+    const currentMeal = allMeals().find((item) => item.id === meal?.id) || meal;
+    if (
+      currentMeal &&
+      $("#mealDialog")?.open &&
+      $("#mealId")?.value === currentMeal.id &&
+      !hasUnscoredFeelings($("#beforeFeelingTags"), "before")
+    ) {
+      const visibleBefore = collectScoredFeelingScores(
+        $("#beforeFeelingTags"),
+        "before",
+      );
+      if (
+        JSON.stringify(normalizeFeelingScores(currentMeal.feelingsBefore)) !==
+        JSON.stringify(visibleBefore)
+      ) {
+        currentMeal.feelingsBefore = visibleBefore;
+        if (currentMeal.feeling)
+          currentMeal.feeling.beforeScores = visibleBefore;
+        currentMeal.updatedAt = new Date().toISOString();
+        setMealChanged(currentMeal);
+      }
+    }
+    const
       hasBefore = Object.keys(feelingScoresFor(currentMeal, "before")).length,
       hasAfter = Object.keys(feelingScoresFor(currentMeal, "after")).length;
     if (hasBefore || !hasAfter)
@@ -8811,7 +8849,7 @@
     $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", physiologicalContextHtml());
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.55.23" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.55.25" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -9521,17 +9559,18 @@
     updateMealFeelingsOverview(meal);
   }
   function openFeelingFromMealEditor(meal) {
-    const formMealId = $("#mealId")?.value,
+    const currentMeal = allMeals().find((item) => item.id === meal?.id) || meal,
+      formMealId = $("#mealId")?.value,
       picker = $("#beforeFeelingTags"),
       editingThisMeal =
-        $("#mealDialog")?.open && formMealId && formMealId === meal?.id;
+        $("#mealDialog")?.open && formMealId && formMealId === currentMeal?.id;
     if (editingThisMeal && picker) {
       if (hasUnscoredFeelings(picker, "before")) {
         alert("Choisis une intensité de 1 à 5 pour chaque ressenti sélectionné.");
         return;
       }
       const scores = collectScoredFeelingScores(picker, "before"),
-        previous = normalizeFeelingScores(meal.feelingsBefore),
+        previous = normalizeFeelingScores(currentMeal.feelingsBefore),
         changed = JSON.stringify(previous) !== JSON.stringify(scores);
       if (changed) {
         const quality = Object.keys(scores).length
@@ -9539,16 +9578,16 @@
           : null;
         if (Object.keys(scores).length && !quality) return;
         const recordedAt = new Date().toISOString();
-        meal.feelingsBefore = scores;
-        meal.feelingsBeforeQuality = quality
+        currentMeal.feelingsBefore = scores;
+        currentMeal.feelingsBeforeQuality = quality
           ? { ...quality, recordedAt }
           : null;
-        if (meal.feeling) meal.feeling.beforeScores = scores;
-        meal.updatedAt = recordedAt;
-        setMealChanged(meal);
+        if (currentMeal.feeling) currentMeal.feeling.beforeScores = scores;
+        currentMeal.updatedAt = recordedAt;
+        setMealChanged(currentMeal);
       }
     }
-    openFeeling(meal.id);
+    openFeeling(currentMeal.id);
   }
   function feelingScorePreviewItems(scores = {}) {
     const normalized = normalizeFeelingScores(scores);
@@ -11404,7 +11443,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.23");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.25");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
