@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.22";
+  const APP_RELEASE = "3.55.23";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -525,9 +525,7 @@
       ),
       hasAfter = !!(
         rawFeeling &&
-        (rawFeeling.recordedAt ||
-          rawFeeling.recorded_at ||
-          rawFeeling.rating ||
+        (rawFeeling.rating ||
           (rawFeeling.tags || []).length ||
           Object.keys(normalizeFeelingScores(rawFeeling.scores)).length ||
           rawFeeling.notes)
@@ -8813,7 +8811,7 @@
     $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", physiologicalContextHtml());
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.55.22" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.55.23" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -9518,9 +9516,39 @@
       button.innerHTML = `<span aria-hidden="true">${meal.feeling ? "✎" : "＋"}</span><strong>${meal.feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}</strong><b aria-hidden="true">›</b>`;
       button.classList.toggle("is-set", !!meal.feeling);
       button.classList.toggle("is-empty", !meal.feeling);
-      button.onclick = () => openFeeling(meal.id);
+      button.onclick = () => openFeelingFromMealEditor(meal);
     }
     updateMealFeelingsOverview(meal);
+  }
+  function openFeelingFromMealEditor(meal) {
+    const formMealId = $("#mealId")?.value,
+      picker = $("#beforeFeelingTags"),
+      editingThisMeal =
+        $("#mealDialog")?.open && formMealId && formMealId === meal?.id;
+    if (editingThisMeal && picker) {
+      if (hasUnscoredFeelings(picker, "before")) {
+        alert("Choisis une intensité de 1 à 5 pour chaque ressenti sélectionné.");
+        return;
+      }
+      const scores = collectScoredFeelingScores(picker, "before"),
+        previous = normalizeFeelingScores(meal.feelingsBefore),
+        changed = JSON.stringify(previous) !== JSON.stringify(scores);
+      if (changed) {
+        const quality = Object.keys(scores).length
+          ? reviewFeelingQuality(feelingQualityAssessment(picker, "before"))
+          : null;
+        if (Object.keys(scores).length && !quality) return;
+        const recordedAt = new Date().toISOString();
+        meal.feelingsBefore = scores;
+        meal.feelingsBeforeQuality = quality
+          ? { ...quality, recordedAt }
+          : null;
+        if (meal.feeling) meal.feeling.beforeScores = scores;
+        meal.updatedAt = recordedAt;
+        setMealChanged(meal);
+      }
+    }
+    openFeeling(meal.id);
   }
   function feelingScorePreviewItems(scores = {}) {
     const normalized = normalizeFeelingScores(scores);
@@ -10312,8 +10340,18 @@
     const scores = collectScoredFeelingScores($("#feelingTags"), "after"),
       tags = Object.keys(scores),
       notes = $("#feelingNotes").value.trim();
-    if (!tags.length && !notes && !Object.keys(normalizeFeelingScores(m.feelingsBefore)).length)
-      return alert("Sélectionne au moins un ressenti ou ajoute une note.");
+    if (!tags.length && !notes) {
+      m.feeling = null;
+      m.feelingNotifiedAt = null;
+      m.updatedAt = new Date().toISOString();
+      setMealChanged(m);
+      $("#feelingDialog").close();
+      clearFormDraft($("#feelingForm"));
+      render();
+      if ($("#mealDialog").open && $("#mealId").value === m.id)
+        updateMealFeelingUi(m);
+      return;
+    }
     const feelingSavedAt = new Date().toISOString();
     m.feeling = {
       rating: averageFeelingScore(scores) ?? 0,
@@ -11366,7 +11404,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.22");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.23");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
