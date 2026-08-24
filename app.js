@@ -2847,8 +2847,7 @@
   }
   function setLivingHeaderIcon(kind, title = weatherTitleFromKind(kind)) {
     const svg = WEATHER_SVGS[kind] || WEATHER_SVGS.afternoon;
-    const header = $("#livingHeaderIcon"),
-      nav = $("#todayNavIcon");
+    const header = $("#livingHeaderIcon");
     if (header) {
       const temperature = normalizeWeatherTemperature(window.lastWeatherTemp);
       const temp =
@@ -2864,13 +2863,6 @@
           ? title
           : `${title}, ${Math.round(temperature)} degrés Celsius`,
       );
-    }
-    if (nav) {
-      if (nav.dataset.weatherKind !== kind || !nav.firstElementChild)
-        nav.innerHTML = svg;
-      nav.dataset.weatherKind = kind;
-      nav.title = title;
-      nav.setAttribute("aria-label", title);
     }
   }
   function readWeatherCache() {
