@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.21";
+  const APP_RELEASE = "3.55.22";
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -265,6 +265,7 @@
     confirmationResendAvailableAt = 0,
     feelingMealId = null,
     missingBeforeMealId = null,
+    missingBeforeContinuation = "summary",
     notificationTimer = null;
   let hasDemoAccess = false;
   let professionalDemoMode = false;
@@ -5757,8 +5758,16 @@
     );
     $("#energyResponseDialog").showModal();
   }
-  function openMissingBeforeDialog(meal) {
-    missingBeforeMealId = meal.id;
+  function openMissingBeforeDialog(meal, continuation = "summary") {
+    const currentMeal = allMeals().find((item) => item.id === meal?.id) || meal;
+    if (!currentMeal) return;
+    if (Object.keys(feelingScoresFor(currentMeal, "before")).length) {
+      if (continuation === "after") openFeeling(currentMeal.id);
+      else showMealEnergyResponse(currentMeal);
+      return;
+    }
+    missingBeforeMealId = currentMeal.id;
+    missingBeforeContinuation = continuation;
     $("#missingBeforeTags").innerHTML = scoredFeelingPickerHtml("before", {});
     bindScoredFeelingPicker($("#missingBeforeTags"), "before");
     updateFeelingQualityNotice($("#missingBeforeTags"), "before");
@@ -5766,17 +5775,25 @@
     $("#missingBeforeDialog").showModal();
   }
   function finishAfterFeelingFlow(meal) {
-    const hasBefore = Object.keys(feelingScoresFor(meal, "before")).length,
-      hasAfter = Object.keys(feelingScoresFor(meal, "after")).length;
+    const currentMeal = allMeals().find((item) => item.id === meal?.id) || meal,
+      hasBefore = Object.keys(feelingScoresFor(currentMeal, "before")).length,
+      hasAfter = Object.keys(feelingScoresFor(currentMeal, "after")).length;
     if (hasBefore || !hasAfter)
-      showMealEnergyResponse(meal);
-    else openMissingBeforeDialog(meal);
+      showMealEnergyResponse(currentMeal);
+    else openMissingBeforeDialog(currentMeal, "summary");
   }
   function skipMissingBefore() {
-    const meal = allMeals().find((item) => item.id === missingBeforeMealId);
+    const meal = allMeals().find((item) => item.id === missingBeforeMealId),
+      continuation = missingBeforeContinuation;
     if ($("#missingBeforeDialog").open) $("#missingBeforeDialog").close();
+    clearFormDraft($("#missingBeforeForm"));
     missingBeforeMealId = null;
-    if (meal) setTimeout(() => showMealEnergyResponse(meal), 120);
+    missingBeforeContinuation = "summary";
+    if (meal)
+      setTimeout(() => {
+        if (continuation === "after") openFeeling(meal.id);
+        else showMealEnergyResponse(meal);
+      }, 120);
   }
   async function requestFeelingNotifications() {
     if (!("Notification" in window)) return false;
@@ -6252,7 +6269,10 @@
     );
     $("#answerFeeling")?.addEventListener("click", (e) => {
       selectedDate = e.currentTarget.dataset.date;
-      openFeeling(e.currentTarget.dataset.id);
+      const meal = allMeals().find((item) => item.id === e.currentTarget.dataset.id);
+      if (meal && !meal.feeling && !Object.keys(feelingScoresFor(meal, "before")).length)
+        openMissingBeforeDialog(meal, "after");
+      else openFeeling(e.currentTarget.dataset.id);
     });
     bindJournalSwipe();
   }
@@ -8793,7 +8813,7 @@
     $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", physiologicalContextHtml());
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.55.21" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.55.22" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -10316,7 +10336,8 @@
   };
   $("#missingBeforeForm").onsubmit = (e) => {
     e.preventDefault();
-    const meal = allMeals().find((item) => item.id === missingBeforeMealId);
+    const meal = allMeals().find((item) => item.id === missingBeforeMealId),
+      continuation = missingBeforeContinuation;
     if (!meal) return $("#missingBeforeDialog").close();
     if (hasUnscoredFeelings($("#missingBeforeTags"), "before")) {
       $("#missingBeforeError").hidden = false;
@@ -10342,11 +10363,17 @@
     meal.updatedAt = recordedAt;
     setMealChanged(meal);
     $("#missingBeforeDialog").close();
+    clearFormDraft($("#missingBeforeForm"));
     missingBeforeMealId = null;
+    missingBeforeContinuation = "summary";
     render();
     if ($("#mealDialog").open && $("#mealId").value === meal.id)
       updateMealFeelingUi(meal);
-    setTimeout(() => showMealEnergyResponse(meal), 180);
+    setTimeout(() => {
+      const currentMeal = allMeals().find((item) => item.id === meal.id) || meal;
+      if (continuation === "after") openFeeling(currentMeal.id);
+      else showMealEnergyResponse(currentMeal);
+    }, 180);
   };
   $("#skipMissingBefore").onclick = skipMissingBefore;
   $("#closeMissingBefore").onclick = (event) =>
@@ -11339,7 +11366,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.21");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.22");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
