@@ -845,6 +845,14 @@
     "Dernières boissons":"Recent drinks", "Derniers repas":"Recent meals"
   });
   const dict=locale==='en'?en:locale==='fr-FR'?frFR:{};
+  Object.assign(en, {
+    'Calories estimées':'Estimated calories',
+    'Ajustées par vous':'Adjusted by you',
+    'Estimation automatique · modifiable':'Automatic estimate · editable',
+    'Aucune estimation disponible · saisie facultative':'No estimate available · optional entry',
+    'Revenir à l’estimation automatique':'Return to the automatic estimate',
+    'Entrez des calories positives ou nulles, ou revenez à l’estimation automatique.':'Enter zero or positive calories, or return to the automatic estimate.'
+  });
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
   window.t=translateString;

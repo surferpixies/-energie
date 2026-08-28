@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 71;
-  const APP_RELEASE = "3.56.1";
+  const APP_RELEASE = "3.56.2";
   const Metrics = window.EnergieMetrics;
   const FEELING_ALIASES = {
     energy: "stable_energy",
@@ -502,6 +502,9 @@
       confidence: n.confidence || "low",
       basis: n.basis || "portion courante",
       estimated: n.estimated !== false,
+      caloriesManual: typeof n.caloriesManual === "boolean"
+        ? n.caloriesManual
+        : n.estimated === false && val("calories") != null,
     };
     return [
       out.calories,
@@ -830,6 +833,7 @@
       );
     return {
       at: new Date().toISOString(),
+      calorieEditorVersion: 1,
       controls,
       buttons,
       scoredItems,
@@ -882,6 +886,7 @@
     }
     const controls = [...form.querySelectorAll("input,select,textarea")].filter(
       (control) =>
+        (draft.calorieEditorVersion || !["mealCalories", "mealCalorieMode"].includes(control.id)) &&
         !["file", "password", "submit", "button"].includes(
           String(control.type || "").toLowerCase(),
         ),
@@ -893,7 +898,7 @@
         control.checked = Boolean(saved.checked);
       else control.value = saved.value ?? "";
     });
-    [...form.querySelectorAll("button")].forEach((button, index) => {
+    [...form.querySelectorAll("button")].filter(button => draft.calorieEditorVersion || button.id !== "resetMealCalories").forEach((button, index) => {
       const saved = draft.buttons?.[index];
       if (typeof saved === "boolean") button.classList.toggle("active", saved);
       else if (saved) {
@@ -919,6 +924,7 @@
           !!item.querySelector("[data-scored-value].active");
     });
     if (form.id === "mealForm") {
+      updateMealCalorieEditor();
       updateEatingReasonUi();
       updateMealFeelingsOverview();
       updateMealCompositionReview();
@@ -1528,6 +1534,7 @@
               error.message || "",
             )
           ) {
+            if (payload.nutrition?.caloriesManual) throw error;
             delete payload.nutrition;
             delete payload.recommendation;
             ({ error } = await client.from("meals").upsert(payload));
@@ -2318,6 +2325,7 @@
     };
     return normalNutrition({
       calories: get("#nutritionCalories"),
+      caloriesManual: $("#mealCalorieMode")?.value === "manual",
       protein: get("#nutritionProtein"),
       carbs: get("#nutritionCarbs"),
       fat: get("#nutritionFat"),
@@ -2332,6 +2340,10 @@
   }
   function fillNutritionInputs(n, note = "") {
     n = normalNutrition(n);
+    // Updating an estimate, a barcode or a photo must not replace a manual value.
+    if ($("#mealCalorieMode")?.value === "manual") {
+      n = { ...(n || {}), calories: Metrics.number($("#mealCalories").value), caloriesManual: true };
+    }
     [
       ["#nutritionCalories", "calories"],
       ["#nutritionProtein", "protein"],
@@ -2355,6 +2367,27 @@
       (n?.source === "barcode"
         ? `Valeurs ${n.basis || "du produit"} provenant de l’étiquette Open Food Facts. Vérifie-les au besoin.`
         : "Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.");
+    updateMealCalorieEditor();
+  }
+  function updateMealCalorieEditor() {
+    const input = $("#mealCalories"), mode = $("#mealCalorieMode");
+    if (!input || !mode) return;
+    const manual = mode.value === "manual", value = Metrics.number(input.value);
+    input.setCustomValidity(manual && (value == null || value < 0)
+      ? t("Entrez des calories positives ou nulles, ou revenez à l’estimation automatique.") : "");
+    if (manual) $("#nutritionCalories").value = value != null && value >= 0 ? value : "";
+    else input.value = $("#nutritionCalories").value;
+    $("#mealCalorieStatus").textContent = manual ? t("Ajustées par vous")
+      : input.value !== "" ? t("Estimation automatique · modifiable") : t("Aucune estimation disponible · saisie facultative");
+    $("#resetMealCalories").hidden = !manual;
+  }
+  function resetMealCalories() {
+    clearTimeout(mealNutritionPreviewTimer);
+    $("#mealCalorieMode").value = "auto";
+    const estimate = estimateNutritionFromText($("#mealDescription").value.trim());
+    $("#nutritionCalories").value = estimate?.calories ?? "";
+    updateMealCalorieEditor();
+    scheduleFormAutosave($("#mealForm"));
   }
   function estimateCurrentMealNutrition() {
     const n = estimateNutritionFromText($("#mealDescription").value);
@@ -2374,10 +2407,19 @@
     clearTimeout(mealNutritionPreviewTimer);
     updateMealCompositionReview();
     if (
-      db.settings.autoNutritionEstimates === false ||
-      mealNutritionManuallyEdited
+      db.settings.autoNutritionEstimates === false
     )
       return;
+    if (mealNutritionManuallyEdited) {
+      if ($("#mealCalorieMode")?.value !== "manual") {
+        mealNutritionPreviewTimer = setTimeout(() => {
+          if ($("#mealCalorieMode").value === "manual") return;
+          $("#nutritionCalories").value = estimateNutritionFromText($("#mealDescription").value)?.calories ?? "";
+          updateMealCalorieEditor();
+        }, 450);
+      }
+      return;
+    }
     mealNutritionPreviewTimer = setTimeout(() => {
       const description = $("#mealDescription")?.value.trim();
       if (!description) {
@@ -9009,7 +9051,7 @@
     bindPersonalProfile();
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.1" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.2" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -9924,6 +9966,7 @@
         : "Facultatif · plusieurs réponses possibles";
   }
   function openMeal(id = null, presetType = null, forceReadOnly = false) {
+    clearTimeout(mealNutritionPreviewTimer);
     applyMealCompositionLocale();
     const d = ensureDay(db, selectedDate),
       m = id ? d.meals.find((x) => x.id === id) : null,
@@ -9978,6 +10021,8 @@
     $("#mealOptionalTitle").textContent = nutritionVisibleToViewer() ? "Notes et nutrition" : "Notes";
     $("#mealNutritionSection").hidden = !nutritionVisibleToViewer();
     const automaticNutrition = db.settings.autoNutritionEstimates !== false;
+    $("#mealCalorieMode").value = "auto";
+    $("#mealCalories").setCustomValidity("");
     fillNutritionInputs(
       m?.nutrition
         ? normalNutrition({
@@ -10004,6 +10049,13 @@
         : null,
     );
     mealNutritionManuallyEdited = m?.nutrition?.estimated === false;
+    if (normalNutrition(m?.nutrition)?.caloriesManual) {
+      $("#mealCalorieMode").value = "manual";
+      $("#mealCalories").value = m.nutrition.calories;
+    } else if ($("#nutritionCalories").value === "" && automaticNutrition) {
+      $("#nutritionCalories").value = estimateNutritionFromText($("#mealDescription").value)?.calories ?? "";
+    }
+    updateMealCalorieEditor();
     renderBeforeFeelingPicker(m);
     $("#mealFeelingsDetails").open = true;
     $("#beforeFeelingEditor").open = false;
@@ -10406,8 +10458,18 @@
     mealFoodReview = { description, acknowledgedGaps: true };
     updateMealCompositionReview();
   };
+  $("#mealCalories").addEventListener("input", () => {
+    $("#mealCalorieMode").value = "manual";
+    updateMealCalorieEditor();
+  });
+  $("#resetMealCalories").onclick = resetMealCalories;
   $$("#mealNutritionSection input").forEach((input) =>
     input.addEventListener("input", () => {
+      if (input.id === "nutritionCalories") {
+        $("#mealCalorieMode").value = "manual";
+        $("#mealCalories").value = input.value;
+        updateMealCalorieEditor();
+      }
       mealNutritionManuallyEdited = true;
       const section = $("#mealNutritionSection");
       if (section) {
@@ -10417,6 +10479,7 @@
     }),
   );
   $("#clearMealNutrition").onclick = () => {
+    $("#mealCalorieMode").value = "auto";
     mealNutritionManuallyEdited = true;
     fillNutritionInputs(
       null,
@@ -10430,6 +10493,8 @@
   };
   $("#mealForm").onsubmit = (e) => {
     e.preventDefault();
+    updateMealCalorieEditor();
+    if (!$("#mealCalories").reportValidity()) return;
     if (hasUnscoredFeelings($("#beforeFeelingTags"), "before"))
       return alert("Choisis une intensité de 1 à 5 pour chaque ressenti sélectionné.");
     const beforeQuality = reviewFeelingQuality(
@@ -10460,7 +10525,7 @@
         nutrition: nutritionFromInputs() ||
           (db.settings.autoNutritionEstimates !== false && !mealNutritionManuallyEdited
             ? estimateNutritionFromText($("#mealDescription").value.trim())
-            : old?.nutrition || null),
+            : null),
         foodReview:
           mealFoodReview?.description === $("#mealDescription").value.trim()
             ? { ...mealFoodReview }
@@ -11609,7 +11674,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.1");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.2");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
