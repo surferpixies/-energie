@@ -11,9 +11,11 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.55.25">
-  <link rel="stylesheet" href="portrait.css?v=3.55.25">
-  <link rel="stylesheet" href="observation-detail.css?v=3.55.25">
+  <link rel="stylesheet" href="styles.css?v=3.56.1">
+  <link rel="stylesheet" href="portrait.css?v=3.56.1">
+  <link rel="stylesheet" href="observation-detail.css?v=3.56.1">
+  <link rel="stylesheet" href="personal-metrics.css?v=3.56.1">
+  <link rel="stylesheet" href="meal-labels.css?v=3.56.1">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -80,7 +82,7 @@
       <input type="hidden" id="mealType" value="Déjeuner">
       <div class="meal-dialog-type" aria-live="polite">
         <span id="mealDialogTypeIcon" class="meal-dialog-type-icon" aria-hidden="true">🍳</span>
-        <div><span class="muted small">Type de repas</span><strong id="mealDialogTypeLabel">Déjeuner</strong></div>
+        <div><span class="muted small">Type de repas</span><strong id="mealDialogTypeLabel" data-i18n-key="Déjeuner">Déjeuner</strong></div>
       </div>
       <div class="meal-copy-actions">
         <button type="button" class="secondary small meal-copy-button" id="copyYesterdayBreakfast">🍳 Copier le déjeuner d'hier</button>
@@ -492,7 +494,7 @@
   </dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=3.7.1"></script>
-  <script src="i18n.js?v=3.13.2"></script>
+  <script src="i18n.js?v=3.56.1"></script>
   <script src="foods.js?v=3.8.0"></script>
   <script src="food-categories.js?v=3.31.2"></script>
   <script src="dish-knowledge.js?v=3.31.2"></script>
@@ -505,8 +507,9 @@
   <script src="brain/profile.js?v=3.8.0"></script>
   <script src="brain/insight-engine.js?v=3.30.2"></script>
   <script src="brain/index.js?v=3.12.0"></script>
-  <script src="observation-engine.js?v=3.55.25"></script>
-  <script src="demo-profiles.js?v=3.55.25"></script>
-  <script src="app.js?v=3.55.25"></script>
+  <script src="observation-engine.js?v=3.56.1"></script>
+  <script src="demo-profiles.js?v=3.56.1"></script>
+  <script src="personal-metrics.js?v=3.56.1"></script>
+  <script src="app.js?v=3.56.1"></script>
 </body>
 </html>

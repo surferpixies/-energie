@@ -5,8 +5,9 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 70;
-  const APP_RELEASE = "3.55.25";
+  const CURRENT_VERSION = 71;
+  const APP_RELEASE = "3.56.1";
+  const Metrics = window.EnergieMetrics;
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -66,6 +67,15 @@
           "'": "&#39;",
         })[c],
     );
+  function mealTypeHtml(type) {
+    // Keep the immutable stored key alongside its label to prevent retranslation.
+    return `<span data-i18n-key="${esc(type)}">${esc(t(type))}</span>`;
+  }
+  function feelingMealOptionsHtml() {
+    return ["Déjeuner", "Dîner", "Souper", "Collation"].map((type) =>
+      `<label class="setting-option"><input type="checkbox" data-feeling-meal-type="${esc(type)}" ${(db.settings.feelingMealTypes || []).includes(type) ? "checked" : ""}><span>${mealIcon(type)} ${mealTypeHtml(type)}</span></label>`
+    ).join("");
+  }
   const clamp = (n, a, b) => Math.max(a, Math.min(b, Number(n) || 0));
   function activityIcon(t) {
     return (
@@ -432,6 +442,7 @@
         physiologicalContext: "none",
         menstrualLastStart: "",
         pregnancyDueDate: "",
+        personalProfile: {},
       },
       favorites: [],
       days: {},
@@ -475,6 +486,7 @@
   function normalNutrition(n) {
     if (!n || typeof n !== "object") return null;
     const val = (k) => {
+      if (n[k] == null || n[k] === "" || typeof n[k] === "boolean") return null;
       const x = Number(n[k]);
       return Number.isFinite(x) && x >= 0 ? Math.round(x * 10) / 10 : null;
     };
@@ -605,6 +617,7 @@
     const out = freshDB();
     if (!raw || typeof raw !== "object") return out;
     out.settings = { ...out.settings, ...(raw.settings || {}) };
+    out.settings.personalProfile = Metrics.mergeProfile(out.settings.personalProfile);
     out.settings.supplements = normalizeSupplements(
       out.settings.supplements || raw.settings?.supplements || [],
     );
@@ -639,6 +652,7 @@
             ? { ...d.formDrafts }
             : {};
         day.water = Number(d.water ?? d.waterGlasses ?? d.eau ?? 0) || 0;
+        day.weightMeasurement = Metrics.weightRecord(d.weightMeasurement);
         day.activities = (Array.isArray(d.activities) ? d.activities : []).map(
           normalizeActivity,
         );
@@ -1433,9 +1447,21 @@
               defaults: db.settings.supplements || [],
               defaultsUpdatedAt: db.settings.supplementsUpdatedAt || db.updatedAt,
               formDrafts: d.formDrafts || {},
+              personalProfile: Metrics.mergeProfile(db.settings.personalProfile),
+              weightMeasurement: Metrics.weightRecord(d.weightMeasurement),
             },
             updated_at: d.updatedAt,
           };
+          // Independently dated fields must survive unrelated day edits.
+          let hasPersonalData = Object.keys(dayPayload.supplements.personalProfile).length > 0 || !!dayPayload.supplements.weightMeasurement;
+          {
+            const { data: latest, error: readError } = await client.from("daily_logs")
+              .select("supplements").eq("user_id", session.user.id).eq("log_date", op.date).maybeSingle();
+            if (readError && (hasPersonalData || !/(supplements|schema cache|column)/i.test(readError.message || ""))) throw readError;
+            dayPayload.supplements.personalProfile = Metrics.mergeProfile(dayPayload.supplements.personalProfile, latest?.supplements?.personalProfile);
+            dayPayload.supplements.weightMeasurement = Metrics.mergeWeight(dayPayload.supplements.weightMeasurement, latest?.supplements?.weightMeasurement);
+            hasPersonalData = Object.keys(dayPayload.supplements.personalProfile).length > 0 || !!dayPayload.supplements.weightMeasurement;
+          }
           let { error } = await client
             .from("daily_logs")
             .upsert(dayPayload, { onConflict: "user_id,log_date" });
@@ -1445,6 +1471,8 @@
               error.message || "",
             )
           ) {
+            // Do not silently drop new data and report a successful sync.
+            if (hasPersonalData) throw error;
             delete dayPayload.sleep_tags;
             delete dayPayload.sleep_comment;
             delete dayPayload.supplements;
@@ -1656,7 +1684,9 @@
       }
     }
     for (const r of dr.data || []) {
+      db.settings.personalProfile = Metrics.mergeProfile(db.settings.personalProfile, r.supplements?.personalProfile);
       const d = ensureDay(db, r.log_date);
+      d.weightMeasurement = Metrics.mergeWeight(d.weightMeasurement, r.supplements?.weightMeasurement);
       const remoteIsNewer = !d.updatedAt || new Date(r.updated_at) >= new Date(d.updatedAt);
       if (remoteIsNewer) {
         d.sleepHours = r.sleep_hours;
@@ -1755,7 +1785,9 @@
     const memoryOk = await pullMemoryCloud();
     syncState = memoryOk ? "online" : "error";
     updateSyncBadge();
-    render();
+    // Background sync must not rebuild the Profile while the user types,
+    // resets the selected measurement date or moves their keyboard focus.
+    if (show || currentView !== "profile") render();
   }
   async function seedCloudFromLocal() {
     if (!session) return;
@@ -3261,7 +3293,7 @@
           date: meal.date,
           mealDescription: meal.description || "Repas",
           mealTime: meal.time || "12:00",
-          mealType: t(meal.type),
+          mealType: meal.type,
           rating: meal.feeling?.rating || 3,
           notes: meal.notes || meal.feeling?.notes || "",
           priorMeals: [],
@@ -3422,7 +3454,7 @@
         options.push(`<option value="observation|${observation.id}|${date}|Observation globale du ${esc(formatDate(date))}">🌿 Observation globale · ${esc(formatDate(date))}</option>`),
       );
       (day.meals || []).forEach((meal) =>
-        options.push(`<option value="meal|${meal.id}|${date}|${esc(meal.type)} — ${esc(meal.description)}">${mealIcon(meal.type, meal.description)} ${esc(meal.type)} · ${esc(meal.description)}</option>`),
+        options.push(`<option translate="no" value="meal|${meal.id}|${date}|${esc(meal.type)} — ${esc(meal.description)}">${mealIcon(meal.type, meal.description)} ${esc(t(meal.type))} · ${esc(meal.description)}</option>`),
       );
     });
     return options.join("");
@@ -4306,6 +4338,7 @@
     return `<button type="button" class="card journal-brain-card" id="openJournalBrain" aria-label="Ouvrir le Cerveau"><span class="journal-brain-visual" aria-hidden="true"><span class="journal-brain-plant">${state.plant}</span><span class="journal-brain-icon">🧠</span></span><span class="journal-brain-copy"><span class="journal-brain-top"><span><small>${esc(state.eyebrow)}</small><strong>${esc(state.title)}</strong></span><b>›</b></span><span class="journal-brain-message">${esc(state.text)}</span><span class="journal-brain-progress"><i><em style="width:${state.progress}%"></em></i><small>${state.plant} ${esc(state.label)} · ${state.days} journée${state.days !== 1 ? "s" : ""}</small></span></span></button>`;
   }
   function render() {
+    flushPersonalProfile?.();
     const demoDataVersions = { marie: "marie-dairy-v3", sophie: "sophie-fiber-v2", elodie: "elodie-soya-v2" };
     const activeDemoId = db.settings?.demoProfileId;
     if (
@@ -4364,7 +4397,7 @@
       !!m.feeling,
       true,
     );
-    return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${m.photoUrl || m.photoLocal ? `<img src="${esc(m.photoUrl || m.photoLocal)}" alt="">` : mealIcon(m.type, m.description)}</div><div class="meal-card-body"><h3>${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${esc(t(m.type))}${opts.showDate ? ` · ${esc(formatDate(m.date))}` : ""}</div>${nutritionVisibleToViewer() && m.nutrition ? `<div class="meal-macros">≈ ${esc(nutritionText(m.nutrition))}</div>` : ""}${feelingPreview}<div class="meal-footer">${beforeCount ? `<span class="chip">Avant · ${beforeCount}</span>` : ""}${feelingEligible ? `<button class="meal-feeling-inline ${feeling ? "is-set" : "is-empty"}" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? `Après · ${afterCount}` : "Ressenti après"}</button>` : ""}</div>${visibleChanges ? `<div class="meal-card-feeling-changes">${visibleChanges}</div>` : ""}</div><div class="meal-actions">${feelingEligible ? `<button class="feeling-meal" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? "😊" : "＋😊"}</button>` : ""}<button class="favorite-meal ${favorite ? "is-favorite" : ""}" data-favorite="${m.id}" title="${favorite ? "Retirer des favoris" : "Ajouter aux favoris"}">${favorite ? "★" : "☆"}</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div></article>`;
+    return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${m.photoUrl || m.photoLocal ? `<img src="${esc(m.photoUrl || m.photoLocal)}" alt="">` : mealIcon(m.type, m.description)}</div><div class="meal-card-body"><h3 translate="no">${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${mealTypeHtml(m.type)}${opts.showDate ? ` · ${esc(formatDate(m.date))}` : ""}</div>${nutritionVisibleToViewer() && m.nutrition ? `<div class="meal-macros">≈ ${esc(nutritionText(m.nutrition))}</div>` : ""}${feelingPreview}<div class="meal-footer">${beforeCount ? `<span class="chip">Avant · ${beforeCount}</span>` : ""}${feelingEligible ? `<button class="meal-feeling-inline ${feeling ? "is-set" : "is-empty"}" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? `Après · ${afterCount}` : "Ressenti après"}</button>` : ""}</div>${visibleChanges ? `<div class="meal-card-feeling-changes">${visibleChanges}</div>` : ""}</div><div class="meal-actions">${feelingEligible ? `<button class="feeling-meal" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? "😊" : "＋😊"}</button>` : ""}<button class="favorite-meal ${favorite ? "is-favorite" : ""}" data-favorite="${m.id}" title="${favorite ? "Retirer des favoris" : "Ajouter aux favoris"}">${favorite ? "★" : "☆"}</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div></article>`;
   }
   function bindMealCards() {
     $$("[data-meal]").forEach(
@@ -4674,7 +4707,7 @@
     const visibleChanges = main
       ? feelingChangesHtml(feelingScoresFor(main, "before"), feelingScoresFor(main, "after"), !!main.feeling, true)
       : "";
-    return `<button class="meal-quick-card ${done ? "is-complete" : ""} ${visibleChanges ? "has-feeling-changes" : ""}" data-quick-meal="${esc(type)}" ${main && type !== "Collation" ? `data-edit-meal="${main.id}"` : ""} aria-label="${esc(actionLabel)}"><span class="meal-quick-icon">${done && type !== "Collation" ? "✓" : icon}</span><span><strong>${esc(t(type))}</strong><small>${subtitle}</small></span><span class="meal-quick-action">${actionIcon}</span>${visibleChanges ? `<span class="meal-quick-feeling-changes">${visibleChanges}</span>` : ""}</button>`;
+    return `<button class="meal-quick-card ${done ? "is-complete" : ""} ${visibleChanges ? "has-feeling-changes" : ""}" data-quick-meal="${esc(type)}" ${main && type !== "Collation" ? `data-edit-meal="${main.id}"` : ""} aria-label="${esc(actionLabel)}"><span class="meal-quick-icon">${done && type !== "Collation" ? "✓" : icon}</span><span><strong>${mealTypeHtml(type)}</strong><small${main && type !== "Collation" ? ' translate="no"' : ""}>${subtitle}</small></span><span class="meal-quick-action">${actionIcon}</span>${visibleChanges ? `<span class="meal-quick-feeling-changes">${visibleChanges}</span>` : ""}</button>`;
   }
   function changeJournalDay(offset) {
     const nextDate = addDaysKey(selectedDate, offset);
@@ -5884,50 +5917,12 @@
   }
 
   function dailyMacroSummaryHtml(meals) {
-    if (!nutritionVisibleToViewer()) return "";
-    if (!Array.isArray(meals) || !meals.length) return "";
-    const known = [];
-    meals.forEach((meal) => {
-      const saved = normalNutrition(meal.nutrition),
-        estimated = db.settings.autoNutritionEstimates !== false
-          ? estimateNutritionFromText(meal.description || "")
-          : null;
-      const nutrition = saved
-        ? normalNutrition({
-            ...estimated,
-            ...saved,
-            fiber: saved.fiber ?? estimated?.fiber,
-            sugars: saved.sugars ?? estimated?.sugars,
-            sodium: saved.sodium ?? estimated?.sodium,
-          })
-        : estimated;
-      if (nutrition) known.push(nutrition);
-    });
-    if (!known.length) return "";
-    const sum = (key) =>
-      Math.round(
-        known.reduce((total, n) => total + (Number(n[key]) || 0), 0) * 10,
-      ) / 10;
-    const calories = Math.round(sum("calories"));
-    const protein = sum("protein");
-    const carbs = sum("carbs");
-    const fat = sum("fat");
-    const coverage =
-      known.length === meals.length
-        ? "Tous les repas enregistrés ont été inclus."
-        : `${known.length} entrée${known.length > 1 ? "s" : ""} sur ${meals.length} ${known.length > 1 ? "ont" : "a"} pu être estimée${known.length > 1 ? "s" : ""}.`;
-    const extra = [
-      { key: "fiber", icon: "🌾", label: "Fibres", unit: "g" },
-      { key: "sugars", icon: "🍬", label: "Sucres", unit: "g" },
-      { key: "sodium", icon: "🧂", label: "Sodium", unit: "mg" },
-    ]
-      .filter((x) => known.every((m) => m[x.key] != null))
-      .map((x) => {
-        const value = Math.round(sum(x.key) * 10) / 10;
-        return `<span><b>${x.icon} ${value.toLocaleString("fr-CA")} ${x.unit}</b><small>${x.label}</small></span>`;
-      })
-      .join("");
-    return `<details class="daily-macros-card" aria-label="Estimation nutritionnelle de la journée"><summary class="daily-macros-head"><span class="daily-macros-title"><b aria-hidden="true">⚡</b><span>Estimation nutritionnelle</span></span><span class="daily-macros-head-right"><strong>≈ ${calories.toLocaleString("fr-CA")} kcal</strong><b class="weekly-trends-chevron" aria-hidden="true">›</b></span></summary><div class="daily-macros-details"><div class="daily-macros-grid"><span><b>🥩 ${protein.toLocaleString("fr-CA")} g</b><small>Protéines</small></span><span><b>🍞 ${carbs.toLocaleString("fr-CA")} g</b><small>Glucides</small></span><span><b>🥑 ${fat.toLocaleString("fr-CA")} g</b><small>Lipides</small></span>${extra}</div><p>Valeurs approximatives, calculées à partir des aliments reconnus. ${coverage}</p></div></details>`;
+    const summary = Metrics.calorieSummary(meals, calorieEstimator);
+    const value = summary.total == null ? '—' : '≈ ' + summary.total.toLocaleString('fr-CA');
+    const note = !summary.count ? 'Aucun repas enregistré pour cette journée.'
+      : summary.total == null ? 'Pas encore d’estimation disponible pour les repas saisis.'
+      : summary.known + '/' + summary.count + ' repas ou collations estimés' + (summary.partial ? ' · total partiel' : '') + '. Le total dépend de ce qui est saisi.';
+    return '<section class="daily-calories-card" aria-label="Calories estimées de la journée"><div><span>⚡ Calories de la journée</span><strong>' + value + ' <small>kcal</small></strong></div><p>' + esc(note) + '</p></section>';
   }
   function observationSectionHtml(day) {
     const observations = [...(day?.observations || [])].sort((a, b) =>
@@ -6255,7 +6250,7 @@
       (d.sleepTags || []).filter((x) => x !== "none").length - 2,
     );
     $("#app").innerHTML =
-      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}${dailyMacroSummaryHtml(meals)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? `${d.sleepHours} h` : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><button class="card activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button></section><section class="card hydration-card"><div class="row"><div class="hydration-heading"><span>💧 <small>(500 ml)</small></span><h3>Hydratation</h3></div><strong>${d.water}/${goal}</strong></div><div class="water-row">${water}</div></section>${supplementsTodayHtml(d)}</div>`;
+      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${dailyMacroSummaryHtml(meals)}${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? `${d.sleepHours} h` : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><button class="card activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button></section><section class="card hydration-card"><div class="row"><div class="hydration-heading"><span>💧 <small>(500 ml)</small></span><h3>Hydratation</h3></div><strong>${d.water}/${goal}</strong></div><div class="water-row">${water}</div></section>${supplementsTodayHtml(d)}</div>`;
     $("#previousDay").onclick = () => changeJournalDay(-1);
     if (!$("#nextDay").disabled)
       $("#nextDay").onclick = () => changeJournalDay(1);
@@ -6547,7 +6542,7 @@
             mealId: meal.id,
             mealDescription: meal.description || "Repas",
             mealTime: meal.time || "12:00",
-            mealType: t(meal.type),
+            mealType: meal.type,
             feelingRecordedAt: meal.feeling?.recordedAt || null,
             beforeRecordedAt:
               meal.feelingsBeforeQuality?.recordedAt ||
@@ -6724,7 +6719,7 @@
         ),
       );
     const mealsHtml = occ.priorMeals.length
-      ? `<div class="feeling-context-meals"><span>🍴 Repas précédents</span>${occ.priorMeals.map((meal) => `<div class="feeling-context-meal"><strong>${esc(meal.description)}</strong><small>${esc(meal.time)} · ${esc(t(meal.type))}</small></div>`).join("")}</div>`
+      ? `<div class="feeling-context-meals"><span>🍴 Repas précédents</span>${occ.priorMeals.map((meal) => `<div class="feeling-context-meal"><strong>${esc(meal.description)}</strong><small>${esc(meal.time)} · ${mealTypeHtml(meal.type)}</small></div>`).join("")}</div>`
       : `<p class="muted small feeling-context-no-meals">Aucun repas précédent enregistré cette journée.</p>`;
     return `<div class="feeling-day-context"><div class="feeling-context-title"><span>Contexte de cette journée</span><small>Comparé à tes habitudes personnelles</small></div><div class="feeling-context-tiles">${tiles.join("")}</div>${mealsHtml}</div>`;
   }
@@ -6751,7 +6746,7 @@
                 occ.beforeValue == null
                   ? `Avant non consigné · Après ${feelingEndpointLabel(occ.afterValue)}`
                   : `${feelingEndpointLabel(occ.beforeValue)} → ${feelingEndpointLabel(occ.afterValue)}`;
-              return `<article class="history-feeling-occurrence feeling-observation-occurrence"><div class="history-feeling-occurrence-head"><strong>${esc(formatDate(occ.date))}</strong><span>${esc(occ.mealTime)} · ${esc(occ.mealType)}</span></div><div class="feeling-occurrence-summary"><strong>${esc(occ.mealDescription)}</strong><span>${esc(evolution)}${occ.notes ? ` · ${esc(occ.notes)}` : ""}</span></div>${feelingOccurrenceContextHtml(occ, averages)}</article>`;
+              return `<article class="history-feeling-occurrence feeling-observation-occurrence"><div class="history-feeling-occurrence-head"><strong>${esc(formatDate(occ.date))}</strong><span>${esc(occ.mealTime)} · ${mealTypeHtml(occ.mealType)}</span></div><div class="feeling-occurrence-summary"><strong>${esc(occ.mealDescription)}</strong><span>${esc(evolution)}${occ.notes ? ` · ${esc(occ.notes)}` : ""}</span></div>${feelingOccurrenceContextHtml(occ, averages)}</article>`;
             })
             .join("")}</div></details>`,
       )
@@ -6851,7 +6846,7 @@
       "Boisson",
     ];
     $("#app").innerHTML =
-      `<section class="hero"><p class="eyebrow">Smart Timeline</p><h2>Ton historique, organisé naturellement</h2><p>Les repas sont regroupés par journée, semaine et mois pour rester faciles à consulter avec le temps.</p></section><section class="card search-card"><div class="history-search-row"><input id="mealSearch" type="search" placeholder="Rechercher un aliment, une note ou une date…" autocomplete="off"><button type="button" class="history-filter-toggle" id="historyFilterToggle" aria-expanded="false" aria-controls="historyFilterPanel"><span>Filtres</span><b>⌄</b></button></div><div id="historyFilterPanel" class="history-filter-panel" hidden><div class="filter-label">Période</div><div class="filter-row"><button class="filter-chip active" data-range="all">Tout</button><button class="filter-chip" data-range="7">7 jours</button><button class="filter-chip" data-range="30">Ce mois</button><button class="filter-chip" data-range="365">Cette année</button></div><div class="filter-label">Type de repas</div><div class="filter-row">${types.map((mealType, i) => `<button class="filter-chip ${i === 0 ? "active" : ""}" data-type="${esc(mealType)}">${esc(t(mealType))}</button>`).join("")}</div><div class="filter-row"><button class="filter-chip" data-special="favorite">⭐ Favoris</button></div></div></section><section class="section-title"><h2>Chronologie</h2><span id="resultCount" class="muted small">${meals.length} repas</span></section><div id="historyResults">${renderHistoryGroups(meals)}</div>`;
+      `<section class="hero"><p class="eyebrow">Smart Timeline</p><h2>Ton historique, organisé naturellement</h2><p>Les repas sont regroupés par journée, semaine et mois pour rester faciles à consulter avec le temps.</p></section><section class="card search-card"><div class="history-search-row"><input id="mealSearch" type="search" placeholder="Rechercher un aliment, une note ou une date…" autocomplete="off"><button type="button" class="history-filter-toggle" id="historyFilterToggle" aria-expanded="false" aria-controls="historyFilterPanel"><span>Filtres</span><b>⌄</b></button></div><div id="historyFilterPanel" class="history-filter-panel" hidden><div class="filter-label">Période</div><div class="filter-row"><button class="filter-chip active" data-range="all">Tout</button><button class="filter-chip" data-range="7">7 jours</button><button class="filter-chip" data-range="30">Ce mois</button><button class="filter-chip" data-range="365">Cette année</button></div><div class="filter-label">Type de repas</div><div class="filter-row">${types.map((mealType, i) => `<button class="filter-chip ${i === 0 ? "active" : ""}" data-type="${esc(mealType)}">${mealTypeHtml(mealType)}</button>`).join("")}</div><div class="filter-row"><button class="filter-chip" data-special="favorite">⭐ Favoris</button></div></div></section><section class="section-title"><h2>Chronologie</h2><span id="resultCount" class="muted small">${meals.length} repas</span></section><div id="historyResults">${renderHistoryGroups(meals)}</div>`;
     $("#resultCount").textContent = historyEntryCountLabel(meals.length);
     const filterToggle = $("#historyFilterToggle"),
       filterPanel = $("#historyFilterPanel");
@@ -6875,7 +6870,7 @@
           (!cutoff || localDate(m.date) >= cutoff) &&
           (type === "Tous" || m.type === type) &&
           (!favoriteOnly || isFavoriteMeal(m)) &&
-          `${m.description} ${m.type} ${m.notes} ${m.date}`
+          `${m.description} ${m.type} ${t(m.type)} ${m.notes} ${m.date}`
             .toLowerCase()
             .includes(q),
       );
@@ -7891,7 +7886,7 @@
                 occ.beforeValue == null
                   ? `Avant non consigné → ${occ.afterValue}/5`
                   : `${occ.beforeValue}/5 → ${occ.afterValue}/5`;
-            return `<article class="portrait-evolution-occurrence"><div class="portrait-occurrence-heading"><time><span aria-hidden="true">📅</span>${esc(formatCalendarDate(occ.date))}</time><b>${esc(evolution)}</b></div><p class="portrait-full-meal">${mealHighlight.html}</p>${mealHighlight.matches.length ? `<p class="portrait-highlight-legend"><span>Éléments observés :</span>${mealHighlight.matches.map((match) => `<mark class="${match.isSecondary ? "is-secondary" : "is-primary"}">${esc(match.term)}</mark>`).join("")}</p>` : ""}<div class="portrait-time-grid"><span><small>Ressenti avant</small><strong>${beforeAt ? esc(beforeAt) : "Heure non disponible"}</strong></span><span><small>Repas · ${mealIcon(occ.mealType, occ.mealDescription)} ${esc(occ.mealType)}</small><strong>${esc(formatCalendarDate(occ.date))} à ${esc(occ.mealTime)}</strong></span><span><small>Ressenti après</small><strong>${afterAt ? esc(afterAt) : "Heure non disponible"}</strong></span><span><small>Délai repas → ressenti après</small><strong>${delay ? esc(delay) : "Non calculable"}</strong></span></div>${occ.notes ? `<p class="portrait-occurrence-note"><b>Note :</b> ${esc(occ.notes)}</p>` : ""}</article>`;
+            return `<article class="portrait-evolution-occurrence"><div class="portrait-occurrence-heading"><time><span aria-hidden="true">📅</span>${esc(formatCalendarDate(occ.date))}</time><b>${esc(evolution)}</b></div><p class="portrait-full-meal">${mealHighlight.html}</p>${mealHighlight.matches.length ? `<p class="portrait-highlight-legend"><span>Éléments observés :</span>${mealHighlight.matches.map((match) => `<mark class="${match.isSecondary ? "is-secondary" : "is-primary"}">${esc(match.term)}</mark>`).join("")}</p>` : ""}<div class="portrait-time-grid"><span><small>Ressenti avant</small><strong>${beforeAt ? esc(beforeAt) : "Heure non disponible"}</strong></span><span><small>Repas · ${mealIcon(occ.mealType, occ.mealDescription)} ${mealTypeHtml(occ.mealType)}</small><strong>${esc(formatCalendarDate(occ.date))} à ${esc(occ.mealTime)}</strong></span><span><small>Ressenti après</small><strong>${afterAt ? esc(afterAt) : "Heure non disponible"}</strong></span><span><small>Délai repas → ressenti après</small><strong>${delay ? esc(delay) : "Non calculable"}</strong></span></div>${occ.notes ? `<p class="portrait-occurrence-note"><b>Note :</b> ${esc(occ.notes)}</p>` : ""}</article>`;
           })
           .join("");
         const observationSummary = [primaryCount ? `${primaryCount} observation${primaryCount > 1 ? "s" : ""} à surveiller` : "", secondaryCount ? `${secondaryCount} piste${secondaryCount > 1 ? "s" : ""} secondaire${secondaryCount > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · "),
@@ -7943,7 +7938,7 @@
           meal.description,
           observation.categoryId,
         );
-        return `<article><div class="portrait-attention-meal-head"><strong>${mealIcon(meal.type, meal.description)} ${esc(t(meal.type || "Repas"))}</strong><time>${esc(formatCalendarDate(meal.date))}${meal.time ? ` à ${esc(meal.time)}` : ""}</time></div><p>${highlightedObservationMeal(meal.description, observation.categoryId)}</p><div><span>Élément observé : <b>${esc(matched || categoryLabel)}</b></span><em>+${esc(String(meal.change).replace(".", ","))}</em></div></article>`;
+        return `<article><div class="portrait-attention-meal-head"><strong>${mealIcon(meal.type, meal.description)} ${mealTypeHtml(meal.type || "Repas")}</strong><time>${esc(formatCalendarDate(meal.date))}${meal.time ? ` à ${esc(meal.time)}` : ""}</time></div><p>${highlightedObservationMeal(meal.description, observation.categoryId)}</p><div><span>Élément observé : <b>${esc(matched || categoryLabel)}</b></span><em>+${esc(String(meal.change).replace(".", ","))}</em></div></article>`;
       })
       .join("")}</div><small>Les éléments surlignés sont présents dans les repas associés; cela ne prouve pas qu’ils causent le ressenti.</small></details>`;
   }
@@ -8000,7 +7995,7 @@
                 occ.beforeValue == null
                   ? `Avant non consigné → ${occ.afterValue}/5`
                   : `${occ.beforeValue}/5 → ${occ.afterValue}/5`;
-              return `<article><time>${esc(formatDate(occ.date))}</time><div><strong>${occ.item.emoji} ${esc(occ.item.label)}</strong><small>${esc(occ.mealType)} · ${esc(occ.mealDescription)}</small></div><b>${esc(evolution)}</b></article>`;
+              return `<article><time>${esc(formatDate(occ.date))}</time><div><strong>${occ.item.emoji} ${esc(occ.item.label)}</strong><small>${mealTypeHtml(occ.mealType)} · ${esc(occ.mealDescription)}</small></div><b>${esc(evolution)}</b></article>`;
             })
             .join("")
         : `<p class="muted small">Aucun exemple à afficher pour cette période.</p>`;
@@ -8179,7 +8174,7 @@
     const meals = Array.isArray(x?.relatedMeals) ? x.relatedMeals : [];
     $("#sourceTitle").textContent = "Repas derrière cette observation";
     $("#sourceContent").innerHTML = meals.length
-      ? `<p class="muted small">Voici les repas où le ressenti suivi s’est détérioré. L’élément reconnu est mis en évidence, mais l’ensemble du repas demeure visible pour conserver son contexte.</p><div class="observation-related-list">${meals.map((meal) => { const matched = observationCategoryMatch(meal.description, x?.categoryId); return `<button type="button" class="observation-related-meal" data-related-meal="${esc(meal.id || "")}" data-related-date="${esc(meal.date || "")}"><span>${mealIcon(meal.type, meal.description)}</span><div><small class="observation-related-meta"><b>${esc(t(meal.type || "Repas"))}</b><span>${esc(formatCalendarDate(meal.date))}${meal.time ? ` à ${esc(meal.time)}` : ""}</span></small><strong>${highlightedObservationMeal(meal.description, x?.categoryId)}</strong>${matched ? `<em>Élément observé : <mark>${esc(matched)}</mark></em>` : ""}</div><b>+${esc(String(meal.change).replace(".", ","))}</b></button>`; }).join("")}</div><p class="muted small">Cette liste montre des repas associés à la tendance; elle ne prouve pas qu’un aliment est la cause du ressenti.</p>`
+      ? `<p class="muted small">Voici les repas où le ressenti suivi s’est détérioré. L’élément reconnu est mis en évidence, mais l’ensemble du repas demeure visible pour conserver son contexte.</p><div class="observation-related-list">${meals.map((meal) => { const matched = observationCategoryMatch(meal.description, x?.categoryId); return `<button type="button" class="observation-related-meal" data-related-meal="${esc(meal.id || "")}" data-related-date="${esc(meal.date || "")}"><span>${mealIcon(meal.type, meal.description)}</span><div><small class="observation-related-meta"><b>${mealTypeHtml(meal.type || "Repas")}</b><span>${esc(formatCalendarDate(meal.date))}${meal.time ? ` à ${esc(meal.time)}` : ""}</span></small><strong>${highlightedObservationMeal(meal.description, x?.categoryId)}</strong>${matched ? `<em>Élément observé : <mark>${esc(matched)}</mark></em>` : ""}</div><b>+${esc(String(meal.change).replace(".", ","))}</b></button>`; }).join("")}</div><p class="muted small">Cette liste montre des repas associés à la tendance; elle ne prouve pas qu’un aliment est la cause du ressenti.</p>`
       : `<p>Aucun repas précis n’est disponible pour cette observation.</p>`;
     [...$("#sourceContent").querySelectorAll(".observation-related-meal")].forEach((button) => {
       button.onclick = () => {
@@ -8507,6 +8502,7 @@
         : "";
     $("#app").innerHTML =
       `${analysisDateNavigatorHtml()}<section class="hero"><p class="eyebrow">Tableau intelligent</p><h2>Ce qu’Énergie apprend sur toi</h2><p>Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer leurs causes.</p></section>${previewBanner}${discoverySectionHtml(discoveryReport, negativeFeelings)}<div class="grid dashboard-overview"><section class="card stat-card compact-stat-card compact-row-card dashboard-hero-card"><div class="stat-card-heading"><span>🍎</span><div><h3>Tu utilises Énergie depuis</h3><p class="muted small">Date de départ du journal</p></div></div><div class="metric metric-small">${esc(story.since)}</div></section><section class="card stat-card dashboard-mini-card"><span>⭐</span><h3>Point fort</h3><p>${esc(story.strength)}</p></section><section class="card stat-card dashboard-mini-card"><span>💡</span><h3>Habitude observée</h3><p>${esc(story.habit)}</p></section><section class="card stat-card dashboard-mini-card"><span>🎯</span><h3>Suggestion principale</h3><p>${esc(story.suggestion)}</p></section></div>${professionalDiscussionHtml(meals)}<div class="section-title"><h2>🧠 Autres observations</h2><span class="muted small">${insights.length} carte${insights.length > 1 ? "s" : ""}</span></div><div class="insight-grid">${insights.length ? insights.map(insightHtml).join("") : `<section class="card empty wide"><div class="food-art">🧠</div><p>${db.settings.insightsEnabled ? "Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles." : "Les observations sont désactivées dans les paramètres."}</p></section>`}</div>${demoDiscoveryHtml()}${usePreview && !db.settings.demoMode ? '<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>' : ""}`;
+    $("#app .hero")?.insertAdjacentHTML("afterend", personalTrendsHtml());
     const primaryObservationFold = $(".attention-observations-fold"),
       secondaryObservationHtml = secondaryObservationSectionHtml(discoveryReport);
     if (primaryObservationFold && secondaryObservationHtml)
@@ -8798,21 +8794,183 @@
     bindAnalysisDateNavigator();
   }
 
+  let flushPersonalProfile = null;
+  function personalProfile() {
+    return Metrics.mergeProfile(db.settings.personalProfile);
+  }
+  function profileTimestamp(previous) {
+    return new Date(Math.max(Date.now(), (Date.parse(previous || "") || 0) + 1)).toISOString();
+  }
+  function personalSaveStatus(text, error = false) {
+    const status = $("#personalProfileStatus");
+    if (status) { status.textContent = text; status.classList.toggle("is-error", error); }
+  }
+  function persistPersonalChange(date = todayKey()) {
+    const day = ensureDay(db, date);
+    day.updatedAt = new Date().toISOString();
+    if (saveLocal("profil-personnel") === false) {
+      personalSaveStatus("Sauvegarde impossible sur cet appareil. Réessaie avant de fermer.", true);
+      return false;
+    }
+    enqueue({ kind: "day", date });
+    personalSaveStatus("Enregistré sur cet appareil ✓ · état du nuage en haut de l’écran");
+    return true;
+  }
+  function setPersonalRecord(key, value) {
+    if (db.settings.demoMode) return false;
+    db.settings.personalProfile = personalProfile();
+    db.settings.personalProfile[key] = { ...value, updatedAt: profileTimestamp(db.settings.personalProfile[key]?.updatedAt) };
+    return persistPersonalChange();
+  }
+  function savePhysiology() {
+    return setPersonalRecord("physiology", { value: {
+      context: db.settings.physiologicalContext,
+      menstrualLastStart: db.settings.menstrualLastStart || "",
+      pregnancyDueDate: db.settings.pregnancyDueDate || "",
+    }});
+  }
+  function applyPersonalPhysiology() {
+    const value = personalProfile().physiology?.value;
+    if (!value) return;
+    db.settings.physiologicalContext = value.context;
+    db.settings.menstrualLastStart = value.menstrualLastStart;
+    db.settings.pregnancyDueDate = value.pregnancyDueDate;
+  }
+  function latestPersonalWeight() {
+    const entries = Object.entries(db.days || {}).filter(([date, day]) => date <= todayKey() && Metrics.dateTime(date) != null && Metrics.weightRecord(day.weightMeasurement)?.kg != null);
+    entries.sort(([a], [b]) => b.localeCompare(a));
+    return entries.length ? {date: entries[0][0], kg: entries[0][1].weightMeasurement.kg} : null;
+  }
+  function personalProfileHtml() {
+    const profile = personalProfile(), age = profile.age || {}, weight = profile.weight || {}, sex = profile.sex || {}, unit = weight.unit || "kg";
+    const latest = latestPersonalWeight(), todayWeight = Metrics.weightRecord(db.days[todayKey()]?.weightMeasurement);
+    const modes = (mode) => [["unspecified", "Non renseigné"], ["provided", "Je souhaite le renseigner"], ["declined", "Je préfère ne pas répondre"]].map(([value, label]) => `<option value="${value}" ${(mode || "unspecified") === value ? "selected" : ""}>${label}</option>`).join("");
+    const selectedSex = sex.mode === "declined" ? "declined" : sex.value || "unspecified";
+    return `<section class="card personal-profile-card" aria-labelledby="personalProfileTitle"><h3 id="personalProfileTitle">À propos de moi</h3><p class="muted small">Tout est facultatif. Ces renseignements ne servent pas à calculer un objectif calorique ni à poser un diagnostic.</p><fieldset ${db.settings.demoMode ? "disabled" : ""}>
+      <div class="personal-profile-field"><label for="profileAgeMode">Âge</label><select id="profileAgeMode">${modes(age.mode)}</select><label id="profileAgeFields" class="personal-profile-value" ${age.mode === "provided" ? "" : "hidden"}><span>Âge en années</span><input type="text" inputmode="numeric" autocomplete="off" id="profileAge" value="${age.value ?? ""}" placeholder="Ex. 42" aria-describedby="profileAgeError"><small id="profileAgeError" class="personal-field-error" aria-live="polite"></small></label></div>
+      <div class="personal-profile-field"><label for="profileSex">Sexe</label><select id="profileSex">${[["unspecified", "Non renseigné"], ["female", "Féminin"], ["male", "Masculin"], ["intersex", "Intersexe"], ["other", "Autre"], ["declined", "Je préfère ne pas répondre"]].map(([value, label]) => `<option value="${value}" ${selectedSex === value ? "selected" : ""}>${label}</option>`).join("")}</select></div>
+      <div class="personal-profile-field"><label for="profileWeightMode">Poids</label><select id="profileWeightMode">${modes(weight.mode)}</select><div id="profileWeightFields" ${weight.mode === "provided" ? "" : "hidden"}><p id="profileLastWeight" class="muted small">${latest ? `Dernière mesure : ${Metrics.displayWeight(latest.kg, unit).toLocaleString("fr-CA")} ${unit} · ${esc(formatCalendarDate(latest.date))}` : "Aucune mesure enregistrée."}</p><div class="personal-weight-grid"><label>Date de la mesure<input id="profileWeightDate" type="date" max="${todayKey()}" value="${todayKey()}"></label><label>Unité<select id="profileWeightUnit"><option value="kg" ${unit === "kg" ? "selected" : ""}>kg</option><option value="lb" ${unit === "lb" ? "selected" : ""}>lb</option></select></label><label class="personal-weight-input">Poids mesuré<input id="profileWeight" type="text" inputmode="decimal" autocomplete="off" value="${todayWeight?.kg != null ? Metrics.displayWeight(todayWeight.kg, unit) : ""}" placeholder="Ex. ${unit === "lb" ? "165,5" : "75,2"}" aria-describedby="profileWeightError"></label></div><small id="profileWeightError" class="personal-field-error" aria-live="polite"></small><p class="muted tiny">Une mesure par date, sauvegardée automatiquement. Choisis une autre date pour ajouter ou corriger une mesure; vider le poids retire uniquement la mesure de cette date.</p></div><p id="profileWeightDeclinedNote" class="muted tiny" ${weight.mode === "declined" ? "" : "hidden"}>Le graphique du poids est masqué et aucune nouvelle mesure n’est demandée. Les mesures déjà enregistrées sont conservées.</p></div>
+      </fieldset><p id="personalProfileStatus" class="personal-save-status" role="status">Sauvegarde automatique · connexion requise pour la synchronisation</p></section>`;
+  }
+  function bindPersonalProfile() {
+    const card = $(".personal-profile-card");
+    if (!card || db.settings.demoMode) { flushPersonalProfile = null; return; }
+    const pending = new Map();
+    function flush(key) {
+      const item = pending.get(key);
+      if (!item) return;
+      clearTimeout(item.timer); pending.delete(key); item.run();
+    }
+    flushPersonalProfile = () => [...pending.keys()].forEach(flush);
+    function schedule(key, run) {
+      clearTimeout(pending.get(key)?.timer);
+      pending.set(key, {run, timer: setTimeout(() => flush(key), 900)});
+      personalSaveStatus("Modification en cours…");
+    }
+    const ageInput = $("#profileAge"), weightInput = $("#profileWeight"), dateInput = $("#profileWeightDate"), unitInput = $("#profileWeightUnit");
+    let editingDate = dateInput.value, editingUnit = unitInput.value;
+    const updateLastWeight = () => {
+      const latest = latestPersonalWeight();
+      $("#profileLastWeight").textContent = latest ? `Dernière mesure : ${Metrics.displayWeight(latest.kg, editingUnit).toLocaleString("fr-CA")} ${editingUnit} · ${formatCalendarDate(latest.date)}` : "Aucune mesure enregistrée.";
+    };
+    function saveAge() {
+      if ($("#profileAgeMode").value !== "provided") return;
+      const raw = ageInput.value.trim(), age = Metrics.number(raw), valid = !raw || (age != null && Number.isInteger(age) && age >= 0 && age <= 130);
+      $("#profileAgeError").textContent = valid ? "" : "Entre un âge entier entre 0 et 130 ans.";
+      ageInput.setAttribute("aria-invalid", String(!valid));
+      if (!valid) { personalSaveStatus("L’âge n’a pas été enregistré : vérifie la valeur.", true); return; }
+      setPersonalRecord("age", {mode: "provided", value: raw ? age : null});
+    }
+    function saveWeight() {
+      if ($("#profileWeightMode").value !== "provided") return;
+      const raw = weightInput.value.trim(), kg = Metrics.weightKg(raw, editingUnit);
+      const valid = Metrics.dateTime(editingDate) != null && editingDate <= todayKey() && (!raw || kg != null);
+      $("#profileWeightError").textContent = valid ? "" : "Vérifie le poids positif, l’unité et la date (pas de date future).";
+      weightInput.setAttribute("aria-invalid", String(!valid));
+      if (!valid) { personalSaveStatus("La mesure n’a pas été enregistrée : vérifie les champs.", true); return; }
+      const old = db.days[editingDate]?.weightMeasurement;
+      if ((!raw && !old) || (old && old.kg === kg)) { personalSaveStatus("Aucune modification de la mesure."); return; }
+      ensureDay(db, editingDate).weightMeasurement = {kg, updatedAt: profileTimestamp(old?.updatedAt)};
+      persistPersonalChange(editingDate); updateLastWeight();
+    }
+    ageInput.addEventListener("input", () => schedule("age", saveAge));
+    ageInput.addEventListener("blur", () => flush("age"));
+    weightInput.addEventListener("input", () => schedule("weight", saveWeight));
+    weightInput.addEventListener("blur", () => flush("weight"));
+    $("#profileAgeMode").addEventListener("change", (e) => {
+      clearTimeout(pending.get("age")?.timer); pending.delete("age");
+      const mode = e.target.value;
+      if (mode !== "provided") ageInput.value = "";
+      $("#profileAgeFields").hidden = mode !== "provided";
+      $("#profileAgeError").textContent = "";
+      ageInput.setAttribute("aria-invalid", "false");
+      setPersonalRecord("age", {mode, value: mode === "provided" ? Metrics.number(ageInput.value) : null});
+    });
+    $("#profileSex").addEventListener("change", (e) => {
+      const choice = e.target.value, mode = ["unspecified", "declined"].includes(choice) ? choice : "provided";
+      setPersonalRecord("sex", {mode, value: mode === "provided" ? choice : null});
+    });
+    $("#profileWeightMode").addEventListener("change", (e) => {
+      clearTimeout(pending.get("weight")?.timer); pending.delete("weight");
+      $("#profileWeightFields").hidden = e.target.value !== "provided";
+      $("#profileWeightDeclinedNote").hidden = e.target.value !== "declined";
+      const saved = Metrics.weightRecord(db.days[editingDate]?.weightMeasurement);
+      weightInput.value = saved?.kg != null ? Metrics.displayWeight(saved.kg, editingUnit) : "";
+      $("#profileWeightError").textContent = "";
+      weightInput.setAttribute("aria-invalid", "false");
+      setPersonalRecord("weight", {mode: e.target.value, unit: editingUnit});
+    });
+    dateInput.addEventListener("change", () => {
+      flush("weight"); editingDate = dateInput.value;
+      const valid = Metrics.dateTime(editingDate) != null && editingDate <= todayKey();
+      $("#profileWeightError").textContent = valid ? "" : "Choisis une date valide, aujourd’hui ou dans le passé.";
+      const record = db.days[editingDate]?.weightMeasurement;
+      weightInput.value = record?.kg != null ? Metrics.displayWeight(record.kg, editingUnit) : "";
+    });
+    unitInput.addEventListener("change", () => {
+      flush("weight");
+      const kg = Metrics.weightKg(weightInput.value, editingUnit);
+      editingUnit = unitInput.value === "lb" ? "lb" : "kg";
+      weightInput.value = kg == null ? "" : Metrics.displayWeight(kg, editingUnit);
+      weightInput.placeholder = editingUnit === "lb" ? "Ex. 165,5" : "Ex. 75,2";
+      setPersonalRecord("weight", {mode: $("#profileWeightMode").value, unit: editingUnit});
+      updateLastWeight();
+    });
+  }
+  window.addEventListener("pagehide", () => flushPersonalProfile?.());
+  document.addEventListener("visibilitychange", () => { if (document.hidden) flushPersonalProfile?.(); });
+
+  function calorieEstimator(description) {
+    return db.settings.autoNutritionEstimates !== false ? estimateNutritionFromText(description) : null;
+  }
+  function personalTrendsHtml() {
+    const end = demoAnalysisContext()?.cutoff || todayKey(), profile = personalProfile(), unit = profile.weight?.unit || "kg";
+    const data = Metrics.series(db.days, end, unit, calorieEstimator), lastWeight = data.weights.at(-1);
+    const declined = profile.weight?.mode === "declined", known = data.calories.filter((p) => p.value != null);
+    const average = known.length ? Math.round(known.reduce((n, p) => n + p.value, 0) / known.length) : null;
+    return `<section class="personal-trends" aria-labelledby="personalTrendsTitle"><div class="section-title"><h2 id="personalTrendsTitle">Mes tendances chiffrées</h2><span class="muted small">30 jours · ${db.settings.demoMode ? "données du profil fictif" : "mes données uniquement"}</span></div><div class="personal-trends-grid"><article class="card personal-trend-card"><div class="metrics-heading"><h3>Poids</h3><strong>${declined ? "Non renseigné" : lastWeight ? `${lastWeight.value.toLocaleString("fr-CA")} ${unit}` : "—"}</strong></div><p class="muted tiny">${!declined && lastWeight ? `Dernière mesure de la période · ${esc(formatCalendarDate(lastWeight.date))}` : "Mesures enregistrées dans le Profil"}</p>${declined ? '<p class="metrics-empty">Tu as choisi de ne pas renseigner ton poids. Tu peux modifier ce choix dans le Profil.</p>' : Metrics.chart(data.weights, {...data, kind: "weight", unit, id: "weightTrend"})}<p class="metrics-note">${declined ? "Ton choix est respecté." : data.weights.length === 1 ? "Une première mesure : il en faut au moins deux pour voir une évolution." : "Chaque point est une mesure réelle. Aucun poids n’est inventé pour les jours sans saisie."}</p></article><article class="card personal-trend-card"><div class="metrics-heading"><h3>Calories par jour</h3><strong>${average == null ? "—" : `≈ ${average.toLocaleString("fr-CA")} kcal`}</strong></div><p class="muted tiny">${average == null ? "Repas et collations enregistrés" : `Moyenne sur ${known.length} jour${known.length > 1 ? "s" : ""} avec estimation`}</p>${Metrics.chart(data.calories, {...data, kind: "calories", unit: "kcal", id: "calorieTrend"})}<p class="metrics-note">Estimations des repas saisis, pas un objectif. Les jours sans estimation restent vides; les barres en pointillé indiquent une estimation partielle. Un journal incomplet peut sous-estimer le total.</p></article></div></section>`;
+  }
+
   let keepPhysiologicalPanelOpen = false;
   function physiologicalContextHtml() {
-    const allowed = new Set(["none", "menstrual", "pregnancy"]),
+    applyPersonalPhysiology();
+    const allowed = new Set(["none", "menstrual", "pregnancy", "menopause"]),
       context = allowed.has(db.settings?.physiologicalContext) ? db.settings.physiologicalContext : "none",
-      label = context === "menstrual" ? "Cycle menstruel" : context === "pregnancy" ? "Grossesse" : "Non activé",
-      icon = context === "pregnancy" ? "👶" : "🌙";
+      label = context === "menstrual" ? "Cycle menstruel" : context === "pregnancy" ? "Grossesse" : context === "menopause" ? "Ménopause" : "Non activé",
+      icon = context === "pregnancy" ? "👶" : context === "menopause" ? "🌿" : "🌙";
     const fields = context === "menstrual"
       ? `<label class="physiological-date-field"><span>Début des dernières menstruations</span><input type="date" id="menstrualLastStart" max="${todayKey()}" value="${esc(db.settings?.menstrualLastStart || "")}"></label><p class="muted tiny">Cette date servira éventuellement à comparer des périodes semblables, sans attribuer automatiquement un ressenti au cycle.</p>`
       : context === "pregnancy"
         ? `<label class="physiological-date-field"><span>Date prévue d’accouchement <small>(facultative)</small></span><input type="date" id="pregnancyDueDate" value="${esc(db.settings?.pregnancyDueDate || "")}"></label><p class="muted tiny">Cette information servira éventuellement à situer le contexte. Énergie ne remplace pas le suivi médical.</p>`
-        : `<div class="physiological-empty"><span aria-hidden="true">○</span><p>Aucun contexte physiologique n’est utilisé.</p></div>`;
-    return `<details class="card physiological-context-card" ${keepPhysiologicalPanelOpen ? "open" : ""}><summary><span class="physiological-context-title"><b aria-hidden="true">${icon}</b><span><strong>Contexte physiologique</strong><small>Cycle menstruel ou grossesse · facultatif</small></span></span><span class="physiological-context-meta"><b>${esc(label)}</b><i aria-hidden="true">›</i></span></summary><div class="physiological-context-content"><p class="muted small">Ces renseignements sensibles restent facultatifs. Ils sont enregistrés avec ton profil, mais ne modifient pas encore les analyses.</p><label class="physiological-context-select"><span>Contexte à prendre en compte</span><select id="physiologicalContext"><option value="none" ${context === "none" ? "selected" : ""}>Aucun</option><option value="menstrual" ${context === "menstrual" ? "selected" : ""}>Cycle menstruel</option><option value="pregnancy" ${context === "pregnancy" ? "selected" : ""}>Grossesse</option></select></label><div class="physiological-context-fields">${fields}</div><p class="physiological-context-privacy">🔒 Énergie ne tente jamais de déduire une grossesse ou un cycle à partir des repas et ressentis.</p></div></details>`;
+        : context === "menopause"
+          ? `<p class="muted small">La ménopause est notée comme contexte personnel. Ce choix ne déclenche aucun diagnostic ni aucune modification automatique des observations.</p>`
+          : `<div class="physiological-empty"><span aria-hidden="true">○</span><p>Aucun contexte physiologique n’est utilisé.</p></div>`;
+    return `<details class="card physiological-context-card" ${keepPhysiologicalPanelOpen ? "open" : ""}><summary><span class="physiological-context-title"><b aria-hidden="true">${icon}</b><span><strong>Contexte physiologique</strong><small>Cycle, grossesse ou ménopause · facultatif</small></span></span><span class="physiological-context-meta"><b>${esc(label)}</b><i aria-hidden="true">›</i></span></summary><div class="physiological-context-content"><p class="muted small">Ces renseignements sensibles restent facultatifs. Ils sont enregistrés avec ton profil, mais ne modifient pas encore les analyses.</p><label class="physiological-context-select"><span>Contexte à prendre en compte</span><select id="physiologicalContext"><option value="none" ${context === "none" ? "selected" : ""}>Aucun</option><option value="menstrual" ${context === "menstrual" ? "selected" : ""}>Cycle menstruel</option><option value="pregnancy" ${context === "pregnancy" ? "selected" : ""}>Grossesse</option><option value="menopause" ${context === "menopause" ? "selected" : ""}>Ménopause</option></select></label><div class="physiological-context-fields">${fields}</div><p class="physiological-context-privacy">🔒 Énergie ne tente jamais de déduire une grossesse, un cycle ou une ménopause à partir des repas et ressentis.</p></div></details>`;
   }
 
   function renderProfile() {
+    flushPersonalProfile?.();
+    flushPersonalProfile = null;
     const backups = (() => {
       try {
         return JSON.parse(localStorage.getItem(BACKUP_KEY) || "[]").length;
@@ -8829,10 +8987,10 @@
         ? `<p class="profile-account-since">Tu utilises Énergie depuis ${esc(formatCalendarDate(profileFirstDate))}</p>`
         : "",
       nutritionSettingsHtml = nutritionVisibleToViewer()
-        ? `<div class="notice info-notice"><strong>Estimations nutritionnelles professionnelles</strong><p>Les calories et nutriments sont calculés pour soutenir l’analyse professionnelle, mais demeurent cachés au client.</p></div>`
-        : `<div class="notice info-notice"><strong>Une expérience sans chiffres nutritionnels</strong><p>Les calories et nutriments sont volontairement cachés. Ils peuvent être analysés dans l’espace professionnel sans influencer ton rapport à l’alimentation.</p></div>`;
+        ? `<div class="notice info-notice"><strong>Estimations nutritionnelles professionnelles</strong><p>Le Journal affiche uniquement le total calorique. Les détails des nutriments restent réservés à cette vue professionnelle.</p></div>`
+        : `<div class="notice info-notice"><strong>Calories estimées, sans objectif</strong><p>Seul le total calorique est affiché en haut du Journal, avec sa tendance dans Observations. Les autres chiffres nutritionnels restent masqués.</p></div>`;
     $("#app").innerHTML =
-      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="off"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${["Déjeuner", "Dîner", "Souper", "Collation"].map((t) => `<label class="setting-option"><input type="checkbox" data-feeling-meal-type="${t}" ${(db.settings.feelingMealTypes || []).includes(t) ? "checked" : ""}><span>${mealIcon(t)} ${window.t(t)}</span></label>`).join("")}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button><p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p></div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${professionalDemoEntryHtml()}${hasDemoAccess ? demoProfileCardsHtml() : ``}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<section class="card"><h3>Sauvegarde supplémentaire</h3><p class="muted small">${backups} copie(s) locale(s) de sécurité.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></section></div>`;
+      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="off"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button><p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p></div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${professionalDemoEntryHtml()}${hasDemoAccess ? demoProfileCardsHtml() : ``}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<section class="card"><h3>Sauvegarde supplémentaire</h3><p class="muted small">${backups} copie(s) locale(s) de sécurité.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></section></div>`;
     const nutritionAnchor = $("#settingNutrition")?.closest("label");
     if (session && profileSinceHtml)
       $("#syncNow")
@@ -8847,9 +9005,11 @@
     $("#settingMacros")?.closest("label")?.remove();
     if (!nutritionVisibleToViewer()) $("#settingAutoNutrition")?.closest("label")?.remove();
     $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", physiologicalContextHtml());
+    $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", personalProfileHtml());
+    bindPersonalProfile();
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.55.25" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.1" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -8860,10 +9020,12 @@
     });
     $("#editTrackedFeelings")?.addEventListener("click", () => openTrackedFeelingsDialog(false));
     $("#syncNow")?.addEventListener("click", async () => {
+      flushPersonalProfile?.();
       await syncNow();
       await pullCloud();
     });
     $("#signOut")?.addEventListener("click", async () => {
+      flushPersonalProfile?.();
       if (!confirm("Se déconnecter de ce compte? La copie locale sera retirée de cet appareil après vérification de la synchronisation.")) return;
       if (outbox().length) await syncNow();
       if (outbox().length) {
@@ -8880,21 +9042,24 @@
       render();
     });
     $("#physiologicalContext")?.addEventListener("change", (event) => {
-      const value = ["menstrual", "pregnancy"].includes(event.target.value) ? event.target.value : "none";
+      if (db.settings.demoMode) return;
+      const value = ["menstrual", "pregnancy", "menopause"].includes(event.target.value) ? event.target.value : "none";
       db.settings.physiologicalContext = value;
       if (value !== "menstrual") db.settings.menstrualLastStart = "";
       if (value !== "pregnancy") db.settings.pregnancyDueDate = "";
-      saveLocal("contexte-physiologique");
+      savePhysiology();
       keepPhysiologicalPanelOpen = true;
       renderProfile();
     });
     $("#menstrualLastStart")?.addEventListener("change", (event) => {
+      if (db.settings.demoMode) return;
       db.settings.menstrualLastStart = /^\d{4}-\d{2}-\d{2}$/.test(event.target.value) ? event.target.value : "";
-      saveLocal("contexte-cycle");
+      savePhysiology();
     });
     $("#pregnancyDueDate")?.addEventListener("change", (event) => {
+      if (db.settings.demoMode) return;
       db.settings.pregnancyDueDate = /^\d{4}-\d{2}-\d{2}$/.test(event.target.value) ? event.target.value : "";
-      saveLocal("contexte-grossesse");
+      savePhysiology();
     });
     $("#waterGoal").onchange = (e) => {
       db.settings.waterGoal = clamp(e.target.value, 1, 20);
@@ -9533,6 +9698,7 @@
     const value = type || "Déjeuner";
     $("#mealType").value = value;
     $("#mealDialogTypeIcon").innerHTML = mealIcon(value);
+    $("#mealDialogTypeLabel").setAttribute("data-i18n-key", value);
     $("#mealDialogTypeLabel").textContent = t(value);
     $("#copyYesterdayBreakfast").hidden = value !== "Déjeuner";
     $("#copyYesterdayDinner").hidden = value !== "Dîner";
@@ -10044,7 +10210,7 @@
         .slice(0, 12)
         .map(
           (m) =>
-            `<label class="observation-meal-option"><input type="checkbox" value="${m.id}" ${chosen.has(m.id) ? "checked" : ""}><span><strong>${mealIcon(m.type, m.description)} ${esc(m.type)} · ${esc(m.time)}</strong><small>${esc(formatDate(m.date))} — ${esc(m.description)}</small></span></label>`,
+            `<label class="observation-meal-option"><input type="checkbox" value="${m.id}" ${chosen.has(m.id) ? "checked" : ""}><span><strong>${mealIcon(m.type, m.description)} ${mealTypeHtml(m.type)} · ${esc(m.time)}</strong><small>${esc(formatDate(m.date))} — ${esc(m.description)}</small></span></label>`,
         )
         .join("") ||
       '<p class="muted small">Aucun repas enregistré dans les 72 heures précédentes.</p>'
@@ -11443,7 +11609,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.55.25");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.1");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

@@ -1,0 +1,49 @@
+/* Native Énergie cards; no new font or chart dependency. */
+.daily-calories-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:12px 15px;margin-bottom:12px;color:var(--text)}
+.daily-calories-card>div{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.daily-calories-card span{font-size:.88rem;font-weight:750}
+.daily-calories-card strong{font-size:1.35rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.daily-calories-card strong small{font-size:.75rem;font-weight:600;color:var(--muted)}
+.daily-calories-card p{margin:5px 0 0;color:var(--muted);font-size:.72rem;line-height:1.4}
+.personal-profile-card fieldset{border:0;margin:0;padding:0;min-width:0}
+.personal-profile-field{display:grid;gap:8px;margin-top:15px;padding-top:14px;border-top:1px solid var(--border)}
+.personal-profile-field>label:first-child{font-size:.94rem;font-weight:750}
+.personal-profile-card input,.personal-profile-card select{width:100%;max-width:100%;min-width:0;box-sizing:border-box;font-size:16px;min-height:44px}
+.personal-profile-card select{white-space:normal}
+.personal-profile-card label{display:grid;gap:6px}
+.personal-profile-value{margin-top:4px}
+.personal-profile-card [hidden]{display:none!important}
+.personal-weight-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(76px,.45fr);gap:10px}
+.personal-weight-input{grid-column:1/-1}
+.personal-profile-card [aria-invalid=true]{border-color:#b54735}
+.personal-field-error{display:block;color:#b54735;font-size:.78rem;min-height:0;line-height:1.45}
+.personal-field-error:empty{display:none}
+.personal-save-status{font-size:.74rem;color:var(--muted);line-height:1.5;margin:14px 0 0}
+.personal-save-status.is-error{color:#b54735}
+.personal-trends{margin:16px 0 20px}
+.personal-trends>.section-title{display:flex;align-items:baseline;justify-content:space-between;gap:6px 12px;flex-wrap:wrap}
+.personal-trends>.section-title h2{font-size:1.05rem}
+.personal-trends-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.personal-trend-card{padding:14px;min-width:0}
+.metrics-heading{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.metrics-heading h3{margin:0;font-size:.94rem}
+.metrics-heading strong{font-size:1.1rem;font-variant-numeric:tabular-nums}
+.personal-trend-card>p{margin:6px 0}
+.metrics-chart{display:block;width:100%;height:auto;overflow:visible;margin:12px 0 6px}
+.metrics-chart text{font-family:inherit;font-size:11px;fill:var(--muted)}
+.metrics-gridline{stroke:var(--border);stroke-width:1;stroke-dasharray:3 4}
+.metrics-line{fill:none;stroke:var(--accent,#57833b);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.metrics-dot{fill:var(--accent,#57833b);stroke:var(--surface);stroke-width:1}
+.metrics-bar{fill:#708eae}
+.metrics-bar.is-partial{fill:none;stroke:#8a714f;stroke-width:1.5;stroke-dasharray:2 2}
+.metrics-empty{min-height:90px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px;color:var(--muted);font-size:.83rem}
+.metrics-note{color:var(--muted);font-size:.71rem;line-height:1.45}
+.metrics-values{font-size:.77rem;border-top:1px solid var(--border);padding:8px 0;margin-top:8px}
+.metrics-values summary{cursor:pointer;padding:5px 0;min-height:28px;color:var(--text)}
+.metrics-table-scroll{overflow:auto;max-height:240px}
+.metrics-values table{width:100%;border-collapse:collapse;margin-top:8px;font-variant-numeric:tabular-nums}
+.metrics-values caption{text-align:left;font-size:.72rem;color:var(--muted);padding-bottom:6px}
+.metrics-values th,.metrics-values td{text-align:left;padding:7px 5px;border-bottom:1px solid var(--border);font-size:.72rem}
+.metrics-values tbody th{font-weight:500;white-space:nowrap}
+@media(max-width:640px){.personal-trends-grid{grid-template-columns:minmax(0,1fr)}.personal-trend-card{padding:12px 14px}.personal-trends>.section-title h2{margin-bottom:3px}}
+@media(prefers-reduced-motion:reduce){.metrics-chart *{transition:none!important;animation:none!important}}

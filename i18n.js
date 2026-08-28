@@ -819,6 +819,31 @@
     'Ces observations comparent uniquement les journées de ton propre historique. Elles décrivent des associations possibles, ne prouvent aucune cause et ne constituent jamais un diagnostic.':'Ces observations comparent uniquement les journées de votre propre historique. Elles décrivent des associations possibles, ne prouvent aucun lien de causalité et ne constituent jamais un diagnostic.'
   });
 
+  // Meal types stored in the journal keep their Canadian keys. Only labels change.
+  Object.assign(frFR, {
+    "🍱 Restants : copier le souper d'hier":"🍱 Restes : copier le dîner d’hier",
+    "🍳 Copier le déjeuner d'hier":"🍳 Copier le petit-déjeuner d’hier",
+    "Restants : copier le souper d'hier":"Restes : copier le dîner d’hier",
+    "Aucun déjeuner trouvé hier.":"Aucun petit-déjeuner trouvé hier.",
+    "Aucun souper trouvé hier.":"Aucun dîner trouvé hier.",
+    "Derniers déjeuners":"Derniers petits-déjeuners",
+    "Derniers dîners":"Derniers déjeuners",
+    "Derniers soupers":"Derniers dîners",
+    "Dernières collations":"Derniers en-cas",
+    "Les protéines au déjeuner":"Les protéines au petit-déjeuner",
+    "Plusieurs déjeuners enregistrés ne mentionnent pas clairement une source de protéines.":"Plusieurs petits-déjeuners enregistrés ne mentionnent pas clairement une source de protéines.",
+    "Un déjeuner apparaît souvent dans les 28 derniers jours, ce qui peut refléter une routine du matin plutôt qu’un comportement inhabituel.":"Un petit-déjeuner apparaît souvent dans les 28 derniers jours, ce qui peut refléter une routine du matin plutôt qu’un comportement inhabituel.",
+    "Les légumes apparaissent souvent dans tes soupers récents.":"Les légumes apparaissent souvent dans vos dîners récents.",
+    "Les produits laitiers apparaissent encore dans plusieurs déjeuners, cafés et collations.":"Les produits laitiers apparaissent encore dans plusieurs petits-déjeuners, cafés et en-cas.",
+    "Tu prends un déjeuner presque tous les jours.":"Vous prenez un petit-déjeuner presque tous les jours.",
+    "Les légumes sont présents dans la majorité de tes soupers.":"Les légumes sont présents dans la majorité de vos dîners.",
+    "Les Favoris sont idéaux pour tes déjeuners et collations récurrents : tu pourras ensuite ajuster seulement ce qui change.":"Les Favoris sont idéaux pour vos petits-déjeuners et en-cas récurrents : vous pourrez ensuite ajuster seulement ce qui change."
+  });
+  Object.assign(en, {
+    "Derniers déjeuners":"Recent breakfasts", "Derniers dîners":"Recent lunches",
+    "Derniers soupers":"Recent dinners", "Dernières collations":"Recent snacks",
+    "Dernières boissons":"Recent drinks", "Derniers repas":"Recent meals"
+  });
   const dict=locale==='en'?en:locale==='fr-FR'?frFR:{};
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
@@ -836,6 +861,20 @@
 
   function translateString(s){
     let out=translate(s);
+    // Never feed a mapped French meal name back into another meal mapping.
+    if(locale==='fr-FR') {
+      if(out!==s) return out;
+      const mealWord=x=>translate(x.charAt(0).toUpperCase()+x.slice(1).toLowerCase()).toLowerCase();
+      const rules=[
+        [/^Après (déjeuner|dîner|souper|collation|boisson) · (.+)$/i,(_,meal,detail)=>`Après ${mealWord(meal)} · ${detail}`],
+        [/^Comment te sens-tu après ton (déjeuner|dîner|souper|collation|boisson) \?$/i,(_,meal)=>`Comment vous sentez-vous après votre ${mealWord(meal)} ?`],
+        [/^(Ajouter|Modifier) (Déjeuner|Dîner|Souper|Collation|Boisson)$/i,(_,action,meal)=>`${action} ${mealWord(meal)}`],
+        [/^Hier, tu as noté (.+) après (déjeuner|dîner|souper|collation|boisson)$/i,(_,feeling,meal)=>`Hier, vous avez noté ${feeling} après ${mealWord(meal)}`],
+        [/^Observation basée sur (\d+) soupers des 28 derniers jours\.$/,(_,n)=>`Observation basée sur ${n} dîners des 28 derniers jours.`],
+        [/^(\d+) collation(s?) notée(s?)$/,(_,n)=>`${n} en-cas noté${n==='1'?'':'s'}`]
+      ];
+      for(const [pattern,replacement] of rules) if(pattern.test(s)) return s.replace(pattern,replacement);
+    }
     if(locale==='en'){
       const mealWord=x=>translate(x.charAt(0).toUpperCase()+x.slice(1)).toLowerCase();
       out=out
@@ -915,20 +954,64 @@
     }
     return out;
   }
+  // Remember the output per node/attribute: observer callbacks and subsequent
+  // render passes must not translate Déjeuner (French lunch) into breakfast.
+  const translatedText=new WeakMap(), translatedAttributes=new WeakMap();
+  const ignored='script,style,textarea,input,[contenteditable="true"],[translate="no"],[data-i18n-skip]';
+  function translateTextNode(node){
+    const parent=node.parentElement;
+    if(!parent || parent.closest(ignored)) return;
+    const keyed=parent.closest('[data-i18n-key]');
+    if(keyed){translateKeyedElement(keyed);return;}
+    const raw=node.nodeValue;
+    if(translatedText.get(node)===raw) return;
+    const trim=raw.trim(), result=trim?raw.replace(trim,translateString(trim)):raw;
+    translatedText.set(node,result);
+    if(result!==raw) node.nodeValue=result;
+  }
+  function translateKeyedElement(el){
+    if(!el.hasAttribute('data-i18n-key') || el.closest(ignored)) return;
+    const value=translateString(el.getAttribute('data-i18n-key'));
+    if(el.textContent!==value) el.textContent=value;
+  }
+  function translateAttributes(el){
+    if(el.closest('[translate="no"],[data-i18n-skip]')) return;
+    const saved=translatedAttributes.get(el)||{};
+    for(const name of ['placeholder','aria-label','title']){
+      if(!el.hasAttribute(name)){delete saved[name];continue;}
+      const raw=el.getAttribute(name);
+      if(saved[name]===raw) continue;
+      const result=translateString(raw);
+      saved[name]=result;
+      if(result!==raw) el.setAttribute(name,result);
+    }
+    translatedAttributes.set(el,saved);
+  }
   function translateDOM(root=document){
+    if(root.nodeType===3){translateTextNode(root);return;}
+    const elements=[...(root.nodeType===1?[root]:[]),...(root.querySelectorAll?.('[data-i18n-key],[placeholder],[aria-label],[title]')||[])];
+    elements.forEach(el=>{if(el.hasAttribute('data-i18n-key'))translateKeyedElement(el);translateAttributes(el);});
     const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
     const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
-    nodes.forEach(n=>{const raw=n.nodeValue,trim=raw.trim();if(!trim)return;const tr=translateString(trim);if(tr!==trim)n.nodeValue=raw.replace(trim,tr)});
-    root.querySelectorAll?.('[placeholder],[aria-label],[title]').forEach(el=>['placeholder','aria-label','title'].forEach(a=>{if(el.hasAttribute(a))el.setAttribute(a,translateString(el.getAttribute(a)))}));
+    nodes.forEach(translateTextNode);
     ensureLanguageSelector();
   }
   function ensureLanguageSelector(){
     const app=document.querySelector('#app');if(!app||!document.querySelector('#waterGoal')||document.querySelector('#languageSettingCard'))return;
     const card=document.createElement('section');card.className='card';card.id='languageSettingCard';
     card.innerHTML=`<div class="settings-row"><div><h3>${translate('Langue')}</h3><p class="muted small">${translate('Langue de l’application')}</p></div><select id="languageSelect" aria-label="${translate('Langue de l’application')}"><option value="fr-CA">${translate('Français (Canada)')}</option><option value="fr-FR">${translate('Français (France)')}</option><option value="en">English</option></select></div>`;
-    const stack=app.querySelector('.stack');const target=[...stack.children].find(x=>x.textContent.includes('Objectif')||x.textContent.includes('Water goal'));target?.after(card);
+    const stack=app.querySelector('.stack');if(!stack)return;const target=[...stack.children].find(x=>x.textContent.includes('Objectif')||x.textContent.includes('Water goal'));target?.after(card);
     const sel=card.querySelector('select');sel.value=locale;sel.addEventListener('change',()=>{localStorage.setItem('energieLocale',sel.value);location.reload()});
   }
-  const obs=new MutationObserver(ms=>ms.forEach(m=>{if(m.type==='characterData'){const raw=m.target.nodeValue,trim=raw.trim();if(trim){const tr=translateString(trim);if(tr!==trim)m.target.nodeValue=raw.replace(trim,tr)}}m.addedNodes.forEach(n=>{if(n.nodeType===1)translateDOM(n);else if(n.nodeType===3){const raw=n.nodeValue,trim=raw.trim();if(trim){const tr=translateString(trim);if(tr!==trim)n.nodeValue=raw.replace(trim,tr)}}})}));
-  document.addEventListener('DOMContentLoaded',()=>{translateDOM(document);obs.observe(document.body,{childList:true,subtree:true,characterData:true})});
+  const obs=new MutationObserver(ms=>ms.forEach(m=>{
+    if(m.type==='characterData')translateTextNode(m.target);
+    else if(m.type==='attributes'){
+      if(m.attributeName==='data-i18n-key')translateKeyedElement(m.target);
+      else translateAttributes(m.target);
+    }
+    m.addedNodes.forEach(n=>{if(n.nodeType===1||n.nodeType===3)translateDOM(n);});
+  }));
+  function startTranslation(){translateDOM(document);obs.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['placeholder','aria-label','title','data-i18n-key']});}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startTranslation,{once:true});
+  else startTranslation();
 })();
