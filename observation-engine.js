@@ -2,7 +2,7 @@
   "use strict";
 
   const FOOD = window.ENERGIE_FOOD_CATEGORIES;
-  const VERSION = 3;
+  const VERSION = 4;
   const DEFAULT_LOCALE = "fr-CA";
   const DAY_MS = 86400000;
   const CATEGORY_PRIORITY = Object.freeze({
@@ -333,20 +333,26 @@
     const out = {};
     if (!value || typeof value !== "object" || Array.isArray(value)) return out;
     Object.entries(value).forEach(([id, raw]) => {
+      if (!["number", "string"].includes(typeof raw) || String(raw).trim() === "") return;
       const score = Number(raw);
       const confirmsNoSymptom =
         id === "feeling_good" || id === "no_tracked_symptoms";
       if (id && confirmsNoSymptom && score === 0) out[id] = 0;
+      else if (isPositiveFeeling(id) && score === 0) out[id] = 0;
       else if (id && score >= 1 && score <= 5) out[id] = score;
     });
     return out;
+  }
+
+  function isPositiveFeeling(id) {
+    return (window.ENERGIE_FEELING_TAGS || []).some(tag => tag.id === id && tag.group === "positive" && !tag.deprecated);
   }
 
   function mealFeelingChange(meal, tagId) {
     const after = scoreMap(meal?.feeling?.scores);
     if (!Object.keys(after).length && Array.isArray(meal?.feeling?.tags)) {
       const fallback = Math.min(5, Math.max(1, Number(meal.feeling.rating) || 3));
-      meal.feeling.tags.forEach(id => { after[id] = fallback; });
+      meal.feeling.tags.forEach(id => { if (!isPositiveFeeling(id)) after[id] = fallback; });
     }
     const before = scoreMap(meal?.feelingsBefore || meal?.feeling?.beforeScores);
     const beforeConfirmsNoSymptom =
@@ -355,20 +361,21 @@
         after.feeling_good === 0 || after.no_tracked_symptoms === 0,
       beforeValue = Object.prototype.hasOwnProperty.call(before, tagId)
         ? before[tagId]
-        : beforeConfirmsNoSymptom
+        : beforeConfirmsNoSymptom && !isPositiveFeeling(tagId)
           ? 0
           : null,
       afterValue = Object.prototype.hasOwnProperty.call(after, tagId)
         ? after[tagId]
-        : afterConfirmsNoSymptom
+        : afterConfirmsNoSymptom && !isPositiveFeeling(tagId)
           ? 0
           : null;
     if (beforeValue == null || afterValue == null) return null;
     return afterValue - beforeValue;
   }
 
-  function scoredFeelingObservations(days, locale, options) {
-    const tags = (window.ENERGIE_FEELING_TAGS || []).filter(tag => tag.group === "symptom");
+  function scoredFeelingObservations(days, locale, options, group = "symptom") {
+    const positive = group === "positive";
+    const tags = (window.ENERGIE_FEELING_TAGS || []).filter(tag => tag.group === group && !tag.deprecated);
     const meals = days
       .flatMap(day => day.meals || [])
       .filter(
@@ -412,7 +419,8 @@
             change:item.change
           }));
         results.push({
-          id:`food-feeling:${category.id}:${tag.id}`,
+          id:`${positive ? "positive-food-feeling" : "food-feeling"}:${category.id}:${tag.id}`,
+          valence: positive ? "positive" : "negative",
           icon:tag.emoji || category.icon || "🔎",
           title:`${categoryLabel} et ${String(tag.label || tag.id).toLowerCase()}`,
           text:`« ${tag.label || tag.id} » augmente plus souvent après les repas contenant la catégorie « ${categoryLabel.toLowerCase()} » que dans les autres repas comparables.`,
@@ -424,7 +432,7 @@
           evidence:{exposedAffected,comparisonAffected,exposedRate:rateA,comparisonRate:rateB},
           relatedMeals,
           score,
-          basis:`${exposedAffected} aggravations parmi ${exposedChanges.length} repas contenant « ${categoryLabel.toLowerCase()} », contre ${comparisonAffected} parmi ${comparisonChanges.length} autres repas. Le calcul compare le score après au score avant pour chaque ressenti.`,
+          basis:`${exposedAffected} ${positive ? "renforcements du ressenti positif" : "aggravations"} parmi ${exposedChanges.length} repas contenant « ${categoryLabel.toLowerCase()} », contre ${comparisonAffected} parmi ${comparisonChanges.length} autres repas. Le calcul compare le score après au score avant pour chaque ressenti.${positive ? " Seules les intensités explicitement renseignées sont comparées. Cette association ne démontre pas un effet bénéfique de l’aliment." : ""}`,
           kind:"food-category-feeling-change",
           category:`food:${category.id}`,
           categoryId:category.id,
@@ -456,53 +464,60 @@
     const cutoff = Date.now() - Number(settings.lookbackDays) * DAY_MS;
     const recentDays = days.filter(day => dateValue(day.date) >= cutoff);
 
-    const candidates = scoredFeelingObservations(recentDays, locale, settings)
-      .sort((a, b) =>
-        b.score - a.score ||
-        (CATEGORY_PRIORITY[b.categoryId] || 50) -
-          (CATEGORY_PRIORITY[a.categoryId] || 50)
-      );
+    function selectObservations(group) {
+      const candidates = scoredFeelingObservations(recentDays, locale, settings, group)
+        .sort((a, b) =>
+          b.score - a.score ||
+          (CATEGORY_PRIORITY[b.categoryId] || 50) -
+            (CATEGORY_PRIORITY[a.categoryId] || 50)
+        );
 
-    const observations = [];
-    const secondaryObservations = [];
-    const selectedCategoryIds = [];
-    const limit = Number(settings.limit) || DEFAULT_OPTIONS.limit;
+      const observations = [];
+      const secondaryObservations = [];
+      const selectedCategoryIds = [];
+      const limit = Number(settings.limit) || DEFAULT_OPTIONS.limit;
 
-    function exposureOverlap(firstId, secondId) {
-      const eligible = recentDays.filter(day => day.hasUsableFeelings && day.meals.length > 0);
-      let intersection = 0;
-      let union = 0;
-      eligible.forEach(day => {
-        const first = day.categoryIds.has(firstId);
-        const second = day.categoryIds.has(secondId);
-        if (first || second) union += 1;
-        if (first && second) intersection += 1;
-      });
-      return union ? intersection / union : 0;
+      function exposureOverlap(firstId, secondId) {
+        const eligible = recentDays.filter(day => day.hasUsableFeelings && day.meals.length > 0);
+        let intersection = 0;
+        let union = 0;
+        eligible.forEach(day => {
+          const first = day.categoryIds.has(firstId);
+          const second = day.categoryIds.has(secondId);
+          if (first || second) union += 1;
+          if (first && second) intersection += 1;
+        });
+        return union ? intersection / union : 0;
+      }
+
+      for (const candidate of candidates) {
+        const overlappingCategoryId = selectedCategoryIds.find(categoryId =>
+          exposureOverlap(candidate.categoryId, categoryId) >= 0.85
+        );
+        if (overlappingCategoryId) {
+          secondaryObservations.push({
+            ...candidate,
+            secondaryReason: "overlap",
+            overlapsCategoryId: overlappingCategoryId
+          });
+          continue;
+        }
+        if (observations.length < limit) {
+          observations.push(candidate);
+          selectedCategoryIds.push(candidate.categoryId);
+        } else {
+          secondaryObservations.push({
+            ...candidate,
+            secondaryReason: "lower-ranked"
+          });
+        }
+      }
+      return { observations, secondaryObservations, candidateCount: candidates.length };
     }
 
-    for (const candidate of candidates) {
-      const overlappingCategoryId = selectedCategoryIds.find(categoryId =>
-        exposureOverlap(candidate.categoryId, categoryId) >= 0.85
-      );
-      if (overlappingCategoryId) {
-        secondaryObservations.push({
-          ...candidate,
-          secondaryReason: "overlap",
-          overlapsCategoryId: overlappingCategoryId
-        });
-        continue;
-      }
-      if (observations.length < limit) {
-        observations.push(candidate);
-        selectedCategoryIds.push(candidate.categoryId);
-      } else {
-        secondaryObservations.push({
-          ...candidate,
-          secondaryReason: "lower-ranked"
-        });
-      }
-    }
+    // Independent selection: positive associations never displace symptom alerts.
+    const negative = selectObservations("symptom");
+    const positive = selectObservations("positive");
 
     const analyzableDays = recentDays.filter(day => day.hasUsableFeelings && day.meals.length > 0).length;
 
@@ -512,11 +527,14 @@
       generatedAt: new Date().toISOString(),
       locale,
       maturity: journalMaturity(recentDays, locale),
-      observations,
-      secondaryObservations,
+      observations: negative.observations,
+      secondaryObservations: negative.secondaryObservations,
+      positiveObservations: positive.observations,
+      positiveSecondaryObservations: positive.secondaryObservations,
       analyzedDays: recentDays.length,
       analyzableDays,
-      candidateCount: candidates.length,
+      candidateCount: negative.candidateCount,
+      positiveCandidateCount: positive.candidateCount,
       settings: {
         lookbackDays: Number(settings.lookbackDays),
         minimumExposedDays: Number(settings.minimumExposedDays),

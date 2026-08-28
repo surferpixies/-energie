@@ -844,6 +844,19 @@
     "Derniers soupers":"Recent dinners", "Dernières collations":"Recent snacks",
     "Dernières boissons":"Recent drinks", "Derniers repas":"Recent meals"
   });
+  Object.assign(en, {
+    'Sensation de légèreté':'Feeling light',
+    'Énergique':'Energetic',
+    'Pas ressenti':'Not felt',
+    'Observations positives':'Positive observations',
+    'Association positive possible':'Possible positive association',
+    'Piste positive secondaire':'Secondary positive lead',
+    'Renforcements observés':'Observed increases',
+    'Plus présent après':'Stronger afterwards',
+    'Moins présent après':'Less strong afterwards',
+    'Non ressenti après':'Not felt afterwards',
+    'Choisir mes ressentis suivis':'Choose feelings to track',
+  });
   const dict=locale==='en'?en:locale==='fr-FR'?frFR:{};
   Object.assign(en, {
     'Calories estimées':'Estimated calories',

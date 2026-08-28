@@ -6,8 +6,17 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 71;
-  const APP_RELEASE = "3.56.2";
+  const APP_RELEASE = "3.56.3";
   const Metrics = window.EnergieMetrics;
+  // New IDs keep historical aliases (already collapsed to "Tout va bien") neutral.
+  const POSITIVE_FEELINGS = [
+    { id: "positive_wellbeing", emoji: "🙂", label: "Je me sens bien" },
+    { id: "positive_lightness", emoji: "🪶", label: "Sensation de légèreté" },
+    { id: "positive_satiety", emoji: "🥗", label: "Rassasié" },
+    { id: "positive_energy", emoji: "⚡", label: "Énergique" },
+    { id: "positive_calm", emoji: "🧘", label: "Calme ou détendu" },
+  ].map((tag) => ({ ...tag, group: "positive", category: "positive", minScore: 0 }));
+  const POSITIVE_FEELING_IDS = new Set(POSITIVE_FEELINGS.map((tag) => tag.id));
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -522,11 +531,14 @@
     const out = {};
     if (value && typeof value === "object" && !Array.isArray(value))
       Object.entries(value).forEach(([id, score]) => {
+        if (!["number", "string"].includes(typeof score) || String(score).trim() === "") return;
         const n = Number(score);
         const canonicalId = canonicalFeelingId(id);
         const confirmedNone = ["feeling_good", "no_tracked_symptoms"].includes(canonicalId);
         if (canonicalId && confirmedNone && n >= 0 && n <= 5)
           out[canonicalId] = 0;
+        else if (POSITIVE_FEELING_IDS.has(canonicalId) && n === 0)
+          out[canonicalId] = Math.max(out[canonicalId] || 0, 0);
         else if (canonicalId && n >= 1 && n <= 5)
           out[canonicalId] = Math.max(out[canonicalId] || 0, Math.round(n));
       });
@@ -548,7 +560,7 @@
     const legacyAfterScores =
       rawFeeling && !Object.keys(normalizeFeelingScores(rawFeeling.scores)).length
         ? normalizeFeelingScores(Object.fromEntries(
-            (rawFeeling.tags || []).map((id) => [
+            (rawFeeling.tags || []).filter((id) => !POSITIVE_FEELING_IDS.has(id)).map((id) => [
               id,
               Math.min(5, Math.max(1, Number(rawFeeling.rating) || 3)),
             ]),
@@ -821,10 +833,12 @@
             ),
         )
         .map((control) => ({
+          key: control.dataset.trackedFeeling ? `tracked:${control.dataset.trackedFeeling}` : control.id ? `id:${control.id}` : null,
           value: control.value,
           checked: Boolean(control.checked),
         })),
       buttons = [...form.querySelectorAll("button")].map((button) => ({
+        key: button.dataset.scoredTag ? `scored:${button.dataset.scoredToggle || button.dataset.scoredValue}:${button.dataset.scoredTag}:${button.dataset.score ?? "toggle"}` : button.dataset.observationTag ? `observation:${button.dataset.observationTag}` : button.id ? `id:${button.id}` : null,
         active: button.classList.contains("active"),
         ariaPressed: button.getAttribute("aria-pressed"),
       })),
@@ -834,6 +848,7 @@
     return {
       at: new Date().toISOString(),
       calorieEditorVersion: 1,
+      feelingEditorVersion: 1,
       controls,
       buttons,
       scoredItems,
@@ -887,19 +902,22 @@
     const controls = [...form.querySelectorAll("input,select,textarea")].filter(
       (control) =>
         (draft.calorieEditorVersion || !["mealCalories", "mealCalorieMode"].includes(control.id)) &&
+        (draft.feelingEditorVersion || !control.dataset.trackedFeeling?.startsWith("positive_")) &&
         !["file", "password", "submit", "button"].includes(
           String(control.type || "").toLowerCase(),
         ),
     );
     controls.forEach((control, index) => {
-      const saved = draft.controls?.[index];
+      const key = control.dataset.trackedFeeling ? `tracked:${control.dataset.trackedFeeling}` : control.id ? `id:${control.id}` : null;
+      const saved = draft.feelingEditorVersion && key ? draft.controls?.find((item) => item.key === key) : draft.controls?.[index];
       if (!saved) return;
       if (["checkbox", "radio"].includes(control.type))
         control.checked = Boolean(saved.checked);
       else control.value = saved.value ?? "";
     });
-    [...form.querySelectorAll("button")].filter(button => draft.calorieEditorVersion || button.id !== "resetMealCalories").forEach((button, index) => {
-      const saved = draft.buttons?.[index];
+    [...form.querySelectorAll("button")].filter(button => (draft.calorieEditorVersion || button.id !== "resetMealCalories") && (draft.feelingEditorVersion || (!button.closest('[data-scored-item*="positive_"]') && !button.dataset.observationTag?.startsWith("positive_")))).forEach((button, index) => {
+      const key = button.dataset.scoredTag ? `scored:${button.dataset.scoredToggle || button.dataset.scoredValue}:${button.dataset.scoredTag}:${button.dataset.score ?? "toggle"}` : button.dataset.observationTag ? `observation:${button.dataset.observationTag}` : button.id ? `id:${button.id}` : null;
+      const saved = draft.feelingEditorVersion && key ? draft.buttons?.find((item) => item.key === key) : draft.buttons?.[index];
       if (typeof saved === "boolean") button.classList.toggle("active", saved);
       else if (saved) {
         button.classList.toggle("active", Boolean(saved.active));
@@ -4315,7 +4333,7 @@
         meal,
         tag: (meal.feeling.tags || [])
           .map((id) => FEELING_TAGS.find((item) => item.id === id))
-          .find((item) => item?.group === "positive"),
+          .find((item) => item?.group === "positive" && Number(meal.feeling.scores?.[item.id]) > 0),
       }))
       .find((item) => item.tag);
     let eyebrow = "Le cerveau apprend",
@@ -4840,7 +4858,7 @@
     );
   }
   const FEELING_CATEGORIES = [
-    { id: "positive", emoji: "👌", label: "Ressenti général" },
+    { id: "positive", emoji: "🌿", label: "Ressentis positifs" },
     { id: "digestion", emoji: "🍽️", label: "Digestion" },
     { id: "energy_state", emoji: "⚡", label: "Énergie" },
     { id: "head_senses", emoji: "🧠", label: "Tête et sens" },
@@ -4853,6 +4871,7 @@
     { id: "other_physical", emoji: "🩺", label: "Autres signes" },
   ];
   const FEELING_TAGS = [
+    ...POSITIVE_FEELINGS,
     {
       id: "no_tracked_symptoms",
       emoji: "✅",
@@ -5306,7 +5325,7 @@
   window.ENERGIE_FEELING_TAGS = FEELING_TAGS.map((tag) => ({ ...tag }));
   function trackedFeelingIds() {
     const valid = new Set(
-      FEELING_TAGS.filter((tag) => tag.group === "symptom" && !tag.deprecated).map((tag) => tag.id),
+      FEELING_TAGS.filter((tag) => ["symptom", "positive"].includes(tag.group) && !tag.deprecated).map((tag) => tag.id),
     );
     return normalizeFeelingIds(db.settings?.trackedFeelingIds || []).filter((id) => valid.has(id));
   }
@@ -5317,8 +5336,8 @@
   }
   function trackedFeelingsChooserHtml(selectedIds = []) {
     const selected = new Set(selectedIds);
-    return FEELING_CATEGORIES.filter((category) => category.id !== "positive").map((category) => {
-      const tags = FEELING_TAGS.filter((tag) => tag.category === category.id && tag.group === "symptom" && !tag.deprecated);
+    return FEELING_CATEGORIES.map((category) => {
+      const tags = FEELING_TAGS.filter((tag) => tag.category === category.id && ["symptom", "positive"].includes(tag.group) && !tag.deprecated);
       if (!tags.length) return "";
       return `<details class="tracked-feelings-group" ${tags.some((tag) => selected.has(tag.id)) ? "open" : ""}><summary><span>${category.emoji} ${esc(t(category.label))}</span><small>${tags.filter((tag) => selected.has(tag.id)).length}/${tags.length}</small></summary><div>${tags.map((tag) => `<label><input type="checkbox" data-tracked-feeling="${tag.id}" ${selected.has(tag.id) ? "checked" : ""}><span>${tag.emoji} ${esc(t(tag.label))}</span></label>`).join("")}</div></details>`;
     }).join("");
@@ -5372,7 +5391,7 @@
   }
   function averageFeelingScore(scores = {}) {
     const values = Object.entries(normalizeFeelingScores(scores))
-      .filter(([id]) => !["feeling_good", "no_tracked_symptoms"].includes(id))
+      .filter(([id]) => !["feeling_good", "no_tracked_symptoms"].includes(id) && !POSITIVE_FEELING_IDS.has(id))
       .map(([, score]) => score);
     return values.length
       ? Math.round(values.reduce((sum, n) => sum + n, 0) / values.length)
@@ -5388,7 +5407,7 @@
     if (Object.keys(saved).length) return saved;
     const fallback = Number(meal?.feeling?.rating) || 3;
     return Object.fromEntries(
-      (meal?.feeling?.tags || []).map((id) => [id, fallback]),
+      (meal?.feeling?.tags || []).filter((id) => !POSITIVE_FEELING_IDS.has(id)).map((id) => [id, fallback]),
     );
   }
   function feelingTagsForMode(mode, selectedIds = []) {
@@ -5413,19 +5432,22 @@
       const active = Object.prototype.hasOwnProperty.call(selected, tag.id),
         score = active ? selected[tag.id] : null,
         fixed = tag.fixedScore != null;
-      return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}" ${fixed ? `data-fixed-score="${tag.fixedScore}"` : ""} data-feeling-search-label="${esc(t(tag.label))}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span class="feeling-tag-icon">${tag.emoji}</span><span class="feeling-tag-label">${esc(t(tag.label))}</span></button><div class="feeling-score-prompt" ${fixed || !active || score ? "hidden" : ""}>Choisis l’intensité</div><div class="feeling-score-buttons" ${active && !fixed ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n} sur 5">${n}</button>`).join("")}</div></div>`;
+      return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}" ${fixed ? `data-fixed-score="${tag.fixedScore}"` : ""} data-feeling-search-label="${esc(t(tag.label))}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span class="feeling-tag-icon">${tag.emoji}</span><span class="feeling-tag-label">${esc(t(tag.label))}</span></button><div class="feeling-score-prompt" ${fixed || !active || score != null ? "hidden" : ""}>Choisis l’intensité</div><div class="feeling-score-buttons" ${active && !fixed ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${(tag.minScore === 0 ? [0, 1, 2, 3, 4, 5] : [1, 2, 3, 4, 5]).map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n === 0 ? "Pas ressenti" : `${n} sur 5`}">${n}</button>`).join("")}</div></div>`;
     };
-    const standaloneTags = availableTags.filter((tag) => tag.category === "positive"),
+    const standaloneTags = availableTags.filter((tag) => tag.category === "positive" && tag.group === "neutral"),
       standalone = standaloneTags.length
         ? `<div class="standalone-feeling-choice">${standaloneTags.map(tagHtml).join("")}</div>`
         : "";
     const directTags = availableTags.filter(
-        (tag) => tag.category !== "positive",
+        (tag) => tag.category !== "positive" || tag.group !== "neutral",
       ),
       direct = directTags.length
         ? `<div class="direct-feeling-list scored-feeling-group">${directTags.map(tagHtml).join("")}</div>`
         : "";
-    return `${standalone}${direct}`;
+    const positiveHelp = availableTags.some((tag) => tag.group === "positive")
+      ? `<p class="positive-feeling-help muted small">Ressentis positifs : 0 = pas ressenti, 1 = faible, 5 = très présent. Indique le même ressenti avant et après pour permettre la comparaison. Un choix non renseigné reste inconnu. « Tout va bien » confirme seulement l’absence d’inconforts suivis.</p>`
+      : "";
+    return `${standalone}${positiveHelp}${direct}`;
   }
   function bindScoredFeelingPicker(container, mode) {
     if (!container) return;
@@ -5441,7 +5463,7 @@
               selectingNone = neutralIds.has(selectedId);
             container.querySelectorAll(".scored-feeling-item.active").forEach((other) => {
               const otherId = other.querySelector(`[data-scored-toggle="${mode}"]`)?.dataset.scoredTag;
-              if ((selectingNone && other !== item) || (!selectingNone && neutralIds.has(otherId))) {
+              if ((selectingNone && other !== item && !POSITIVE_FEELING_IDS.has(otherId)) || (!selectingNone && !POSITIVE_FEELING_IDS.has(selectedId) && neutralIds.has(otherId))) {
                 other.classList.remove("active");
                 const otherToggle = other.querySelector(`[data-scored-toggle="${mode}"]`);
                 otherToggle?.classList.remove("active");
@@ -5608,7 +5630,7 @@
         allMeals().find((meal) => meal.id === feelingMealId)?.feelingsBefore,
       );
       extremeCount = Object.entries(scores).filter(
-        ([id, score]) => score - (before[id] || 0) >= 4,
+        ([id, score]) => (!POSITIVE_FEELING_IDS.has(id) || Object.prototype.hasOwnProperty.call(before, id)) && score - (before[id] || 0) >= 4,
       ).length;
     }
     const extreme = extremeCount >= 8;
@@ -5744,8 +5766,8 @@
       const tag = FEELING_TAGS.find((item) => item.id === id),
         hasBefore = Object.prototype.hasOwnProperty.call(before, id),
         hasAfter = Object.prototype.hasOwnProperty.call(after, id),
-        start = hasBefore ? before[id] : beforeNone ? 0 : null,
-        end = hasAfter ? after[id] : afterNone ? 0 : null;
+        start = hasBefore ? before[id] : beforeNone && tag?.group === "symptom" ? 0 : null,
+        end = hasAfter ? after[id] : afterNone && tag?.group === "symptom" ? 0 : null;
       if (!tag || start == null || end == null) return;
       rows.push({ id, tag, start, end, delta: end - start });
     });
@@ -6032,7 +6054,7 @@
     if (!feeling) return null;
     const tags = Array.isArray(feeling.tags) ? feeling.tags : [];
     const positiveTags = tags.filter(
-      (id) => FEELING_TAGS.find((tag) => tag.id === id)?.group === "positive",
+      (id) => FEELING_TAGS.find((tag) => tag.id === id)?.group === "positive" && Number(feeling.scores?.[id]) > 0,
     ).length;
     const symptomTags = tags.filter(
       (id) => FEELING_TAGS.find((tag) => tag.id === id)?.group === "symptom",
@@ -6562,7 +6584,6 @@
             count: 0,
             occurrences: [],
           };
-          entry.count += 1;
           const beforeScores = feelingScoresFor(meal, "before");
           const afterScores = feelingScoresFor(meal, "after");
           const beforeNeutral =
@@ -6573,12 +6594,14 @@
             tag,
           )
             ? Number(beforeScores[tag])
-            : beforeNeutral
+            : beforeNeutral && meta.group === "symptom"
               ? 0
               : null;
           const afterValue = Number(
             afterScores[tag] ?? meal.feeling.rating ?? 3,
           );
+          if (meta.group === "positive" && !(Number(afterScores[tag]) > 0)) return;
+          entry.count += 1;
           entry.occurrences.push({
             date: meal.date,
             mealId: meal.id,
@@ -7638,7 +7661,7 @@
       comparisonRate = Number(evidence.comparisonRate),
       hasRates = Number.isFinite(exposedRate) && Number.isFinite(comparisonRate),
       relatedCount = Array.isArray(x.relatedMeals) ? x.relatedMeals.length : 0;
-    return `<details class="observation-evidence"><summary><span>Voir les preuves</span><span aria-hidden="true">⌄</span></summary><div class="observation-evidence-body"><div class="observation-proof-grid"><div><small>Comparés</small><strong>${x.samples?.total || 0}</strong><span>${feelingChange ? "repas avec avant + après" : "journées analysées"}</span></div><div><small>Écart observé</small><strong>${esc(differenceText)}</strong><span>dans ton propre journal</span></div><div><small>Confiance</small><strong>${esc(observationStrengthLabel(x.metrics?.strength))}</strong><span>selon la répétition</span></div></div>${hasRates ? `<div class="observation-rate-proof"><strong>Aggravations observées</strong><div><span>Avec la catégorie <b>${Math.round(exposedRate * 100)} %</b></span><span>Autres repas <b>${Math.round(comparisonRate * 100)} %</b></span></div></div>` : ""}<p class="observation-basis">${esc(x.basis || "Cette observation utilise uniquement les données disponibles dans ton journal.")}</p><div class="observation-proof-actions">${relatedCount ? `<button class="secondary small related-discovery-meals" data-discovery="${index}">Voir les repas concernés (${relatedCount})</button>` : ""}<button class="text-button why-discovery" data-discovery="${index}">Comment c’est calculé</button></div></div></details>`;
+    return `<details class="observation-evidence"><summary><span>Voir les preuves</span><span aria-hidden="true">⌄</span></summary><div class="observation-evidence-body"><div class="observation-proof-grid"><div><small>Comparés</small><strong>${x.samples?.total || 0}</strong><span>${feelingChange ? "repas avec avant + après" : "journées analysées"}</span></div><div><small>Écart observé</small><strong>${esc(differenceText)}</strong><span>dans ton propre journal</span></div><div><small>Confiance</small><strong>${esc(observationStrengthLabel(x.metrics?.strength))}</strong><span>selon la répétition</span></div></div>${hasRates ? `<div class="observation-rate-proof"><strong>${x.valence === "positive" ? "Renforcements observés" : "Aggravations observées"}</strong><div><span>Avec la catégorie <b>${Math.round(exposedRate * 100)} %</b></span><span>Autres repas <b>${Math.round(comparisonRate * 100)} %</b></span></div></div>` : ""}<p class="observation-basis">${esc(x.basis || "Cette observation utilise uniquement les données disponibles dans ton journal.")}</p><div class="observation-proof-actions">${relatedCount ? `<button class="secondary small ${x.valence === "positive" ? "related-positive-meals" : "related-discovery-meals"}" data-discovery="${index}">Voir les repas concernés (${relatedCount})</button>` : ""}<button class="text-button ${x.valence === "positive" ? "why-positive-observation" : "why-discovery"}" data-discovery="${index}">Comment c’est calculé</button></div></div></details>`;
   }
   function brainGrowthState(maturity) {
     const days = Math.max(0, Number(maturity?.analyzableDays) || 0);
@@ -8165,6 +8188,18 @@
     const scored=x.kind==="food-category-feeling-change",unit=scored?" point":"/5",item=scored?"repas":"journée",labels=Array.isArray(x.comparisonLabels)?x.comparisonLabels:["Avec","Sans"];
     return `<div class="observation-comparison" aria-label="Comparaison"><div><span>${esc(labels[0])}</span><strong>${esc(x.statistic)}${unit}</strong><small>${x.samples.exposed} ${item}${x.samples.exposed!==1?"s":""}</small></div><div class="observation-vs">vs</div><div><span>${esc(labels[1])}</span><strong>${esc(x.comparisonStatistic)}${unit}</strong><small>${x.samples.comparison} ${item}${x.samples.comparison!==1?"s":""}</small></div></div>`;
   }
+  function positiveObservationItems(report) {
+    return [
+      ...(report.positiveObservations || []),
+      ...(report.positiveSecondaryObservations || []).slice(0, 8).map((item) => ({ ...item, isSecondary: true })),
+    ];
+  }
+  function positiveObservationSectionHtml(report) {
+    const items = positiveObservationItems(report);
+    const cards = items.map((item, index) => `<article class="card positive-observation-card"><p class="eyebrow">${item.isSecondary ? "Piste positive secondaire" : "Association positive possible"}</p><h3>${item.icon || "🌿"} ${esc(item.title)}</h3><p>${esc(item.text)}</p>${item.isSecondary ? `<p class="muted small">${item.secondaryReason === "overlap" ? "Cette catégorie accompagne souvent une autre catégorie observée : leurs effets ne peuvent pas être distingués ici." : "Cette piste est moins prioritaire que les observations principales."}</p>` : ""}${discoveryComparisonHtml(item)}${observationEvidenceHtml(item, index)}</article>`).join("");
+    const enabled = db.settings?.insightsEnabled !== false;
+    return `<section class="positive-observations" aria-labelledby="positiveObservationsTitle"><div class="section-title"><h2 id="positiveObservationsTitle">🌿 Observations positives</h2></div><p class="muted small">Les ressentis agréables peuvent aussi évoluer après un repas. Ces associations issues de ton journal ne prouvent pas qu’un aliment en est la cause.</p>${enabled && items.length ? `<p class="muted small">Les valeurs comparent l’évolution moyenne après − avant, avec et sans la catégorie.</p><div class="insight-grid">${cards}</div>` : `<div class="card"><p>${enabled ? "Pas encore d’association positive suffisamment étayée. Choisis les ressentis positifs que tu souhaites suivre, puis indique leur intensité avant et après les repas et les collations. Un ressenti stable reste enregistré sans créer de tendance." : "Les observations sont désactivées dans les paramètres."}</p></div>`}<button type="button" class="secondary" id="choosePositiveFeelings">Choisir mes ressentis suivis</button></section>`;
+  }
   function openDiscoveryWhy(x) {
     $("#sourceTitle").textContent = "Pourquoi cette tendance apparaît-elle?";
     $("#sourceContent").innerHTML =
@@ -8216,7 +8251,7 @@
     const meals = Array.isArray(x?.relatedMeals) ? x.relatedMeals : [];
     $("#sourceTitle").textContent = "Repas derrière cette observation";
     $("#sourceContent").innerHTML = meals.length
-      ? `<p class="muted small">Voici les repas où le ressenti suivi s’est détérioré. L’élément reconnu est mis en évidence, mais l’ensemble du repas demeure visible pour conserver son contexte.</p><div class="observation-related-list">${meals.map((meal) => { const matched = observationCategoryMatch(meal.description, x?.categoryId); return `<button type="button" class="observation-related-meal" data-related-meal="${esc(meal.id || "")}" data-related-date="${esc(meal.date || "")}"><span>${mealIcon(meal.type, meal.description)}</span><div><small class="observation-related-meta"><b>${mealTypeHtml(meal.type || "Repas")}</b><span>${esc(formatCalendarDate(meal.date))}${meal.time ? ` à ${esc(meal.time)}` : ""}</span></small><strong>${highlightedObservationMeal(meal.description, x?.categoryId)}</strong>${matched ? `<em>Élément observé : <mark>${esc(matched)}</mark></em>` : ""}</div><b>+${esc(String(meal.change).replace(".", ","))}</b></button>`; }).join("")}</div><p class="muted small">Cette liste montre des repas associés à la tendance; elle ne prouve pas qu’un aliment est la cause du ressenti.</p>`
+      ? `<p class="muted small">Voici les repas où ${x.valence === "positive" ? "le ressenti positif s’est renforcé" : "le ressenti suivi s’est détérioré"}. L’élément reconnu est mis en évidence, mais l’ensemble du repas demeure visible pour conserver son contexte.</p><div class="observation-related-list">${meals.map((meal) => { const matched = observationCategoryMatch(meal.description, x?.categoryId); return `<button type="button" class="observation-related-meal" data-related-meal="${esc(meal.id || "")}" data-related-date="${esc(meal.date || "")}"><span>${mealIcon(meal.type, meal.description)}</span><div><small class="observation-related-meta"><b>${mealTypeHtml(meal.type || "Repas")}</b><span>${esc(formatCalendarDate(meal.date))}${meal.time ? ` à ${esc(meal.time)}` : ""}</span></small><strong>${highlightedObservationMeal(meal.description, x?.categoryId)}</strong>${matched ? `<em>Élément observé : <mark>${esc(matched)}</mark></em>` : ""}</div><b>+${esc(String(meal.change).replace(".", ","))}</b></button>`; }).join("")}</div><p class="muted small">Cette liste montre des repas associés à la tendance; elle ne prouve pas qu’un aliment est la cause du ressenti.</p>`
       : `<p>Aucun repas précis n’est disponible pour cette observation.</p>`;
     [...$("#sourceContent").querySelectorAll(".observation-related-meal")].forEach((button) => {
       button.onclick = () => {
@@ -8545,6 +8580,17 @@
     $("#app").innerHTML =
       `${analysisDateNavigatorHtml()}<section class="hero"><p class="eyebrow">Tableau intelligent</p><h2>Ce qu’Énergie apprend sur toi</h2><p>Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer leurs causes.</p></section>${previewBanner}${discoverySectionHtml(discoveryReport, negativeFeelings)}<div class="grid dashboard-overview"><section class="card stat-card compact-stat-card compact-row-card dashboard-hero-card"><div class="stat-card-heading"><span>🍎</span><div><h3>Tu utilises Énergie depuis</h3><p class="muted small">Date de départ du journal</p></div></div><div class="metric metric-small">${esc(story.since)}</div></section><section class="card stat-card dashboard-mini-card"><span>⭐</span><h3>Point fort</h3><p>${esc(story.strength)}</p></section><section class="card stat-card dashboard-mini-card"><span>💡</span><h3>Habitude observée</h3><p>${esc(story.habit)}</p></section><section class="card stat-card dashboard-mini-card"><span>🎯</span><h3>Suggestion principale</h3><p>${esc(story.suggestion)}</p></section></div>${professionalDiscussionHtml(meals)}<div class="section-title"><h2>🧠 Autres observations</h2><span class="muted small">${insights.length} carte${insights.length > 1 ? "s" : ""}</span></div><div class="insight-grid">${insights.length ? insights.map(insightHtml).join("") : `<section class="card empty wide"><div class="food-art">🧠</div><p>${db.settings.insightsEnabled ? "Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles." : "Les observations sont désactivées dans les paramètres."}</p></section>`}</div>${demoDiscoveryHtml()}${usePreview && !db.settings.demoMode ? '<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>' : ""}`;
     $("#app .hero")?.insertAdjacentHTML("afterend", personalTrendsHtml());
+    // Never manufacture positive observations from the dashboard's preview meals.
+    const positiveReport = canonicalObservationReport(realMeals);
+    const positiveItems = positiveObservationItems(positiveReport);
+    $(".dashboard-overview")?.insertAdjacentHTML("beforebegin", positiveObservationSectionHtml(positiveReport));
+    $("#choosePositiveFeelings")?.addEventListener("click", () => openTrackedFeelingsDialog());
+    $$(".why-positive-observation").forEach((button) => {
+      button.onclick = () => openDiscoveryWhy(positiveItems[Number(button.dataset.discovery)]);
+    });
+    $$(".related-positive-meals").forEach((button) => {
+      button.onclick = () => openDiscoveryMeals(positiveItems[Number(button.dataset.discovery)]);
+    });
     const primaryObservationFold = $(".attention-observations-fold"),
       secondaryObservationHtml = secondaryObservationSectionHtml(discoveryReport);
     if (primaryObservationFold && secondaryObservationHtml)
@@ -9051,7 +9097,7 @@
     bindPersonalProfile();
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.2" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.3" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -9774,7 +9820,7 @@
         $("#mealDialog")?.open && formMealId && formMealId === currentMeal?.id;
     if (editingThisMeal && picker) {
       if (hasUnscoredFeelings(picker, "before")) {
-        alert("Choisis une intensité de 1 à 5 pour chaque ressenti sélectionné.");
+        alert("Choisis une intensité pour chaque ressenti sélectionné (0 signifie « pas ressenti » pour un ressenti positif).");
         return;
       }
       const scores = collectScoredFeelingScores(picker, "before"),
@@ -9872,8 +9918,8 @@
       if (!tag) return;
       const hasBefore = Object.prototype.hasOwnProperty.call(before, id),
         hasAfter = Object.prototype.hasOwnProperty.call(after, id),
-        start = hasBefore ? before[id] : beforeNone ? 0 : null,
-        end = hasAfter ? after[id] : afterNone ? 0 : null;
+        start = hasBefore ? before[id] : beforeNone && tag?.group === "symptom" ? 0 : null,
+        end = hasAfter ? after[id] : afterNone && tag?.group === "symptom" ? 0 : null;
       if (start == null || end == null) return;
       const delta = end - start;
       let tone = "stable", arrow = "→", label = "Stable";
@@ -9888,6 +9934,12 @@
       } else if (delta < 0) {
         tone = "improved"; arrow = "↘";
         label = delta === -1 ? "Légère amélioration" : delta <= -3 ? "Amélioration marquée" : "Amélioration";
+      }
+      if (tag.group === "positive") {
+        tone = delta > 0 ? "improved" : "stable";
+        arrow = delta > 0 ? "↗" : delta < 0 ? "↘" : "→";
+        label = delta > 0 ? (start === 0 ? "Apparu après" : "Plus présent après")
+          : delta < 0 ? (end === 0 ? "Non ressenti après" : "Moins présent après") : "Stable";
       }
       const compactTransition = start === 0
           ? `Absent→${end}/5`
@@ -10496,7 +10548,7 @@
     updateMealCalorieEditor();
     if (!$("#mealCalories").reportValidity()) return;
     if (hasUnscoredFeelings($("#beforeFeelingTags"), "before"))
-      return alert("Choisis une intensité de 1 à 5 pour chaque ressenti sélectionné.");
+      return alert("Choisis une intensité pour chaque ressenti sélectionné (0 signifie « pas ressenti » pour un ressenti positif).");
     const beforeQuality = reviewFeelingQuality(
       feelingQualityAssessment($("#beforeFeelingTags"), "before"),
     );
@@ -10602,7 +10654,7 @@
     const m = allMeals().find((x) => x.id === feelingMealId);
     if (!m) return;
     if (hasUnscoredFeelings($("#feelingTags"), "after"))
-      return alert("Choisis une intensité de 1 à 5 pour chaque ressenti sélectionné.");
+      return alert("Choisis une intensité pour chaque ressenti sélectionné (0 signifie « pas ressenti » pour un ressenti positif).");
     const qualityReview = reviewFeelingQuality(
       feelingQualityAssessment($("#feelingTags"), "after"),
     );
@@ -11674,7 +11726,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.2");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.3");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

@@ -1,0 +1,21 @@
+.positive-observations {
+  margin: 1.4rem 0;
+  padding: 1rem;
+  border: 1px solid #8fbc9a;
+  border-radius: 22px;
+  background: rgba(217, 243, 214, .24);
+}
+.positive-observations > .secondary { margin-top: 1rem; }
+.positive-observation-card { min-width: 0; }
+.positive-observation-card h3 { overflow-wrap: anywhere; }
+.positive-feeling-help { margin: .8rem 0; grid-column: 1 / -1; }
+.direct-feeling-list .scored-feeling-item[data-scored-item*="positive_"] {
+  border-color: #8fbc9a;
+}
+.scored-feeling-item[data-scored-item*="positive_"] .feeling-score-buttons {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+@media (max-width: 420px) {
+  .positive-observations { padding: .75rem; }
+  .positive-observations .insight-grid { grid-template-columns: minmax(0, 1fr); }
+}
