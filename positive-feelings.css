@@ -19,3 +19,56 @@
   .positive-observations { padding: .75rem; }
   .positive-observations .insight-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Shared presentation for pickers, summaries, history and global observations. */
+.feeling-valence-panel {
+  display: block;
+  box-sizing: border-box;
+  grid-column: 1 / -1;
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 0;
+  margin: 10px 0;
+  padding: 12px;
+  border: 1px solid var(--border, #cbd5cb);
+  border-left-width: 4px;
+  border-radius: 16px;
+  text-align: left;
+}
+.feeling-valence-positive {
+  border-color: #78a58b;
+  background: color-mix(in srgb, #8fcaa3 14%, var(--surface, white));
+}
+.feeling-valence-symptom {
+  border-color: #bf9c6a;
+  background: color-mix(in srgb, #e2ba83 14%, var(--surface, white));
+}
+.feeling-valence-neutral {
+  background: var(--surface, white);
+  border-color: var(--border, #cbd5cb);
+}
+.feeling-valence-panel > .feeling-valence-title {
+  display: block;
+  width: 100%;
+  margin: 0 0 9px;
+  color: var(--text, #244c3b);
+  font-size: .85rem;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.feeling-valence-content { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.feeling-valence-picker .feeling-valence-content.direct-feeling-list.scored-feeling-group {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+}
+.feeling-valence-summary { margin: 5px 0; padding: 8px 10px; border-radius: 12px; }
+.feeling-valence-summary > .feeling-valence-title { font-size: .7rem; margin-bottom: 5px; }
+.feeling-valence-panel[hidden] { display: none !important; }
+.fixed-positive-feelings .tracked-feelings-summary { display: flex; flex-wrap: wrap; gap: 6px; }
+.feeling-valence-picker .feeling-tag { width: 100%; }
+@media print {
+  .feeling-valence-panel { break-inside: avoid; }
+}

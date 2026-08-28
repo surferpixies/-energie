@@ -856,6 +856,14 @@
     'Moins présent après':'Less strong afterwards',
     'Non ressenti après':'Not felt afterwards',
     'Choisir mes ressentis suivis':'Choose feelings to track',
+    'Inconforts':'Discomforts',
+    'Inconforts à suivre':'Discomforts to track',
+    'Autres indications':'Other information',
+    'Mes ressentis':'My feelings',
+    'Mes inconforts suivis':'My tracked discomforts',
+    'Modifier mes inconforts suivis':'Edit tracked discomforts',
+    'Liste fixe, toujours disponible. Aucun choix à configurer.':'Fixed list, always available. No setup needed.',
+    'Aucun inconfort sélectionné.':'No discomforts selected.',
   });
   const dict=locale==='en'?en:locale==='fr-FR'?frFR:{};
   Object.assign(en, {

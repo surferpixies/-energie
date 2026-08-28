@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 71;
-  const APP_RELEASE = "3.56.3";
+  const APP_RELEASE = "3.56.4";
   const Metrics = window.EnergieMetrics;
   // New IDs keep historical aliases (already collapsed to "Tout va bien") neutral.
   const POSITIVE_FEELINGS = [
@@ -1036,7 +1036,7 @@
       return Boolean(date && time && date <= todayKey() && (tags || notes));
     }
     if (form.id === "trackedFeelingsForm")
-      return $$('[data-tracked-feeling]:checked').length > 0;
+      return true;
     return true;
   }
   function smartCloseDialog(button) {
@@ -3449,19 +3449,19 @@
   function professionalTrackingPlanHtml() {
     const profile = activeDemoProfile(),
       plan = activeProfessionalTrackingPlan(),
-      chosen = new Set(plan?.feelingIds || []),
+      chosen = new Set((plan?.feelingIds || []).filter((id) => !POSITIVE_FEELING_IDS.has(id))),
       groups = FEELING_CATEGORIES.map((category) => {
-        const tags = FEELING_TAGS.filter((tag) => tag.category === category.id && tag.id !== "feeling_good" && !tag.scopedOnly && !tag.deprecated);
+        const tags = FEELING_TAGS.filter((tag) => tag.category === category.id && tag.group === "symptom" && !tag.scopedOnly && !tag.deprecated);
         if (!tags.length) return "";
         return `<details class="tracking-plan-group" ${tags.some((tag) => chosen.has(tag.id)) ? "open" : ""}><summary><span>${category.emoji} ${esc(t(category.label))}</span><small>${tags.filter((tag) => chosen.has(tag.id)).length}/${tags.length}</small></summary><div class="tracking-plan-options">${tags.map((tag) => `<label><input type="checkbox" data-tracking-feeling="${tag.id}" ${chosen.has(tag.id) ? "checked" : ""}><span>${tag.emoji} ${esc(t(tag.label))}</span></label>`).join("")}</div></details>`;
       }).join("");
-    return `<form id="professionalTrackingPlanForm" class="card professional-tracking-plan"><div class="professional-tracking-plan-head"><div><p class="eyebrow">Plan de suivi personnalisé</p><h2>🎯 Ressentis suivis avec ${esc(profile.name)}</h2></div><strong id="trackingPlanCount">${chosen.size} sélectionnés</strong></div><p class="muted small">Le client ne verra que ces ressentis avant et après les repas ainsi que dans les observations globales. Les anciennes données demeurent conservées.</p><div class="tracking-plan-actions"><button type="button" class="text-button" id="selectAllTrackingFeelings">Tout sélectionner</button><button type="button" class="text-button" id="clearTrackingFeelings">Tout retirer</button></div><div class="tracking-plan-groups">${groups}</div><p class="tracking-plan-permanent">✅ « Tout va bien — rien de particulier » et ✍️ « Autre chose à signaler » demeurent toujours disponibles.</p><button type="submit" class="primary">Enregistrer le plan de suivi</button></form>`;
+    return `<form id="professionalTrackingPlanForm" class="card professional-tracking-plan"><div class="professional-tracking-plan-head"><div><p class="eyebrow">Plan de suivi personnalisé</p><h2>🎯 Ressentis suivis avec ${esc(profile.name)}</h2></div><strong id="trackingPlanCount">${chosen.size} sélectionnés</strong></div><p class="muted small">Cette sélection concerne les inconforts. Les cinq ressentis positifs restent toujours disponibles. Les anciennes données demeurent conservées.</p><div class="tracking-plan-actions"><button type="button" class="text-button" id="selectAllTrackingFeelings">Tout sélectionner</button><button type="button" class="text-button" id="clearTrackingFeelings">Tout retirer</button></div>${fixedPositiveFeelingsHtml()}<section class="feeling-valence-panel feeling-valence-symptom"><strong class="feeling-valence-title">🌦️ Inconforts à suivre</strong><div class="tracking-plan-groups">${groups}</div></section><p class="tracking-plan-permanent">✅ « Tout va bien — rien de particulier » et ✍️ « Autre chose à signaler » demeurent toujours disponibles.</p><button type="submit" class="primary">Enregistrer le plan de suivi</button></form>`;
   }
   function clientTrackingPlanSummaryHtml() {
     const plan = activeProfessionalTrackingPlan();
     if (!plan) return "";
-    const tags = (plan.feelingIds || []).filter((id) => id !== "feeling_good").map((id) => FEELING_TAGS.find((tag) => tag.id === id)).filter(Boolean);
-    return `<section class="card client-tracking-summary"><p class="eyebrow">Plan convenu avec le professionnel</p><h3>🎯 Mes ressentis à observer</h3><div>${tags.map((tag) => `<span>${tag.emoji} ${esc(t(tag.label))}</span>`).join("")}</div><p class="muted tiny">Cette sélection simplifie la saisie. Tes anciennes observations demeurent dans ton historique.</p></section>`;
+    const tags = (plan.feelingIds || []).map((id) => FEELING_TAGS.find((tag) => tag.id === id)).filter((tag) => tag?.group === "symptom");
+    return `<section class="card client-tracking-summary"><p class="eyebrow">Plan convenu avec le professionnel</p><h3>🎯 Mes ressentis à observer</h3>${fixedPositiveFeelingsHtml()}${feelingGroupsHtml(tags, (tag) => `<span>${tag.emoji} ${esc(t(tag.label))}</span>`)}<p class="muted tiny">Cette sélection simplifie la saisie. Tes anciennes observations demeurent dans ton historique.</p></section>`;
   }
   function professionalDemoEntryHtml() {
     if (!hasDemoAccess || db.settings.demoMode) return "";
@@ -3783,7 +3783,6 @@
     $("#professionalTrackingPlanForm")?.addEventListener("submit", (event) => {
       event.preventDefault();
       const feelingIds = $$("[data-tracking-feeling]:checked").map((input) => input.dataset.trackingFeeling);
-      if (!feelingIds.length) return alert("Sélectionne au moins un ressenti à suivre.");
       const plans = readProfessionalTrackingPlans();
       plans[profile.id] = { clientId: profile.id, feelingIds, updatedAt: new Date().toISOString() };
       writeProfessionalTrackingPlans(plans);
@@ -5323,24 +5322,38 @@
     },
   ];
   window.ENERGIE_FEELING_TAGS = FEELING_TAGS.map((tag) => ({ ...tag }));
+  function feelingGroupsHtml(items, renderItem, variant = "summary") {
+    const groups = [
+      { id: "positive", label: "🌿 Ressentis positifs" },
+      { id: "symptom", label: "🌦️ Inconforts" },
+      { id: "neutral", label: "ℹ️ Autres indications" },
+    ];
+    const element = ["picker", "history"].includes(variant) ? "section" : "span";
+    return groups.map((group) => {
+      const entries = items.filter((item) => (item.group || "neutral") === group.id);
+      if (!entries.length) return "";
+      return `<${element} class="feeling-valence-panel feeling-valence-${group.id} feeling-valence-${variant}" data-feeling-section="${group.id}" role="group" aria-label="${esc(t(group.label))}"><strong class="feeling-valence-title">${esc(t(group.label))}</strong><${element === "section" ? "div" : "span"} class="feeling-valence-content ${variant === "picker" ? "direct-feeling-list scored-feeling-group" : ""}">${entries.map(renderItem).join("")}</${element === "section" ? "div" : "span"}></${element}>`;
+    }).join("");
+  }
+  function fixedPositiveFeelingsHtml() {
+    return `<section class="feeling-valence-panel feeling-valence-positive fixed-positive-feelings"><strong class="feeling-valence-title">🌿 Ressentis positifs</strong><p class="muted small">Liste fixe, toujours disponible. Aucun choix à configurer.</p><div class="tracked-feelings-summary">${POSITIVE_FEELINGS.map((tag) => `<span>${tag.emoji} ${esc(t(tag.label))}</span>`).join("")}</div></section>`;
+  }
   function trackedFeelingIds() {
-    const valid = new Set(
-      FEELING_TAGS.filter((tag) => ["symptom", "positive"].includes(tag.group) && !tag.deprecated).map((tag) => tag.id),
-    );
+    const valid = new Set(FEELING_TAGS.filter((tag) => tag.group === "symptom" && !tag.deprecated).map((tag) => tag.id));
     return normalizeFeelingIds(db.settings?.trackedFeelingIds || []).filter((id) => valid.has(id));
   }
   function trackedFeelingsProfileHtml() {
-    const ids = trackedFeelingIds(),
-      tags = ids.map((id) => FEELING_TAGS.find((tag) => tag.id === id)).filter(Boolean);
-    return `<div class="tracked-feelings-profile"><div class="tracked-feelings-profile-head"><div><p class="eyebrow">Ce que tu veux observer</p><h4>Mes ressentis suivis</h4></div><strong>${tags.length}</strong></div><p class="muted small">Seuls les ressentis qui comptent pour toi apparaissent avant et après les repas.</p>${tags.length ? `<div class="tracked-feelings-summary">${tags.map((tag) => `<span>${tag.emoji} ${esc(t(tag.label))}</span>`).join("")}</div>` : `<p class="tracked-feelings-empty">Choisis ce que tu souhaites observer pour simplifier tes saisies.</p>`}<button type="button" class="secondary" id="editTrackedFeelings">${tags.length ? "Modifier mes ressentis" : "Choisir mes ressentis"}</button></div>`;
+    const tags = trackedFeelingIds().map((id) => FEELING_TAGS.find((tag) => tag.id === id)).filter(Boolean);
+    return `<div class="tracked-feelings-profile"><h4>Mes ressentis</h4>${fixedPositiveFeelingsHtml()}<section class="feeling-valence-panel feeling-valence-symptom"><strong class="feeling-valence-title">🌦️ Inconforts à suivre</strong><p class="muted small">Choisis les inconforts que tu souhaites voir lors de tes saisies.</p>${tags.length ? `<div class="tracked-feelings-summary">${tags.map((tag) => `<span>${tag.emoji} ${esc(t(tag.label))}</span>`).join("")}</div>` : '<p class="muted small">Aucun inconfort sélectionné.</p>'}<button type="button" class="secondary" id="editTrackedFeelings">Modifier mes inconforts suivis</button></section></div>`;
   }
   function trackedFeelingsChooserHtml(selectedIds = []) {
     const selected = new Set(selectedIds);
-    return FEELING_CATEGORIES.map((category) => {
-      const tags = FEELING_TAGS.filter((tag) => tag.category === category.id && ["symptom", "positive"].includes(tag.group) && !tag.deprecated);
+    const groups = FEELING_CATEGORIES.filter((category) => category.id !== "positive").map((category) => {
+      const tags = FEELING_TAGS.filter((tag) => tag.category === category.id && tag.group === "symptom" && !tag.deprecated);
       if (!tags.length) return "";
       return `<details class="tracked-feelings-group" ${tags.some((tag) => selected.has(tag.id)) ? "open" : ""}><summary><span>${category.emoji} ${esc(t(category.label))}</span><small>${tags.filter((tag) => selected.has(tag.id)).length}/${tags.length}</small></summary><div>${tags.map((tag) => `<label><input type="checkbox" data-tracked-feeling="${tag.id}" ${selected.has(tag.id) ? "checked" : ""}><span>${tag.emoji} ${esc(t(tag.label))}</span></label>`).join("")}</div></details>`;
     }).join("");
+    return `${fixedPositiveFeelingsHtml()}<section class="feeling-valence-panel feeling-valence-symptom"><strong class="feeling-valence-title">🌦️ Inconforts à suivre</strong>${groups}</section>`;
   }
   function updateTrackedFeelingsDialogCount() {
     const count = $$('[data-tracked-feeling]:checked').length,
@@ -5376,10 +5389,6 @@
   $("#trackedFeelingsForm").onsubmit = (event) => {
     event.preventDefault();
     const ids = $$('[data-tracked-feeling]:checked').map((input) => input.dataset.trackedFeeling);
-    if (!ids.length) {
-      $("#trackedFeelingsError").hidden = false;
-      return;
-    }
     db.settings.trackedFeelingIds = normalizeFeelingIds(ids);
     db.settings.trackedFeelingsConfigured = true;
     saveLocal("ressentis-suivis");
@@ -5416,6 +5425,7 @@
     return FEELING_TAGS.filter((tag) => {
       if (mode === "before" && tag.afterOnly) return false;
       if (tag.deprecated && !selected.has(tag.id)) return false;
+      if (POSITIVE_FEELING_IDS.has(tag.id)) return true;
       if (!plan && db.settings?.trackedFeelingsConfigured) {
         const tracked = new Set(trackedFeelingIds());
         return tag.scopedOnly || tracked.has(tag.id) || selected.has(tag.id);
@@ -5438,12 +5448,8 @@
       standalone = standaloneTags.length
         ? `<div class="standalone-feeling-choice">${standaloneTags.map(tagHtml).join("")}</div>`
         : "";
-    const directTags = availableTags.filter(
-        (tag) => tag.category !== "positive" || tag.group !== "neutral",
-      ),
-      direct = directTags.length
-        ? `<div class="direct-feeling-list scored-feeling-group">${directTags.map(tagHtml).join("")}</div>`
-        : "";
+    const directTags = availableTags.filter((tag) => tag.category !== "positive" || tag.group !== "neutral");
+    const direct = feelingGroupsHtml(directTags, tagHtml, "picker");
     const positiveHelp = availableTags.some((tag) => tag.group === "positive")
       ? `<p class="positive-feeling-help muted small">Ressentis positifs : 0 = pas ressenti, 1 = faible, 5 = très présent. Indique le même ressenti avant et après pour permettre la comparaison. Un choix non renseigné reste inconnu. « Tout va bien » confirme seulement l’absence d’inconforts suivis.</p>`
       : "";
@@ -5589,6 +5595,9 @@
         delete group.dataset.searchWasOpen;
         group.hidden = false;
       }
+    });
+    container.querySelectorAll("[data-feeling-section]").forEach((section) => {
+      section.hidden = !!query && ![...section.querySelectorAll(".scored-feeling-item")].some((item) => !item.hidden);
     });
     if (clear) clear.hidden = !query;
     if (empty) empty.hidden = !query || matches > 0;
@@ -5998,14 +6007,13 @@
             .map((id) => FEELING_TAGS.find((x) => x.id === id))
             .filter(Boolean),
           lead = tags[0],
-          more = Math.max(0, tags.length - 1),
           contexts = (o.contexts || [])
             .map((id) => OBSERVATION_CONTEXTS[id])
             .filter(Boolean);
-        return `<button type="button" class="global-observation-item" data-global-observation="${o.id}"><span class="global-observation-item-icon">${lead?.emoji || "🔎"}</span><span><strong>${lead ? esc(t(lead.label)) : "Observation"}${more ? ` +${more}` : ""}</strong><small>${esc(o.time)} · Intensité ${o.intensity}/5 · ${esc(OBSERVATION_DURATIONS[o.duration] || "Durée inconnue")}</small>${contexts.length ? `<em>${esc(contexts.join(" · "))}</em>` : ""}</span><b>›</b></button>`;
+        return `<button type="button" class="global-observation-item" data-global-observation="${o.id}"><span class="global-observation-item-icon">${lead?.emoji || "🔎"}</span><span>${tags.length ? feelingGroupsHtml(tags, (tag) => `<span>${tag.emoji} ${esc(t(tag.label))}</span>`) : "<strong>Observation</strong>"}<small>${esc(o.time)} · Intensité ${o.intensity}/5 · ${esc(OBSERVATION_DURATIONS[o.duration] || "Durée inconnue")}</small>${contexts.length ? `<em>${esc(contexts.join(" · "))}</em>` : ""}</span><b>›</b></button>`;
       })
       .join("");
-    return `<section class="card global-observations-card"><div class="row observation-section-head"><div><p class="eyebrow">Ressenti hors repas</p><h3>🔎 Observations globales</h3></div><button type="button" class="secondary small" id="addGlobalObservation">+ Ajouter</button></div><p class="muted small">Pour noter un symptôme qui peut apparaître plus tard ou durer plusieurs jours, sans l’attribuer automatiquement au dernier repas.</p><div class="observation-list">${cards || '<div class="observation-empty"><span>🌿</span><small>Aucune observation globale cette journée.</small></div>'}</div></section>`;
+    return `<section class="card global-observations-card"><div class="row observation-section-head"><div><p class="eyebrow">Ressenti hors repas</p><h3>🔎 Observations globales</h3></div><button type="button" class="secondary small" id="addGlobalObservation">+ Ajouter</button></div><p class="muted small">Pour noter un ressenti positif ou un inconfort hors repas, sans l’attribuer automatiquement au dernier repas.</p><div class="observation-list">${cards || '<div class="observation-empty"><span>🌿</span><small>Aucune observation globale cette journée.</small></div>'}</div></section>`;
   }
   function supplementsTodayHtml(day) {
     const observationHtml = observationSectionHtml(day),
@@ -6817,13 +6825,19 @@
       )
       .join("")}</div></div>`;
   }
+  function historyFeelingGroupsHtml(stats, limit = 6, occurrenceLimit = 3) {
+    return feelingGroupsHtml([
+      { group: "positive", html: feelingObservationSectionHtml(stats?.positive || [], "Faits consignés", "Aucun ressenti positif consigné", "Les ressentis positifs enregistrés après tes repas apparaîtront ici.", limit, occurrenceLimit) },
+      { group: "symptom", html: feelingObservationSectionHtml(stats?.negative || [], "Faits consignés", "Aucun inconfort consigné", "Les inconforts enregistrés après tes repas apparaîtront ici.", limit, occurrenceLimit) },
+    ], (item) => item.html, "history");
+  }
   function historyNegativeFeelingHtml(stats) {
-    return `<section class="card history-feelings-card">${feelingObservationSectionHtml(stats.negative || [], "Observations basées sur tes ressentis", "Aucun ressenti observé", "Les ressentis enregistrés après tes repas apparaîtront automatiquement ici.", 6, 3)}</section>`;
+    return `<section class="card history-feelings-card">${historyFeelingGroupsHtml(stats)}</section>`;
   }
   let lazyAllObservationStats = null;
   function dashboardNegativeFeelingHtml(stats) {
     lazyAllObservationStats = stats;
-    const count = (stats.negative || []).reduce(
+    const count = [...(stats.negative || []), ...(stats.positive || [])].reduce(
       (sum, item) => sum + item.count,
       0,
     );
@@ -6841,14 +6855,7 @@
           if (!target.isConnected) return;
           target.dataset.loaded = "true";
           target.classList.remove("all-observations-lazy-placeholder");
-          target.innerHTML = feelingObservationSectionHtml(
-            lazyAllObservationStats?.negative || [],
-            "Historique complet",
-            "Aucun ressenti observé",
-            "Les ressentis enregistrés après tes repas apparaîtront automatiquement ici.",
-            Number.MAX_SAFE_INTEGER,
-            Number.MAX_SAFE_INTEGER,
-          );
+          target.innerHTML = historyFeelingGroupsHtml(lazyAllObservationStats, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
         }, 0),
       );
     });
@@ -7980,7 +7987,7 @@
           title = tags.length
             ? tags.map((tag) => `${tag.emoji} ${t(tag.label)}`).join(" · ")
             : "Ressenti hors repas";
-        return `<article class="portrait-global-occurrence"><div class="portrait-occurrence-heading"><div><time>${esc(formatCalendarDate(observation.date))} à ${esc(observation.time || "—")}</time><strong>${esc(title)}</strong></div><b>${observation.intensity}/5</b></div><div class="portrait-global-meta"><span>Durée : <b>${esc(OBSERVATION_DURATIONS[observation.duration] || "Inconnue")}</b></span>${contexts.length ? `<span>Contexte : <b>${esc(contexts.join(" · "))}</b></span>` : ""}</div>${relatedMeals.length ? `<div class="portrait-related-meals"><small>Repas associés manuellement</small>${relatedMeals.map((meal) => `<p><b>${esc(formatCalendarDate(meal.date))} à ${esc(meal.time)}</b> — ${esc(meal.description)}</p>`).join("")}</div>` : `<p class="portrait-no-related-meal">Aucun repas associé manuellement.</p>`}${observation.notes ? `<p class="portrait-occurrence-note"><b>Note :</b> ${esc(observation.notes)}</p>` : ""}</article>`;
+        return `<article class="portrait-global-occurrence"><div class="portrait-occurrence-heading"><div><time>${esc(formatCalendarDate(observation.date))} à ${esc(observation.time || "—")}</time>${tags.length ? feelingGroupsHtml(tags, (tag) => `<span>${tag.emoji} ${esc(t(tag.label))}</span>`) : `<strong>${esc(title)}</strong>`}</div><b>${observation.intensity}/5</b></div><div class="portrait-global-meta"><span>Durée : <b>${esc(OBSERVATION_DURATIONS[observation.duration] || "Inconnue")}</b></span>${contexts.length ? `<span>Contexte : <b>${esc(contexts.join(" · "))}</b></span>` : ""}</div>${relatedMeals.length ? `<div class="portrait-related-meals"><small>Repas associés manuellement</small>${relatedMeals.map((meal) => `<p><b>${esc(formatCalendarDate(meal.date))} à ${esc(meal.time)}</b> — ${esc(meal.description)}</p>`).join("")}</div>` : `<p class="portrait-no-related-meal">Aucun repas associé manuellement.</p>`}${observation.notes ? `<p class="portrait-occurrence-note"><b>Note :</b> ${esc(observation.notes)}</p>` : ""}</article>`;
       })
       .join("");
   }
@@ -8198,7 +8205,7 @@
     const items = positiveObservationItems(report);
     const cards = items.map((item, index) => `<article class="card positive-observation-card"><p class="eyebrow">${item.isSecondary ? "Piste positive secondaire" : "Association positive possible"}</p><h3>${item.icon || "🌿"} ${esc(item.title)}</h3><p>${esc(item.text)}</p>${item.isSecondary ? `<p class="muted small">${item.secondaryReason === "overlap" ? "Cette catégorie accompagne souvent une autre catégorie observée : leurs effets ne peuvent pas être distingués ici." : "Cette piste est moins prioritaire que les observations principales."}</p>` : ""}${discoveryComparisonHtml(item)}${observationEvidenceHtml(item, index)}</article>`).join("");
     const enabled = db.settings?.insightsEnabled !== false;
-    return `<section class="positive-observations" aria-labelledby="positiveObservationsTitle"><div class="section-title"><h2 id="positiveObservationsTitle">🌿 Observations positives</h2></div><p class="muted small">Les ressentis agréables peuvent aussi évoluer après un repas. Ces associations issues de ton journal ne prouvent pas qu’un aliment en est la cause.</p>${enabled && items.length ? `<p class="muted small">Les valeurs comparent l’évolution moyenne après − avant, avec et sans la catégorie.</p><div class="insight-grid">${cards}</div>` : `<div class="card"><p>${enabled ? "Pas encore d’association positive suffisamment étayée. Choisis les ressentis positifs que tu souhaites suivre, puis indique leur intensité avant et après les repas et les collations. Un ressenti stable reste enregistré sans créer de tendance." : "Les observations sont désactivées dans les paramètres."}</p></div>`}<button type="button" class="secondary" id="choosePositiveFeelings">Choisir mes ressentis suivis</button></section>`;
+    return `<section class="positive-observations" aria-labelledby="positiveObservationsTitle"><div class="section-title"><h2 id="positiveObservationsTitle">🌿 Observations positives</h2></div><p class="muted small">Les ressentis agréables peuvent aussi évoluer après un repas. Ces associations issues de ton journal ne prouvent pas qu’un aliment en est la cause.</p>${enabled && items.length ? `<p class="muted small">Les valeurs comparent l’évolution moyenne après − avant, avec et sans la catégorie.</p><div class="insight-grid">${cards}</div>` : `<div class="card"><p>${enabled ? "Pas encore d’association positive suffisamment étayée. Les cinq ressentis positifs sont toujours disponibles. Indique leur intensité avant et après les repas et les collations. Un ressenti stable reste enregistré sans créer de tendance." : "Les observations sont désactivées dans les paramètres."}</p></div>`}</section>`;
   }
   function openDiscoveryWhy(x) {
     $("#sourceTitle").textContent = "Pourquoi cette tendance apparaît-elle?";
@@ -8584,7 +8591,6 @@
     const positiveReport = canonicalObservationReport(realMeals);
     const positiveItems = positiveObservationItems(positiveReport);
     $(".dashboard-overview")?.insertAdjacentHTML("beforebegin", positiveObservationSectionHtml(positiveReport));
-    $("#choosePositiveFeelings")?.addEventListener("click", () => openTrackedFeelingsDialog());
     $$(".why-positive-observation").forEach((button) => {
       button.onclick = () => openDiscoveryWhy(positiveItems[Number(button.dataset.discovery)]);
     });
@@ -9097,7 +9103,7 @@
     bindPersonalProfile();
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.3" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.4" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -9853,29 +9859,19 @@
   function feelingScorePreviewHtml(scores = {}) {
     const items = feelingScorePreviewItems(scores);
     return items.length
-      ? items
-          .map(
-            (item) =>
-              `<span class="meal-feeling-score-chip"><span>${item.emoji}</span>${esc(t(item.label))}${item.score === 0 ? "" : `<b>${item.score}/5</b>`}</span>`,
-          )
-          .join("")
+      ? feelingGroupsHtml(items, (item) => `<span class="meal-feeling-score-chip"><span>${item.emoji}</span>${esc(t(item.label))}${item.score === 0 ? (item.group === "positive" ? "<b>Absent</b>" : "") : `<b>${item.score}/5</b>`}</span>`)
       : '<span class="meal-feeling-empty">Aucun ressenti</span>';
   }
   function feelingCompactSummaryHtml(label, scores = {}) {
     const items = feelingScorePreviewItems(scores);
     const rows = items.length
-      ? items
-          .map(
-            (item) =>
-              `<span class="meal-feelings-mini-item"><i aria-hidden="true">${item.emoji}</i><small>${esc(t(item.label))}</small>${item.score === 0 ? "" : `<b>${item.score}/5</b>`}</span>`,
-          )
-          .join("")
+      ? feelingGroupsHtml(items, (item) => `<span class="meal-feelings-mini-item"><i aria-hidden="true">${item.emoji}</i><small>${esc(t(item.label))}</small>${item.score === 0 ? (item.group === "positive" ? "<b>Absent</b>" : "") : `<b>${item.score}/5</b>`}</span>`)
       : '<span class="meal-feelings-mini-empty">Aucun ressenti</span>';
-    return `<span class="meal-feelings-mini-group"><strong>${label}</strong><span class="meal-feelings-mini-list">${rows}</span></span>`;
+    return `<span class="meal-feelings-mini-group"><strong>${esc(label)}</strong><span class="meal-feelings-mini-list">${rows}</span></span>`;
   }
   function feelingSelectionCountLabel(items = []) {
     if (!items.length) return "Non consigné";
-    if (items.length === 1 && items[0].score === 0) return "Tout va bien";
+    if (items.length === 1 && items[0].score === 0 && items[0].group === "neutral") return "Tout va bien";
     return `${items.length} ressenti${items.length > 1 ? "s" : ""}`;
   }
   function compactFeelingLabel(tag) {
@@ -9947,14 +9943,15 @@
             ? `${start}/5→Absent`
             : `${start}→${end}`,
         fullTransition = `${feelingEndpointLabel(start)} → ${feelingEndpointLabel(end)}`;
-      rows.push(compact
+      rows.push({ group: tag.group, html: compact
         ? `<span class="feeling-change-pill ${tone}" title="${esc(label)}"><i aria-hidden="true">${arrow}</i><span>${tag.emoji} ${esc(compactFeelingLabel(tag))}</span><b>${compactTransition}</b></span>`
-        : `<span class="feeling-change ${tone}"><i aria-hidden="true">${arrow}</i><span><strong>${tag.emoji} ${esc(t(tag.label))}</strong><small>${label}</small></span><b>${fullTransition}</b></span>`);
+        : `<span class="feeling-change ${tone}"><i aria-hidden="true">${arrow}</i><span><strong>${tag.emoji} ${esc(t(tag.label))}</strong><small>${label}</small></span><b>${fullTransition}</b></span>` });
     });
     if (!rows.length) return "";
+    const groupedRows = feelingGroupsHtml(rows, (row) => row.html);
     return compact
-      ? `<span class="feeling-change-pills"><strong>Évolution</strong><span>${rows.join("")}</span></span>`
-      : `<span class="feeling-changes"><strong>Évolution après le repas</strong>${rows.join("")}<small class="feeling-change-caution">Ces changements décrivent une évolution autour du repas, sans établir qu’il en est la cause.</small></span>`;
+      ? `<span class="feeling-change-pills"><strong>Évolution</strong><span>${groupedRows}</span></span>`
+      : `<span class="feeling-changes"><strong>Évolution après le repas</strong>${groupedRows}<small class="feeling-change-caution">Ces changements décrivent une évolution autour du repas, sans établir qu’il en est la cause.</small></span>`;
   }
   function updateMealFeelingsOverview(meal = null) {
     const collapsed = $("#mealFeelingsCollapsedPreview"),
@@ -10283,22 +10280,11 @@
     return null;
   }
   function observationTagPickerHtml(selected) {
-    const chosen = new Set(selected || []),
-      availableTags = feelingTagsForMode("global", [...chosen]);
-    const standaloneTags = availableTags.filter((tag) => tag.category === "positive"),
-      standalone = standaloneTags.length
-        ? `<div class="standalone-feeling-choice">${standaloneTags.map((tag) => `<button type="button" class="feeling-tag ${chosen.has(tag.id) ? "active" : ""}" data-observation-tag="${tag.id}"><span class="feeling-tag-icon">${tag.emoji}</span><span class="feeling-tag-label">${esc(t(tag.label))}</span></button>`).join("")}</div>`
-        : "";
-    const categories = FEELING_CATEGORIES.filter((category) => category.id !== "positive").map((category) => {
-      const tags = availableTags.filter((tag) => tag.category === category.id),
-        alwaysClosed = category.id === "digestion";
-      if (!tags.length) return "";
-      const open =
-        !alwaysClosed &&
-        (category.open || tags.some((tag) => chosen.has(tag.id)));
-      return `<details class="feeling-tag-group feeling-tag-group-${category.id}" ${open ? "open" : ""}><summary><span><b>${category.emoji}</b><strong>${esc(t(category.label))}</strong></span><small>${tags.length}</small><i aria-hidden="true">›</i></summary><div class="feeling-tag-group-body">${tags.map((tag) => `<button type="button" class="feeling-tag ${chosen.has(tag.id) ? "active" : ""}" data-observation-tag="${tag.id}"><span class="feeling-tag-icon">${tag.emoji}</span><span class="feeling-tag-label">${esc(t(tag.label))}</span></button>`).join("")}</div></details>`;
-    }).join("");
-    return `${standalone}${categories}`;
+    const chosen = new Set(selected || []), availableTags = feelingTagsForMode("global", [...chosen]);
+    const tagHtml = (tag) => `<button type="button" class="feeling-tag ${chosen.has(tag.id) ? "active" : ""}" data-observation-tag="${tag.id}"><span class="feeling-tag-icon">${tag.emoji}</span><span class="feeling-tag-label">${esc(t(tag.label))}</span></button>`;
+    const neutral = availableTags.filter((tag) => tag.category === "positive" && tag.group === "neutral");
+    const rest = availableTags.filter((tag) => !neutral.includes(tag));
+    return `<div class="standalone-feeling-choice">${neutral.map(tagHtml).join("")}</div>${feelingGroupsHtml(rest, tagHtml, "picker")}`;
   }
   function recentObservationMeals(date, time, selected = []) {
     const end = new Date(`${date}T${time || "23:59"}:00`).getTime(),
@@ -11726,7 +11712,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.3");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.4");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

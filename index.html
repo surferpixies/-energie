@@ -11,13 +11,13 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.56.3">
-  <link rel="stylesheet" href="portrait.css?v=3.56.3">
-  <link rel="stylesheet" href="observation-detail.css?v=3.56.3">
-  <link rel="stylesheet" href="personal-metrics.css?v=3.56.3">
-  <link rel="stylesheet" href="meal-labels.css?v=3.56.3">
-  <link rel="stylesheet" href="meal-calories.css?v=3.56.3">
-  <link rel="stylesheet" href="positive-feelings.css?v=3.56.3">
+  <link rel="stylesheet" href="styles.css?v=3.56.4">
+  <link rel="stylesheet" href="portrait.css?v=3.56.4">
+  <link rel="stylesheet" href="observation-detail.css?v=3.56.4">
+  <link rel="stylesheet" href="personal-metrics.css?v=3.56.4">
+  <link rel="stylesheet" href="meal-labels.css?v=3.56.4">
+  <link rel="stylesheet" href="meal-calories.css?v=3.56.4">
+  <link rel="stylesheet" href="positive-feelings.css?v=3.56.4">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -358,11 +358,11 @@
   <dialog id="trackedFeelingsDialog" class="tracked-feelings-dialog">
     <form id="trackedFeelingsForm" class="dialog-card tracked-feelings-card">
       <div class="dialog-header"><div><p class="eyebrow">Le cœur d’Énergie</p><h2>Mes ressentis suivis</h2></div><button type="button" class="icon-button" id="closeTrackedFeelings" aria-label="Fermer">✕</button></div>
-      <p>Choisis uniquement les ressentis que tu veux comprendre. Ce sont les seuls qui apparaîtront lors de tes saisies.</p>
+      <p>Les cinq ressentis positifs sont toujours disponibles. Choisis seulement les inconforts que tu veux suivre; tu peux aussi n’en choisir aucun.</p>
       <div class="tracked-feelings-reassurance"><span aria-hidden="true">🔒</span><span>Tu pourras modifier cette sélection en tout temps. Ton ancien historique ne sera jamais supprimé.</span></div>
       <div class="tracked-feelings-toolbar"><strong id="trackedFeelingsCount">0 sélectionné</strong><button type="button" class="text-button" id="clearTrackedFeelings">Tout retirer</button></div>
       <div id="trackedFeelingsChoices" class="tracked-feelings-choices"></div>
-      <p id="trackedFeelingsError" class="form-error" hidden>Choisis au moins un ressenti à suivre.</p>
+      <p id="trackedFeelingsError" class="form-error" hidden>Vérifie ta sélection.</p>
       <div class="dialog-actions"><button type="submit" class="primary">Enregistrer mes ressentis</button></div>
     </form>
   </dialog>
@@ -503,7 +503,7 @@
   </dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=3.7.1"></script>
-  <script src="i18n.js?v=3.56.3"></script>
+  <script src="i18n.js?v=3.56.4"></script>
   <script src="foods.js?v=3.8.0"></script>
   <script src="food-categories.js?v=3.31.2"></script>
   <script src="dish-knowledge.js?v=3.31.2"></script>
@@ -516,9 +516,9 @@
   <script src="brain/profile.js?v=3.8.0"></script>
   <script src="brain/insight-engine.js?v=3.30.2"></script>
   <script src="brain/index.js?v=3.12.0"></script>
-  <script src="observation-engine.js?v=3.56.3"></script>
-  <script src="demo-profiles.js?v=3.56.3"></script>
-  <script src="personal-metrics.js?v=3.56.3"></script>
-  <script src="app.js?v=3.56.3"></script>
+  <script src="observation-engine.js?v=3.56.4"></script>
+  <script src="demo-profiles.js?v=3.56.4"></script>
+  <script src="personal-metrics.js?v=3.56.4"></script>
+  <script src="app.js?v=3.56.4"></script>
 </body>
 </html>
