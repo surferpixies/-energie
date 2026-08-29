@@ -335,10 +335,7 @@
     Object.entries(value).forEach(([id, raw]) => {
       if (!["number", "string"].includes(typeof raw) || String(raw).trim() === "") return;
       const score = Number(raw);
-      const confirmsNoSymptom =
-        id === "feeling_good" || id === "no_tracked_symptoms";
-      if (id && confirmsNoSymptom && score === 0) out[id] = 0;
-      else if (isPositiveFeeling(id) && score === 0) out[id] = 0;
+      if (isPositiveFeeling(id) && score === 0) out[id] = 0;
       else if (id && score >= 1 && score <= 5) out[id] = score;
     });
     return out;
@@ -355,10 +352,12 @@
       meal.feeling.tags.forEach(id => { if (!isPositiveFeeling(id)) after[id] = fallback; });
     }
     const before = scoreMap(meal?.feelingsBefore || meal?.feeling?.beforeScores);
-    const beforeConfirmsNoSymptom =
-        before.feeling_good === 0 || before.no_tracked_symptoms === 0,
-      afterConfirmsNoSymptom =
-        after.feeling_good === 0 || after.no_tracked_symptoms === 0,
+    const beforeConfirmsNoSymptom = Object.entries(before).some(
+        ([id, score]) => isPositiveFeeling(id) && Number(score) > 0,
+      ),
+      afterConfirmsNoSymptom = Object.entries(after).some(
+        ([id, score]) => isPositiveFeeling(id) && Number(score) > 0,
+      ),
       beforeValue = Object.prototype.hasOwnProperty.call(before, tagId)
         ? before[tagId]
         : beforeConfirmsNoSymptom && !isPositiveFeeling(tagId)

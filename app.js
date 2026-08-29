@@ -5,10 +5,10 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 71;
-  const APP_RELEASE = "3.56.5";
+  const CURRENT_VERSION = 72;
+  const APP_RELEASE = "3.56.6";
   const Metrics = window.EnergieMetrics;
-  // New IDs keep historical aliases (already collapsed to "Tout va bien") neutral.
+  // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
     { id: "positive_wellbeing", emoji: "🙂", label: "Je me sens bien" },
     { id: "positive_lightness", emoji: "🪶", label: "Sensation de légèreté" },
@@ -17,6 +17,7 @@
     { id: "positive_calm", emoji: "🧘", label: "Calme ou détendu" },
   ].map((tag) => ({ ...tag, group: "positive", category: "positive", minScore: 0 }));
   const POSITIVE_FEELING_IDS = new Set(POSITIVE_FEELINGS.map((tag) => tag.id));
+  const RETIRED_FEELING_IDS = new Set(["feeling_good", "no_tracked_symptoms"]);
   const FEELING_ALIASES = {
     energy: "stable_energy",
     stable_energy: "feeling_good",
@@ -56,7 +57,7 @@
     return current;
   }
   function normalizeFeelingIds(ids = []) {
-    return [...new Set((Array.isArray(ids) ? ids : []).map(canonicalFeelingId).filter(Boolean))];
+    return [...new Set((Array.isArray(ids) ? ids : []).map(canonicalFeelingId).filter((id) => id && !RETIRED_FEELING_IDS.has(id)))];
   }
   const $ = (s) => document.querySelector(s);
   const $$ = (s) => [...document.querySelectorAll(s)];
@@ -534,10 +535,8 @@
         if (!["number", "string"].includes(typeof score) || String(score).trim() === "") return;
         const n = Number(score);
         const canonicalId = canonicalFeelingId(id);
-        const confirmedNone = ["feeling_good", "no_tracked_symptoms"].includes(canonicalId);
-        if (canonicalId && confirmedNone && n >= 0 && n <= 5)
-          out[canonicalId] = 0;
-        else if (POSITIVE_FEELING_IDS.has(canonicalId) && n === 0)
+        if (RETIRED_FEELING_IDS.has(canonicalId)) return;
+        if (POSITIVE_FEELING_IDS.has(canonicalId) && n === 0)
           out[canonicalId] = Math.max(out[canonicalId] || 0, 0);
         else if (canonicalId && n >= 1 && n <= 5)
           out[canonicalId] = Math.max(out[canonicalId] || 0, Math.round(n));
@@ -550,14 +549,7 @@
       beforeScores = normalizeFeelingScores(
         m.feelingsBefore || m.feelings_before || rawFeeling?.beforeScores,
       ),
-      hasAfter = !!(
-        rawFeeling &&
-        (rawFeeling.rating ||
-          (rawFeeling.tags || []).length ||
-          Object.keys(normalizeFeelingScores(rawFeeling.scores)).length ||
-          rawFeeling.notes)
-      );
-    const legacyAfterScores =
+      legacyAfterScores =
       rawFeeling && !Object.keys(normalizeFeelingScores(rawFeeling.scores)).length
         ? normalizeFeelingScores(Object.fromEntries(
             (rawFeeling.tags || []).filter((id) => !POSITIVE_FEELING_IDS.has(id)).map((id) => [
@@ -565,7 +557,11 @@
               Math.min(5, Math.max(1, Number(rawFeeling.rating) || 3)),
             ]),
           ))
-        : normalizeFeelingScores(rawFeeling?.scores);
+        : normalizeFeelingScores(rawFeeling?.scores),
+      hasAfter = !!(
+        rawFeeling &&
+        (Object.keys(legacyAfterScores).length || String(rawFeeling.notes || "").trim())
+      );
     const feeling = hasAfter
       ? {
           ...rawFeeling,
@@ -4872,26 +4868,6 @@
   const FEELING_TAGS = [
     ...POSITIVE_FEELINGS,
     {
-      id: "no_tracked_symptoms",
-      emoji: "✅",
-      label: (window.ENERGIE_LOCALE || "fr-CA").startsWith("en")
-        ? "Everything feels fine — nothing in particular"
-        : "Tout va bien — rien de particulier",
-      group: "neutral",
-      category: "positive",
-      fixedScore: 0,
-      scopedOnly: true,
-    },
-    {
-      id: "feeling_good",
-      emoji: "👌",
-      label: "Tout va bien — rien de particulier",
-      group: "neutral",
-      category: "positive",
-      fixedScore: 0,
-      deprecated: true,
-    },
-    {
       id: "stable_energy",
       emoji: "🔋",
       label: "Bonne énergie",
@@ -5431,7 +5407,6 @@
         return tag.scopedOnly || tracked.has(tag.id) || selected.has(tag.id);
       }
       if (!plan) return !tag.scopedOnly;
-      if (tag.id === "feeling_good" && !selected.has(tag.id)) return false;
       return tag.scopedOnly || plan.feelingIds.includes(tag.id) || selected.has(tag.id);
     });
   }
@@ -5444,18 +5419,12 @@
         fixed = tag.fixedScore != null;
       return `<div class="scored-feeling-item ${active ? "active" : ""}" data-scored-item="${mode}:${tag.id}" ${fixed ? `data-fixed-score="${tag.fixedScore}"` : ""} data-feeling-search-label="${esc(t(tag.label))}"><button type="button" class="feeling-tag ${active ? "active" : ""}" data-scored-toggle="${mode}" data-scored-tag="${tag.id}" aria-pressed="${active}"><span class="feeling-tag-icon">${tag.emoji}</span><span class="feeling-tag-label">${esc(t(tag.label))}</span></button><div class="feeling-score-prompt" ${fixed || !active || score != null ? "hidden" : ""}>Choisis l’intensité</div><div class="feeling-score-buttons" ${active && !fixed ? "" : "hidden"} aria-label="Intensité de ${esc(t(tag.label))}">${(tag.minScore === 0 ? [0, 1, 2, 3, 4, 5] : [1, 2, 3, 4, 5]).map((n) => `<button type="button" class="${n === score ? "active" : ""}" data-scored-value="${mode}" data-scored-tag="${tag.id}" data-score="${n}" aria-label="${n === 0 ? "Pas ressenti" : `${n} sur 5`}">${n}</button>`).join("")}</div></div>`;
     };
-    const standaloneTags = availableTags.filter((tag) => tag.category === "positive" && tag.group === "neutral"),
-      standalone = standaloneTags.length
-        // Retain legacy controls only for existing data and older indexed drafts.
-        // They are not displayed or focusable, and never create a new selection.
-        ? `<div class="legacy-neutral-feeling" hidden inert aria-hidden="true">${standaloneTags.map(tagHtml).join("")}</div>`
-        : "";
-    const directTags = availableTags.filter((tag) => tag.category !== "positive" || tag.group !== "neutral");
+    const directTags = availableTags.filter((tag) => !RETIRED_FEELING_IDS.has(tag.id));
     const direct = feelingGroupsHtml(directTags, tagHtml, "picker");
     const positiveHelp = availableTags.some((tag) => tag.group === "positive")
       ? `<p class="positive-feeling-help muted small">Positifs : 0 = pas ressenti · 1 = faible · 5 = très présent.</p>`
       : "";
-    return `${standalone}${positiveHelp}${direct}`;
+    return `${positiveHelp}${direct}`;
   }
   function bindScoredFeelingPicker(container, mode) {
     if (!container) return;
@@ -5465,22 +5434,6 @@
         (button.onclick = () => {
           const item = button.closest(".scored-feeling-item"),
             active = !item.classList.contains("active");
-          if (active) {
-            const selectedId = button.dataset.scoredTag,
-              neutralIds = new Set(["feeling_good", "no_tracked_symptoms"]),
-              selectingNone = neutralIds.has(selectedId);
-            container.querySelectorAll(".scored-feeling-item.active").forEach((other) => {
-              const otherId = other.querySelector(`[data-scored-toggle="${mode}"]`)?.dataset.scoredTag;
-              if ((selectingNone && other !== item && !POSITIVE_FEELING_IDS.has(otherId)) || (!selectingNone && neutralIds.has(otherId))) {
-                other.classList.remove("active");
-                const otherToggle = other.querySelector(`[data-scored-toggle="${mode}"]`);
-                otherToggle?.classList.remove("active");
-                otherToggle?.setAttribute("aria-pressed", "false");
-                const otherButtons = other.querySelector(".feeling-score-buttons");
-                if (otherButtons) otherButtons.hidden = true;
-              }
-            });
-          }
           item.classList.toggle("active", active);
           button.classList.toggle("active", active);
           button.setAttribute("aria-pressed", String(active));
@@ -5508,12 +5461,6 @@
     container.querySelectorAll(`[data-scored-value="${mode}"]`).forEach(
       (button) =>
         (button.onclick = () => {
-          container.querySelectorAll(".legacy-neutral-feeling .scored-feeling-item.active").forEach((item) => {
-            item.classList.remove("active");
-            const toggle = item.querySelector("[data-scored-toggle]");
-            toggle?.classList.remove("active");
-            toggle?.setAttribute("aria-pressed", "false");
-          });
           const row = button.closest(".feeling-score-buttons");
           row
             .querySelectorAll("[data-score]")
@@ -5584,7 +5531,6 @@
     const query = normalizeFeelingSearch(input.value);
     let matches = 0;
     container.querySelectorAll(".scored-feeling-item").forEach((item) => {
-      if (item.closest(".legacy-neutral-feeling")) return;
       const matchesQuery =
         !query ||
         normalizeFeelingSearch(item.dataset.feelingSearchLabel).includes(query);
@@ -5777,20 +5723,19 @@
   function comparableFeelingDeltas(meal) {
     const before = feelingScoresFor(meal, "before"),
       after = feelingScoresFor(meal, "after"),
-      neutralIds = new Set(["feeling_good", "no_tracked_symptoms"]),
-      beforeNone = Object.keys(before).some((id) => neutralIds.has(id) && before[id] === 0),
-      afterNone = Object.keys(after).some((id) => neutralIds.has(id) && after[id] === 0),
+      beforePositive = Object.entries(before).some(([id, score]) => POSITIVE_FEELING_IDS.has(id) && score > 0),
+      afterPositive = Object.entries(after).some(([id, score]) => POSITIVE_FEELING_IDS.has(id) && score > 0),
       ids = new Set([
-        ...Object.keys(before).filter((id) => !neutralIds.has(id)),
-        ...Object.keys(after).filter((id) => !neutralIds.has(id)),
+        ...Object.keys(before),
+        ...Object.keys(after),
       ]),
       rows = [];
     ids.forEach((id) => {
       const tag = FEELING_TAGS.find((item) => item.id === id),
         hasBefore = Object.prototype.hasOwnProperty.call(before, id),
         hasAfter = Object.prototype.hasOwnProperty.call(after, id),
-        start = hasBefore ? before[id] : beforeNone && tag?.group === "symptom" ? 0 : null,
-        end = hasAfter ? after[id] : afterNone && tag?.group === "symptom" ? 0 : null;
+        start = hasBefore ? before[id] : beforePositive && tag?.group === "symptom" ? 0 : null,
+        end = hasAfter ? after[id] : afterPositive && tag?.group === "symptom" ? 0 : null;
       if (!tag || start == null || end == null) return;
       rows.push({ id, tag, start, end, delta: end - start });
     });
@@ -5839,22 +5784,13 @@
     if (!meal?.feeling) return;
     const beforeScores = feelingScoresFor(meal, "before"),
       afterScores = feelingScoresFor(meal, "after"),
-      neutralIds = new Set(["feeling_good", "no_tracked_symptoms"]),
       hasBefore = Object.keys(beforeScores).length > 0,
       hasAfter = Object.keys(afterScores).length > 0,
-      onlyNeutral =
-        hasBefore &&
-        hasAfter &&
-        [...Object.keys(beforeScores), ...Object.keys(afterScores)].every((id) =>
-          neutralIds.has(id),
-        ),
       rows = comparableFeelingDeltas(meal),
       main = rows[0],
       positiveFeeling = main?.tag?.group === "positive",
       title = !hasBefore
         ? "Ton ressenti après est bien enregistré"
-        : onlyNeutral
-          ? "Tout va bien est bien enregistré"
         : !main
           ? "Énergie vient d’apprendre quelque chose"
           : main.delta > 0
@@ -5868,8 +5804,6 @@
               : "Un ressenti demeuré stable",
       text = !hasBefore
         ? "Comme tu ne te souvenais pas de ton état avant le repas, aucune évolution n’a été inventée. Cette donnée demeure utile comme ressenti après."
-        : onlyNeutral
-          ? "Tu n’as signalé rien de particulier avant ni après ce repas. Énergie conserve simplement cette confirmation dans ton journal."
         : main
           ? `${main.tag.emoji} ${t(main.tag.label)} est passé de ${feelingEndpointLabel(main.start)} à ${feelingEndpointLabel(main.end)} après ce repas.`
           : "Tes ressentis avant et après sont conservés. Les prochaines saisies aideront à reconnaître ce qui se répète.";
@@ -6608,15 +6542,15 @@
           };
           const beforeScores = feelingScoresFor(meal, "before");
           const afterScores = feelingScoresFor(meal, "after");
-          const beforeNeutral =
-            beforeScores.no_tracked_symptoms === 0 ||
-            beforeScores.feeling_good === 0;
+          const beforePositive = Object.entries(beforeScores).some(
+            ([id, score]) => POSITIVE_FEELING_IDS.has(id) && Number(score) > 0,
+          );
           const beforeValue = Object.prototype.hasOwnProperty.call(
             beforeScores,
             tag,
           )
             ? Number(beforeScores[tag])
-            : beforeNeutral && meta.group === "symptom"
+            : beforePositive && meta.group === "symptom"
               ? 0
               : null;
           const afterValue = Number(
@@ -9117,7 +9051,7 @@
     bindPersonalProfile();
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.5" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.6" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -9885,7 +9819,6 @@
   }
   function feelingSelectionCountLabel(items = []) {
     if (!items.length) return "Non consigné";
-    if (items.length === 1 && items[0].score === 0 && items[0].group === "neutral") return "Tout va bien";
     return `${items.length} ressenti${items.length > 1 ? "s" : ""}`;
   }
   function compactFeelingLabel(tag) {
@@ -9912,15 +9845,14 @@
   function feelingChangesHtml(beforeScores = {}, afterScores = {}, afterRecorded = false, compact = false) {
     const before = normalizeFeelingScores(beforeScores),
       after = normalizeFeelingScores(afterScores),
-      neutralIds = new Set(["feeling_good", "no_tracked_symptoms"]),
       beforeKnown = Object.keys(before).length > 0,
       afterKnown = afterRecorded && Object.keys(after).length > 0;
     if (!beforeKnown || !afterKnown) return "";
-    const beforeNone = Object.keys(before).some((id) => neutralIds.has(id) && before[id] === 0),
-      afterNone = Object.keys(after).some((id) => neutralIds.has(id) && after[id] === 0),
+    const beforePositive = Object.entries(before).some(([id, score]) => POSITIVE_FEELING_IDS.has(id) && Number(score) > 0),
+      afterPositive = Object.entries(after).some(([id, score]) => POSITIVE_FEELING_IDS.has(id) && Number(score) > 0),
       ids = new Set([
-        ...Object.keys(before).filter((id) => !neutralIds.has(id)),
-        ...Object.keys(after).filter((id) => !neutralIds.has(id)),
+        ...Object.keys(before),
+        ...Object.keys(after),
       ]),
       rows = [];
     ids.forEach((id) => {
@@ -9928,8 +9860,8 @@
       if (!tag) return;
       const hasBefore = Object.prototype.hasOwnProperty.call(before, id),
         hasAfter = Object.prototype.hasOwnProperty.call(after, id),
-        start = hasBefore ? before[id] : beforeNone && tag?.group === "symptom" ? 0 : null,
-        end = hasAfter ? after[id] : afterNone && tag?.group === "symptom" ? 0 : null;
+        start = hasBefore ? before[id] : beforePositive && tag?.group === "symptom" ? 0 : null,
+        end = hasAfter ? after[id] : afterPositive && tag?.group === "symptom" ? 0 : null;
       if (start == null || end == null) return;
       const delta = end - start;
       let tone = "stable", arrow = "→", label = "Stable";
@@ -10120,7 +10052,6 @@
     }
     updateMealCalorieEditor();
     renderBeforeFeelingPicker(m);
-    $("#mealFeelingsDetails").open = true;
     $("#beforeFeelingEditor").open = false;
     updateMealFeelingUi(m);
     updateMealCompositionReview();
@@ -11726,7 +11657,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.5");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.6");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

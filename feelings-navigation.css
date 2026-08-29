@@ -1,0 +1,105 @@
+.meal-feelings-workflow {
+  overflow: hidden;
+}
+
+.meal-feelings-workflow-head {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(31, 105, 73, .14);
+}
+
+.meal-feelings-workflow-head > span:last-child {
+  display: grid;
+  gap: .15rem;
+}
+
+.meal-feelings-workflow-head strong {
+  color: var(--ink, #163f2d);
+  font-size: 1.05rem;
+}
+
+.meal-feelings-workflow-head small {
+  color: var(--muted, #617067);
+}
+
+.meal-feelings-workflow .meal-feelings-card-content {
+  display: grid;
+  gap: .9rem;
+  padding: .9rem;
+}
+
+.meal-feelings-workflow .meal-feeling-period {
+  min-width: 0;
+  padding: .9rem;
+  border: 1px solid rgba(45, 96, 119, .24);
+  border-top: 4px solid #4f8ba4;
+  border-radius: 18px;
+  background: rgba(239, 248, 251, .74);
+  box-shadow: 0 4px 14px rgba(29, 76, 58, .06);
+}
+
+.meal-feelings-workflow .meal-feeling-period-after {
+  border-color: rgba(47, 151, 82, .25);
+  border-top-color: #35a85c;
+  background: rgba(240, 250, 239, .8);
+}
+
+.meal-feelings-workflow .meal-feeling-period-head {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  margin-bottom: .7rem;
+}
+
+.meal-feelings-workflow .meal-feeling-period-head > div {
+  display: grid;
+  gap: .05rem;
+}
+
+.meal-feelings-workflow .meal-feeling-period-head span:not(.meal-feeling-step) {
+  color: var(--ink, #163f2d);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.meal-feelings-workflow .meal-feeling-period-head strong {
+  color: var(--muted, #617067);
+  font-size: .78rem;
+  font-weight: 600;
+}
+
+.meal-feeling-step {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 2rem;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: #4f8ba4;
+  font-weight: 900;
+}
+
+.meal-feeling-period-after .meal-feeling-step {
+  background: #35a85c;
+}
+
+.meal-feelings-after-block .meal-feeling-step {
+  background: #35a85c;
+}
+
+.meal-feelings-workflow .meal-feeling-action {
+  width: 100%;
+  margin-top: .7rem;
+}
+
+.meal-feelings-workflow .meal-feeling-editor[open] {
+  margin-top: .75rem;
+}
+
+@media (max-width: 520px) {
+  .meal-feelings-workflow .meal-feelings-card-content { padding: .65rem; }
+  .meal-feelings-workflow .meal-feeling-period { padding: .75rem; }
+}

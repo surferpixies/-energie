@@ -11,13 +11,14 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.56.5">
-  <link rel="stylesheet" href="portrait.css?v=3.56.5">
-  <link rel="stylesheet" href="observation-detail.css?v=3.56.5">
-  <link rel="stylesheet" href="personal-metrics.css?v=3.56.5">
-  <link rel="stylesheet" href="meal-labels.css?v=3.56.5">
-  <link rel="stylesheet" href="meal-calories.css?v=3.56.5">
-  <link rel="stylesheet" href="positive-feelings.css?v=3.56.5">
+  <link rel="stylesheet" href="styles.css?v=3.56.6">
+  <link rel="stylesheet" href="portrait.css?v=3.56.6">
+  <link rel="stylesheet" href="observation-detail.css?v=3.56.6">
+  <link rel="stylesheet" href="personal-metrics.css?v=3.56.6">
+  <link rel="stylesheet" href="meal-labels.css?v=3.56.6">
+  <link rel="stylesheet" href="meal-calories.css?v=3.56.6">
+  <link rel="stylesheet" href="positive-feelings.css?v=3.56.6">
+  <link rel="stylesheet" href="feelings-navigation.css?v=3.56.6">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -90,6 +91,23 @@
         <button type="button" class="secondary small meal-copy-button" id="copyYesterdayBreakfast">🍳 Copier le déjeuner d'hier</button>
         <button type="button" class="secondary small meal-copy-button" id="copyYesterdayDinner">🍱 Restants : copier le souper d'hier</button>
       </div>
+      <section id="mealFeelingsDetails" class="meal-feelings-card meal-feelings-workflow meal-feelings-before-block">
+        <header class="meal-feelings-workflow-head">
+          <span class="meal-feeling-step">1</span>
+          <span><strong>Avant le repas</strong><small>Comment te sens-tu avant de manger?</small></span>
+        </header>
+        <span id="mealFeelingsCollapsedPreview" hidden></span>
+        <div class="meal-feelings-card-content">
+          <section class="meal-feeling-period meal-feeling-period-before">
+            <div class="meal-feeling-period-head"><div><span>Ressentis avant</span><strong id="beforeFeelingCount">Non consigné</strong></div></div>
+            <div id="beforeFeelingSelectedPreview" class="meal-feeling-selected-preview"><span class="meal-feeling-empty">Aucun ressenti</span></div>
+            <details id="beforeFeelingEditor" class="meal-feeling-editor">
+              <summary class="meal-feeling-action"><span aria-hidden="true">＋</span><strong id="beforeFeelingActionLabel">Ajouter les ressentis avant</strong><b aria-hidden="true">›</b></summary>
+              <fieldset class="feeling-fieldset meal-before-feelings"><legend>Ressentis avant <span class="muted tiny">(facultatif)</span></legend><p class="muted small">Sélectionne ce que tu ressens maintenant et indique l’intensité de chaque élément.</p><label class="feeling-search" for="beforeFeelingSearch"><span aria-hidden="true">🔎</span><input id="beforeFeelingSearch" type="search" autocomplete="off" placeholder="Rechercher un ressenti…"><button id="clearBeforeFeelingSearch" type="button" aria-label="Effacer la recherche" hidden>×</button></label><div id="beforeFeelingTags" class="feeling-tags scored-feeling-picker"></div><p id="beforeFeelingSearchEmpty" class="feeling-search-empty" hidden>Aucun ressenti trouvé.</p><div id="beforeFeelingQualityNotice" class="feeling-quality-notice" hidden></div></fieldset>
+            </details>
+          </section>
+        </div>
+      </section>
       <section id="favoriteQuickSection" class="meal-quick-picks" hidden>
         <div class="meal-quick-picks-heading"><span>⭐</span><div><strong>Mes favoris</strong><small>Un toucher pour remplir le repas</small></div></div>
         <div id="favoriteQuickList" class="meal-quick-picks-list"></div>
@@ -143,30 +161,6 @@
           <label id="eatingReasonOtherWrap" class="eating-reason-other" hidden>Précise la raison<input id="eatingReasonOther" type="text" maxlength="160" autocomplete="off" placeholder="Ex. pour avoir de l’énergie, après une activité…"></label>
         </div>
       </details>
-      <details id="mealFeelingsDetails" class="meal-feelings-card">
-        <summary>
-          <span class="meal-feelings-card-icon" aria-hidden="true">😊</span>
-          <span class="meal-feelings-card-copy"><strong>Ressentis avant et après</strong><span id="mealFeelingsCollapsedPreview" class="meal-feelings-collapsed-preview"><small>Aucun ressenti</small></span></span>
-          <b class="meal-feelings-chevron" aria-hidden="true">›</b>
-        </summary>
-        <div class="meal-feelings-card-content">
-          <section class="meal-feeling-period meal-feeling-period-before">
-            <div class="meal-feeling-period-head"><div><span>Avant le repas</span><strong id="beforeFeelingCount">Non consigné</strong></div></div>
-            <div id="beforeFeelingSelectedPreview" class="meal-feeling-selected-preview"><span class="meal-feeling-empty">Aucun ressenti</span></div>
-            <details id="beforeFeelingEditor" class="meal-feeling-editor">
-              <summary class="meal-feeling-action"><span aria-hidden="true">＋</span><strong id="beforeFeelingActionLabel">Ajouter les ressentis avant</strong><b aria-hidden="true">›</b></summary>
-              <fieldset class="feeling-fieldset meal-before-feelings"><legend>Ressentis avant <span class="muted tiny">(facultatif)</span></legend><p class="muted small">Sélectionne ce que tu ressens maintenant et indique l’intensité de chaque élément.</p><label class="feeling-search" for="beforeFeelingSearch"><span aria-hidden="true">🔎</span><input id="beforeFeelingSearch" type="search" autocomplete="off" placeholder="Rechercher un ressenti…"><button id="clearBeforeFeelingSearch" type="button" aria-label="Effacer la recherche" hidden>×</button></label><div id="beforeFeelingTags" class="feeling-tags scored-feeling-picker"></div><p id="beforeFeelingSearchEmpty" class="feeling-search-empty" hidden>Aucun ressenti trouvé.</p><div id="beforeFeelingQualityNotice" class="feeling-quality-notice" hidden></div></fieldset>
-            </details>
-          </section>
-          <section class="meal-feeling-period meal-feeling-period-after">
-            <div class="meal-feeling-period-head"><div><span>Après le repas</span><strong id="afterFeelingCount">Non consigné</strong></div></div>
-            <div id="afterFeelingSelectedPreview" class="meal-feeling-selected-preview"><span class="meal-feeling-empty">Aucun ressenti</span></div>
-            <button type="button" class="meal-feeling-action meal-feeling-after-button" id="mealFeelingButton" hidden><span aria-hidden="true">＋</span><strong>Ajouter les ressentis après</strong><b aria-hidden="true">›</b></button>
-            <p id="mealFeelingUnavailable" class="muted tiny">Disponible après avoir enregistré le repas.</p>
-          </section>
-          <div id="mealFeelingChanges" class="meal-feeling-changes-preview" hidden></div>
-        </div>
-      </details>
       <div id="mealSuggestionWrap" class="meal-suggestion-wrap" hidden><button type="button" id="mealSuggestionToggle" class="meal-suggestion-toggle" aria-expanded="false">💡 Voir la suggestion</button><p id="mealSuggestionBody" class="meal-suggestion-body" hidden></p></div>
       <details id="mealOptionalDetails" class="meal-optional-details">
         <summary><span>＋</span><span><strong id="mealOptionalTitle">Notes</strong><small>Options facultatives</small></span></summary>
@@ -194,6 +188,21 @@
         <input id="mealCalories" type="text" inputmode="decimal" autocomplete="off" placeholder="—" aria-describedby="mealCalorieStatus">
         <small id="mealCalorieStatus" role="status">Aucune estimation disponible · saisie facultative</small>
         <button type="button" class="text-button" id="resetMealCalories" hidden>Revenir à l’estimation automatique</button>
+      </section>
+      <section class="meal-feelings-card meal-feelings-workflow meal-feelings-after-block">
+        <header class="meal-feelings-workflow-head">
+          <span class="meal-feeling-step">2</span>
+          <span><strong>Après le repas</strong><small>Comment te sens-tu après avoir mangé?</small></span>
+        </header>
+        <div class="meal-feelings-card-content">
+          <section class="meal-feeling-period meal-feeling-period-after">
+            <div class="meal-feeling-period-head"><div><span>Ressentis après</span><strong id="afterFeelingCount">Non consigné</strong></div></div>
+            <div id="afterFeelingSelectedPreview" class="meal-feeling-selected-preview"><span class="meal-feeling-empty">Aucun ressenti</span></div>
+            <button type="button" class="meal-feeling-action meal-feeling-after-button" id="mealFeelingButton" hidden><span aria-hidden="true">＋</span><strong>Ajouter les ressentis après</strong><b aria-hidden="true">›</b></button>
+            <p id="mealFeelingUnavailable" class="muted tiny">Disponible après avoir enregistré le repas.</p>
+          </section>
+          <div id="mealFeelingChanges" class="meal-feeling-changes-preview" hidden></div>
+        </div>
       </section>
       <div class="dialog-actions meal-form-actions"><button type="button" class="danger" id="deleteCurrentMeal" hidden>Supprimer</button><button type="submit" class="primary">Enregistrer le repas</button></div>
     </form>
@@ -503,7 +512,7 @@
   </dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=3.7.1"></script>
-  <script src="i18n.js?v=3.56.5"></script>
+  <script src="i18n.js?v=3.56.6"></script>
   <script src="foods.js?v=3.8.0"></script>
   <script src="food-categories.js?v=3.31.2"></script>
   <script src="dish-knowledge.js?v=3.31.2"></script>
@@ -516,9 +525,9 @@
   <script src="brain/profile.js?v=3.8.0"></script>
   <script src="brain/insight-engine.js?v=3.30.2"></script>
   <script src="brain/index.js?v=3.12.0"></script>
-  <script src="observation-engine.js?v=3.56.5"></script>
-  <script src="demo-profiles.js?v=3.56.5"></script>
-  <script src="personal-metrics.js?v=3.56.5"></script>
-  <script src="app.js?v=3.56.5"></script>
+  <script src="observation-engine.js?v=3.56.6"></script>
+  <script src="demo-profiles.js?v=3.56.6"></script>
+  <script src="personal-metrics.js?v=3.56.6"></script>
+  <script src="app.js?v=3.56.6"></script>
 </body>
 </html>
