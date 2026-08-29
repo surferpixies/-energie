@@ -82,30 +82,38 @@
 .summary-water-glass {
   position: absolute;
   z-index: 0;
-  top: .78rem;
-  right: .86rem;
-  width: 2.55rem;
-  height: 3.35rem;
-  overflow: hidden;
-  border: 3px solid rgba(61, 120, 139, .3);
-  border-top-width: 2px;
-  border-radius: 5px 5px 12px 12px;
-  background: rgba(255, 255, 255, .18);
-  box-shadow: inset 5px 0 7px rgba(255, 255, 255, .2);
+  top: .62rem;
+  right: .72rem;
+  width: 3rem;
+  height: 3.85rem;
+  overflow: visible;
+  opacity: .58;
   transform: rotate(3deg);
   pointer-events: none;
 }
 
-.summary-water-glass::before {
-  content: "";
-  position: absolute;
-  right: 2px;
-  bottom: 2px;
-  left: 2px;
-  height: 72%;
-  border-radius: 2px 2px 8px 8px;
-  background: linear-gradient(180deg, rgba(94, 195, 230, .42), rgba(40, 143, 201, .58));
-  box-shadow: inset 0 4px 5px rgba(255, 255, 255, .2);
+.summary-water-glass .glass-outline {
+  fill: rgba(255, 255, 255, .16);
+  stroke: rgba(48, 109, 132, .62);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.summary-water-glass .glass-water {
+  fill: rgba(63, 169, 217, .72);
+}
+
+.summary-water-glass .glass-waterline {
+  fill: none;
+  stroke: rgba(151, 224, 244, .92);
+  stroke-width: 1.5;
+}
+
+.summary-water-glass .glass-shine {
+  fill: none;
+  stroke: rgba(255, 255, 255, .78);
+  stroke-width: 2.2;
+  stroke-linecap: round;
 }
 
 .journal-summary-action--water .summary-action-plus {
@@ -173,7 +181,7 @@ html[data-theme="dark"] .journal-summary-action small {
 html[data-theme="dark"] .journal-summary-action strong { color: #8fd5a9; }
 html[data-theme="dark"] .summary-action-watermark { opacity: .34; }
 html[data-theme="dark"] .summary-action-plus { border-color: #253d32; }
-html[data-theme="dark"] .summary-water-glass { border-color: rgba(142, 211, 229, .4); }
+html[data-theme="dark"] .summary-water-glass { opacity: .72; }
 
 @media (prefers-reduced-motion: reduce) {
   .journal-summary-action { transition: none; }
