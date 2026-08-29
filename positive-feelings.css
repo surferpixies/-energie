@@ -9,6 +9,7 @@
 .positive-observation-card { min-width: 0; }
 .positive-observation-card h3 { overflow-wrap: anywhere; }
 .positive-feeling-help { margin: .8rem 0; grid-column: 1 / -1; }
+.legacy-neutral-feeling { display: none !important; }
 .direct-feeling-list .scored-feeling-item[data-scored-item*="positive_"] {
   border-color: #8fbc9a;
 }

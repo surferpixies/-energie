@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 71;
-  const APP_RELEASE = "3.56.4";
+  const APP_RELEASE = "3.56.5";
   const Metrics = window.EnergieMetrics;
   // New IDs keep historical aliases (already collapsed to "Tout va bien") neutral.
   const POSITIVE_FEELINGS = [
@@ -3455,7 +3455,7 @@
         if (!tags.length) return "";
         return `<details class="tracking-plan-group" ${tags.some((tag) => chosen.has(tag.id)) ? "open" : ""}><summary><span>${category.emoji} ${esc(t(category.label))}</span><small>${tags.filter((tag) => chosen.has(tag.id)).length}/${tags.length}</small></summary><div class="tracking-plan-options">${tags.map((tag) => `<label><input type="checkbox" data-tracking-feeling="${tag.id}" ${chosen.has(tag.id) ? "checked" : ""}><span>${tag.emoji} ${esc(t(tag.label))}</span></label>`).join("")}</div></details>`;
       }).join("");
-    return `<form id="professionalTrackingPlanForm" class="card professional-tracking-plan"><div class="professional-tracking-plan-head"><div><p class="eyebrow">Plan de suivi personnalisé</p><h2>🎯 Ressentis suivis avec ${esc(profile.name)}</h2></div><strong id="trackingPlanCount">${chosen.size} sélectionnés</strong></div><p class="muted small">Cette sélection concerne les inconforts. Les cinq ressentis positifs restent toujours disponibles. Les anciennes données demeurent conservées.</p><div class="tracking-plan-actions"><button type="button" class="text-button" id="selectAllTrackingFeelings">Tout sélectionner</button><button type="button" class="text-button" id="clearTrackingFeelings">Tout retirer</button></div>${fixedPositiveFeelingsHtml()}<section class="feeling-valence-panel feeling-valence-symptom"><strong class="feeling-valence-title">🌦️ Inconforts à suivre</strong><div class="tracking-plan-groups">${groups}</div></section><p class="tracking-plan-permanent">✅ « Tout va bien — rien de particulier » et ✍️ « Autre chose à signaler » demeurent toujours disponibles.</p><button type="submit" class="primary">Enregistrer le plan de suivi</button></form>`;
+    return `<form id="professionalTrackingPlanForm" class="card professional-tracking-plan"><div class="professional-tracking-plan-head"><div><p class="eyebrow">Plan de suivi personnalisé</p><h2>🎯 Ressentis suivis avec ${esc(profile.name)}</h2></div><strong id="trackingPlanCount">${chosen.size} sélectionnés</strong></div><p class="muted small">Cette sélection concerne les inconforts. Les cinq ressentis positifs restent toujours disponibles. Les anciennes données demeurent conservées.</p><div class="tracking-plan-actions"><button type="button" class="text-button" id="selectAllTrackingFeelings">Tout sélectionner</button><button type="button" class="text-button" id="clearTrackingFeelings">Tout retirer</button></div>${fixedPositiveFeelingsHtml()}<section class="feeling-valence-panel feeling-valence-symptom"><strong class="feeling-valence-title">🌦️ Inconforts à suivre</strong><div class="tracking-plan-groups">${groups}</div></section><p class="tracking-plan-permanent">Les cinq ressentis positifs et ✍️ « Autre chose à signaler » demeurent toujours disponibles.</p><button type="submit" class="primary">Enregistrer le plan de suivi</button></form>`;
   }
   function clientTrackingPlanSummaryHtml() {
     const plan = activeProfessionalTrackingPlan();
@@ -5446,12 +5446,14 @@
     };
     const standaloneTags = availableTags.filter((tag) => tag.category === "positive" && tag.group === "neutral"),
       standalone = standaloneTags.length
-        ? `<div class="standalone-feeling-choice">${standaloneTags.map(tagHtml).join("")}</div>`
+        // Retain legacy controls only for existing data and older indexed drafts.
+        // They are not displayed or focusable, and never create a new selection.
+        ? `<div class="legacy-neutral-feeling" hidden inert aria-hidden="true">${standaloneTags.map(tagHtml).join("")}</div>`
         : "";
     const directTags = availableTags.filter((tag) => tag.category !== "positive" || tag.group !== "neutral");
     const direct = feelingGroupsHtml(directTags, tagHtml, "picker");
     const positiveHelp = availableTags.some((tag) => tag.group === "positive")
-      ? `<p class="positive-feeling-help muted small">Ressentis positifs : 0 = pas ressenti, 1 = faible, 5 = très présent. Indique le même ressenti avant et après pour permettre la comparaison. Un choix non renseigné reste inconnu. « Tout va bien » confirme seulement l’absence d’inconforts suivis.</p>`
+      ? `<p class="positive-feeling-help muted small">Positifs : 0 = pas ressenti · 1 = faible · 5 = très présent.</p>`
       : "";
     return `${standalone}${positiveHelp}${direct}`;
   }
@@ -5469,7 +5471,7 @@
               selectingNone = neutralIds.has(selectedId);
             container.querySelectorAll(".scored-feeling-item.active").forEach((other) => {
               const otherId = other.querySelector(`[data-scored-toggle="${mode}"]`)?.dataset.scoredTag;
-              if ((selectingNone && other !== item && !POSITIVE_FEELING_IDS.has(otherId)) || (!selectingNone && !POSITIVE_FEELING_IDS.has(selectedId) && neutralIds.has(otherId))) {
+              if ((selectingNone && other !== item && !POSITIVE_FEELING_IDS.has(otherId)) || (!selectingNone && neutralIds.has(otherId))) {
                 other.classList.remove("active");
                 const otherToggle = other.querySelector(`[data-scored-toggle="${mode}"]`);
                 otherToggle?.classList.remove("active");
@@ -5506,6 +5508,12 @@
     container.querySelectorAll(`[data-scored-value="${mode}"]`).forEach(
       (button) =>
         (button.onclick = () => {
+          container.querySelectorAll(".legacy-neutral-feeling .scored-feeling-item.active").forEach((item) => {
+            item.classList.remove("active");
+            const toggle = item.querySelector("[data-scored-toggle]");
+            toggle?.classList.remove("active");
+            toggle?.setAttribute("aria-pressed", "false");
+          });
           const row = button.closest(".feeling-score-buttons");
           row
             .querySelectorAll("[data-score]")
@@ -5576,6 +5584,7 @@
     const query = normalizeFeelingSearch(input.value);
     let matches = 0;
     container.querySelectorAll(".scored-feeling-item").forEach((item) => {
+      if (item.closest(".legacy-neutral-feeling")) return;
       const matchesQuery =
         !query ||
         normalizeFeelingSearch(item.dataset.feelingSearchLabel).includes(query);
@@ -5751,6 +5760,11 @@
       afterScores = hasAfter
         ? feelingScoresFor(m, "after")
         : feelingScoresFor(m, "before");
+    // Do not carry a retired neutral response into a new after-meal record.
+    if (!hasAfter) {
+      delete afterScores.no_tracked_symptoms;
+      delete afterScores.feeling_good;
+    }
     $("#feelingTags").innerHTML = scoredFeelingPickerHtml("after", afterScores);
     bindScoredFeelingPicker($("#feelingTags"), "after");
     bindFeelingSearch("after");
@@ -9103,7 +9117,7 @@
     bindPersonalProfile();
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.4" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.5" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -11233,7 +11247,7 @@
           "Les estimations nutritionnelles sont approximatives et servent surtout à comparer les habitudes dans le temps.",
           "Le Cerveau devient plus pertinent à mesure que ton historique s’allonge et que tes entrées restent régulières.",
           "Tu peux revenir modifier une journée passée afin de garder ton historique aussi fidèle que possible.",
-          "Indique « Tout va bien — rien de particulier » avant un repas pour que les changements apparus après soient comparables.",
+          "Indique tes ressentis avant et après le repas pour comparer leur évolution.",
           "Note seulement les ressentis réellement présents : une saisie simple et fidèle vaut mieux qu’une longue liste approximative.",
           "Utilise la photo IA comme point de départ, puis corrige le texte si un aliment a été mal reconnu.",
           "Le lecteur de code-barres est pratique pour identifier rapidement un produit emballé.",
@@ -11712,7 +11726,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.4");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.5");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
