@@ -1,4 +1,4 @@
-const CACHE_NAME = "energie-runtime-v3.56.7";
+const CACHE_NAME = "energie-runtime-v3.56.8";
 
 self.addEventListener("install", () => self.skipWaiting());
 

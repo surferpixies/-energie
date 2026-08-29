@@ -70,35 +70,31 @@
 .journal-summary-action--water { border-top: 4px solid #46aee1; }
 
 .journal-view-switcher {
-  position: sticky;
-  bottom: calc(76px + env(safe-area-inset-bottom));
-  z-index: 15;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: .25rem;
-  margin: 1.2rem auto .2rem;
-  padding: .3rem;
-  max-width: 390px;
-  border: 1px solid rgba(35, 94, 67, .15);
-  border-radius: 18px;
-  background: rgba(248, 252, 246, .94);
-  box-shadow: 0 7px 24px rgba(24, 66, 47, .15);
-  backdrop-filter: blur(14px);
+  gap: .15rem;
+  width: 220px;
+  margin: .4rem 0 1rem auto;
+  padding: .2rem;
+  border: 1px solid rgba(35, 94, 67, .11);
+  border-radius: 13px;
+  background: rgba(239, 247, 236, .7);
 }
 
 .journal-view-switcher button {
-  min-height: 42px;
+  min-height: 32px;
   border: 0;
-  border-radius: 14px;
+  border-radius: 10px;
   color: var(--muted, #66736b);
   background: transparent;
-  font-weight: 800;
+  font-size: .76rem;
+  font-weight: 700;
 }
 
 .journal-view-switcher button.active {
-  color: #fff;
-  background: #289e57;
-  box-shadow: 0 3px 9px rgba(29, 125, 67, .22);
+  color: #1d7542;
+  background: rgba(255, 255, 255, .9);
+  box-shadow: 0 1px 4px rgba(29, 105, 61, .1);
 }
 
 .quick-journal-dialog-card {
