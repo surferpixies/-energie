@@ -69,32 +69,29 @@
 .journal-summary-action--activity { border-top: 4px solid #7f78e8; }
 .journal-summary-action--water { border-top: 4px solid #46aee1; }
 
-.journal-view-switcher {
+.daily-calories-value {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: .15rem;
-  width: 220px;
-  margin: .4rem 0 1rem auto;
-  padding: .2rem;
-  border: 1px solid rgba(35, 94, 67, .11);
-  border-radius: 13px;
-  background: rgba(239, 247, 236, .7);
+  gap: .1rem;
 }
 
-.journal-view-switcher button {
-  min-height: 32px;
-  border: 0;
-  border-radius: 10px;
+.journal-view-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  min-height: 28px;
+  padding: .22rem .55rem;
+  border: 1px solid rgba(35, 94, 67, .12);
+  border-radius: 999px;
   color: var(--muted, #66736b);
-  background: transparent;
-  font-size: .76rem;
+  background: rgba(239, 247, 236, .72);
+  font-size: .7rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
-.journal-view-switcher button.active {
-  color: #1d7542;
-  background: rgba(255, 255, 255, .9);
-  box-shadow: 0 1px 4px rgba(29, 105, 61, .1);
+.daily-calories-card .journal-view-compact span {
+  font-size: .82rem;
+  font-weight: 600;
 }
 
 .quick-journal-dialog-card {

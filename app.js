@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 74;
-  const APP_RELEASE = "3.56.8";
+  const CURRENT_VERSION = 75;
+  const APP_RELEASE = "3.56.9";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -5944,7 +5944,9 @@
     const note = !summary.count ? 'Aucun repas enregistré pour cette journée.'
       : summary.total == null ? 'Pas encore d’estimation disponible pour les repas saisis.'
       : summary.known + '/' + summary.count + ' repas ou collations estimés' + (summary.partial ? ' · total partiel' : '') + '. Le total dépend de ce qui est saisi.';
-    return '<section class="daily-calories-card" aria-label="Calories estimées de la journée"><div><span>⚡ Calories de la journée</span><strong>' + value + ' <small>kcal</small></strong></div><p>' + esc(note) + '</p></section>';
+    const summaryMode = journalViewMode() === 'summary', nextMode = summaryMode ? 'detailed' : 'summary';
+    const viewButton = '<button type="button" class="journal-view-compact" data-journal-view="' + nextMode + '" aria-label="Afficher la vue ' + (summaryMode ? 'détaillée' : 'sommaire') + '"><span aria-hidden="true">' + (summaryMode ? '☷' : '▦') + '</span>' + (summaryMode ? 'Détaillée' : 'Sommaire') + '</button>';
+    return '<section class="daily-calories-card" aria-label="Calories estimées de la journée"><div><span class="daily-calories-value"><span>⚡ Calories de la journée</span><strong>' + value + ' <small>kcal</small></strong></span>' + viewButton + '</div><p>' + esc(note) + '</p></section>';
   }
   function observationSectionHtml(day) {
     const observations = [...(day?.observations || [])].sort((a, b) =>
@@ -6227,11 +6229,6 @@
     return db.settings?.journalViewMode === "summary" ? "summary" : "detailed";
   }
 
-  function journalViewSwitcherHtml() {
-    const mode = journalViewMode();
-    return `<nav class="journal-view-switcher" aria-label="Affichage du Journal"><button type="button" data-journal-view="summary" class="${mode === "summary" ? "active" : ""}" aria-pressed="${mode === "summary"}">Sommaire</button><button type="button" data-journal-view="detailed" class="${mode === "detailed" ? "active" : ""}" aria-pressed="${mode === "detailed"}">Détaillée</button></nav>`;
-  }
-
   function journalSummaryHtml(day, meals) {
     const activity = activitySummary(day),
       activityCount = (day.activities || []).length,
@@ -6309,7 +6306,7 @@
       (d.sleepTags || []).filter((x) => x !== "none").length - 2,
     );
     $("#app").innerHTML =
-      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${dailyMacroSummaryHtml(meals)}${journalViewSwitcherHtml()}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? `${d.sleepHours} h` : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><button class="card activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button></section><section class="card hydration-card"><div class="row"><div class="hydration-heading"><span>💧 <small>(500 ml)</small></span><h3>Hydratation</h3></div><strong>${d.water}/${goal}</strong></div><div class="water-row">${water}</div></section>${supplementsTodayHtml(d)}</div>`}</div>`;
+      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${dailyMacroSummaryHtml(meals)}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? `${d.sleepHours} h` : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><button class="card activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button></section><section class="card hydration-card"><div class="row"><div class="hydration-heading"><span>💧 <small>(500 ml)</small></span><h3>Hydratation</h3></div><strong>${d.water}/${goal}</strong></div><div class="water-row">${water}</div></section>${supplementsTodayHtml(d)}</div>`}</div>`;
     $("#previousDay").onclick = () => changeJournalDay(-1);
     if (!$("#nextDay").disabled)
       $("#nextDay").onclick = () => changeJournalDay(1);
@@ -9121,7 +9118,7 @@
     bindPersonalProfile();
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.8" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.9" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -11727,7 +11724,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.8");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.9");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
