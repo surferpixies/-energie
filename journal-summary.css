@@ -23,51 +23,138 @@
 }
 
 .journal-summary-action {
+  --cute-from: #fffaf7;
+  --cute-to: #fff1ec;
+  --cute-accent: #e96f73;
+  --cute-glow: rgba(239, 111, 115, .16);
+  --cute-border: rgba(233, 111, 115, .24);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   min-height: 132px;
   display: grid;
   grid-template-columns: 1fr auto;
   align-content: space-between;
   gap: .65rem;
   padding: 1rem;
-  border: 1px solid rgba(36, 93, 67, .12);
-  border-radius: 22px;
+  border: 1px solid var(--cute-border);
+  border-radius: 25px;
   color: var(--ink, #173f2d);
-  background: rgba(255, 255, 252, .92);
-  box-shadow: 0 8px 22px rgba(31, 80, 57, .08);
+  background: linear-gradient(145deg, var(--cute-from), var(--cute-to));
+  box-shadow: 0 9px 22px var(--cute-glow), inset 0 1px 0 rgba(255, 255, 255, .75);
   text-align: left;
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+
+.journal-summary-action::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 84px;
+  height: 84px;
+  top: -36px;
+  right: -25px;
+  border-radius: 50%;
+  background: var(--cute-glow);
+}
+
+.journal-summary-action > * {
+  position: relative;
+  z-index: 1;
 }
 
 .journal-summary-action > span:first-child {
   grid-column: 1 / -1;
   color: var(--muted, #69766e);
-  font-size: .86rem;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .01em;
 }
 
 .journal-summary-action strong {
   align-self: end;
-  font-size: 1.25rem;
+  color: var(--cute-accent);
+  font-size: 1.28rem;
 }
 
 .journal-summary-action .summary-action-icon {
+  position: relative;
   display: grid;
-  width: 2.8rem;
-  height: 2.8rem;
+  width: 3rem;
+  height: 3rem;
   place-items: center;
   align-self: end;
-  border-radius: 15px;
-  font-size: 1.55rem;
-  background: rgba(91, 190, 124, .14);
+  border: 1px solid rgba(255, 255, 255, .8);
+  border-radius: 17px;
+  font-size: 1.65rem;
+  background: rgba(255, 255, 255, .7);
+  box-shadow: 0 5px 12px var(--cute-glow);
+  transform: rotate(2deg);
+}
+
+.journal-summary-action .summary-action-icon::after {
+  content: "+";
+  position: absolute;
+  display: grid;
+  width: 17px;
+  height: 17px;
+  right: -5px;
+  top: -6px;
+  place-items: center;
+  border: 2px solid var(--cute-to);
+  border-radius: 50%;
+  color: #fff;
+  background: var(--cute-accent);
+  font-size: .72rem;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .journal-summary-action small {
   grid-column: 1 / -1;
   color: var(--muted, #69766e);
+  width: fit-content;
+  padding: .22rem .48rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .55);
+  font-size: .68rem;
 }
 
-.journal-summary-action--meal { border-top: 4px solid #ef6d73; }
-.journal-summary-action--feeling { border-top: 4px solid #eba94d; }
-.journal-summary-action--activity { border-top: 4px solid #7f78e8; }
-.journal-summary-action--water { border-top: 4px solid #46aee1; }
+.journal-summary-action--meal {
+  --cute-from: #fffaf7; --cute-to: #ffece8; --cute-accent: #df666d; --cute-glow: rgba(223, 102, 109, .17); --cute-border: rgba(223, 102, 109, .22);
+}
+.journal-summary-action--feeling {
+  --cute-from: #fffdf5; --cute-to: #fff1ce; --cute-accent: #c88927; --cute-glow: rgba(221, 165, 67, .18); --cute-border: rgba(200, 137, 39, .22);
+}
+.journal-summary-action--activity {
+  --cute-from: #faf9ff; --cute-to: #eeeaff; --cute-accent: #7368cc; --cute-glow: rgba(115, 104, 204, .17); --cute-border: rgba(115, 104, 204, .22);
+}
+.journal-summary-action--water {
+  --cute-from: #f7fcff; --cute-to: #e1f5ff; --cute-accent: #328bb8; --cute-glow: rgba(50, 139, 184, .17); --cute-border: rgba(50, 139, 184, .22);
+}
+
+.journal-summary-action--feeling .summary-action-icon,
+.journal-summary-action--water .summary-action-icon { transform: rotate(-2deg); }
+
+.journal-summary-action:active {
+  transform: scale(.975);
+  box-shadow: 0 4px 12px var(--cute-glow);
+}
+
+html[data-theme="dark"] .journal-summary-action {
+  --cute-from: #20332b;
+  --cute-to: #243a31;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .2);
+}
+
+html[data-theme="dark"] .journal-summary-action small,
+html[data-theme="dark"] .journal-summary-action .summary-action-icon {
+  background: rgba(255, 255, 255, .08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journal-summary-action { transition: none; }
+}
 
 .daily-calories-value {
   display: grid;
