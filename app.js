@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 87;
-  const APP_RELEASE = "3.56.25";
+  const APP_RELEASE = "3.56.26";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10030,7 +10030,7 @@
   function feelingScorePreviewHtml(scores = {}) {
     const items = feelingScorePreviewItems(scores);
     return items.length
-      ? feelingGroupsHtml(items, (item) => `<span class="meal-feeling-score-chip"><span>${item.emoji}</span>${esc(t(item.label))}${item.score === 0 ? (item.group === "positive" ? "<b>Absent</b>" : "") : `<b>${item.score}/5</b>`}</span>`)
+      ? items.map((item) => `<span class="meal-feeling-simple-item"><span aria-hidden="true">${item.emoji}</span><span>${esc(t(item.label))}</span>${item.score === 0 ? (item.group === "positive" ? "<b>Absent</b>" : "") : `<b>${item.score}/5</b>`}</span>`).join("")
       : '<span class="meal-feeling-empty">Aucun ressenti</span>';
   }
   function feelingCompactSummaryHtml(label, scores = {}) {
@@ -10157,10 +10157,9 @@
       beforeActionIcon.textContent = beforeItems.length ? "✎" : "＋";
     if (afterCount)
       afterCount.textContent = feelingSelectionCountLabel(afterItems);
-    const changes = feelingChangesHtml(beforeScores, afterScores, !!savedMeal?.feeling);
     if (changesPreview) {
-      changesPreview.innerHTML = changes;
-      changesPreview.hidden = !changes;
+      changesPreview.innerHTML = "";
+      changesPreview.hidden = true;
     }
     collapsed.innerHTML = beforeItems.length || afterItems.length
       ? `${feelingCompactSummaryHtml("Avant", beforeScores)}${feelingCompactSummaryHtml("Après", afterScores)}`
@@ -11929,7 +11928,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.25");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.26");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
