@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 87;
-  const APP_RELEASE = "3.56.26";
+  const APP_RELEASE = "3.56.27";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -9821,6 +9821,7 @@
           const favorite = db.favorites.find((f) => f.id === button.dataset.quickFavorite);
           applyFavoriteToMealForm(favorite);
           $$('[data-quick-favorite]').forEach((x) => x.classList.toggle("active", x === button));
+          $("#mealQuickFillDialog")?.close();
         }),
     );
   }
@@ -9900,6 +9901,7 @@
           $$('[data-quick-favorite]').forEach((x) => x.classList.remove("active"));
           field.focus();
           field.setSelectionRange(field.value.length, field.value.length);
+          $("#mealQuickFillDialog")?.close();
         }),
     );
   }
@@ -9955,8 +9957,13 @@
     $("#mealDialogTypeIcon").innerHTML = mealIcon(value);
     $("#mealDialogTypeLabel").setAttribute("data-i18n-key", value);
     $("#mealDialogTypeLabel").textContent = t(value);
-    $("#copyYesterdayBreakfast").hidden = value !== "Déjeuner";
-    $("#copyYesterdayDinner").hidden = value !== "Dîner";
+    const mainMeal = ["Déjeuner", "Dîner", "Souper"].includes(value),
+      quickBar = $("#mealQuickFillBar"),
+      previousLabel = $("#copyPreviousMealLabel"),
+      previousIcon = $("#copyPreviousMealIcon");
+    if (quickBar) quickBar.hidden = !mainMeal;
+    if (previousLabel) previousLabel.textContent = value === "Déjeuner" ? "Déjeuner d’hier" : value === "Dîner" ? "Souper d’hier" : "Souper précédent";
+    if (previousIcon) previousIcon.textContent = value === "Déjeuner" ? "🍳" : "🍱";
     populateFavoriteSelect(value);
     $("#favoriteMealSelect").value = "";
     populateFavoriteQuickPicks(value);
@@ -11094,22 +11101,32 @@
         .sort((a, b) => a.time.localeCompare(b.time))[0] || null
     );
   }
-  $("#copyYesterdayBreakfast").onclick = () => {
-    const m = previousDayMeal("Déjeuner");
-    if (!m) return alert("Aucun déjeuner trouvé hier.");
+  $("#copyPreviousMealQuick").onclick = () => {
+    const currentType = $("#mealType").value,
+      sourceType = currentType === "Déjeuner" ? "Déjeuner" : "Souper",
+      m = previousDayMeal(sourceType);
+    if (!m) return alert(sourceType === "Déjeuner" ? "Aucun déjeuner trouvé hier." : "Aucun souper trouvé hier.");
     $("#mealDescription").value = m.description;
     $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
     $("#mealNotes").value = m.notes || "";
     $("#mealDescription").focus();
   };
-  $("#copyYesterdayDinner").onclick = () => {
-    const m = previousDayMeal("Souper");
-    if (!m) return alert("Aucun souper trouvé hier.");
-    $("#mealDescription").value = m.description;
-    $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
-    $("#mealNotes").value = m.notes || "";
-    $("#mealDescription").focus();
-  };
+  function openMealQuickFill(kind) {
+    const dialog = $("#mealQuickFillDialog"),
+      favorites = $("#favoriteQuickSection"),
+      recent = $("#recentFoodsSection"),
+      empty = $("#mealQuickFillEmpty"),
+      title = $("#mealQuickFillDialogTitle"),
+      target = kind === "favorites" ? favorites : recent;
+    if (!dialog || !favorites || !recent) return;
+    favorites.hidden = kind !== "favorites" || !favorites.querySelector("button");
+    recent.hidden = kind !== "recent" || !recent.querySelector("button");
+    if (title) title.textContent = kind === "favorites" ? "Mes favoris" : recentMealsHeading($("#mealType").value);
+    if (empty) empty.hidden = !!target?.querySelector("button");
+    dialog.showModal();
+  }
+  $("#openFavoriteQuickFill").onclick = () => openMealQuickFill("favorites");
+  $("#openRecentQuickFill").onclick = () => openMealQuickFill("recent");
   $("#welcomeForm").onsubmit = (e) => {
     e.preventDefault();
     $("#welcomeDialog").close();
@@ -11928,7 +11945,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.26");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.27");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

@@ -1,0 +1,12 @@
+#mealForm > .meal-quick-fill-bar { order: -70; }
+#mealForm > #favoriteMealLabel { order: -69; }
+.meal-quick-fill-bar { display:grid; grid-template-columns:minmax(0,1fr) repeat(3,auto); align-items:center; gap:.32rem; width:100%; padding:.38rem .44rem; border:1px solid color-mix(in srgb,var(--accent) 18%,var(--border)); border-radius:13px; background:color-mix(in srgb,var(--accent) 6%,var(--surface)); }
+.meal-quick-fill-title { display:flex; align-items:center; gap:.3rem; min-width:0; color:var(--accent-strong); }
+.meal-quick-fill-title strong { overflow:hidden; font-size:.67rem; text-overflow:ellipsis; white-space:nowrap; }
+.meal-quick-fill-bar button { display:inline-flex; align-items:center; gap:.2rem; min-height:31px; padding:.3rem .46rem; border:1px solid var(--border); border-radius:999px; background:var(--surface); color:var(--text); font-size:.6rem; font-weight:800; white-space:nowrap; }
+.meal-quick-fill-dialog { width:min(92vw,480px); }
+.meal-quick-fill-dialog-card { gap:.8rem; }
+.meal-quick-fill-dialog .meal-quick-picks,.meal-quick-fill-dialog .recent-foods-section { display:grid; gap:.55rem; padding:0; border:0; background:transparent; }
+.meal-quick-fill-dialog .meal-quick-picks-list,.meal-quick-fill-dialog .recent-foods-list { display:grid; grid-template-columns:1fr; gap:.45rem; overflow:visible; }
+.meal-quick-fill-dialog .meal-quick-pick,.meal-quick-fill-dialog .recent-food-button { width:100%; max-width:100%; min-height:44px; text-align:left; }
+@media(max-width:420px){.meal-quick-fill-bar{grid-template-columns:repeat(3,minmax(0,1fr))}.meal-quick-fill-title{grid-column:1/-1}.meal-quick-fill-bar button{justify-content:center;min-width:0;padding-inline:.28rem}.meal-quick-fill-bar button span:last-child{overflow:hidden;text-overflow:ellipsis}}
