@@ -103,3 +103,111 @@
   .meal-feelings-workflow .meal-feelings-card-content { padding: .65rem; }
   .meal-feelings-workflow .meal-feeling-period { padding: .75rem; }
 }
+
+/* Formulaire de repas allégé : les sélecteurs complets vivent dans des fenêtres. */
+#mealForm > .dialog-header { order: -100; }
+#mealForm > .meal-dialog-type { order: -90; }
+#mealForm > #mealFeelingsDetails { order: -80; }
+#mealForm > .meal-time-row { order: -70; }
+#mealForm > .meal-description-field { order: -60; }
+#mealForm > .meal-copy-actions { order: -50; }
+#mealForm > #favoriteQuickSection { order: -40; }
+#mealForm > #favoriteMealLabel { order: -39; }
+#mealForm > #recentFoodsSection { order: -38; }
+
+#mealForm > .meal-time-row {
+  padding: .7rem .8rem;
+  border: 1px solid rgba(42, 118, 75, .16);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface2) 72%, var(--surface));
+}
+
+#mealForm > .meal-description-field {
+  padding: .9rem;
+  border: 2px solid color-mix(in srgb, var(--accent) 34%, var(--border));
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+  box-shadow: 0 9px 22px rgba(35, 103, 67, .08);
+}
+
+.meal-feeling-summary-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .7rem;
+  padding: .72rem .8rem;
+  border: 1px solid rgba(45, 96, 119, .22);
+  border-radius: 18px;
+  background: rgba(239, 248, 251, .72);
+}
+
+.meal-feelings-after-block.meal-feeling-summary-card {
+  border-color: rgba(47, 151, 82, .24);
+  background: rgba(240, 250, 239, .76);
+}
+
+.meal-feeling-summary-icon {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .72);
+  font-size: 1.25rem;
+}
+
+.meal-feeling-summary-copy {
+  min-width: 0;
+  display: grid;
+  gap: .12rem;
+}
+
+.meal-feeling-summary-copy > strong { font-size: .86rem; }
+.meal-feeling-summary-copy > small { color: var(--muted); font-size: .65rem; }
+.meal-feeling-summary-copy .meal-feeling-selected-preview {
+  max-height: 2.7rem;
+  margin: .1rem 0 0;
+  overflow: hidden;
+}
+
+.meal-feeling-summary-action {
+  display: inline-grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: .25rem;
+  min-height: 36px;
+  padding: .42rem .55rem;
+  border: 1px solid rgba(44, 125, 79, .2);
+  border-radius: 12px;
+  color: #26734a;
+  background: rgba(255, 255, 255, .7);
+}
+
+.meal-feeling-summary-action strong { font-size: .68rem; }
+.meal-feeling-summary-action b { color: var(--muted); }
+.meal-feeling-later {
+  max-width: 8.5rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: .6rem;
+  line-height: 1.25;
+  text-align: right;
+}
+.meal-feeling-summary-card .meal-feeling-changes-preview { grid-column: 1 / -1; }
+
+.meal-feeling-picker-dialog { width: min(94vw, 620px); }
+.meal-feeling-picker-card { gap: .9rem; }
+.meal-feeling-picker-card .feeling-fieldset { margin: 0; }
+
+html[data-theme="dark"] .meal-feeling-summary-card,
+html[data-theme="dark"] .meal-feelings-after-block.meal-feeling-summary-card {
+  background: color-mix(in srgb, var(--surface2) 82%, var(--surface));
+}
+html[data-theme="dark"] .meal-feeling-summary-icon,
+html[data-theme="dark"] .meal-feeling-summary-action { background: rgba(255, 255, 255, .07); }
+
+@media (max-width: 420px) {
+  .meal-feeling-summary-card { grid-template-columns: auto minmax(0, 1fr); }
+  .meal-feeling-summary-action,
+  .meal-feeling-later { grid-column: 1 / -1; width: 100%; max-width: none; justify-content: center; text-align: center; }
+}

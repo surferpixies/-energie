@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 86;
-  const APP_RELEASE = "3.56.20";
+  const CURRENT_VERSION = 87;
+  const APP_RELEASE = "3.56.21";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -9264,7 +9264,7 @@
     bindPersonalProfile();
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.20" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.21" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -9972,12 +9972,22 @@
     button.hidden = !hasMeal;
     unavailable.hidden = hasMeal;
     if (hasMeal) {
-      button.innerHTML = `<span aria-hidden="true">${meal.feeling ? "✎" : "＋"}</span><strong>${meal.feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}</strong><b aria-hidden="true">›</b>`;
+      button.innerHTML = `<span aria-hidden="true">${meal.feeling ? "✎" : "＋"}</span><strong>${meal.feeling ? "Modifier" : "Ajouter"}</strong><b aria-hidden="true">›</b>`;
       button.classList.toggle("is-set", !!meal.feeling);
       button.classList.toggle("is-empty", !meal.feeling);
       button.onclick = () => openFeelingFromMealEditor(meal);
     }
     updateMealFeelingsOverview(meal);
+  }
+  function finishBeforeFeelingPicker() {
+    const picker = $("#beforeFeelingTags");
+    if (hasUnscoredFeelings(picker, "before"))
+      return alert("Choisis une intensité pour chaque ressenti sélectionné (0 signifie « pas ressenti » pour un ressenti positif).");
+    const scores = collectScoredFeelingScores(picker, "before");
+    if (Object.keys(scores).length && !reviewFeelingQuality(feelingQualityAssessment(picker, "before"))) return;
+    updateMealFeelingsOverview();
+    scheduleFormAutosave($("#mealForm"));
+    $("#beforeFeelingDialog").close();
   }
   function openFeelingFromMealEditor(meal) {
     const currentMeal = allMeals().find((item) => item.id === meal?.id) || meal,
@@ -10120,7 +10130,7 @@
       afterCount = $("#afterFeelingCount"),
       changesPreview = $("#mealFeelingChanges"),
       beforeActionLabel = $("#beforeFeelingActionLabel"),
-      beforeActionIcon = $("#beforeFeelingEditor > summary > span");
+      beforeActionIcon = $("#beforeFeelingActionIcon");
     if (!collapsed || !beforePreview || !afterPreview) return;
     const mealId = $("#mealId")?.value,
       savedMeal =
@@ -10141,8 +10151,8 @@
       beforeCount.textContent = feelingSelectionCountLabel(beforeItems);
     if (beforeActionLabel)
       beforeActionLabel.textContent = beforeItems.length
-        ? "Modifier les ressentis avant"
-        : "Ajouter les ressentis avant";
+        ? "Modifier"
+        : "Ajouter";
     if (beforeActionIcon)
       beforeActionIcon.textContent = beforeItems.length ? "✎" : "＋";
     if (afterCount)
@@ -10265,7 +10275,7 @@
     }
     updateMealCalorieEditor();
     renderBeforeFeelingPicker(m);
-    $("#beforeFeelingEditor").open = false;
+    if ($("#beforeFeelingDialog").open) $("#beforeFeelingDialog").close();
     updateMealFeelingUi(m);
     updateMealCompositionReview();
     photoData = m?.photoLocal || m?.photoUrl || null;
@@ -10711,6 +10721,11 @@
       section.dataset.estimated = "false";
     }
   };
+  $("#openBeforeFeeling").onclick = () => $("#beforeFeelingDialog").showModal();
+  $("#finishBeforeFeeling").onclick = finishBeforeFeelingPicker;
+  $("#beforeFeelingDialog").addEventListener("close", () =>
+    updateMealFeelingsOverview(),
+  );
   $("#mealForm").onsubmit = (e) => {
     e.preventDefault();
     updateMealCalorieEditor();
@@ -11913,7 +11928,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.20");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.21");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
