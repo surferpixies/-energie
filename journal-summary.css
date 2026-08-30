@@ -285,6 +285,73 @@ html[data-theme="dark"] .quick-meal-type-grid button.is-complete {
   background: linear-gradient(145deg, #20332b, #244532);
 }
 
+.beverage-dialog-card { max-width: 560px; }
+.beverage-type-fieldset { display: grid; gap: .7rem; }
+.beverage-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .55rem;
+}
+.beverage-type-grid button {
+  min-height: 72px;
+  display: grid;
+  place-items: center;
+  gap: .2rem;
+  padding: .5rem .3rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: var(--text);
+  background: var(--bg);
+}
+.beverage-type-grid button span { font-size: 1.45rem; }
+.beverage-type-grid button small { font-size: .62rem; line-height: 1.15; }
+.beverage-type-grid button.active {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent) 11%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.beverage-caffeine-row[hidden] { display: none; }
+.beverage-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .7rem;
+  padding-top: .65rem;
+  border-top: 1px solid var(--border);
+}
+.beverage-section-head > div { display: grid; gap: .05rem; }
+.beverage-section-head strong { font-size: .78rem; }
+.beverage-section-head small { color: var(--muted); font-size: .6rem; }
+.beverage-entry-list { display: grid; gap: .4rem; margin-top: .55rem; }
+.beverage-entry {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: .55rem;
+  padding: .48rem .58rem;
+  border-radius: 13px;
+  background: var(--surface2);
+}
+.beverage-entry > span:first-child { font-size: 1.25rem; }
+.beverage-entry > span:nth-child(2) { display: grid; gap: .05rem; }
+.beverage-entry strong { font-size: .72rem; }
+.beverage-entry small { color: var(--muted); font-size: .61rem; }
+.beverage-entry button {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 9px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+}
+.beverage-empty { margin: 0; color: var(--muted); font-size: .66rem; }
+
+@media (max-width: 390px) {
+  .beverage-type-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .beverage-section-head { align-items: stretch; flex-direction: column; }
+}
+
 .quick-feeling-choices {
   display: grid;
   gap: .65rem;

@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 84;
-  const APP_RELEASE = "3.56.18";
+  const CURRENT_VERSION = 85;
+  const APP_RELEASE = "3.56.19";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -470,6 +470,7 @@
         sleepTags: [],
         sleepComment: "",
         water: 0,
+        beverages: [],
         activities: [],
         meals: [],
         observations: [],
@@ -489,10 +490,47 @@
     d.formDrafts =
       d.formDrafts && typeof d.formDrafts === "object" ? d.formDrafts : {};
     d.water = Number(d.water) || 0;
+    d.beverages = (Array.isArray(d.beverages) ? d.beverages : [])
+      .map((item) => normalBeverage(item, key))
+      .filter(Boolean);
     d.supplementsTaken = normalizeSupplements(
       d.supplementsTaken || d.supplements || [],
     );
     return d;
+  }
+  const BEVERAGE_TYPES = [
+    { id: "water", label: "Eau", icon: "💧", amount: 500 },
+    { id: "sparkling_water", label: "Eau pétillante", icon: "🫧", amount: 500 },
+    { id: "coffee", label: "Café", icon: "☕", amount: 250, caffeine: true },
+    { id: "tea", label: "Thé", icon: "🍵", amount: 250, caffeine: true },
+    { id: "herbal_tea", label: "Tisane", icon: "🌿", amount: 250 },
+    { id: "juice", label: "Jus de fruits", icon: "🧃", amount: 250 },
+    { id: "milk", label: "Lait", icon: "🥛", amount: 250 },
+    { id: "soft_drink", label: "Boisson gazeuse", icon: "🥤", amount: 355, caffeine: true },
+    { id: "energy_drink", label: "Boisson énergisante", icon: "⚡", amount: 250, caffeine: true },
+    { id: "beer", label: "Bière", icon: "🍺", amount: 341, alcohol: true },
+    { id: "wine", label: "Vin", icon: "🍷", amount: 150, alcohol: true },
+    { id: "spirits", label: "Spiritueux", icon: "🥃", amount: 45, alcohol: true },
+    { id: "other", label: "Autre", icon: "🥂", amount: 250 },
+  ];
+  function beverageType(type) {
+    return BEVERAGE_TYPES.find((item) => item.id === type) || BEVERAGE_TYPES.at(-1);
+  }
+  function normalBeverage(item = {}, date = todayKey()) {
+    const type = beverageType(item.type).id,
+      amount = Number(item.amountMl ?? item.amount ?? item.ml),
+      time = /^([01]\d|2[0-3]):[0-5]\d$/.test(item.time || "") ? item.time : "12:00";
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 5000) return null;
+    return {
+      id: item.id || uid(),
+      date: item.date || date,
+      type,
+      time,
+      amountMl: Math.round(amount),
+      caffeinated: !!item.caffeinated,
+      createdAt: item.createdAt || new Date().toISOString(),
+      updatedAt: item.updatedAt || new Date().toISOString(),
+    };
   }
   function normalNutrition(n) {
     if (!n || typeof n !== "object") return null;
@@ -664,6 +702,9 @@
             ? { ...d.formDrafts }
             : {};
         day.water = Number(d.water ?? d.waterGlasses ?? d.eau ?? 0) || 0;
+        day.beverages = (Array.isArray(d.beverages) ? d.beverages : [])
+          .map((item) => normalBeverage(item, k))
+          .filter(Boolean);
         day.weightMeasurement = Metrics.weightRecord(d.weightMeasurement);
         day.activities = (Array.isArray(d.activities) ? d.activities : []).map(
           normalizeActivity,
@@ -1465,6 +1506,7 @@
             activities: (d.activities || []).map(activityToCloud),
             supplements: {
               taken: d.supplementsTaken || [],
+              beverages: d.beverages || [],
               defaults: db.settings.supplements || [],
               defaultsUpdatedAt: db.settings.supplementsUpdatedAt || db.updatedAt,
               formDrafts: d.formDrafts || {},
@@ -1715,6 +1757,9 @@
         d.sleepTags = Array.isArray(r.sleep_tags) ? r.sleep_tags : [];
         d.sleepComment = r.sleep_comment || "";
         d.water = r.water || 0;
+        d.beverages = (Array.isArray(r.supplements?.beverages) ? r.supplements.beverages : [])
+          .map((item) => normalBeverage(item, r.log_date))
+          .filter(Boolean);
         d.activities = (r.activities || []).map(normalizeActivity);
         if (Array.isArray(r.supplements?.taken))
           d.supplementsTaken = normalizeSupplements(r.supplements.taken);
@@ -1732,6 +1777,10 @@
         if (!(d.sleepTags || []).length && Array.isArray(r.sleep_tags)) d.sleepTags = r.sleep_tags;
         if (!d.sleepComment && r.sleep_comment) d.sleepComment = r.sleep_comment;
         if (!(Number(d.water) > 0) && Number(r.water) > 0) d.water = Number(r.water);
+        if (!(d.beverages || []).length && Array.isArray(r.supplements?.beverages))
+          d.beverages = r.supplements.beverages
+            .map((item) => normalBeverage(item, r.log_date))
+            .filter(Boolean);
         if (!(d.activities || []).length && Array.isArray(r.activities))
           d.activities = r.activities.map(normalizeActivity);
         if (!(d.supplementsTaken || []).length && Array.isArray(r.supplements?.taken))
@@ -5998,6 +6047,23 @@
       .join("");
     return `${observationHtml}<section class="card supplement-card"><div class="row"><div class="hydration-heading"><span>💊</span><h3>Suppléments</h3></div><strong>${taken.length}/${defaults.length}</strong></div><p class="muted small">Coche ce que tu as pris aujourd’hui. Les éléments restants restent décochés.</p><div class="supplement-list">${items}</div></section>`;
   }
+  function beverageEntriesHtml(day) {
+    const beverages = [...(day?.beverages || [])].sort((a, b) =>
+      a.time.localeCompare(b.time),
+    );
+    if (!beverages.length)
+      return '<p class="beverage-empty">Aucune autre boisson inscrite aujourd’hui.</p>';
+    return beverages.map((item) => {
+      const type = beverageType(item.type),
+        detail = item.caffeinated ? " · caféiné" : type.alcohol ? " · alcool" : "";
+      return `<div class="beverage-entry"><span aria-hidden="true">${type.icon}</span><span><strong>${esc(type.label)}</strong><small>${esc(item.time)} · ${item.amountMl.toLocaleString("fr-CA")} ml${detail}</small></span><button type="button" data-delete-beverage="${esc(item.id)}" aria-label="Supprimer ${esc(type.label)}">×</button></div>`;
+    }).join("");
+  }
+  function hydrationCardHtml(day, goal, waterButtons) {
+    const units = Number(day.water) || 0,
+      displayUnits = Number.isInteger(units) ? units : units.toLocaleString("fr-CA", { maximumFractionDigits: 1 });
+    return `<section class="card hydration-card"><div class="row"><div class="hydration-heading"><span>💧 <small>(500 ml)</small></span><h3>Boissons et hydratation</h3></div><strong>${displayUnits}/${goal}</strong></div><div class="water-row">${waterButtons}</div><div class="beverage-section-head"><div><strong>Boissons inscrites</strong><small>Type, heure et quantité</small></div><button type="button" class="secondary small" id="openBeverage">+ Ajouter une boisson</button></div><div class="beverage-entry-list">${beverageEntriesHtml(day)}</div></section>`;
+  }
 
   function trendDateKeys(endDate, days = 7, offset = 0) {
     const end = new Date(`${endDate}T12:00:00`);
@@ -6355,7 +6421,7 @@
       (d.sleepTags || []).filter((x) => x !== "none").length - 2,
     );
     $("#app").innerHTML =
-      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${dailyMacroSummaryHtml(meals)}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? `${d.sleepHours} h` : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><button class="card activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button></section><section class="card hydration-card"><div class="row"><div class="hydration-heading"><span>💧 <small>(500 ml)</small></span><h3>Hydratation</h3></div><strong>${d.water}/${goal}</strong></div><div class="water-row">${water}</div></section>${supplementsTodayHtml(d)}</div>`}</div>`;
+      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${dailyMacroSummaryHtml(meals)}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? `${d.sleepHours} h` : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><button class="card activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button></section>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
     $("#previousDay").onclick = () => changeJournalDay(-1);
     if (!$("#nextDay").disabled)
       $("#nextDay").onclick = () => changeJournalDay(1);
@@ -6388,6 +6454,11 @@
     $("#journalSummaryActivity")?.addEventListener("click", openActivity);
     $("#journalSummaryWater")?.addEventListener("click", () => {
       d.water = Math.min(goal, (Number(d.water) || 0) + 1);
+      d.beverages.push(normalBeverage({
+        type: "water",
+        time: new Date().toTimeString().slice(0, 5),
+        amountMl: 500,
+      }, selectedDate));
       setDayChanged(selectedDate);
       render();
     });
@@ -6404,6 +6475,18 @@
     });
     $(".edit-sleep")?.addEventListener("click", openSleep);
     $(".edit-activity")?.addEventListener("click", openActivity);
+    $("#openBeverage")?.addEventListener("click", openBeverage);
+    $$('[data-delete-beverage]').forEach((button) => {
+      button.onclick = () => {
+        const index = d.beverages.findIndex((item) => item.id === button.dataset.deleteBeverage);
+        if (index < 0) return;
+        const [removed] = d.beverages.splice(index, 1);
+        if (["water", "sparkling_water"].includes(removed.type))
+          d.water = Math.max(0, (Number(d.water) || 0) - removed.amountMl / 500);
+        setDayChanged(selectedDate);
+        render();
+      };
+    });
     $$("[data-quick-meal]").forEach(
       (b) =>
         (b.onclick = () => {
@@ -9171,7 +9254,7 @@
     bindPersonalProfile();
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.18" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.19" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -10249,6 +10332,30 @@
     updateActivityEstimate();
     $("#activityDialog").showModal();
   }
+  function selectBeverageType(typeId, resetAmount = true) {
+    const type = beverageType(typeId),
+      caffeineRow = $("#beverageCaffeineRow");
+    $("#beverageType").value = type.id;
+    if (resetAmount) $("#beverageAmount").value = type.amount;
+    $$('[data-beverage-type]').forEach((button) => {
+      const active = button.dataset.beverageType === type.id;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+    if (caffeineRow) caffeineRow.hidden = !["coffee", "tea", "soft_drink", "energy_drink"].includes(type.id);
+    $("#beverageCaffeinated").checked = !!type.caffeine;
+  }
+  function openBeverage() {
+    $("#beverageTypeChoices").innerHTML = BEVERAGE_TYPES.map((type) =>
+      `<button type="button" data-beverage-type="${type.id}" aria-pressed="false"><span>${type.icon}</span><small>${esc(type.label)}</small></button>`,
+    ).join("");
+    $$('[data-beverage-type]').forEach((button) =>
+      button.addEventListener("click", () => selectBeverageType(button.dataset.beverageType)),
+    );
+    $("#beverageTime").value = new Date().toTimeString().slice(0, 5);
+    selectBeverageType("water");
+    $("#beverageDialog").showModal();
+  }
   async function fileToDataUrl(file) {
     if (!file) return null;
     const img = await createImageBitmap(file),
@@ -10888,6 +10995,25 @@
         }
       }),
   );
+  $("#beverageForm").onsubmit = (e) => {
+    e.preventDefault();
+    const d = ensureDay(db, selectedDate),
+      type = beverageType($("#beverageType").value),
+      amountMl = Number($("#beverageAmount").value),
+      beverage = normalBeverage({
+        type: type.id,
+        time: $("#beverageTime").value,
+        amountMl,
+        caffeinated: !$("#beverageCaffeineRow").hidden && $("#beverageCaffeinated").checked,
+      }, selectedDate);
+    if (!beverage) return alert("Indique une quantité valide entre 1 et 5 000 ml.");
+    d.beverages.push(beverage);
+    if (["water", "sparkling_water"].includes(type.id))
+      d.water = Math.min(db.settings.waterGoal || 8, (Number(d.water) || 0) + amountMl / 500);
+    setDayChanged(selectedDate);
+    $("#beverageDialog").close();
+    render();
+  };
   $("#activityForm").onsubmit = (e) => {
     e.preventDefault();
     const d = ensureDay(db, selectedDate),
@@ -11777,7 +11903,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.18");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.19");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
