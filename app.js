@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 87;
-  const APP_RELEASE = "3.56.22";
+  const APP_RELEASE = "3.56.23";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10235,8 +10235,9 @@
     $("#mealNotes").value = m?.notes || "";
     const favorite = favoriteForMeal(m);
     setMealFavoriteToggle(!!favorite, favorite?.id || "");
-    $("#mealOptionalDetails").open = !!(m?.notes || (nutritionVisibleToViewer() && m?.nutrition));
-    $("#mealOptionalTitle").textContent = nutritionVisibleToViewer() ? "Notes et nutrition" : "Notes";
+    $("#mealOptionalDetails").open = !!(nutritionVisibleToViewer() && m?.nutrition);
+    $("#mealOptionalDetails").hidden = !nutritionVisibleToViewer();
+    $("#mealOptionalTitle").textContent = "Détails nutritionnels";
     $("#mealNutritionSection").hidden = !nutritionVisibleToViewer();
     const automaticNutrition = db.settings.autoNutritionEstimates !== false;
     $("#mealCalorieMode").value = "auto";
@@ -11928,7 +11929,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.22");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.23");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

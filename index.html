@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="meal-labels.css?v=3.56.21">
   <link rel="stylesheet" href="meal-calories.css?v=3.56.21">
   <link rel="stylesheet" href="positive-feelings.css?v=3.56.21">
-  <link rel="stylesheet" href="feelings-navigation.css?v=3.56.22">
+  <link rel="stylesheet" href="feelings-navigation.css?v=3.56.23">
   <link rel="stylesheet" href="journal-summary.css?v=3.56.21">
 </head>
 <body>
@@ -87,10 +87,7 @@
       <div class="meal-dialog-type" aria-live="polite">
         <span id="mealDialogTypeIcon" class="meal-dialog-type-icon" aria-hidden="true">🍳</span>
         <div><span class="muted small">Type de repas</span><strong id="mealDialogTypeLabel" data-i18n-key="Déjeuner">Déjeuner</strong></div>
-      </div>
-      <div class="meal-copy-actions">
-        <button type="button" class="secondary small meal-copy-button" id="copyYesterdayBreakfast">🍳 Copier le déjeuner d'hier</button>
-        <button type="button" class="secondary small meal-copy-button" id="copyYesterdayDinner">🍱 Restants : copier le souper d'hier</button>
+        <label class="meal-type-time" for="mealTime"><span>Heure</span><input id="mealTime" type="time" name="energie_meal_clock_value" autocomplete="one-time-code" required></label>
       </div>
       <section id="mealFeelingsDetails" class="meal-feeling-summary-card meal-feelings-before-block">
         <span class="meal-feeling-summary-icon" aria-hidden="true">🌤️</span>
@@ -106,6 +103,10 @@
           <button type="button" class="primary" id="finishBeforeFeeling">Terminer</button>
         </section>
       </dialog>
+      <div class="meal-copy-actions meal-shortcuts">
+        <button type="button" class="secondary small meal-copy-button" id="copyYesterdayBreakfast">🍳 Déjeuner d'hier</button>
+        <button type="button" class="secondary small meal-copy-button" id="copyYesterdayDinner">🍱 Souper d'hier</button>
+      </div>
       <section id="favoriteQuickSection" class="meal-quick-picks" hidden>
         <div class="meal-quick-picks-heading"><span>⭐</span><div><strong>Mes favoris</strong><small>Un toucher pour remplir le repas</small></div></div>
         <div id="favoriteQuickList" class="meal-quick-picks-list"></div>
@@ -117,7 +118,6 @@
         <div class="recent-foods-heading"><span>🕒</span><strong id="recentFoodsHeading">Derniers repas</strong></div>
         <div id="recentFoodsList" class="recent-foods-list"></div>
       </section>
-      <label class="meal-time-row" for="mealTime"><span class="meal-time-label"><span aria-hidden="true">🕒</span><span>Heure</span></span><input id="mealTime" type="time" name="energie_meal_clock_value" autocomplete="one-time-code" required></label>
       <div class="meal-description-field">
         <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div>
         <div class="meal-description-composer">
@@ -161,7 +161,7 @@
       </details>
       <div id="mealSuggestionWrap" class="meal-suggestion-wrap" hidden><button type="button" id="mealSuggestionToggle" class="meal-suggestion-toggle" aria-expanded="false">💡 Voir la suggestion</button><p id="mealSuggestionBody" class="meal-suggestion-body" hidden></p></div>
       <details id="mealOptionalDetails" class="meal-optional-details">
-        <summary><span>＋</span><span><strong id="mealOptionalTitle">Notes</strong><small>Options facultatives</small></span></summary>
+        <summary><span>＋</span><span><strong id="mealOptionalTitle">Détails nutritionnels</strong><small>Valeurs facultatives</small></span></summary>
         <div class="meal-optional-content">
           <section id="mealNutritionSection" class="meal-nutrition-section" hidden>
             <div class="meal-nutrition-heading"><div><span class="eyebrow">Nutrition facultative</span><strong>Estimation nutritionnelle</strong></div><button type="button" class="secondary small" id="estimateMealNutrition">Estimer</button></div>
@@ -177,7 +177,6 @@
             <p id="nutritionEstimateNote" class="muted tiny">Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.</p>
             <button type="button" class="text-button nutrition-clear" id="clearMealNutrition">Effacer les valeurs</button>
           </section>
-          <label>Notes facultatives<textarea id="mealNotes" name="energie_meal_notes_value" autocomplete="one-time-code" autocapitalize="sentences" rows="2" placeholder="Contexte, digestion, humeur…"></textarea></label>
         </div>
       </details>
       <section class="meal-calorie-editor" aria-labelledby="mealCaloriesLabel">
@@ -194,6 +193,7 @@
         <p id="mealFeelingUnavailable" class="meal-feeling-later">Disponible après avoir enregistré le repas.</p>
         <div id="mealFeelingChanges" class="meal-feeling-changes-preview" hidden></div>
       </section>
+      <label class="meal-final-note"><span><b aria-hidden="true">✎</b><strong>Note facultative</strong></span><textarea id="mealNotes" name="energie_meal_notes_value" autocomplete="one-time-code" autocapitalize="sentences" rows="2" placeholder="Un détail à retenir sur ce repas…"></textarea></label>
       <div class="dialog-actions meal-form-actions"><button type="button" class="danger" id="deleteCurrentMeal" hidden>Supprimer</button><button type="submit" class="primary">Enregistrer le repas</button></div>
     </form>
   </dialog>
@@ -551,6 +551,6 @@
   <script src="observation-engine.js?v=3.56.21"></script>
   <script src="demo-profiles.js?v=3.56.21"></script>
   <script src="personal-metrics.js?v=3.56.21"></script>
-  <script src="app.js?v=3.56.22"></script>
+  <script src="app.js?v=3.56.23"></script>
 </body>
 </html>
