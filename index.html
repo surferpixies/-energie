@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="meal-calories.css?v=3.56.21">
   <link rel="stylesheet" href="positive-feelings.css?v=3.56.21">
   <link rel="stylesheet" href="feelings-navigation.css?v=3.56.23">
+  <link rel="stylesheet" href="meal-form-compact.css?v=3.56.24">
   <link rel="stylesheet" href="journal-summary.css?v=3.56.21">
 </head>
 <body>
@@ -118,6 +119,14 @@
         <div class="recent-foods-heading"><span>🕒</span><strong id="recentFoodsHeading">Derniers repas</strong></div>
         <div id="recentFoodsList" class="recent-foods-list"></div>
       </section>
+      <section class="meal-calorie-editor meal-calorie-inline" aria-labelledby="mealCaloriesLabel">
+        <label id="mealCaloriesLabel" for="mealCalories"><span aria-hidden="true">⚡</span> Calories estimées</label>
+        <input id="mealCalorieMode" type="hidden" value="auto">
+        <input id="mealCalories" type="text" inputmode="decimal" autocomplete="off" placeholder="—" aria-describedby="mealCalorieStatus">
+        <span class="meal-calorie-unit">kcal</span>
+        <small id="mealCalorieStatus" role="status">Aucune estimation disponible · saisie facultative</small>
+        <button type="button" class="text-button" id="resetMealCalories" hidden>Auto</button>
+      </section>
       <div class="meal-description-field">
         <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div>
         <div class="meal-description-composer">
@@ -179,13 +188,6 @@
           </section>
         </div>
       </details>
-      <section class="meal-calorie-editor" aria-labelledby="mealCaloriesLabel">
-        <label id="mealCaloriesLabel" for="mealCalories">Calories estimées <span class="muted small">(kcal)</span></label>
-        <input id="mealCalorieMode" type="hidden" value="auto">
-        <input id="mealCalories" type="text" inputmode="decimal" autocomplete="off" placeholder="—" aria-describedby="mealCalorieStatus">
-        <small id="mealCalorieStatus" role="status">Aucune estimation disponible · saisie facultative</small>
-        <button type="button" class="text-button" id="resetMealCalories" hidden>Revenir à l’estimation automatique</button>
-      </section>
       <section class="meal-feeling-summary-card meal-feelings-after-block">
         <span class="meal-feeling-summary-icon" aria-hidden="true">🌿</span>
         <span class="meal-feeling-summary-copy"><strong>Après le repas</strong><small id="afterFeelingCount">Non consigné</small><span id="afterFeelingSelectedPreview" class="meal-feeling-selected-preview"><span class="meal-feeling-empty">Aucun ressenti</span></span></span>
@@ -551,6 +553,6 @@
   <script src="observation-engine.js?v=3.56.21"></script>
   <script src="demo-profiles.js?v=3.56.21"></script>
   <script src="personal-metrics.js?v=3.56.21"></script>
-  <script src="app.js?v=3.56.23"></script>
+  <script src="app.js?v=3.56.24"></script>
 </body>
 </html>
