@@ -223,6 +223,7 @@ html[data-theme="dark"] .summary-water-glass { opacity: .72; }
 }
 
 .quick-meal-type-grid button {
+  position: relative;
   min-height: 110px;
   display: grid;
   place-items: center;
@@ -233,8 +234,56 @@ html[data-theme="dark"] .summary-water-glass { opacity: .72; }
   background: #fff;
 }
 
-.quick-meal-type-grid button span { font-size: 2rem; }
+.quick-meal-type-grid button .quick-meal-type-icon { font-size: 2rem; }
 .quick-meal-type-grid button strong { font-size: 1rem; }
+
+.quick-meal-type-state {
+  color: var(--muted, #69766e);
+  font-size: .68rem;
+  font-weight: 700;
+}
+
+.quick-meal-type-badge {
+  position: absolute;
+  top: .62rem;
+  right: .62rem;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border-radius: 9px;
+  color: #fff;
+  background: #4c8c67;
+  font-size: .9rem;
+  line-height: 1;
+}
+
+.quick-meal-type-grid button.is-complete {
+  border-color: rgba(32, 156, 79, .42);
+  background: linear-gradient(145deg, #fff, #edf9e9);
+  box-shadow: inset 0 0 0 1px rgba(32, 156, 79, .08);
+}
+
+.quick-meal-type-grid button.is-complete .quick-meal-type-badge {
+  background: #18a94f;
+}
+
+.quick-meal-type-grid button.is-waiting .quick-meal-type-badge {
+  color: #75571b;
+  background: #f1d690;
+}
+
+.quick-meal-type-grid button.is-waiting .quick-meal-type-state {
+  color: #856925;
+}
+
+html[data-theme="dark"] .quick-meal-type-grid button {
+  background: #20332b;
+}
+
+html[data-theme="dark"] .quick-meal-type-grid button.is-complete {
+  background: linear-gradient(145deg, #20332b, #244532);
+}
 
 .quick-feeling-choices {
   display: grid;

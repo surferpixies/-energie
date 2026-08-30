@@ -11,15 +11,15 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.56.17">
-  <link rel="stylesheet" href="portrait.css?v=3.56.17">
-  <link rel="stylesheet" href="observation-detail.css?v=3.56.17">
-  <link rel="stylesheet" href="personal-metrics.css?v=3.56.17">
-  <link rel="stylesheet" href="meal-labels.css?v=3.56.17">
-  <link rel="stylesheet" href="meal-calories.css?v=3.56.17">
-  <link rel="stylesheet" href="positive-feelings.css?v=3.56.17">
-  <link rel="stylesheet" href="feelings-navigation.css?v=3.56.17">
-  <link rel="stylesheet" href="journal-summary.css?v=3.56.17">
+  <link rel="stylesheet" href="styles.css?v=3.56.18">
+  <link rel="stylesheet" href="portrait.css?v=3.56.18">
+  <link rel="stylesheet" href="observation-detail.css?v=3.56.18">
+  <link rel="stylesheet" href="personal-metrics.css?v=3.56.18">
+  <link rel="stylesheet" href="meal-labels.css?v=3.56.18">
+  <link rel="stylesheet" href="meal-calories.css?v=3.56.18">
+  <link rel="stylesheet" href="positive-feelings.css?v=3.56.18">
+  <link rel="stylesheet" href="feelings-navigation.css?v=3.56.18">
+  <link rel="stylesheet" href="journal-summary.css?v=3.56.18">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -214,10 +214,10 @@
       <div class="dialog-header"><div><p class="eyebrow">Ajout rapide</p><h2>Choisir le repas</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
       <p class="muted small">Le formulaire habituel s’ouvrira avec le bon type de repas.</p>
       <div class="quick-meal-type-grid">
-        <button type="button" data-summary-meal-type="Déjeuner"><span>🍳</span><strong data-i18n-key="Déjeuner">Déjeuner</strong></button>
-        <button type="button" data-summary-meal-type="Dîner"><span>🥪</span><strong data-i18n-key="Dîner">Dîner</strong></button>
-        <button type="button" data-summary-meal-type="Souper"><span>🍝</span><strong data-i18n-key="Souper">Souper</strong></button>
-        <button type="button" data-summary-meal-type="Collation"><span>🧺</span><strong data-i18n-key="Collation">Collation</strong></button>
+        <button type="button" data-summary-meal-type="Déjeuner"><span class="quick-meal-type-icon">🍳</span><strong data-i18n-key="Déjeuner">Déjeuner</strong><small class="quick-meal-type-state">Ajouter</small><b class="quick-meal-type-badge" aria-hidden="true">+</b></button>
+        <button type="button" data-summary-meal-type="Dîner"><span class="quick-meal-type-icon">🥪</span><strong data-i18n-key="Dîner">Dîner</strong><small class="quick-meal-type-state">Ajouter</small><b class="quick-meal-type-badge" aria-hidden="true">+</b></button>
+        <button type="button" data-summary-meal-type="Souper"><span class="quick-meal-type-icon">🍝</span><strong data-i18n-key="Souper">Souper</strong><small class="quick-meal-type-state">Ajouter</small><b class="quick-meal-type-badge" aria-hidden="true">+</b></button>
+        <button type="button" data-summary-meal-type="Collation"><span class="quick-meal-type-icon">🧺</span><strong data-i18n-key="Collation">Collation</strong><small class="quick-meal-type-state">Plusieurs possibles</small><b class="quick-meal-type-badge" aria-hidden="true">+</b></button>
       </div>
     </section>
   </dialog>
@@ -535,7 +535,7 @@
   </dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js?v=3.7.1"></script>
-  <script src="i18n.js?v=3.56.17"></script>
+  <script src="i18n.js?v=3.56.18"></script>
   <script src="foods.js?v=3.8.0"></script>
   <script src="food-categories.js?v=3.31.2"></script>
   <script src="dish-knowledge.js?v=3.31.2"></script>
@@ -548,9 +548,9 @@
   <script src="brain/profile.js?v=3.8.0"></script>
   <script src="brain/insight-engine.js?v=3.30.2"></script>
   <script src="brain/index.js?v=3.12.0"></script>
-  <script src="observation-engine.js?v=3.56.17"></script>
-  <script src="demo-profiles.js?v=3.56.17"></script>
-  <script src="personal-metrics.js?v=3.56.17"></script>
-  <script src="app.js?v=3.56.17"></script>
+  <script src="observation-engine.js?v=3.56.18"></script>
+  <script src="demo-profiles.js?v=3.56.18"></script>
+  <script src="personal-metrics.js?v=3.56.18"></script>
+  <script src="app.js?v=3.56.18"></script>
 </body>
 </html>
