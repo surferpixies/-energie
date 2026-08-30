@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 81;
-  const APP_RELEASE = "3.56.15";
+  const CURRENT_VERSION = 83;
+  const APP_RELEASE = "3.56.17";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -4512,6 +4512,20 @@
       .sort((a, b) => a.time.localeCompare(b.time));
     return type === "Collation" ? list : list.slice(0, 1);
   }
+  function journalCountedMeals(meals = []) {
+    const recordedMeals = meals.filter((meal) =>
+        String(meal?.description || "").trim(),
+      ),
+      mainTypes = new Set(["Déjeuner", "Dîner", "Souper"]),
+      firstMainIds = new Set();
+    for (const type of mainTypes) {
+      const first = mealTypeSummary(recordedMeals, type)[0];
+      if (first?.id) firstMainIds.add(first.id);
+    }
+    return recordedMeals.filter((meal) =>
+      !mainTypes.has(meal.type) || firstMainIds.has(meal.id),
+    );
+  }
   function recentUniqueSnacks(limit = 10) {
     const seen = new Set();
     return allMeals()
@@ -5939,11 +5953,16 @@
   }
 
   function dailyMacroSummaryHtml(meals) {
+    meals = journalCountedMeals(meals);
     const summary = Metrics.calorieSummary(meals, calorieEstimator);
     const value = summary.total == null ? '—' : '≈ ' + summary.total.toLocaleString('fr-CA');
     const note = !summary.count ? 'Aucun repas enregistré pour cette journée.'
       : summary.total == null ? 'Pas encore d’estimation disponible pour les repas saisis.'
-      : summary.known + '/' + summary.count + ' repas ou collations estimés' + (summary.partial ? ' · total partiel' : '') + '. Le total dépend de ce qui est saisi.';
+      : summary.partial
+        ? 'Calories disponibles pour ' + summary.known + ' des ' + summary.count + ' entrées saisies · total partiel.'
+        : summary.count === 1
+          ? '1 repas ou collation avec calories estimées.'
+          : summary.count + ' repas ou collations avec calories estimées.';
     const summaryMode = journalViewMode() === 'summary', nextMode = summaryMode ? 'detailed' : 'summary';
     const viewButton = '<button type="button" class="journal-view-compact" data-journal-view="' + nextMode + '" aria-label="Afficher la vue ' + (summaryMode ? 'détaillée' : 'sommaire') + '"><span aria-hidden="true">' + (summaryMode ? '☷' : '▦') + '</span>' + (summaryMode ? 'Détaillée' : 'Sommaire') + '</button>';
     return '<section class="daily-calories-card" aria-label="Calories estimées de la journée"><div><span class="daily-calories-value"><span>⚡ Calories de la journée</span><strong>' + value + ' <small>kcal</small></strong></span>' + viewButton + '</div><p>' + esc(note) + '</p></section>';
@@ -6230,6 +6249,7 @@
   }
 
   function journalSummaryHtml(day, meals) {
+    meals = journalCountedMeals(meals);
     const activity = activitySummary(day),
       activityCount = (day.activities || []).length,
       feelingCount = meals.filter((meal) =>
@@ -6331,7 +6351,9 @@
     $$('[data-summary-meal-type]').forEach((button) => {
       button.onclick = () => {
         $("#quickMealTypeDialog").close();
-        openMeal(null, button.dataset.summaryMealType);
+        const type = button.dataset.summaryMealType,
+          existing = type === "Collation" ? null : mealTypeSummary(meals, type)[0];
+        openMeal(existing?.id || null, type);
       };
     });
     $("#journalSummarySleep")?.addEventListener("click", openSleep);
@@ -9121,7 +9143,7 @@
     bindPersonalProfile();
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.15" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.17" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -11727,7 +11749,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.15");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.17");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
