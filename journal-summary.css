@@ -121,6 +121,68 @@
   top: .5rem;
 }
 
+.journal-summary-hydration {
+  align-content: start;
+  gap: .42rem;
+  cursor: default;
+}
+
+.journal-summary-hydration .summary-water-glass {
+  right: .55rem;
+  top: .5rem;
+  width: 2.45rem;
+  height: 3.15rem;
+  opacity: .42;
+}
+
+.summary-water-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  width: 100%;
+  margin-top: .05rem;
+}
+
+.summary-water-drop {
+  flex: 1 1 12px;
+  min-width: 0;
+  width: auto;
+  max-width: 1.08rem;
+  height: 1.55rem;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  filter: grayscale(1);
+  opacity: .2;
+  font-size: .9rem;
+  line-height: 1;
+}
+
+.summary-water-drop.filled {
+  filter: none;
+  opacity: 1;
+}
+
+.summary-add-beverage {
+  width: 100%;
+  min-height: 28px;
+  padding: .3rem .5rem;
+  border: 1px solid rgba(47, 135, 87, .22);
+  border-radius: 10px;
+  color: #26734a;
+  background: rgba(255, 255, 255, .62);
+  font-size: .68rem;
+  font-weight: 850;
+}
+
+html[data-theme="dark"] .summary-add-beverage {
+  color: #9cddb5;
+  background: rgba(255, 255, 255, .08);
+}
+
 .journal-summary-action > span:first-child {
   grid-column: 1 / -1;
   color: var(--muted, #69766e);

@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 85;
-  const APP_RELEASE = "3.56.19";
+  const CURRENT_VERSION = 86;
+  const APP_RELEASE = "3.56.20";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -6314,6 +6314,18 @@
     return db.settings?.journalViewMode === "summary" ? "summary" : "detailed";
   }
 
+  function summaryHydrationHtml(day) {
+    const goal = Number(db.settings.waterGoal) || 8,
+      units = Number(day.water) || 0,
+      waterMl = Math.round(units * 500),
+      drops = Array.from({ length: goal }, (_, index) => {
+        const value = index + 1,
+          filled = index < units;
+        return `<button type="button" class="summary-water-drop ${filled ? "filled" : ""}" data-summary-water="${value}" aria-label="${filled ? "Retirer" : "Ajouter"} la goutte ${value}">💧</button>`;
+      }).join("");
+    return `<section class="journal-summary-action journal-summary-action--water journal-summary-hydration" id="journalSummaryWater"><span>Hydratation</span><strong>${waterMl.toLocaleString("fr-CA")} ml</strong><svg class="summary-water-glass" aria-hidden="true" viewBox="0 0 52 64"><defs><clipPath id="summaryWaterClip"><path d="M7 4h38l-5 55H12z"/></clipPath></defs><path class="glass-outline" d="M7 4h38l-5 55H12z"/><g clip-path="url(#summaryWaterClip)"><path class="glass-water" d="M10 18 Q26 15 42 18 L39 58 H13z"/><path class="glass-waterline" d="M10 18 Q26 15 42 18"/></g><path class="glass-shine" d="M14 10l-3 31"/></svg><div class="summary-water-controls" aria-label="Quantité d’eau">${drops}</div><button type="button" class="summary-add-beverage" id="summaryOpenBeverage">+ Boisson</button></section>`;
+  }
+
   function journalSummaryHtml(day, meals) {
     meals = journalCountedMeals(meals);
     const activity = activitySummary(day),
@@ -6321,10 +6333,9 @@
       feelingCount = meals.filter((meal) =>
         Object.keys(feelingScoresFor(meal, "before")).length || meal.feeling,
       ).length,
-      waterMl = (Number(day.water) || 0) * 500,
       sleepRecorded = day.sleepHours != null || (day.sleepTags || []).length > 0 || String(day.sleepComment || "").trim(),
       sleepPrompt = sleepRecorded ? "" : `<button type="button" class="journal-summary-action journal-summary-sleep" id="journalSummarySleep"><span>À noter une fois aujourd’hui</span><strong>Sommeil</strong><span class="summary-action-watermark" aria-hidden="true">🛌</span><span class="summary-action-plus" aria-hidden="true">+</span><small>Durée, qualité ou commentaire</small></button>`;
-    return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}<button type="button" class="journal-summary-action journal-summary-action--meal" id="journalSummaryMeal"><span>Ajouter un</span><strong>Repas</strong><span class="summary-action-watermark" aria-hidden="true">🍲</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${meals.length} repas ou collation${meals.length !== 1 ? "s" : ""} cette journée</small></button><button type="button" class="journal-summary-action journal-summary-action--feeling" id="journalSummaryFeeling"><span>Ajouter un</span><strong>Ressenti</strong><span class="summary-action-watermark" aria-hidden="true">😬</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${feelingCount ? `${feelingCount} repas documenté${feelingCount > 1 ? "s" : ""}` : "Avant, après ou hors repas"}</small></button><button type="button" class="journal-summary-action journal-summary-action--activity" id="journalSummaryActivity"><span>Ajouter une</span><strong>Activité</strong><span class="summary-action-watermark" aria-hidden="true">🏃</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${activityCount ? activity.label : "Aucune activité notée"}</small></button><button type="button" class="journal-summary-action journal-summary-action--water" id="journalSummaryWater"><span>Ajouter 500 ml à</span><strong>Hydratation</strong><svg class="summary-water-glass" aria-hidden="true" viewBox="0 0 52 64"><defs><clipPath id="summaryWaterClip"><path d="M7 4h38l-5 55H12z"/></clipPath></defs><path class="glass-outline" d="M7 4h38l-5 55H12z"/><g clip-path="url(#summaryWaterClip)"><path class="glass-water" d="M10 18 Q26 15 42 18 L39 58 H13z"/><path class="glass-waterline" d="M10 18 Q26 15 42 18"/></g><path class="glass-shine" d="M14 10l-3 31"/></svg><span class="summary-action-plus" aria-hidden="true">+</span><small>${waterMl.toLocaleString("fr-CA")} ml d’eau enregistré</small></button></div></section>`;
+    return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}<button type="button" class="journal-summary-action journal-summary-action--meal" id="journalSummaryMeal"><span>Ajouter un</span><strong>Repas</strong><span class="summary-action-watermark" aria-hidden="true">🍲</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${meals.length} repas ou collation${meals.length !== 1 ? "s" : ""} cette journée</small></button><button type="button" class="journal-summary-action journal-summary-action--feeling" id="journalSummaryFeeling"><span>Ajouter un</span><strong>Ressenti</strong><span class="summary-action-watermark" aria-hidden="true">😬</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${feelingCount ? `${feelingCount} repas documenté${feelingCount > 1 ? "s" : ""}` : "Avant, après ou hors repas"}</small></button><button type="button" class="journal-summary-action journal-summary-action--activity" id="journalSummaryActivity"><span>Ajouter une</span><strong>Activité</strong><span class="summary-action-watermark" aria-hidden="true">🏃</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${activityCount ? activity.label : "Aucune activité notée"}</small></button>${summaryHydrationHtml(day)}</div></section>`;
   }
 
   function updateQuickMealTypeDialog(meals, now = new Date()) {
@@ -6452,15 +6463,15 @@
     });
     $("#journalSummarySleep")?.addEventListener("click", openSleep);
     $("#journalSummaryActivity")?.addEventListener("click", openActivity);
-    $("#journalSummaryWater")?.addEventListener("click", () => {
-      d.water = Math.min(goal, (Number(d.water) || 0) + 1);
-      d.beverages.push(normalBeverage({
-        type: "water",
-        time: new Date().toTimeString().slice(0, 5),
-        amountMl: 500,
-      }, selectedDate));
-      setDayChanged(selectedDate);
-      render();
+    $("#summaryOpenBeverage")?.addEventListener("click", openBeverage);
+    $$('[data-summary-water]').forEach((button) => {
+      button.onclick = () => {
+        const target = Number(button.dataset.summaryWater),
+          current = Number(d.water) || 0;
+        d.water = target <= current ? Math.max(0, target - 1) : target;
+        setDayChanged(selectedDate);
+        render();
+      };
     });
     $("#journalSummaryFeeling")?.addEventListener("click", () =>
       openQuickFeelingChooser(meals),
@@ -6500,10 +6511,9 @@
     $$("[data-water]").forEach(
       (b) =>
         (b.onclick = () => {
-          d.water =
-            Number(b.dataset.water) === d.water
-              ? d.water - 1
-              : Number(b.dataset.water);
+          const target = Number(b.dataset.water),
+            current = Number(d.water) || 0;
+          d.water = target <= current ? Math.max(0, target - 1) : target;
           setDayChanged(selectedDate);
           render();
         }),
@@ -9254,7 +9264,7 @@
     bindPersonalProfile();
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
-      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.19" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
+      `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.20" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
@@ -11903,7 +11913,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.19");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.20");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
