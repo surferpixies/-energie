@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 88;
-  const APP_RELEASE = "3.56.31";
+  const APP_RELEASE = "3.56.32";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -8883,16 +8883,30 @@
       .map(([date, day]) => ({ date, steps: Math.max(0, Number(day.steps) || 0), goal: stepsGoalForDay(day) }));
     if (!rows.length)
       return `<section class="card steps-observation-card"><div class="steps-observation-head"><span aria-hidden="true">👟</span><div><p class="eyebrow">Progression</p><h3>Pas par jour</h3></div></div><div class="steps-observation-empty"><strong>Ton graphique commencera avec ta première journée.</strong><p>Ajoute ton nombre de pas dans le Journal pour suivre ta progression vers ton objectif.</p></div></section>`;
-    const ceiling = Math.max(...rows.flatMap((row) => [row.steps, row.goal]), 1),
+    const highest = Math.max(...rows.flatMap((row) => [row.steps, row.goal]), 1),
+      ceiling = Math.max(1000, Math.ceil((highest * 1.15) / 1000) * 1000),
       reached = rows.filter((row) => row.steps >= row.goal).length,
       averageSteps = Math.round(rows.reduce((sum, row) => sum + row.steps, 0) / rows.length),
-      columns = rows.map((row) => {
-        const height = Math.max(2, Math.round((row.steps / ceiling) * 100)),
-          marker = Math.min(100, Math.round((row.goal / ceiling) * 100)),
-          label = new Intl.DateTimeFormat("fr-CA", { weekday: "short", day: "numeric" }).format(new Date(`${row.date}T12:00:00`));
-        return `<div class="steps-chart-column" title="${row.steps.toLocaleString("fr-CA")} pas · objectif ${row.goal.toLocaleString("fr-CA")}"><div class="steps-chart-track"><i style="bottom:${marker}%" aria-hidden="true"></i><b class="${row.steps >= row.goal ? "goal-reached" : ""}" style="height:${height}%"></b></div><small>${esc(label.replace(".", ""))}</small></div>`;
-      }).join("");
-    return `<section class="card steps-observation-card"><div class="steps-observation-head"><span aria-hidden="true">👟</span><div><p class="eyebrow">Progression</p><h3>Pas par jour</h3></div><strong>${averageSteps.toLocaleString("fr-CA")}<small>moyenne</small></strong></div><div class="steps-chart" role="img" aria-label="Graphique du nombre de pas par jour comparé à l’objectif de chaque journée">${columns}</div><div class="steps-chart-legend"><span><i></i> Pas</span><span><i></i> Objectif du jour</span><strong>${reached}/${rows.length} objectif${rows.length > 1 ? "s" : ""} atteint${reached > 1 ? "s" : ""}</strong></div><p class="muted tiny steps-chart-note">L’objectif est enregistré avec chaque journée. Si tu le modifies dans ton profil, les journées précédentes restent donc comparées à leur objectif d’origine.</p></section>`;
+      chartLeft = 72,
+      chartRight = 676,
+      chartTop = 18,
+      chartBottom = 222,
+      xFor = (index) => rows.length === 1 ? (chartLeft + chartRight) / 2 : chartLeft + (index / (rows.length - 1)) * (chartRight - chartLeft),
+      yFor = (value) => chartBottom - (Math.min(ceiling, Math.max(0, value)) / ceiling) * (chartBottom - chartTop),
+      points = rows.map((row, index) => `${xFor(index).toFixed(1)},${yFor(row.steps).toFixed(1)}`).join(" "),
+      goalPoints = rows.map((row, index) => `${xFor(index).toFixed(1)},${yFor(row.goal).toFixed(1)}`).join(" "),
+      ticks = [ceiling, Math.round(ceiling / 2), 0].map((value) => {
+        const y = yFor(value);
+        return `<g class="steps-chart-tick"><line x1="${chartLeft}" y1="${y}" x2="${chartRight}" y2="${y}"></line><text x="${chartLeft - 10}" y="${y + 4}" text-anchor="end">${value.toLocaleString("fr-CA")}</text></g>`;
+      }).join(""),
+      dateIndexes = [...new Set([0, Math.floor((rows.length - 1) / 2), rows.length - 1])],
+      dates = dateIndexes.map((index) => {
+        const label = new Intl.DateTimeFormat("fr-CA", { day: "2-digit", month: "2-digit" }).format(new Date(`${rows[index].date}T12:00:00`));
+        return `<text class="steps-chart-date" x="${xFor(index)}" y="252" text-anchor="middle">${esc(label)}</text>`;
+      }).join(""),
+      circles = rows.map((row, index) => `<circle class="steps-chart-point ${row.steps >= row.goal ? "goal-reached" : ""}" cx="${xFor(index)}" cy="${yFor(row.steps)}" r="6"><title>${esc(formatCalendarDate(row.date))} : ${row.steps.toLocaleString("fr-CA")} pas · objectif ${row.goal.toLocaleString("fr-CA")}</title></circle>`).join(""),
+      latestGoal = rows[rows.length - 1].goal;
+    return `<section class="card steps-observation-card"><div class="steps-observation-head"><span aria-hidden="true">👟</span><div><p class="eyebrow">Progression</p><h3>Pas par jour</h3></div><strong>${averageSteps.toLocaleString("fr-CA")}<small>moyenne</small></strong></div><div class="steps-line-chart"><svg viewBox="0 0 700 265" role="img" aria-label="Évolution du nombre de pas par jour et objectif quotidien">${ticks}<polyline class="steps-goal-line" points="${goalPoints}"></polyline><text class="steps-goal-label" x="${chartRight - 4}" y="${Math.max(chartTop + 14, yFor(latestGoal) - 8)}" text-anchor="end">Objectif ${latestGoal.toLocaleString("fr-CA")}</text>${rows.length > 1 ? `<polyline class="steps-data-line" points="${points}"></polyline>` : ""}${circles}${dates}</svg></div><div class="steps-chart-legend"><span><i></i> Pas quotidiens</span><span><i></i> Objectif du jour</span><strong>${reached}/${rows.length} objectif${rows.length > 1 ? "s" : ""} atteint${reached > 1 ? "s" : ""}</strong></div><p class="muted tiny steps-chart-note">Chaque point correspond à une journée. Si l’objectif change, la ligne pointillée évolue à partir de cette date sans modifier les journées précédentes.</p></section>`;
   }
   function toggleSetting(id, key) {
     $(id).onchange = (e) => {
@@ -12061,7 +12075,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.31");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.32");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
