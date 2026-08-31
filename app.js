@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 87;
-  const APP_RELEASE = "3.56.29";
+  const CURRENT_VERSION = 88;
+  const APP_RELEASE = "3.56.30";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -426,6 +426,8 @@
       updatedAt: new Date().toISOString(),
       settings: {
         waterGoal: 8,
+        stepsTracking: false,
+        stepsGoal: 8000,
         journalViewMode: "detailed",
         theme: "system",
         showWelcome: true,
@@ -470,6 +472,8 @@
         sleepTags: [],
         sleepComment: "",
         water: 0,
+        steps: null,
+        stepsGoal: null,
         beverages: [],
         activities: [],
         meals: [],
@@ -702,6 +706,8 @@
             ? { ...d.formDrafts }
             : {};
         day.water = Number(d.water ?? d.waterGlasses ?? d.eau ?? 0) || 0;
+        day.steps = Number.isFinite(Number(d.steps)) && Number(d.steps) >= 0 ? Math.round(Number(d.steps)) : null;
+        day.stepsGoal = Number.isFinite(Number(d.stepsGoal)) && Number(d.stepsGoal) > 0 ? Math.round(Number(d.stepsGoal)) : null;
         day.beverages = (Array.isArray(d.beverages) ? d.beverages : [])
           .map((item) => normalBeverage(item, k))
           .filter(Boolean);
@@ -1507,6 +1513,10 @@
             supplements: {
               taken: d.supplementsTaken || [],
               beverages: d.beverages || [],
+              steps: d.steps,
+              stepsGoal: d.stepsGoal,
+              stepsTracking: db.settings.stepsTracking === true,
+              currentStepsGoal: Number(db.settings.stepsGoal) || 8000,
               defaults: db.settings.supplements || [],
               defaultsUpdatedAt: db.settings.supplementsUpdatedAt || db.updatedAt,
               formDrafts: d.formDrafts || {},
@@ -1760,6 +1770,10 @@
         d.beverages = (Array.isArray(r.supplements?.beverages) ? r.supplements.beverages : [])
           .map((item) => normalBeverage(item, r.log_date))
           .filter(Boolean);
+        d.steps = Number.isFinite(Number(r.supplements?.steps)) ? Math.round(Number(r.supplements.steps)) : null;
+        d.stepsGoal = Number.isFinite(Number(r.supplements?.stepsGoal)) ? Math.round(Number(r.supplements.stepsGoal)) : null;
+        if (typeof r.supplements?.stepsTracking === "boolean") db.settings.stepsTracking = r.supplements.stepsTracking;
+        if (Number(r.supplements?.currentStepsGoal) > 0) db.settings.stepsGoal = Math.round(Number(r.supplements.currentStepsGoal));
         d.activities = (r.activities || []).map(normalizeActivity);
         if (Array.isArray(r.supplements?.taken))
           d.supplementsTaken = normalizeSupplements(r.supplements.taken);
@@ -1781,6 +1795,8 @@
           d.beverages = r.supplements.beverages
             .map((item) => normalBeverage(item, r.log_date))
             .filter(Boolean);
+        if (d.steps == null && Number.isFinite(Number(r.supplements?.steps))) d.steps = Math.round(Number(r.supplements.steps));
+        if (d.stepsGoal == null && Number(r.supplements?.stepsGoal) > 0) d.stepsGoal = Math.round(Number(r.supplements.stepsGoal));
         if (!(d.activities || []).length && Array.isArray(r.activities))
           d.activities = r.activities.map(normalizeActivity);
         if (!(d.supplementsTaken || []).length && Array.isArray(r.supplements?.taken))
@@ -6314,6 +6330,37 @@
     return db.settings?.journalViewMode === "summary" ? "summary" : "detailed";
   }
 
+  function stepsGoalForDay(day) {
+    const savedGoal = Number(day?.stepsGoal);
+    return savedGoal > 0
+      ? savedGoal
+      : Math.max(100, Number(db.settings?.stepsGoal) || 8000);
+  }
+
+  function stepsProgressHtml(day, compact = false) {
+    if (db.settings?.stepsTracking !== true) return "";
+    const steps = day?.steps != null && Number.isFinite(Number(day.steps)) ? Math.max(0, Number(day.steps)) : null,
+      goal = stepsGoalForDay(day),
+      pct = steps == null ? 0 : Math.min(100, Math.round((steps / goal) * 100)),
+      label = steps == null ? "Ajouter mes pas" : `${steps.toLocaleString("fr-CA")} / ${goal.toLocaleString("fr-CA")} pas`;
+    return `<button type="button" class="steps-journal-button edit-steps ${compact ? "is-compact" : ""}" aria-label="${steps == null ? "Ajouter le nombre de pas" : `Modifier les pas, ${label}`}"><span class="steps-journal-icon" aria-hidden="true">👟</span><span><small>Pas aujourd’hui</small><strong>${label}</strong><i class="steps-journal-progress"><b style="width:${pct}%"></b></i></span><em aria-hidden="true">›</em></button>`;
+  }
+
+  function openSteps() {
+    const day = ensureDay(db, selectedDate),
+      goal = stepsGoalForDay(day),
+      input = $("#stepsInput"),
+      updateProgress = () => {
+        const value = Math.max(0, Number(input.value) || 0);
+        $("#stepsDialogProgress").textContent = `${value.toLocaleString("fr-CA")} / ${goal.toLocaleString("fr-CA")}`;
+      };
+    input.value = day.steps == null ? "" : String(day.steps);
+    input.oninput = updateProgress;
+    updateProgress();
+    $("#stepsDialog").showModal();
+    setTimeout(() => input.focus(), 50);
+  }
+
   function summaryHydrationHtml(day) {
     const goal = Number(db.settings.waterGoal) || 8,
       units = Number(day.water) || 0,
@@ -6335,7 +6382,7 @@
       ).length,
       sleepRecorded = day.sleepHours != null || (day.sleepTags || []).length > 0 || String(day.sleepComment || "").trim(),
       sleepPrompt = sleepRecorded ? "" : `<button type="button" class="journal-summary-action journal-summary-sleep" id="journalSummarySleep"><span>À noter une fois aujourd’hui</span><strong>Sommeil</strong><span class="summary-action-watermark" aria-hidden="true">🛌</span><span class="summary-action-plus" aria-hidden="true">+</span><small>Durée, qualité ou commentaire</small></button>`;
-    return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}<button type="button" class="journal-summary-action journal-summary-action--meal" id="journalSummaryMeal"><span>Ajouter un</span><strong>Repas</strong><span class="summary-action-watermark" aria-hidden="true">🍲</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${meals.length} repas ou collation${meals.length !== 1 ? "s" : ""} cette journée</small></button><button type="button" class="journal-summary-action journal-summary-action--feeling" id="journalSummaryFeeling"><span>Ajouter un</span><strong>Ressenti</strong><span class="summary-action-watermark" aria-hidden="true">😬</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${feelingCount ? `${feelingCount} repas documenté${feelingCount > 1 ? "s" : ""}` : "Avant, après ou hors repas"}</small></button><button type="button" class="journal-summary-action journal-summary-action--activity" id="journalSummaryActivity"><span>Ajouter une</span><strong>Activité</strong><span class="summary-action-watermark" aria-hidden="true">🏃</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${activityCount ? activity.label : "Aucune activité notée"}</small></button>${summaryHydrationHtml(day)}</div></section>`;
+    return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}<button type="button" class="journal-summary-action journal-summary-action--meal" id="journalSummaryMeal"><span>Ajouter un</span><strong>Repas</strong><span class="summary-action-watermark" aria-hidden="true">🍲</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${meals.length} repas ou collation${meals.length !== 1 ? "s" : ""} cette journée</small></button><button type="button" class="journal-summary-action journal-summary-action--feeling" id="journalSummaryFeeling"><span>Ajouter un</span><strong>Ressenti</strong><span class="summary-action-watermark" aria-hidden="true">😬</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${feelingCount ? `${feelingCount} repas documenté${feelingCount > 1 ? "s" : ""}` : "Avant, après ou hors repas"}</small></button><section class="journal-summary-activity-wrap"><button type="button" class="journal-summary-action journal-summary-action--activity" id="journalSummaryActivity"><span>Ajouter une</span><strong>Activité</strong><span class="summary-action-watermark" aria-hidden="true">🏃</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${activityCount ? activity.label : "Aucune activité notée"}</small></button>${stepsProgressHtml(day, true)}</section>${summaryHydrationHtml(day)}</div></section>`;
   }
 
   function updateQuickMealTypeDialog(meals, now = new Date()) {
@@ -6432,7 +6479,7 @@
       (d.sleepTags || []).filter((x) => x !== "none").length - 2,
     );
     $("#app").innerHTML =
-      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${dailyMacroSummaryHtml(meals)}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? `${d.sleepHours} h` : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><button class="card activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button></section>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
+      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${dailyMacroSummaryHtml(meals)}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? `${d.sleepHours} h` : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><div class="card activity-card-with-steps"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div></section>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
     $("#previousDay").onclick = () => changeJournalDay(-1);
     if (!$("#nextDay").disabled)
       $("#nextDay").onclick = () => changeJournalDay(1);
@@ -6486,6 +6533,7 @@
     });
     $(".edit-sleep")?.addEventListener("click", openSleep);
     $(".edit-activity")?.addEventListener("click", openActivity);
+    $$(".edit-steps").forEach((button) => button.addEventListener("click", openSteps));
     $("#openBeverage")?.addEventListener("click", () => openBeverage());
     $$('[data-edit-beverage]').forEach((button) => {
       button.onclick = () => {
@@ -8754,6 +8802,8 @@
     $("#app").innerHTML =
       `${analysisDateNavigatorHtml()}<section class="hero"><p class="eyebrow">Tableau intelligent</p><h2>Ce qu’Énergie apprend sur toi</h2><p>Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer leurs causes.</p></section>${previewBanner}${discoverySectionHtml(discoveryReport, negativeFeelings)}<div class="grid dashboard-overview"><section class="card stat-card compact-stat-card compact-row-card dashboard-hero-card"><div class="stat-card-heading"><span>🍎</span><div><h3>Tu utilises Énergie depuis</h3><p class="muted small">Date de départ du journal</p></div></div><div class="metric metric-small">${esc(story.since)}</div></section><section class="card stat-card dashboard-mini-card"><span>⭐</span><h3>Point fort</h3><p>${esc(story.strength)}</p></section><section class="card stat-card dashboard-mini-card"><span>💡</span><h3>Habitude observée</h3><p>${esc(story.habit)}</p></section><section class="card stat-card dashboard-mini-card"><span>🎯</span><h3>Suggestion principale</h3><p>${esc(story.suggestion)}</p></section></div>${professionalDiscussionHtml(meals)}<div class="section-title"><h2>🧠 Autres observations</h2><span class="muted small">${insights.length} carte${insights.length > 1 ? "s" : ""}</span></div><div class="insight-grid">${insights.length ? insights.map(insightHtml).join("") : `<section class="card empty wide"><div class="food-art">🧠</div><p>${db.settings.insightsEnabled ? "Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles." : "Les observations sont désactivées dans les paramètres."}</p></section>`}</div>${demoDiscoveryHtml()}${usePreview && !db.settings.demoMode ? '<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>' : ""}`;
     $("#app .hero")?.insertAdjacentHTML("afterend", personalTrendsHtml());
+    const personalTrends = $("#app .personal-trends");
+    (personalTrends || $("#app .hero"))?.insertAdjacentHTML("afterend", stepsObservationHtml());
     // Never manufacture positive observations from the dashboard's preview meals.
     const positiveReport = canonicalObservationReport(realMeals);
     const positiveItems = positiveObservationItems(positiveReport);
@@ -8822,6 +8872,27 @@
     decorateSupplementIcons();
     renderDemoChrome();
     bindViewSwipe();
+  }
+
+  function stepsObservationHtml() {
+    if (db.settings?.stepsTracking !== true) return "";
+    const rows = Object.entries(db.days || {})
+      .filter(([date, day]) => date <= selectedDate && day?.steps != null)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-14)
+      .map(([date, day]) => ({ date, steps: Math.max(0, Number(day.steps) || 0), goal: stepsGoalForDay(day) }));
+    if (!rows.length)
+      return `<section class="card steps-observation-card"><div class="steps-observation-head"><span aria-hidden="true">👟</span><div><p class="eyebrow">Progression</p><h3>Pas par jour</h3></div></div><div class="steps-observation-empty"><strong>Ton graphique commencera avec ta première journée.</strong><p>Ajoute ton nombre de pas dans le Journal pour suivre ta progression vers ton objectif.</p></div></section>`;
+    const ceiling = Math.max(...rows.flatMap((row) => [row.steps, row.goal]), 1),
+      reached = rows.filter((row) => row.steps >= row.goal).length,
+      averageSteps = Math.round(rows.reduce((sum, row) => sum + row.steps, 0) / rows.length),
+      columns = rows.map((row) => {
+        const height = Math.max(2, Math.round((row.steps / ceiling) * 100)),
+          marker = Math.min(100, Math.round((row.goal / ceiling) * 100)),
+          label = new Intl.DateTimeFormat("fr-CA", { weekday: "short", day: "numeric" }).format(new Date(`${row.date}T12:00:00`));
+        return `<div class="steps-chart-column" title="${row.steps.toLocaleString("fr-CA")} pas · objectif ${row.goal.toLocaleString("fr-CA")}"><div class="steps-chart-track"><i style="bottom:${marker}%" aria-hidden="true"></i><b class="${row.steps >= row.goal ? "goal-reached" : ""}" style="height:${height}%"></b></div><small>${esc(label.replace(".", ""))}</small></div>`;
+      }).join("");
+    return `<section class="card steps-observation-card"><div class="steps-observation-head"><span aria-hidden="true">👟</span><div><p class="eyebrow">Progression</p><h3>Pas par jour</h3></div><strong>${averageSteps.toLocaleString("fr-CA")}<small>moyenne</small></strong></div><div class="steps-chart" role="img" aria-label="Graphique du nombre de pas par jour comparé à l’objectif de chaque journée">${columns}</div><div class="steps-chart-legend"><span><i></i> Pas</span><span><i></i> Objectif du jour</span><strong>${reached}/${rows.length} objectif${rows.length > 1 ? "s" : ""} atteint${reached > 1 ? "s" : ""}</strong></div><p class="muted tiny steps-chart-note">L’objectif est enregistré avec chaque journée. Si tu le modifies dans ton profil, les journées précédentes restent donc comparées à leur objectif d’origine.</p></section>`;
   }
   function toggleSetting(id, key) {
     $(id).onchange = (e) => {
@@ -9259,6 +9330,8 @@
         ?.querySelector(":scope > div")
         ?.insertAdjacentHTML("beforeend", profileSinceHtml);
     $("#app .hero")?.insertAdjacentHTML("beforeend", `<small class="profile-build">Version ${APP_RELEASE}</small>`);
+    const waterSettingsSection = $("#waterGoal")?.closest("section.card");
+    waterSettingsSection?.insertAdjacentHTML("afterend", `<section class="card steps-profile-card"><h3>👟 Suivi des pas</h3><p class="muted small">Affiche les pas dans le Journal et leur progression dans Observations.</p><label class="toggle-row"><span><strong>Suivre mes pas</strong><small>Tu peux masquer ce suivi sans supprimer ton historique</small></span><input id="settingStepsTracking" type="checkbox" ${db.settings.stepsTracking === true ? "checked" : ""}></label><div id="stepsGoalSetting" class="settings-row ${db.settings.stepsTracking === true ? "" : "is-disabled"}"><div><strong>Objectif quotidien</strong><p class="muted tiny">Utilisé pour les nouvelles journées seulement</p></div><label><input id="stepsGoal" type="number" min="100" max="100000" step="100" inputmode="numeric" value="${Number(db.settings.stepsGoal) || 8000}" ${db.settings.stepsTracking === true ? "" : "disabled"}><span>pas</span></label></div></section>`);
     const feelingSettingsSection = $("#settingFeelingReminders")?.closest("section.card"),
       feelingIntro = feelingSettingsSection?.querySelector(":scope > p");
     if (feelingIntro) feelingIntro.insertAdjacentHTML("afterend", trackedFeelingsProfileHtml());
@@ -9327,6 +9400,16 @@
       saveLocal("objectif-eau");
       render();
     };
+    $("#settingStepsTracking")?.addEventListener("change", (event) => {
+      db.settings.stepsTracking = event.target.checked;
+      saveLocal("suivi-pas");
+      renderProfile();
+    });
+    $("#stepsGoal")?.addEventListener("change", (event) => {
+      db.settings.stepsGoal = clamp(event.target.value, 100, 100000);
+      saveLocal("objectif-pas");
+      event.target.value = db.settings.stepsGoal;
+    });
     $("#addSupplement").onclick = () => {
       const name = $("#supplementNameInput").value.trim();
       if (!name) return;
@@ -11027,6 +11110,19 @@
     $("#sleepDialog").close();
     render();
   };
+  $("#stepsForm").onsubmit = (e) => {
+    e.preventDefault();
+    const value = Number($("#stepsInput").value);
+    if (!Number.isFinite(value) || value < 0 || value > 200000)
+      return alert("Entre un nombre de pas entre 0 et 200 000.");
+    const day = ensureDay(db, selectedDate);
+    day.steps = Math.round(value);
+    if (!(Number(day.stepsGoal) > 0))
+      day.stepsGoal = Math.max(100, Number(db.settings?.stepsGoal) || 8000);
+    setDayChanged(selectedDate);
+    $("#stepsDialog").close();
+    render();
+  };
   $$("[data-sleep-tag]").forEach(
     (input) =>
       (input.onchange = () => {
@@ -11965,7 +12061,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.29");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.30");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

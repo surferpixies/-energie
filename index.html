@@ -24,6 +24,7 @@
   <link rel="stylesheet" href="meal-feelings-simple.css?v=3.56.26">
   <link rel="stylesheet" href="meal-quick-fill.css?v=3.56.28">
   <link rel="stylesheet" href="beverage-edit.css?v=3.56.29">
+  <link rel="stylesheet" href="steps-tracking.css?v=3.56.30">
   <link rel="stylesheet" href="journal-summary.css?v=3.56.21">
 </head>
 <body>
@@ -333,6 +334,16 @@
     </form>
   </dialog>
 
+  <dialog id="stepsDialog">
+    <form id="stepsForm" class="dialog-card steps-dialog-card" autocomplete="off">
+      <div class="dialog-header"><div><p class="eyebrow">Activité quotidienne</p><h2>Nombre de pas</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
+      <div class="steps-dialog-progress"><span aria-hidden="true">👟</span><div><strong id="stepsDialogProgress">0 / 8 000</strong><small>Objectif de cette journée</small></div></div>
+      <label>Pas effectués<input id="stepsInput" type="number" min="0" max="200000" step="1" inputmode="numeric" placeholder="Ex. 6500" required></label>
+      <p class="muted tiny">Pour l’instant, inscris le total indiqué par ton téléphone ou ta montre. Plus tard, Apple Santé pourra le remplir automatiquement.</p>
+      <button type="submit" class="primary">Enregistrer les pas</button>
+    </form>
+  </dialog>
+
   <dialog id="feelingDialog">
     <form id="feelingForm" class="dialog-card feeling-dialog-card" autocomplete="off">
       <div class="dialog-header"><div><p class="eyebrow">Après le repas</p><h2>😊 Ressentis après</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
@@ -560,6 +571,6 @@
   <script src="observation-engine.js?v=3.56.21"></script>
   <script src="demo-profiles.js?v=3.56.21"></script>
   <script src="personal-metrics.js?v=3.56.21"></script>
-  <script src="app.js?v=3.56.29"></script>
+  <script src="app.js?v=3.56.30"></script>
 </body>
 </html>
