@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 87;
-  const APP_RELEASE = "3.56.28";
+  const APP_RELEASE = "3.56.29";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -6056,7 +6056,7 @@
     return beverages.map((item) => {
       const type = beverageType(item.type),
         detail = item.caffeinated ? " · caféiné" : type.alcohol ? " · alcool" : "";
-      return `<div class="beverage-entry"><span aria-hidden="true">${type.icon}</span><span><strong>${esc(type.label)}</strong><small>${esc(item.time)} · ${item.amountMl.toLocaleString("fr-CA")} ml${detail}</small></span><button type="button" data-delete-beverage="${esc(item.id)}" aria-label="Supprimer ${esc(type.label)}">×</button></div>`;
+      return `<div class="beverage-entry"><span aria-hidden="true">${type.icon}</span><span><strong>${esc(type.label)}</strong><small>${esc(item.time)} · ${item.amountMl.toLocaleString("fr-CA")} ml${detail}</small></span><div class="beverage-entry-actions"><button type="button" data-edit-beverage="${esc(item.id)}" aria-label="Modifier ${esc(type.label)}">✎</button><button type="button" data-delete-beverage="${esc(item.id)}" aria-label="Supprimer ${esc(type.label)}">×</button></div></div>`;
     }).join("");
   }
   function hydrationCardHtml(day, goal, waterButtons) {
@@ -6463,7 +6463,7 @@
     });
     $("#journalSummarySleep")?.addEventListener("click", openSleep);
     $("#journalSummaryActivity")?.addEventListener("click", openActivity);
-    $("#summaryOpenBeverage")?.addEventListener("click", openBeverage);
+    $("#summaryOpenBeverage")?.addEventListener("click", () => openBeverage());
     $$('[data-summary-water]').forEach((button) => {
       button.onclick = () => {
         const target = Number(button.dataset.summaryWater),
@@ -6486,7 +6486,13 @@
     });
     $(".edit-sleep")?.addEventListener("click", openSleep);
     $(".edit-activity")?.addEventListener("click", openActivity);
-    $("#openBeverage")?.addEventListener("click", openBeverage);
+    $("#openBeverage")?.addEventListener("click", () => openBeverage());
+    $$('[data-edit-beverage]').forEach((button) => {
+      button.onclick = () => {
+        const beverage = d.beverages.find((item) => item.id === button.dataset.editBeverage);
+        if (beverage) openBeverage(beverage);
+      };
+    });
     $$('[data-delete-beverage]').forEach((button) => {
       button.onclick = () => {
         const index = d.beverages.findIndex((item) => item.id === button.dataset.deleteBeverage);
@@ -10372,15 +10378,22 @@
     if (caffeineRow) caffeineRow.hidden = !["coffee", "tea", "soft_drink", "energy_drink"].includes(type.id);
     $("#beverageCaffeinated").checked = !!type.caffeine;
   }
-  function openBeverage() {
+  function openBeverage(item = null) {
     $("#beverageTypeChoices").innerHTML = BEVERAGE_TYPES.map((type) =>
       `<button type="button" data-beverage-type="${type.id}" aria-pressed="false"><span>${type.icon}</span><small>${esc(type.label)}</small></button>`,
     ).join("");
     $$('[data-beverage-type]').forEach((button) =>
       button.addEventListener("click", () => selectBeverageType(button.dataset.beverageType)),
     );
-    $("#beverageTime").value = new Date().toTimeString().slice(0, 5);
-    selectBeverageType("water");
+    $("#beverageId").value = item?.id || "";
+    $("#beverageDialogTitle").textContent = item ? "Modifier la boisson" : "Ajouter une boisson";
+    $("#beverageSubmitLabel").textContent = item ? "Enregistrer les modifications" : "Ajouter la boisson";
+    $("#beverageTime").value = item?.time || new Date().toTimeString().slice(0, 5);
+    selectBeverageType(item?.type || "water", !item);
+    if (item) {
+      $("#beverageAmount").value = item.amountMl;
+      $("#beverageCaffeinated").checked = !!item.caffeinated;
+    }
     $("#beverageDialog").showModal();
   }
   async function fileToDataUrl(file) {
@@ -11032,16 +11045,23 @@
     const d = ensureDay(db, selectedDate),
       type = beverageType($("#beverageType").value),
       amountMl = Number($("#beverageAmount").value),
+      editingId = $("#beverageId").value,
+      existingIndex = editingId ? d.beverages.findIndex((item) => item.id === editingId) : -1,
+      existing = existingIndex >= 0 ? d.beverages[existingIndex] : null,
       beverage = normalBeverage({
+        id: existing?.id,
+        createdAt: existing?.createdAt,
         type: type.id,
         time: $("#beverageTime").value,
         amountMl,
         caffeinated: !$("#beverageCaffeineRow").hidden && $("#beverageCaffeinated").checked,
       }, selectedDate);
     if (!beverage) return alert("Indique une quantité valide entre 1 et 5 000 ml.");
-    d.beverages.push(beverage);
-    if (["water", "sparkling_water"].includes(type.id))
-      d.water = Math.min(db.settings.waterGoal || 8, (Number(d.water) || 0) + amountMl / 500);
+    const oldWaterMl = existing && ["water", "sparkling_water"].includes(existing.type) ? existing.amountMl : 0,
+      newWaterMl = ["water", "sparkling_water"].includes(type.id) ? amountMl : 0;
+    if (existingIndex >= 0) d.beverages[existingIndex] = beverage;
+    else d.beverages.push(beverage);
+    d.water = Math.max(0, Math.min(db.settings.waterGoal || 8, (Number(d.water) || 0) + (newWaterMl - oldWaterMl) / 500));
     setDayChanged(selectedDate);
     $("#beverageDialog").close();
     render();
@@ -11945,7 +11965,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.28");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.29");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

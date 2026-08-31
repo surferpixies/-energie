@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="meal-form-width-fix.css?v=3.56.25">
   <link rel="stylesheet" href="meal-feelings-simple.css?v=3.56.26">
   <link rel="stylesheet" href="meal-quick-fill.css?v=3.56.28">
+  <link rel="stylesheet" href="beverage-edit.css?v=3.56.29">
   <link rel="stylesheet" href="journal-summary.css?v=3.56.21">
 </head>
 <body>
@@ -322,12 +323,13 @@
 
   <dialog id="beverageDialog">
     <form id="beverageForm" class="dialog-card beverage-dialog-card" autocomplete="off">
-      <div class="dialog-header"><div><p class="eyebrow">Boissons et hydratation</p><h2>Ajouter une boisson</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
+      <div class="dialog-header"><div><p class="eyebrow">Boissons et hydratation</p><h2 id="beverageDialogTitle">Ajouter une boisson</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
+      <input id="beverageId" type="hidden">
       <fieldset class="beverage-type-fieldset"><legend>Type de boisson</legend><div id="beverageTypeChoices" class="beverage-type-grid" role="radiogroup" aria-label="Type de boisson"></div><input id="beverageType" type="hidden" value="water"></fieldset>
       <div class="two-col"><label>Heure<input id="beverageTime" type="time" required></label><label>Quantité (ml)<input id="beverageAmount" type="number" min="1" max="5000" step="1" inputmode="numeric" value="500" required></label></div>
       <label id="beverageCaffeineRow" class="toggle-row beverage-caffeine-row"><span><strong>Contient de la caféine</strong><small>Décoche pour un café ou un thé décaféiné</small></span><input id="beverageCaffeinated" type="checkbox"></label>
       <p class="muted tiny">Les boissons sont conservées avec leur heure afin de pouvoir comparer plus tard les habitudes et le sommeil. Une association observée ne prouve pas une cause.</p>
-      <button type="submit" class="primary">Ajouter la boisson</button>
+      <button type="submit" class="primary" id="beverageSubmitLabel">Ajouter la boisson</button>
     </form>
   </dialog>
 
@@ -558,6 +560,6 @@
   <script src="observation-engine.js?v=3.56.21"></script>
   <script src="demo-profiles.js?v=3.56.21"></script>
   <script src="personal-metrics.js?v=3.56.21"></script>
-  <script src="app.js?v=3.56.28"></script>
+  <script src="app.js?v=3.56.29"></script>
 </body>
 </html>
