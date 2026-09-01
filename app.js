@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 89;
-  const APP_RELEASE = "3.56.33";
+  const APP_RELEASE = "3.56.34";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -261,7 +261,10 @@
   function activityFavoriteButtonsHtml(compact = false) {
     const favorites = activityFavorites();
     if (!favorites.length) return "";
-    return `<div class="activity-favorite-shortcuts ${compact ? "is-compact" : ""}">${favorites.slice(0, 3).map((f) => `<button type="button" class="activity-favorite-shortcut" data-add-activity-favorite="${esc(f.id)}"><span>${activityIcon(f.type)}</span><strong>${esc(f.type)}</strong><small>${f.minutes} min</small><b aria-hidden="true">+</b></button>`).join("")}</div>`;
+    if (compact) {
+      return `<div class="activity-favorite-shortcuts is-compact" aria-label="Activités favorites">${favorites.slice(0, 3).map((f) => `<button type="button" class="activity-favorite-shortcut" data-add-activity-favorite="${esc(f.id)}" title="Ajouter ${esc(f.type)} · ${f.minutes} min" aria-label="Ajouter ${esc(f.type)}, ${f.minutes} minutes"><span>${activityIcon(f.type)}</span><b aria-hidden="true">+</b></button>`).join("")}</div>`;
+    }
+    return `<div class="activity-favorite-shortcuts">${favorites.slice(0, 3).map((f) => `<button type="button" class="activity-favorite-shortcut" data-add-activity-favorite="${esc(f.id)}"><span>${activityIcon(f.type)}</span><strong>${esc(f.type)}</strong><small>${f.minutes} min</small><b aria-hidden="true">+</b></button>`).join("")}</div>`;
   }
   function activitySummary(day) {
     const items = (day.activities || []).map(normalizeActivity),
@@ -12119,7 +12122,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.33");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.34");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {
