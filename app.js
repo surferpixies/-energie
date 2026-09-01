@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 88;
-  const APP_RELEASE = "3.56.32";
+  const CURRENT_VERSION = 89;
+  const APP_RELEASE = "3.56.33";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -229,6 +229,39 @@
     return a.actualCalories != null
       ? Number(a.actualCalories) || 0
       : Number(a.estimatedCalories) || 0;
+  }
+  function activityFavorites() {
+    const list = Array.isArray(db.settings.activityFavorites) ? db.settings.activityFavorites : [];
+    return list.map((f) => ({
+      id: f.id || uid(),
+      type: f.type || "Autre",
+      minutes: Math.max(1, Number(f.minutes) || 30),
+      intensity: ["low", "moderate", "high"].includes(f.intensity) ? f.intensity : "moderate",
+    }));
+  }
+  function saveActivityFavorite(type, minutes, intensity) {
+    db.settings.activityFavorites = activityFavorites();
+    const existing = db.settings.activityFavorites.find((f) =>
+      f.type === type && Number(f.minutes) === Number(minutes) && f.intensity === intensity
+    );
+    if (!existing) db.settings.activityFavorites.push({ id: uid(), type, minutes: Number(minutes), intensity });
+  }
+  function addFavoriteActivity(id) {
+    const favorite = activityFavorites().find((f) => f.id === id);
+    if (!favorite) return;
+    const d = ensureDay(db, selectedDate);
+    d.activities.push(normalizeActivity({
+      id: uid(), type: favorite.type, minutes: favorite.minutes, intensity: favorite.intensity,
+      estimatedCalories: estimateActivityCalories(favorite.type, favorite.minutes, favorite.intensity),
+      actualCalories: null, at: new Date().toISOString(),
+    }));
+    setDayChanged(selectedDate);
+    render();
+  }
+  function activityFavoriteButtonsHtml(compact = false) {
+    const favorites = activityFavorites();
+    if (!favorites.length) return "";
+    return `<div class="activity-favorite-shortcuts ${compact ? "is-compact" : ""}">${favorites.slice(0, 3).map((f) => `<button type="button" class="activity-favorite-shortcut" data-add-activity-favorite="${esc(f.id)}"><span>${activityIcon(f.type)}</span><strong>${esc(f.type)}</strong><small>${f.minutes} min</small><b aria-hidden="true">+</b></button>`).join("")}</div>`;
   }
   function activitySummary(day) {
     const items = (day.activities || []).map(normalizeActivity),
@@ -456,6 +489,7 @@
         menstrualLastStart: "",
         pregnancyDueDate: "",
         personalProfile: {},
+        activityFavorites: [],
       },
       favorites: [],
       days: {},
@@ -6382,7 +6416,7 @@
       ).length,
       sleepRecorded = day.sleepHours != null || (day.sleepTags || []).length > 0 || String(day.sleepComment || "").trim(),
       sleepPrompt = sleepRecorded ? "" : `<button type="button" class="journal-summary-action journal-summary-sleep" id="journalSummarySleep"><span>À noter une fois aujourd’hui</span><strong>Sommeil</strong><span class="summary-action-watermark" aria-hidden="true">🛌</span><span class="summary-action-plus" aria-hidden="true">+</span><small>Durée, qualité ou commentaire</small></button>`;
-    return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}<button type="button" class="journal-summary-action journal-summary-action--meal" id="journalSummaryMeal"><span>Ajouter un</span><strong>Repas</strong><span class="summary-action-watermark" aria-hidden="true">🍲</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${meals.length} repas ou collation${meals.length !== 1 ? "s" : ""} cette journée</small></button><button type="button" class="journal-summary-action journal-summary-action--feeling" id="journalSummaryFeeling"><span>Ajouter un</span><strong>Ressenti</strong><span class="summary-action-watermark" aria-hidden="true">😬</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${feelingCount ? `${feelingCount} repas documenté${feelingCount > 1 ? "s" : ""}` : "Avant, après ou hors repas"}</small></button><button type="button" class="journal-summary-action journal-summary-action--activity" id="journalSummaryActivity"><span>Ajouter une</span><strong>Activité</strong><span class="summary-action-watermark" aria-hidden="true">🏃</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${activityCount ? activity.label : "Aucune activité notée"}</small></button>${summaryHydrationHtml(day)}${stepsProgressHtml(day, true)}</div></section>`;
+    return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}<button type="button" class="journal-summary-action journal-summary-action--meal" id="journalSummaryMeal"><span>Ajouter un</span><strong>Repas</strong><span class="summary-action-watermark" aria-hidden="true">🍲</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${meals.length} repas ou collation${meals.length !== 1 ? "s" : ""} cette journée</small></button><button type="button" class="journal-summary-action journal-summary-action--feeling" id="journalSummaryFeeling"><span>Ajouter un</span><strong>Ressenti</strong><span class="summary-action-watermark" aria-hidden="true">😬</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${feelingCount ? `${feelingCount} repas documenté${feelingCount > 1 ? "s" : ""}` : "Avant, après ou hors repas"}</small></button><div class="journal-summary-activity-wrap"><button type="button" class="journal-summary-action journal-summary-action--activity" id="journalSummaryActivity"><span>Ajouter une</span><strong>Activité</strong><span class="summary-action-watermark" aria-hidden="true">🏃</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${activityCount ? activity.label : "Aucune activité notée"}</small></button>${activityFavoriteButtonsHtml(true)}</div>${summaryHydrationHtml(day)}${stepsProgressHtml(day, true)}</div></section>`;
   }
 
   function updateQuickMealTypeDialog(meals, now = new Date()) {
@@ -6533,6 +6567,7 @@
     });
     $(".edit-sleep")?.addEventListener("click", openSleep);
     $(".edit-activity")?.addEventListener("click", openActivity);
+    $$(`[data-add-activity-favorite]`).forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); addFavoriteActivity(b.dataset.addActivityFavorite); }));
     $$(".edit-steps").forEach((button) => button.addEventListener("click", openSteps));
     $("#openBeverage")?.addEventListener("click", () => openBeverage());
     $$('[data-edit-beverage]').forEach((button) => {
@@ -10456,6 +10491,14 @@
     $("#activityType").value = "";
     $("#activityMinutes").value = "";
     $("#activityActualCalories").value = "";
+    if ($("#activityFavorite")) $("#activityFavorite").checked = false;
+    if ($("#activityFavoriteShortcuts")) {
+      $("#activityFavoriteShortcuts").innerHTML = activityFavoriteButtonsHtml();
+      $("#activityFavoriteShortcuts").querySelectorAll("[data-add-activity-favorite]").forEach((b) => b.addEventListener("click", () => {
+        addFavoriteActivity(b.dataset.addActivityFavorite);
+        $("#activityDialog").close();
+      }));
+    }
     $$("[data-activity]").forEach((b) => b.classList.remove("active"));
     setActivityIntensity("moderate");
     renderDayActivities();
@@ -11203,6 +11246,7 @@
         at: new Date().toISOString(),
       }),
     );
+    if ($("#activityFavorite")?.checked) saveActivityFavorite(type, min, intensity);
     setDayChanged(selectedDate);
     $("#activityDialog").close();
     render();
@@ -12075,7 +12119,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.32");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.33");
         await reg.update();
         let refreshing = false;
         navigator.serviceWorker.addEventListener("controllerchange", () => {

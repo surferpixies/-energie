@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="meal-feelings-simple.css?v=3.56.26">
   <link rel="stylesheet" href="meal-quick-fill.css?v=3.56.28">
   <link rel="stylesheet" href="beverage-edit.css?v=3.56.29">
-  <link rel="stylesheet" href="steps-tracking.css?v=3.56.32">
+  <link rel="stylesheet" href="steps-tracking.css?v=3.56.33">
   <link rel="stylesheet" href="journal-summary.css?v=3.56.21">
 </head>
 <body>
@@ -301,6 +301,7 @@
   <dialog id="activityDialog">
     <form id="activityForm" class="dialog-card" autocomplete="off">
       <div class="dialog-header"><div><p class="eyebrow">Mouvement</p><h2>Ajouter une activité</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
+      <div id="activityFavoriteShortcuts"></div>
       <fieldset class="activity-fieldset"><legend>Choisis une activité</legend>
         <div id="activityChoices" class="activity-choices" role="radiogroup" aria-label="Type d’activité">
           <button type="button" data-activity="Marche"><span>🚶</span><small>Marche</small></button>
@@ -316,6 +317,7 @@
       <label>Durée en minutes<input id="activityMinutes" name="energie_activity_duration_value" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Ex. 45" aria-label="Durée de l’activité en minutes"></label>
       <fieldset class="activity-intensity-fieldset"><legend>Intensité</legend><div class="activity-intensity-choices" role="radiogroup" aria-label="Intensité de l’activité"><button type="button" data-intensity="low">Faible</button><button type="button" data-intensity="moderate" class="active">Modérée</button><button type="button" data-intensity="high">Élevée</button></div><input id="activityIntensity" type="hidden" value="moderate"></fieldset>
       <div class="activity-estimate-card"><div><span>🔥</span><div><small>Calories estimées</small><strong id="activityEstimateValue">— kcal</strong></div></div><p>Estimation indicative selon l’activité, la durée et l’intensité.</p></div>
+      <label class="activity-favorite-toggle"><input id="activityFavorite" type="checkbox"><span>⭐ Enregistrer comme activité favorite</span></label>
       <label>Calories mesurées <span class="muted tiny">(facultatif)</span><input id="activityActualCalories" type="number" min="0" max="10000" step="1" inputmode="numeric" autocomplete="off" placeholder="Ex. 320"><small class="field-hint">Entre la valeur de ta montre ou de ton appareil pour remplacer l’estimation.</small></label>
       <div><p class="eyebrow">Activités enregistrées</p><div id="dayActivitiesList" class="day-activities-list"></div></div>
       <button type="submit" class="primary">Ajouter l'activité</button>
@@ -571,6 +573,6 @@
   <script src="observation-engine.js?v=3.56.21"></script>
   <script src="demo-profiles.js?v=3.56.21"></script>
   <script src="personal-metrics.js?v=3.56.21"></script>
-  <script src="app.js?v=3.56.32"></script>
+  <script src="app.js?v=3.56.33"></script>
 </body>
 </html>
