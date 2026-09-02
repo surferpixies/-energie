@@ -240,7 +240,7 @@ html[data-theme="dark"] .journal-summary-action small {
   background: rgba(255, 255, 255, .08);
 }
 
-html[data-theme="dark"] .journal-summary-action strong { color: #8fd5a9; }
+html[data-theme="dark"] .journal-summary-action strong { color: var(--text, #f5f2e9); }
 html[data-theme="dark"] .summary-action-watermark { opacity: .34; }
 html[data-theme="dark"] .summary-action-plus { border-color: #253d32; }
 html[data-theme="dark"] .summary-water-glass { opacity: .72; }

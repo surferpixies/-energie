@@ -7,3 +7,17 @@
 /* Graphique d'évolution des pas */
 .steps-line-chart{width:100%;overflow:hidden;border-radius:16px;background:linear-gradient(180deg,#f7faf5,#eef5eb);padding:8px 4px 0}.steps-line-chart svg{display:block;width:100%;height:auto;min-height:220px;overflow:visible}.steps-chart-tick line{stroke:#d9e4d8;stroke-width:1}.steps-chart-tick text,.steps-chart-date{fill:#66776e;font-size:15px}.steps-goal-line{fill:none;stroke:#d39a1b;stroke-width:3;stroke-dasharray:10 8;stroke-linecap:round;stroke-linejoin:round}.steps-goal-label{fill:#a67509;font-size:15px;font-weight:700;paint-order:stroke;stroke:#f3f8f0;stroke-width:5px;stroke-linejoin:round}.steps-data-line{fill:none;stroke:#2fa956;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}.steps-chart-point{fill:#fff;stroke:#2fa956;stroke-width:5}.steps-chart-point.goal-reached{fill:#2fa956;stroke:#fff}.steps-chart-legend span:first-child i{width:18px;height:0;border-radius:0;background:transparent;border-top:4px solid #2fa956}.steps-chart-legend span:nth-child(2) i{width:18px;border-top:3px dashed #d39a1b}
 @media(max-width:600px){.steps-line-chart{margin-inline:-3px;width:calc(100% + 6px)}.steps-line-chart svg{min-height:190px}.steps-chart-tick text,.steps-chart-date,.steps-goal-label{font-size:16px}}
+
+
+/* V3.56.39 — harmonisation de la carte Pas avec les cartes Ajout rapide en mode sombre */
+html[data-theme="dark"] .journal-summary-steps {
+  border-color: rgba(49,128,85,.2);
+  color: var(--text, #f5f2e9);
+  background: linear-gradient(145deg, #20332b, #253d32);
+  box-shadow: 0 8px 20px rgba(0,0,0,.2);
+}
+html[data-theme="dark"] .journal-summary-steps:hover { background: linear-gradient(145deg, #20332b, #253d32); }
+html[data-theme="dark"] .journal-summary-steps small,
+html[data-theme="dark"] .journal-summary-steps em { color: var(--muted, #b6c0ba); }
+html[data-theme="dark"] .journal-summary-steps strong { color: var(--text, #f5f2e9); }
+html[data-theme="dark"] .journal-summary-steps .steps-journal-progress { background: rgba(255,255,255,.08); }
