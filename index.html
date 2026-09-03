@@ -134,7 +134,7 @@
         <small id="mealCalorieStatus" role="status">Aucune estimation disponible · saisie facultative</small>
         <button type="button" class="text-button" id="resetMealCalories" hidden>Auto</button>
       </section>
-      <div class="meal-description-field">
+      <div id="mealDescriptionCard" class="meal-description-field">
         <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div>
         <div class="meal-description-composer">
           <textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea>
@@ -195,7 +195,7 @@
           </section>
         </div>
       </details>
-      <section class="meal-feeling-summary-card meal-feelings-after-block">
+      <section id="mealAfterFeelingCard" class="meal-feeling-summary-card meal-feelings-after-block">
         <span class="meal-feeling-summary-icon" aria-hidden="true">🌿</span>
         <span class="meal-feeling-summary-copy"><strong>Après le repas</strong><small id="afterFeelingCount">Non consigné</small><span id="afterFeelingSelectedPreview" class="meal-feeling-selected-preview"><span class="meal-feeling-empty">Aucun ressenti</span></span></span>
         <button type="button" class="meal-feeling-summary-action meal-feeling-after-button" id="mealFeelingButton" hidden><span aria-hidden="true">＋</span><strong>Ajouter</strong><b aria-hidden="true">›</b></button>
@@ -593,6 +593,6 @@
   <script src="observation-engine.js?v=3.56.21"></script>
   <script src="demo-profiles.js?v=3.56.21"></script>
   <script src="personal-metrics.js?v=3.56.44"></script>
-  <script src="app.js?v=3.56.44"></script>
+  <script src="app.js?v=3.56.45"></script>
 </body>
 </html>

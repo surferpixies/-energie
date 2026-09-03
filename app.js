@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.44";
+  const APP_RELEASE = "3.56.45";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -5875,6 +5875,7 @@
       hasAfter || !Object.keys(afterScores).length;
     $("#feelingNotes").value = m.feeling?.notes || "";
     $("#feelingDialog").showModal();
+    setAfterFeelingGuidance(m);
   }
   function comparableFeelingDeltas(meal) {
     const before = feelingScoresFor(meal, "before"),
@@ -6057,11 +6058,18 @@
     for (const m of pendingFeelings()) {
       if (m.feelingNotifiedAt) continue;
       try {
-        new Notification(`🍏⚡ ${t("Ressenti")}`, {
+        const notification = new Notification(`🍏⚡ ${t("Ressenti")}`, {
           body: t(`Comment te sens-tu après ton ${m.type.toLowerCase()} ?`),
           icon: "assets/icon-192.png",
           tag: `feeling-${m.id}`,
         });
+        notification.onclick = () => {
+          try { window.focus(); } catch (_) {}
+          selectedDate = m.date;
+          render();
+          setTimeout(() => openFeeling(m.id), 120);
+          try { notification.close(); } catch (_) {}
+        };
         m.feelingNotifiedAt = new Date().toISOString();
         setMealChanged(m);
       } catch (_) {}
@@ -10202,6 +10210,32 @@
       }
     });
   }
+  function guidedMealFlowEnabled(type = $("#mealType")?.value) {
+    return ["Déjeuner", "Dîner", "Souper"].includes(type);
+  }
+  function updateGuidedMealFlow() {
+    const beforeCard = $("#mealFeelingsDetails"),
+      mealCard = $("#mealDescriptionCard"),
+      afterCard = $("#mealAfterFeelingCard");
+    [beforeCard, mealCard, afterCard].forEach((el) => el?.classList.remove("guided-next-step"));
+    if (!guidedMealFlowEnabled()) return;
+    const beforeScores = collectScoredFeelingScores($("#beforeFeelingTags"), "before"),
+      hasBefore = Object.keys(beforeScores).length > 0,
+      hasDescription = Boolean($("#mealDescription")?.value.trim()),
+      hasSavedMeal = Boolean($("#mealId")?.value);
+    if (!hasBefore) beforeCard?.classList.add("guided-next-step");
+    else if (!hasSavedMeal || !hasDescription) mealCard?.classList.add("guided-next-step");
+  }
+  function setAfterFeelingGuidance(meal) {
+    const form = $("#feelingForm");
+    form?.classList.remove("guided-after-step");
+    if (!meal || !guidedMealFlowEnabled(meal.type) || meal.feeling) return;
+    const due = feelingDueAt(meal) <= new Date() || Boolean(meal.feelingNotifiedAt);
+    if (due) {
+      form?.classList.add("guided-after-step");
+      requestAnimationFrame(() => $("#feelingTags")?.scrollIntoView({ behavior: "smooth", block: "center" }));
+    }
+  }
   function updateMealDialogType(type) {
     const value = type || "Déjeuner";
     $("#mealType").value = value;
@@ -10224,6 +10258,7 @@
     populateRecentFoods(value);
     if (!["Déjeuner", "Dîner", "Souper"].includes(value))
       setMealSuggestion(null, value);
+    updateGuidedMealFlow();
   }
   function updateMealFeelingUi(meal) {
     const button = $("#mealFeelingButton"),
@@ -10247,6 +10282,7 @@
     const scores = collectScoredFeelingScores(picker, "before");
     if (Object.keys(scores).length && !reviewFeelingQuality(feelingQualityAssessment(picker, "before"))) return;
     updateMealFeelingsOverview();
+    updateGuidedMealFlow();
     scheduleFormAutosave($("#mealForm"));
     $("#beforeFeelingDialog").close();
   }
@@ -10538,6 +10574,7 @@
     renderBeforeFeelingPicker(m);
     if ($("#beforeFeelingDialog").open) $("#beforeFeelingDialog").close();
     updateMealFeelingUi(m);
+    updateGuidedMealFlow();
     updateMealCompositionReview();
     photoData = m?.photoLocal || m?.photoUrl || null;
     photoRemoved = false;
@@ -11018,6 +11055,7 @@
       section.dataset.estimated = "false";
     }
   };
+  $("#mealDescription")?.addEventListener("input", updateGuidedMealFlow);
   $("#openBeforeFeeling").onclick = () => $("#beforeFeelingDialog").showModal();
   $("#finishBeforeFeeling").onclick = finishBeforeFeelingPicker;
   $("#beforeFeelingDialog").addEventListener("close", () =>
