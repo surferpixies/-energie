@@ -47,3 +47,17 @@
 .metrics-values tbody th{font-weight:500;white-space:nowrap}
 @media(max-width:640px){.personal-trends-grid{grid-template-columns:minmax(0,1fr)}.personal-trend-card{padding:12px 14px}.personal-trends>.section-title h2{margin-bottom:3px}}
 @media(prefers-reduced-motion:reduce){.metrics-chart *{transition:none!important;animation:none!important}}
+.energy-balance-trend-card{margin-top:12px}
+.energy-zero-line{stroke:var(--text);stroke-width:1.25;stroke-dasharray:none;opacity:.5}
+.energy-balance-bar.is-deficit{fill:#708eae}
+.energy-balance-bar.is-surplus{fill:#b68a62}
+.energy-balance-bar.is-even{fill:var(--muted)}
+.energy-balance-bar.is-partial{fill-opacity:.35;stroke:var(--muted);stroke-width:1;stroke-dasharray:2 2}
+.energy-balance-legend{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:2px 0 8px;color:var(--muted);font-size:.72rem}
+.energy-balance-legend span{display:inline-flex;align-items:center;gap:5px}
+.energy-balance-legend i{display:inline-block;width:12px;height:7px;border-radius:2px;background:var(--muted)}
+.energy-balance-legend i.is-deficit{background:#708eae}
+.energy-balance-legend i.is-surplus{background:#b68a62}
+.energy-balance-legend i.is-zero{height:2px;background:var(--text);opacity:.55}
+.calorie-balance-profile-card .toggle-row{margin-top:12px}
+@media(max-width:640px){.energy-balance-trend-card{margin-top:10px}}

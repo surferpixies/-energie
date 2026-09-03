@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 92;
-  const APP_RELEASE = "3.56.40";
+  const CURRENT_VERSION = 93;
+  const APP_RELEASE = "3.56.41";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -464,6 +464,7 @@
         waterGoal: 8,
         stepsTracking: false,
         stepsGoal: 8000,
+        calorieBalanceTracking: false,
         journalViewMode: "detailed",
         theme: "system",
         showWelcome: true,
@@ -1553,6 +1554,7 @@
               steps: d.steps,
               stepsGoal: d.stepsGoal,
               stepsTracking: db.settings.stepsTracking === true,
+              calorieBalanceTracking: db.settings.calorieBalanceTracking === true,
               currentStepsGoal: Number(db.settings.stepsGoal) || 8000,
               defaults: db.settings.supplements || [],
               defaultsUpdatedAt: db.settings.supplementsUpdatedAt || db.updatedAt,
@@ -1810,6 +1812,7 @@
         d.steps = Number.isFinite(Number(r.supplements?.steps)) ? Math.round(Number(r.supplements.steps)) : null;
         d.stepsGoal = Number.isFinite(Number(r.supplements?.stepsGoal)) ? Math.round(Number(r.supplements.stepsGoal)) : null;
         if (typeof r.supplements?.stepsTracking === "boolean") db.settings.stepsTracking = r.supplements.stepsTracking;
+        if (typeof r.supplements?.calorieBalanceTracking === "boolean") db.settings.calorieBalanceTracking = r.supplements.calorieBalanceTracking;
         if (Number(r.supplements?.currentStepsGoal) > 0) db.settings.stepsGoal = Math.round(Number(r.supplements.currentStepsGoal));
         d.activities = (r.activities || []).map(normalizeActivity);
         if (Array.isArray(r.supplements?.taken))
@@ -9252,15 +9255,14 @@
     return entries.length ? {date: entries[0][0], kg: entries[0][1].weightMeasurement.kg} : null;
   }
   function personalProfileHtml() {
-    const profile = personalProfile(), age = profile.age || {}, weight = profile.weight || {}, sex = profile.sex || {}, height = profile.height || {}, activityLevel = profile.activityLevel || {}, unit = weight.unit || "kg";
+    const profile = personalProfile(), age = profile.age || {}, weight = profile.weight || {}, sex = profile.sex || {}, height = profile.height || {}, unit = weight.unit || "kg";
     const latest = latestPersonalWeight(), todayWeight = Metrics.weightRecord(db.days[todayKey()]?.weightMeasurement);
     const modes = (mode) => [["unspecified", "Non renseigné"], ["provided", "Je souhaite le renseigner"], ["declined", "Je préfère ne pas répondre"]].map(([value, label]) => `<option value="${value}" ${(mode || "unspecified") === value ? "selected" : ""}>${label}</option>`).join("");
     const selectedSex = sex.mode === "declined" ? "declined" : sex.value || "unspecified";
-    return `<section class="card personal-profile-card" aria-labelledby="personalProfileTitle"><h3 id="personalProfileTitle">À propos de moi</h3><p class="muted small">Tout est facultatif. Ces données pourront servir plus tard à estimer ta dépense énergétique et ton déficit calorique. Aucun calcul n’est effectué pour l’instant.</p><fieldset ${db.settings.demoMode ? "disabled" : ""}>
+    return `<section class="card personal-profile-card" aria-labelledby="personalProfileTitle"><h3 id="personalProfileTitle">À propos de moi</h3><p class="muted small">Tout est facultatif. Ces données servent notamment à estimer ta dépense énergétique lorsque le suivi du déficit / surplus calorique est activé. Aucun champ n’est obligatoire.</p><fieldset ${db.settings.demoMode ? "disabled" : ""}>
       <div class="personal-profile-field"><label for="profileAgeMode">Âge</label><select id="profileAgeMode">${modes(age.mode)}</select><label id="profileAgeFields" class="personal-profile-value" ${age.mode === "provided" ? "" : "hidden"}><span>Âge en années</span><input type="text" inputmode="numeric" autocomplete="off" id="profileAge" value="${age.value ?? ""}" placeholder="Ex. 42" aria-describedby="profileAgeError"><small id="profileAgeError" class="personal-field-error" aria-live="polite"></small></label></div>
       <div class="personal-profile-field"><label for="profileSex">Sexe</label><select id="profileSex">${[["unspecified", "Non renseigné"], ["female", "Féminin"], ["male", "Masculin"], ["intersex", "Intersexe"], ["other", "Autre"], ["declined", "Je préfère ne pas répondre"]].map(([value, label]) => `<option value="${value}" ${selectedSex === value ? "selected" : ""}>${label}</option>`).join("")}</select></div>
       <div class="personal-profile-field"><label for="profileHeightMode">Taille</label><select id="profileHeightMode">${modes(height.mode)}</select><label id="profileHeightFields" class="personal-profile-value" ${height.mode === "provided" ? "" : "hidden"}><span>Taille en cm</span><input type="text" inputmode="decimal" autocomplete="off" id="profileHeight" value="${height.value ?? ""}" placeholder="Ex. 175" aria-describedby="profileHeightError"><small id="profileHeightError" class="personal-field-error" aria-live="polite"></small></label></div>
-      <div class="personal-profile-field"><label for="profileActivityLevel">Niveau d’activité habituel</label><select id="profileActivityLevel">${[["unspecified", "Non renseigné"], ["sedentary", "Très faible — surtout assis"], ["light", "Faible — un peu actif"], ["moderate", "Modéré — actif régulièrement"], ["active", "Élevé — très actif"], ["very_active", "Très élevé — activité intense fréquente"], ["declined", "Je préfère ne pas répondre"]].map(([value, label]) => `<option value="${value}" ${(activityLevel.mode === "declined" ? "declined" : activityLevel.value || "unspecified") === value ? "selected" : ""}>${label}</option>`).join("")}</select><p class="muted tiny">Décris ton niveau d’activité général; les activités saisies dans le Journal restent séparées.</p></div>
       <div class="personal-profile-field"><label for="profileWeightMode">Poids</label><select id="profileWeightMode">${modes(weight.mode)}</select><div id="profileWeightFields" ${weight.mode === "provided" ? "" : "hidden"}><p id="profileLastWeight" class="muted small">${latest ? `Dernière mesure : ${Metrics.displayWeight(latest.kg, unit).toLocaleString("fr-CA")} ${unit} · ${esc(formatCalendarDate(latest.date))}` : "Aucune mesure enregistrée."}</p><div class="personal-weight-grid"><label>Date de la mesure<input id="profileWeightDate" type="date" max="${todayKey()}" value="${todayKey()}"></label><label>Unité<select id="profileWeightUnit"><option value="kg" ${unit === "kg" ? "selected" : ""}>kg</option><option value="lb" ${unit === "lb" ? "selected" : ""}>lb</option></select></label><label class="personal-weight-input">Poids mesuré<input id="profileWeight" type="text" inputmode="decimal" autocomplete="off" value="${todayWeight?.kg != null ? Metrics.displayWeight(todayWeight.kg, unit) : ""}" placeholder="Ex. ${unit === "lb" ? "165,5" : "75,2"}" aria-describedby="profileWeightError"></label></div><small id="profileWeightError" class="personal-field-error" aria-live="polite"></small><p class="muted tiny">Une mesure par date, sauvegardée automatiquement. Choisis une autre date pour ajouter ou corriger une mesure; vider le poids retire uniquement la mesure de cette date.</p></div><p id="profileWeightDeclinedNote" class="muted tiny" ${weight.mode === "declined" ? "" : "hidden"}>Le graphique du poids est masqué et aucune nouvelle mesure n’est demandée. Les mesures déjà enregistrées sont conservées.</p></div>
       </fieldset><p id="personalProfileStatus" class="personal-save-status" role="status">Sauvegarde automatique · connexion requise pour la synchronisation</p></section>`;
   }
@@ -9341,10 +9343,6 @@
       heightInput.setAttribute("aria-invalid", "false");
       setPersonalRecord("height", {mode, value: mode === "provided" ? Metrics.number(heightInput.value) : null});
     });
-    $("#profileActivityLevel").addEventListener("change", (e) => {
-      const choice = e.target.value, mode = ["unspecified", "declined"].includes(choice) ? choice : "provided";
-      setPersonalRecord("activityLevel", {mode, value: mode === "provided" ? choice : null});
-    });
     $("#profileWeightMode").addEventListener("change", (e) => {
       clearTimeout(pending.get("weight")?.timer); pending.delete("weight");
       $("#profileWeightFields").hidden = e.target.value !== "provided";
@@ -9378,12 +9376,30 @@
   function calorieEstimator(description) {
     return db.settings.autoNutritionEstimates !== false ? estimateNutritionFromText(description) : null;
   }
+  function energyBalancePrerequisites(profile = personalProfile()) {
+    const missing = [];
+    if (profile.age?.mode !== "provided" || Metrics.number(profile.age?.value) == null) missing.push("âge");
+    if (profile.sex?.mode !== "provided" || !["female", "male"].includes(profile.sex?.value)) missing.push("sexe");
+    if (profile.height?.mode !== "provided" || Metrics.number(profile.height?.value) == null) missing.push("taille");
+    if (!latestPersonalWeight()) missing.push("poids");
+    return missing;
+  }
+  function energyBalanceObservationHtml(end, profile) {
+    if (db.settings?.calorieBalanceTracking !== true) return "";
+    const missing = energyBalancePrerequisites(profile);
+    if (missing.length) return `<article class="card personal-trend-card energy-balance-trend-card"><div class="metrics-heading"><h3>⚖️ Déficit / surplus calorique</h3><strong>—</strong></div><p class="muted tiny">Estimation de la balance énergétique quotidienne</p><p class="metrics-empty">Il manque : ${esc(missing.join(", "))}. Complète ces données dans le Profil pour démarrer le calcul.</p><p class="metrics-note">Aucune valeur n’est inventée lorsque les données nécessaires ne sont pas disponibles.</p></article>`;
+    const balance = Metrics.energyBalanceSeries(db.days, end, profile, calorieEstimator), known = balance.points.filter((p) => p.value != null);
+    const average = known.length ? Math.round(known.reduce((sum, p) => sum + p.value, 0) / known.length) : null;
+    const averageLabel = average == null ? "—" : average < 0 ? `−${Math.abs(average).toLocaleString("fr-CA")} kcal` : average > 0 ? `+${average.toLocaleString("fr-CA")} kcal` : "0 kcal";
+    const state = average == null ? "Aucune journée calculable" : average < 0 ? "déficit moyen" : average > 0 ? "surplus moyen" : "équilibre moyen";
+    return `<article class="card personal-trend-card energy-balance-trend-card"><div class="metrics-heading"><h3>⚖️ Déficit / surplus calorique</h3><strong>${averageLabel}</strong></div><p class="muted tiny">${average == null ? "Calories consommées comparées à la dépense estimée" : `${state} · ${known.length} jour${known.length > 1 ? "s" : ""} calculable${known.length > 1 ? "s" : ""}`}</p>${Metrics.balanceChart(balance.points, {...balance, id: "energyBalanceTrend"})}<div class="energy-balance-legend"><span><i class="is-deficit"></i> Déficit</span><span><i class="is-surplus"></i> Surplus</span><span><i class="is-zero"></i> Équilibre</span></div><p class="metrics-note">Le calcul estime d’abord le métabolisme de base avec la formule de Mifflin–St Jeor (âge, sexe, taille et dernier poids disponible à cette date). Il applique ensuite un facteur fixe de 1,2 pour représenter les activités normales de la vie quotidienne, puis ajoute les calories des activités réellement enregistrées dans le Journal. La différence entre les calories consommées et cette dépense estimée donne le déficit ou le surplus. Un journal alimentaire ou d’activité incomplet peut modifier l’estimation.</p></article>`;
+  }
   function personalTrendsHtml() {
     const end = demoAnalysisContext()?.cutoff || todayKey(), profile = personalProfile(), unit = profile.weight?.unit || "kg";
     const data = Metrics.series(db.days, end, unit, calorieEstimator), lastWeight = data.weights.at(-1);
     const declined = profile.weight?.mode === "declined", known = data.calories.filter((p) => p.value != null);
     const average = known.length ? Math.round(known.reduce((n, p) => n + p.value, 0) / known.length) : null;
-    return `<section class="personal-trends" aria-labelledby="personalTrendsTitle"><div class="section-title"><h2 id="personalTrendsTitle">Mes tendances chiffrées</h2><span class="muted small">30 jours · ${db.settings.demoMode ? "données du profil fictif" : "mes données uniquement"}</span></div><div class="personal-trends-grid"><article class="card personal-trend-card"><div class="metrics-heading"><h3>Poids</h3><strong>${declined ? "Non renseigné" : lastWeight ? `${lastWeight.value.toLocaleString("fr-CA")} ${unit}` : "—"}</strong></div><p class="muted tiny">${!declined && lastWeight ? `Dernière mesure de la période · ${esc(formatCalendarDate(lastWeight.date))}` : "Mesures enregistrées dans le Profil"}</p>${declined ? '<p class="metrics-empty">Tu as choisi de ne pas renseigner ton poids. Tu peux modifier ce choix dans le Profil.</p>' : Metrics.chart(data.weights, {...data, kind: "weight", unit, id: "weightTrend"})}<p class="metrics-note">${declined ? "Ton choix est respecté." : data.weights.length === 1 ? "Une première mesure : il en faut au moins deux pour voir une évolution." : "Chaque point est une mesure réelle. Aucun poids n’est inventé pour les jours sans saisie."}</p></article><article class="card personal-trend-card"><div class="metrics-heading"><h3>Calories par jour</h3><strong>${average == null ? "—" : `≈ ${average.toLocaleString("fr-CA")} kcal`}</strong></div><p class="muted tiny">${average == null ? "Repas et collations enregistrés" : `Moyenne sur ${known.length} jour${known.length > 1 ? "s" : ""} avec estimation`}</p>${Metrics.chart(data.calories, {...data, kind: "calories", unit: "kcal", id: "calorieTrend"})}<p class="metrics-note">Estimations des repas saisis, pas un objectif. Les jours sans estimation restent vides; les barres en pointillé indiquent une estimation partielle. Un journal incomplet peut sous-estimer le total.</p></article></div></section>`;
+    return `<section class="personal-trends" aria-labelledby="personalTrendsTitle"><div class="section-title"><h2 id="personalTrendsTitle">Mes tendances chiffrées</h2><span class="muted small">30 jours · ${db.settings.demoMode ? "données du profil fictif" : "mes données uniquement"}</span></div><div class="personal-trends-grid"><article class="card personal-trend-card"><div class="metrics-heading"><h3>Poids</h3><strong>${declined ? "Non renseigné" : lastWeight ? `${lastWeight.value.toLocaleString("fr-CA")} ${unit}` : "—"}</strong></div><p class="muted tiny">${!declined && lastWeight ? `Dernière mesure de la période · ${esc(formatCalendarDate(lastWeight.date))}` : "Mesures enregistrées dans le Profil"}</p>${declined ? '<p class="metrics-empty">Tu as choisi de ne pas renseigner ton poids. Tu peux modifier ce choix dans le Profil.</p>' : Metrics.chart(data.weights, {...data, kind: "weight", unit, id: "weightTrend"})}<p class="metrics-note">${declined ? "Ton choix est respecté." : data.weights.length === 1 ? "Une première mesure : il en faut au moins deux pour voir une évolution." : "Chaque point est une mesure réelle. Aucun poids n’est inventé pour les jours sans saisie."}</p></article><article class="card personal-trend-card"><div class="metrics-heading"><h3>Calories par jour</h3><strong>${average == null ? "—" : `≈ ${average.toLocaleString("fr-CA")} kcal`}</strong></div><p class="muted tiny">${average == null ? "Repas et collations enregistrés" : `Moyenne sur ${known.length} jour${known.length > 1 ? "s" : ""} avec estimation`}</p>${Metrics.chart(data.calories, {...data, kind: "calories", unit: "kcal", id: "calorieTrend"})}<p class="metrics-note">Estimations des repas saisis, pas un objectif. Les jours sans estimation restent vides; les barres en pointillé indiquent une estimation partielle. Un journal incomplet peut sous-estimer le total.</p></article></div>${energyBalanceObservationHtml(end, profile)}</section>`;
   }
 
   let keepPhysiologicalPanelOpen = false;
@@ -9435,6 +9451,7 @@
     $("#app .hero")?.insertAdjacentHTML("beforeend", `<small class="profile-build">Version ${APP_RELEASE}</small>`);
     const waterSettingsSection = $("#waterGoal")?.closest("section.card");
     waterSettingsSection?.insertAdjacentHTML("afterend", `<section class="card steps-profile-card"><h3>👟 Suivi des pas</h3><p class="muted small">Affiche les pas dans le Journal et leur progression dans Observations.</p><label class="toggle-row"><span><strong>Suivre mes pas</strong><small>Tu peux masquer ce suivi sans supprimer ton historique</small></span><input id="settingStepsTracking" type="checkbox" ${db.settings.stepsTracking === true ? "checked" : ""}></label><div id="stepsGoalSetting" class="settings-row ${db.settings.stepsTracking === true ? "" : "is-disabled"}"><div><strong>Objectif quotidien</strong><p class="muted tiny">Utilisé pour les nouvelles journées seulement</p></div><label><input id="stepsGoal" type="number" min="100" max="100000" step="100" inputmode="numeric" value="${Number(db.settings.stepsGoal) || 8000}" ${db.settings.stepsTracking === true ? "" : "disabled"}><span>pas</span></label></div></section>`);
+    $(".steps-profile-card")?.insertAdjacentHTML("afterend", `<section class="card calorie-balance-profile-card"><h3>⚖️ Balance calorique</h3><p class="muted small">Compare les calories consignées à une dépense énergétique quotidienne estimée et affiche la tendance dans Observations.</p><label class="toggle-row"><span><strong>Suivre mon déficit / surplus calorique</strong><small>Tu peux masquer ce suivi sans supprimer tes données</small></span><input id="settingCalorieBalanceTracking" type="checkbox" ${db.settings.calorieBalanceTracking === true ? "checked" : ""}></label><p class="muted tiny">Le calcul utilise l’âge, le sexe, la taille et le poids renseignés dans « À propos de moi », puis tient compte des activités enregistrées dans le Journal. Il demeure une estimation.</p></section>`);
     const feelingSettingsSection = $("#settingFeelingReminders")?.closest("section.card"),
       feelingIntro = feelingSettingsSection?.querySelector(":scope > p");
     if (feelingIntro) feelingIntro.insertAdjacentHTML("afterend", trackedFeelingsProfileHtml());
@@ -9506,6 +9523,12 @@
     $("#settingStepsTracking")?.addEventListener("change", (event) => {
       db.settings.stepsTracking = event.target.checked;
       saveLocal("suivi-pas");
+      renderProfile();
+    });
+    $("#settingCalorieBalanceTracking")?.addEventListener("change", (event) => {
+      db.settings.calorieBalanceTracking = event.target.checked;
+      saveLocal("suivi-balance-calorique");
+      setDayChanged(todayKey());
       renderProfile();
     });
     $("#stepsGoal")?.addEventListener("change", (event) => {
