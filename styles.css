@@ -1105,3 +1105,10 @@ body.demo-guide-open .bottom-nav{z-index:20}
   .guided-learning-brain{animation:none}
 }
 
+
+/* V3.56.50 — cerveau d’apprentissage sur Sommeil dans le Sommaire */
+.journal-summary-sleep{position:relative}
+.guided-learning-brain--summary{
+  left:6px;
+  top:8px;
+}
