@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 92;
-  const APP_RELEASE = "3.56.37";
+  const APP_RELEASE = "3.56.40";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -9252,13 +9252,15 @@
     return entries.length ? {date: entries[0][0], kg: entries[0][1].weightMeasurement.kg} : null;
   }
   function personalProfileHtml() {
-    const profile = personalProfile(), age = profile.age || {}, weight = profile.weight || {}, sex = profile.sex || {}, unit = weight.unit || "kg";
+    const profile = personalProfile(), age = profile.age || {}, weight = profile.weight || {}, sex = profile.sex || {}, height = profile.height || {}, activityLevel = profile.activityLevel || {}, unit = weight.unit || "kg";
     const latest = latestPersonalWeight(), todayWeight = Metrics.weightRecord(db.days[todayKey()]?.weightMeasurement);
     const modes = (mode) => [["unspecified", "Non renseigné"], ["provided", "Je souhaite le renseigner"], ["declined", "Je préfère ne pas répondre"]].map(([value, label]) => `<option value="${value}" ${(mode || "unspecified") === value ? "selected" : ""}>${label}</option>`).join("");
     const selectedSex = sex.mode === "declined" ? "declined" : sex.value || "unspecified";
-    return `<section class="card personal-profile-card" aria-labelledby="personalProfileTitle"><h3 id="personalProfileTitle">À propos de moi</h3><p class="muted small">Tout est facultatif. Ces renseignements ne servent pas à calculer un objectif calorique ni à poser un diagnostic.</p><fieldset ${db.settings.demoMode ? "disabled" : ""}>
+    return `<section class="card personal-profile-card" aria-labelledby="personalProfileTitle"><h3 id="personalProfileTitle">À propos de moi</h3><p class="muted small">Tout est facultatif. Ces données pourront servir plus tard à estimer ta dépense énergétique et ton déficit calorique. Aucun calcul n’est effectué pour l’instant.</p><fieldset ${db.settings.demoMode ? "disabled" : ""}>
       <div class="personal-profile-field"><label for="profileAgeMode">Âge</label><select id="profileAgeMode">${modes(age.mode)}</select><label id="profileAgeFields" class="personal-profile-value" ${age.mode === "provided" ? "" : "hidden"}><span>Âge en années</span><input type="text" inputmode="numeric" autocomplete="off" id="profileAge" value="${age.value ?? ""}" placeholder="Ex. 42" aria-describedby="profileAgeError"><small id="profileAgeError" class="personal-field-error" aria-live="polite"></small></label></div>
       <div class="personal-profile-field"><label for="profileSex">Sexe</label><select id="profileSex">${[["unspecified", "Non renseigné"], ["female", "Féminin"], ["male", "Masculin"], ["intersex", "Intersexe"], ["other", "Autre"], ["declined", "Je préfère ne pas répondre"]].map(([value, label]) => `<option value="${value}" ${selectedSex === value ? "selected" : ""}>${label}</option>`).join("")}</select></div>
+      <div class="personal-profile-field"><label for="profileHeightMode">Taille</label><select id="profileHeightMode">${modes(height.mode)}</select><label id="profileHeightFields" class="personal-profile-value" ${height.mode === "provided" ? "" : "hidden"}><span>Taille en cm</span><input type="text" inputmode="decimal" autocomplete="off" id="profileHeight" value="${height.value ?? ""}" placeholder="Ex. 175" aria-describedby="profileHeightError"><small id="profileHeightError" class="personal-field-error" aria-live="polite"></small></label></div>
+      <div class="personal-profile-field"><label for="profileActivityLevel">Niveau d’activité habituel</label><select id="profileActivityLevel">${[["unspecified", "Non renseigné"], ["sedentary", "Très faible — surtout assis"], ["light", "Faible — un peu actif"], ["moderate", "Modéré — actif régulièrement"], ["active", "Élevé — très actif"], ["very_active", "Très élevé — activité intense fréquente"], ["declined", "Je préfère ne pas répondre"]].map(([value, label]) => `<option value="${value}" ${(activityLevel.mode === "declined" ? "declined" : activityLevel.value || "unspecified") === value ? "selected" : ""}>${label}</option>`).join("")}</select><p class="muted tiny">Décris ton niveau d’activité général; les activités saisies dans le Journal restent séparées.</p></div>
       <div class="personal-profile-field"><label for="profileWeightMode">Poids</label><select id="profileWeightMode">${modes(weight.mode)}</select><div id="profileWeightFields" ${weight.mode === "provided" ? "" : "hidden"}><p id="profileLastWeight" class="muted small">${latest ? `Dernière mesure : ${Metrics.displayWeight(latest.kg, unit).toLocaleString("fr-CA")} ${unit} · ${esc(formatCalendarDate(latest.date))}` : "Aucune mesure enregistrée."}</p><div class="personal-weight-grid"><label>Date de la mesure<input id="profileWeightDate" type="date" max="${todayKey()}" value="${todayKey()}"></label><label>Unité<select id="profileWeightUnit"><option value="kg" ${unit === "kg" ? "selected" : ""}>kg</option><option value="lb" ${unit === "lb" ? "selected" : ""}>lb</option></select></label><label class="personal-weight-input">Poids mesuré<input id="profileWeight" type="text" inputmode="decimal" autocomplete="off" value="${todayWeight?.kg != null ? Metrics.displayWeight(todayWeight.kg, unit) : ""}" placeholder="Ex. ${unit === "lb" ? "165,5" : "75,2"}" aria-describedby="profileWeightError"></label></div><small id="profileWeightError" class="personal-field-error" aria-live="polite"></small><p class="muted tiny">Une mesure par date, sauvegardée automatiquement. Choisis une autre date pour ajouter ou corriger une mesure; vider le poids retire uniquement la mesure de cette date.</p></div><p id="profileWeightDeclinedNote" class="muted tiny" ${weight.mode === "declined" ? "" : "hidden"}>Le graphique du poids est masqué et aucune nouvelle mesure n’est demandée. Les mesures déjà enregistrées sont conservées.</p></div>
       </fieldset><p id="personalProfileStatus" class="personal-save-status" role="status">Sauvegarde automatique · connexion requise pour la synchronisation</p></section>`;
   }
@@ -9277,7 +9279,7 @@
       pending.set(key, {run, timer: setTimeout(() => flush(key), 900)});
       personalSaveStatus("Modification en cours…");
     }
-    const ageInput = $("#profileAge"), weightInput = $("#profileWeight"), dateInput = $("#profileWeightDate"), unitInput = $("#profileWeightUnit");
+    const ageInput = $("#profileAge"), heightInput = $("#profileHeight"), weightInput = $("#profileWeight"), dateInput = $("#profileWeightDate"), unitInput = $("#profileWeightUnit");
     let editingDate = dateInput.value, editingUnit = unitInput.value;
     const updateLastWeight = () => {
       const latest = latestPersonalWeight();
@@ -9290,6 +9292,14 @@
       ageInput.setAttribute("aria-invalid", String(!valid));
       if (!valid) { personalSaveStatus("L’âge n’a pas été enregistré : vérifie la valeur.", true); return; }
       setPersonalRecord("age", {mode: "provided", value: raw ? age : null});
+    }
+    function saveHeight() {
+      if ($("#profileHeightMode").value !== "provided") return;
+      const raw = heightInput.value.trim(), height = Metrics.number(raw), valid = !raw || (height != null && height >= 50 && height <= 300);
+      $("#profileHeightError").textContent = valid ? "" : "Entre une taille entre 50 et 300 cm.";
+      heightInput.setAttribute("aria-invalid", String(!valid));
+      if (!valid) { personalSaveStatus("La taille n’a pas été enregistrée : vérifie la valeur.", true); return; }
+      setPersonalRecord("height", {mode: "provided", value: raw ? Math.round(height * 10) / 10 : null});
     }
     function saveWeight() {
       if ($("#profileWeightMode").value !== "provided") return;
@@ -9305,6 +9315,8 @@
     }
     ageInput.addEventListener("input", () => schedule("age", saveAge));
     ageInput.addEventListener("blur", () => flush("age"));
+    heightInput.addEventListener("input", () => schedule("height", saveHeight));
+    heightInput.addEventListener("blur", () => flush("height"));
     weightInput.addEventListener("input", () => schedule("weight", saveWeight));
     weightInput.addEventListener("blur", () => flush("weight"));
     $("#profileAgeMode").addEventListener("change", (e) => {
@@ -9319,6 +9331,19 @@
     $("#profileSex").addEventListener("change", (e) => {
       const choice = e.target.value, mode = ["unspecified", "declined"].includes(choice) ? choice : "provided";
       setPersonalRecord("sex", {mode, value: mode === "provided" ? choice : null});
+    });
+    $("#profileHeightMode").addEventListener("change", (e) => {
+      clearTimeout(pending.get("height")?.timer); pending.delete("height");
+      const mode = e.target.value;
+      if (mode !== "provided") heightInput.value = "";
+      $("#profileHeightFields").hidden = mode !== "provided";
+      $("#profileHeightError").textContent = "";
+      heightInput.setAttribute("aria-invalid", "false");
+      setPersonalRecord("height", {mode, value: mode === "provided" ? Metrics.number(heightInput.value) : null});
+    });
+    $("#profileActivityLevel").addEventListener("change", (e) => {
+      const choice = e.target.value, mode = ["unspecified", "declined"].includes(choice) ? choice : "provided";
+      setPersonalRecord("activityLevel", {mode, value: mode === "provided" ? choice : null});
     });
     $("#profileWeightMode").addEventListener("change", (e) => {
       clearTimeout(pending.get("weight")?.timer); pending.delete("weight");
@@ -10125,10 +10150,13 @@
     $("#mealDialogTypeLabel").setAttribute("data-i18n-key", value);
     $("#mealDialogTypeLabel").textContent = t(value);
     const mainMeal = ["Déjeuner", "Dîner", "Souper"].includes(value),
+      supportsQuickFill = mainMeal || value === "Collation",
       quickBar = $("#mealQuickFillBar"),
+      previousButton = $("#copyPreviousMealQuick"),
       previousLabel = $("#copyPreviousMealLabel"),
       previousIcon = $("#copyPreviousMealIcon");
-    if (quickBar) quickBar.hidden = !mainMeal;
+    if (quickBar) quickBar.hidden = !supportsQuickFill;
+    if (previousButton) previousButton.hidden = value === "Collation";
     if (previousLabel) previousLabel.textContent = value === "Déjeuner" ? "Déjeuner d’hier" : value === "Dîner" ? "Souper d’hier" : "Souper précédent";
     if (previousIcon) previousIcon.textContent = value === "Déjeuner" ? "🍳" : "🍱";
     populateFavoriteSelect(value);

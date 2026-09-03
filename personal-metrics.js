@@ -49,13 +49,17 @@
       if (key === "age") {
         const age = number(record.value);
         if (age != null && Number.isInteger(age) && age >= 0 && age <= 130) out.value = age;
-      } else if (key === "sex" && ["female", "male", "intersex", "other"].includes(record.value)) out.value = record.value;
+      } else if (key === "height") {
+        const height = number(record.value);
+        if (height != null && height >= 50 && height <= 300) out.value = Math.round(height * 10) / 10;
+      } else if (key === "activityLevel" && ["sedentary", "light", "moderate", "active", "very_active"].includes(record.value)) out.value = record.value;
+      else if (key === "sex" && ["female", "male", "intersex", "other"].includes(record.value)) out.value = record.value;
     }
     return out;
   }
   function mergeProfile(local = {}, remote = {}) {
     const out = {};
-    for (const key of ["age", "sex", "weight", "physiology"]) {
+    for (const key of ["age", "sex", "weight", "height", "activityLevel", "physiology"]) {
       const a = profileRecord(key, local?.[key]), b = profileRecord(key, remote?.[key]);
       const latest = !a || (b && Date.parse(b.updatedAt) > Date.parse(a.updatedAt)) ? b : a;
       if (latest) out[key] = latest;
