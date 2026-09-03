@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.41";
+  const APP_RELEASE = "3.56.43";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -96,6 +96,24 @@
         Musculation: "🏋️",
         Yoga: "🧘",
         Natation: "🏊",
+        Aquabike: "🚴‍♀️",
+        Aquagym: "🤽",
+        Randonnée: "🥾",
+        Pilates: "🧘‍♀️",
+        Danse: "💃",
+        Elliptique: "🏃‍♀️",
+        Rameur: "🚣",
+        Tennis: "🎾",
+        Badminton: "🏸",
+        Soccer: "⚽",
+        Hockey: "🏒",
+        Pickleball: "🏓",
+        Volleyball: "🏐",
+        "Ski de fond": "⛷️",
+        Patinage: "⛸️",
+        Escaliers: "🪜",
+        HIIT: "⚡",
+        Étirements: "🤸",
         Autre: "✨",
       }[t] || "✨"
     );
@@ -173,6 +191,24 @@
     Musculation: { low: 3.5, moderate: 5.5, high: 8.0 },
     Yoga: { low: 2.2, moderate: 3.2, high: 4.5 },
     Natation: { low: 5.0, moderate: 8.0, high: 11.0 },
+    Aquabike: { low: 4.5, moderate: 7.0, high: 9.5 },
+    Aquagym: { low: 3.5, moderate: 5.5, high: 7.5 },
+    Randonnée: { low: 4.0, moderate: 6.0, high: 8.5 },
+    Pilates: { low: 2.5, moderate: 3.5, high: 5.0 },
+    Danse: { low: 3.5, moderate: 5.5, high: 8.0 },
+    Elliptique: { low: 4.5, moderate: 7.0, high: 10.0 },
+    Rameur: { low: 5.0, moderate: 8.0, high: 11.0 },
+    Tennis: { low: 4.5, moderate: 7.0, high: 9.5 },
+    Badminton: { low: 4.0, moderate: 6.0, high: 8.0 },
+    Soccer: { low: 5.0, moderate: 8.0, high: 11.0 },
+    Hockey: { low: 5.0, moderate: 8.5, high: 12.0 },
+    Pickleball: { low: 3.5, moderate: 5.5, high: 7.5 },
+    Volleyball: { low: 3.0, moderate: 5.0, high: 7.5 },
+    "Ski de fond": { low: 5.5, moderate: 8.5, high: 12.0 },
+    Patinage: { low: 4.5, moderate: 7.0, high: 10.0 },
+    Escaliers: { low: 5.0, moderate: 8.0, high: 11.0 },
+    HIIT: { low: 7.0, moderate: 10.0, high: 13.0 },
+    Étirements: { low: 1.8, moderate: 2.5, high: 3.5 },
     Autre: { low: 3.0, moderate: 5.0, high: 7.0 },
   };
   const ACTIVITY_INTENSITY_LABELS = {
@@ -10566,12 +10602,33 @@
     });
     $("#sleepDialog").showModal();
   }
+  function normalizeActivitySearch(value = "") {
+    return String(value)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .trim();
+  }
+  function filterActivityChoices(query = "") {
+    const normalized = normalizeActivitySearch(query);
+    let visible = 0;
+    $$('[data-activity]').forEach((button) => {
+      const haystack = normalizeActivitySearch(`${button.dataset.activity || ""} ${button.dataset.search || ""} ${button.textContent || ""}`);
+      const matches = !normalized || haystack.includes(normalized);
+      button.hidden = !matches;
+      if (matches) visible += 1;
+    });
+    const empty = $("#activitySearchEmpty");
+    if (empty) empty.hidden = visible > 0;
+  }
   function openActivity() {
     ensureDay(db, selectedDate);
     $("#activityType").value = "";
     $("#activityMinutes").value = "";
     $("#activityActualCalories").value = "";
     if ($("#activityFavorite")) $("#activityFavorite").checked = false;
+    if ($("#activitySearch")) $("#activitySearch").value = "";
+    filterActivityChoices("");
     if ($("#activityFavoriteShortcuts")) {
       $("#activityFavoriteShortcuts").innerHTML = activityFavoriteButtonsHtml();
       $("#activityFavoriteShortcuts").querySelectorAll("[data-add-activity-favorite]").forEach((b) => b.addEventListener("click", () => {
@@ -11341,6 +11398,9 @@
         updateActivityEstimate();
       }),
   );
+  $("#activitySearch")?.addEventListener("input", (event) => {
+    filterActivityChoices(event.target.value);
+  });
   $$("[data-intensity]").forEach(
     (b) => (b.onclick = () => setActivityIntensity(b.dataset.intensity)),
   );
