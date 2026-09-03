@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.47";
+  const APP_RELEASE = "3.56.48";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10216,11 +10216,25 @@
   function guidedMealFlowEnabled(type = $("#mealType")?.value) {
     return ["Déjeuner", "Dîner", "Souper"].includes(type);
   }
+  function setLearningBrain(target, active) {
+    if (!target) return;
+    target.classList.toggle("guided-next-step", !!active);
+    let brain = target.querySelector(":scope > .guided-learning-brain");
+    if (active && !brain) {
+      brain = document.createElement("span");
+      brain.className = "guided-learning-brain";
+      brain.setAttribute("aria-hidden", "true");
+      brain.textContent = "🧠";
+      target.prepend(brain);
+    } else if (!active && brain) {
+      brain.remove();
+    }
+  }
   function updateGuidedMealFlow() {
     const beforeCard = $("#mealFeelingsDetails"),
       mealCard = $("#mealDescriptionCard"),
       afterCard = $("#mealAfterFeelingCard");
-    [beforeCard, mealCard, afterCard].forEach((el) => el?.classList.remove("guided-next-step"));
+    [beforeCard, mealCard, afterCard].forEach((el) => setLearningBrain(el, false));
     if (!guidedMealFlowEnabled()) return;
     const beforeScores = collectScoredFeelingScores($("#beforeFeelingTags"), "before"),
       hasBefore = Object.keys(beforeScores).length > 0,
@@ -10228,18 +10242,20 @@
       mealId = $("#mealId")?.value,
       savedMeal = mealId ? allMeals().find((item) => item.id === mealId) : null,
       hasSavedMeal = Boolean(savedMeal);
-    if (!hasBefore) beforeCard?.classList.add("guided-next-step");
-    else if (!hasSavedMeal || !hasDescription) mealCard?.classList.add("guided-next-step");
+    if (!hasBefore) setLearningBrain(beforeCard, true);
+    else if (!hasSavedMeal || !hasDescription) setLearningBrain(mealCard, true);
     else if (!savedMeal.feeling && feelingDueAt(savedMeal) <= new Date())
-      afterCard?.classList.add("guided-next-step");
+      setLearningBrain(afterCard, true);
   }
   function setAfterFeelingGuidance(meal) {
     const form = $("#feelingForm");
+    setLearningBrain(form, false);
     form?.classList.remove("guided-after-step");
     if (!meal || !guidedMealFlowEnabled(meal.type) || meal.feeling) return;
     const due = feelingDueAt(meal) <= new Date() || Boolean(meal.feelingNotifiedAt);
     if (due) {
       form?.classList.add("guided-after-step");
+      setLearningBrain(form, true);
       requestAnimationFrame(() => $("#feelingTags")?.scrollIntoView({ behavior: "smooth", block: "center" }));
     }
   }

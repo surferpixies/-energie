@@ -1075,13 +1075,33 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .journal-summary-action--activity.has-entry>strong{max-width:85%;font-size:1rem}
 .journal-summary-action--activity.has-entry .summary-action-watermark{opacity:.13}
 
-
-/* V3.56.45 — parcours guidé des repas principaux */
+/* V3.56.48 — cerveau d’apprentissage : prochaine action suggérée */
 #mealFeelingsDetails,#mealDescriptionCard,#mealAfterFeelingCard,#feelingForm{position:relative}
 .guided-next-step,.guided-after-step{isolation:isolate}
-.guided-next-step::before,.guided-after-step::before{content:"";position:absolute;z-index:4;pointer-events:none;inset:-3px;border-radius:inherit;padding:3px;background:conic-gradient(from var(--guided-angle,0deg),color-mix(in srgb,var(--accent) 30%,transparent) 0 18%,color-mix(in srgb,var(--accent) 62%,transparent) 27%,color-mix(in srgb,var(--accent) 96%,#a8ffc4) 37%,color-mix(in srgb,var(--accent) 70%,transparent) 47%,color-mix(in srgb,var(--accent) 30%,transparent) 58% 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;filter:drop-shadow(0 0 7px color-mix(in srgb,var(--accent) 52%,transparent)) drop-shadow(0 0 13px color-mix(in srgb,var(--accent) 22%,transparent));animation:guidedMealHalo 3.8s linear infinite}
-@property --guided-angle{syntax:"<angle>";inherits:false;initial-value:0deg}
-@keyframes guidedMealHalo{to{--guided-angle:360deg}}
-@media(prefers-reduced-motion:reduce){.guided-next-step::before,.guided-after-step::before{animation:none;background:color-mix(in srgb,var(--accent) 88%,transparent);filter:drop-shadow(0 0 8px color-mix(in srgb,var(--accent) 42%,transparent))}}
+.guided-learning-brain{
+  position:absolute;
+  z-index:8;
+  left:10px;
+  top:10px;
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  font-size:1.35rem;
+  line-height:1;
+  background:color-mix(in srgb,var(--surface) 86%,var(--accent));
+  border:1px solid color-mix(in srgb,var(--accent) 52%,var(--border));
+  box-shadow:0 3px 12px color-mix(in srgb,var(--accent) 24%,transparent);
+  pointer-events:none;
+  transform-origin:center;
+  animation:learningBrainPulse 1.45s ease-in-out infinite;
+}
+@keyframes learningBrainPulse{
+  0%,100%{transform:scale(1);box-shadow:0 3px 12px color-mix(in srgb,var(--accent) 20%,transparent)}
+  50%{transform:scale(1.16);box-shadow:0 4px 17px color-mix(in srgb,var(--accent) 38%,transparent)}
+}
+@media(prefers-reduced-motion:reduce){
+  .guided-learning-brain{animation:none}
+}
 
-/* V3.56.47 — halo du parcours guidé plus visible, sans mouvement de la carte */
