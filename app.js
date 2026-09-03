@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.45";
+  const APP_RELEASE = "3.56.46";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -6092,6 +6092,9 @@
         () => {
           notifyDueFeelings();
           render();
+          // If the meal editor is still open, the after-meal card becomes the
+          // suggested next step as soon as its reminder delay is reached.
+          requestAnimationFrame(updateGuidedMealFlow);
         },
         Math.min(
           2147483647,
@@ -10222,9 +10225,13 @@
     const beforeScores = collectScoredFeelingScores($("#beforeFeelingTags"), "before"),
       hasBefore = Object.keys(beforeScores).length > 0,
       hasDescription = Boolean($("#mealDescription")?.value.trim()),
-      hasSavedMeal = Boolean($("#mealId")?.value);
+      mealId = $("#mealId")?.value,
+      savedMeal = mealId ? allMeals().find((item) => item.id === mealId) : null,
+      hasSavedMeal = Boolean(savedMeal);
     if (!hasBefore) beforeCard?.classList.add("guided-next-step");
     else if (!hasSavedMeal || !hasDescription) mealCard?.classList.add("guided-next-step");
+    else if (!savedMeal.feeling && feelingDueAt(savedMeal) <= new Date())
+      afterCard?.classList.add("guided-next-step");
   }
   function setAfterFeelingGuidance(meal) {
     const form = $("#feelingForm");
