@@ -1079,7 +1079,9 @@ body.demo-guide-open .bottom-nav{z-index:20}
 /* V3.56.45 — parcours guidé des repas principaux */
 #mealFeelingsDetails,#mealDescriptionCard,#mealAfterFeelingCard,#feelingForm{position:relative}
 .guided-next-step,.guided-after-step{isolation:isolate}
-.guided-next-step::before,.guided-after-step::before{content:"";position:absolute;z-index:4;pointer-events:none;inset:-2px;border-radius:inherit;padding:2px;background:conic-gradient(from var(--guided-angle,0deg),transparent 0 25%,color-mix(in srgb,var(--accent) 35%,transparent) 34%,color-mix(in srgb,var(--accent) 88%,#7fe7a5) 42%,color-mix(in srgb,var(--accent) 35%,transparent) 50%,transparent 59% 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;filter:drop-shadow(0 0 5px color-mix(in srgb,var(--accent) 28%,transparent));animation:guidedMealHalo 4.8s linear infinite}
+.guided-next-step::before,.guided-after-step::before{content:"";position:absolute;z-index:4;pointer-events:none;inset:-3px;border-radius:inherit;padding:3px;background:conic-gradient(from var(--guided-angle,0deg),color-mix(in srgb,var(--accent) 30%,transparent) 0 18%,color-mix(in srgb,var(--accent) 62%,transparent) 27%,color-mix(in srgb,var(--accent) 96%,#a8ffc4) 37%,color-mix(in srgb,var(--accent) 70%,transparent) 47%,color-mix(in srgb,var(--accent) 30%,transparent) 58% 100%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;filter:drop-shadow(0 0 7px color-mix(in srgb,var(--accent) 52%,transparent)) drop-shadow(0 0 13px color-mix(in srgb,var(--accent) 22%,transparent));animation:guidedMealHalo 3.8s linear infinite}
 @property --guided-angle{syntax:"<angle>";inherits:false;initial-value:0deg}
 @keyframes guidedMealHalo{to{--guided-angle:360deg}}
-@media(prefers-reduced-motion:reduce){.guided-next-step::before,.guided-after-step::before{animation:none;background:color-mix(in srgb,var(--accent) 72%,transparent)}}
+@media(prefers-reduced-motion:reduce){.guided-next-step::before,.guided-after-step::before{animation:none;background:color-mix(in srgb,var(--accent) 88%,transparent);filter:drop-shadow(0 0 8px color-mix(in srgb,var(--accent) 42%,transparent))}}
+
+/* V3.56.47 — halo du parcours guidé plus visible, sans mouvement de la carte */
