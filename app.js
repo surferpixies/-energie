@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.50";
+  const APP_RELEASE = "3.56.51";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -932,7 +932,7 @@
   }
   function formDraftContext(form) {
     if (form.dataset.autosaveContext) return form.dataset.autosaveContext;
-    if (form.id === "mealForm") return $("#mealId")?.value || "nouveau";
+    if (form.id === "mealForm") return $("#mealId")?.value || `nouveau:${$("#mealType")?.value || "Déjeuner"}`;
     if (form.id === "feelingForm") return feelingMealId || "nouveau";
     if (form.id === "missingBeforeForm")
       return missingBeforeMealId || "nouveau";
