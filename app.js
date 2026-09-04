@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 92;
-  const APP_RELEASE = "3.56.43";
+  const APP_RELEASE = "3.56.44";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -9387,6 +9387,7 @@
     { kicker: "Ton quotidien", title: "Bouge et hydrate-toi 💧🚶", copy: "Ajoute une activité, utilise tes activités favorites, note tes boissons et suis ton objectif de pas. Ces informations complètent le contexte de ta journée.", media: `<div class="energy-guide-media daily-collage"><img class="daily-main" src="${energyGuideImage('hydration')}" alt="Ajout d’une boisson"><img class="daily-activity" src="${energyGuideImage('activity')}" alt="Ajout d’une activité"><img class="daily-steps" src="${energyGuideImage('steps')}" alt="Saisie du nombre de pas"></div>` },
     { kicker: "Cerveau", title: "Ton journal devient plus utile 🧠", copy: "Le Cerveau montre la couverture de tes données : il indique ce qui est suffisamment documenté pour être analysé. Le pourcentage mesure la présence des informations, pas la qualité de tes habitudes.", media: `<div class="energy-guide-media"><img src="${energyGuideImage('brain')}" alt="Écran Cerveau et qualité du journal"></div>` },
     { kicker: "Observations", title: "Découvre tes tendances 👁️", copy: "Observe l’évolution de tes habitudes, de tes pas et des autres indicateurs disponibles. Énergie cherche des tendances dans ton historique : une association observée ne prouve pas une cause.", media: `<div class="energy-guide-media"><img src="${energyGuideImage('observations')}" alt="Écran Observations avec graphiques de tendances"></div>` },
+    { kicker: "Le cœur d’Énergie", title: "Comprends ce qui te fait du bien 🌱", copy: "Énergie relie ce que tu manges à tes ressentis avant et après, puis regarde ce qui se répète au fil du temps. Des inconforts reviennent-ils après des repas contenant des produits laitiers, du soya ou certains aliments? Certaines habitudes accompagnent-elles plutôt les journées où tu te sens mieux? Plus ton journal se construit, plus les Observations peuvent faire ressortir des associations personnalisées.", media: `<div class="energy-guide-purpose"><div class="energy-guide-purpose-flow"><span>🍽️<b>Alimentation</b></span><i>+</i><span>🙂<b>Avant</b></span><i>+</i><span>🧠<b>Après</b></span><i>+</i><span>📆<b>Répétition</b></span><i>→</i><span>👁️<b>Observations</b></span></div><p class="energy-guide-purpose-note">Énergie met en évidence des associations et des tendances. Elles ne prouvent pas un lien de cause à effet et ne constituent pas un diagnostic médical.</p></div>` },
     { kicker: "Profil", title: "Une app qui s’adapte à toi ⚙️", copy: "Dans Profil, choisis ce que tu veux suivre, règle tes objectifs et tes préférences, puis reviens à ce guide quand tu le souhaites.", media: `<div class="energy-guide-media"><img src="${energyGuideImage('profile')}" alt="Réglages du Profil dans Énergie"></div>` },
   ];
   let energyGuideIndex = 0;
