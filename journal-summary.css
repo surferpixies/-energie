@@ -447,3 +447,24 @@ html[data-theme="dark"] .quick-meal-type-grid button.is-complete {
   .journal-summary-action { min-height: 122px; padding: .85rem; }
   .journal-summary-action strong { font-size: 1.1rem; }
 }
+
+/* v3.56.53 — Cerveau = information attendue */
+.energy-action-brain{
+  display:grid;place-items:center;
+  transform-origin:center;
+  animation:energyActionBrainPulse 1.15s ease-in-out infinite;
+}
+@keyframes energyActionBrainPulse{
+  0%,100%{transform:scale(.92)}
+  50%{transform:scale(1.12)}
+}
+@media(prefers-reduced-motion:reduce){.energy-action-brain{animation:none}}
+
+.journal-summary-action.needs-brain-action{padding-left:4.35rem}
+.summary-energy-action-brain{
+  position:absolute!important;z-index:3!important;left:.9rem;top:50%;
+  width:2.75rem;height:2.75rem;margin-top:-1.375rem;
+  border-radius:15px;background:color-mix(in srgb,var(--accent) 14%,var(--surface));
+  box-shadow:0 7px 18px color-mix(in srgb,var(--accent) 18%,transparent);
+  font-size:1.45rem;pointer-events:none;
+}

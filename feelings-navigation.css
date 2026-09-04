@@ -211,3 +211,20 @@ html[data-theme="dark"] .meal-feeling-summary-action { background: rgba(255, 255
   .meal-feeling-summary-action,
   .meal-feeling-later { grid-column: 1 / -1; width: 100%; max-width: none; justify-content: center; text-align: center; }
 }
+
+/* v3.56.53 — Cerveau = information attendue */
+.energy-action-brain{
+  display:grid;place-items:center;
+  transform-origin:center;
+  animation:energyActionBrainPulse 1.15s ease-in-out infinite;
+}
+@keyframes energyActionBrainPulse{
+  0%,100%{transform:scale(.92)}
+  50%{transform:scale(1.12)}
+}
+@media(prefers-reduced-motion:reduce){.energy-action-brain{animation:none}}
+
+#beforeFeelingSummaryIcon.energy-action-brain{
+  background:color-mix(in srgb,var(--accent) 14%,var(--surface));
+  box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 7%,transparent);
+}
