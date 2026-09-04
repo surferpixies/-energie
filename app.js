@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 92;
-  const APP_RELEASE = "3.56.48";
+  const APP_RELEASE = "3.56.49";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -9625,6 +9625,10 @@
     if (!nutritionVisibleToViewer()) $("#settingAutoNutrition")?.closest("label")?.remove();
     $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", physiologicalContextHtml());
     $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", personalProfileHtml());
+
+    // Build the visual Profile groups NOW, before any later binding can interrupt renderProfile().
+    enhanceProfileWithAccordions();
+
     bindPersonalProfile();
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
@@ -9798,8 +9802,6 @@
     $("#exportData").onclick = exportData;
     $("#importData").onclick = () => $("#importFile").click();
 
-    // All Profile cards are now present: group them only after the render is complete.
-    enhanceProfileWithAccordions();
   }
 
   // --- Ajout rapide par code-barres -------------------------------------------------

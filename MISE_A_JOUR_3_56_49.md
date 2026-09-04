@@ -1,5 +1,8 @@
-# Énergie v3.56.49
+# Énergie 3.56.49
 
-- Petit ajustement du cerveau 🧠 du parcours guidé.
-- Décalé de 4 px vers la gauche afin de lui laisser plus d'espace au maximum de sa pulsation.
-- Aucun changement au fonctionnement du parcours guidé.
+## Profil — correction de l'ordre d'exécution
+Le HTML du Profil était bien rendu, mais la transformation en accordéons était appelée tout à la fin de `renderProfile()`.
+Si une initialisation intermédiaire interrompait la fonction, les cartes restaient donc dans leur ancien affichage.
+
+La transformation est maintenant exécutée immédiatement après l'insertion des dernières cartes dynamiques
+(À propos de moi, contexte physiologique, pas, etc.) et avant les liaisons d'événements.
