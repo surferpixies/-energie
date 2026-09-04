@@ -483,3 +483,19 @@ html[data-theme="dark"] .quick-meal-type-grid button.is-complete {
   height:2.35rem;
   font-size:1.25rem;
 }
+
+
+/* v3.56.57 — cerveau Sommeil à gauche, sans chevauchement */
+.journal-summary-sleep.sleep-needs-brain-action{
+  padding-left:4.75rem;
+}
+.journal-summary-sleep .sleep-energy-action-brain{
+  left:1rem!important;
+  right:auto!important;
+  top:50%!important;
+  margin-top:-1.3rem!important;
+  width:2.6rem;
+  height:2.6rem;
+  border-radius:15px;
+  font-size:1.35rem;
+}
