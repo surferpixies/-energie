@@ -1074,3 +1074,17 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .journal-summary-action--activity.has-entry>span:first-child{font-weight:750;color:var(--accent)}
 .journal-summary-action--activity.has-entry>strong{max-width:85%;font-size:1rem}
 .journal-summary-action--activity.has-entry .summary-action-watermark{opacity:.13}
+
+/* v3.56.46 — Profil simplifié en sections repliables */
+.profile-accordion{padding:0 !important;overflow:hidden}
+.profile-accordion-details>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:20px 22px;cursor:pointer}
+.profile-accordion-details>summary::-webkit-details-marker{display:none}
+.profile-accordion-title{display:flex;align-items:center;gap:12px;min-width:0}
+.profile-accordion-title>span:first-child{font-size:26px}
+.profile-accordion-title strong{display:block;font-size:18px;color:var(--text);line-height:1.2}
+.profile-accordion-title small{display:block;margin-top:4px;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:58vw}
+.profile-accordion-chevron{font-size:22px;color:var(--muted);transition:transform .18s ease}
+.profile-accordion-details[open] .profile-accordion-chevron{transform:rotate(180deg)}
+.profile-accordion-body{padding:0 12px 12px}
+.profile-accordion-body>.card{margin:0 0 12px;box-shadow:none}
+.profile-guide-standalone{margin-top:16px}

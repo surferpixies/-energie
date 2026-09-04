@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 92;
-  const APP_RELEASE = "3.56.45";
+  const APP_RELEASE = "3.56.46";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -9415,6 +9415,69 @@
     $("#energyGuideNext").textContent = energyGuideIndex === ENERGY_GUIDE_SLIDES.length - 1 ? "Terminer" : "Suivant";
     $("#energyGuideBody").scrollTop = 0;
   }
+
+  function enhanceProfileWithAccordions() {
+    const profile = $("#profileView") || $("#profile") || document.querySelector('[data-view="profile"]');
+    if (!profile || profile.dataset.accordionsReady === "1") return;
+
+    const cards = [...profile.querySelectorAll(":scope > .card, :scope > section.card")];
+    if (!cards.length) return;
+
+    const buckets = [
+      { key:"about", icon:"👤", title:"À propos de moi", terms:["à propos de moi","profil personnel","informations personnelles"] },
+      { key:"tracking", icon:"🎯", title:"Mes objectifs et suivis", terms:["objectif d’eau","hydratation","suivi des pas","balance calorique","déficit","surplus","sommeil"] },
+      { key:"prefs", icon:"⚙️", title:"Préférences de l’application", terms:["langue","estimation","notification","préférence"] },
+      { key:"other", icon:"🧑‍⚕️", title:"Professionnel & autres options", terms:["mode professionnel","professionnel","démo"] },
+    ];
+
+    const norm = s => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+    const assigned = new Set();
+
+    buckets.forEach(bucket => {
+      const matched = cards.filter(card => {
+        if (assigned.has(card)) return false;
+        if (card.classList.contains("energy-guide-profile-card")) return false;
+        const txt = norm((card.querySelector("h2,h3,h4")?.textContent || card.textContent || "").slice(0,180));
+        return bucket.terms.some(term => txt.includes(norm(term)));
+      });
+      if (!matched.length) return;
+
+      matched.forEach(x => assigned.add(x));
+      const wrap = document.createElement("section");
+      wrap.className = "profile-accordion card";
+      wrap.dataset.profileAccordion = bucket.key;
+      const details = document.createElement("details");
+      details.className = "profile-accordion-details";
+      details.innerHTML = `<summary><span class="profile-accordion-title"><span aria-hidden="true">${bucket.icon}</span><span><strong>${bucket.title}</strong><small></small></span></span><span class="profile-accordion-chevron">⌄</span></summary><div class="profile-accordion-body"></div>`;
+      wrap.appendChild(details);
+      matched[0].before(wrap);
+      const body = details.querySelector(".profile-accordion-body");
+      matched.forEach(card => body.appendChild(card));
+
+      const summaryBits = matched.slice(0,2).map(card => (card.querySelector("h2,h3,h4")?.textContent || "").trim()).filter(Boolean);
+      details.querySelector("small").textContent = summaryBits.join(" · ");
+
+      details.addEventListener("toggle", () => {
+        if (!details.open) return;
+        profile.querySelectorAll(".profile-accordion-details[open]").forEach(other => {
+          if (other !== details) other.open = false;
+        });
+        try { sessionStorage.setItem("energieProfileAccordion", bucket.key); } catch (_) {}
+      });
+    });
+
+    // Keep Discover Energy outside accordions and easy to find.
+    const guideCard = profile.querySelector(".energy-guide-profile-card");
+    if (guideCard) guideCard.classList.add("profile-guide-standalone");
+
+    const saved = (() => { try { return sessionStorage.getItem("energieProfileAccordion"); } catch (_) { return null; } })();
+    const first = profile.querySelector(`.profile-accordion[data-profile-accordion="${saved || "tracking"}"] .profile-accordion-details`)
+      || profile.querySelector(".profile-accordion-details");
+    if (first) first.open = true;
+
+    profile.dataset.accordionsReady = "1";
+  }
+
   function openEnergyGuide() {
     const dialog = ensureEnergyGuideDialog();
     energyGuideIndex = 0;
@@ -9454,6 +9517,7 @@
     welcomeInfoSection?.insertAdjacentHTML("afterend", `<section class="card energy-guide-profile-card"><div class="settings-row"><div><span class="energy-guide-profile-icon" aria-hidden="true">🌱</span><span><h3>Découvrir Énergie</h3><p class="muted small">Un petit tour des principales fonctions de l’application.</p></span></div><button class="secondary" id="openEnergyGuide" type="button">Voir le guide</button></div></section>`);
     const energyGuideButton = $("#openEnergyGuide");
     if (energyGuideButton) energyGuideButton.onclick = openEnergyGuide;
+    requestAnimationFrame(enhanceProfileWithAccordions);
     const nutritionAnchor = $("#settingNutrition")?.closest("label");
     if (session && profileSinceHtml)
       $("#syncNow")
