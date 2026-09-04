@@ -525,3 +525,66 @@ html[data-theme="dark"] .quick-meal-type-grid button.is-complete {
   place-items:center!important;
   pointer-events:none;
 }
+
+
+/* v3.56.59 — Sommeil : vraie mise en page 2 colonnes, sans position absolue du cerveau */
+.journal-summary-sleep.sleep-needs-brain-action{
+  display:grid!important;
+  grid-template-columns:3.25rem minmax(0,1fr)!important;
+  grid-template-rows:1fr!important;
+  align-items:center!important;
+  align-content:center!important;
+  column-gap:.85rem!important;
+  padding:1rem 5.7rem 1rem 1rem!important;
+}
+.journal-summary-sleep .sleep-energy-action-brain{
+  position:relative!important;
+  inset:auto!important;
+  translate:none!important;
+  margin:0!important;
+  grid-column:1!important;
+  grid-row:1!important;
+  align-self:center!important;
+  justify-self:center!important;
+  width:2.75rem!important;
+  height:2.75rem!important;
+  border-radius:15px;
+  background:color-mix(in srgb,var(--accent) 14%,var(--surface));
+  box-shadow:0 7px 18px color-mix(in srgb,var(--accent) 18%,transparent);
+  font-size:1.35rem!important;
+  display:grid!important;
+  place-items:center!important;
+  z-index:3!important;
+}
+.journal-summary-sleep .sleep-summary-copy{
+  grid-column:2!important;
+  grid-row:1!important;
+  display:grid!important;
+  gap:.45rem!important;
+  min-width:0;
+  align-self:center;
+}
+.journal-summary-sleep .sleep-summary-copy > span{
+  color:var(--muted,#69766e);
+  font-size:.78rem;
+  font-weight:700;
+  letter-spacing:.01em;
+}
+.journal-summary-sleep .sleep-summary-copy > strong{
+  color:#226c46;
+  font-size:1.28rem;
+}
+.journal-summary-sleep .sleep-summary-copy > small{
+  width:fit-content;
+  color:var(--muted,#69766e);
+  padding:.22rem .48rem;
+  border-radius:999px;
+  background:rgba(255,255,255,.55);
+  font-size:.68rem;
+}
+html[data-theme="dark"] .journal-summary-sleep .sleep-summary-copy > strong{
+  color:var(--text,#f5f2e9);
+}
+html[data-theme="dark"] .journal-summary-sleep .sleep-summary-copy > small{
+  background:rgba(255,255,255,.08);
+}
