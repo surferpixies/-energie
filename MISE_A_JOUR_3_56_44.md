@@ -1,4 +1,4 @@
-# Énergie 3.56.51
+# Énergie 3.56.52
 
 - Guide « Découvrir Énergie » : remplacement uniquement de la capture des pas par la nouvelle capture fournie.
 - Ajout d’une étape centrale expliquant la raison d’être d’Énergie : alimentation + ressentis avant/après + répétition dans le temps → observations personnalisées.

@@ -1,4 +1,4 @@
-# Énergie 3.56.51
+# Énergie 3.56.52
 
 - Guide : la capture « Nombre de pas » utilise désormais `contain` afin d’être visible en entier.
 - Profil : regroupement visuel des réglages en sections repliables.

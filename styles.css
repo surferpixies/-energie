@@ -1075,7 +1075,7 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .journal-summary-action--activity.has-entry>strong{max-width:85%;font-size:1rem}
 .journal-summary-action--activity.has-entry .summary-action-watermark{opacity:.13}
 
-/* v3.56.51 — Profil simplifié en sections repliables */
+/* v3.56.52 — Profil simplifié en sections repliables */
 .profile-accordion{padding:0 !important;overflow:hidden}
 .profile-accordion-details>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:20px 22px;cursor:pointer}
 .profile-accordion-details>summary::-webkit-details-marker{display:none}
