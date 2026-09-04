@@ -1,7 +1,6 @@
-# Énergie v3.56.42
+# Énergie 3.56.42 — Images du guide
 
-- Suppression du champ « Niveau d’activité habituel » du Profil.
-- Balance calorique basée sur Mifflin–St Jeor × 1,2 pour la vie quotidienne.
-- Ajout des calories des activités réellement enregistrées dans le Journal (calories mesurées prioritaires, sinon estimées).
-- Note explicative détaillée sous le graphique Déficit / surplus calorique.
-- L’interrupteur de suivi dans Profil est conservé.
+- Les 11 captures du guide sont maintenant embarquées directement dans `onboarding-images.js` sous forme de data URI.
+- Le guide ne dépend donc plus d’un chemin `assets/onboarding/...` au moment de l’affichage.
+- Les fichiers JPEG restent aussi présents comme fallback.
+- Cache incrémenté à 3.56.42.
