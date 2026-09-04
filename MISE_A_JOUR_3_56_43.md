@@ -1,7 +1,5 @@
-# Énergie v3.56.43
+# Énergie 3.56.43 — Finition du guide
 
-- Ajout d’une recherche instantanée dans les pastilles d’activités.
-- Ajout d’Aquabike et Aquagym.
-- Ajout de plusieurs activités : randonnée, Pilates, danse, elliptique, rameur, tennis, badminton, soccer, hockey, pickleball, volleyball, ski de fond, patinage, escaliers, HIIT et étirements.
-- Ajout d’icônes et d’estimations caloriques faible/modérée/élevée pour les nouvelles activités.
-- Recherche tolérante aux accents et à plusieurs synonymes courants.
+- Boutons Précédent et Suivant de largeur identique.
+- Recomposition de l’écran Activité / Hydratation / Pas : hydratation mise en avant, activité et pas présentés en vignettes complémentaires.
+- Cache incrémenté à 3.56.43.
