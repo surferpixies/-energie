@@ -1029,7 +1029,13 @@
     const app=document.querySelector('#app');if(!app||!document.querySelector('#waterGoal')||document.querySelector('#languageSettingCard'))return;
     const card=document.createElement('section');card.className='card';card.id='languageSettingCard';
     card.innerHTML=`<div class="settings-row"><div><h3>${translate('Langue')}</h3><p class="muted small">${translate('Langue de l’application')}</p></div><select id="languageSelect" aria-label="${translate('Langue de l’application')}"><option value="fr-CA">${translate('Français (Canada)')}</option><option value="fr-FR">${translate('Français (France)')}</option><option value="en">English</option></select></div>`;
-    const stack=app.querySelector('.stack');if(!stack)return;const target=[...stack.children].find(x=>x.textContent.includes('Objectif')||x.textContent.includes('Water goal'));target?.after(card);
+    const stack=app.querySelector('.stack');if(!stack)return;
+    const prefsBody=stack.querySelector('[data-profile-accordion="prefs"] .profile-accordion-body');
+    if(prefsBody) prefsBody.appendChild(card);
+    else {
+      const target=[...stack.children].find(x=>x.textContent.includes('Objectif')||x.textContent.includes('Water goal'));
+      target?.after(card);
+    }
     const sel=card.querySelector('select');sel.value=locale;sel.addEventListener('change',()=>{localStorage.setItem('energieLocale',sel.value);location.reload()});
   }
   const obs=new MutationObserver(ms=>ms.forEach(m=>{

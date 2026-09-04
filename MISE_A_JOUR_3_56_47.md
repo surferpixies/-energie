@@ -1,4 +1,4 @@
-# Énergie 3.56.49
+# Énergie 3.56.50
 
 ## Correctif Profil
 - Le regroupement en accordéons cible maintenant le vrai conteneur du Profil (`#app .stack`).

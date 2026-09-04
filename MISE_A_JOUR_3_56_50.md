@@ -1,5 +1,6 @@
-# Énergie v3.56.50
+# Énergie 3.56.50
 
-- Le cerveau 🧠 d’apprentissage apparaît maintenant sur la carte Sommeil du Sommaire lorsque le sommeil n’a pas encore été renseigné.
-- Il utilise la même pulsation et le même langage visuel que le parcours guidé des repas.
-- Dès qu’une durée, un marqueur ou un commentaire de sommeil est enregistré, la carte de rappel — et donc le cerveau — disparaît comme auparavant.
+- « Langue » est maintenant intégrée à « Préférences de l’application ».
+- « Message d’information » et « Découvrir Énergie » sont regroupés dans une section repliable « 🌱 Aide & découverte ».
+- « Préférences de l’application » est déplacée au bas du Profil, après les sections de démonstration (juste avant la signature créateur).
+- La sélection de langue injectée par i18n sait maintenant rejoindre directement le corps de l’accordéon Préférences.

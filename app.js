@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 92;
-  const APP_RELEASE = "3.56.49";
+  const APP_RELEASE = "3.56.50";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -9459,17 +9459,6 @@
         ],
       },
       {
-        key: "prefs",
-        icon: "⚙️",
-        title: "Préférences de l’application",
-        terms: [
-          "ambiance saisonniere",
-          "observations et recommandations",
-          "langue",
-          "message d'information",
-        ],
-      },
-      {
         key: "other",
         icon: "🧑‍⚕️",
         title: "Professionnel & autres options",
@@ -9479,6 +9468,22 @@
           "sauvegarde supplementaire",
         ],
       },
+      {
+        key: "help",
+        icon: "🌱",
+        title: "Aide & découverte",
+        terms: ["message d'information", "decouvrir energie"],
+      },
+      {
+        key: "prefs",
+        icon: "⚙️",
+        title: "Préférences de l’application",
+        terms: [
+          "ambiance saisonniere",
+          "observations et recommandations",
+          "langue",
+        ],
+      },
     ];
 
     const assigned = new Set();
@@ -9486,11 +9491,7 @@
     buckets.forEach((bucket) => {
       const matched = cards.filter((card) => {
         if (assigned.has(card)) return false;
-        if (
-          card.classList.contains("energy-guide-profile-card") ||
-          card.classList.contains("profile-creator-card")
-        )
-          return false;
+        if (card.classList.contains("profile-creator-card")) return false;
 
         const heading =
           card.querySelector("h2,h3,h4,summary")?.textContent ||
@@ -9551,8 +9552,13 @@
       });
     });
 
-    const guideCard = profile.querySelector(".energy-guide-profile-card");
-    if (guideCard) guideCard.classList.add("profile-guide-standalone");
+    // Less frequently used sections live at the bottom of Profile.
+    // Keep the creator signature as the visual footer.
+    const creator = profile.querySelector(".profile-creator-card");
+    const helpGroup = profile.querySelector('[data-profile-accordion="help"]');
+    const prefsGroup = profile.querySelector('[data-profile-accordion="prefs"]');
+    if (helpGroup) profile.insertBefore(helpGroup, creator || null);
+    if (prefsGroup) profile.insertBefore(prefsGroup, creator || null);
 
     const saved = (() => {
       try {

@@ -1,4 +1,4 @@
-# Énergie 3.56.49
+# Énergie 3.56.50
 
 ## Profil — correction de l'ordre d'exécution
 Le HTML du Profil était bien rendu, mais la transformation en accordéons était appelée tout à la fin de `renderProfile()`.
