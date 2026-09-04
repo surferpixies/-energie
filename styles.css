@@ -1088,3 +1088,13 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .profile-accordion-body{padding:0 12px 12px}
 .profile-accordion-body>.card{margin:0 0 12px;box-shadow:none}
 .profile-guide-standalone{margin-top:16px}
+
+/* v3.56.63 — restauration du catalogue complet d’activités + recherche */
+.activity-search{display:flex!important;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:0 11px}
+.activity-search>span{font-size:1rem;flex:0 0 auto}
+.activity-search input{border:0!important;background:transparent!important;box-shadow:none!important;padding:10px 0!important;min-width:0;width:100%;color:var(--text)}
+.activity-search input:focus{outline:0}
+.activity-search-empty{margin:0;padding:8px 2px;text-align:center}
+.activity-choices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.activity-choices button[hidden]{display:none!important}
+@media(max-width:520px){.activity-choices{grid-template-columns:repeat(3,minmax(0,1fr))}}
