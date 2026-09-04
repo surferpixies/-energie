@@ -74,7 +74,7 @@ dialog{border:0;border-radius:28px;background:transparent;padding:0;width:min(94
 
 
 /* V2.0.4 — cartes distinctes Sommeil et Activité */
-.wellbeing-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}.sleep-card,.activity-card{width:100%;color:var(--text);text-align:left;display:grid;gap:10px;cursor:pointer}.wellness-head{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:8px}.wellness-head .wellness-icon{font-size:1.45rem}.wellness-head small,.wellness-head strong{display:block}.wellness-head small{color:var(--muted);font-size:.68rem}.wellness-head b{color:var(--muted);font-size:1.35rem}.sleep-bar{height:8px;background:var(--surface2);border-radius:999px;overflow:hidden}.sleep-bar i{display:block;height:100%;background:var(--accent);border-radius:inherit}.activity-chip-row{display:flex;gap:6px;flex-wrap:wrap}.activity-chip{font-size:.68rem;background:var(--surface2);padding:5px 8px;border-radius:999px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.activity-fieldset{border:0;padding:0;margin:0;display:grid;gap:10px}.activity-fieldset legend{font-weight:850;margin-bottom:7px}.activity-search{display:flex!important;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:0 11px}.activity-search>span{font-size:1rem;flex:0 0 auto}.activity-search input{border:0!important;background:transparent!important;box-shadow:none!important;padding:10px 0!important;min-width:0;width:100%;color:var(--text)}.activity-search input:focus{outline:0}.activity-search-empty{margin:0;padding:8px 2px;text-align:center}.activity-choices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.activity-choices button{border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:14px;padding:9px 4px;display:grid;gap:3px;place-items:center;min-width:0}.activity-choices button span{font-size:1.45rem}.activity-choices button small{font-size:.62rem;max-width:100%;overflow:hidden;text-overflow:ellipsis}.activity-choices button.active{background:var(--accent);color:#fff;border-color:var(--accent)}.day-activities-list{display:grid;gap:8px;margin-top:8px}.saved-activity{display:grid;grid-template-columns:34px minmax(0,1fr) 32px;align-items:center;gap:8px;background:var(--surface2);border-radius:14px;padding:9px}.saved-activity>span{font-size:1.25rem}.saved-activity div{min-width:0;display:grid}.saved-activity strong,.saved-activity small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.saved-activity small{color:var(--muted)}.saved-activity button{border:0;background:transparent;color:var(--danger);font-size:1.35rem;min-width:32px;min-height:32px;border-radius:10px}@media(max-width:520px){.activity-choices{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:380px){.wellbeing-detail-grid{grid-template-columns:1fr}}
+.wellbeing-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}.sleep-card,.activity-card{width:100%;color:var(--text);text-align:left;display:grid;gap:10px;cursor:pointer}.wellness-head{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:8px}.wellness-head .wellness-icon{font-size:1.45rem}.wellness-head small,.wellness-head strong{display:block}.wellness-head small{color:var(--muted);font-size:.68rem}.wellness-head b{color:var(--muted);font-size:1.35rem}.sleep-bar{height:8px;background:var(--surface2);border-radius:999px;overflow:hidden}.sleep-bar i{display:block;height:100%;background:var(--accent);border-radius:inherit}.activity-chip-row{display:flex;gap:6px;flex-wrap:wrap}.activity-chip{font-size:.68rem;background:var(--surface2);padding:5px 8px;border-radius:999px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.activity-fieldset{border:0;padding:0;margin:0;display:grid;gap:10px}.activity-fieldset legend{font-weight:850;margin-bottom:7px}.activity-choices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.activity-choices button{border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:14px;padding:9px 4px;display:grid;gap:3px;place-items:center;min-width:0}.activity-choices button span{font-size:1.45rem}.activity-choices button small{font-size:.62rem;max-width:100%;overflow:hidden;text-overflow:ellipsis}.activity-choices button.active{background:var(--accent);color:#fff;border-color:var(--accent)}.day-activities-list{display:grid;gap:8px;margin-top:8px}.saved-activity{display:grid;grid-template-columns:34px minmax(0,1fr) 32px;align-items:center;gap:8px;background:var(--surface2);border-radius:14px;padding:9px}.saved-activity>span{font-size:1.25rem}.saved-activity div{min-width:0;display:grid}.saved-activity strong,.saved-activity small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.saved-activity small{color:var(--muted)}.saved-activity button{border:0;background:transparent;color:var(--danger);font-size:1.35rem;min-width:32px;min-height:32px;border-radius:10px}@media(max-width:520px){.activity-choices{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:380px){.wellbeing-detail-grid{grid-template-columns:1fr}}
 
 
 /* V2.0.5 — saisies Sommeil et Activité complètement séparées */
@@ -1074,41 +1074,3 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .journal-summary-action--activity.has-entry>span:first-child{font-weight:750;color:var(--accent)}
 .journal-summary-action--activity.has-entry>strong{max-width:85%;font-size:1rem}
 .journal-summary-action--activity.has-entry .summary-action-watermark{opacity:.13}
-
-/* V3.56.48 — cerveau d’apprentissage : prochaine action suggérée */
-#mealFeelingsDetails,#mealDescriptionCard,#mealAfterFeelingCard,#feelingForm{position:relative}
-.guided-next-step,.guided-after-step{isolation:isolate}
-.guided-learning-brain{
-  position:absolute;
-  z-index:8;
-  left:6px;
-  top:10px;
-  width:34px;
-  height:34px;
-  display:grid;
-  place-items:center;
-  border-radius:50%;
-  font-size:1.35rem;
-  line-height:1;
-  background:color-mix(in srgb,var(--surface) 86%,var(--accent));
-  border:1px solid color-mix(in srgb,var(--accent) 52%,var(--border));
-  box-shadow:0 3px 12px color-mix(in srgb,var(--accent) 24%,transparent);
-  pointer-events:none;
-  transform-origin:center;
-  animation:learningBrainPulse 1.45s ease-in-out infinite;
-}
-@keyframes learningBrainPulse{
-  0%,100%{transform:scale(1);box-shadow:0 3px 12px color-mix(in srgb,var(--accent) 20%,transparent)}
-  50%{transform:scale(1.16);box-shadow:0 4px 17px color-mix(in srgb,var(--accent) 38%,transparent)}
-}
-@media(prefers-reduced-motion:reduce){
-  .guided-learning-brain{animation:none}
-}
-
-
-/* V3.56.50 — cerveau d’apprentissage sur Sommeil dans le Sommaire */
-.journal-summary-sleep{position:relative}
-.guided-learning-brain--summary{
-  left:6px;
-  top:8px;
-}

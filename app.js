@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.51";
+  const CURRENT_VERSION = 92;
+  const APP_RELEASE = "3.56.40";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -96,24 +96,6 @@
         Musculation: "🏋️",
         Yoga: "🧘",
         Natation: "🏊",
-        Aquabike: "🚴‍♀️",
-        Aquagym: "🤽",
-        Randonnée: "🥾",
-        Pilates: "🧘‍♀️",
-        Danse: "💃",
-        Elliptique: "🏃‍♀️",
-        Rameur: "🚣",
-        Tennis: "🎾",
-        Badminton: "🏸",
-        Soccer: "⚽",
-        Hockey: "🏒",
-        Pickleball: "🏓",
-        Volleyball: "🏐",
-        "Ski de fond": "⛷️",
-        Patinage: "⛸️",
-        Escaliers: "🪜",
-        HIIT: "⚡",
-        Étirements: "🤸",
         Autre: "✨",
       }[t] || "✨"
     );
@@ -191,24 +173,6 @@
     Musculation: { low: 3.5, moderate: 5.5, high: 8.0 },
     Yoga: { low: 2.2, moderate: 3.2, high: 4.5 },
     Natation: { low: 5.0, moderate: 8.0, high: 11.0 },
-    Aquabike: { low: 4.5, moderate: 7.0, high: 9.5 },
-    Aquagym: { low: 3.5, moderate: 5.5, high: 7.5 },
-    Randonnée: { low: 4.0, moderate: 6.0, high: 8.5 },
-    Pilates: { low: 2.5, moderate: 3.5, high: 5.0 },
-    Danse: { low: 3.5, moderate: 5.5, high: 8.0 },
-    Elliptique: { low: 4.5, moderate: 7.0, high: 10.0 },
-    Rameur: { low: 5.0, moderate: 8.0, high: 11.0 },
-    Tennis: { low: 4.5, moderate: 7.0, high: 9.5 },
-    Badminton: { low: 4.0, moderate: 6.0, high: 8.0 },
-    Soccer: { low: 5.0, moderate: 8.0, high: 11.0 },
-    Hockey: { low: 5.0, moderate: 8.5, high: 12.0 },
-    Pickleball: { low: 3.5, moderate: 5.5, high: 7.5 },
-    Volleyball: { low: 3.0, moderate: 5.0, high: 7.5 },
-    "Ski de fond": { low: 5.5, moderate: 8.5, high: 12.0 },
-    Patinage: { low: 4.5, moderate: 7.0, high: 10.0 },
-    Escaliers: { low: 5.0, moderate: 8.0, high: 11.0 },
-    HIIT: { low: 7.0, moderate: 10.0, high: 13.0 },
-    Étirements: { low: 1.8, moderate: 2.5, high: 3.5 },
     Autre: { low: 3.0, moderate: 5.0, high: 7.0 },
   };
   const ACTIVITY_INTENSITY_LABELS = {
@@ -500,7 +464,6 @@
         waterGoal: 8,
         stepsTracking: false,
         stepsGoal: 8000,
-        calorieBalanceTracking: false,
         journalViewMode: "detailed",
         theme: "system",
         showWelcome: true,
@@ -932,7 +895,7 @@
   }
   function formDraftContext(form) {
     if (form.dataset.autosaveContext) return form.dataset.autosaveContext;
-    if (form.id === "mealForm") return $("#mealId")?.value || `nouveau:${$("#mealType")?.value || "Déjeuner"}`;
+    if (form.id === "mealForm") return $("#mealId")?.value || "nouveau";
     if (form.id === "feelingForm") return feelingMealId || "nouveau";
     if (form.id === "missingBeforeForm")
       return missingBeforeMealId || "nouveau";
@@ -1590,7 +1553,6 @@
               steps: d.steps,
               stepsGoal: d.stepsGoal,
               stepsTracking: db.settings.stepsTracking === true,
-              calorieBalanceTracking: db.settings.calorieBalanceTracking === true,
               currentStepsGoal: Number(db.settings.stepsGoal) || 8000,
               defaults: db.settings.supplements || [],
               defaultsUpdatedAt: db.settings.supplementsUpdatedAt || db.updatedAt,
@@ -1848,7 +1810,6 @@
         d.steps = Number.isFinite(Number(r.supplements?.steps)) ? Math.round(Number(r.supplements.steps)) : null;
         d.stepsGoal = Number.isFinite(Number(r.supplements?.stepsGoal)) ? Math.round(Number(r.supplements.stepsGoal)) : null;
         if (typeof r.supplements?.stepsTracking === "boolean") db.settings.stepsTracking = r.supplements.stepsTracking;
-        if (typeof r.supplements?.calorieBalanceTracking === "boolean") db.settings.calorieBalanceTracking = r.supplements.calorieBalanceTracking;
         if (Number(r.supplements?.currentStepsGoal) > 0) db.settings.stepsGoal = Math.round(Number(r.supplements.currentStepsGoal));
         d.activities = (r.activities || []).map(normalizeActivity);
         if (Array.isArray(r.supplements?.taken))
@@ -5875,7 +5836,6 @@
       hasAfter || !Object.keys(afterScores).length;
     $("#feelingNotes").value = m.feeling?.notes || "";
     $("#feelingDialog").showModal();
-    setAfterFeelingGuidance(m);
   }
   function comparableFeelingDeltas(meal) {
     const before = feelingScoresFor(meal, "before"),
@@ -6058,18 +6018,11 @@
     for (const m of pendingFeelings()) {
       if (m.feelingNotifiedAt) continue;
       try {
-        const notification = new Notification(`🍏⚡ ${t("Ressenti")}`, {
+        new Notification(`🍏⚡ ${t("Ressenti")}`, {
           body: t(`Comment te sens-tu après ton ${m.type.toLowerCase()} ?`),
           icon: "assets/icon-192.png",
           tag: `feeling-${m.id}`,
         });
-        notification.onclick = () => {
-          try { window.focus(); } catch (_) {}
-          selectedDate = m.date;
-          render();
-          setTimeout(() => openFeeling(m.id), 120);
-          try { notification.close(); } catch (_) {}
-        };
         m.feelingNotifiedAt = new Date().toISOString();
         setMealChanged(m);
       } catch (_) {}
@@ -6092,9 +6045,6 @@
         () => {
           notifyDueFeelings();
           render();
-          // If the meal editor is still open, the after-meal card becomes the
-          // suggested next step as soon as its reminder delay is reached.
-          requestAnimationFrame(updateGuidedMealFlow);
         },
         Math.min(
           2147483647,
@@ -6494,7 +6444,7 @@
         Object.keys(feelingScoresFor(meal, "before")).length || meal.feeling,
       ).length,
       sleepRecorded = day.sleepHours != null || (day.sleepTags || []).length > 0 || String(day.sleepComment || "").trim(),
-      sleepPrompt = sleepRecorded ? "" : `<button type="button" class="journal-summary-action journal-summary-sleep guided-summary-learning" id="journalSummarySleep"><span class="guided-learning-brain guided-learning-brain--summary" aria-hidden="true">🧠</span><span>À noter une fois aujourd’hui</span><strong>Sommeil</strong><span class="summary-action-watermark" aria-hidden="true">🛌</span><span class="summary-action-plus" aria-hidden="true">+</span><small>Durée, qualité ou commentaire</small></button>`;
+      sleepPrompt = sleepRecorded ? "" : `<button type="button" class="journal-summary-action journal-summary-sleep" id="journalSummarySleep"><span>À noter une fois aujourd’hui</span><strong>Sommeil</strong><span class="summary-action-watermark" aria-hidden="true">🛌</span><span class="summary-action-plus" aria-hidden="true">+</span><small>Durée, qualité ou commentaire</small></button>`;
     return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}<button type="button" class="journal-summary-action journal-summary-action--meal" id="journalSummaryMeal"><span>Ajouter un</span><strong>Repas</strong><span class="summary-action-watermark" aria-hidden="true">🍲</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${meals.length} repas ou collation${meals.length !== 1 ? "s" : ""} cette journée</small></button><button type="button" class="journal-summary-action journal-summary-action--feeling" id="journalSummaryFeeling"><span>Ajouter un</span><strong>Ressenti</strong><span class="summary-action-watermark" aria-hidden="true">😬</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${feelingCount ? `${feelingCount} repas documenté${feelingCount > 1 ? "s" : ""}` : "Avant, après ou hors repas"}</small></button>${summaryActivityHtml(day)}${summaryHydrationHtml(day)}${stepsProgressHtml(day, true)}</div></section>`;
   }
 
@@ -9302,14 +9252,13 @@
     return entries.length ? {date: entries[0][0], kg: entries[0][1].weightMeasurement.kg} : null;
   }
   function personalProfileHtml() {
-    const profile = personalProfile(), age = profile.age || {}, weight = profile.weight || {}, sex = profile.sex || {}, height = profile.height || {}, unit = weight.unit || "kg";
+    const profile = personalProfile(), age = profile.age || {}, weight = profile.weight || {}, sex = profile.sex || {}, unit = weight.unit || "kg";
     const latest = latestPersonalWeight(), todayWeight = Metrics.weightRecord(db.days[todayKey()]?.weightMeasurement);
     const modes = (mode) => [["unspecified", "Non renseigné"], ["provided", "Je souhaite le renseigner"], ["declined", "Je préfère ne pas répondre"]].map(([value, label]) => `<option value="${value}" ${(mode || "unspecified") === value ? "selected" : ""}>${label}</option>`).join("");
     const selectedSex = sex.mode === "declined" ? "declined" : sex.value || "unspecified";
-    return `<section class="card personal-profile-card" aria-labelledby="personalProfileTitle"><h3 id="personalProfileTitle">À propos de moi</h3><p class="muted small">Tout est facultatif. Ces données servent notamment à estimer ta dépense énergétique lorsque le suivi du déficit / surplus calorique est activé. Aucun champ n’est obligatoire.</p><fieldset ${db.settings.demoMode ? "disabled" : ""}>
+    return `<section class="card personal-profile-card" aria-labelledby="personalProfileTitle"><h3 id="personalProfileTitle">À propos de moi</h3><p class="muted small">Tout est facultatif. Ces renseignements ne servent pas à calculer un objectif calorique ni à poser un diagnostic.</p><fieldset ${db.settings.demoMode ? "disabled" : ""}>
       <div class="personal-profile-field"><label for="profileAgeMode">Âge</label><select id="profileAgeMode">${modes(age.mode)}</select><label id="profileAgeFields" class="personal-profile-value" ${age.mode === "provided" ? "" : "hidden"}><span>Âge en années</span><input type="text" inputmode="numeric" autocomplete="off" id="profileAge" value="${age.value ?? ""}" placeholder="Ex. 42" aria-describedby="profileAgeError"><small id="profileAgeError" class="personal-field-error" aria-live="polite"></small></label></div>
       <div class="personal-profile-field"><label for="profileSex">Sexe</label><select id="profileSex">${[["unspecified", "Non renseigné"], ["female", "Féminin"], ["male", "Masculin"], ["intersex", "Intersexe"], ["other", "Autre"], ["declined", "Je préfère ne pas répondre"]].map(([value, label]) => `<option value="${value}" ${selectedSex === value ? "selected" : ""}>${label}</option>`).join("")}</select></div>
-      <div class="personal-profile-field"><label for="profileHeightMode">Taille</label><select id="profileHeightMode">${modes(height.mode)}</select><label id="profileHeightFields" class="personal-profile-value" ${height.mode === "provided" ? "" : "hidden"}><span>Taille en cm</span><input type="text" inputmode="decimal" autocomplete="off" id="profileHeight" value="${height.value ?? ""}" placeholder="Ex. 175" aria-describedby="profileHeightError"><small id="profileHeightError" class="personal-field-error" aria-live="polite"></small></label></div>
       <div class="personal-profile-field"><label for="profileWeightMode">Poids</label><select id="profileWeightMode">${modes(weight.mode)}</select><div id="profileWeightFields" ${weight.mode === "provided" ? "" : "hidden"}><p id="profileLastWeight" class="muted small">${latest ? `Dernière mesure : ${Metrics.displayWeight(latest.kg, unit).toLocaleString("fr-CA")} ${unit} · ${esc(formatCalendarDate(latest.date))}` : "Aucune mesure enregistrée."}</p><div class="personal-weight-grid"><label>Date de la mesure<input id="profileWeightDate" type="date" max="${todayKey()}" value="${todayKey()}"></label><label>Unité<select id="profileWeightUnit"><option value="kg" ${unit === "kg" ? "selected" : ""}>kg</option><option value="lb" ${unit === "lb" ? "selected" : ""}>lb</option></select></label><label class="personal-weight-input">Poids mesuré<input id="profileWeight" type="text" inputmode="decimal" autocomplete="off" value="${todayWeight?.kg != null ? Metrics.displayWeight(todayWeight.kg, unit) : ""}" placeholder="Ex. ${unit === "lb" ? "165,5" : "75,2"}" aria-describedby="profileWeightError"></label></div><small id="profileWeightError" class="personal-field-error" aria-live="polite"></small><p class="muted tiny">Une mesure par date, sauvegardée automatiquement. Choisis une autre date pour ajouter ou corriger une mesure; vider le poids retire uniquement la mesure de cette date.</p></div><p id="profileWeightDeclinedNote" class="muted tiny" ${weight.mode === "declined" ? "" : "hidden"}>Le graphique du poids est masqué et aucune nouvelle mesure n’est demandée. Les mesures déjà enregistrées sont conservées.</p></div>
       </fieldset><p id="personalProfileStatus" class="personal-save-status" role="status">Sauvegarde automatique · connexion requise pour la synchronisation</p></section>`;
   }
@@ -9328,7 +9277,7 @@
       pending.set(key, {run, timer: setTimeout(() => flush(key), 900)});
       personalSaveStatus("Modification en cours…");
     }
-    const ageInput = $("#profileAge"), heightInput = $("#profileHeight"), weightInput = $("#profileWeight"), dateInput = $("#profileWeightDate"), unitInput = $("#profileWeightUnit");
+    const ageInput = $("#profileAge"), weightInput = $("#profileWeight"), dateInput = $("#profileWeightDate"), unitInput = $("#profileWeightUnit");
     let editingDate = dateInput.value, editingUnit = unitInput.value;
     const updateLastWeight = () => {
       const latest = latestPersonalWeight();
@@ -9341,14 +9290,6 @@
       ageInput.setAttribute("aria-invalid", String(!valid));
       if (!valid) { personalSaveStatus("L’âge n’a pas été enregistré : vérifie la valeur.", true); return; }
       setPersonalRecord("age", {mode: "provided", value: raw ? age : null});
-    }
-    function saveHeight() {
-      if ($("#profileHeightMode").value !== "provided") return;
-      const raw = heightInput.value.trim(), height = Metrics.number(raw), valid = !raw || (height != null && height >= 50 && height <= 300);
-      $("#profileHeightError").textContent = valid ? "" : "Entre une taille entre 50 et 300 cm.";
-      heightInput.setAttribute("aria-invalid", String(!valid));
-      if (!valid) { personalSaveStatus("La taille n’a pas été enregistrée : vérifie la valeur.", true); return; }
-      setPersonalRecord("height", {mode: "provided", value: raw ? Math.round(height * 10) / 10 : null});
     }
     function saveWeight() {
       if ($("#profileWeightMode").value !== "provided") return;
@@ -9364,8 +9305,6 @@
     }
     ageInput.addEventListener("input", () => schedule("age", saveAge));
     ageInput.addEventListener("blur", () => flush("age"));
-    heightInput.addEventListener("input", () => schedule("height", saveHeight));
-    heightInput.addEventListener("blur", () => flush("height"));
     weightInput.addEventListener("input", () => schedule("weight", saveWeight));
     weightInput.addEventListener("blur", () => flush("weight"));
     $("#profileAgeMode").addEventListener("change", (e) => {
@@ -9380,15 +9319,6 @@
     $("#profileSex").addEventListener("change", (e) => {
       const choice = e.target.value, mode = ["unspecified", "declined"].includes(choice) ? choice : "provided";
       setPersonalRecord("sex", {mode, value: mode === "provided" ? choice : null});
-    });
-    $("#profileHeightMode").addEventListener("change", (e) => {
-      clearTimeout(pending.get("height")?.timer); pending.delete("height");
-      const mode = e.target.value;
-      if (mode !== "provided") heightInput.value = "";
-      $("#profileHeightFields").hidden = mode !== "provided";
-      $("#profileHeightError").textContent = "";
-      heightInput.setAttribute("aria-invalid", "false");
-      setPersonalRecord("height", {mode, value: mode === "provided" ? Metrics.number(heightInput.value) : null});
     });
     $("#profileWeightMode").addEventListener("change", (e) => {
       clearTimeout(pending.get("weight")?.timer); pending.delete("weight");
@@ -9423,30 +9353,12 @@
   function calorieEstimator(description) {
     return db.settings.autoNutritionEstimates !== false ? estimateNutritionFromText(description) : null;
   }
-  function energyBalancePrerequisites(profile = personalProfile()) {
-    const missing = [];
-    if (profile.age?.mode !== "provided" || Metrics.number(profile.age?.value) == null) missing.push("âge");
-    if (profile.sex?.mode !== "provided" || !["female", "male"].includes(profile.sex?.value)) missing.push("sexe");
-    if (profile.height?.mode !== "provided" || Metrics.number(profile.height?.value) == null) missing.push("taille");
-    if (!latestPersonalWeight()) missing.push("poids");
-    return missing;
-  }
-  function energyBalanceObservationHtml(end, profile) {
-    if (db.settings?.calorieBalanceTracking !== true) return "";
-    const missing = energyBalancePrerequisites(profile);
-    if (missing.length) return `<article class="card personal-trend-card energy-balance-trend-card"><div class="metrics-heading"><h3>⚖️ Déficit / surplus calorique</h3><strong>—</strong></div><p class="muted tiny">Estimation de la balance énergétique quotidienne</p><p class="metrics-empty">Il manque : ${esc(missing.join(", "))}. Complète ces données dans le Profil pour démarrer le calcul.</p><p class="metrics-note">Aucune valeur n’est inventée lorsque les données nécessaires ne sont pas disponibles.</p></article>`;
-    const balance = Metrics.energyBalanceSeries(db.days, end, profile, calorieEstimator), known = balance.points.filter((p) => p.value != null);
-    const average = known.length ? Math.round(known.reduce((sum, p) => sum + p.value, 0) / known.length) : null;
-    const averageLabel = average == null ? "—" : average < 0 ? `−${Math.abs(average).toLocaleString("fr-CA")} kcal` : average > 0 ? `+${average.toLocaleString("fr-CA")} kcal` : "0 kcal";
-    const state = average == null ? "Aucune journée calculable" : average < 0 ? "déficit moyen" : average > 0 ? "surplus moyen" : "équilibre moyen";
-    return `<article class="card personal-trend-card energy-balance-trend-card"><div class="metrics-heading"><h3>⚖️ Déficit / surplus calorique</h3><strong>${averageLabel}</strong></div><p class="muted tiny">${average == null ? "Calories consommées comparées à la dépense estimée" : `${state} · ${known.length} jour${known.length > 1 ? "s" : ""} calculable${known.length > 1 ? "s" : ""}`}</p>${Metrics.balanceChart(balance.points, {...balance, id: "energyBalanceTrend"})}<div class="energy-balance-legend"><span><i class="is-deficit"></i> Déficit</span><span><i class="is-surplus"></i> Surplus</span><span><i class="is-zero"></i> Équilibre</span></div><p class="metrics-note">Le calcul estime d’abord le métabolisme de base avec la formule de Mifflin–St Jeor (âge, sexe, taille et dernier poids disponible à cette date). Il applique ensuite un facteur fixe de 1,2 pour représenter les activités normales de la vie quotidienne, puis ajoute les calories des activités réellement enregistrées dans le Journal. La différence entre les calories consommées et cette dépense estimée donne le déficit ou le surplus. Un journal alimentaire ou d’activité incomplet peut modifier l’estimation.</p></article>`;
-  }
   function personalTrendsHtml() {
     const end = demoAnalysisContext()?.cutoff || todayKey(), profile = personalProfile(), unit = profile.weight?.unit || "kg";
     const data = Metrics.series(db.days, end, unit, calorieEstimator), lastWeight = data.weights.at(-1);
     const declined = profile.weight?.mode === "declined", known = data.calories.filter((p) => p.value != null);
     const average = known.length ? Math.round(known.reduce((n, p) => n + p.value, 0) / known.length) : null;
-    return `<section class="personal-trends" aria-labelledby="personalTrendsTitle"><div class="section-title"><h2 id="personalTrendsTitle">Mes tendances chiffrées</h2><span class="muted small">30 jours · ${db.settings.demoMode ? "données du profil fictif" : "mes données uniquement"}</span></div><div class="personal-trends-grid"><article class="card personal-trend-card"><div class="metrics-heading"><h3>Poids</h3><strong>${declined ? "Non renseigné" : lastWeight ? `${lastWeight.value.toLocaleString("fr-CA")} ${unit}` : "—"}</strong></div><p class="muted tiny">${!declined && lastWeight ? `Dernière mesure de la période · ${esc(formatCalendarDate(lastWeight.date))}` : "Mesures enregistrées dans le Profil"}</p>${declined ? '<p class="metrics-empty">Tu as choisi de ne pas renseigner ton poids. Tu peux modifier ce choix dans le Profil.</p>' : Metrics.chart(data.weights, {...data, kind: "weight", unit, id: "weightTrend"})}<p class="metrics-note">${declined ? "Ton choix est respecté." : data.weights.length === 1 ? "Une première mesure : il en faut au moins deux pour voir une évolution." : "Chaque point est une mesure réelle. Aucun poids n’est inventé pour les jours sans saisie."}</p></article><article class="card personal-trend-card"><div class="metrics-heading"><h3>Calories par jour</h3><strong>${average == null ? "—" : `≈ ${average.toLocaleString("fr-CA")} kcal`}</strong></div><p class="muted tiny">${average == null ? "Repas et collations enregistrés" : `Moyenne sur ${known.length} jour${known.length > 1 ? "s" : ""} avec estimation`}</p>${Metrics.chart(data.calories, {...data, kind: "calories", unit: "kcal", id: "calorieTrend"})}<p class="metrics-note">Estimations des repas saisis, pas un objectif. Les jours sans estimation restent vides; les barres en pointillé indiquent une estimation partielle. Un journal incomplet peut sous-estimer le total.</p></article></div>${energyBalanceObservationHtml(end, profile)}</section>`;
+    return `<section class="personal-trends" aria-labelledby="personalTrendsTitle"><div class="section-title"><h2 id="personalTrendsTitle">Mes tendances chiffrées</h2><span class="muted small">30 jours · ${db.settings.demoMode ? "données du profil fictif" : "mes données uniquement"}</span></div><div class="personal-trends-grid"><article class="card personal-trend-card"><div class="metrics-heading"><h3>Poids</h3><strong>${declined ? "Non renseigné" : lastWeight ? `${lastWeight.value.toLocaleString("fr-CA")} ${unit}` : "—"}</strong></div><p class="muted tiny">${!declined && lastWeight ? `Dernière mesure de la période · ${esc(formatCalendarDate(lastWeight.date))}` : "Mesures enregistrées dans le Profil"}</p>${declined ? '<p class="metrics-empty">Tu as choisi de ne pas renseigner ton poids. Tu peux modifier ce choix dans le Profil.</p>' : Metrics.chart(data.weights, {...data, kind: "weight", unit, id: "weightTrend"})}<p class="metrics-note">${declined ? "Ton choix est respecté." : data.weights.length === 1 ? "Une première mesure : il en faut au moins deux pour voir une évolution." : "Chaque point est une mesure réelle. Aucun poids n’est inventé pour les jours sans saisie."}</p></article><article class="card personal-trend-card"><div class="metrics-heading"><h3>Calories par jour</h3><strong>${average == null ? "—" : `≈ ${average.toLocaleString("fr-CA")} kcal`}</strong></div><p class="muted tiny">${average == null ? "Repas et collations enregistrés" : `Moyenne sur ${known.length} jour${known.length > 1 ? "s" : ""} avec estimation`}</p>${Metrics.chart(data.calories, {...data, kind: "calories", unit: "kcal", id: "calorieTrend"})}<p class="metrics-note">Estimations des repas saisis, pas un objectif. Les jours sans estimation restent vides; les barres en pointillé indiquent une estimation partielle. Un journal incomplet peut sous-estimer le total.</p></article></div></section>`;
   }
 
   let keepPhysiologicalPanelOpen = false;
@@ -9464,6 +9376,48 @@
           ? `<p class="muted small">La ménopause est notée comme contexte personnel. Ce choix ne déclenche aucun diagnostic ni aucune modification automatique des observations.</p>`
           : `<div class="physiological-empty"><span aria-hidden="true">○</span><p>Aucun contexte physiologique n’est utilisé.</p></div>`;
     return `<details class="card physiological-context-card" ${keepPhysiologicalPanelOpen ? "open" : ""}><summary><span class="physiological-context-title"><b aria-hidden="true">${icon}</b><span><strong>Contexte physiologique</strong><small>Cycle, grossesse ou ménopause · facultatif</small></span></span><span class="physiological-context-meta"><b>${esc(label)}</b><i aria-hidden="true">›</i></span></summary><div class="physiological-context-content"><p class="muted small">Ces renseignements sensibles restent facultatifs. Ils sont enregistrés avec ton profil, mais ne modifient pas encore les analyses.</p><label class="physiological-context-select"><span>Contexte à prendre en compte</span><select id="physiologicalContext"><option value="none" ${context === "none" ? "selected" : ""}>Aucun</option><option value="menstrual" ${context === "menstrual" ? "selected" : ""}>Cycle menstruel</option><option value="pregnancy" ${context === "pregnancy" ? "selected" : ""}>Grossesse</option><option value="menopause" ${context === "menopause" ? "selected" : ""}>Ménopause</option></select></label><div class="physiological-context-fields">${fields}</div><p class="physiological-context-privacy">🔒 Énergie ne tente jamais de déduire une grossesse, un cycle ou une ménopause à partir des repas et ressentis.</p></div></details>`;
+  }
+
+
+  const ENERGY_GUIDE_SLIDES = [
+    { kicker: "Bienvenue", title: "Découvre Énergie 🌱", copy: "Ton Journal rassemble repas, ressentis, activité, hydratation et pas au même endroit. Passe du Sommaire à la vue détaillée selon ce dont tu as besoin.", media: `<div class="energy-guide-media journal-pair"><img src="assets/onboarding/journal-summary.jpeg" alt="Journal Énergie en vue sommaire"><img src="assets/onboarding/journal-detailed.jpeg" alt="Journal Énergie en vue détaillée"></div>` },
+    { kicker: "Repas", title: "Note tes repas facilement 🍽️", copy: "Écris simplement ce que tu as mangé, ou gagne du temps avec Souper d’hier, Favoris et Récents. Photo IA et Scanner peuvent aussi aider à remplir la description. Les estimations et éléments reconnus restent toujours à vérifier.", media: `<div class="energy-guide-media"><img src="assets/onboarding/meal.jpeg" alt="Formulaire de saisie d’un repas dans Énergie"></div>` },
+    { kicker: "Ressentis", title: "Dis comment tu te sens 🧠", copy: "Avant et après un repas, choisis ce que tu ressens et son intensité. Ces repères donnent à Énergie de meilleurs points de comparaison au fil du temps.", media: `<div class="energy-guide-media duo"><img src="assets/onboarding/feeling-before.jpeg" alt="Saisie des ressentis avant un repas"><img src="assets/onboarding/feeling-after.jpeg" alt="Saisie des ressentis après un repas"></div>` },
+    { kicker: "Ton quotidien", title: "Bouge et hydrate-toi 💧🚶", copy: "Ajoute une activité, utilise tes activités favorites, note tes boissons et suis ton objectif de pas. Ces informations complètent le contexte de ta journée.", media: `<div class="energy-guide-media trio"><img src="assets/onboarding/activity.jpeg" alt="Ajout d’une activité"><img src="assets/onboarding/hydration.jpeg" alt="Ajout d’une boisson"><img src="assets/onboarding/steps.jpeg" alt="Saisie du nombre de pas"></div>` },
+    { kicker: "Cerveau", title: "Ton journal devient plus utile 🧠", copy: "Le Cerveau montre la couverture de tes données : il indique ce qui est suffisamment documenté pour être analysé. Le pourcentage mesure la présence des informations, pas la qualité de tes habitudes.", media: `<div class="energy-guide-media"><img src="assets/onboarding/brain.jpeg" alt="Écran Cerveau et qualité du journal"></div>` },
+    { kicker: "Observations", title: "Découvre tes tendances 👁️", copy: "Observe l’évolution de tes habitudes, de tes pas et des autres indicateurs disponibles. Énergie cherche des tendances dans ton historique : une association observée ne prouve pas une cause.", media: `<div class="energy-guide-media"><img src="assets/onboarding/observations.jpeg" alt="Écran Observations avec graphiques de tendances"></div>` },
+    { kicker: "Profil", title: "Une app qui s’adapte à toi ⚙️", copy: "Dans Profil, choisis ce que tu veux suivre, règle tes objectifs et tes préférences, puis reviens à ce guide quand tu le souhaites.", media: `<div class="energy-guide-media"><img src="assets/onboarding/profile.jpeg" alt="Réglages du Profil dans Énergie"></div>` },
+  ];
+  let energyGuideIndex = 0;
+  function ensureEnergyGuideDialog() {
+    let dialog = $("#energyGuideDialog");
+    if (dialog) return dialog;
+    document.body.insertAdjacentHTML("beforeend", `<dialog id="energyGuideDialog" class="energy-guide-dialog"><section class="energy-guide-shell"><div class="energy-guide-top"><button type="button" class="energy-guide-skip" id="energyGuideSkip">Fermer</button><button type="button" class="energy-guide-close" id="energyGuideClose" aria-label="Fermer le guide">✕</button></div><div class="energy-guide-body" id="energyGuideBody"></div><div class="energy-guide-footer"><div class="energy-guide-dots" id="energyGuideDots" aria-label="Progression du guide"></div><div class="energy-guide-actions"><button type="button" class="energy-guide-prev" id="energyGuidePrev">Précédent</button><button type="button" class="energy-guide-next" id="energyGuideNext">Suivant</button></div></div></section></dialog>`);
+    dialog = $("#energyGuideDialog");
+    $("#energyGuideClose").onclick = () => dialog.close();
+    $("#energyGuideSkip").onclick = () => dialog.close();
+    $("#energyGuidePrev").onclick = () => { if (energyGuideIndex > 0) { energyGuideIndex--; renderEnergyGuideSlide(); } };
+    $("#energyGuideNext").onclick = () => { if (energyGuideIndex >= ENERGY_GUIDE_SLIDES.length - 1) dialog.close(); else { energyGuideIndex++; renderEnergyGuideSlide(); } };
+    let touchX = null;
+    dialog.addEventListener("touchstart", e => { touchX = e.changedTouches?.[0]?.clientX ?? null; }, {passive:true});
+    dialog.addEventListener("touchend", e => { if (touchX == null) return; const dx=(e.changedTouches?.[0]?.clientX ?? touchX)-touchX; touchX=null; if(Math.abs(dx)<55) return; if(dx<0 && energyGuideIndex<ENERGY_GUIDE_SLIDES.length-1) energyGuideIndex++; else if(dx>0 && energyGuideIndex>0) energyGuideIndex--; else return; renderEnergyGuideSlide(); }, {passive:true});
+    return dialog;
+  }
+  function renderEnergyGuideSlide() {
+    const slide = ENERGY_GUIDE_SLIDES[energyGuideIndex];
+    $("#energyGuideBody").innerHTML = `<p class="energy-guide-kicker">${slide.kicker}</p><h2 class="energy-guide-title">${slide.title}</h2><p class="energy-guide-copy">${slide.copy}</p>${slide.media}`;
+    $("#energyGuideDots").innerHTML = ENERGY_GUIDE_SLIDES.map((_, i) => `<button type="button" class="energy-guide-dot ${i === energyGuideIndex ? "active" : ""}" data-energy-guide-dot="${i}" aria-label="Étape ${i+1} sur ${ENERGY_GUIDE_SLIDES.length}"></button>`).join("");
+    $$('[data-energy-guide-dot]').forEach(b => b.onclick = () => { energyGuideIndex = Number(b.dataset.energyGuideDot); renderEnergyGuideSlide(); });
+    $("#energyGuidePrev").disabled = energyGuideIndex === 0;
+    $("#energyGuidePrev").style.visibility = energyGuideIndex === 0 ? "hidden" : "visible";
+    $("#energyGuideNext").textContent = energyGuideIndex === ENERGY_GUIDE_SLIDES.length - 1 ? "Terminer" : "Suivant";
+    $("#energyGuideBody").scrollTop = 0;
+  }
+  function openEnergyGuide() {
+    const dialog = ensureEnergyGuideDialog();
+    energyGuideIndex = 0;
+    renderEnergyGuideSlide();
+    if (!dialog.open) dialog.showModal();
   }
 
   function renderProfile() {
@@ -9489,6 +9443,8 @@
         : `<div class="notice info-notice"><strong>Calories estimées, sans objectif</strong><p>Seul le total calorique est affiché en haut du Journal, avec sa tendance dans Observations. Les autres chiffres nutritionnels restent masqués.</p></div>`;
     $("#app").innerHTML =
       `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="off"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button><p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p></div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${professionalDemoEntryHtml()}${hasDemoAccess ? demoProfileCardsHtml() : ``}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<section class="card"><h3>Sauvegarde supplémentaire</h3><p class="muted small">${backups} copie(s) locale(s) de sécurité.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></section></div>`;
+    const welcomeInfoSection = $("#showWelcomeAgain")?.closest("section.card");
+    welcomeInfoSection?.insertAdjacentHTML("afterend", `<section class="card energy-guide-profile-card"><div class="settings-row"><div><span class="energy-guide-profile-icon" aria-hidden="true">🌱</span><span><h3>Découvrir Énergie</h3><p class="muted small">Un petit tour des principales fonctions de l’application.</p></span></div><button class="secondary" id="openEnergyGuide" type="button">Voir le guide</button></div></section>`);
     const nutritionAnchor = $("#settingNutrition")?.closest("label");
     if (session && profileSinceHtml)
       $("#syncNow")
@@ -9498,7 +9454,6 @@
     $("#app .hero")?.insertAdjacentHTML("beforeend", `<small class="profile-build">Version ${APP_RELEASE}</small>`);
     const waterSettingsSection = $("#waterGoal")?.closest("section.card");
     waterSettingsSection?.insertAdjacentHTML("afterend", `<section class="card steps-profile-card"><h3>👟 Suivi des pas</h3><p class="muted small">Affiche les pas dans le Journal et leur progression dans Observations.</p><label class="toggle-row"><span><strong>Suivre mes pas</strong><small>Tu peux masquer ce suivi sans supprimer ton historique</small></span><input id="settingStepsTracking" type="checkbox" ${db.settings.stepsTracking === true ? "checked" : ""}></label><div id="stepsGoalSetting" class="settings-row ${db.settings.stepsTracking === true ? "" : "is-disabled"}"><div><strong>Objectif quotidien</strong><p class="muted tiny">Utilisé pour les nouvelles journées seulement</p></div><label><input id="stepsGoal" type="number" min="100" max="100000" step="100" inputmode="numeric" value="${Number(db.settings.stepsGoal) || 8000}" ${db.settings.stepsTracking === true ? "" : "disabled"}><span>pas</span></label></div></section>`);
-    $(".steps-profile-card")?.insertAdjacentHTML("afterend", `<section class="card calorie-balance-profile-card"><h3>⚖️ Balance calorique</h3><p class="muted small">Compare les calories consignées à une dépense énergétique quotidienne estimée et affiche la tendance dans Observations.</p><label class="toggle-row"><span><strong>Suivre mon déficit / surplus calorique</strong><small>Tu peux masquer ce suivi sans supprimer tes données</small></span><input id="settingCalorieBalanceTracking" type="checkbox" ${db.settings.calorieBalanceTracking === true ? "checked" : ""}></label><p class="muted tiny">Le calcul utilise l’âge, le sexe, la taille et le poids renseignés dans « À propos de moi », puis tient compte des activités enregistrées dans le Journal. Il demeure une estimation.</p></section>`);
     const feelingSettingsSection = $("#settingFeelingReminders")?.closest("section.card"),
       feelingIntro = feelingSettingsSection?.querySelector(":scope > p");
     if (feelingIntro) feelingIntro.insertAdjacentHTML("afterend", trackedFeelingsProfileHtml());
@@ -9570,12 +9525,6 @@
     $("#settingStepsTracking")?.addEventListener("change", (event) => {
       db.settings.stepsTracking = event.target.checked;
       saveLocal("suivi-pas");
-      renderProfile();
-    });
-    $("#settingCalorieBalanceTracking")?.addEventListener("change", (event) => {
-      db.settings.calorieBalanceTracking = event.target.checked;
-      saveLocal("suivi-balance-calorique");
-      setDayChanged(todayKey());
       renderProfile();
     });
     $("#stepsGoal")?.addEventListener("change", (event) => {
@@ -9667,6 +9616,7 @@
           : "Les notifications ne sont pas autorisées dans ce navigateur.",
       );
     });
+    $("#openEnergyGuide")?.addEventListener("click", openEnergyGuide);
     $("#showWelcomeAgain")?.addEventListener("click", () => {
       const dialog = $("#welcomeDialog");
       if (dialog && !dialog.open) dialog.showModal();
@@ -10213,52 +10163,6 @@
       }
     });
   }
-  function guidedMealFlowEnabled(type = $("#mealType")?.value) {
-    return ["Déjeuner", "Dîner", "Souper"].includes(type);
-  }
-  function setLearningBrain(target, active) {
-    if (!target) return;
-    target.classList.toggle("guided-next-step", !!active);
-    let brain = target.querySelector(":scope > .guided-learning-brain");
-    if (active && !brain) {
-      brain = document.createElement("span");
-      brain.className = "guided-learning-brain";
-      brain.setAttribute("aria-hidden", "true");
-      brain.textContent = "🧠";
-      target.prepend(brain);
-    } else if (!active && brain) {
-      brain.remove();
-    }
-  }
-  function updateGuidedMealFlow() {
-    const beforeCard = $("#mealFeelingsDetails"),
-      mealCard = $("#mealDescriptionCard"),
-      afterCard = $("#mealAfterFeelingCard");
-    [beforeCard, mealCard, afterCard].forEach((el) => setLearningBrain(el, false));
-    if (!guidedMealFlowEnabled()) return;
-    const beforeScores = collectScoredFeelingScores($("#beforeFeelingTags"), "before"),
-      hasBefore = Object.keys(beforeScores).length > 0,
-      hasDescription = Boolean($("#mealDescription")?.value.trim()),
-      mealId = $("#mealId")?.value,
-      savedMeal = mealId ? allMeals().find((item) => item.id === mealId) : null,
-      hasSavedMeal = Boolean(savedMeal);
-    if (!hasBefore) setLearningBrain(beforeCard, true);
-    else if (!hasSavedMeal || !hasDescription) setLearningBrain(mealCard, true);
-    else if (!savedMeal.feeling && feelingDueAt(savedMeal) <= new Date())
-      setLearningBrain(afterCard, true);
-  }
-  function setAfterFeelingGuidance(meal) {
-    const form = $("#feelingForm");
-    setLearningBrain(form, false);
-    form?.classList.remove("guided-after-step");
-    if (!meal || !guidedMealFlowEnabled(meal.type) || meal.feeling) return;
-    const due = feelingDueAt(meal) <= new Date() || Boolean(meal.feelingNotifiedAt);
-    if (due) {
-      form?.classList.add("guided-after-step");
-      setLearningBrain(form, true);
-      requestAnimationFrame(() => $("#feelingTags")?.scrollIntoView({ behavior: "smooth", block: "center" }));
-    }
-  }
   function updateMealDialogType(type) {
     const value = type || "Déjeuner";
     $("#mealType").value = value;
@@ -10266,13 +10170,10 @@
     $("#mealDialogTypeLabel").setAttribute("data-i18n-key", value);
     $("#mealDialogTypeLabel").textContent = t(value);
     const mainMeal = ["Déjeuner", "Dîner", "Souper"].includes(value),
-      supportsQuickFill = mainMeal || value === "Collation",
       quickBar = $("#mealQuickFillBar"),
-      previousButton = $("#copyPreviousMealQuick"),
       previousLabel = $("#copyPreviousMealLabel"),
       previousIcon = $("#copyPreviousMealIcon");
-    if (quickBar) quickBar.hidden = !supportsQuickFill;
-    if (previousButton) previousButton.hidden = value === "Collation";
+    if (quickBar) quickBar.hidden = !mainMeal;
     if (previousLabel) previousLabel.textContent = value === "Déjeuner" ? "Déjeuner d’hier" : value === "Dîner" ? "Souper d’hier" : "Souper précédent";
     if (previousIcon) previousIcon.textContent = value === "Déjeuner" ? "🍳" : "🍱";
     populateFavoriteSelect(value);
@@ -10281,7 +10182,6 @@
     populateRecentFoods(value);
     if (!["Déjeuner", "Dîner", "Souper"].includes(value))
       setMealSuggestion(null, value);
-    updateGuidedMealFlow();
   }
   function updateMealFeelingUi(meal) {
     const button = $("#mealFeelingButton"),
@@ -10305,7 +10205,6 @@
     const scores = collectScoredFeelingScores(picker, "before");
     if (Object.keys(scores).length && !reviewFeelingQuality(feelingQualityAssessment(picker, "before"))) return;
     updateMealFeelingsOverview();
-    updateGuidedMealFlow();
     scheduleFormAutosave($("#mealForm"));
     $("#beforeFeelingDialog").close();
   }
@@ -10597,7 +10496,6 @@
     renderBeforeFeelingPicker(m);
     if ($("#beforeFeelingDialog").open) $("#beforeFeelingDialog").close();
     updateMealFeelingUi(m);
-    updateGuidedMealFlow();
     updateMealCompositionReview();
     photoData = m?.photoLocal || m?.photoUrl || null;
     photoRemoved = false;
@@ -10662,33 +10560,12 @@
     });
     $("#sleepDialog").showModal();
   }
-  function normalizeActivitySearch(value = "") {
-    return String(value)
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .trim();
-  }
-  function filterActivityChoices(query = "") {
-    const normalized = normalizeActivitySearch(query);
-    let visible = 0;
-    $$('[data-activity]').forEach((button) => {
-      const haystack = normalizeActivitySearch(`${button.dataset.activity || ""} ${button.dataset.search || ""} ${button.textContent || ""}`);
-      const matches = !normalized || haystack.includes(normalized);
-      button.hidden = !matches;
-      if (matches) visible += 1;
-    });
-    const empty = $("#activitySearchEmpty");
-    if (empty) empty.hidden = visible > 0;
-  }
   function openActivity() {
     ensureDay(db, selectedDate);
     $("#activityType").value = "";
     $("#activityMinutes").value = "";
     $("#activityActualCalories").value = "";
     if ($("#activityFavorite")) $("#activityFavorite").checked = false;
-    if ($("#activitySearch")) $("#activitySearch").value = "";
-    filterActivityChoices("");
     if ($("#activityFavoriteShortcuts")) {
       $("#activityFavoriteShortcuts").innerHTML = activityFavoriteButtonsHtml();
       $("#activityFavoriteShortcuts").querySelectorAll("[data-add-activity-favorite]").forEach((b) => b.addEventListener("click", () => {
@@ -11078,7 +10955,6 @@
       section.dataset.estimated = "false";
     }
   };
-  $("#mealDescription")?.addEventListener("input", updateGuidedMealFlow);
   $("#openBeforeFeeling").onclick = () => $("#beforeFeelingDialog").showModal();
   $("#finishBeforeFeeling").onclick = finishBeforeFeelingPicker;
   $("#beforeFeelingDialog").addEventListener("close", () =>
@@ -11459,9 +11335,6 @@
         updateActivityEstimate();
       }),
   );
-  $("#activitySearch")?.addEventListener("input", (event) => {
-    filterActivityChoices(event.target.value);
-  });
   $$("[data-intensity]").forEach(
     (b) => (b.onclick = () => setActivityIntensity(b.dataset.intensity)),
   );

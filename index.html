@@ -11,10 +11,10 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.56.44">
+  <link rel="stylesheet" href="styles.css?v=3.56.21">
   <link rel="stylesheet" href="portrait.css?v=3.56.21">
   <link rel="stylesheet" href="observation-detail.css?v=3.56.21">
-  <link rel="stylesheet" href="personal-metrics.css?v=3.56.41">
+  <link rel="stylesheet" href="personal-metrics.css?v=3.56.21">
   <link rel="stylesheet" href="meal-labels.css?v=3.56.21">
   <link rel="stylesheet" href="meal-calories.css?v=3.56.21">
   <link rel="stylesheet" href="positive-feelings.css?v=3.56.21">
@@ -26,6 +26,7 @@
   <link rel="stylesheet" href="beverage-edit.css?v=3.56.29">
   <link rel="stylesheet" href="steps-tracking.css?v=3.56.39">
   <link rel="stylesheet" href="journal-summary.css?v=3.56.39">
+  <link rel="stylesheet" href="onboarding.css?v=3.56.40">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -134,7 +135,7 @@
         <small id="mealCalorieStatus" role="status">Aucune estimation disponible · saisie facultative</small>
         <button type="button" class="text-button" id="resetMealCalories" hidden>Auto</button>
       </section>
-      <div id="mealDescriptionCard" class="meal-description-field">
+      <div class="meal-description-field">
         <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div>
         <div class="meal-description-composer">
           <textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea>
@@ -195,7 +196,7 @@
           </section>
         </div>
       </details>
-      <section id="mealAfterFeelingCard" class="meal-feeling-summary-card meal-feelings-after-block">
+      <section class="meal-feeling-summary-card meal-feelings-after-block">
         <span class="meal-feeling-summary-icon" aria-hidden="true">🌿</span>
         <span class="meal-feeling-summary-copy"><strong>Après le repas</strong><small id="afterFeelingCount">Non consigné</small><span id="afterFeelingSelectedPreview" class="meal-feeling-selected-preview"><span class="meal-feeling-empty">Aucun ressenti</span></span></span>
         <button type="button" class="meal-feeling-summary-action meal-feeling-after-button" id="mealFeelingButton" hidden><span aria-hidden="true">＋</span><strong>Ajouter</strong><b aria-hidden="true">›</b></button>
@@ -303,35 +304,15 @@
       <div class="dialog-header"><div><p class="eyebrow">Mouvement</p><h2>Ajouter une activité</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
       <div id="activityFavoriteShortcuts"></div>
       <fieldset class="activity-fieldset"><legend>Choisis une activité</legend>
-        <label class="activity-search" for="activitySearch"><span aria-hidden="true">🔎</span><input id="activitySearch" type="search" autocomplete="off" placeholder="Rechercher un sport…" aria-label="Rechercher une activité"></label>
         <div id="activityChoices" class="activity-choices" role="radiogroup" aria-label="Type d’activité">
-          <button type="button" data-activity="Aquabike" data-search="aquabike aqua bike velo piscine water cycling"><span>🚴‍♀️</span><small>Aquabike</small></button>
-          <button type="button" data-activity="Aquagym" data-search="aquagym aqua gym aerobique piscine water aerobics"><span>🤽</span><small>Aquagym</small></button>
-          <button type="button" data-activity="Badminton"><span>🏸</span><small>Badminton</small></button>
-          <button type="button" data-activity="Course" data-search="course jogging running"><span>🏃</span><small>Course</small></button>
-          <button type="button" data-activity="Danse" data-search="danse dance zumba"><span>💃</span><small>Danse</small></button>
-          <button type="button" data-activity="Elliptique" data-search="elliptique elliptical cardio"><span>🏃‍♀️</span><small>Elliptique</small></button>
-          <button type="button" data-activity="Escaliers" data-search="escaliers stairs stairmaster"><span>🪜</span><small>Escaliers</small></button>
-          <button type="button" data-activity="Étirements" data-search="etirements stretching flexibilite"><span>🤸</span><small>Étirements</small></button>
-          <button type="button" data-activity="HIIT" data-search="hiit intervalles cardio interval"><span>⚡</span><small>HIIT</small></button>
-          <button type="button" data-activity="Hockey"><span>🏒</span><small>Hockey</small></button>
-          <button type="button" data-activity="Marche" data-search="marche marche rapide walking"><span>🚶</span><small>Marche</small></button>
-          <button type="button" data-activity="Musculation" data-search="musculation poids gym renforcement"><span>🏋️</span><small>Musculation</small></button>
-          <button type="button" data-activity="Natation" data-search="natation nage piscine swimming"><span>🏊</span><small>Natation</small></button>
-          <button type="button" data-activity="Patinage" data-search="patinage patin glace skating"><span>⛸️</span><small>Patinage</small></button>
-          <button type="button" data-activity="Pickleball" data-search="pickleball pickle ball"><span>🏓</span><small>Pickleball</small></button>
-          <button type="button" data-activity="Pilates"><span>🧘‍♀️</span><small>Pilates</small></button>
-          <button type="button" data-activity="Rameur" data-search="rameur aviron rowing"><span>🚣</span><small>Rameur</small></button>
-          <button type="button" data-activity="Randonnée" data-search="randonnee hiking marche sentier"><span>🥾</span><small>Randonnée</small></button>
-          <button type="button" data-activity="Ski de fond" data-search="ski de fond ski fond cross country"><span>⛷️</span><small>Ski de fond</small></button>
-          <button type="button" data-activity="Soccer" data-search="soccer football foot"><span>⚽</span><small>Soccer</small></button>
-          <button type="button" data-activity="Tennis"><span>🎾</span><small>Tennis</small></button>
-          <button type="button" data-activity="Vélo" data-search="velo bicyclette cyclisme cycling"><span>🚴</span><small>Vélo</small></button>
-          <button type="button" data-activity="Volleyball" data-search="volleyball volley ball"><span>🏐</span><small>Volleyball</small></button>
+          <button type="button" data-activity="Marche"><span>🚶</span><small>Marche</small></button>
+          <button type="button" data-activity="Course"><span>🏃</span><small>Course</small></button>
+          <button type="button" data-activity="Vélo"><span>🚴</span><small>Vélo</small></button>
+          <button type="button" data-activity="Musculation"><span>🏋️</span><small>Musculation</small></button>
           <button type="button" data-activity="Yoga"><span>🧘</span><small>Yoga</small></button>
-          <button type="button" data-activity="Autre" data-search="autre autre sport"><span>✨</span><small>Autre</small></button>
+          <button type="button" data-activity="Natation"><span>🏊</span><small>Natation</small></button>
+          <button type="button" data-activity="Autre"><span>✨</span><small>Autre</small></button>
         </div>
-        <p id="activitySearchEmpty" class="activity-search-empty muted small" hidden>Aucune activité trouvée. Tu peux effacer la recherche et choisir « Autre ».</p>
         <input id="activityType" type="hidden">
       </fieldset>
       <label>Durée en minutes<input id="activityMinutes" name="energie_activity_duration_value" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Ex. 45" aria-label="Durée de l’activité en minutes"></label>
@@ -592,7 +573,7 @@
   <script src="brain/index.js?v=3.12.0"></script>
   <script src="observation-engine.js?v=3.56.21"></script>
   <script src="demo-profiles.js?v=3.56.21"></script>
-  <script src="personal-metrics.js?v=3.56.44"></script>
-  <script src="app.js?v=3.56.51"></script>
+  <script src="personal-metrics.js?v=3.56.21"></script>
+  <script src="app.js?v=3.56.40"></script>
 </body>
 </html>

@@ -1,7 +1,6 @@
-# Énergie 3.56.40
+# Énergie 3.56.40 — Guide Découvrir Énergie
 
-- Profil : ajout de la taille (cm) et du niveau d’activité habituel pour préparer un futur calcul de déficit calorique.
-- Aucun calcul calorique n’est effectué dans cette version.
-- Le poids existant est réutilisé; aucun champ de poids n’est dupliqué.
-- Collation : la barre de saisie rapide affiche maintenant les favoris et les collations récentes.
-- Collation : le raccourci « repas d’hier » est masqué.
+- Ajout d’un guide visuel de 7 étapes accessible uniquement depuis Profil.
+- Utilise les captures réelles de l’application : Journal, repas, ressentis, activité/hydratation/pas, Cerveau, Observations et Profil.
+- Navigation Suivant/Précédent, points de progression, toucher sur les points et balayage horizontal.
+- Aucun affichage automatique à la connexion dans cette version.
