@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 92;
-  const APP_RELEASE = "3.56.50";
+  const APP_RELEASE = "3.56.51";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -9461,17 +9461,18 @@
       {
         key: "other",
         icon: "🧑‍⚕️",
-        title: "Professionnel & autres options",
+        title: "Professionnel & démonstration",
         terms: [
           "accompagnement professionnel",
+          "mode professionnel",
+          "profils de demonstration",
           "mode demo",
-          "sauvegarde supplementaire",
         ],
       },
       {
         key: "help",
         icon: "🌱",
-        title: "Aide & découverte",
+        title: "Découvrir Énergie",
         terms: ["message d'information", "decouvrir energie"],
       },
       {

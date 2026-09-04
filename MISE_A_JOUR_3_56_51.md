@@ -1,5 +1,5 @@
-# Énergie v3.56.51
+# Énergie 3.56.51
 
-- Corrige un bug possible où un nouveau repas pouvait récupérer le type d’un ancien brouillon automatique.
-- Les brouillons de nouveaux repas sont maintenant séparés par type : Déjeuner, Dîner, Souper et Collation.
-- Choisir Collation ne peut donc plus restaurer un ancien brouillon de Souper et changer silencieusement le type avant l’enregistrement.
+- « Message d’information » et le bouton du guide sont maintenant présentés comme le contenu d’une seule carte dépliable « Découvrir Énergie », avec une simple séparation interne.
+- « Accompagnement professionnel », « Mode professionnel — Démo » et « Profils de démonstration » sont regroupés dans une seule grande section « Professionnel & démonstration ».
+- « Sauvegarde supplémentaire » n’est plus rangée avec le mode professionnel.
