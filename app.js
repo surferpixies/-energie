@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 92;
-  const APP_RELEASE = "3.56.47";
+  const APP_RELEASE = "3.56.48";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -9799,7 +9799,7 @@
     $("#importData").onclick = () => $("#importFile").click();
 
     // All Profile cards are now present: group them only after the render is complete.
-    requestAnimationFrame(enhanceProfileWithAccordions);
+    enhanceProfileWithAccordions();
   }
 
   // --- Ajout rapide par code-barres -------------------------------------------------
