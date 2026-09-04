@@ -468,3 +468,18 @@ html[data-theme="dark"] .quick-meal-type-grid button.is-complete {
   box-shadow:0 7px 18px color-mix(in srgb,var(--accent) 18%,transparent);
   font-size:1.45rem;pointer-events:none;
 }
+
+
+/* v3.56.55 — cerveau Sommeil/Repas : position et états indépendants */
+.journal-summary-sleep.sleep-needs-brain-action{
+  padding-left:1rem;
+}
+.journal-summary-sleep .sleep-energy-action-brain{
+  left:auto!important;
+  right:5.25rem!important;
+  top:.65rem!important;
+  margin-top:0!important;
+  width:2.35rem;
+  height:2.35rem;
+  font-size:1.25rem;
+}

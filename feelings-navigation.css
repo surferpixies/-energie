@@ -228,3 +228,19 @@ html[data-theme="dark"] .meal-feeling-summary-action { background: rgba(255, 255
   background:color-mix(in srgb,var(--accent) 14%,var(--surface));
   box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 7%,transparent);
 }
+
+
+/* v3.56.56 — guide cerveau séquentiel dans la saisie du repas */
+.meal-description-label-row .meal-entry-brain{
+  flex:0 0 auto;
+  width:2.35rem;
+  height:2.35rem;
+  margin-right:.15rem;
+  border-radius:14px;
+  background:color-mix(in srgb,var(--accent) 14%,var(--surface));
+  box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 16%,transparent);
+  font-size:1.25rem;
+}
+.meal-description-field.needs-meal-entry-brain .meal-description-label-row{
+  align-items:center;
+}

@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 92;
-  const APP_RELEASE = "3.56.54";
+  const APP_RELEASE = "3.56.56";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -6444,7 +6444,7 @@
         Object.keys(feelingScoresFor(meal, "before")).length || meal.feeling,
       ).length,
       sleepRecorded = day.sleepHours != null || (day.sleepTags || []).length > 0 || String(day.sleepComment || "").trim(),
-      sleepPrompt = sleepRecorded ? "" : `<button type="button" class="journal-summary-action journal-summary-sleep needs-brain-action" id="journalSummarySleep"><span class="energy-action-brain summary-energy-action-brain" aria-hidden="true">🧠</span><span>À noter une fois aujourd’hui</span><strong>Sommeil</strong><span class="summary-action-watermark" aria-hidden="true">🛌</span><span class="summary-action-plus" aria-hidden="true">+</span><small>Durée, qualité ou commentaire</small></button>`,
+      sleepPrompt = sleepRecorded ? "" : `<button type="button" class="journal-summary-action journal-summary-sleep needs-brain-action sleep-needs-brain-action" id="journalSummarySleep"><span class="energy-action-brain summary-energy-action-brain sleep-energy-action-brain" aria-hidden="true">🧠</span><span>À noter une fois aujourd’hui</span><strong>Sommeil</strong><span class="summary-action-watermark" aria-hidden="true">🛌</span><span class="summary-action-plus" aria-hidden="true">+</span><small>Durée, qualité ou commentaire</small></button>`,
       dueFeeling = pendingFeelings().some((meal) => meal.date === selectedDate),
       feelingBrain = dueFeeling ? `<span class="energy-action-brain summary-energy-action-brain" aria-hidden="true">🧠</span>` : "";
     return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}<button type="button" class="journal-summary-action journal-summary-action--meal" id="journalSummaryMeal"><span>Ajouter un</span><strong>Repas</strong><span class="summary-action-watermark" aria-hidden="true">🍲</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${meals.length} repas ou collation${meals.length !== 1 ? "s" : ""} cette journée</small></button><button type="button" class="journal-summary-action journal-summary-action--feeling ${dueFeeling ? "needs-brain-action" : ""}" id="journalSummaryFeeling">${feelingBrain}<span>${dueFeeling ? "À compléter" : "Ajouter un"}</span><strong>Ressenti</strong><span class="summary-action-watermark" aria-hidden="true">😬</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${dueFeeling ? "Un ressenti après est maintenant attendu" : feelingCount ? `${feelingCount} repas documenté${feelingCount > 1 ? "s" : ""}` : "Avant, après ou hors repas"}</small></button>${summaryActivityHtml(day)}${summaryHydrationHtml(day)}${stepsProgressHtml(day, true)}</div></section>`;
@@ -10595,7 +10595,44 @@
     collapsed.innerHTML = beforeItems.length || afterItems.length
       ? `${feelingCompactSummaryHtml("Avant", beforeScores)}${feelingCompactSummaryHtml("Après", afterScores)}`
       : "<small>Aucun ressenti</small>";
+    updateMealEntryBrainGuide();
   }
+  function updateMealEntryBrainGuide() {
+    const beforeIcon = $("#beforeFeelingSummaryIcon"),
+      descriptionField = $("#mealDescription")?.closest(".meal-description-field"),
+      labelRow = descriptionField?.querySelector(".meal-description-label-row"),
+      picker = $("#beforeFeelingTags"),
+      mealId = $("#mealId")?.value,
+      savedMeal = mealId
+        ? ensureDay(db, selectedDate).meals.find((item) => item.id === mealId)
+        : null,
+      beforeScores = picker?.children.length
+        ? collectScoredFeelingScores(picker, "before")
+        : feelingScoresFor(savedMeal, "before"),
+      beforeDone = Object.keys(beforeScores).length > 0,
+      descriptionDone = !!String($("#mealDescription")?.value || "").trim();
+
+    // Étape 1 : tant que le ressenti avant manque, le cerveau reste sur "Avant".
+    if (beforeIcon) {
+      beforeIcon.textContent = beforeDone ? "🌤️" : "🧠";
+      beforeIcon.classList.toggle("energy-action-brain", !beforeDone);
+    }
+
+    // Étape 2 : dès que "Avant" est rempli, le cerveau passe à la saisie du repas.
+    let mealBrain = labelRow?.querySelector(".meal-entry-brain");
+    const needsMealDescription = beforeDone && !descriptionDone;
+    if (needsMealDescription && labelRow && !mealBrain) {
+      mealBrain = document.createElement("span");
+      mealBrain.className = "energy-action-brain meal-entry-brain";
+      mealBrain.setAttribute("aria-hidden", "true");
+      mealBrain.textContent = "🧠";
+      labelRow.prepend(mealBrain);
+    } else if (!needsMealDescription && mealBrain) {
+      mealBrain.remove();
+    }
+    descriptionField?.classList.toggle("needs-meal-entry-brain", needsMealDescription);
+  }
+
   function collectEatingReasons() {
     return normalizeEatingReasons(
       $$('#mealForm input[name="eatingReason"]:checked').map((input) => input.value),
@@ -10645,6 +10682,10 @@
     updateMealDialogType(type);
     $("#mealTime").value = m?.time || new Date().toTimeString().slice(0, 5);
     $("#mealDescription").value = m?.description || "";
+    if (!$("#mealDescription").dataset.brainGuideBound) {
+      $("#mealDescription").dataset.brainGuideBound = "true";
+      $("#mealDescription").addEventListener("input", updateMealEntryBrainGuide);
+    }
     const selectedReasons = new Set(normalizeEatingReasons(m?.eatingReasons));
     $$('#mealForm input[name="eatingReason"]').forEach((input) => {
       input.checked = selectedReasons.has(input.value);
