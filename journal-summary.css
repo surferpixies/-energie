@@ -499,3 +499,29 @@ html[data-theme="dark"] .quick-meal-type-grid button.is-complete {
   border-radius:15px;
   font-size:1.35rem;
 }
+
+
+/* v3.56.58 — Sommeil : vraie colonne réservée au cerveau à gauche */
+.journal-summary-sleep.sleep-needs-brain-action{
+  padding-left:5.15rem!important;
+}
+.journal-summary-sleep.sleep-needs-brain-action > span:not(.sleep-energy-action-brain):first-of-type,
+.journal-summary-sleep.sleep-needs-brain-action > strong,
+.journal-summary-sleep.sleep-needs-brain-action > small{
+  margin-left:0!important;
+}
+.journal-summary-sleep .sleep-energy-action-brain{
+  position:absolute!important;
+  left:1.15rem!important;
+  right:auto!important;
+  top:50%!important;
+  bottom:auto!important;
+  margin:0!important;
+  translate:0 -50%;
+  width:2.75rem!important;
+  height:2.75rem!important;
+  z-index:5!important;
+  display:grid!important;
+  place-items:center!important;
+  pointer-events:none;
+}
