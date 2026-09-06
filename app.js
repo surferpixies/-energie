@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.67";
+  const APP_RELEASE = "3.56.68";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -12609,7 +12609,6 @@
   async function initAuth() {
     if (!client) {
       render();
-      initDailySplash();
       dismissSplash();
       setTimeout(showExperienceLaunchIfNeeded, 120);
       return;
@@ -12633,24 +12632,17 @@
       }
     }
     render();
-    initDailySplash();
     dismissSplash();
     setTimeout(showExperienceLaunchIfNeeded, 120);
   }
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.37");
-        await reg.update();
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener("controllerchange", () => {
-          if (refreshing) return;
-          refreshing = true;
-          location.reload();
-        });
-        if (reg.waiting) {
-          reg.waiting.postMessage?.({ type: "SKIP_WAITING" });
-        }
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.68");
+        // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
+        // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
+        reg.update().catch(() => {});
+        if (reg.waiting) reg.waiting.postMessage?.({ type: "SKIP_WAITING" });
       } catch (e) {
         console.warn(e);
       }
@@ -12672,6 +12664,10 @@
   });
 
   installFormAutosave();
+  // Le splash doit être lisible immédiatement à partir des données locales.
+  // L'authentification et la synchro Supabase continuent ensuite en arrière-plan
+  // pendant que le splash est déjà complet.
+  initDailySplash();
   initAuth();
   scheduleFeelingChecks();
 
