@@ -5,8 +5,8 @@
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
-  const CURRENT_VERSION = 92;
-  const APP_RELEASE = "3.56.63";
+  const CURRENT_VERSION = 93;
+  const APP_RELEASE = "3.56.64";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -348,6 +348,8 @@
     syncQueued = false,
     photoData = null,
     photoRemoved = false,
+    mealPhotoDrafts = [],
+    removedMealPhotoPaths = new Set(),
     mealAiSuggestionText = "",
     mealNutritionPreviewTimer = null,
     mealNutritionManuallyEdited = false,
@@ -406,7 +408,7 @@
     barcodeLastProduct = null,
     barcodeTargetInputId = "mealDescription";
   let selectedRecentSnackId = null;
-  let quickSnackPhotoData = null;
+  let quickSnackPhotoData = [];
 
   function normalizeSupplements(value) {
     return [
@@ -510,6 +512,8 @@
         generalRecommendations: true,
         showSources: true,
         professionalSupport: false,
+        retainMealPhotos: false,
+        shareMealPhotosWithProfessional: false,
         feelingReminders: true,
         feelingDelayHours: 0.5,
         feelingDelayPreferenceSet: false,
@@ -712,6 +716,21 @@
       nutrition: normalNutrition(m.nutrition || m.macros),
       foodReview:
         m.foodReview || m.food_review || rawFeeling?.foodReview || null,
+      photos: (() => {
+        const items = Array.isArray(m.photos) ? m.photos : [];
+        const normalized = items.slice(0, 3).map((photo) => ({
+          url: photo?.url || photo?.photoUrl || null,
+          path: photo?.path || photo?.photoPath || null,
+          local: photo?.local || photo?.photoLocal || null,
+        })).filter((photo) => photo.url || photo.path || photo.local);
+        if (normalized.length) return normalized;
+        const legacy = {
+          url: m.photoUrl || null,
+          path: m.photoPath || null,
+          local: m.photoLocal || m.photo || m.image || null,
+        };
+        return legacy.url || legacy.path || legacy.local ? [legacy] : [];
+      })(),
       photoUrl: m.photoUrl || null,
       photoPath: m.photoPath || null,
       photoLocal: m.photoLocal || m.photo || m.image || null,
@@ -1504,6 +1523,7 @@
       id: meal.id,
       date: meal.date,
       photoPath: meal.photoPath,
+      photoPaths: (meal.photos || []).map((photo) => photo.path).filter(Boolean),
     });
     scheduleFeelingChecks();
   }
@@ -1514,25 +1534,35 @@
   }
 
   async function uploadPhoto(meal) {
-    if (
-      !client ||
-      !session ||
-      !meal.photoLocal ||
-      meal.photoLocal === meal.photoUrl
-    )
+    if (!client || !session) return meal;
+    const photos = (Array.isArray(meal.photos) ? meal.photos : []).slice(0, 3);
+    if (db.settings.retainMealPhotos !== true) {
+      meal.photos = photos.filter((photo) => photo.path || photo.url).map((photo) => ({ ...photo, local: null }));
+      const first = meal.photos[0] || null;
+      meal.photoPath = first?.path || null;
+      meal.photoUrl = first?.url || null;
+      meal.photoLocal = null;
       return meal;
-    const blob = await (await fetch(meal.photoLocal)).blob();
-    const ext = (blob.type.split("/")[1] || "jpg").replace("jpeg", "jpg");
-    const path = `${session.user.id}/${meal.id}.${ext}`;
-    const { error } = await client.storage
-      .from("meal-photos")
-      .upload(path, blob, {
-        upsert: true,
-        contentType: blob.type || "image/jpeg",
-      });
-    if (error) throw error;
-    meal.photoPath = path;
-    meal.photoLocal = null;
+    }
+    for (let index = 0; index < photos.length; index += 1) {
+      const photo = photos[index];
+      if (!photo?.local || photo.local === photo.url) continue;
+      const blob = await (await fetch(photo.local)).blob();
+      const ext = (blob.type.split("/")[1] || "jpg").replace("jpeg", "jpg");
+      const path = `${session.user.id}/${meal.id}-${index + 1}.${ext}`;
+      const { error } = await client.storage
+        .from("meal-photos")
+        .upload(path, blob, { upsert: true, contentType: blob.type || "image/jpeg" });
+      if (error) throw error;
+      photo.path = path;
+      photo.local = null;
+      photo.url = null;
+    }
+    meal.photos = photos;
+    const first = photos[0] || null;
+    meal.photoPath = first?.path || null;
+    meal.photoUrl = first?.url || null;
+    meal.photoLocal = first?.local || null;
     return meal;
   }
   async function signedPhoto(path) {
@@ -1649,6 +1679,7 @@
             fatigue_after: meal.fatigueAfter,
             notes: meal.notes || null,
             photo_path: meal.photoPath || null,
+            photo_paths: (meal.photos || []).map((photo) => photo.path).filter(Boolean).slice(0, 3),
             feeling:
               Object.keys(normalizeFeelingScores(meal.feelingsBefore)).length ||
               meal.feeling || meal.foodReview || meal.eatingReasons?.length || meal.eatingReasonOther
@@ -1677,9 +1708,16 @@
             if (payload.nutrition?.caloriesManual) throw error;
             delete payload.nutrition;
             delete payload.recommendation;
+            delete payload.photo_paths;
             ({ error } = await client.from("meals").upsert(payload));
           }
           if (error) throw error;
+        } else if (op.kind === "deleteMealPhotos") {
+          const paths = [...new Set(op.photoPaths || [])].filter(Boolean);
+          if (paths.length) {
+            const { error } = await client.storage.from("meal-photos").remove(paths);
+            if (error) throw error;
+          }
         } else if (op.kind === "favorite") {
           const f = db.favorites.find((x) => x.id === op.id);
           if (!f) continue;
@@ -1704,8 +1742,9 @@
             .eq("id", op.id)
             .eq("user_id", session.user.id);
           if (error) throw error;
-          if (op.photoPath)
-            await client.storage.from("meal-photos").remove([op.photoPath]);
+          const photoPaths = [...new Set([...(op.photoPaths || []), op.photoPath].filter(Boolean))];
+          if (photoPaths.length)
+            await client.storage.from("meal-photos").remove(photoPaths);
         } else if (op.kind === "deleteFavorite") {
           const { error } = await client
             .from("favorite_meals")
@@ -1901,6 +1940,9 @@
           fatigueAfter: r.fatigue_after,
           notes: r.notes,
           photoPath: r.photo_path,
+          photos: Array.isArray(r.photo_paths) && r.photo_paths.length
+            ? r.photo_paths.slice(0, 3).map((path) => ({ path, url: null, local: null }))
+            : undefined,
           feeling: r.feeling || null,
           feelingNotifiedAt: r.feeling_notified_at || null,
           nutrition: r.nutrition || null,
@@ -4591,7 +4633,7 @@
       !!m.feeling,
       true,
     );
-    return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${m.photoUrl || m.photoLocal ? `<img src="${esc(m.photoUrl || m.photoLocal)}" alt="">` : mealIcon(m.type, m.description)}</div><div class="meal-card-body"><h3 translate="no">${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${mealTypeHtml(m.type)}${opts.showDate ? ` · ${esc(formatDate(m.date))}` : ""}</div>${nutritionVisibleToViewer() && m.nutrition ? `<div class="meal-macros">≈ ${esc(nutritionText(m.nutrition))}</div>` : ""}${feelingPreview}<div class="meal-footer">${beforeCount ? `<span class="chip">Avant · ${beforeCount}</span>` : ""}${feelingEligible ? `<button class="meal-feeling-inline ${feeling ? "is-set" : "is-empty"}" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? `Après · ${afterCount}` : "Ressenti après"}</button>` : ""}</div>${visibleChanges ? `<div class="meal-card-feeling-changes">${visibleChanges}</div>` : ""}</div><div class="meal-actions">${feelingEligible ? `<button class="feeling-meal" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? "😊" : "＋😊"}</button>` : ""}<button class="favorite-meal ${favorite ? "is-favorite" : ""}" data-favorite="${m.id}" title="${favorite ? "Retirer des favoris" : "Ajouter aux favoris"}">${favorite ? "★" : "☆"}</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div></article>`;
+    return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${(m.photos?.[0]?.url || m.photos?.[0]?.local || m.photoUrl || m.photoLocal) ? `<img src="${esc(m.photos?.[0]?.url || m.photos?.[0]?.local || m.photoUrl || m.photoLocal)}" alt="">` : mealIcon(m.type, m.description)}</div><div class="meal-card-body"><h3 translate="no">${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${mealTypeHtml(m.type)}${opts.showDate ? ` · ${esc(formatDate(m.date))}` : ""}</div>${nutritionVisibleToViewer() && m.nutrition ? `<div class="meal-macros">≈ ${esc(nutritionText(m.nutrition))}</div>` : ""}${feelingPreview}<div class="meal-footer">${beforeCount ? `<span class="chip">Avant · ${beforeCount}</span>` : ""}${feelingEligible ? `<button class="meal-feeling-inline ${feeling ? "is-set" : "is-empty"}" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? `Après · ${afterCount}` : "Ressenti après"}</button>` : ""}</div>${visibleChanges ? `<div class="meal-card-feeling-changes">${visibleChanges}</div>` : ""}</div><div class="meal-actions">${feelingEligible ? `<button class="feeling-meal" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? "😊" : "＋😊"}</button>` : ""}<button class="favorite-meal ${favorite ? "is-favorite" : ""}" data-favorite="${m.id}" title="${favorite ? "Retirer des favoris" : "Ajouter aux favoris"}">${favorite ? "★" : "☆"}</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div></article>`;
   }
   function bindMealCards() {
     $$("[data-meal]").forEach(
@@ -4727,9 +4769,12 @@
   function updateQuickSnackUi() {
     const description = $("#quickSnackDescription")?.value.trim() || "";
     $("#saveQuickSnack").disabled = !description;
-    const preview = $("#quickSnackPhotoPreview");
-    preview.hidden = !quickSnackPhotoData;
-    if (quickSnackPhotoData) $("#quickSnackPhotoImage").src = quickSnackPhotoData;
+    const preview = $("#quickSnackPhotoPreview"), list = $("#quickSnackPhotoList"), count = $("#quickSnackPhotoCount");
+    preview.hidden = !quickSnackPhotoData.length;
+    if (list) list.innerHTML = quickSnackPhotoData.map((src, index) => `<div class="meal-photo-preview-item"><img src="${esc(src)}" alt="Photo ${index + 1} de la collation"><button type="button" class="text-button small" data-remove-quick-snack-photo="${index}">Retirer</button></div>`).join("");
+    if (count) count.textContent = `${quickSnackPhotoData.length}/3`;
+    if ($("#quickSnackPhoto")) $("#quickSnackPhoto").disabled = quickSnackPhotoData.length >= 3;
+    $$('[data-remove-quick-snack-photo]').forEach((button) => button.onclick = () => { quickSnackPhotoData.splice(Number(button.dataset.removeQuickSnackPhoto), 1); updateQuickSnackUi(); });
   }
   async function analyzeQuickSnackPhoto(imageData) {
     if (!client || !session) {
@@ -4774,7 +4819,8 @@
         feelingsBefore: {},
         feelingsBeforeQuality: null,
         feeling: null,
-        photoLocal: quickSnackPhotoData,
+        photos: db.settings.retainMealPhotos === true ? quickSnackPhotoData.slice(0, 3).map((local) => ({ local, url: null, path: null })) : [],
+        photoLocal: db.settings.retainMealPhotos === true ? quickSnackPhotoData[0] || null : null,
         photoUrl: null,
         photoPath: null,
         foodReview: null,
@@ -4803,7 +4849,7 @@
       addSelected = $("#addSelectedSnack"),
       recentSnacks = recentUniqueSnacks();
     selectedRecentSnackId = null;
-    quickSnackPhotoData = null;
+    quickSnackPhotoData = [];
     $("#quickSnackDescription").value = "";
     $("#quickSnackPhoto").value = "";
     setQuickSnackAiStatus("Vérifie toujours la description proposée.");
@@ -4853,16 +4899,19 @@
       const file = event.target.files[0];
       if (!file) return;
       try {
-        quickSnackPhotoData = await fileToDataUrl(file);
+        if (quickSnackPhotoData.length >= 3) return;
+        const imageData = await fileToDataUrl(file);
+        event.target.value = "";
+        quickSnackPhotoData.push(imageData);
         updateQuickSnackUi();
-        await analyzeQuickSnackPhoto(quickSnackPhotoData);
+        await analyzeQuickSnackPhoto(imageData);
       } catch (error) {
         console.warn("Photo de collation illisible", error);
         setQuickSnackAiStatus("Cette photo n’a pas pu être lue.", "error");
       }
     };
     $("#removeQuickSnackPhoto").onclick = () => {
-      quickSnackPhotoData = null;
+      quickSnackPhotoData = [];
       $("#quickSnackPhoto").value = "";
       setQuickSnackAiStatus("Vérifie toujours la description proposée.");
       updateQuickSnackUi();
@@ -6698,19 +6747,21 @@
   }
 
   async function hydratePhotoUrls() {
-    if (!session) return;
     let changed = false;
-    for (const d of Object.values(db.days))
-      for (const m of d.meals)
-        if (m.photoPath && !m.photoUrl) {
-          m.photoUrl = await signedPhoto(m.photoPath);
-          changed = changed || !!m.photoUrl;
+    for (const m of allMeals()) {
+      if (Array.isArray(m.photos) && m.photos.length) {
+        for (const photo of m.photos) {
+          if (photo.path && !photo.url) { photo.url = await signedPhoto(photo.path); changed = changed || !!photo.url; }
         }
-    if (changed) {
-      saveLocal("liens-photo");
-      render();
+        const first = m.photos[0];
+        m.photoPath = first?.path || null; m.photoUrl = first?.url || null; m.photoLocal = first?.local || null;
+      } else if (m.photoPath && !m.photoUrl) {
+        m.photoUrl = await signedPhoto(m.photoPath); changed = changed || !!m.photoUrl;
+      }
     }
+    if (changed) saveLocal("liens-photo");
   }
+
   function localDate(date) {
     return new Date(`${date}T12:00:00`);
   }
@@ -9657,6 +9708,8 @@
         : `<div class="notice info-notice"><strong>Calories estimées, sans objectif</strong><p>Seul le total calorique est affiché en haut du Journal, avec sa tendance dans Observations. Les autres chiffres nutritionnels restent masqués.</p></div>`;
     $("#app").innerHTML =
       `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="one-time-code"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button><p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p></div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${professionalDemoEntryHtml()}${hasDemoAccess ? demoProfileCardsHtml() : ``}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<details class="card profile-backup-panel"><summary><span><strong>Données et sauvegarde</strong><small>Options avancées · ${backups} copie(s) locale(s)</small></span><span aria-hidden="true">›</span></summary><div class="profile-backup-content"><p class="muted small">Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></div></details></div>`;
+    const professionalSettingsSection = $("#settingProfessionalSupport")?.closest("section.card");
+    professionalSettingsSection?.insertAdjacentHTML("afterend", `<section class="card meal-photo-settings-card"><h3>📷 Photos des repas</h3><p class="muted small">Jusqu’à 3 photos peuvent être utilisées par l’IA pour compléter un repas.</p><label class="toggle-row"><span><strong>Conserver mes photos de repas</strong><small>Si désactivé, les nouvelles photos servent à l’analyse IA sans être enregistrées avec le repas.</small></span><input id="settingRetainMealPhotos" type="checkbox" ${db.settings.retainMealPhotos === true ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.retainMealPhotos === true ? "" : "is-disabled"}"><span><strong>Partager mes photos avec mon professionnel</strong><small>Autorisation distincte, utilisée lorsqu’un professionnel sera lié à ton compte.</small></span><input id="settingShareMealPhotos" type="checkbox" ${db.settings.shareMealPhotosWithProfessional === true ? "checked" : ""} ${db.settings.retainMealPhotos === true ? "" : "disabled"}></label><p class="muted tiny">Désactiver la conservation n’efface pas automatiquement les anciennes photos déjà enregistrées.</p></section>`);
     const welcomeInfoSection = $("#showWelcomeAgain")?.closest("section.card");
     welcomeInfoSection?.insertAdjacentHTML("afterend", `<section class="card energy-guide-profile-card"><div class="settings-row"><div><span class="energy-guide-profile-icon" aria-hidden="true">🌱</span><span><h3>Découvrir Énergie</h3><p class="muted small">Un petit tour des principales fonctions de l’application.</p></span></div><button class="secondary" id="openEnergyGuide" type="button">Voir le guide</button></div></section>`);
     const energyGuideButton = $("#openEnergyGuide");
@@ -9803,6 +9856,16 @@
     toggleSetting("#settingRecommendations", "generalRecommendations");
     toggleSetting("#settingSources", "showSources");
     toggleSetting("#settingProfessionalSupport", "professionalSupport");
+    $("#settingRetainMealPhotos")?.addEventListener("change", (event) => {
+      db.settings.retainMealPhotos = event.target.checked;
+      if (!event.target.checked) db.settings.shareMealPhotosWithProfessional = false;
+      saveLocal("conservation-photos-repas");
+      renderProfile();
+    });
+    $("#settingShareMealPhotos")?.addEventListener("change", (event) => {
+      db.settings.shareMealPhotosWithProfessional = db.settings.retainMealPhotos === true && event.target.checked;
+      saveLocal("partage-photos-professionnel");
+    });
     const feelingToggle = $("#settingFeelingReminders");
     if (feelingToggle)
       feelingToggle.onchange = async (e) => {
@@ -10792,7 +10855,9 @@
     if ($("#beforeFeelingDialog").open) $("#beforeFeelingDialog").close();
     updateMealFeelingUi(m);
     updateMealCompositionReview();
-    photoData = m?.photoLocal || m?.photoUrl || null;
+    mealPhotoDrafts = (m?.photos || []).slice(0, 3).map((photo) => ({ ...photo }));
+    removedMealPhotoPaths = new Set();
+    photoData = mealPhotoDrafts[0]?.local || mealPhotoDrafts[0]?.url || null;
     photoRemoved = false;
     hideMealAiSuggestion();
     setMealAiPhotoStatus("La description IA doit être vérifiée et corrigée au besoin.");
@@ -10802,9 +10867,27 @@
     $("#mealDialog").showModal();
   }
   function showPhotoPreview() {
-    const wrap = $("#photoPreviewWrap");
-    wrap.hidden = !photoData;
-    if (photoData) $("#photoPreview").src = photoData;
+    const wrap = $("#photoPreviewWrap"), list = $("#photoPreviewList"), count = $("#mealPhotoCount");
+    if (!wrap || !list) return;
+    wrap.hidden = !mealPhotoDrafts.length;
+    list.innerHTML = mealPhotoDrafts.map((photo, index) => {
+      const src = photo.local || photo.url || "";
+      return `<div class="meal-photo-preview-item">${src ? `<img src="${esc(src)}" alt="Photo ${index + 1} du repas">` : '<span class="meal-photo-placeholder">📷</span>'}<button type="button" class="secondary small" data-remove-meal-photo="${index}">Retirer</button></div>`;
+    }).join("");
+    if (count) count.textContent = `${mealPhotoDrafts.length}/3`;
+    const input = $("#mealPhoto");
+    if (input) input.disabled = mealPhotoDrafts.length >= 3;
+    $$('[data-remove-meal-photo]').forEach((button) => {
+      button.onclick = () => {
+        const index = Number(button.dataset.removeMealPhoto);
+        const removed = mealPhotoDrafts.splice(index, 1)[0];
+        if (removed?.path) removedMealPhotoPaths.add(removed.path);
+        photoRemoved = true;
+        photoData = mealPhotoDrafts[0]?.local || mealPhotoDrafts[0]?.url || null;
+        hideMealAiSuggestion();
+        showPhotoPreview();
+      };
+    });
   }
   function renderDayActivities() {
     const d = ensureDay(db, selectedDate),
@@ -10949,13 +11032,24 @@
     mealAiSuggestionText = "";
     $("#mealAiSuggestion").hidden = true;
   }
+  function mergeMealDescription(existing, suggestion) {
+    const parts = (value) => String(value || "").split(/[,;\n]+/).map((part) => part.trim()).filter(Boolean);
+    const normalize = (value) => value.toLocaleLowerCase("fr-CA").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+    const base = parts(existing), seen = new Set(base.map(normalize));
+    parts(suggestion).forEach((part) => {
+      const key = normalize(part);
+      if (key && !seen.has(key)) { base.push(part); seen.add(key); }
+    });
+    return base.join(", ");
+  }
   function useMealAiSuggestion() {
     if (!mealAiSuggestionText) return;
-    $("#mealDescription").value = mealAiSuggestionText;
-    $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
+    const field = $("#mealDescription"), before = field.value.trim();
+    field.value = mergeMealDescription(before, mealAiSuggestionText);
+    field.dispatchEvent(new Event("input", { bubbles: true }));
     hideMealAiSuggestion();
-    setMealAiPhotoStatus("Description ajoutée — vérifie-la et corrige-la au besoin.", "success");
-    $("#mealDescription").focus();
+    setMealAiPhotoStatus(before ? "Analyse ajoutée au repas sans effacer ta saisie." : "Description ajoutée — vérifie-la et corrige-la au besoin.", "success");
+    field.focus();
   }
   async function analyzeMealPhotoWithAI(imageData) {
     if (!client || !session) {
@@ -10977,12 +11071,12 @@
       const description = String(data?.description || "").trim();
       if (!description) throw new Error("Réponse vide");
       mealAiSuggestionText = description;
-      if (!$("#mealDescription").value.trim()) {
+      const before = $("#mealDescription").value.trim(), merged = mergeMealDescription(before, description);
+      if (merged !== before) {
         useMealAiSuggestion();
       } else {
-        $("#mealAiSuggestionText").textContent = description;
-        $("#mealAiSuggestion").hidden = false;
-        setMealAiPhotoStatus("Une suggestion est prête sans remplacer ton texte.", "success");
+        hideMealAiSuggestion();
+        setMealAiPhotoStatus("Cette photo n’ajoute rien de nouveau à la description.", "success");
       }
     } catch (error) {
       console.warn("Analyse IA de la photo impossible", error);
@@ -11189,9 +11283,11 @@
   $("#mealSuggestionToggle").onclick = toggleMealSuggestion;
   $("#mealPhoto").onchange = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    e.target.value = "";
+    if (!file || mealPhotoDrafts.length >= 3) return;
     try {
       photoData = await fileToDataUrl(file);
+      mealPhotoDrafts.push({ local: photoData, url: null, path: null });
       photoRemoved = false;
       showPhotoPreview();
       await analyzeMealPhotoWithAI(photoData);
@@ -11199,13 +11295,6 @@
       console.warn("Photo illisible", error);
       setMealAiPhotoStatus("Cette photo n’a pas pu être lue. Essaie-en une autre.", "error");
     }
-  };
-  $("#removePhoto").onclick = () => {
-    photoData = null;
-    photoRemoved = true;
-    hideMealAiSuggestion();
-    setMealAiPhotoStatus("La description IA doit être vérifiée et corrigée au besoin.");
-    showPhotoPreview();
   };
   $("#useMealAiSuggestion").onclick = useMealAiSuggestion;
   $("#dismissMealAiSuggestion").onclick = () => {
@@ -11330,12 +11419,13 @@
           ? $("#eatingReasonOther").value.trim().slice(0, 160)
           : "",
         notes: $("#mealNotes").value.trim(),
-        photoLocal:
-          photoData && photoData.startsWith("data:")
-            ? photoData
-            : old?.photoLocal || null,
-        photoUrl: photoRemoved ? null : old?.photoUrl || null,
-        photoPath: photoRemoved ? null : old?.photoPath || null,
+        photos: (db.settings.retainMealPhotos === true
+          ? mealPhotoDrafts
+          : mealPhotoDrafts.filter((photo) => photo.path || photo.url)
+        ).slice(0, 3).map((photo) => ({ ...photo, local: db.settings.retainMealPhotos === true ? photo.local || null : null })),
+        photoLocal: db.settings.retainMealPhotos === true ? mealPhotoDrafts[0]?.local || null : null,
+        photoUrl: mealPhotoDrafts[0]?.url || null,
+        photoPath: mealPhotoDrafts[0]?.path || null,
         updatedAt: new Date().toISOString(),
       },
       selectedDate,
@@ -11348,6 +11438,10 @@
       : null;
     savedMeal.recommendation = recommendation || null;
     setMealChanged(savedMeal);
+    if (removedMealPhotoPaths.size) {
+      enqueue({ kind: "deleteMealPhotos", id: savedMeal.id, date: savedMeal.date, photoPaths: [...removedMealPhotoPaths] });
+      removedMealPhotoPaths = new Set();
+    }
     const favoriteButton = $("#mealFavoriteToggle"),
       wantsFavorite = favoriteButton.getAttribute("aria-pressed") === "true",
       favoriteId = favoriteButton.dataset.favoriteId,

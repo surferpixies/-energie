@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="styles.css?v=3.56.63">
+  <link rel="stylesheet" href="styles.css?v=3.56.64">
   <link rel="stylesheet" href="portrait.css?v=3.56.21">
   <link rel="stylesheet" href="observation-detail.css?v=3.56.21">
   <link rel="stylesheet" href="personal-metrics.css?v=3.56.21">
@@ -141,7 +141,7 @@
           <textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. bagel, œufs et café" required></textarea>
           <div class="meal-description-toolbar">
             <div class="meal-composer-actions">
-              <label class="meal-composer-action meal-photo-action"><input id="mealPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><strong>Photo IA</strong></label>
+              <label class="meal-composer-action meal-photo-action"><input id="mealPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><strong>Photo IA <small id="mealPhotoCount">0/3</small></strong></label>
               <button type="button" class="meal-composer-action meal-barcode-action" id="openBarcodeScanner"><span aria-hidden="true">▥</span><strong>Scanner</strong></button>
             </div>
             <small id="mealAiPhotoStatus" class="meal-ai-photo-status" role="status" aria-live="polite">La description IA doit être vérifiée et corrigée au besoin.</small>
@@ -153,7 +153,7 @@
           <div><span aria-hidden="true">✨</span><span><strong>Suggestion de l’IA</strong><small id="mealAiSuggestionText"></small></span></div>
           <div><button type="button" id="useMealAiSuggestion" class="secondary small">Utiliser</button><button type="button" id="dismissMealAiSuggestion" class="text-button small">Ignorer</button></div>
         </div>
-        <div id="photoPreviewWrap" class="photo-preview-wrap meal-photo-preview" hidden><img id="photoPreview" alt="Aperçu du repas"><button type="button" id="removePhoto" class="secondary small">Retirer la photo</button></div>
+        <div id="photoPreviewWrap" class="photo-preview-wrap meal-photo-preview" hidden><div id="photoPreviewList" class="meal-photo-preview-list"></div></div>
       </div>
       <section id="mealCompositionReview" class="meal-composition-review" hidden aria-live="polite">
         <div id="mealCompositionSummary"></div>
@@ -242,13 +242,13 @@
           <textarea id="quickSnackDescription" rows="2" autocapitalize="sentences" autocomplete="one-time-code" placeholder="Ex. pomme et quelques amandes"></textarea>
           <div class="quick-snack-toolbar">
             <div>
-              <label class="meal-composer-action meal-photo-action"><input id="quickSnackPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><strong>Photo IA</strong></label>
+              <label class="meal-composer-action meal-photo-action"><input id="quickSnackPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><strong>Photo IA <small id="quickSnackPhotoCount">0/3</small></strong></label>
               <button type="button" class="meal-composer-action meal-barcode-action" id="quickSnackBarcode"><span aria-hidden="true">▥</span><strong>Scanner</strong></button>
             </div>
             <small id="quickSnackAiStatus" role="status" aria-live="polite">Vérifie toujours la description proposée.</small>
           </div>
         </div>
-        <div id="quickSnackPhotoPreview" class="quick-snack-photo-preview" hidden><img id="quickSnackPhotoImage" alt="Aperçu de la collation"><button type="button" id="removeQuickSnackPhoto" class="text-button small">Retirer</button></div>
+        <div id="quickSnackPhotoPreview" class="quick-snack-photo-preview" hidden><div id="quickSnackPhotoList" class="meal-photo-preview-list"></div><button type="button" id="removeQuickSnackPhoto" class="text-button small">Tout retirer</button></div>
         <button type="button" class="primary" id="saveQuickSnack" disabled>Ajouter la collation</button>
       </section>
       <div class="snack-manager-divider"><span>ou reprendre une collation</span></div>
@@ -595,6 +595,6 @@
   <script src="demo-profiles.js?v=3.56.21"></script>
   <script src="personal-metrics.js?v=3.56.21"></script>
   <script src="onboarding-images.js?v=3.56.52"></script>
-  <script src="app.js?v=3.56.63"></script>
+  <script src="app.js?v=3.56.64"></script>
 </body>
 </html>

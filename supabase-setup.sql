@@ -98,3 +98,17 @@ alter table public.daily_logs
 
 comment on column public.daily_logs.supplements is
   'État des suppléments pour la journée: prises aujourd’hui et defaults enregistrés dans le profil.';
+
+
+-- Énergie V3.56.64 — jusqu’à trois photos facultatives par repas
+-- Migration non destructive : photo_path demeure compatible avec les anciennes versions.
+alter table public.meals
+  add column if not exists photo_paths jsonb not null default '[]'::jsonb;
+
+update public.meals
+set photo_paths = jsonb_build_array(photo_path)
+where photo_path is not null
+  and (photo_paths is null or photo_paths = '[]'::jsonb);
+
+comment on column public.meals.photo_paths is
+  'Jusqu’à trois chemins privés dans Storage pour les photos facultatives du repas.';
