@@ -1108,3 +1108,13 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .meal-photo-placeholder{display:grid;place-items:center;background:var(--surface-soft,#f3f4f6);font-size:1.6rem}
 .meal-photo-action small{font-size:.72em;font-weight:700;opacity:.7}
 @media(max-width:520px){.meal-photo-preview-list{gap:.4rem}.meal-photo-preview-item .secondary.small{padding:.4rem .25rem;font-size:.72rem}}
+
+/* V3.56.66 — splash plus rapide et message du Cerveau plus utile */
+.splash-logo{animation-delay:.02s!important;animation-duration:.5s!important}
+.splash-brand>strong{animation-delay:.48s!important;animation-duration:.4s!important}
+.splash-subtitle{animation-delay:.68s!important;animation-duration:.34s!important}
+.splash-status{animation-delay:.92s!important;animation-duration:.34s!important}
+.splash-observation{animation-delay:1.02s!important}
+.has-splash-observation .splash-observation-eye{animation-delay:.82s!important}
+.splash-tip{animation-delay:1.34s!important}
+.splash-app-hint{animation-delay:1.72s!important}

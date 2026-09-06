@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.65";
+  const APP_RELEASE = "3.56.66";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -12089,10 +12089,16 @@
       "fr-CA": {
         status: {
           empty: "Le Cerveau est prêt à apprendre avec ton journal.",
-          one: "1 journée est maintenant enregistrée.",
-          many: (n) => `${n} journées alimentent maintenant tes observations.`,
-          growing: (n) =>
-            `Ton historique de ${n} journées rend les tendances plus précises.`,
+          one: "Le Cerveau commence à relier tes repas, tes ressentis et tes habitudes.",
+          many: (n) => `${n} journées donnent déjà au Cerveau des points de comparaison.`,
+          growing: (n) => `Ton historique de ${n} journées rend les tendances plus précises.`,
+          brain: [
+            "Le Cerveau compare tes journées pour repérer ce qui revient avec certains ressentis.",
+            "Le Cerveau apprend surtout des répétitions : repas, ressentis, sommeil, activité et hydratation.",
+            "Le Cerveau cherche ce qui change entre tes bonnes journées et celles où certains ressentis augmentent.",
+            "Chaque ressenti avant et après un repas aide le Cerveau à mieux comparer tes journées.",
+            "Le Cerveau garde en mémoire les changements récents pour vérifier s’ils se répètent.",
+          ],
         },
         labels: {
           fact: "Saviez-vous que…",
@@ -12149,8 +12155,12 @@
           empty: "Le Cerveau est prêt à apprendre avec votre journal.",
           one: "1 journée est maintenant enregistrée.",
           many: (n) => `${n} journées alimentent maintenant vos observations.`,
-          growing: (n) =>
-            `Votre historique de ${n} journées rend les tendances plus précises.`,
+          growing: (n) => `Votre historique de ${n} journées rend les tendances plus précises.`,
+          brain: [
+            "Le Cerveau compare vos journées pour repérer ce qui revient avec certains ressentis.",
+            "Le Cerveau apprend des répétitions entre repas, ressentis, sommeil, activité et hydratation.",
+            "Le Cerveau garde les changements récents en mémoire pour vérifier s’ils se répètent.",
+          ],
         },
         labels: {
           fact: "Le saviez-vous ?",
@@ -12192,8 +12202,12 @@
           empty: "The Brain is ready to learn from your journal.",
           one: "1 day is now recorded in your journal.",
           many: (n) => `${n} days now contribute to your observations.`,
-          growing: (n) =>
-            `Your ${n}-day history is making patterns more precise.`,
+          growing: (n) => `Your ${n}-day history is making patterns more precise.`,
+          brain: [
+            "The Brain compares your days to spot what tends to return with certain feelings.",
+            "The Brain learns from repeated links between meals, feelings, sleep, activity and hydration.",
+            "The Brain remembers recent changes and checks whether they happen again.",
+          ],
         },
         labels: {
           fact: "Did you know?",
@@ -12446,14 +12460,19 @@
             Number(day.water) > 0 ||
             day.activities?.length),
       ).length;
+    const brainMessages = pack.status.brain || [],
+      brainMessageIndex = rotatingSplashIndex(Math.max(brainMessages.length, 1), "brain-status"),
+      showHistoryStatus = days > 0 && dateSeed(todayKey()) % 5 === 0;
     statusEl.textContent =
       days === 0
         ? pack.status.empty
         : days === 1
           ? pack.status.one
-          : days < 14
-            ? pack.status.many(days)
-            : pack.status.growing(days);
+          : showHistoryStatus
+            ? days < 14
+              ? pack.status.many(days)
+              : pack.status.growing(days)
+            : brainMessages[brainMessageIndex] || pack.status.growing(days);
     const seed = dateSeed(todayKey()),
       showFeatureTip = seed % 3 === 0;
     const pool = showFeatureTip ? pack.tips : pack.facts,
