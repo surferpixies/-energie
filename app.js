@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.66";
+  const APP_RELEASE = "3.56.67";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -12494,24 +12494,39 @@
     appHintIconEl.textContent = "💡";
     appHintLabelEl.textContent = pack.labels.appHint;
     appHintTextEl.textContent = pack.appHints[appHintIndex];
-    const observation = splashObservationCandidate();
-    if (observation) {
+    // Afficher immédiatement le contenu normal du splash. La recherche d'une
+    // observation spéciale est volontairement différée afin qu'elle ne puisse
+    // jamais retarder le premier rendu (notamment après une saisie la veille).
+    wrap.hidden = false;
+    setTimeout(() => {
+      const observation = splashObservationCandidate();
+      if (!observation) return;
       observationLabelEl.textContent = observation.label;
       observationTitleEl.textContent = observation.title;
       observationTextEl.textContent = observation.text;
       observationDateEl.textContent = observation.dateText;
       observationEl.hidden = false;
       statusEl.hidden = true;
-      observationEl.closest("#splashScreen")?.classList.add(
-        "has-splash-observation",
-      );
-      observationEl.closest("#splashScreen")?.setAttribute(
-        "data-has-observation",
-        "true",
-      );
+      const splash = observationEl.closest("#splashScreen");
+      splash?.classList.add("has-splash-observation");
+      splash?.setAttribute("data-has-observation", "true");
       $(".splash-tip").hidden = true;
-    }
-    wrap.hidden = false;
+      if (splash) {
+        splash.onclick = (event) => {
+          if (event.target.closest("#openSplashObservation")) return;
+          hideSplashNow();
+        };
+        $("#openSplashObservation").onclick = (event) => {
+          event.stopPropagation();
+          currentView = "insights";
+          render();
+          hideSplashNow();
+        };
+        if (splashDismissTimer) clearTimeout(splashDismissTimer);
+        const reduced = matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+        splashDismissTimer = setTimeout(hideSplashNow, reduced ? 7600 : 8400);
+      }
+    }, 0);
   }
   let splashDismissTimer = null;
   function hideSplashNow() {

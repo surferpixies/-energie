@@ -1118,3 +1118,14 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .has-splash-observation .splash-observation-eye{animation-delay:.82s!important}
 .splash-tip{animation-delay:1.34s!important}
 .splash-app-hint{animation-delay:1.72s!important}
+
+
+/* V3.56.67 — splash immédiat : le texte suit le logo sans attente perceptible */
+.splash-logo{animation-delay:.01s!important;animation-duration:.42s!important}
+.splash-brand>strong{animation-delay:.24s!important;animation-duration:.32s!important}
+.splash-subtitle{animation-delay:.38s!important;animation-duration:.28s!important}
+.splash-status{animation-delay:.52s!important;animation-duration:.28s!important}
+.splash-observation{animation-delay:.64s!important}
+.has-splash-observation .splash-observation-eye{animation-delay:.54s!important}
+.splash-tip{animation-delay:.86s!important}
+.splash-app-hint{animation-delay:1.16s!important}
