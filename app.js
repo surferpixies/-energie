@@ -12524,7 +12524,7 @@
         };
         if (splashDismissTimer) clearTimeout(splashDismissTimer);
         const reduced = matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-        splashDismissTimer = setTimeout(hideSplashNow, reduced ? 7600 : 8400);
+        splashDismissTimer = setTimeout(hideSplashNow, reduced ? 4200 : 4800);
       }
     }, 0);
   }
@@ -12545,11 +12545,11 @@
     const hasObservation = splash.dataset.hasObservation === "true",
       readingTime = hasObservation
         ? reduced
-          ? 7600
-          : 8400
+          ? 4200
+          : 4800
         : reduced
-          ? 6300
-          : 6900;
+          ? 2600
+          : 3200;
     if (hasObservation) {
       splash.onclick = (event) => {
         if (event.target.closest("#openSplashObservation")) return;
@@ -12607,9 +12607,10 @@
     return hasDemoAccess;
   }
   async function initAuth() {
+    // Le splash a sa propre durée et ne doit jamais attendre le réseau.
+    dismissSplash();
     if (!client) {
       render();
-      dismissSplash();
       setTimeout(showExperienceLaunchIfNeeded, 120);
       return;
     }
@@ -12632,13 +12633,12 @@
       }
     }
     render();
-    dismissSplash();
     setTimeout(showExperienceLaunchIfNeeded, 120);
   }
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.68");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.69");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});

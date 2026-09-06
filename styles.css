@@ -1129,3 +1129,21 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .has-splash-observation .splash-observation-eye{animation-delay:.54s!important}
 .splash-tip{animation-delay:.86s!important}
 .splash-app-hint{animation-delay:1.16s!important}
+
+/* V3.56.69 — splash toujours clair, indépendant du thème de l'app */
+#splashScreen.splash-screen{
+  --bg:#eef8e7;
+  --surface:#ffffff;
+  --surface2:#f6fbf2;
+  --text:#173321;
+  --muted:#667a6b;
+  --border:#d6e7d2;
+  --accent:#4fa765;
+  --accent-strong:#2f7d45;
+  background:#eef8e7!important;
+  color:#173321!important;
+}
+#splashScreen .splash-subtitle{color:#6f8575!important}
+#splashScreen .splash-subtitle i{color:#4fa765!important}
+#splashScreen .splash-brand>strong,#splashScreen .splash-status{color:#173321!important}
+#splashScreen .splash-tip p,#splashScreen .splash-app-hint p{color:#667a6b!important}
