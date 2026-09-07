@@ -8844,7 +8844,12 @@
         }
       });
     });
-    (day?.globalObservations || day?.observations || []).forEach((observation) => {
+    const globalObservations = Array.isArray(day?.globalObservations)
+      ? day.globalObservations
+      : Array.isArray(day?.observations)
+        ? day.observations
+        : [];
+    globalObservations.forEach((observation) => {
       const score = Number(observation?.intensity || observation?.score);
       evidence += 1;
       if (observation?.kind === "positive" || observation?.positive === true) positiveSignals += 1;
@@ -8883,8 +8888,9 @@
     }
     const categories = window.ENERGIE_FOOD_CATEGORIES;
     const categoryIds = new Set();
-    (day?.meals || []).forEach((meal) => {
-      categories?.categoryIdsForText?.(meal?.description || "").forEach((id) => categoryIds.add(id));
+    (Array.isArray(day?.meals) ? day.meals : []).forEach((meal) => {
+      const detected = categories?.categoryIdsForText?.(meal?.description || "") || [];
+      if (Array.isArray(detected)) detected.forEach((id) => categoryIds.add(id));
     });
     categoryIds.forEach((id) => {
       const meta = categories?.getCategory?.(id, window.ENERGIE_LOCALE || "fr-CA");
@@ -8948,22 +8954,33 @@
   }
   function observationExplorerPanelHtml(mode, open, offset) {
     const isGood = mode === "good";
-    const analysis = buildObservationExplorerResults(mode), all = analysis.results;
-    const safeOffset = Math.min(Math.max(0, offset), Math.max(0, all.length - 1));
-    const visible = all.slice(safeOffset, safeOffset + 3);
-    const hasMore = safeOffset + visible.length < all.length;
     const title = isGood ? "Je me sens bien lorsque…" : "Je me sens moins bien lorsque…";
     const icon = isGood ? "😊" : "😕";
-    let body = "";
+    let body = "", subtitle = "Touchez pour explorer";
+
+    // Important : une carte fermée ne lance pas l'analyse. Cela garde les deux
+    // cartes visibles même si une donnée historique inhabituelle pose problème.
     if (open) {
-      if (!all.length) {
-        body = `<div class="observation-explorer-panel-body"><div class="observation-explorer-empty"><span aria-hidden="true">🌱</span><strong>Pas encore assez de répétitions</strong><p>Énergie a besoin d’au moins quelques journées comparables avant de faire ressortir ce type de piste. Continue simplement ton journal.</p></div><p class="muted tiny observation-explorer-note">Analyse exploratoire sur un maximum de 180 jours. Les associations affichées ne prouvent pas un lien de cause à effet.</p></div>`;
-      } else {
-        const remaining = all.length - (safeOffset + visible.length);
-        body = `<div class="observation-explorer-panel-body"><div class="observation-explorer-results">${visible.map((item) => observationExplorerResultHtml(item, mode)).join("")}</div>${hasMore ? `<button type="button" class="secondary observation-explorer-more" data-explorer-more="${mode}">🔄 Montre-moi autre chose${remaining > 0 ? ` (${remaining})` : ""}</button>` : ""}<p class="muted tiny observation-explorer-note">Analyse exploratoire sur un maximum de 180 jours. Les associations affichées ne prouvent pas un lien de cause à effet.</p></div>`;
+      try {
+        const analysis = buildObservationExplorerResults(mode), all = analysis.results || [];
+        subtitle = all.length
+          ? `${all.length} piste${all.length !== 1 ? "s" : ""} trouvée${all.length !== 1 ? "s" : ""}`
+          : "Aucune piste assez solide pour l’instant";
+        if (!all.length) {
+          body = `<div class="observation-explorer-panel-body"><div class="observation-explorer-empty"><span aria-hidden="true">🌱</span><strong>Pas encore assez de répétitions</strong><p>Énergie a besoin d’au moins quelques journées comparables avant de faire ressortir ce type de piste. Continue simplement ton journal.</p></div><p class="muted tiny observation-explorer-note">Analyse exploratoire sur un maximum de 180 jours. Les associations affichées ne prouvent pas un lien de cause à effet.</p></div>`;
+        } else {
+          const safeOffset = Math.max(0, Math.min(Math.floor(Number(offset) || 0), Math.max(0, all.length - 1)));
+          const visible = all.slice(safeOffset, safeOffset + 3);
+          const remaining = Math.max(0, all.length - (safeOffset + visible.length));
+          body = `<div class="observation-explorer-panel-body"><div class="observation-explorer-results">${visible.map((item) => observationExplorerResultHtml(item, mode)).join("")}</div>${remaining > 0 ? `<button type="button" class="secondary observation-explorer-more" data-explorer-more="${mode}">🔄 Montre-moi autre chose (${remaining})</button>` : ""}<p class="muted tiny observation-explorer-note">Analyse exploratoire sur un maximum de 180 jours. Les associations affichées ne prouvent pas un lien de cause à effet.</p></div>`;
+        }
+      } catch (error) {
+        console.error("Observation explorer", mode, error);
+        subtitle = "Exploration temporairement indisponible";
+        body = `<div class="observation-explorer-panel-body"><div class="observation-explorer-empty"><span aria-hidden="true">🧠</span><strong>Je n’arrive pas à analyser cette partie du journal</strong><p>La carte reste disponible. Aucune donnée n’a été modifiée; refermez-la puis réessayez.</p></div></div>`;
       }
     }
-    return `<section class="observation-explorer-panel ${open ? "open" : ""}"><button type="button" class="observation-explorer-panel-toggle" data-explorer-toggle="${mode}" aria-expanded="${open}"><span class="observation-explorer-panel-icon">${icon}</span><span class="observation-explorer-panel-title"><strong>${title}</strong><small>${all.length ? `${all.length} piste${all.length !== 1 ? "s" : ""} trouvée${all.length !== 1 ? "s" : ""}` : "Explorer mon historique"}</small></span><span class="observation-explorer-chevron" aria-hidden="true">⌄</span></button>${body}</section>`;
+    return `<section class="observation-explorer-panel ${open ? "open" : ""}"><button type="button" class="observation-explorer-panel-toggle" data-explorer-toggle="${mode}" aria-expanded="${open}"><span class="observation-explorer-panel-icon">${icon}</span><span class="observation-explorer-panel-title"><strong>${title}</strong><small>${subtitle}</small></span><span class="observation-explorer-chevron" aria-hidden="true">⌄</span></button>${body}</section>`;
   }
   function observationExplorerHtml() {
     const state = observationExplorerState();
