@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.74";
+  const APP_RELEASE = "3.56.75";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -8826,143 +8826,73 @@
   }
   function observationExplorerDayOutcome(day) {
     const tagMeta = Object.fromEntries(FEELING_TAGS.map((tag) => [tag.id, tag]));
-    const legacyPositiveIds = new Set([
-      "feeling_good", "no_tracked_symptoms", "stable_energy", "energy", "satisfied",
-      "easy_digestion", "light_after_meal", "focus", "good_mood", "calm",
-      ...POSITIVE_FEELING_IDS,
-    ]);
-    const metaFor = (id) => {
-      const direct = tagMeta[id];
-      if (direct) return direct;
-      const canonical = canonicalFeelingId(id);
-      return tagMeta[canonical] || null;
-    };
     let positiveSignals = 0,
       negativeSignals = 0,
-      evidence = 0,
-      documentedAfter = 0;
-
+      evidence = 0;
     (day?.meals || []).forEach((meal) => {
       const before = feelingScoresFor(meal, "before"),
-        after = feelingScoresFor(meal, "after"),
-        rawTags = Array.isArray(meal?.feeling?.tags) ? meal.feeling.tags : [];
-
-      if (meal?.feeling?.recordedAt || Object.keys(after).length || rawTags.length) documentedAfter += 1;
-
+        after = feelingScoresFor(meal, "after");
       Object.entries(after).forEach(([id, rawScore]) => {
-        const meta = metaFor(id), score = Number(rawScore);
+        const meta = tagMeta[id], score = Number(rawScore);
         if (!meta || !Number.isFinite(score)) return;
         evidence += 1;
-        const group = meta.group || meta.kind;
-        if (group === "positive") {
+        if (meta.group === "positive") {
           if (score >= 3) positiveSignals += score >= 4 ? 2 : 1;
           return;
         }
-        if (group !== "symptom") return;
+        if (meta.group !== "symptom") return;
         const beforeScore = Object.prototype.hasOwnProperty.call(before, id) ? Number(before[id]) : null;
         if (Number.isFinite(beforeScore)) {
-          const delta = score - beforeScore;
-          if (delta >= 1) negativeSignals += delta >= 2 ? 2 : 1;
-          if (delta <= -1) positiveSignals += delta <= -2 ? 2 : 1;
+          if (score - beforeScore >= 1) negativeSignals += score - beforeScore >= 2 ? 2 : 1;
         } else if (score >= 3) negativeSignals += score >= 4 ? 2 : 1;
       });
-
-      // Les anciens profils et certaines anciennes saisies utilisent des tags positifs
-      // désormais retirés de l'interface. On les conserve comme preuve historique.
-      rawTags.forEach((id) => {
-        if (legacyPositiveIds.has(id)) {
-          evidence += 1;
-          positiveSignals += 1;
-        }
+    });
+    (day?.observations || []).forEach((observation) => {
+      const intensity = Math.max(1, Number(observation?.intensity) || 1);
+      (observation?.tags || []).forEach((id) => {
+        const meta = tagMeta[id];
+        if (!meta) return;
+        evidence += 1;
+        if (meta.group === "positive" && intensity >= 3) positiveSignals += intensity >= 4 ? 2 : 1;
+        if (meta.group === "symptom" && intensity >= 2) negativeSignals += intensity >= 4 ? 2 : 1;
       });
     });
-
-    const observations = Array.isArray(day?.observations)
-      ? day.observations
-      : Array.isArray(day?.globalObservations)
-        ? day.globalObservations
-        : [];
-    observations.forEach((observation) => {
-      const intensity = Math.max(1, Number(observation?.intensity || observation?.score) || 1);
-      const tags = Array.isArray(observation?.tags) ? observation.tags : [];
-      if (tags.length) {
-        tags.forEach((id) => {
-          const meta = metaFor(id);
-          evidence += 1;
-          if (legacyPositiveIds.has(id)) {
-            positiveSignals += intensity >= 4 ? 2 : 1;
-            return;
-          }
-          if (!meta) return;
-          const group = meta.group || meta.kind;
-          if (group === "positive" && intensity >= 3) positiveSignals += intensity >= 4 ? 2 : 1;
-          if (group === "symptom" && intensity >= 2) negativeSignals += intensity >= 4 ? 2 : 1;
-        });
-      } else {
-        evidence += 1;
-        if (observation?.kind === "positive" || observation?.positive === true) positiveSignals += intensity >= 4 ? 2 : 1;
-        else if (intensity >= 2) negativeSignals += intensity >= 4 ? 2 : 1;
-      }
-    });
-
-    // Une saisie « après » réellement complétée, sans aggravation ni observation
-    // négative ce jour-là, est une information utile : elle représente une journée
-    // documentée sans signal défavorable, même si aucun ancien tag positif n'a été coché.
-    if (documentedAfter > 0 && negativeSignals === 0 && positiveSignals === 0) {
-      positiveSignals = 1;
-      evidence += 1;
-    }
-
     return {
       good: positiveSignals > 0 && positiveSignals >= negativeSignals,
       less: negativeSignals > 0 && negativeSignals >= positiveSignals,
       positiveSignals,
       negativeSignals,
       evidence,
-      documentedAfter,
     };
   }
   function observationExplorerFactors(date, day) {
-    const factors = [];
-    const add = (id, icon, label) => {
-      if (!factors.some((factor) => factor.id === id)) factors.push({ id, icon, label });
-    };
-    const sleep = Number(day?.sleep?.hours ?? day?.sleepHours ?? day?.sleep);
+    const factors = [], add = (id, icon, label) => factors.push({ id, icon, label });
+    const sleep = Number(day?.sleepHours), goal = Math.max(1, Number(db.settings?.waterGoal) || 8), water = Number(day?.water) || 0;
     if (Number.isFinite(sleep)) {
-      if (sleep >= 7) add("sleep:7plus", "😴", "sommeil de 7 h ou plus");
-      if (sleep < 6.5) add("sleep:short", "🌙", "sommeil de moins de 6 h 30");
+      if (sleep >= 7) add("sleep:7plus", "😴", "sommeil d’au moins 7 h");
+      if (sleep < 6.5) add("sleep:short", "🌙", "sommeil de moins de 6,5 h");
     }
-    // Selon la génération de données, l'hydratation est enregistrée soit en
-    // nombre de verres/gouttes (`water`), soit sous une forme détaillée en ml.
-    const water = Number(day?.water) || 0;
-    const waterGoal = Math.max(1, Number(db.settings?.waterGoal) || 8);
-    const hydration = hydrationTotalMl(day);
-    const hydrationGoal = Number(db.settings?.hydrationGoal || 2000);
     if (water > 0) {
-      if (water >= waterGoal) add("hydration:goal", "💧", "objectif d’hydratation atteint");
-      if (water < waterGoal * 0.7) add("hydration:low", "🥤", "hydratation sous 70 % de l’objectif");
-    } else if (hydration > 0 && hydrationGoal > 0) {
-      if (hydration >= hydrationGoal) add("hydration:goal", "💧", "objectif d’hydratation atteint");
-      if (hydration < hydrationGoal * 0.7) add("hydration:low", "🥤", "hydratation sous 70 % de l’objectif");
+      if (water >= goal) add("water:goal", "💧", "objectif d’hydratation atteint");
+      if (water < goal * 0.7) add("water:low", "💧", "hydratation sous 70 % de l’objectif");
     }
-    const activities = Array.isArray(day?.activities) ? day.activities : [];
-    const activityMinutes = activities.reduce((sum, activity) => sum + (Number(activity?.minutes || activity?.duration) || 0), 0);
-    if (activityMinutes >= 30) add("activity:30plus", "🏃", "activité pendant 30 min ou plus");
-    activities.forEach((activity) => {
-      const raw = String(activity?.type || activity?.name || "").trim();
-      if (raw) add(`activity:${normalizeText(raw)}`, "🚶", `${raw.toLowerCase()} pratiquée`);
+    const activities = (day?.activities || []).map(normalizeActivity),
+      activeMinutes = activities.reduce((sum, item) => sum + (Number(item.minutes) || 0), 0);
+    if (activeMinutes >= 30) add("activity:30", "🚶", "au moins 30 min d’activité");
+    const byType = new Map();
+    activities.forEach((item) => byType.set(item.type, (byType.get(item.type) || 0) + (Number(item.minutes) || 0)));
+    byType.forEach((minutes, type) => {
+      if (minutes >= 30) add(`activity-type:${type}`, activityIcon(type), `${type.toLowerCase()} au moins 30 min`);
     });
-    const steps = Number(day?.steps);
-    const stepGoal = Number(db.settings?.stepsGoal || db.settings?.stepGoal || 8000);
-    if (Number.isFinite(steps) && steps > 0 && stepGoal > 0) {
+    if (db.settings?.stepsTracking === true && day?.steps != null) {
+      const steps = Number(day.steps) || 0, stepGoal = stepsGoalForDay(day);
       if (steps >= stepGoal) add("steps:goal", "👟", "objectif de pas atteint");
-      if (steps < stepGoal * 0.6) add("steps:low", "👣", "moins de 60 % de l’objectif de pas");
+      else if (steps < stepGoal * 0.6) add("steps:low", "👟", "moins de 60 % de l’objectif de pas");
     }
     const categories = window.ENERGIE_FOOD_CATEGORIES;
     const categoryIds = new Set();
-    (Array.isArray(day?.meals) ? day.meals : []).forEach((meal) => {
-      const detected = categories?.categoryIdsForText?.(meal?.description || "") || [];
-      if (Array.isArray(detected)) detected.forEach((id) => categoryIds.add(id));
+    (day?.meals || []).forEach((meal) => {
+      categories?.categoryIdsForText?.(meal?.description || "").forEach((id) => categoryIds.add(id));
     });
     categoryIds.forEach((id) => {
       const meta = categories?.getCategory?.(id, window.ENERGIE_LOCALE || "fr-CA");
@@ -8980,28 +8910,30 @@
       .map(([date, day]) => ({ date, day, outcome: observationExplorerDayOutcome(day), factors: observationExplorerFactors(date, day) }))
       .filter((row) => row.outcome.evidence > 0);
     const targetCount = rows.filter((row) => row.outcome[mode]).length;
-    if (rows.length < 8 || targetCount < 3) return { rows, targetCount, results: [] };
+    if (rows.length < 10 || targetCount < 4) return { rows, targetCount, results: [] };
     const factorMap = new Map();
     rows.forEach((row) => row.factors.forEach((factor) => factorMap.set(factor.id, factor)));
     const eligibleFactors = [...factorMap.values()].filter((factor) => {
       const present = rows.filter((row) => row.factors.some((item) => item.id === factor.id)).length;
-      return present >= 3 && rows.length - present >= 3;
+      return present >= 4 && rows.length - present >= 4;
     });
     const candidates = eligibleFactors.map((factor) => ({ factors: [factor] }));
     for (let i = 0; i < eligibleFactors.length; i += 1) {
-      for (let j = i + 1; j < eligibleFactors.length; j += 1) candidates.push({ factors: [eligibleFactors[i], eligibleFactors[j]] });
+      for (let j = i + 1; j < eligibleFactors.length; j += 1) {
+        candidates.push({ factors: [eligibleFactors[i], eligibleFactors[j]] });
+      }
     }
     const scored = candidates.map((candidate) => {
       const ids = candidate.factors.map((factor) => factor.id);
       const exposed = rows.filter((row) => ids.every((id) => row.factors.some((factor) => factor.id === id))),
         comparison = rows.filter((row) => !ids.every((id) => row.factors.some((factor) => factor.id === id)));
-      if (exposed.length < 3 || comparison.length < 3) return null;
+      if (exposed.length < 4 || comparison.length < 4) return null;
       const exposedHit = exposed.filter((row) => row.outcome[mode]).length,
         comparisonHit = comparison.filter((row) => row.outcome[mode]).length,
         exposedRate = exposedHit / exposed.length,
         comparisonRate = comparisonHit / comparison.length,
         difference = exposedRate - comparisonRate;
-      if (difference < 0.14 || exposedHit < 2) return null;
+      if (difference < 0.16 || exposedHit < 3) return null;
       const balance = Math.min(exposed.length, comparison.length) / Math.max(exposed.length, comparison.length),
         score = difference * Math.log2(exposed.length + 1) * (0.8 + balance * 0.2) * (ids.length === 2 ? 1.04 : 1);
       return { ...candidate, exposed: exposed.length, comparison: comparison.length, exposedHit, comparisonHit, exposedRate, comparisonRate, difference, score };
