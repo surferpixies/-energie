@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.79";
+  const APP_RELEASE = "3.56.80";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -9726,11 +9726,18 @@
     return 10 * weightKg + 6.25 * height - 5 * age + (sex === "male" ? 5 : -161);
   }
   function energyBalanceSeries(calorieSeries, profile) {
+    const mainMealTypes = ["Déjeuner", "Dîner", "Souper"];
     return calorieSeries.map((point) => {
-      if (point.value == null) return {...point, value: null};
+      if (point.value == null || point.partial) return {...point, value: null};
+      const day = db.days?.[point.date] || {}, meals = Array.isArray(day.meals) ? day.meals : [];
+      const hasAllMainMeals = mainMealTypes.every((type) =>
+        meals.some((meal) => meal?.type === type && String(meal?.description || "").trim())
+      );
+      // Par prudence, aucune balance n'est calculée si la journée alimentaire semble incomplète.
+      if (!hasAllMainMeals) return {...point, value: null};
       const weightKg = weightKgForDate(point.date), resting = estimatedRestingCalories(profile, weightKg);
       if (resting == null) return {...point, value: null};
-      const day = db.days?.[point.date] || {}, activities = (day.activities || []).map(normalizeActivity);
+      const activities = (day.activities || []).map(normalizeActivity);
       const activityKcal = activities.reduce((sum, activity) => sum + activityCalories(activity), 0);
       const expenditure = Math.round(resting * 1.2 + activityKcal);
       return {...point, value: Math.round(point.value - expenditure), expenditure, activityKcal};
@@ -9753,7 +9760,7 @@
     const knownBalance = balance.filter((p) => p.value != null);
     const balanceAverage = knownBalance.length ? Math.round(knownBalance.reduce((n, p) => n + p.value, 0) / knownBalance.length) : null;
     const balanceReady = energyBalanceProfileReady(profile);
-    const balanceCard = balanceEnabled ? `<article class="card personal-trend-card energy-balance-trend"><div class="metrics-heading"><h3>Déficit / surplus calorique</h3><strong>${balanceAverage == null ? "—" : `≈ ${balanceAverage > 0 ? "+" : ""}${balanceAverage.toLocaleString("fr-CA")} kcal`}</strong></div><p class="muted tiny">${!balanceReady ? "Complète l’âge, le sexe, la taille et au moins une mesure de poids dans Profil." : balanceAverage == null ? "Aucune journée calculable sur cette période" : `Moyenne estimée sur ${knownBalance.length} jour${knownBalance.length > 1 ? "s" : ""}`}</p>${balanceReady ? Metrics.chart(balance, {...data, kind: "balance", unit: "kcal", id: "energyBalanceTrend"}) : '<p class="metrics-empty">Données personnelles insuffisantes pour estimer la dépense.</p>'}<p class="metrics-note">Valeur négative = déficit estimé; valeur positive = surplus estimé. Dépense ≈ métabolisme de repos (Mifflin-St Jeor) × 1,2 + activités enregistrées. Il s’agit d’un ordre de grandeur, pas d’une mesure exacte.</p></article>` : "";
+    const balanceCard = balanceEnabled ? `<article class="card personal-trend-card energy-balance-trend"><div class="metrics-heading"><h3>Déficit / surplus calorique</h3><strong>${balanceAverage == null ? "—" : `≈ ${balanceAverage > 0 ? "+" : ""}${balanceAverage.toLocaleString("fr-CA")} kcal`}</strong></div><p class="muted tiny">${!balanceReady ? "Complète l’âge, le sexe, la taille et au moins une mesure de poids dans Profil." : balanceAverage == null ? "Aucune journée calculable sur cette période" : `Moyenne estimée sur ${knownBalance.length} jour${knownBalance.length > 1 ? "s" : ""}`}</p>${balanceReady ? Metrics.chart(balance, {...data, kind: "balance", unit: "kcal", id: "energyBalanceTrend"}) : '<p class="metrics-empty">Données personnelles insuffisantes pour estimer la dépense.</p>'}<p class="metrics-note">Valeur négative = déficit estimé; valeur positive = surplus estimé. Dépense ≈ métabolisme de repos (Mifflin-St Jeor) × 1,2 + activités enregistrées. Les journées sans Déjeuner, Dîner et Souper complets, ou avec une estimation calorique partielle, sont ignorées. Il s’agit d’un ordre de grandeur, pas d’une mesure exacte.</p></article>` : "";
     return `<section class="personal-trends" aria-labelledby="personalTrendsTitle"><div class="section-title"><h2 id="personalTrendsTitle">Mes tendances chiffrées</h2><span class="muted small">30 jours · ${db.settings.demoMode ? "données du profil fictif" : "mes données uniquement"}</span></div><div class="personal-trends-grid"><article class="card personal-trend-card"><div class="metrics-heading"><h3>Poids</h3><strong>${declined ? "Non renseigné" : lastWeight ? `${lastWeight.value.toLocaleString("fr-CA")} ${unit}` : "—"}</strong></div><p class="muted tiny">${!declined && lastWeight ? `Dernière mesure de la période · ${esc(formatCalendarDate(lastWeight.date))}` : "Mesures enregistrées dans le Profil"}</p>${declined ? '<p class="metrics-empty">Tu as choisi de ne pas renseigner ton poids. Tu peux modifier ce choix dans le Profil.</p>' : Metrics.chart(data.weights, {...data, kind: "weight", unit, id: "weightTrend"})}<p class="metrics-note">${declined ? "Ton choix est respecté." : data.weights.length === 1 ? "Une première mesure : il en faut au moins deux pour voir une évolution." : "Chaque point est une mesure réelle. Aucun poids n’est inventé pour les jours sans saisie."}</p></article><article class="card personal-trend-card"><div class="metrics-heading"><h3>Calories par jour</h3><strong>${average == null ? "—" : `≈ ${average.toLocaleString("fr-CA")} kcal`}</strong></div><p class="muted tiny">${average == null ? "Repas et collations enregistrés" : `Moyenne sur ${known.length} jour${known.length > 1 ? "s" : ""} avec estimation`}</p>${Metrics.chart(data.calories, {...data, kind: "calories", unit: "kcal", id: "calorieTrend"})}<p class="metrics-note">Estimations des repas saisis, pas un objectif. Les jours sans estimation restent vides; les barres en pointillé indiquent une estimation partielle. Un journal incomplet peut sous-estimer le total.</p></article>${balanceCard}</div></section>`;
   }
 
@@ -9976,10 +9983,13 @@
       }
     })();
 
-    const first =
-      profile.querySelector(
-        `.profile-accordion[data-profile-accordion="${saved || "tracking"}"] .profile-accordion-details`,
-      ) || profile.querySelector(".profile-accordion-details");
+    // Aucun groupe n'est ouvert automatiquement. Si l'utilisateur en avait
+    // explicitement ouvert un pendant cette session, on conserve ce choix.
+    const first = saved
+      ? profile.querySelector(
+          `.profile-accordion[data-profile-accordion="${saved}"] .profile-accordion-details`,
+        )
+      : null;
     if (first) first.open = true;
   }
 
