@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.76";
+  const APP_RELEASE = "3.56.77";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -8959,8 +8959,9 @@
     const label = item.factors.map((factor) => factor.label).join(" + "),
       icons = item.factors.map((factor) => factor.icon).join(" "),
       pct = Math.round(item.exposedRate * 100), base = Math.round(item.comparisonRate * 100),
+      diff = Math.round(item.difference * 100),
       strength = item.difference >= 0.35 && item.exposed >= 8 ? "Tendance forte" : item.difference >= 0.25 ? "Tendance intéressante" : "Piste à explorer";
-    return `<article class="observation-explorer-result"><div class="observation-explorer-result-head"><span>${icons}</span><div><strong>${esc(label)}</strong><small>${esc(strength)}</small></div></div><p>${mode === "good" ? "Un meilleur ressenti" : "Un ressenti moins favorable"} apparaît dans <b>${pct} %</b> des journées correspondant à cette situation, contre <b>${base} %</b> des autres journées analysables.</p><div class="observation-explorer-proof"><span>${item.exposedHit}/${item.exposed} journées correspondantes</span><span>écart +${Math.round(item.difference * 100)} pts</span></div></article>`;
+    return `<article class="observation-explorer-result"><div class="observation-explorer-result-head"><span>${icons}</span><div><strong>${esc(label)}</strong><small>${esc(strength)}</small></div></div><p>${mode === "good" ? "Un meilleur ressenti" : "Un ressenti moins favorable"} apparaît dans <b>${pct} %</b> des journées correspondant à cette situation, contre <b>${base} %</b> des autres journées analysables.</p><div class="observation-explorer-proof"><span>${item.exposedHit}/${item.exposed} journées correspondantes</span><span>écart +${diff} pts</span></div><details class="observation-explorer-why"><summary>Pourquoi Énergie me montre ceci ?</summary><div class="observation-explorer-why-body"><p><strong>${item.exposedHit} journée${item.exposedHit !== 1 ? "s" : ""} sur ${item.exposed}</strong> correspondant à cette situation ont eu ${mode === "good" ? "un meilleur ressenti" : "un ressenti moins favorable"}, soit <strong>${pct} %</strong>.</p><p>Dans les autres journées comparables, c’était <strong>${item.comparisonHit}/${item.comparison}</strong>, soit <strong>${base} %</strong>. L’écart observé est donc de <strong>+${diff} points</strong>.</p><p class="muted tiny">Énergie affiche cette piste parce qu’elle revient plusieurs fois et que l’écart avec les autres journées dépasse son seuil exploratoire. C’est une association dans ton historique, pas une preuve de cause à effet.</p></div></details></article>`;
   }
   function observationExplorerPanelHtml(mode, open, offset) {
     const isGood = mode === "good";
