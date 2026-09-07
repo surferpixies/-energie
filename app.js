@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.70";
+  const APP_RELEASE = "3.56.71";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -8807,16 +8807,18 @@
       };
     return rows.length ? [exposureCard, progressionCard] : [];
   }
-  const EXPLORATION_STATE_KEY = "energieObservationExplorerV1";
+  const EXPLORATION_STATE_KEY = "energieObservationExplorerV2";
   function observationExplorerState() {
     try {
       const saved = JSON.parse(sessionStorage.getItem(EXPLORATION_STATE_KEY) || "{}");
       return {
-        mode: ["good", "less"].includes(saved.mode) ? saved.mode : null,
-        offset: Math.max(0, Number(saved.offset) || 0),
+        openGood: !!saved.openGood,
+        openLess: !!saved.openLess,
+        goodOffset: Math.max(0, Number(saved.goodOffset) || 0),
+        lessOffset: Math.max(0, Number(saved.lessOffset) || 0),
       };
     } catch (_) {
-      return { mode: null, offset: 0 };
+      return { openGood: false, openLess: false, goodOffset: 0, lessOffset: 0 };
     }
   }
   function saveObservationExplorerState(state) {
@@ -8834,58 +8836,50 @@
         const meta = tagMeta[id], score = Number(rawScore);
         if (!meta || !Number.isFinite(score)) return;
         evidence += 1;
-        if (meta.group === "positive") {
-          if (score >= 3) positiveSignals += score >= 4 ? 2 : 1;
-          return;
+        if (meta.kind === "positive" && score >= 3) positiveSignals += 1;
+        if (meta.kind !== "positive") {
+          const beforeScore = Number(before[id]);
+          if (Number.isFinite(beforeScore) && score > beforeScore) negativeSignals += 1;
+          else if (!Number.isFinite(beforeScore) && score >= 3) negativeSignals += 1;
         }
-        if (meta.group !== "symptom") return;
-        const beforeScore = Object.prototype.hasOwnProperty.call(before, id) ? Number(before[id]) : null;
-        if (Number.isFinite(beforeScore)) {
-          if (score - beforeScore >= 1) negativeSignals += score - beforeScore >= 2 ? 2 : 1;
-        } else if (score >= 3) negativeSignals += score >= 4 ? 2 : 1;
       });
     });
-    (day?.observations || []).forEach((observation) => {
-      const intensity = Math.max(1, Number(observation?.intensity) || 1);
-      (observation?.tags || []).forEach((id) => {
-        const meta = tagMeta[id];
-        if (!meta) return;
-        evidence += 1;
-        if (meta.group === "positive" && intensity >= 3) positiveSignals += intensity >= 4 ? 2 : 1;
-        if (meta.group === "symptom" && intensity >= 2) negativeSignals += intensity >= 4 ? 2 : 1;
-      });
+    (day?.globalObservations || day?.observations || []).forEach((observation) => {
+      const score = Number(observation?.intensity || observation?.score);
+      evidence += 1;
+      if (observation?.kind === "positive" || observation?.positive === true) positiveSignals += 1;
+      else if (!Number.isFinite(score) || score >= 2) negativeSignals += 1;
     });
-    return {
-      good: positiveSignals > 0 && positiveSignals >= negativeSignals,
-      less: negativeSignals > 0 && negativeSignals >= positiveSignals,
-      positiveSignals,
-      negativeSignals,
-      evidence,
-    };
+    return { good: positiveSignals > 0 && negativeSignals === 0, less: negativeSignals > 0, evidence };
   }
   function observationExplorerFactors(date, day) {
-    const factors = [], add = (id, icon, label) => factors.push({ id, icon, label });
-    const sleep = Number(day?.sleepHours), goal = Math.max(1, Number(db.settings?.waterGoal) || 8), water = Number(day?.water) || 0;
+    const factors = [];
+    const add = (id, icon, label) => {
+      if (!factors.some((factor) => factor.id === id)) factors.push({ id, icon, label });
+    };
+    const sleep = Number(day?.sleep?.hours ?? day?.sleepHours ?? day?.sleep);
     if (Number.isFinite(sleep)) {
-      if (sleep >= 7) add("sleep:7plus", "😴", "sommeil d’au moins 7 h");
-      if (sleep < 6.5) add("sleep:short", "🌙", "sommeil de moins de 6,5 h");
+      if (sleep >= 7) add("sleep:7plus", "😴", "sommeil de 7 h ou plus");
+      if (sleep < 6.5) add("sleep:short", "🌙", "sommeil de moins de 6 h 30");
     }
-    if (water > 0) {
-      if (water >= goal) add("water:goal", "💧", "objectif d’hydratation atteint");
-      if (water < goal * 0.7) add("water:low", "💧", "hydratation sous 70 % de l’objectif");
+    const hydration = hydrationTotalMl(day);
+    const hydrationGoal = Number(db.settings?.hydrationGoal || 2000);
+    if (hydration > 0 && hydrationGoal > 0) {
+      if (hydration >= hydrationGoal) add("hydration:goal", "💧", "objectif d’hydratation atteint");
+      if (hydration < hydrationGoal * 0.65) add("hydration:low", "🥤", "hydratation sous 65 % de l’objectif");
     }
-    const activities = (day?.activities || []).map(normalizeActivity),
-      activeMinutes = activities.reduce((sum, item) => sum + (Number(item.minutes) || 0), 0);
-    if (activeMinutes >= 30) add("activity:30", "🚶", "au moins 30 min d’activité");
-    const byType = new Map();
-    activities.forEach((item) => byType.set(item.type, (byType.get(item.type) || 0) + (Number(item.minutes) || 0)));
-    byType.forEach((minutes, type) => {
-      if (minutes >= 30) add(`activity-type:${type}`, activityIcon(type), `${type.toLowerCase()} au moins 30 min`);
+    const activities = Array.isArray(day?.activities) ? day.activities : [];
+    const activityMinutes = activities.reduce((sum, activity) => sum + (Number(activity?.minutes || activity?.duration) || 0), 0);
+    if (activityMinutes >= 30) add("activity:30plus", "🏃", "activité pendant 30 min ou plus");
+    activities.forEach((activity) => {
+      const raw = String(activity?.type || activity?.name || "").trim();
+      if (raw) add(`activity:${normalizeText(raw)}`, "🚶", `${raw.toLowerCase()} pratiquée`);
     });
-    if (db.settings?.stepsTracking === true && day?.steps != null) {
-      const steps = Number(day.steps) || 0, stepGoal = stepsGoalForDay(day);
+    const steps = Number(day?.steps);
+    const stepGoal = Number(db.settings?.stepsGoal || db.settings?.stepGoal || 8000);
+    if (Number.isFinite(steps) && steps > 0 && stepGoal > 0) {
       if (steps >= stepGoal) add("steps:goal", "👟", "objectif de pas atteint");
-      else if (steps < stepGoal * 0.6) add("steps:low", "👟", "moins de 60 % de l’objectif de pas");
+      if (steps < stepGoal * 0.6) add("steps:low", "👣", "moins de 60 % de l’objectif de pas");
     }
     const categories = window.ENERGIE_FOOD_CATEGORIES;
     const categoryIds = new Set();
@@ -8917,9 +8911,7 @@
     });
     const candidates = eligibleFactors.map((factor) => ({ factors: [factor] }));
     for (let i = 0; i < eligibleFactors.length; i += 1) {
-      for (let j = i + 1; j < eligibleFactors.length; j += 1) {
-        candidates.push({ factors: [eligibleFactors[i], eligibleFactors[j]] });
-      }
+      for (let j = i + 1; j < eligibleFactors.length; j += 1) candidates.push({ factors: [eligibleFactors[i], eligibleFactors[j]] });
     }
     const scored = candidates.map((candidate) => {
       const ids = candidate.factors.map((factor) => factor.id);
@@ -8954,34 +8946,48 @@
       strength = item.difference >= 0.35 && item.exposed >= 8 ? "Tendance forte" : item.difference >= 0.25 ? "Tendance intéressante" : "Piste à explorer";
     return `<article class="observation-explorer-result"><div class="observation-explorer-result-head"><span>${icons}</span><div><strong>${esc(label)}</strong><small>${esc(strength)}</small></div></div><p>${mode === "good" ? "Un meilleur ressenti" : "Un ressenti moins favorable"} apparaît dans <b>${pct} %</b> des journées correspondant à cette situation, contre <b>${base} %</b> des autres journées analysables.</p><div class="observation-explorer-proof"><span>${item.exposedHit}/${item.exposed} journées correspondantes</span><span>écart +${Math.round(item.difference * 100)} pts</span></div></article>`;
   }
-  function observationExplorerHtml() {
-    const state = observationExplorerState(), mode = state.mode;
-    let body = `<div class="observation-explorer-empty"><span aria-hidden="true">🧠</span><p>Choisis une question. Énergie cherchera dans les repas, le sommeil, l’hydratation, l’activité, les pas et leurs combinaisons.</p></div>`;
-    let resultCount = 0;
-    if (mode) {
-      const analysis = buildObservationExplorerResults(mode), all = analysis.results;
-      resultCount = all.length;
+  function observationExplorerPanelHtml(mode, open, offset) {
+    const isGood = mode === "good";
+    const analysis = buildObservationExplorerResults(mode), all = analysis.results;
+    const safeOffset = Math.min(Math.max(0, offset), Math.max(0, all.length - 1));
+    const visible = all.slice(safeOffset, safeOffset + 3);
+    const hasMore = safeOffset + visible.length < all.length;
+    const title = isGood ? "Je me sens bien lorsque…" : "Je me sens moins bien lorsque…";
+    const icon = isGood ? "😊" : "😕";
+    let body = "";
+    if (open) {
       if (!all.length) {
-        body = `<div class="observation-explorer-empty"><span aria-hidden="true">🌱</span><strong>Pas encore assez de répétitions</strong><p>Énergie a besoin d’au moins quelques journées comparables avant de faire ressortir ce type de piste. Continue simplement ton journal.</p></div>`;
+        body = `<div class="observation-explorer-panel-body"><div class="observation-explorer-empty"><span aria-hidden="true">🌱</span><strong>Pas encore assez de répétitions</strong><p>Énergie a besoin d’au moins quelques journées comparables avant de faire ressortir ce type de piste. Continue simplement ton journal.</p></div><p class="muted tiny observation-explorer-note">Analyse exploratoire sur un maximum de 180 jours. Les associations affichées ne prouvent pas un lien de cause à effet.</p></div>`;
       } else {
-        const visible = all.slice(state.offset, state.offset + 3).length ? all.slice(state.offset, state.offset + 3) : all.slice(0, 3);
-        body = `<div class="observation-explorer-results">${visible.map((item) => observationExplorerResultHtml(item, mode)).join("")}</div>${all.length > 3 ? `<button type="button" class="secondary observation-explorer-more" id="observationExplorerMore">🔄 Montre-moi autre chose</button>` : ""}<p class="muted tiny observation-explorer-note">Analyse exploratoire sur un maximum de 180 jours. Les associations affichées ne prouvent pas un lien de cause à effet.</p>`;
+        const remaining = all.length - (safeOffset + visible.length);
+        body = `<div class="observation-explorer-panel-body"><div class="observation-explorer-results">${visible.map((item) => observationExplorerResultHtml(item, mode)).join("")}</div>${hasMore ? `<button type="button" class="secondary observation-explorer-more" data-explorer-more="${mode}">🔄 Montre-moi autre chose${remaining > 0 ? ` (${remaining})` : ""}</button>` : ""}<p class="muted tiny observation-explorer-note">Analyse exploratoire sur un maximum de 180 jours. Les associations affichées ne prouvent pas un lien de cause à effet.</p></div>`;
       }
     }
-    return `<section class="card observation-explorer-card"><div class="observation-explorer-heading"><div><p class="eyebrow">Explorer mon historique</p><h2>🔎 Je remarque que…</h2></div><span class="observation-explorer-badge">${mode ? `${resultCount} piste${resultCount !== 1 ? "s" : ""}` : "Recherche libre"}</span></div><p class="muted">Pose une question simple à ton journal. Le Cerveau compare automatiquement les contextes seuls puis par paires pour faire ressortir ce qui semble le plus pertinent.</p><div class="observation-explorer-choices"><button type="button" class="observation-explorer-choice ${mode === "good" ? "active" : ""}" data-explorer-mode="good"><span>😊</span><strong>Je me sens bien lorsque…</strong></button><button type="button" class="observation-explorer-choice ${mode === "less" ? "active" : ""}" data-explorer-mode="less"><span>😕</span><strong>Je me sens moins bien lorsque…</strong></button></div>${body}</section>`;
+    return `<section class="observation-explorer-panel ${open ? "open" : ""}"><button type="button" class="observation-explorer-panel-toggle" data-explorer-toggle="${mode}" aria-expanded="${open}"><span class="observation-explorer-panel-icon">${icon}</span><span class="observation-explorer-panel-title"><strong>${title}</strong><small>${all.length ? `${all.length} piste${all.length !== 1 ? "s" : ""} trouvée${all.length !== 1 ? "s" : ""}` : "Explorer mon historique"}</small></span><span class="observation-explorer-chevron" aria-hidden="true">⌄</span></button>${body}</section>`;
+  }
+  function observationExplorerHtml() {
+    const state = observationExplorerState();
+    return `<section class="card observation-explorer-card"><div class="observation-explorer-heading"><div><p class="eyebrow">Explorer mon historique</p><h2>🔎 Je remarque que…</h2></div><span class="observation-explorer-badge">Recherche libre</span></div><p class="muted">Ouvre une question. Énergie compare les repas, le sommeil, l’hydratation, l’activité, les pas et leurs combinaisons pour faire ressortir les pistes les plus pertinentes.</p><div class="observation-explorer-panels">${observationExplorerPanelHtml("good", state.openGood, state.goodOffset)}${observationExplorerPanelHtml("less", state.openLess, state.lessOffset)}</div></section>`;
   }
   function bindObservationExplorer() {
-    $$('[data-explorer-mode]').forEach((button) => {
+    $$('[data-explorer-toggle]').forEach((button) => {
       button.onclick = () => {
-        saveObservationExplorerState({ mode: button.dataset.explorerMode, offset: 0 });
+        const mode = button.dataset.explorerToggle, state = observationExplorerState();
+        if (mode === "good") state.openGood = !state.openGood;
+        if (mode === "less") state.openLess = !state.openLess;
+        saveObservationExplorerState(state);
         renderInsights();
       };
     });
-    $("#observationExplorerMore")?.addEventListener("click", () => {
-      const state = observationExplorerState(), analysis = buildObservationExplorerResults(state.mode), total = analysis.results.length;
-      if (!total) return;
-      saveObservationExplorerState({ mode: state.mode, offset: (state.offset + 3) % total });
-      renderInsights();
+    $$('[data-explorer-more]').forEach((button) => {
+      button.onclick = () => {
+        const mode = button.dataset.explorerMore, state = observationExplorerState();
+        const key = mode === "good" ? "goodOffset" : "lessOffset";
+        const current = Math.max(0, Number(state[key]) || 0);
+        state[key] = current + 3;
+        saveObservationExplorerState(state);
+        renderInsights();
+      };
     });
   }
 
