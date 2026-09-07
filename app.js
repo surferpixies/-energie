@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.75";
+  const APP_RELEASE = "3.56.76";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -8808,6 +8808,7 @@
     return rows.length ? [exposureCard, progressionCard] : [];
   }
   const EXPLORATION_STATE_KEY = "energieObservationExplorerV2";
+  const observationExplorerResultsCache = new Map();
   function observationExplorerState() {
     try {
       const saved = JSON.parse(sessionStorage.getItem(EXPLORATION_STATE_KEY) || "{}");
@@ -8949,6 +8950,11 @@
     }
     return { rows, targetCount, results };
   }
+  function cachedObservationExplorerResults(mode) {
+    if (!observationExplorerResultsCache.has(mode))
+      observationExplorerResultsCache.set(mode, buildObservationExplorerResults(mode));
+    return observationExplorerResultsCache.get(mode);
+  }
   function observationExplorerResultHtml(item, mode) {
     const label = item.factors.map((factor) => factor.label).join(" + "),
       icons = item.factors.map((factor) => factor.icon).join(" "),
@@ -8990,26 +8996,43 @@
     const state = observationExplorerState();
     return `<section class="card observation-explorer-card"><div class="observation-explorer-heading"><div><p class="eyebrow">Explorer mon historique</p><h2>🔎 Je remarque que…</h2></div><span class="observation-explorer-badge">Recherche libre</span></div><p class="muted">Ouvre une question. Énergie compare les repas, le sommeil, l’hydratation, l’activité, les pas et leurs combinaisons pour faire ressortir les pistes les plus pertinentes.</p><div class="observation-explorer-panels">${observationExplorerPanelHtml("good", state.openGood, state.goodOffset)}${observationExplorerPanelHtml("less", state.openLess, state.lessOffset)}</div></section>`;
   }
+  function refreshObservationExplorerPanel(mode) {
+    const state = observationExplorerState(),
+      open = mode === "good" ? state.openGood : state.openLess,
+      offset = mode === "good" ? state.goodOffset : state.lessOffset,
+      currentPanel = $(`.observation-explorer-panel [data-explorer-toggle="${mode}"]`)?.closest(".observation-explorer-panel");
+    if (!currentPanel) return;
+    const holder = document.createElement("div");
+    holder.innerHTML = observationExplorerPanelHtml(mode, open, offset).trim();
+    const replacement = holder.firstElementChild;
+    if (replacement) currentPanel.replaceWith(replacement);
+  }
+
   function bindObservationExplorer() {
-    $$('[data-explorer-toggle]').forEach((button) => {
-      button.onclick = () => {
-        const mode = button.dataset.explorerToggle, state = observationExplorerState();
+    const card = $(".observation-explorer-card");
+    if (!card) return;
+    card.onclick = (event) => {
+      const toggle = event.target.closest("[data-explorer-toggle]");
+      if (toggle && card.contains(toggle)) {
+        event.preventDefault();
+        const mode = toggle.dataset.explorerToggle, state = observationExplorerState();
         if (mode === "good") state.openGood = !state.openGood;
         if (mode === "less") state.openLess = !state.openLess;
         saveObservationExplorerState(state);
-        renderInsights();
-      };
-    });
-    $$('[data-explorer-more]').forEach((button) => {
-      button.onclick = () => {
-        const mode = button.dataset.explorerMore, state = observationExplorerState();
+        refreshObservationExplorerPanel(mode);
+        return;
+      }
+      const more = event.target.closest("[data-explorer-more]");
+      if (more && card.contains(more)) {
+        event.preventDefault();
+        const mode = more.dataset.explorerMore, state = observationExplorerState();
         const key = mode === "good" ? "goodOffset" : "lessOffset";
         const current = Math.max(0, Number(state[key]) || 0);
         state[key] = current + 3;
         saveObservationExplorerState(state);
-        renderInsights();
-      };
-    });
+        refreshObservationExplorerPanel(mode);
+      }
+    };
   }
 
   let insightsRenderRequest = 0,
@@ -9026,6 +9049,7 @@
     );
   }
   function renderInsightsContent() {
+    observationExplorerResultsCache.clear();
     const realMeals = mealsThroughSelectedDate(),
       referenceBrain = activeReferenceBrain(),
       usePreview =
