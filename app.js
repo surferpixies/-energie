@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.71";
+  const APP_RELEASE = "3.56.73";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -8836,26 +8836,52 @@
         const meta = tagMeta[id], score = Number(rawScore);
         if (!meta || !Number.isFinite(score)) return;
         evidence += 1;
-        if (meta.kind === "positive" && score >= 3) positiveSignals += 1;
-        if (meta.kind !== "positive") {
-          const beforeScore = Number(before[id]);
-          if (Number.isFinite(beforeScore) && score > beforeScore) negativeSignals += 1;
-          else if (!Number.isFinite(beforeScore) && score >= 3) negativeSignals += 1;
+        // FEELING_TAGS utilise historiquement `group` (positive / symptom).
+        // On accepte aussi `kind` pour rester compatible avec d'anciens jeux de données.
+        const group = meta.group || meta.kind;
+        if (group === "positive") {
+          if (score >= 3) positiveSignals += score >= 4 ? 2 : 1;
+          return;
         }
+        if (group !== "symptom") return;
+        const beforeScore = Object.prototype.hasOwnProperty.call(before, id) ? Number(before[id]) : null;
+        if (Number.isFinite(beforeScore)) {
+          if (score - beforeScore >= 1) negativeSignals += score - beforeScore >= 2 ? 2 : 1;
+        } else if (score >= 3) negativeSignals += score >= 4 ? 2 : 1;
       });
     });
-    const globalObservations = Array.isArray(day?.globalObservations)
-      ? day.globalObservations
-      : Array.isArray(day?.observations)
-        ? day.observations
+
+    const observations = Array.isArray(day?.observations)
+      ? day.observations
+      : Array.isArray(day?.globalObservations)
+        ? day.globalObservations
         : [];
-    globalObservations.forEach((observation) => {
-      const score = Number(observation?.intensity || observation?.score);
-      evidence += 1;
-      if (observation?.kind === "positive" || observation?.positive === true) positiveSignals += 1;
-      else if (!Number.isFinite(score) || score >= 2) negativeSignals += 1;
+    observations.forEach((observation) => {
+      const intensity = Math.max(1, Number(observation?.intensity || observation?.score) || 1);
+      const tags = Array.isArray(observation?.tags) ? observation.tags : [];
+      if (tags.length) {
+        tags.forEach((id) => {
+          const meta = tagMeta[id];
+          if (!meta) return;
+          evidence += 1;
+          const group = meta.group || meta.kind;
+          if (group === "positive" && intensity >= 3) positiveSignals += intensity >= 4 ? 2 : 1;
+          if (group === "symptom" && intensity >= 2) negativeSignals += intensity >= 4 ? 2 : 1;
+        });
+      } else {
+        // Compatibilité avec des observations stockées sous forme plus simple.
+        evidence += 1;
+        if (observation?.kind === "positive" || observation?.positive === true) positiveSignals += intensity >= 4 ? 2 : 1;
+        else if (intensity >= 2) negativeSignals += intensity >= 4 ? 2 : 1;
+      }
     });
-    return { good: positiveSignals > 0 && negativeSignals === 0, less: negativeSignals > 0, evidence };
+    return {
+      good: positiveSignals > 0 && positiveSignals >= negativeSignals,
+      less: negativeSignals > 0 && negativeSignals >= positiveSignals,
+      positiveSignals,
+      negativeSignals,
+      evidence,
+    };
   }
   function observationExplorerFactors(date, day) {
     const factors = [];
@@ -8867,11 +8893,18 @@
       if (sleep >= 7) add("sleep:7plus", "😴", "sommeil de 7 h ou plus");
       if (sleep < 6.5) add("sleep:short", "🌙", "sommeil de moins de 6 h 30");
     }
+    // Selon la génération de données, l'hydratation est enregistrée soit en
+    // nombre de verres/gouttes (`water`), soit sous une forme détaillée en ml.
+    const water = Number(day?.water) || 0;
+    const waterGoal = Math.max(1, Number(db.settings?.waterGoal) || 8);
     const hydration = hydrationTotalMl(day);
     const hydrationGoal = Number(db.settings?.hydrationGoal || 2000);
-    if (hydration > 0 && hydrationGoal > 0) {
+    if (water > 0) {
+      if (water >= waterGoal) add("hydration:goal", "💧", "objectif d’hydratation atteint");
+      if (water < waterGoal * 0.7) add("hydration:low", "🥤", "hydratation sous 70 % de l’objectif");
+    } else if (hydration > 0 && hydrationGoal > 0) {
       if (hydration >= hydrationGoal) add("hydration:goal", "💧", "objectif d’hydratation atteint");
-      if (hydration < hydrationGoal * 0.65) add("hydration:low", "🥤", "hydratation sous 65 % de l’objectif");
+      if (hydration < hydrationGoal * 0.7) add("hydration:low", "🥤", "hydratation sous 70 % de l’objectif");
     }
     const activities = Array.isArray(day?.activities) ? day.activities : [];
     const activityMinutes = activities.reduce((sum, activity) => sum + (Number(activity?.minutes || activity?.duration) || 0), 0);
@@ -9780,6 +9813,7 @@
           "langue",
           "sauvegarde supplementaire",
           "donnees et sauvegarde",
+          "photos des repas",
         ],
       },
     ];
