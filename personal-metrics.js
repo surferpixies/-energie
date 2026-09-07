@@ -49,13 +49,16 @@
       if (key === "age") {
         const age = number(record.value);
         if (age != null && Number.isInteger(age) && age >= 0 && age <= 130) out.value = age;
+      } else if (key === "height") {
+        const height = number(record.value);
+        if (height != null && height >= 30 && height <= 250) out.value = Math.round(height * 10) / 10;
       } else if (key === "sex" && ["female", "male", "intersex", "other"].includes(record.value)) out.value = record.value;
     }
     return out;
   }
   function mergeProfile(local = {}, remote = {}) {
     const out = {};
-    for (const key of ["age", "sex", "weight", "physiology"]) {
+    for (const key of ["age", "sex", "height", "weight", "physiology"]) {
       const a = profileRecord(key, local?.[key]), b = profileRecord(key, remote?.[key]);
       const latest = !a || (b && Date.parse(b.updatedAt) > Date.parse(a.updatedAt)) ? b : a;
       if (latest) out[key] = latest;
@@ -92,19 +95,27 @@
   function chart(points, { start, end, kind, unit, id }) {
     const known = points.filter((p) => number(p.value) != null && dateTime(p.date) != null);
     if (!known.length) return '<p class="metrics-empty">Aucune donnée sur cette période.</p>';
-    const values = known.map((p) => p.value), isWeight = kind === "weight";
-    let min = isWeight ? Math.min(...values) : 0, max = Math.max(...values);
-    const pad = isWeight ? Math.max((max - min) * 0.2, unit === "lb" ? 1 : 0.5) : Math.max(max * 0.1, 1);
-    min = Math.max(0, min - (isWeight ? pad : 0)); max += pad;
+    const values = known.map((p) => p.value), isWeight = kind === "weight", isBalance = kind === "balance";
+    let min = isWeight || isBalance ? Math.min(...values) : 0, max = Math.max(...values);
+    const pad = isWeight ? Math.max((max - min) * 0.2, unit === "lb" ? 1 : 0.5) : isBalance ? Math.max((max - min) * 0.12, 80) : Math.max(max * 0.1, 1);
+    if (isWeight) min = Math.max(0, min - pad);
+    else if (isBalance) { min = Math.min(0, min - pad); max = Math.max(0, max + pad); }
+    max += isWeight || isBalance ? pad : pad;
+    if (isBalance) max -= pad; // déjà ajouté ci-dessus
+    if (max === min) { max += 1; min -= isBalance ? 1 : 0; }
     const left = 56, top = 12, width = 272, height = 104;
     const span = Math.max(DAY, dateTime(end) - dateTime(start));
     const x = (date) => left + (dateTime(date) - dateTime(start)) / span * width;
     const y = (value) => top + height - (value - min) / (max - min) * height;
     const axes = [min, (min + max) / 2, max].map((v) => `<line x1="${left}" x2="${left + width}" y1="${y(v)}" y2="${y(v)}" class="metrics-gridline"/><text x="${left - 7}" y="${y(v) + 4}" text-anchor="end">${escape(format(v))}</text>`).join("");
+    const zeroY = isBalance ? y(0) : top + height;
     const marks = isWeight
       ? `${known.length > 1 ? `<polyline class="metrics-line" points="${known.map((p) => `${x(p.date)},${y(p.value)}`).join(" ")}"/>` : ""}${known.map((p) => `<circle class="metrics-dot" cx="${x(p.date)}" cy="${y(p.value)}" r="3.5"><title>${escape(p.date)} : ${escape(format(p.value))} ${escape(unit)}</title></circle>`).join("")}`
-      : known.map((p) => `<rect class="metrics-bar${p.partial ? " is-partial" : ""}" x="${x(p.date) - 3}" y="${p.value === 0 ? top + height - 2 : y(p.value)}" width="6" height="${Math.max(2, top + height - y(p.value))}" rx="2"><title>${escape(p.date)} : ${escape(format(p.value))} kcal${p.partial ? " — estimation partielle" : ""}</title></rect>`).join("");
-    const title = isWeight ? "Évolution des mesures de poids" : "Calories estimées des repas saisis par jour";
+      : `${isBalance ? `<line x1="${left}" x2="${left + width}" y1="${zeroY}" y2="${zeroY}" class="metrics-zero-line"/>` : ""}${known.map((p) => {
+          const pointY = y(p.value), barY = isBalance ? Math.min(pointY, zeroY) : (p.value === 0 ? top + height - 2 : pointY), barHeight = isBalance ? Math.max(2, Math.abs(zeroY - pointY)) : Math.max(2, top + height - pointY);
+          return `<rect class="metrics-bar${p.partial ? " is-partial" : ""}${isBalance ? (p.value < 0 ? " is-deficit" : p.value > 0 ? " is-surplus" : " is-balanced") : ""}" x="${x(p.date) - 3}" y="${barY}" width="6" height="${barHeight}" rx="2"><title>${escape(p.date)} : ${p.value > 0 && isBalance ? "+" : ""}${escape(format(p.value))} kcal${p.partial ? " — estimation partielle" : ""}</title></rect>`;
+        }).join("")}`;
+    const title = isWeight ? "Évolution des mesures de poids" : isBalance ? "Balance énergétique estimée par jour" : "Calories estimées des repas saisis par jour";
     return `<svg class="metrics-chart" viewBox="0 0 344 146" role="img" aria-labelledby="${id}-title ${id}-desc"><title id="${id}-title">${title}</title><desc id="${id}-desc">Du ${start} au ${end}. ${known.length} journée(s) avec données. Détail des valeurs dans le tableau ci-dessous.</desc>${axes}${marks}<text x="${left}" y="140">${shortDate(start)}</text><text x="${left + width / 2}" y="140" text-anchor="middle">${shortDate(new Date((dateTime(start) + dateTime(end)) / 2).toISOString().slice(0, 10))}</text><text x="${left + width}" y="140" text-anchor="end">${shortDate(end)}</text></svg><details class="metrics-values"><summary>Voir les valeurs</summary><div class="metrics-table-scroll"><table><caption>${title} (${escape(unit)})</caption><thead><tr><th scope="col">Date</th><th scope="col">Valeur</th>${isWeight ? "" : '<th scope="col">Repas estimés</th>'}</tr></thead><tbody>${known.map((p) => `<tr><th scope="row">${escape(p.date)}</th><td>${escape(format(p.value))}</td>${isWeight ? "" : `<td>${p.known}/${p.count}${p.partial ? " · partiel" : ""}</td>`}</tr>`).join("")}</tbody></table></div></details>`;
   }
   const api = { number, dateTime, weightKg, displayWeight, weightRecord, mergeWeight, mergeProfile, calorieSummary, series, chart };
