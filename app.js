@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.68";
+  const APP_RELEASE = "3.56.70";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -8807,6 +8807,184 @@
       };
     return rows.length ? [exposureCard, progressionCard] : [];
   }
+  const EXPLORATION_STATE_KEY = "energieObservationExplorerV1";
+  function observationExplorerState() {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem(EXPLORATION_STATE_KEY) || "{}");
+      return {
+        mode: ["good", "less"].includes(saved.mode) ? saved.mode : null,
+        offset: Math.max(0, Number(saved.offset) || 0),
+      };
+    } catch (_) {
+      return { mode: null, offset: 0 };
+    }
+  }
+  function saveObservationExplorerState(state) {
+    try { sessionStorage.setItem(EXPLORATION_STATE_KEY, JSON.stringify(state)); } catch (_) {}
+  }
+  function observationExplorerDayOutcome(day) {
+    const tagMeta = Object.fromEntries(FEELING_TAGS.map((tag) => [tag.id, tag]));
+    let positiveSignals = 0,
+      negativeSignals = 0,
+      evidence = 0;
+    (day?.meals || []).forEach((meal) => {
+      const before = feelingScoresFor(meal, "before"),
+        after = feelingScoresFor(meal, "after");
+      Object.entries(after).forEach(([id, rawScore]) => {
+        const meta = tagMeta[id], score = Number(rawScore);
+        if (!meta || !Number.isFinite(score)) return;
+        evidence += 1;
+        if (meta.group === "positive") {
+          if (score >= 3) positiveSignals += score >= 4 ? 2 : 1;
+          return;
+        }
+        if (meta.group !== "symptom") return;
+        const beforeScore = Object.prototype.hasOwnProperty.call(before, id) ? Number(before[id]) : null;
+        if (Number.isFinite(beforeScore)) {
+          if (score - beforeScore >= 1) negativeSignals += score - beforeScore >= 2 ? 2 : 1;
+        } else if (score >= 3) negativeSignals += score >= 4 ? 2 : 1;
+      });
+    });
+    (day?.observations || []).forEach((observation) => {
+      const intensity = Math.max(1, Number(observation?.intensity) || 1);
+      (observation?.tags || []).forEach((id) => {
+        const meta = tagMeta[id];
+        if (!meta) return;
+        evidence += 1;
+        if (meta.group === "positive" && intensity >= 3) positiveSignals += intensity >= 4 ? 2 : 1;
+        if (meta.group === "symptom" && intensity >= 2) negativeSignals += intensity >= 4 ? 2 : 1;
+      });
+    });
+    return {
+      good: positiveSignals > 0 && positiveSignals >= negativeSignals,
+      less: negativeSignals > 0 && negativeSignals >= positiveSignals,
+      positiveSignals,
+      negativeSignals,
+      evidence,
+    };
+  }
+  function observationExplorerFactors(date, day) {
+    const factors = [], add = (id, icon, label) => factors.push({ id, icon, label });
+    const sleep = Number(day?.sleepHours), goal = Math.max(1, Number(db.settings?.waterGoal) || 8), water = Number(day?.water) || 0;
+    if (Number.isFinite(sleep)) {
+      if (sleep >= 7) add("sleep:7plus", "😴", "sommeil d’au moins 7 h");
+      if (sleep < 6.5) add("sleep:short", "🌙", "sommeil de moins de 6,5 h");
+    }
+    if (water > 0) {
+      if (water >= goal) add("water:goal", "💧", "objectif d’hydratation atteint");
+      if (water < goal * 0.7) add("water:low", "💧", "hydratation sous 70 % de l’objectif");
+    }
+    const activities = (day?.activities || []).map(normalizeActivity),
+      activeMinutes = activities.reduce((sum, item) => sum + (Number(item.minutes) || 0), 0);
+    if (activeMinutes >= 30) add("activity:30", "🚶", "au moins 30 min d’activité");
+    const byType = new Map();
+    activities.forEach((item) => byType.set(item.type, (byType.get(item.type) || 0) + (Number(item.minutes) || 0)));
+    byType.forEach((minutes, type) => {
+      if (minutes >= 30) add(`activity-type:${type}`, activityIcon(type), `${type.toLowerCase()} au moins 30 min`);
+    });
+    if (db.settings?.stepsTracking === true && day?.steps != null) {
+      const steps = Number(day.steps) || 0, stepGoal = stepsGoalForDay(day);
+      if (steps >= stepGoal) add("steps:goal", "👟", "objectif de pas atteint");
+      else if (steps < stepGoal * 0.6) add("steps:low", "👟", "moins de 60 % de l’objectif de pas");
+    }
+    const categories = window.ENERGIE_FOOD_CATEGORIES;
+    const categoryIds = new Set();
+    (day?.meals || []).forEach((meal) => {
+      categories?.categoryIdsForText?.(meal?.description || "").forEach((id) => categoryIds.add(id));
+    });
+    categoryIds.forEach((id) => {
+      const meta = categories?.getCategory?.(id, window.ENERGIE_LOCALE || "fr-CA");
+      add(`food:${id}`, meta?.icon || "🍽️", `${String(meta?.label || id).toLowerCase()} repéré`);
+    });
+    const dinner = (day?.meals || []).find((meal) => meal.type === "Souper" && meal.time);
+    if (dinner?.time >= "20:00") add("meal:late-dinner", "🕗", "souper à 20 h ou plus tard");
+    return factors;
+  }
+  function buildObservationExplorerResults(mode) {
+    const rows = Object.entries(db.days || {})
+      .filter(([date, day]) => date <= selectedDate && day)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-180)
+      .map(([date, day]) => ({ date, day, outcome: observationExplorerDayOutcome(day), factors: observationExplorerFactors(date, day) }))
+      .filter((row) => row.outcome.evidence > 0);
+    const targetCount = rows.filter((row) => row.outcome[mode]).length;
+    if (rows.length < 10 || targetCount < 4) return { rows, targetCount, results: [] };
+    const factorMap = new Map();
+    rows.forEach((row) => row.factors.forEach((factor) => factorMap.set(factor.id, factor)));
+    const eligibleFactors = [...factorMap.values()].filter((factor) => {
+      const present = rows.filter((row) => row.factors.some((item) => item.id === factor.id)).length;
+      return present >= 4 && rows.length - present >= 4;
+    });
+    const candidates = eligibleFactors.map((factor) => ({ factors: [factor] }));
+    for (let i = 0; i < eligibleFactors.length; i += 1) {
+      for (let j = i + 1; j < eligibleFactors.length; j += 1) {
+        candidates.push({ factors: [eligibleFactors[i], eligibleFactors[j]] });
+      }
+    }
+    const scored = candidates.map((candidate) => {
+      const ids = candidate.factors.map((factor) => factor.id);
+      const exposed = rows.filter((row) => ids.every((id) => row.factors.some((factor) => factor.id === id))),
+        comparison = rows.filter((row) => !ids.every((id) => row.factors.some((factor) => factor.id === id)));
+      if (exposed.length < 4 || comparison.length < 4) return null;
+      const exposedHit = exposed.filter((row) => row.outcome[mode]).length,
+        comparisonHit = comparison.filter((row) => row.outcome[mode]).length,
+        exposedRate = exposedHit / exposed.length,
+        comparisonRate = comparisonHit / comparison.length,
+        difference = exposedRate - comparisonRate;
+      if (difference < 0.16 || exposedHit < 3) return null;
+      const balance = Math.min(exposed.length, comparison.length) / Math.max(exposed.length, comparison.length),
+        score = difference * Math.log2(exposed.length + 1) * (0.8 + balance * 0.2) * (ids.length === 2 ? 1.04 : 1);
+      return { ...candidate, exposed: exposed.length, comparison: comparison.length, exposedHit, comparisonHit, exposedRate, comparisonRate, difference, score };
+    }).filter(Boolean).sort((a, b) => b.score - a.score || b.exposed - a.exposed);
+    const results = [];
+    for (const item of scored) {
+      const ids = item.factors.map((factor) => factor.id);
+      const tooSimilar = results.some((kept) => {
+        const keptIds = kept.factors.map((factor) => factor.id);
+        return ids.length === 2 && keptIds.length === 1 && ids.includes(keptIds[0]) && item.difference < kept.difference + 0.08;
+      });
+      if (!tooSimilar) results.push(item);
+    }
+    return { rows, targetCount, results };
+  }
+  function observationExplorerResultHtml(item, mode) {
+    const label = item.factors.map((factor) => factor.label).join(" + "),
+      icons = item.factors.map((factor) => factor.icon).join(" "),
+      pct = Math.round(item.exposedRate * 100), base = Math.round(item.comparisonRate * 100),
+      strength = item.difference >= 0.35 && item.exposed >= 8 ? "Tendance forte" : item.difference >= 0.25 ? "Tendance intéressante" : "Piste à explorer";
+    return `<article class="observation-explorer-result"><div class="observation-explorer-result-head"><span>${icons}</span><div><strong>${esc(label)}</strong><small>${esc(strength)}</small></div></div><p>${mode === "good" ? "Un meilleur ressenti" : "Un ressenti moins favorable"} apparaît dans <b>${pct} %</b> des journées correspondant à cette situation, contre <b>${base} %</b> des autres journées analysables.</p><div class="observation-explorer-proof"><span>${item.exposedHit}/${item.exposed} journées correspondantes</span><span>écart +${Math.round(item.difference * 100)} pts</span></div></article>`;
+  }
+  function observationExplorerHtml() {
+    const state = observationExplorerState(), mode = state.mode;
+    let body = `<div class="observation-explorer-empty"><span aria-hidden="true">🧠</span><p>Choisis une question. Énergie cherchera dans les repas, le sommeil, l’hydratation, l’activité, les pas et leurs combinaisons.</p></div>`;
+    let resultCount = 0;
+    if (mode) {
+      const analysis = buildObservationExplorerResults(mode), all = analysis.results;
+      resultCount = all.length;
+      if (!all.length) {
+        body = `<div class="observation-explorer-empty"><span aria-hidden="true">🌱</span><strong>Pas encore assez de répétitions</strong><p>Énergie a besoin d’au moins quelques journées comparables avant de faire ressortir ce type de piste. Continue simplement ton journal.</p></div>`;
+      } else {
+        const visible = all.slice(state.offset, state.offset + 3).length ? all.slice(state.offset, state.offset + 3) : all.slice(0, 3);
+        body = `<div class="observation-explorer-results">${visible.map((item) => observationExplorerResultHtml(item, mode)).join("")}</div>${all.length > 3 ? `<button type="button" class="secondary observation-explorer-more" id="observationExplorerMore">🔄 Montre-moi autre chose</button>` : ""}<p class="muted tiny observation-explorer-note">Analyse exploratoire sur un maximum de 180 jours. Les associations affichées ne prouvent pas un lien de cause à effet.</p>`;
+      }
+    }
+    return `<section class="card observation-explorer-card"><div class="observation-explorer-heading"><div><p class="eyebrow">Explorer mon historique</p><h2>🔎 Je remarque que…</h2></div><span class="observation-explorer-badge">${mode ? `${resultCount} piste${resultCount !== 1 ? "s" : ""}` : "Recherche libre"}</span></div><p class="muted">Pose une question simple à ton journal. Le Cerveau compare automatiquement les contextes seuls puis par paires pour faire ressortir ce qui semble le plus pertinent.</p><div class="observation-explorer-choices"><button type="button" class="observation-explorer-choice ${mode === "good" ? "active" : ""}" data-explorer-mode="good"><span>😊</span><strong>Je me sens bien lorsque…</strong></button><button type="button" class="observation-explorer-choice ${mode === "less" ? "active" : ""}" data-explorer-mode="less"><span>😕</span><strong>Je me sens moins bien lorsque…</strong></button></div>${body}</section>`;
+  }
+  function bindObservationExplorer() {
+    $$('[data-explorer-mode]').forEach((button) => {
+      button.onclick = () => {
+        saveObservationExplorerState({ mode: button.dataset.explorerMode, offset: 0 });
+        renderInsights();
+      };
+    });
+    $("#observationExplorerMore")?.addEventListener("click", () => {
+      const state = observationExplorerState(), analysis = buildObservationExplorerResults(state.mode), total = analysis.results.length;
+      if (!total) return;
+      saveObservationExplorerState({ mode: state.mode, offset: (state.offset + 3) % total });
+      renderInsights();
+    });
+  }
+
   let insightsRenderRequest = 0,
     insightsComputationCache = null;
   function renderInsights() {
@@ -8955,6 +9133,7 @@
     $("#app").innerHTML =
       `${analysisDateNavigatorHtml()}<section class="hero"><p class="eyebrow">Tableau intelligent</p><h2>Ce qu’Énergie apprend sur toi</h2><p>Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer leurs causes.</p></section>${previewBanner}${discoverySectionHtml(discoveryReport, negativeFeelings)}<div class="grid dashboard-overview"><section class="card stat-card compact-stat-card compact-row-card dashboard-hero-card"><div class="stat-card-heading"><span>🍎</span><div><h3>Tu utilises Énergie depuis</h3><p class="muted small">Date de départ du journal</p></div></div><div class="metric metric-small">${esc(story.since)}</div></section><section class="card stat-card dashboard-mini-card"><span>⭐</span><h3>Point fort</h3><p>${esc(story.strength)}</p></section><section class="card stat-card dashboard-mini-card"><span>💡</span><h3>Habitude observée</h3><p>${esc(story.habit)}</p></section><section class="card stat-card dashboard-mini-card"><span>🎯</span><h3>Suggestion principale</h3><p>${esc(story.suggestion)}</p></section></div>${professionalDiscussionHtml(meals)}<div class="section-title"><h2>🧠 Autres observations</h2><span class="muted small">${insights.length} carte${insights.length > 1 ? "s" : ""}</span></div><div class="insight-grid">${insights.length ? insights.map(insightHtml).join("") : `<section class="card empty wide"><div class="food-art">🧠</div><p>${db.settings.insightsEnabled ? "Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles." : "Les observations sont désactivées dans les paramètres."}</p></section>`}</div>${demoDiscoveryHtml()}${usePreview && !db.settings.demoMode ? '<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>' : ""}`;
     $("#app .hero")?.insertAdjacentHTML("afterend", personalTrendsHtml());
+    $("#app .hero")?.insertAdjacentHTML("afterend", observationExplorerHtml());
     const personalTrends = $("#app .personal-trends");
     (personalTrends || $("#app .hero"))?.insertAdjacentHTML("afterend", stepsObservationHtml());
     // Never manufacture positive observations from the dashboard's preview meals.
@@ -9020,6 +9199,7 @@
         }),
     );
     bindAnalysisDateNavigator();
+    bindObservationExplorer();
     bindLazyAllObservations();
     $("#openEnergyPortrait")?.addEventListener("click", openEnergyPortrait);
     decorateSupplementIcons();
