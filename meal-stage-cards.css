@@ -74,3 +74,69 @@ html[data-theme="dark"] .meal-entry-stage-card {
   .meal-entry-stage-card{padding:.62rem;gap:.55rem}
   .meal-entry-stage-head small{font-size:.54rem}
 }
+
+
+/* v3.56.85 — cartes de ressentis et calories plus compactes */
+#mealForm .meal-feeling-summary-card {
+  gap: .5rem;
+  padding: .48rem .62rem;
+  border-radius: 15px;
+}
+#mealForm .meal-feeling-summary-icon {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+#mealForm .meal-feeling-summary-copy { gap: .04rem; }
+#mealForm .meal-feeling-summary-copy > strong { font-size: .79rem; }
+#mealForm .meal-feeling-summary-copy > small { font-size: .59rem; }
+#mealForm .meal-feeling-summary-copy .meal-feeling-selected-preview {
+  max-height: 1.35rem;
+  margin-top: 0;
+  font-size: .59rem;
+}
+#mealForm .meal-feeling-summary-action {
+  min-height: 28px;
+  padding: .25rem .4rem;
+  border-radius: 10px;
+}
+#mealForm .meal-feeling-summary-action strong { font-size: .62rem; }
+#mealForm .meal-feeling-later { font-size: .52rem; }
+
+#mealForm .meal-entry-stage-card .meal-calorie-inline {
+  min-height: 0;
+  padding: .22rem .48rem .28rem;
+  gap: .28rem;
+}
+#mealForm .meal-calorie-inline label {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  font-size: .62rem;
+}
+#mealForm .meal-calorie-inline input[type="text"] {
+  min-height: 25px;
+}
+
+@media(max-width:420px){
+  #mealForm .meal-feeling-summary-card {
+    grid-template-columns: auto minmax(0,1fr) auto;
+    padding: .44rem .55rem;
+  }
+  #mealForm .meal-feeling-summary-action {
+    grid-column: auto;
+    width: auto;
+    max-width: none;
+  }
+  #mealForm .meal-feeling-later {
+    grid-column: 2 / -1;
+    width: auto;
+    max-width: none;
+    text-align: right;
+  }
+  #mealForm .meal-entry-stage-card .meal-calorie-inline {
+    grid-template-columns: auto 3.5rem auto minmax(0,1fr);
+  }
+  #mealForm .meal-calorie-inline input[type="text"] { width:3.5rem; }
+}
