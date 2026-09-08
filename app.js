@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.80";
+  const APP_RELEASE = "3.56.81";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -2265,6 +2265,56 @@
     }
     return best?.food || null;
   }
+  function mealQuantityNumber(value) {
+    const text = String(value || "").trim().replace(",", ".");
+    if (/^\d+\s*\/\s*\d+$/.test(text)) {
+      const [a, b] = text.split("/").map(Number);
+      return b ? a / b : null;
+    }
+    const n = Number(text);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+  function mealQuantityUnit(value) {
+    const unit = normalizeFoodText(value);
+    if (/^(g|gramme|grammes|gram)$/.test(unit)) return "g";
+    if (/^(kg|kilogramme|kilogrammes)$/.test(unit)) return "kg";
+    if (/^(ml|millilitre|millilitres)$/.test(unit)) return "ml";
+    if (/^(l|litre|litres)$/.test(unit)) return "l";
+    if (/^(tasse|tasses|cup|cups)$/.test(unit)) return "cup";
+    if (/^(c a soupe|cuillere a soupe|cuilleres a soupe|tbsp)$/.test(unit)) return "tbsp";
+    if (/^(c a the|cuillere a the|cuilleres a the|tsp)$/.test(unit)) return "tsp";
+    return null;
+  }
+  function normalizedMealQuantity(value, unit) {
+    const n = mealQuantityNumber(value), canonical = mealQuantityUnit(unit);
+    if (n == null || !canonical) return null;
+    if (canonical === "kg") return { value: n * 1000, unit: "g" };
+    if (canonical === "l") return { value: n * 1000, unit: "ml" };
+    return { value: n, unit: canonical };
+  }
+  function mealQuantityFromText(text) {
+    const raw = String(text || "")
+      .toLocaleLowerCase("fr-CA")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[’']/g, " ");
+    const number = "(\\d+(?:[.,]\\d+)?|\\d+\\s*\\/\\s*\\d+)";
+    const unit = "(kg|kilogrammes?|g|grammes?|grams?|ml|millilitres?|l|litres?|tasses?|cups?|c\\.?\\s*a\\s*soupe|cuilleres?\\s*a\\s*soupe|tbsp|c\\.?\\s*a\\s*the|cuilleres?\\s*a\\s*the|tsp)";
+    const match = raw.match(new RegExp(`${number}\\s*${unit}\\b`, "i"));
+    return match ? normalizedMealQuantity(match[1], match[2]) : null;
+  }
+  function mealReferenceQuantity(portion) {
+    return mealQuantityFromText(portion);
+  }
+  function nutritionScaleForSegment(segment, food) {
+    const entered = mealQuantityFromText(segment), reference = mealReferenceQuantity(food?.portion);
+    if (!entered || !reference || entered.unit !== reference.unit || reference.value <= 0)
+      return { scale: 1, quantityUsed: false };
+    const scale = entered.value / reference.value;
+    return Number.isFinite(scale) && scale > 0 && scale <= 20
+      ? { scale, quantityUsed: true }
+      : { scale: 1, quantityUsed: false };
+  }
   function splitMealIngredients(text) {
     const explicit = String(text || "")
       .split(/\s*(?:\+|,|;|\n|\r|\u2022|\|)\s*/)
@@ -2343,17 +2393,17 @@
       "fr-CA": {
         labels: { protein: "Protéines", fiber: "Fibres", carbs: "Glucides", carbs_low: "Peu de glucides", dairy: "Laitiers", soy: "Soya", gluten: "Gluten", eggs: "Œufs", nuts: "Noix" },
         status: { confirmed: "confirmé", probable: "probable", possible: "possible", missing: "non détecté" },
-        hint: "Plus ta description est précise — ingrédients, sauces et accompagnements — plus les observations d’Énergie seront pertinentes.", recognized: "Éléments reconnus", written: "Selon les ingrédients écrits", usual: "Composition habituelle — la recette peut varier", recognizedSuffix: "reconnu", usually: "Habituellement", kept: "Description conservée telle quelle", complete: "Préciser le repas", continue: "Continuer ainsi",
+        hint: "Pour améliorer l’estimation des calories, ajoute les quantités quand tu les connais : 150 g de poulet, 1 tasse de riz, 1 tasse de brocoli. C’est facultatif.", recognized: "Éléments reconnus", written: "Selon les ingrédients écrits", usual: "Composition habituelle — la recette peut varier", recognizedSuffix: "reconnu", usually: "Habituellement", kept: "Description conservée telle quelle", complete: "Préciser le repas", continue: "Continuer ainsi",
       },
       "fr-FR": {
         labels: { protein: "Protéines", fiber: "Fibres", carbs: "Glucides", carbs_low: "Peu de glucides", dairy: "Laitiers", soy: "Soja", gluten: "Gluten", eggs: "Œufs", nuts: "Noix" },
         status: { confirmed: "confirmé", probable: "probable", possible: "possible", missing: "non détecté" },
-        hint: "Plus ta description est précise — ingrédients, sauces et accompagnements — plus les observations d’Énergie seront pertinentes.", recognized: "Éléments reconnus", written: "Selon les ingrédients indiqués", usual: "Composition habituelle — la recette peut varier", recognizedSuffix: "reconnu", usually: "Habituellement", kept: "Description conservée telle quelle", complete: "Préciser le repas", continue: "Continuer ainsi",
+        hint: "Pour améliorer l’estimation des calories, ajoute les quantités quand tu les connais : 150 g de poulet, 1 tasse de riz, 1 tasse de brocoli. C’est facultatif.", recognized: "Éléments reconnus", written: "Selon les ingrédients indiqués", usual: "Composition habituelle — la recette peut varier", recognizedSuffix: "reconnu", usually: "Habituellement", kept: "Description conservée telle quelle", complete: "Préciser le repas", continue: "Continuer ainsi",
       },
       en: {
         labels: { protein: "Protein", fiber: "Fiber", carbs: "Carbs", carbs_low: "Low carbs", dairy: "Dairy", soy: "Soy", gluten: "Gluten", eggs: "Eggs", nuts: "Nuts" },
         status: { confirmed: "confirmed", probable: "probable", possible: "possible", missing: "not detected" },
-        hint: "The more precise your description — ingredients, sauces and sides — the more relevant Énergie’s observations will be.", recognized: "Recognized elements", written: "Based on the ingredients entered", usual: "Typical composition — recipes may vary", recognizedSuffix: "recognized", usually: "Usually", kept: "Description kept as entered", complete: "Add meal details", continue: "Continue as is",
+        hint: "For a better calorie estimate, add quantities when you know them: 150 g chicken, 1 cup rice, 1 cup broccoli. This is optional.", recognized: "Recognized elements", written: "Based on the ingredients entered", usual: "Typical composition — recipes may vary", recognizedSuffix: "recognized", usually: "Usually", kept: "Description kept as entered", complete: "Add meal details", continue: "Continue as is",
       },
     };
     return packs[window.ENERGIE_LOCALE || "fr-CA"] || packs["fr-CA"];
@@ -2458,14 +2508,15 @@
       .map((segment) => ({ segment, food: foodMatchForSegment(segment) }))
       .filter((x) => x.food);
     if (!matched.length) return null;
-    const enriched = matched.map((x) => ({
-      ...x,
-      food: foodNutrients(x.food),
-    }));
+    const enriched = matched.map((x) => {
+      const food = foodNutrients(x.food),
+        quantity = nutritionScaleForSegment(x.segment, food);
+      return { ...x, food, ...quantity };
+    });
     const sum = (k) =>
       enriched.every((x) => x.food[k] != null)
         ? Math.round(
-            enriched.reduce((a, x) => a + (Number(x.food[k]) || 0), 0) * 10,
+            enriched.reduce((a, x) => a + (Number(x.food[k]) || 0) * x.scale, 0) * 10,
           ) / 10
         : null;
     const total = {
@@ -2480,14 +2531,16 @@
     const portions = [
       ...new Set(enriched.map((x) => x.food.portion).filter(Boolean)),
     ];
-    const basis =
-      matched.length === 1
+    const quantityUsedCount = enriched.filter((x) => x.quantityUsed).length;
+    const basis = quantityUsedCount
+      ? `${quantityUsedCount} quantité${quantityUsedCount > 1 ? "s" : ""} utilisée${quantityUsedCount > 1 ? "s" : ""} · ${matched.length} ingrédient${matched.length > 1 ? "s" : ""}`
+      : matched.length === 1
         ? portions[0] || "portion courante"
         : `${matched.length} ingrédients estimés`;
     return normalNutrition({
       ...total,
       source: "energie-foods",
-      confidence: matched.length >= 2 ? "medium" : "low",
+      confidence: quantityUsedCount ? "medium" : matched.length >= 2 ? "medium" : "low",
       basis,
       estimated: true,
     });
@@ -2564,7 +2617,9 @@
       note ||
       (n?.source === "barcode"
         ? `Valeurs ${n.basis || "du produit"} provenant de l’étiquette Open Food Facts. Vérifie-les au besoin.`
-        : "Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.");
+        : n?.source === "energie-foods" && /quantité/.test(n?.basis || "")
+          ? `Estimation ajustée selon les quantités reconnues (${n.basis}). Les recettes et valeurs de référence peuvent varier.`
+          : "Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.");
     updateMealCalorieEditor();
   }
   function updateMealCalorieEditor() {
