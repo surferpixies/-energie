@@ -15,7 +15,7 @@
     html,body{margin:0;background:#eef8e7;}
     #splashScreen{position:fixed;inset:0;background:#eef8e7;}
   </style>
-  <link rel="stylesheet" href="styles.css?v=3.56.83">
+  <link rel="stylesheet" href="styles.css?v=3.56.84">
   <link rel="stylesheet" href="portrait.css?v=3.56.21">
   <link rel="stylesheet" href="observation-detail.css?v=3.56.21">
   <link rel="stylesheet" href="personal-metrics.css?v=3.56.21">
@@ -31,6 +31,7 @@
   <link rel="stylesheet" href="steps-tracking.css?v=3.56.39">
   <link rel="stylesheet" href="journal-summary.css?v=3.56.61">
   <link rel="stylesheet" href="onboarding.css?v=3.56.52">
+  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.84">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -114,7 +115,12 @@
           <button type="button" class="primary" id="finishBeforeFeeling">Terminer</button>
         </section>
       </dialog>
-      <div id="mealQuickFillBar" class="meal-quick-fill-bar">
+      <section id="mealEntryCard" class="meal-entry-stage-card">
+        <header class="meal-entry-stage-head">
+          <span id="mealEntryStageIcon" class="meal-entry-stage-icon" aria-hidden="true">🍽️</span>
+          <span><strong id="mealEntryStageTitle">Repas</strong><small>Compose ton repas ou reprends un repas récent</small></span>
+        </header>
+        <div id="mealQuickFillBar" class="meal-quick-fill-bar">
         <span class="meal-quick-fill-title" role="img" aria-label="Raccourcis repas">🪄</span>
         <button type="button" id="copyPreviousMealQuick"><span id="copyPreviousMealIcon" aria-hidden="true">🍱</span><span id="copyPreviousMealLabel">Repas d’hier</span></button>
         <button type="button" id="openFavoriteQuickFill"><span aria-hidden="true">⭐</span><span>Favoris</span></button>
@@ -159,6 +165,7 @@
         </div>
         <div id="photoPreviewWrap" class="photo-preview-wrap meal-photo-preview" hidden><div id="photoPreviewList" class="meal-photo-preview-list"></div></div>
       </div>
+      </section>
       <section id="mealCompositionReview" class="meal-composition-review" hidden aria-live="polite">
         <div id="mealCompositionSummary"></div>
         <div id="mealCompositionActions" class="meal-composition-actions" hidden>
@@ -597,8 +604,8 @@
   <script src="brain/index.js?v=3.12.0"></script>
   <script src="observation-engine.js?v=3.56.21"></script>
   <script src="demo-profiles.js?v=3.56.21"></script>
-  <script src="personal-metrics.js?v=3.56.83"></script>
+  <script src="personal-metrics.js?v=3.56.84"></script>
   <script src="onboarding-images.js?v=3.56.52"></script>
-  <script src="app.js?v=3.56.83"></script>
+  <script src="app.js?v=3.56.84"></script>
 </body>
 </html>

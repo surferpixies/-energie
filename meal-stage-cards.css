@@ -1,0 +1,76 @@
+/* v3.56.84 — hiérarchie visuelle Avant → Repas → Après */
+#mealForm .meal-feelings-before-block,
+#mealForm .meal-feelings-after-block {
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  background: color-mix(in srgb, var(--accent) 4%, var(--surface2));
+  box-shadow: none;
+}
+#mealForm .meal-feelings-after-block.meal-feeling-summary-card {
+  border-color: color-mix(in srgb, var(--accent) 18%, var(--border));
+  background: color-mix(in srgb, var(--accent) 4%, var(--surface2));
+}
+#mealForm .meal-feelings-before-block .meal-feeling-summary-icon,
+#mealForm .meal-feelings-after-block .meal-feeling-summary-icon {
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--accent) 10%, var(--border));
+}
+
+.meal-entry-stage-card {
+  display: grid;
+  gap: .65rem;
+  padding: .72rem;
+  border: 2px solid color-mix(in srgb, var(--accent) 32%, var(--border));
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  box-shadow: 0 8px 20px rgba(20,26,22,.06);
+}
+.meal-entry-stage-head {
+  display: grid;
+  grid-template-columns: 1.9rem minmax(0,1fr);
+  align-items: center;
+  gap: .55rem;
+}
+.meal-entry-stage-head > span:last-child { display:grid; gap:.08rem; min-width:0; }
+.meal-entry-stage-head strong { font-size:.8rem; }
+.meal-entry-stage-head small { color:var(--muted); font-size:.57rem; line-height:1.25; }
+.meal-entry-stage-icon {
+  display:grid;
+  place-items:center;
+  width:1.9rem;
+  height:1.9rem;
+  border-radius:10px;
+  background:var(--surface);
+  border:1px solid color-mix(in srgb,var(--accent) 14%,var(--border));
+  font-size:1rem;
+}
+
+/* Les raccourcis sont maintenant des outils internes de la carte Repas. */
+#mealForm .meal-entry-stage-card .meal-quick-fill-bar {
+  padding:.34rem 0 .5rem;
+  border:0;
+  border-bottom:1px solid color-mix(in srgb,var(--accent) 14%,var(--border));
+  border-radius:0;
+  background:transparent;
+}
+#mealForm .meal-entry-stage-card .meal-quick-fill-title { background:var(--surface); }
+#mealForm .meal-entry-stage-card .meal-calorie-inline {
+  margin:0 0 -.65rem;
+  border-radius:11px 11px 0 0;
+}
+#mealForm .meal-entry-stage-card > .meal-description-field {
+  padding:.72rem;
+  border:1px solid color-mix(in srgb,var(--accent) 20%,var(--border));
+  border-radius:15px;
+  background:var(--surface);
+  box-shadow:none;
+}
+#mealForm .meal-entry-stage-card > .meal-description-field.needs-meal-entry-brain {
+  border-color:color-mix(in srgb,var(--accent) 38%,var(--border));
+}
+html[data-theme="dark"] .meal-entry-stage-card {
+  background:color-mix(in srgb,var(--accent) 7%,var(--surface2));
+}
+@media(max-width:420px){
+  .meal-entry-stage-card{padding:.62rem;gap:.55rem}
+  .meal-entry-stage-head small{font-size:.54rem}
+}

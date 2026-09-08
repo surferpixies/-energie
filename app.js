@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.83";
+  const APP_RELEASE = "3.56.84";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -11097,7 +11097,7 @@
   function updateMealEntryBrainGuide() {
     const beforeIcon = $("#beforeFeelingSummaryIcon"),
       descriptionField = $("#mealDescription")?.closest(".meal-description-field"),
-      labelRow = descriptionField?.querySelector(".meal-description-label-row"),
+      mealStageIcon = $("#mealEntryStageIcon"),
       picker = $("#beforeFeelingTags"),
       mealId = $("#mealId")?.value,
       savedMeal = mealId
@@ -11115,17 +11115,16 @@
       beforeIcon.classList.toggle("energy-action-brain", !beforeDone);
     }
 
-    // Étape 2 : dès que "Avant" est rempli, le cerveau passe à la saisie du repas.
-    let mealBrain = labelRow?.querySelector(".meal-entry-brain");
+    // Étape 2 : dès que "Avant" est rempli, le cerveau passe à la carte Repas.
+    // L'icône reste à gauche de la carte afin de conserver le fil visuel Avant → Repas → Après.
     const needsMealDescription = beforeDone && !descriptionDone;
-    if (needsMealDescription && labelRow && !mealBrain) {
-      mealBrain = document.createElement("span");
-      mealBrain.className = "energy-action-brain meal-entry-brain";
-      mealBrain.setAttribute("aria-hidden", "true");
-      mealBrain.textContent = "🧠";
-      labelRow.prepend(mealBrain);
-    } else if (!needsMealDescription && mealBrain) {
-      mealBrain.remove();
+    if (mealStageIcon) {
+      mealStageIcon.textContent = needsMealDescription ? "🧠" : "🍽️";
+      mealStageIcon.classList.toggle("energy-action-brain", needsMealDescription);
+      mealStageIcon.setAttribute(
+        "aria-label",
+        needsMealDescription ? "Repas maintenant attendu par le Cerveau d’Énergie" : "",
+      );
     }
     descriptionField?.classList.toggle("needs-meal-entry-brain", needsMealDescription);
   }
