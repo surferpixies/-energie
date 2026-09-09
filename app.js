@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.88";
+  const APP_RELEASE = "3.56.89";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -504,6 +504,8 @@
         stepsTracking: false,
         stepsGoal: 8000,
         calorieBalanceTracking: false,
+        calorieTargetGauge: false,
+        calorieDeficitTarget: 400,
         journalViewMode: "detailed",
         theme: "system",
         showWelcome: true,
@@ -1626,6 +1628,8 @@
               stepsTracking: db.settings.stepsTracking === true,
               currentStepsGoal: Number(db.settings.stepsGoal) || 8000,
               calorieBalanceTracking: db.settings.calorieBalanceTracking === true,
+              calorieTargetGauge: db.settings.calorieTargetGauge === true,
+              calorieDeficitTarget: calorieDeficitTarget(),
               defaults: db.settings.supplements || [],
               defaultsUpdatedAt: db.settings.supplementsUpdatedAt || db.updatedAt,
               formDrafts: d.formDrafts || {},
@@ -1893,6 +1897,8 @@
         if (typeof r.supplements?.stepsTracking === "boolean") db.settings.stepsTracking = r.supplements.stepsTracking;
         if (Number(r.supplements?.currentStepsGoal) > 0) db.settings.stepsGoal = Math.round(Number(r.supplements.currentStepsGoal));
         if (typeof r.supplements?.calorieBalanceTracking === "boolean") db.settings.calorieBalanceTracking = r.supplements.calorieBalanceTracking;
+        if (typeof r.supplements?.calorieTargetGauge === "boolean") db.settings.calorieTargetGauge = r.supplements.calorieTargetGauge;
+        if ([250, 400, 500].includes(Number(r.supplements?.calorieDeficitTarget))) db.settings.calorieDeficitTarget = Number(r.supplements.calorieDeficitTarget);
         d.activities = (r.activities || []).map(normalizeActivity);
         if (Array.isArray(r.supplements?.taken))
           d.supplementsTaken = normalizeSupplements(r.supplements.taken);
@@ -2641,6 +2647,7 @@
     $("#mealCalorieStatus").textContent = manual ? t("Ajustées par vous")
       : input.value !== "" ? t("Estimation automatique · modifiable") : t("Aucune estimation disponible · saisie facultative");
     $("#resetMealCalories").hidden = !manual;
+    updateMealCalorieTargetGauge();
   }
   function resetMealCalories() {
     clearTimeout(mealNutritionPreviewTimer);
@@ -6245,7 +6252,7 @@
           : summary.count + ' repas ou collations avec calories estimées.';
     const summaryMode = journalViewMode() === 'summary', nextMode = summaryMode ? 'detailed' : 'summary';
     const viewButton = '<button type="button" class="journal-view-compact" data-journal-view="' + nextMode + '" aria-label="Afficher la vue ' + (summaryMode ? 'détaillée' : 'sommaire') + '"><span aria-hidden="true">' + (summaryMode ? '☷' : '▦') + '</span>' + (summaryMode ? 'Détaillée' : 'Sommaire') + '</button>';
-    return '<section class="daily-calories-card" aria-label="Calories estimées de la journée"><div><span class="daily-calories-value"><span>⚡ Calories de la journée</span><strong>' + value + ' <small>kcal</small></strong></span>' + viewButton + '</div><p>' + esc(note) + '</p></section>';
+    return '<section class="daily-calories-card" aria-label="Calories estimées de la journée"><div><span class="daily-calories-value"><span>⚡ Calories de la journée</span><strong>' + value + ' <small>kcal</small></strong></span>' + viewButton + '</div><p>' + esc(note) + '</p>' + calorieTargetGaugeHtml(selectedDate, meals, { compact: true }) + '</section>';
   }
   function observationSectionHtml(day) {
     const observations = [...(day?.observations || [])].sort((a, b) =>
@@ -9843,6 +9850,55 @@
       profile.sex?.mode === "provided" && ["female", "male"].includes(profile.sex?.value);
   }
 
+  function calorieDeficitTarget() {
+    const value = Number(db.settings?.calorieDeficitTarget);
+    return [250, 400, 500].includes(value) ? value : 400;
+  }
+  function estimatedCalorieTarget(date = selectedDate) {
+    const profile = personalProfile(), weightKg = weightKgForDate(date), resting = estimatedRestingCalories(profile, weightKg);
+    if (resting == null) return null;
+    const day = db.days?.[date] || {}, activities = (day.activities || []).map(normalizeActivity);
+    const activityKcal = Math.round(activities.reduce((sum, activity) => sum + activityCalories(activity), 0));
+    const expenditure = Math.round(resting * 1.2 + activityKcal), deficit = calorieDeficitTarget();
+    const target = Math.round(expenditure - deficit);
+    return target > 0 ? { target, expenditure, deficit, activityKcal } : null;
+  }
+  function calorieTargetGaugeHtml(date, meals, options = {}) {
+    if (db.settings?.calorieTargetGauge !== true) return "";
+    const targetData = estimatedCalorieTarget(date), future = !db.settings?.demoMode && date > todayKey();
+    if (!targetData)
+      return `<div class="calorie-target-gauge is-unavailable ${options.compact ? "is-compact" : ""}"><div class="calorie-target-gauge-head"><span>🎯 Cible calorique estimée</span><strong>À compléter</strong></div><small>Ajoute âge, sexe, taille et poids dans ton Profil pour afficher cette jauge.</small></div>`;
+    const summary = Metrics.calorieSummary(journalCountedMeals(meals), calorieEstimator), consumed = summary.total || 0,
+      pct = Math.max(0, Math.min(100, Math.round((consumed / targetData.target) * 100))),
+      remaining = targetData.target - consumed,
+      state = consumed > targetData.target ? "is-over" : consumed >= targetData.target * 0.9 ? "is-near" : "",
+      lead = future ? "Planifié" : "Enregistré",
+      amount = `${consumed.toLocaleString("fr-CA")} / ≈ ${targetData.target.toLocaleString("fr-CA")} kcal`,
+      status = remaining >= 0
+        ? `≈ ${remaining.toLocaleString("fr-CA")} kcal avant la cible estimée`
+        : `≈ ${Math.abs(remaining).toLocaleString("fr-CA")} kcal au-dessus de la cible estimée`,
+      partial = summary.partial ? " · total alimentaire partiel" : "";
+    return `<div class="calorie-target-gauge ${state} ${options.compact ? "is-compact" : ""}"><div class="calorie-target-gauge-head"><span>🎯 ${future ? "Cible planifiée" : "Cible calorique"}</span><strong>${amount}</strong></div><div class="calorie-target-gauge-track" role="progressbar" aria-label="${esc(lead)} ${consumed} calories sur une cible estimée de ${targetData.target}" aria-valuemin="0" aria-valuemax="${targetData.target}" aria-valuenow="${Math.min(consumed, targetData.target)}"><i style="width:${pct}%"></i></div><small>${esc(status)}${esc(partial)} · déficit choisi ${targetData.deficit.toLocaleString("fr-CA")} kcal</small></div>`;
+  }
+  function mealDraftCalories() {
+    const value = Metrics.number($("#mealCalories")?.value);
+    return value != null && value >= 0 ? Math.round(value) : null;
+  }
+  function mealTargetGaugeMeals() {
+    const day = ensureDay(db, selectedDate), id = $("#mealId")?.value || "", type = $("#mealType")?.value || "Déjeuner",
+      description = $("#mealDescription")?.value.trim() || "Repas en cours", calories = mealDraftCalories();
+    const meals = (day.meals || []).filter((meal) => meal.id !== id).map((meal) => ({...meal}));
+    meals.push({ id: id || "__draft__", type, description, nutrition: calories == null ? null : { calories } });
+    return meals;
+  }
+  function updateMealCalorieTargetGauge() {
+    const wrap = $("#mealCalorieTargetGauge");
+    if (!wrap) return;
+    if (db.settings?.calorieTargetGauge !== true) { wrap.hidden = true; wrap.innerHTML = ""; return; }
+    wrap.hidden = false;
+    wrap.innerHTML = calorieTargetGaugeHtml(selectedDate, mealTargetGaugeMeals());
+  }
+
   function personalTrendsHtml() {
     const end = demoAnalysisContext()?.cutoff || todayKey(), profile = personalProfile(), unit = profile.weight?.unit || "kg";
     const data = Metrics.series(db.days, end, unit, calorieEstimator), lastWeight = data.weights.at(-1);
@@ -9951,8 +10007,6 @@
           "suivi des pas",
           "balance calorique",
           "balance energetique",
-          "deficit",
-          "surplus",
           "ressenti",
           "sommeil",
           "mes favoris",
@@ -9991,6 +10045,7 @@
           "raisons de manger",
           "qu'est-ce qui t'a amene a manger",
           "planification des repas",
+          "jauge de cible calorique",
         ],
       },
     ];
@@ -10140,6 +10195,7 @@
     $("#app .hero")?.insertAdjacentHTML("beforeend", `<small class="profile-build">Version ${APP_RELEASE}</small>`);
     const waterSettingsSection = $("#waterGoal")?.closest("section.card");
     waterSettingsSection?.insertAdjacentHTML("afterend", `<section class="card calorie-balance-profile-card"><h3>⚖️ Balance énergétique</h3><p class="muted small">Optionnel · utile surtout pour suivre une tendance de déficit ou de surplus calorique.</p><label class="toggle-row"><span><strong>Afficher mon déficit calorique estimé</strong><small>Ajoute un graphique sous « Calories par jour » dans Observations</small></span><input id="settingCalorieBalanceTracking" type="checkbox" ${db.settings.calorieBalanceTracking === true ? "checked" : ""}></label><div class="calorie-balance-formula"><strong>Comment Énergie l’estime</strong><p>Balance = calories consommées − dépense estimée.</p><p>Dépense ≈ métabolisme de repos (formule de Mifflin-St Jeor) × 1,2 + calories des activités enregistrées.</p><small>Une valeur négative indique un déficit estimé; une valeur positive, un surplus. Ce calcul reste approximatif : les calories des aliments, le métabolisme et les activités ne peuvent pas être mesurés avec précision par Énergie.</small></div></section>`);
+    $(".calorie-balance-profile-card")?.insertAdjacentHTML("afterend", `<section class="card calorie-target-profile-card"><h3>🎯 Jauge de cible calorique</h3><p class="muted small">Optionnel · pour visualiser les calories enregistrées par rapport à une cible estimée lorsque tu souhaites rester en déficit.</p><label class="toggle-row"><span><strong>Afficher ma jauge de cible calorique</strong><small>Visible dans le Journal et pendant la saisie des repas</small></span><input id="settingCalorieTargetGauge" type="checkbox" ${db.settings.calorieTargetGauge === true ? "checked" : ""}></label><label class="settings-row setting-dependent ${db.settings.calorieTargetGauge === true ? "" : "is-disabled"}" id="calorieDeficitTargetSetting"><span><strong>Déficit quotidien visé</strong><small>Utilisé pour calculer la cible de la jauge</small></span><select id="settingCalorieDeficitTarget" ${db.settings.calorieTargetGauge === true ? "" : "disabled"}><option value="250" ${calorieDeficitTarget() === 250 ? "selected" : ""}>250 kcal</option><option value="400" ${calorieDeficitTarget() === 400 ? "selected" : ""}>400 kcal</option><option value="500" ${calorieDeficitTarget() === 500 ? "selected" : ""}>500 kcal</option></select></label><p class="muted tiny">Cible estimée = dépense estimée − déficit choisi. La jauge montre ce qui est enregistré dans le journal; elle ne confirme pas un déficit réel pendant une journée incomplète.</p></section>`);
     $(".calorie-balance-profile-card")?.insertAdjacentHTML("afterend", `<section class="card steps-profile-card"><h3>👟 Suivi des pas</h3><p class="muted small">Affiche les pas dans le Journal et leur progression dans Observations.</p><label class="toggle-row"><span><strong>Suivre mes pas</strong><small>Tu peux masquer ce suivi sans supprimer ton historique</small></span><input id="settingStepsTracking" type="checkbox" ${db.settings.stepsTracking === true ? "checked" : ""}></label><div id="stepsGoalSetting" class="settings-row ${db.settings.stepsTracking === true ? "" : "is-disabled"}"><div><strong>Objectif quotidien</strong><p class="muted tiny">Utilisé pour les nouvelles journées seulement</p></div><label><input id="stepsGoal" type="number" min="100" max="100000" step="100" inputmode="numeric" value="${Number(db.settings.stepsGoal) || 8000}" ${db.settings.stepsTracking === true ? "" : "disabled"}><span>pas</span></label></div></section>`);
     const feelingSettingsSection = $("#settingFeelingReminders")?.closest("section.card"),
       feelingIntro = feelingSettingsSection?.querySelector(":scope > p");
@@ -10216,6 +10272,18 @@
     $("#settingCalorieBalanceTracking")?.addEventListener("change", (event) => {
       db.settings.calorieBalanceTracking = event.target.checked;
       saveLocal("balance-energetique");
+      setDayChanged(todayKey());
+    });
+    $("#settingCalorieTargetGauge")?.addEventListener("change", (event) => {
+      db.settings.calorieTargetGauge = event.target.checked;
+      saveLocal("jauge-cible-calorique");
+      setDayChanged(todayKey());
+      renderProfile();
+    });
+    $("#settingCalorieDeficitTarget")?.addEventListener("change", (event) => {
+      const value = Number(event.target.value);
+      db.settings.calorieDeficitTarget = [250, 400, 500].includes(value) ? value : 400;
+      saveLocal("cible-deficit-calorique");
       setDayChanged(todayKey());
     });
     $("#settingStepsTracking")?.addEventListener("change", (event) => {
@@ -11278,6 +11346,7 @@
       $("#nutritionCalories").value = estimateNutritionFromText($("#mealDescription").value)?.calories ?? "";
     }
     updateMealCalorieEditor();
+    updateMealCalorieTargetGauge();
     renderBeforeFeelingPicker(m);
     if ($("#beforeFeelingDialog").open) $("#beforeFeelingDialog").close();
     updateMealFeelingUi(m);
