@@ -1164,8 +1164,3 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .calorie-balance-formula small{display:block;margin-top:8px;line-height:1.4;color:var(--muted,#667085);}
 .metrics-zero-line{stroke:currentColor;stroke-width:1;stroke-dasharray:3 3;opacity:.45;}
 .energy-balance-trend .metrics-heading strong{font-variant-numeric:tabular-nums;}
-
-
-/* v3.56.88 — planification des repas jusqu’à 2 jours */
-.future-meal-planning-note{display:flex;align-items:flex-start;gap:.65rem;margin:.7rem 0;padding:.7rem .85rem;border:1px solid color-mix(in srgb,var(--accent,#5f9f73) 28%,transparent);border-radius:14px;background:color-mix(in srgb,var(--accent-soft,#eef7ef) 72%,transparent)}
-.future-meal-planning-note>span{font-size:1.15rem;line-height:1.3}.future-meal-planning-note div{display:grid;gap:.12rem}.future-meal-planning-note strong{font-size:.92rem}.future-meal-planning-note small{color:var(--muted);line-height:1.35}
