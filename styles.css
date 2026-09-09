@@ -1302,3 +1302,14 @@ body.demo-guide-open .bottom-nav{z-index:20}
  .daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring-meta strong{font-size:.61rem}
  .meal-calorie-target-gauge .calorie-target-ring-meta strong{font-size:.63rem}
 }
+
+
+/* v3.56.96 — cercle = dépense estimée; 🎯 = repère du déficit choisi */
+.calorie-target-ring-goal-marker{
+  position:absolute;z-index:4;transform:translate(-50%,-50%);display:grid;place-items:center;
+  width:14px;height:14px;font-size:.58rem;line-height:1;border-radius:50%;
+  background:color-mix(in srgb,var(--surface) 94%,transparent);
+  box-shadow:0 1px 4px rgba(0,0,0,.10);pointer-events:none;
+}
+.daily-calories-card-target .calorie-target-ring-goal-marker{width:13px;height:13px;font-size:.54rem}
+.meal-calorie-target-gauge .calorie-target-ring-goal-marker{width:13px;height:13px;font-size:.54rem}

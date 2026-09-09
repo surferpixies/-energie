@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.91";
+  const APP_RELEASE = "3.56.96";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -9872,29 +9872,31 @@
     const summary = Metrics.calorieSummary(journalCountedMeals(meals), calorieEstimator), consumed = summary.total || 0;
     if (!targetData) {
       if (options.circular)
-        return `<div class="calorie-target-ring-card is-unavailable"><div class="calorie-target-ring" style="--calorie-progress:0deg"><div class="calorie-target-ring-center"><strong>${consumed ? consumed.toLocaleString("fr-CA") : "—"}</strong><small>kcal</small></div></div><div class="calorie-target-ring-meta"><strong>Cible à compléter</strong><small>Ajoute âge, sexe, taille et poids dans Profil.</small></div></div>`;
-      return `<div class="calorie-target-gauge is-unavailable"><div class="calorie-target-gauge-head"><span>🎯 Cible calorique estimée</span><strong>À compléter</strong></div><small>Ajoute âge, sexe, taille et poids dans ton Profil pour afficher cette jauge.</small></div>`;
+        return `<div class="calorie-target-ring-card is-unavailable"><div class="calorie-target-ring"><div class="calorie-target-ring-center"><strong>${consumed ? consumed.toLocaleString("fr-CA") : "—"}</strong><small>kcal</small></div></div><div class="calorie-target-ring-meta"><strong>Estimation à compléter</strong><small>Ajoute âge, sexe, taille et poids dans Profil.</small></div></div>`;
+      return `<div class="calorie-target-gauge is-unavailable"><div class="calorie-target-gauge-head"><span>Dépense quotidienne estimée</span><strong>À compléter</strong></div><small>Ajoute âge, sexe, taille et poids dans ton Profil pour afficher cette jauge.</small></div>`;
     }
-    const ratio = targetData.target > 0 ? consumed / targetData.target : 0,
+    // Le cercle complet représente maintenant la dépense quotidienne estimée.
+    // Le repère 🎯 indique où se situe le déficit choisi sur ce même cercle.
+    const ratio = targetData.expenditure > 0 ? consumed / targetData.expenditure : 0,
       pct = Math.max(0, Math.min(100, Math.round(ratio * 100))),
-      deg = Math.max(0, Math.min(360, Math.round(ratio * 360))),
-      remaining = targetData.target - consumed,
-      state = consumed > targetData.target ? "is-over" : consumed >= targetData.target * 0.9 ? "is-near" : "",
+      goalRatio = Math.max(0, Math.min(1, targetData.target / targetData.expenditure)),
+      goalAngle = goalRatio * Math.PI * 2,
+      goalX = 50 + 47 * Math.sin(goalAngle),
+      goalY = 50 - 47 * Math.cos(goalAngle),
+      remainingToGoal = targetData.target - consumed,
       lead = future ? "Planifié" : "Enregistré",
-      status = remaining >= 0
-        ? `≈ ${remaining.toLocaleString("fr-CA")} kcal restantes`
-        : `≈ ${Math.abs(remaining).toLocaleString("fr-CA")} kcal au-dessus`,
+      goalStatus = remainingToGoal >= 0
+        ? `≈ ${remainingToGoal.toLocaleString("fr-CA")} kcal avant le repère déficit`
+        : `Repère déficit dépassé de ≈ ${Math.abs(remainingToGoal).toLocaleString("fr-CA")} kcal`,
       partial = summary.partial ? " · total partiel" : "";
     if (options.circular) {
-      const dailyAmount = `${consumed.toLocaleString("fr-CA")} / ${targetData.target.toLocaleString("fr-CA")} kcal`;
-      const metaTitle = options.daily ? dailyAmount : `${future ? "Planifié" : "Cible"} ≈ ${targetData.target.toLocaleString("fr-CA")} kcal`;
-      const metaDetail = options.daily
-        ? `${esc(status)}${esc(partial)} · déficit visé ${targetData.deficit.toLocaleString("fr-CA")} kcal`
-        : `${esc(status)}${esc(partial)} · déficit visé ${targetData.deficit.toLocaleString("fr-CA")} kcal`;
-      return `<div class="calorie-target-ring-card ${options.daily ? "is-daily" : ""} ${state} ${future ? "is-future" : ""}"><div class="calorie-target-ring" style="--calorie-progress-pct:${pct}" role="progressbar" aria-label="${esc(lead)} ${consumed} calories sur une cible estimée de ${targetData.target}" aria-valuemin="0" aria-valuemax="${targetData.target}" aria-valuenow="${Math.min(consumed, targetData.target)}"><svg class="calorie-target-ring-svg" viewBox="0 0 44 44" aria-hidden="true"><circle class="calorie-target-ring-outer-track" cx="22" cy="22" r="20" pathLength="100"></circle><circle class="calorie-target-ring-outer-progress" cx="22" cy="22" r="20" pathLength="100" style="--ring-pct:${pct}"></circle><circle class="calorie-target-ring-track" cx="22" cy="22" r="18" pathLength="100"></circle><circle class="calorie-target-ring-progress" cx="22" cy="22" r="18" pathLength="100" style="--ring-pct:${pct}"></circle></svg><div class="calorie-target-ring-center"><strong>${consumed.toLocaleString("fr-CA")}</strong><small>kcal</small></div></div><div class="calorie-target-ring-meta"><strong>${metaTitle}</strong><small>${metaDetail}</small></div></div>`;
+      const dailyAmount = `${consumed.toLocaleString("fr-CA")} / ≈ ${targetData.expenditure.toLocaleString("fr-CA")} kcal`;
+      const metaTitle = options.daily ? dailyAmount : `${future ? "Dépense planifiée" : "Dépense estimée"} ≈ ${targetData.expenditure.toLocaleString("fr-CA")} kcal`;
+      const metaDetail = `${esc(goalStatus)}${esc(partial)} · 🎯 ${targetData.target.toLocaleString("fr-CA")} kcal (−${targetData.deficit.toLocaleString("fr-CA")})`;
+      return `<div class="calorie-target-ring-card ${options.daily ? "is-daily" : ""} ${future ? "is-future" : ""}"><div class="calorie-target-ring" role="progressbar" aria-label="${esc(lead)} ${consumed} calories sur une dépense quotidienne estimée de ${targetData.expenditure}; repère déficit ${targetData.target}" aria-valuemin="0" aria-valuemax="${targetData.expenditure}" aria-valuenow="${Math.min(consumed, targetData.expenditure)}"><svg class="calorie-target-ring-svg" viewBox="0 0 44 44" aria-hidden="true"><circle class="calorie-target-ring-outer-track" cx="22" cy="22" r="20" pathLength="100"></circle><circle class="calorie-target-ring-outer-progress" cx="22" cy="22" r="20" pathLength="100" style="--ring-pct:${pct}"></circle><circle class="calorie-target-ring-track" cx="22" cy="22" r="18" pathLength="100"></circle><circle class="calorie-target-ring-progress" cx="22" cy="22" r="18" pathLength="100" style="--ring-pct:${pct}"></circle></svg><span class="calorie-target-ring-goal-marker" style="left:${goalX.toFixed(2)}%;top:${goalY.toFixed(2)}%" title="Repère déficit : ${targetData.target.toLocaleString("fr-CA")} kcal" aria-hidden="true">🎯</span><div class="calorie-target-ring-center"><strong>${consumed.toLocaleString("fr-CA")}</strong><small>kcal</small></div></div><div class="calorie-target-ring-meta"><strong>${metaTitle}</strong><small>${metaDetail}</small></div></div>`;
     }
-    const amount = `${consumed.toLocaleString("fr-CA")} / ≈ ${targetData.target.toLocaleString("fr-CA")} kcal`;
-    return `<div class="calorie-target-gauge ${state}"><div class="calorie-target-gauge-head"><span>🎯 ${future ? "Cible planifiée" : "Cible calorique"}</span><strong>${amount}</strong></div><div class="calorie-target-gauge-track" role="progressbar" aria-label="${esc(lead)} ${consumed} calories sur une cible estimée de ${targetData.target}" aria-valuemin="0" aria-valuemax="${targetData.target}" aria-valuenow="${Math.min(consumed, targetData.target)}"><i style="width:${pct}%"></i></div><small>${esc(status)}${esc(partial)} · déficit choisi ${targetData.deficit.toLocaleString("fr-CA")} kcal</small></div>`;
+    const amount = `${consumed.toLocaleString("fr-CA")} / ≈ ${targetData.expenditure.toLocaleString("fr-CA")} kcal`;
+    return `<div class="calorie-target-gauge"><div class="calorie-target-gauge-head"><span>${future ? "Dépense planifiée" : "Dépense quotidienne estimée"}</span><strong>${amount}</strong></div><div class="calorie-target-gauge-track" role="progressbar" aria-label="${esc(lead)} ${consumed} calories sur une dépense estimée de ${targetData.expenditure}" aria-valuemin="0" aria-valuemax="${targetData.expenditure}" aria-valuenow="${Math.min(consumed, targetData.expenditure)}"><i style="width:${pct}%"></i></div><small>${esc(goalStatus)}${esc(partial)} · 🎯 ${targetData.target.toLocaleString("fr-CA")} kcal (déficit choisi ${targetData.deficit.toLocaleString("fr-CA")} kcal)</small></div>`;
   }
   function mealDraftCalories() {
     const value = Metrics.number($("#mealCalories")?.value);
