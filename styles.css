@@ -1212,3 +1212,27 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .meal-calorie-target-gauge .calorie-target-ring::after{inset:6px}
 .meal-calorie-target-gauge .calorie-target-ring-center strong{font-size:.88rem}
 @media(max-width:520px){.daily-calories-target-layout{grid-template-columns:auto minmax(0,1fr);gap:10px}.calorie-target-ring{width:66px;height:66px;flex-basis:66px}.daily-calories-target-heading{align-items:flex-start}.daily-calories-target-heading .journal-view-compact{flex:0 0 auto}}
+
+
+/* v3.56.91 — jauge calorique plus compacte et mieux centrée */
+.daily-calories-card-target{padding:12px 14px 11px;overflow:hidden}
+.daily-calories-card-target .daily-calories-target-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.daily-calories-card-target .daily-calories-target-heading>span{font-size:.76rem;font-weight:800;line-height:1.1}
+.daily-calories-card-target .calorie-target-ring-card.is-daily{display:grid;grid-template-columns:58px minmax(0,1fr);align-items:center;gap:10px;width:100%;min-width:0}
+.daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring{width:58px;height:58px;flex-basis:58px;box-shadow:0 2px 8px rgba(36,91,57,.08),inset 0 0 0 1px color-mix(in srgb,var(--border) 72%,transparent)}
+.daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring::after{inset:6px;background:color-mix(in srgb,var(--surface) 94%,#f4fbef)}
+.daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring-center strong{font-size:.82rem;letter-spacing:-.02em}
+.daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring-center small{font-size:.47rem;margin-top:2px}
+.daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring-meta{min-width:0}
+.daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring-meta strong{font-size:.72rem;line-height:1.15;white-space:normal}
+.daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring-meta small{font-size:.54rem;line-height:1.25;margin-top:3px}
+.daily-calories-target-note{margin:7px 0 0!important;font-size:.58rem!important;line-height:1.25!important;color:var(--muted)}
+@media(max-width:520px){
+  .daily-calories-card-target{padding:11px 12px 10px}
+  .daily-calories-card-target .daily-calories-target-heading>span{font-size:.72rem}
+  .daily-calories-card-target .calorie-target-ring-card.is-daily{grid-template-columns:54px minmax(0,1fr);gap:9px}
+  .daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring{width:54px;height:54px;flex-basis:54px}
+  .daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring-center strong{font-size:.76rem}
+  .daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring-meta strong{font-size:.68rem}
+  .daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring-meta small{font-size:.51rem}
+}
