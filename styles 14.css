@@ -1278,27 +1278,3 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .calorie-target-ring-goal{display:none!important}
 .calorie-target-ring-card.is-near .calorie-target-ring-progress,
 .calorie-target-ring-card.is-over .calorie-target-ring-progress{stroke:var(--accent)!important}
-
-
-/* v3.56.94 — personnalité de l’anneau sans changer son encombrement */
-.calorie-target-ring-outer-track,
-.calorie-target-ring-outer-progress{fill:none;stroke-linecap:round}
-.calorie-target-ring-outer-track{stroke:color-mix(in srgb,var(--accent) 5%,var(--border));stroke-width:1.15}
-.calorie-target-ring-outer-progress{stroke:color-mix(in srgb,var(--accent) 36%,transparent);stroke-width:1.45;stroke-dasharray:var(--ring-pct) 100;filter:drop-shadow(0 0 1.2px color-mix(in srgb,var(--accent) 24%,transparent));transition:stroke-dasharray .48s cubic-bezier(.2,.8,.2,1)}
-.calorie-target-ring-track{stroke:color-mix(in srgb,var(--accent) 8%,var(--border));stroke-width:3.15}
-.calorie-target-ring-progress{stroke-width:4.15;filter:drop-shadow(0 0 2.2px color-mix(in srgb,var(--accent) 42%,transparent))}
-.calorie-target-ring-card.is-unavailable .calorie-target-ring-outer-progress,
-.calorie-target-ring::before{background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--accent) 11%,var(--surface)) 0%,color-mix(in srgb,var(--surface) 98%,var(--accent) 2%) 64%,color-mix(in srgb,var(--accent) 4%,var(--surface)) 100%)}
-/* Un cran plus petit dans le journal et dans la saisie, sans changer la taille des cartes/jauges. */
-.daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring-center strong{font-size:.72rem}
-.daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring-center small{font-size:.44rem}
-.daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring-meta strong{font-size:.64rem}
-.daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring-meta small{font-size:.49rem}
-.meal-calorie-target-gauge .calorie-target-ring-center strong{font-size:.78rem}
-.meal-calorie-target-gauge .calorie-target-ring-center small{font-size:.48rem}
-.meal-calorie-target-gauge .calorie-target-ring-meta strong{font-size:.66rem}
-.meal-calorie-target-gauge .calorie-target-ring-meta small{font-size:.52rem}
-@media(max-width:380px){
- .daily-calories-card-target .calorie-target-ring-card.is-daily .calorie-target-ring-meta strong{font-size:.61rem}
- .meal-calorie-target-gauge .calorie-target-ring-meta strong{font-size:.63rem}
-}
