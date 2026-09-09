@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.89";
+  const APP_RELEASE = "3.56.90";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -6252,7 +6252,10 @@
           : summary.count + ' repas ou collations avec calories estimées.';
     const summaryMode = journalViewMode() === 'summary', nextMode = summaryMode ? 'detailed' : 'summary';
     const viewButton = '<button type="button" class="journal-view-compact" data-journal-view="' + nextMode + '" aria-label="Afficher la vue ' + (summaryMode ? 'détaillée' : 'sommaire') + '"><span aria-hidden="true">' + (summaryMode ? '☷' : '▦') + '</span>' + (summaryMode ? 'Détaillée' : 'Sommaire') + '</button>';
-    return '<section class="daily-calories-card" aria-label="Calories estimées de la journée"><div><span class="daily-calories-value"><span>⚡ Calories de la journée</span><strong>' + value + ' <small>kcal</small></strong></span>' + viewButton + '</div><p>' + esc(note) + '</p>' + calorieTargetGaugeHtml(selectedDate, meals, { compact: true }) + '</section>';
+    if (db.settings?.calorieTargetGauge === true) {
+      return '<section class="daily-calories-card daily-calories-card-target" aria-label="Calories de la journée et cible calorique"><div class="daily-calories-target-layout">' + calorieTargetGaugeHtml(selectedDate, meals, { circular: true, daily: true }) + '<div class="daily-calories-target-copy"><div class="daily-calories-target-heading"><span>Calories de la journée</span>' + viewButton + '</div><p>' + esc(note) + '</p></div></div></section>';
+    }
+    return '<section class="daily-calories-card" aria-label="Calories estimées de la journée"><div><span class="daily-calories-value"><span>⚡ Calories de la journée</span><strong>' + value + ' <small>kcal</small></strong></span>' + viewButton + '</div><p>' + esc(note) + '</p></section>';
   }
   function observationSectionHtml(day) {
     const observations = [...(day?.observations || [])].sort((a, b) =>
@@ -9866,19 +9869,27 @@
   function calorieTargetGaugeHtml(date, meals, options = {}) {
     if (db.settings?.calorieTargetGauge !== true) return "";
     const targetData = estimatedCalorieTarget(date), future = !db.settings?.demoMode && date > todayKey();
-    if (!targetData)
-      return `<div class="calorie-target-gauge is-unavailable ${options.compact ? "is-compact" : ""}"><div class="calorie-target-gauge-head"><span>🎯 Cible calorique estimée</span><strong>À compléter</strong></div><small>Ajoute âge, sexe, taille et poids dans ton Profil pour afficher cette jauge.</small></div>`;
-    const summary = Metrics.calorieSummary(journalCountedMeals(meals), calorieEstimator), consumed = summary.total || 0,
-      pct = Math.max(0, Math.min(100, Math.round((consumed / targetData.target) * 100))),
+    const summary = Metrics.calorieSummary(journalCountedMeals(meals), calorieEstimator), consumed = summary.total || 0;
+    if (!targetData) {
+      if (options.circular)
+        return `<div class="calorie-target-ring-card is-unavailable"><div class="calorie-target-ring" style="--calorie-progress:0deg"><div class="calorie-target-ring-center"><strong>${consumed ? consumed.toLocaleString("fr-CA") : "—"}</strong><small>kcal</small></div></div><div class="calorie-target-ring-meta"><strong>Cible à compléter</strong><small>Ajoute âge, sexe, taille et poids dans Profil.</small></div></div>`;
+      return `<div class="calorie-target-gauge is-unavailable"><div class="calorie-target-gauge-head"><span>🎯 Cible calorique estimée</span><strong>À compléter</strong></div><small>Ajoute âge, sexe, taille et poids dans ton Profil pour afficher cette jauge.</small></div>`;
+    }
+    const ratio = targetData.target > 0 ? consumed / targetData.target : 0,
+      pct = Math.max(0, Math.min(100, Math.round(ratio * 100))),
+      deg = Math.max(0, Math.min(360, Math.round(ratio * 360))),
       remaining = targetData.target - consumed,
       state = consumed > targetData.target ? "is-over" : consumed >= targetData.target * 0.9 ? "is-near" : "",
       lead = future ? "Planifié" : "Enregistré",
-      amount = `${consumed.toLocaleString("fr-CA")} / ≈ ${targetData.target.toLocaleString("fr-CA")} kcal`,
       status = remaining >= 0
-        ? `≈ ${remaining.toLocaleString("fr-CA")} kcal avant la cible estimée`
-        : `≈ ${Math.abs(remaining).toLocaleString("fr-CA")} kcal au-dessus de la cible estimée`,
-      partial = summary.partial ? " · total alimentaire partiel" : "";
-    return `<div class="calorie-target-gauge ${state} ${options.compact ? "is-compact" : ""}"><div class="calorie-target-gauge-head"><span>🎯 ${future ? "Cible planifiée" : "Cible calorique"}</span><strong>${amount}</strong></div><div class="calorie-target-gauge-track" role="progressbar" aria-label="${esc(lead)} ${consumed} calories sur une cible estimée de ${targetData.target}" aria-valuemin="0" aria-valuemax="${targetData.target}" aria-valuenow="${Math.min(consumed, targetData.target)}"><i style="width:${pct}%"></i></div><small>${esc(status)}${esc(partial)} · déficit choisi ${targetData.deficit.toLocaleString("fr-CA")} kcal</small></div>`;
+        ? `≈ ${remaining.toLocaleString("fr-CA")} kcal restantes`
+        : `≈ ${Math.abs(remaining).toLocaleString("fr-CA")} kcal au-dessus`,
+      partial = summary.partial ? " · total partiel" : "";
+    if (options.circular) {
+      return `<div class="calorie-target-ring-card ${state} ${future ? "is-future" : ""}"><div class="calorie-target-ring" style="--calorie-progress:${deg}deg" role="progressbar" aria-label="${esc(lead)} ${consumed} calories sur une cible estimée de ${targetData.target}" aria-valuemin="0" aria-valuemax="${targetData.target}" aria-valuenow="${Math.min(consumed, targetData.target)}"><div class="calorie-target-ring-center"><strong>${consumed.toLocaleString("fr-CA")}</strong><small>kcal</small></div></div><div class="calorie-target-ring-meta"><strong>${future ? "Planifié" : "Cible"} ≈ ${targetData.target.toLocaleString("fr-CA")} kcal</strong><small>${esc(status)}${esc(partial)} · déficit visé ${targetData.deficit.toLocaleString("fr-CA")} kcal</small></div></div>`;
+    }
+    const amount = `${consumed.toLocaleString("fr-CA")} / ≈ ${targetData.target.toLocaleString("fr-CA")} kcal`;
+    return `<div class="calorie-target-gauge ${state}"><div class="calorie-target-gauge-head"><span>🎯 ${future ? "Cible planifiée" : "Cible calorique"}</span><strong>${amount}</strong></div><div class="calorie-target-gauge-track" role="progressbar" aria-label="${esc(lead)} ${consumed} calories sur une cible estimée de ${targetData.target}" aria-valuemin="0" aria-valuemax="${targetData.target}" aria-valuenow="${Math.min(consumed, targetData.target)}"><i style="width:${pct}%"></i></div><small>${esc(status)}${esc(partial)} · déficit choisi ${targetData.deficit.toLocaleString("fr-CA")} kcal</small></div>`;
   }
   function mealDraftCalories() {
     const value = Metrics.number($("#mealCalories")?.value);
@@ -9896,7 +9907,7 @@
     if (!wrap) return;
     if (db.settings?.calorieTargetGauge !== true) { wrap.hidden = true; wrap.innerHTML = ""; return; }
     wrap.hidden = false;
-    wrap.innerHTML = calorieTargetGaugeHtml(selectedDate, mealTargetGaugeMeals());
+    wrap.innerHTML = calorieTargetGaugeHtml(selectedDate, mealTargetGaugeMeals(), { circular: true });
   }
 
   function personalTrendsHtml() {
@@ -10194,8 +10205,7 @@
         ?.insertAdjacentHTML("beforeend", profileSinceHtml);
     $("#app .hero")?.insertAdjacentHTML("beforeend", `<small class="profile-build">Version ${APP_RELEASE}</small>`);
     const waterSettingsSection = $("#waterGoal")?.closest("section.card");
-    waterSettingsSection?.insertAdjacentHTML("afterend", `<section class="card calorie-balance-profile-card"><h3>⚖️ Balance énergétique</h3><p class="muted small">Optionnel · utile surtout pour suivre une tendance de déficit ou de surplus calorique.</p><label class="toggle-row"><span><strong>Afficher mon déficit calorique estimé</strong><small>Ajoute un graphique sous « Calories par jour » dans Observations</small></span><input id="settingCalorieBalanceTracking" type="checkbox" ${db.settings.calorieBalanceTracking === true ? "checked" : ""}></label><div class="calorie-balance-formula"><strong>Comment Énergie l’estime</strong><p>Balance = calories consommées − dépense estimée.</p><p>Dépense ≈ métabolisme de repos (formule de Mifflin-St Jeor) × 1,2 + calories des activités enregistrées.</p><small>Une valeur négative indique un déficit estimé; une valeur positive, un surplus. Ce calcul reste approximatif : les calories des aliments, le métabolisme et les activités ne peuvent pas être mesurés avec précision par Énergie.</small></div></section>`);
-    $(".calorie-balance-profile-card")?.insertAdjacentHTML("afterend", `<section class="card calorie-target-profile-card"><h3>🎯 Jauge de cible calorique</h3><p class="muted small">Optionnel · pour visualiser les calories enregistrées par rapport à une cible estimée lorsque tu souhaites rester en déficit.</p><label class="toggle-row"><span><strong>Afficher ma jauge de cible calorique</strong><small>Visible dans le Journal et pendant la saisie des repas</small></span><input id="settingCalorieTargetGauge" type="checkbox" ${db.settings.calorieTargetGauge === true ? "checked" : ""}></label><label class="settings-row setting-dependent ${db.settings.calorieTargetGauge === true ? "" : "is-disabled"}" id="calorieDeficitTargetSetting"><span><strong>Déficit quotidien visé</strong><small>Utilisé pour calculer la cible de la jauge</small></span><select id="settingCalorieDeficitTarget" ${db.settings.calorieTargetGauge === true ? "" : "disabled"}><option value="250" ${calorieDeficitTarget() === 250 ? "selected" : ""}>250 kcal</option><option value="400" ${calorieDeficitTarget() === 400 ? "selected" : ""}>400 kcal</option><option value="500" ${calorieDeficitTarget() === 500 ? "selected" : ""}>500 kcal</option></select></label><p class="muted tiny">Cible estimée = dépense estimée − déficit choisi. La jauge montre ce qui est enregistré dans le journal; elle ne confirme pas un déficit réel pendant une journée incomplète.</p></section>`);
+    waterSettingsSection?.insertAdjacentHTML("afterend", `<section class="card calorie-balance-profile-card"><h3>⚖️ Balance énergétique</h3><p class="muted small">Optionnel · utile surtout pour suivre une tendance de déficit ou de surplus calorique.</p><label class="toggle-row"><span><strong>Afficher mon déficit calorique estimé</strong><small>Ajoute un graphique sous « Calories par jour » dans Observations</small></span><input id="settingCalorieBalanceTracking" type="checkbox" ${db.settings.calorieBalanceTracking === true ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher ma cible calorique</strong><small>Transforme « Calories de la journée » en jauge visuelle et l’affiche aussi pendant la saisie des repas</small></span><input id="settingCalorieTargetGauge" type="checkbox" ${db.settings.calorieTargetGauge === true ? "checked" : ""}></label><label class="settings-row setting-dependent ${db.settings.calorieTargetGauge === true ? "" : "is-disabled"}" id="calorieDeficitTargetSetting"><span><strong>Déficit quotidien visé</strong><small>Utilisé pour calculer la cible calorique estimée</small></span><select id="settingCalorieDeficitTarget" ${db.settings.calorieTargetGauge === true ? "" : "disabled"}><option value="250" ${calorieDeficitTarget() === 250 ? "selected" : ""}>250 kcal</option><option value="400" ${calorieDeficitTarget() === 400 ? "selected" : ""}>400 kcal</option><option value="500" ${calorieDeficitTarget() === 500 ? "selected" : ""}>500 kcal</option></select></label><div class="calorie-balance-formula"><strong>Comment Énergie l’estime</strong><p>Balance = calories consommées − dépense estimée.</p><p>Dépense ≈ métabolisme de repos (formule de Mifflin-St Jeor) × 1,2 + calories des activités enregistrées.</p><p>Cible calorique ≈ dépense estimée − déficit quotidien choisi.</p><small>Ces valeurs restent approximatives : les calories des aliments, le métabolisme et les activités ne peuvent pas être mesurés avec précision par Énergie. La jauge montre les calories enregistrées; elle ne confirme pas un déficit réel si la journée est incomplète.</small></div></section>`);
     $(".calorie-balance-profile-card")?.insertAdjacentHTML("afterend", `<section class="card steps-profile-card"><h3>👟 Suivi des pas</h3><p class="muted small">Affiche les pas dans le Journal et leur progression dans Observations.</p><label class="toggle-row"><span><strong>Suivre mes pas</strong><small>Tu peux masquer ce suivi sans supprimer ton historique</small></span><input id="settingStepsTracking" type="checkbox" ${db.settings.stepsTracking === true ? "checked" : ""}></label><div id="stepsGoalSetting" class="settings-row ${db.settings.stepsTracking === true ? "" : "is-disabled"}"><div><strong>Objectif quotidien</strong><p class="muted tiny">Utilisé pour les nouvelles journées seulement</p></div><label><input id="stepsGoal" type="number" min="100" max="100000" step="100" inputmode="numeric" value="${Number(db.settings.stepsGoal) || 8000}" ${db.settings.stepsTracking === true ? "" : "disabled"}><span>pas</span></label></div></section>`);
     const feelingSettingsSection = $("#settingFeelingReminders")?.closest("section.card"),
       feelingIntro = feelingSettingsSection?.querySelector(":scope > p");
