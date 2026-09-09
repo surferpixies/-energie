@@ -15,7 +15,7 @@
     html,body{margin:0;background:#eef8e7;}
     #splashScreen{position:fixed;inset:0;background:#eef8e7;}
   </style>
-  <link rel="stylesheet" href="styles.css?v=3.56.85">
+  <link rel="stylesheet" href="styles.css?v=3.56.87">
   <link rel="stylesheet" href="portrait.css?v=3.56.21">
   <link rel="stylesheet" href="observation-detail.css?v=3.56.21">
   <link rel="stylesheet" href="personal-metrics.css?v=3.56.21">
@@ -31,7 +31,7 @@
   <link rel="stylesheet" href="steps-tracking.css?v=3.56.39">
   <link rel="stylesheet" href="journal-summary.css?v=3.56.61">
   <link rel="stylesheet" href="onboarding.css?v=3.56.52">
-  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.85">
+  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.87">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -151,10 +151,10 @@
           <textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli" required></textarea>
           <div class="meal-description-toolbar">
             <div class="meal-composer-actions">
-              <label class="meal-composer-action meal-photo-action"><input id="mealPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><strong>Photo IA <small id="mealPhotoCount">0/3</small></strong></label>
+              <label class="meal-composer-action meal-photo-action"><input id="mealPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><strong>Photo <small id="mealPhotoCount">0/3</small></strong></label>
               <button type="button" class="meal-composer-action meal-barcode-action" id="openBarcodeScanner"><span aria-hidden="true">▥</span><strong>Scanner</strong></button>
             </div>
-            <small id="mealAiPhotoStatus" class="meal-ai-photo-status" role="status" aria-live="polite">La description IA doit être vérifiée et corrigée au besoin.</small>
+            <small id="mealAiPhotoStatus" class="meal-ai-photo-status" role="status" aria-live="polite">La photo est ajoutée sans analyse. Utilise ✨ Analyser avec l’IA seulement si tu le souhaites.</small>
           </div>
         </div>
         <p class="meal-precision-hint"><span aria-hidden="true">💡</span><span id="mealPrecisionHintText">Pour améliorer l’estimation des calories, ajoute les quantités quand tu les connais : 150 g de poulet, 1 tasse de riz, 1 tasse de brocoli. C’est facultatif.</span></p>
@@ -253,10 +253,10 @@
           <textarea id="quickSnackDescription" rows="2" autocapitalize="sentences" autocomplete="one-time-code" placeholder="Ex. pomme et quelques amandes"></textarea>
           <div class="quick-snack-toolbar">
             <div>
-              <label class="meal-composer-action meal-photo-action"><input id="quickSnackPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><strong>Photo IA <small id="quickSnackPhotoCount">0/3</small></strong></label>
+              <label class="meal-composer-action meal-photo-action"><input id="quickSnackPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><strong>Photo <small id="quickSnackPhotoCount">0/3</small></strong></label>
               <button type="button" class="meal-composer-action meal-barcode-action" id="quickSnackBarcode"><span aria-hidden="true">▥</span><strong>Scanner</strong></button>
             </div>
-            <small id="quickSnackAiStatus" role="status" aria-live="polite">Vérifie toujours la description proposée.</small>
+            <small id="quickSnackAiStatus" role="status" aria-live="polite">La photo est ajoutée sans analyse. L’IA est facultative.</small>
           </div>
         </div>
         <div id="quickSnackPhotoPreview" class="quick-snack-photo-preview" hidden><div id="quickSnackPhotoList" class="meal-photo-preview-list"></div><button type="button" id="removeQuickSnackPhoto" class="text-button small">Tout retirer</button></div>
@@ -604,8 +604,8 @@
   <script src="brain/index.js?v=3.12.0"></script>
   <script src="observation-engine.js?v=3.56.21"></script>
   <script src="demo-profiles.js?v=3.56.21"></script>
-  <script src="personal-metrics.js?v=3.56.85"></script>
+  <script src="personal-metrics.js?v=3.56.87"></script>
   <script src="onboarding-images.js?v=3.56.52"></script>
-  <script src="app.js?v=3.56.85"></script>
+  <script src="app.js?v=3.56.87"></script>
 </body>
 </html>

@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.85";
+  const APP_RELEASE = "3.56.87";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -409,6 +409,7 @@
     barcodeTargetInputId = "mealDescription";
   let selectedRecentSnackId = null;
   let quickSnackPhotoData = [];
+  let quickSnackAnalyzedPhotos = new Set();
 
   function normalizeSupplements(value) {
     return [
@@ -4835,15 +4836,25 @@
     $("#saveQuickSnack").disabled = !description;
     const preview = $("#quickSnackPhotoPreview"), list = $("#quickSnackPhotoList"), count = $("#quickSnackPhotoCount");
     preview.hidden = !quickSnackPhotoData.length;
-    if (list) list.innerHTML = quickSnackPhotoData.map((src, index) => `<div class="meal-photo-preview-item"><img src="${esc(src)}" alt="Photo ${index + 1} de la collation"><button type="button" class="text-button small" data-remove-quick-snack-photo="${index}">Retirer</button></div>`).join("");
+    if (list) list.innerHTML = quickSnackPhotoData.map((src, index) => {
+      const analyzed = quickSnackAnalyzedPhotos.has(src);
+      return `<div class="meal-photo-preview-item"><img src="${esc(src)}" alt="Photo ${index + 1} de la collation"><button type="button" class="secondary small" data-analyze-quick-snack-photo="${index}" ${analyzed ? "disabled" : ""}>${analyzed ? "✓ Photo analysée" : "✨ Analyser avec l’IA"}</button><button type="button" class="text-button small" data-remove-quick-snack-photo="${index}">Retirer</button></div>`;
+    }).join("");
     if (count) count.textContent = `${quickSnackPhotoData.length}/3`;
     if ($("#quickSnackPhoto")) $("#quickSnackPhoto").disabled = quickSnackPhotoData.length >= 3;
+    $$('[data-analyze-quick-snack-photo]').forEach((button) => button.onclick = async () => {
+      const imageData = quickSnackPhotoData[Number(button.dataset.analyzeQuickSnackPhoto)];
+      if (imageData && !quickSnackAnalyzedPhotos.has(imageData)) {
+        const success = await analyzeQuickSnackPhoto(imageData);
+        if (success) { quickSnackAnalyzedPhotos.add(imageData); updateQuickSnackUi(); }
+      }
+    });
     $$('[data-remove-quick-snack-photo]').forEach((button) => button.onclick = () => { quickSnackPhotoData.splice(Number(button.dataset.removeQuickSnackPhoto), 1); updateQuickSnackUi(); });
   }
   async function analyzeQuickSnackPhoto(imageData) {
     if (!client || !session) {
       setQuickSnackAiStatus("Connecte-toi pour utiliser l’analyse IA.", "error");
-      return;
+      return false;
     }
     setQuickSnackAiStatus("Analyse de la photo en cours…", "loading");
     try {
@@ -4864,9 +4875,11 @@
         field.value = `${field.value.trim().replace(/[\s,;]+$/, "")}, ${description}`;
       field.dispatchEvent(new Event("input", { bubbles: true }));
       setQuickSnackAiStatus("Description ajoutée — corrige-la au besoin.", "success");
+      return true;
     } catch (error) {
       console.warn("Analyse IA de la collation impossible", error);
       setQuickSnackAiStatus("Analyse indisponible. La photo est quand même conservée.", "error");
+      return false;
     }
   }
   function saveQuickSnack() {
@@ -4914,6 +4927,7 @@
       recentSnacks = recentUniqueSnacks();
     selectedRecentSnackId = null;
     quickSnackPhotoData = [];
+    quickSnackAnalyzedPhotos = new Set();
     $("#quickSnackDescription").value = "";
     $("#quickSnackPhoto").value = "";
     setQuickSnackAiStatus("Vérifie toujours la description proposée.");
@@ -4968,7 +4982,7 @@
         event.target.value = "";
         quickSnackPhotoData.push(imageData);
         updateQuickSnackUi();
-        await analyzeQuickSnackPhoto(imageData);
+        setQuickSnackAiStatus("Photo ajoutée sans analyse · ✨ utilise le bouton sous la photo si tu veux l’IA.", "success");
       } catch (error) {
         console.warn("Photo de collation illisible", error);
         setQuickSnackAiStatus("Cette photo n’a pas pu être lue.", "error");
@@ -4976,6 +4990,7 @@
     };
     $("#removeQuickSnackPhoto").onclick = () => {
       quickSnackPhotoData = [];
+    quickSnackAnalyzedPhotos = new Set();
       $("#quickSnackPhoto").value = "";
       setQuickSnackAiStatus("Vérifie toujours la description proposée.");
       updateQuickSnackUi();
@@ -9847,7 +9862,7 @@
   const energyGuideImage = (name) => window.ENERGY_GUIDE_IMAGES?.[name] || `assets/onboarding/${name}.jpeg?v=3.56.42`;
   const ENERGY_GUIDE_SLIDES = [
     { kicker: "Bienvenue", title: "Découvre Énergie 🌱", copy: "Ton Journal rassemble repas, ressentis, activité, hydratation et pas au même endroit. Passe du Sommaire à la vue détaillée selon ce dont tu as besoin.", media: `<div class="energy-guide-media journal-pair"><img src="${energyGuideImage('journal-summary')}" alt="Journal Énergie en vue sommaire"><img src="${energyGuideImage('journal-detailed')}" alt="Journal Énergie en vue détaillée"></div>` },
-    { kicker: "Repas", title: "Note tes repas facilement 🍽️", copy: "Écris simplement ce que tu as mangé, ou gagne du temps avec Souper d’hier, Favoris et Récents. Photo IA et Scanner peuvent aussi aider à remplir la description. Les estimations et éléments reconnus restent toujours à vérifier.", media: `<div class="energy-guide-media"><img src="${energyGuideImage('meal')}" alt="Formulaire de saisie d’un repas dans Énergie"></div>` },
+    { kicker: "Repas", title: "Note tes repas facilement 🍽️", copy: "Écris simplement ce que tu as mangé, ou gagne du temps avec Souper d’hier, Favoris et Récents. Une photo peut être conservée telle quelle; l’analyse IA reste disponible sur demande. Le Scanner peut aussi aider à remplir la description. Les estimations et éléments reconnus restent toujours à vérifier.", media: `<div class="energy-guide-media"><img src="${energyGuideImage('meal')}" alt="Formulaire de saisie d’un repas dans Énergie"></div>` },
     { kicker: "Ressentis", title: "Dis comment tu te sens 🧠", copy: "Avant et après un repas, choisis ce que tu ressens et son intensité. Ces repères donnent à Énergie de meilleurs points de comparaison au fil du temps.", media: `<div class="energy-guide-media duo"><img src="${energyGuideImage('feeling-before')}" alt="Saisie des ressentis avant un repas"><img src="${energyGuideImage('feeling-after')}" alt="Saisie des ressentis après un repas"></div>` },
     { kicker: "Ton quotidien", title: "Bouge et hydrate-toi 💧🚶", copy: "Ajoute une activité, utilise tes activités favorites, note tes boissons et suis ton objectif de pas. Ces informations complètent le contexte de ta journée.", media: `<div class="energy-guide-media daily-collage"><img class="daily-main" src="${energyGuideImage('hydration')}" alt="Ajout d’une boisson"><img class="daily-activity" src="${energyGuideImage('activity')}" alt="Ajout d’une activité"><img class="daily-steps" src="${energyGuideImage('steps')}" alt="Saisie du nombre de pas"></div>` },
     { kicker: "Cerveau", title: "Ton journal devient plus utile 🧠", copy: "Le Cerveau montre la couverture de tes données : il indique ce qui est suffisamment documenté pour être analysé. Le pourcentage mesure la présence des informations, pas la qualité de tes habitudes.", media: `<div class="energy-guide-media"><img src="${energyGuideImage('brain')}" alt="Écran Cerveau et qualité du journal"></div>` },
@@ -11253,7 +11268,7 @@
     photoData = mealPhotoDrafts[0]?.local || mealPhotoDrafts[0]?.url || null;
     photoRemoved = false;
     hideMealAiSuggestion();
-    setMealAiPhotoStatus("La description IA doit être vérifiée et corrigée au besoin.");
+    setMealAiPhotoStatus("Photo seulement par défaut · ✨ analyse IA sur demande.");
     $("#mealPhoto").value = "";
     showPhotoPreview();
     setDemoDetailReadOnly("#mealForm", readOnly);
@@ -11265,11 +11280,20 @@
     wrap.hidden = !mealPhotoDrafts.length;
     list.innerHTML = mealPhotoDrafts.map((photo, index) => {
       const src = photo.local || photo.url || "";
-      return `<div class="meal-photo-preview-item">${src ? `<img src="${esc(src)}" alt="Photo ${index + 1} du repas">` : '<span class="meal-photo-placeholder">📷</span>'}<button type="button" class="secondary small" data-remove-meal-photo="${index}">Retirer</button></div>`;
+      const analyzed = photo.aiAnalyzed === true;
+      return `<div class="meal-photo-preview-item">${src ? `<img src="${esc(src)}" alt="Photo ${index + 1} du repas">` : '<span class="meal-photo-placeholder">📷</span>'}<button type="button" class="secondary small" data-analyze-meal-photo="${index}" ${photo.local && !analyzed ? "" : "disabled"}>${analyzed ? "✓ Photo analysée" : "✨ Analyser avec l’IA"}</button><button type="button" class="text-button small" data-remove-meal-photo="${index}">Retirer</button></div>`;
     }).join("");
     if (count) count.textContent = `${mealPhotoDrafts.length}/3`;
     const input = $("#mealPhoto");
     if (input) input.disabled = mealPhotoDrafts.length >= 3;
+    $$('[data-analyze-meal-photo]').forEach((button) => {
+      button.onclick = async () => {
+        const photo = mealPhotoDrafts[Number(button.dataset.analyzeMealPhoto)];
+        if (!photo?.local || photo.aiAnalyzed === true) return;
+        const success = await analyzeMealPhotoWithAI(photo.local);
+        if (success) { photo.aiAnalyzed = true; showPhotoPreview(); }
+      };
+    });
     $$('[data-remove-meal-photo]').forEach((button) => {
       button.onclick = () => {
         const index = Number(button.dataset.removeMealPhoto);
@@ -11447,7 +11471,7 @@
   async function analyzeMealPhotoWithAI(imageData) {
     if (!client || !session) {
       setMealAiPhotoStatus("Connecte-toi pour utiliser l’analyse de photo par IA.", "error");
-      return;
+      return false;
     }
     setMealAiPhotoStatus("Analyse de la photo en cours…", "loading");
     hideMealAiSuggestion();
@@ -11471,9 +11495,11 @@
         hideMealAiSuggestion();
         setMealAiPhotoStatus("Cette photo n’ajoute rien de nouveau à la description.", "success");
       }
+      return true;
     } catch (error) {
       console.warn("Analyse IA de la photo impossible", error);
       setMealAiPhotoStatus("Analyse IA indisponible. Ta photo est quand même conservée.", "error");
+      return false;
     }
   }
   function createFavoriteFromMeal(m) {
@@ -11683,7 +11709,7 @@
       mealPhotoDrafts.push({ local: photoData, url: null, path: null });
       photoRemoved = false;
       showPhotoPreview();
-      await analyzeMealPhotoWithAI(photoData);
+      setMealAiPhotoStatus("Photo ajoutée sans analyse · ✨ utilise le bouton sous la photo si tu veux l’IA.", "success");
     } catch (error) {
       console.warn("Photo illisible", error);
       setMealAiPhotoStatus("Cette photo n’a pas pu être lue. Essaie-en une autre.", "error");
