@@ -1,0 +1,650 @@
+.journal-summary {
+  display: grid;
+  gap: 1rem;
+}
+
+.journal-summary-intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .1rem .2rem;
+}
+
+.journal-summary-intro h2,
+.journal-summary-intro p {
+  margin: 0;
+}
+
+.journal-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .8rem;
+}
+
+.journal-summary-action {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 132px;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: space-between;
+  gap: .65rem;
+  padding: 1rem;
+  border: 1px solid rgba(49, 128, 85, .2);
+  border-radius: 25px;
+  color: var(--ink, #173f2d);
+  background: linear-gradient(145deg, rgba(255, 254, 248, .98), rgba(231, 246, 224, .9));
+  box-shadow: 0 8px 20px rgba(35, 103, 67, .1), inset 0 1px 0 rgba(255, 255, 255, .76);
+  text-align: left;
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+
+.journal-summary-action > * {
+  position: relative;
+  z-index: 1;
+}
+
+.summary-action-watermark {
+  position: absolute;
+  z-index: 0;
+  right: .72rem;
+  top: .72rem;
+  font-size: 3.25rem;
+  line-height: 1;
+  opacity: .28;
+  filter: grayscale(.12) saturate(.78);
+  transform: rotate(-7deg);
+  pointer-events: none;
+}
+
+.summary-action-plus {
+  position: absolute;
+  z-index: 2;
+  right: .54rem;
+  top: .46rem;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 2px solid rgba(255, 254, 248, .92);
+  border-radius: 50%;
+  color: #fff;
+  background: #2f8757;
+  box-shadow: 0 2px 6px rgba(31, 100, 61, .2);
+  font-size: .72rem;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.summary-water-glass {
+  position: absolute;
+  z-index: 0;
+  top: .62rem;
+  right: .72rem;
+  width: 3rem;
+  height: 3.85rem;
+  overflow: visible;
+  opacity: .58;
+  transform: rotate(3deg);
+  pointer-events: none;
+}
+
+.summary-water-glass .glass-outline {
+  fill: rgba(255, 255, 255, .16);
+  stroke: rgba(48, 109, 132, .62);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.summary-water-glass .glass-water {
+  fill: rgba(63, 169, 217, .72);
+}
+
+.summary-water-glass .glass-waterline {
+  fill: none;
+  stroke: rgba(151, 224, 244, .92);
+  stroke-width: 1.5;
+}
+
+.summary-water-glass .glass-shine {
+  fill: none;
+  stroke: rgba(255, 255, 255, .78);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.journal-summary-action--water .summary-action-plus {
+  right: .54rem;
+  top: .5rem;
+}
+
+.journal-summary-hydration {
+  align-content: start;
+  gap: .42rem;
+  cursor: default;
+}
+
+.journal-summary-hydration .summary-water-glass {
+  right: .55rem;
+  top: .5rem;
+  width: 2.45rem;
+  height: 3.15rem;
+  opacity: .42;
+}
+
+.summary-water-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  width: 100%;
+  margin-top: .05rem;
+}
+
+.summary-water-drop {
+  flex: 1 1 12px;
+  min-width: 0;
+  width: auto;
+  max-width: 1.08rem;
+  height: 1.55rem;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  filter: grayscale(1);
+  opacity: .2;
+  font-size: .9rem;
+  line-height: 1;
+}
+
+.summary-water-drop.filled {
+  filter: none;
+  opacity: 1;
+}
+
+.summary-add-beverage {
+  width: 100%;
+  min-height: 28px;
+  padding: .3rem .5rem;
+  border: 1px solid rgba(47, 135, 87, .22);
+  border-radius: 10px;
+  color: #26734a;
+  background: rgba(255, 255, 255, .62);
+  font-size: .68rem;
+  font-weight: 850;
+}
+
+html[data-theme="dark"] .summary-add-beverage {
+  color: #9cddb5;
+  background: rgba(255, 255, 255, .08);
+}
+
+.journal-summary-action > span:first-child {
+  grid-column: 1 / -1;
+  color: var(--muted, #69766e);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+
+.journal-summary-action strong {
+  align-self: end;
+  color: #226c46;
+  font-size: 1.28rem;
+}
+
+.journal-summary-action small {
+  grid-column: 1 / -1;
+  color: var(--muted, #69766e);
+  width: fit-content;
+  padding: .22rem .48rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .55);
+  font-size: .68rem;
+}
+
+.journal-summary-sleep {
+  grid-column: 1 / -1;
+  min-height: 104px;
+  padding-right: 5.7rem;
+  background: linear-gradient(135deg, rgba(255, 254, 248, .98), rgba(220, 241, 212, .94));
+}
+
+.journal-summary-sleep .summary-action-watermark {
+  right: 1rem;
+  top: .65rem;
+  font-size: 4rem;
+  opacity: .28;
+}
+
+.journal-summary-sleep .summary-action-plus {
+  right: .78rem;
+  top: .4rem;
+}
+
+.journal-summary-action:active {
+  transform: scale(.975);
+  box-shadow: 0 4px 12px rgba(35, 103, 67, .12);
+}
+
+html[data-theme="dark"] .journal-summary-action {
+  background: linear-gradient(145deg, #20332b, #253d32);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .2);
+}
+
+html[data-theme="dark"] .journal-summary-action small {
+  background: rgba(255, 255, 255, .08);
+}
+
+html[data-theme="dark"] .journal-summary-action strong { color: var(--text, #f5f2e9); }
+html[data-theme="dark"] .summary-action-watermark { opacity: .34; }
+html[data-theme="dark"] .summary-action-plus { border-color: #253d32; }
+html[data-theme="dark"] .summary-water-glass { opacity: .72; }
+
+@media (prefers-reduced-motion: reduce) {
+  .journal-summary-action { transition: none; }
+}
+
+.daily-calories-value {
+  display: grid;
+  gap: .1rem;
+}
+
+.journal-view-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  min-height: 28px;
+  padding: .22rem .55rem;
+  border: 1px solid rgba(35, 94, 67, .12);
+  border-radius: 999px;
+  color: var(--muted, #66736b);
+  background: rgba(239, 247, 236, .72);
+  font-size: .7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.daily-calories-card .journal-view-compact span {
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+.quick-journal-dialog-card {
+  max-width: 520px;
+}
+
+.quick-meal-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem;
+}
+
+.quick-meal-type-grid button {
+  position: relative;
+  min-height: 110px;
+  display: grid;
+  place-items: center;
+  gap: .35rem;
+  border: 1px solid rgba(36, 93, 67, .14);
+  border-radius: 20px;
+  color: var(--ink, #173f2d);
+  background: #fff;
+}
+
+.quick-meal-type-grid button .quick-meal-type-icon { font-size: 2rem; }
+.quick-meal-type-grid button strong { font-size: 1rem; }
+
+.quick-meal-type-state {
+  color: var(--muted, #69766e);
+  font-size: .68rem;
+  font-weight: 700;
+}
+
+.quick-meal-type-badge {
+  position: absolute;
+  top: .62rem;
+  right: .62rem;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border-radius: 9px;
+  color: #fff;
+  background: #4c8c67;
+  font-size: .9rem;
+  line-height: 1;
+}
+
+.quick-meal-type-grid button.is-complete {
+  border-color: rgba(32, 156, 79, .42);
+  background: linear-gradient(145deg, #fff, #edf9e9);
+  box-shadow: inset 0 0 0 1px rgba(32, 156, 79, .08);
+}
+
+.quick-meal-type-grid button.is-complete .quick-meal-type-badge {
+  background: #18a94f;
+}
+
+.quick-meal-type-grid button.is-waiting .quick-meal-type-badge {
+  color: #75571b;
+  background: #f1d690;
+}
+
+.quick-meal-type-grid button.is-waiting .quick-meal-type-state {
+  color: #856925;
+}
+
+html[data-theme="dark"] .quick-meal-type-grid button {
+  background: #20332b;
+}
+
+/* V3.56.38 — contraste des noms de repas dans Ajout rapide en mode sombre */
+html[data-theme="dark"] .quick-meal-type-grid button strong {
+  color: var(--text, #f5f2e9);
+}
+
+html[data-theme="dark"] .quick-meal-type-grid button.is-complete {
+  background: linear-gradient(145deg, #20332b, #244532);
+}
+
+.beverage-dialog-card { max-width: 560px; }
+.beverage-type-fieldset { display: grid; gap: .7rem; }
+.beverage-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .55rem;
+}
+.beverage-type-grid button {
+  min-height: 72px;
+  display: grid;
+  place-items: center;
+  gap: .2rem;
+  padding: .5rem .3rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: var(--text);
+  background: var(--bg);
+}
+.beverage-type-grid button span { font-size: 1.45rem; }
+.beverage-type-grid button small { font-size: .62rem; line-height: 1.15; }
+.beverage-type-grid button.active {
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent) 11%, var(--surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.beverage-caffeine-row[hidden] { display: none; }
+.beverage-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .7rem;
+  padding-top: .65rem;
+  border-top: 1px solid var(--border);
+}
+.beverage-section-head > div { display: grid; gap: .05rem; }
+.beverage-section-head strong { font-size: .78rem; }
+.beverage-section-head small { color: var(--muted); font-size: .6rem; }
+.beverage-entry-list { display: grid; gap: .4rem; margin-top: .55rem; }
+.beverage-entry {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: .55rem;
+  padding: .48rem .58rem;
+  border-radius: 13px;
+  background: var(--surface2);
+}
+.beverage-entry > span:first-child { font-size: 1.25rem; }
+.beverage-entry > span:nth-child(2) { display: grid; gap: .05rem; }
+.beverage-entry strong { font-size: .72rem; }
+.beverage-entry small { color: var(--muted); font-size: .61rem; }
+.beverage-entry button {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 9px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+}
+.beverage-empty { margin: 0; color: var(--muted); font-size: .66rem; }
+
+@media (max-width: 390px) {
+  .beverage-type-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .beverage-section-head { align-items: stretch; flex-direction: column; }
+}
+
+.quick-feeling-choices {
+  display: grid;
+  gap: .65rem;
+}
+
+.quick-feeling-choice,
+.quick-global-feeling {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: .75rem;
+  padding: .85rem;
+  text-align: left;
+}
+
+.quick-feeling-choice > span:first-child,
+.quick-global-feeling > span:first-child { font-size: 1.45rem; }
+.quick-feeling-choice > span:nth-child(2),
+.quick-global-feeling > span:nth-child(2) { display: grid; gap: .12rem; }
+.quick-feeling-choice small,
+.quick-global-feeling small { color: var(--muted, #69766e); }
+
+@media (max-width: 420px) {
+  .journal-summary-grid { gap: .65rem; }
+  .journal-summary-action { min-height: 122px; padding: .85rem; }
+  .journal-summary-action strong { font-size: 1.1rem; }
+}
+
+/* v3.56.53 — Cerveau = information attendue */
+.energy-action-brain{
+  display:grid;place-items:center;
+  transform-origin:center;
+  animation:energyActionBrainPulse 1.15s ease-in-out infinite;
+}
+@keyframes energyActionBrainPulse{
+  0%,100%{transform:scale(.92)}
+  50%{transform:scale(1.12)}
+}
+@media(prefers-reduced-motion:reduce){.energy-action-brain{animation:none}}
+
+.journal-summary-action.needs-brain-action{padding-left:4.35rem}
+.summary-energy-action-brain{
+  position:absolute!important;z-index:3!important;left:.9rem;top:50%;
+  width:2.75rem;height:2.75rem;margin-top:-1.375rem;
+  border-radius:15px;background:color-mix(in srgb,var(--accent) 14%,var(--surface));
+  box-shadow:0 7px 18px color-mix(in srgb,var(--accent) 18%,transparent);
+  font-size:1.45rem;pointer-events:none;
+}
+
+
+/* v3.56.55 — cerveau Sommeil/Repas : position et états indépendants */
+.journal-summary-sleep.sleep-needs-brain-action{
+  padding-left:1rem;
+}
+.journal-summary-sleep .sleep-energy-action-brain{
+  left:auto!important;
+  right:5.25rem!important;
+  top:.65rem!important;
+  margin-top:0!important;
+  width:2.35rem;
+  height:2.35rem;
+  font-size:1.25rem;
+}
+
+
+/* v3.56.57 — cerveau Sommeil à gauche, sans chevauchement */
+.journal-summary-sleep.sleep-needs-brain-action{
+  padding-left:4.75rem;
+}
+.journal-summary-sleep .sleep-energy-action-brain{
+  left:1rem!important;
+  right:auto!important;
+  top:50%!important;
+  margin-top:-1.3rem!important;
+  width:2.6rem;
+  height:2.6rem;
+  border-radius:15px;
+  font-size:1.35rem;
+}
+
+
+/* v3.56.58 — Sommeil : vraie colonne réservée au cerveau à gauche */
+.journal-summary-sleep.sleep-needs-brain-action{
+  padding-left:5.15rem!important;
+}
+.journal-summary-sleep.sleep-needs-brain-action > span:not(.sleep-energy-action-brain):first-of-type,
+.journal-summary-sleep.sleep-needs-brain-action > strong,
+.journal-summary-sleep.sleep-needs-brain-action > small{
+  margin-left:0!important;
+}
+.journal-summary-sleep .sleep-energy-action-brain{
+  position:absolute!important;
+  left:1.15rem!important;
+  right:auto!important;
+  top:50%!important;
+  bottom:auto!important;
+  margin:0!important;
+  translate:0 -50%;
+  width:2.75rem!important;
+  height:2.75rem!important;
+  z-index:5!important;
+  display:grid!important;
+  place-items:center!important;
+  pointer-events:none;
+}
+
+
+/* v3.56.59 — Sommeil : vraie mise en page 2 colonnes, sans position absolue du cerveau */
+.journal-summary-sleep.sleep-needs-brain-action{
+  display:grid!important;
+  grid-template-columns:3.25rem minmax(0,1fr)!important;
+  grid-template-rows:1fr!important;
+  align-items:center!important;
+  align-content:center!important;
+  column-gap:.85rem!important;
+  padding:1rem 5.7rem 1rem 1rem!important;
+}
+.journal-summary-sleep .sleep-energy-action-brain{
+  position:relative!important;
+  inset:auto!important;
+  translate:none!important;
+  margin:0!important;
+  grid-column:1!important;
+  grid-row:1!important;
+  align-self:center!important;
+  justify-self:center!important;
+  width:2.75rem!important;
+  height:2.75rem!important;
+  border-radius:15px;
+  background:color-mix(in srgb,var(--accent) 14%,var(--surface));
+  box-shadow:0 7px 18px color-mix(in srgb,var(--accent) 18%,transparent);
+  font-size:1.35rem!important;
+  display:grid!important;
+  place-items:center!important;
+  z-index:3!important;
+}
+.journal-summary-sleep .sleep-summary-copy{
+  grid-column:2!important;
+  grid-row:1!important;
+  display:grid!important;
+  gap:.45rem!important;
+  min-width:0;
+  align-self:center;
+}
+.journal-summary-sleep .sleep-summary-copy > span{
+  color:var(--muted,#69766e);
+  font-size:.78rem;
+  font-weight:700;
+  letter-spacing:.01em;
+}
+.journal-summary-sleep .sleep-summary-copy > strong{
+  color:#226c46;
+  font-size:1.28rem;
+}
+.journal-summary-sleep .sleep-summary-copy > small{
+  width:fit-content;
+  color:var(--muted,#69766e);
+  padding:.22rem .48rem;
+  border-radius:999px;
+  background:rgba(255,255,255,.55);
+  font-size:.68rem;
+}
+html[data-theme="dark"] .journal-summary-sleep .sleep-summary-copy > strong{
+  color:var(--text,#f5f2e9);
+}
+html[data-theme="dark"] .journal-summary-sleep .sleep-summary-copy > small{
+  background:rgba(255,255,255,.08);
+}
+
+
+/* v3.56.61 — Ressenti : colonne réservée au cerveau, comme Sommeil */
+.journal-summary-action--feeling.feeling-needs-brain-action{
+  display:grid!important;
+  grid-template-columns:3.05rem minmax(0,1fr)!important;
+  grid-template-rows:1fr!important;
+  align-items:center!important;
+  align-content:center!important;
+  column-gap:.7rem!important;
+  padding:.85rem 3.35rem .85rem .8rem!important;
+}
+.journal-summary-action--feeling .summary-energy-action-brain{
+  position:relative!important;
+  inset:auto!important;
+  top:auto!important;
+  left:auto!important;
+  right:auto!important;
+  bottom:auto!important;
+  margin:0!important;
+  translate:none!important;
+  grid-column:1!important;
+  grid-row:1!important;
+  align-self:center!important;
+  justify-self:center!important;
+  width:2.55rem!important;
+  height:2.55rem!important;
+  border-radius:14px!important;
+  font-size:1.28rem!important;
+  z-index:3!important;
+}
+.journal-summary-action--feeling .feeling-summary-copy{
+  display:grid;
+  gap:.4rem;
+  min-width:0;
+}
+.journal-summary-action--feeling.feeling-needs-brain-action .feeling-summary-copy{
+  grid-column:2!important;
+  grid-row:1!important;
+  align-self:center;
+}
+.journal-summary-action--feeling .feeling-summary-copy > span{
+  color:var(--muted,#69766e);
+  font-size:.78rem;
+  font-weight:700;
+  letter-spacing:.01em;
+}
+.journal-summary-action--feeling .feeling-summary-copy > strong{
+  color:#226c46;
+  font-size:1.18rem;
+}
+.journal-summary-action--feeling .feeling-summary-copy > small{
+  width:fit-content;
+  color:var(--muted,#69766e);
+  font-size:.68rem;
+  line-height:1.28;
+}
+html[data-theme="dark"] .journal-summary-action--feeling .feeling-summary-copy > strong{
+  color:var(--text,#f5f2e9);
+}

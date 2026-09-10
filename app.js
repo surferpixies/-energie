@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.96";
+  const APP_RELEASE = "3.56.97";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -957,7 +957,12 @@
   }
   function formDraftContext(form) {
     if (form.dataset.autosaveContext) return form.dataset.autosaveContext;
-    if (form.id === "mealForm") return $("#mealId")?.value || "nouveau";
+    if (form.id === "mealForm") {
+      const mealId = $("#mealId")?.value || "";
+      if (mealId) return mealId;
+      const mealType = $("#mealType")?.value || "Repas";
+      return `nouveau:${mealType}`;
+    }
     if (form.id === "feelingForm") return feelingMealId || "nouveau";
     if (form.id === "missingBeforeForm")
       return missingBeforeMealId || "nouveau";
@@ -1187,6 +1192,12 @@
     if (!dialog) return;
     if (form && AUTOSAVE_FORM_IDS.has(form.id)) {
       scheduleFormAutosave(form);
+      // Pour un repas, le X doit toujours fermer la fenêtre. Il ne doit jamais
+      // enregistrer implicitement un brouillon valide comme nouveau repas.
+      if (dialog.id === "mealDialog") {
+        dialog.close();
+        return;
+      }
       if (autosaveFormCanFinish(form)) {
         form.requestSubmit();
         return;
@@ -4870,14 +4881,7 @@
     }
     setQuickSnackAiStatus("Analyse de la photo en cours…", "loading");
     try {
-      const comma = imageData.indexOf(",");
-      const { data, error } = await client.functions.invoke("analyze-meal-photo", {
-        body: {
-          imageBase64: comma >= 0 ? imageData.slice(comma + 1) : imageData,
-          mimeType: "image/jpeg",
-          locale: "fr-CA",
-        },
-      });
+      const { data, error } = await invokeMealPhotoAnalysis(imageData);
       if (error) throw error;
       const description = String(data?.description || "").trim();
       if (!description) throw new Error("Réponse vide");
@@ -11377,6 +11381,10 @@
     $("#mealPhoto").value = "";
     showPhotoPreview();
     setDemoDetailReadOnly("#mealForm", readOnly);
+    if (!m && d.formDrafts?.["mealForm:nouveau"]) {
+      delete d.formDrafts["mealForm:nouveau"];
+      saveLocal("nettoyage-brouillon-repas-legacy");
+    }
     $("#mealDialog").showModal();
   }
   function showPhotoPreview() {
@@ -11573,6 +11581,20 @@
     setMealAiPhotoStatus(before ? "Analyse ajoutée au repas sans effacer ta saisie." : "Description ajoutée — vérifie-la et corrige-la au besoin.", "success");
     field.focus();
   }
+  async function invokeMealPhotoAnalysis(imageData) {
+    const comma = imageData.indexOf(","),
+      request = client.functions.invoke("analyze-meal-photo", {
+        body: {
+          imageBase64: comma >= 0 ? imageData.slice(comma + 1) : imageData,
+          mimeType: "image/jpeg",
+          locale: "fr-CA",
+        },
+      }),
+      timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Délai d’analyse IA dépassé")), 25000),
+      );
+    return Promise.race([request, timeout]);
+  }
   async function analyzeMealPhotoWithAI(imageData) {
     if (!client || !session) {
       setMealAiPhotoStatus("Connecte-toi pour utiliser l’analyse de photo par IA.", "error");
@@ -11581,14 +11603,7 @@
     setMealAiPhotoStatus("Analyse de la photo en cours…", "loading");
     hideMealAiSuggestion();
     try {
-      const comma = imageData.indexOf(",");
-      const { data, error } = await client.functions.invoke("analyze-meal-photo", {
-        body: {
-          imageBase64: comma >= 0 ? imageData.slice(comma + 1) : imageData,
-          mimeType: "image/jpeg",
-          locale: "fr-CA",
-        },
-      });
+      const { data, error } = await invokeMealPhotoAnalysis(imageData);
       if (error) throw error;
       const description = String(data?.description || "").trim();
       if (!description) throw new Error("Réponse vide");
