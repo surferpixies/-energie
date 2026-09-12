@@ -2313,10 +2313,14 @@
       const key = candidate.compareKey;
       if (!padded.includes(` ${key} `)) continue;
       const keyWords = key.split(" ").length,
-        cleanWords = comparable.split(" ").length;
+        cleanWords = comparable.split(" ").length,
+        keyPosition = comparable.indexOf(key);
       const exact = comparable === key ? 10000 : 0;
       const coverage = (keyWords / Math.max(cleanWords, 1)) * 1000;
-      const score = exact + coverage + keyWords * 100 + key.length;
+      // À couverture égale, favorise l’aliment nommé le plus tôt dans le segment.
+      // Exemple : « 125 g poulet à la tomate » doit reconnaître le poulet, pas la tomate.
+      const positionBonus = keyPosition >= 0 ? Math.max(0, 120 - keyPosition) : 0;
+      const score = exact + coverage + keyWords * 100 + key.length + positionBonus;
       if (!best || score > best.score) best = { ...candidate, score };
     }
     return best?.food || null;
@@ -2363,7 +2367,16 @@
     return mealQuantityFromText(portion);
   }
   function nutritionScaleForSegment(segment, food) {
-    const entered = mealQuantityFromText(segment), reference = mealReferenceQuantity(food?.portion);
+    const entered = mealQuantityFromText(segment),
+      explicitReference = mealReferenceQuantity(food?.portion),
+      gramsReference = Number(food?.gramsPerPortion) > 0
+        ? { value: Number(food.gramsPerPortion), unit: "g" }
+        : null,
+      reference = entered && explicitReference?.unit === entered.unit
+        ? explicitReference
+        : entered && gramsReference?.unit === entered.unit
+          ? gramsReference
+          : explicitReference || gramsReference;
     if (!entered || !reference || entered.unit !== reference.unit || reference.value <= 0)
       return { scale: 1, quantityUsed: false };
     const scale = entered.value / reference.value;
@@ -2372,8 +2385,21 @@
       : { scale: 1, quantityUsed: false };
   }
   function splitMealIngredients(text) {
-    const explicit = String(text || "")
-      .split(/\s*(?:\+|,|;|\n|\r|\u2022|\|)\s*/)
+    // Une ligne contenant seulement une quantité complète l’ingrédient précédent.
+    // Ex. « poulet / oignon / huile » puis « 1 cuillère à soupe » rattache la quantité à l’huile.
+    const stitchedLines = [];
+    for (const rawLine of String(text || "").split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (!line) continue;
+      const quantityOnly = mealQuantityFromText(line) && !foodMatchForSegment(line);
+      if (quantityOnly && stitchedLines.length) stitchedLines[stitchedLines.length - 1] += ` ${line}`;
+      else stitchedLines.push(line);
+    }
+    const explicit = stitchedLines
+      .join("\n")
+      // Le « / » est un séparateur seulement lorsqu’il est entouré d’espaces,
+      // afin de ne jamais casser les fractions comme 1/2.
+      .split(/\s*(?:\+|,|;|\n|\r|\u2022|\|)\s*|\s+\/\s+/)
       .map((x) => x.trim())
       .filter(Boolean);
     const initial = explicit.length
@@ -2399,7 +2425,7 @@
   }
   function mealCompositionAnalysis(text) {
     const knownDish = window.ENERGIE_DISH_KNOWLEDGE?.findDish?.(text),
-      hasExplicitIngredientList = /[+,;\n\r|]|\b(avec|with)\b/i.test(String(text || "")),
+      hasExplicitIngredientList = /[+,;\n\r|]|\s+\/\s+|\b(avec|with)\b/i.test(String(text || "")),
       categoryIds = new Set(
         knownDish && !hasExplicitIngredientList
           ? []
@@ -2545,7 +2571,7 @@
   }
   function estimateNutritionFromText(text) {
     const recognizedDish = mealCompositionAnalysis(text)?.dish;
-    if (recognizedDish?.nutrition && !/[+,;\n\r|]/.test(String(text || "")))
+    if (recognizedDish?.nutrition && !/[+,;\n\r|]|\s+\/\s+/.test(String(text || "")))
       return normalNutrition({
         ...recognizedDish.nutrition,
         source: "energie-dish-knowledge",
