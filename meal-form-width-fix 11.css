@@ -1,0 +1,87 @@
+/* Confinement iPhone du formulaire repas — v3.56.25 */
+#mealDialog {
+  box-sizing: border-box;
+  width: min(620px, calc(100vw - 20px));
+  max-width: calc(100vw - 20px);
+  overflow: hidden;
+}
+
+#mealForm,
+#mealForm > *,
+#mealForm section,
+#mealForm div,
+#mealForm label {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#mealForm {
+  width: 100%;
+  overflow-x: hidden;
+  padding-inline: min(22px, 4vw);
+}
+
+#mealForm input,
+#mealForm textarea,
+#mealForm select {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+
+#mealForm .meal-feeling-summary-copy,
+#mealForm .meal-feeling-selected-preview,
+#mealForm .meal-feelings-mini-group,
+#mealForm .meal-feelings-mini-list,
+#mealForm .meal-feeling-score-chip {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#mealForm .meal-feeling-selected-preview {
+  display: block;
+  max-height: 2.45em;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+#mealForm .meal-feeling-selected-preview > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+#mealForm .meal-shortcuts,
+#mealForm .meal-quick-picks-list,
+#mealForm .recent-foods-list {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+#mealForm .meal-shortcuts > *,
+#mealForm .meal-quick-picks-list > *,
+#mealForm .recent-foods-list > * {
+  flex: 0 0 auto;
+  max-width: min(72vw, 300px);
+}
+
+#mealForm .meal-description-field,
+#mealForm .meal-description-composer,
+#mealForm #mealDescription {
+  width: 100%;
+}
+
+@media (max-width: 420px) {
+  #mealDialog { width: calc(100vw - 16px); max-width: calc(100vw - 16px); }
+  #mealForm { padding-inline: 13px; }
+  #mealForm .meal-dialog-type { grid-template-columns: 32px minmax(0, 1fr) auto; }
+  #mealForm .meal-feeling-summary-card { grid-template-columns: 28px minmax(0, 1fr) auto; }
+  #mealForm .meal-feeling-summary-action,
+  #mealForm .meal-feeling-later { grid-column: auto; width: auto; max-width: 7.2rem; }
+}
