@@ -1,0 +1,73 @@
+/* Surcouche compacte du formulaire de repas — v3.56.24 */
+#mealForm > .meal-copy-actions { order: -70; }
+#mealForm > #favoriteQuickSection { order: -69; }
+#mealForm > #favoriteMealLabel { order: -68; }
+#mealForm > #recentFoodsSection { order: -67; }
+#mealForm > .meal-calorie-inline { order: -61; }
+#mealForm > .meal-description-field { order: -60; }
+
+.meal-dialog-type {
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  gap: .55rem;
+  padding: .5rem .65rem;
+  border-radius: 14px;
+  box-shadow: none;
+}
+.meal-dialog-type-icon { width: 36px; height: 36px; border-radius: 11px; font-size: 1.25rem; box-shadow: none; }
+.meal-dialog-type strong { margin-top: 0; font-size: .92rem; }
+.meal-type-time { display: flex; align-items: center; gap: .38rem; min-width: 8.4rem; color: var(--muted); font-size: .62rem; font-weight: 700; }
+.meal-type-time input { width: 6.2rem; min-height: 32px; padding: .25rem .4rem; border-radius: 9px; font-size: .82rem; }
+
+.meal-feeling-summary-card { gap: .48rem; padding: .46rem .56rem; border-radius: 14px; }
+.meal-feeling-summary-icon { width: 1.8rem; height: 1.8rem; border-radius: 9px; font-size: .95rem; }
+.meal-feeling-summary-copy > strong { font-size: .76rem; }
+.meal-feeling-summary-copy > small { font-size: .58rem; }
+.meal-feeling-summary-copy .meal-feeling-selected-preview {
+  display: flex;
+  gap: .3rem;
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+.meal-feeling-summary-copy .meal-feeling-selected-preview::-webkit-scrollbar { display: none; }
+.meal-feeling-summary-action { min-height: 30px; padding: .3rem .42rem; }
+.meal-feeling-later { font-size: .56rem; }
+
+.meal-shortcuts { display: flex; flex-wrap: nowrap; gap: .35rem; overflow-x: auto; }
+.meal-shortcuts .meal-copy-button { flex: 0 0 auto; min-height: 31px; padding: .3rem .52rem; border-radius: 999px; font-size: .65rem; }
+.meal-quick-picks, .recent-foods-section { display: flex; align-items: center; gap: .4rem; padding: .38rem .48rem; border-radius: 11px; }
+.meal-quick-picks-heading, .recent-foods-heading { flex: 0 0 auto; }
+.meal-quick-picks-heading small { display: none; }
+.meal-quick-picks-list, .recent-foods-list { min-width: 0; flex: 1; flex-wrap: nowrap; overflow-x: auto; }
+
+.meal-calorie-inline {
+  display: grid;
+  grid-template-columns: auto 4.2rem auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .35rem;
+  margin: 0 0 -.45rem;
+  padding: .3rem .55rem .5rem;
+  border: 1px solid rgba(197, 145, 48, .18);
+  border-bottom: 0;
+  border-radius: 11px 11px 0 0;
+  background: color-mix(in srgb, #fff7df 52%, var(--surface));
+  box-shadow: none;
+}
+.meal-calorie-inline label { font-size: .67rem; white-space: nowrap; }
+.meal-calorie-inline input[type="text"] { width: 4.2rem; min-height: 29px; padding: .18rem .35rem; border-radius: 8px; font-size: .78rem; }
+.meal-calorie-inline .meal-calorie-unit { color: var(--muted); font-size: .6rem; }
+.meal-calorie-inline small { overflow: hidden; font-size: .55rem; text-overflow: ellipsis; white-space: nowrap; }
+.meal-calorie-inline button { min-height: 27px; padding: .15rem; font-size: .58rem; }
+
+@media (max-width: 420px) {
+  .meal-dialog-type { grid-template-columns: 32px minmax(0, 1fr) auto; }
+  .meal-dialog-type-icon { width: 32px; height: 32px; }
+  .meal-type-time { min-width: 0; }
+  .meal-type-time span { display: none; }
+  .meal-type-time input { width: 5.6rem; }
+  .meal-calorie-inline { grid-template-columns: auto 3.7rem auto minmax(0, 1fr); }
+  .meal-calorie-inline input[type="text"] { width: 3.7rem; }
+  .meal-calorie-inline button { display: none; }
+}
