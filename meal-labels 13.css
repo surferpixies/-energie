@@ -1,0 +1,8 @@
+/* France: keep the longer breakfast label readable on narrow phones. */
+html[lang="fr-FR"] .meal-quick-card > span:nth-child(2) > strong {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}

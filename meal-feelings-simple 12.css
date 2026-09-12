@@ -1,0 +1,34 @@
+/* Résumé simple des ressentis dans le formulaire — v3.56.26 */
+#mealForm .meal-feeling-summary-card { min-height: 64px; overflow: hidden; }
+#mealForm .meal-feeling-selected-preview {
+  display: flex;
+  align-items: center;
+  gap: .32rem;
+  max-height: none;
+  padding: .08rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+#mealForm .meal-feeling-selected-preview::-webkit-scrollbar { display: none; }
+#mealForm .meal-feeling-simple-item {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: .24rem;
+  max-width: min(62vw, 260px);
+  padding: .24rem .42rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  font-size: .62rem;
+  line-height: 1.15;
+}
+#mealForm .meal-feeling-simple-item > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; }
+#mealForm .meal-feeling-simple-item b { color: var(--accent-strong); font-size: .6rem; white-space: nowrap; }
+#mealForm .meal-feeling-changes-preview { display: none !important; }
+@media (max-width: 420px) {
+  #mealForm .meal-feeling-summary-card { grid-template-columns: 28px minmax(0, 1fr) auto; min-height: 60px; }
+  #mealForm .meal-feeling-simple-item { max-width: 52vw; }
+}
