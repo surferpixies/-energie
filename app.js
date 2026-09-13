@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.110";
+  const APP_RELEASE = "3.56.111";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -5126,10 +5126,26 @@
         profile: renderProfile,
       })[currentView] || renderToday
     )();
+    renderProfessionalBetaContextBar();
     decorateSupplementIcons();
     renderDemoChrome();
     bindViewSwipe();
   }
+  function renderProfessionalBetaContextBar() {
+    if (!professionalBetaMode || !professionalActiveClient) return;
+    const app = $("#app");
+    if (!app || $("#professionalBetaContextBar")) return;
+    app.insertAdjacentHTML(
+      "afterbegin",
+      `<section class="professional-beta-context" id="professionalBetaContextBar"><div class="professional-beta-context-copy"><small>Mode professionnel</small><strong>👤 ${esc(professionalActiveClient.name || "Client Énergie")}</strong><span>Tu consultes actuellement le dossier de ce client.</span></div><div class="professional-beta-context-actions"><button type="button" class="secondary small" id="professionalBetaOpenFollowup">Suivi</button><button type="button" class="text-button" id="professionalBetaReturnPersonal">Revenir à mon profil</button></div></section>`,
+    );
+    $("#professionalBetaOpenFollowup")?.addEventListener("click", () => {
+      currentView = "followup";
+      render();
+    });
+    $("#professionalBetaReturnPersonal")?.addEventListener("click", leaveProfessionalBeta);
+  }
+
   function mealCard(m, opts = {}) {
     const feeling = m.feeling;
     const favorite = favoriteForMeal(m);
@@ -13684,7 +13700,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.110");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.111");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});

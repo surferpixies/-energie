@@ -1356,3 +1356,13 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .professional-invite-accept{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.professional-invite-accept input{text-transform:uppercase;letter-spacing:.12em;font-weight:850;text-align:center}
 body.professional-beta-mode .sync-badge{display:none}
 @media(max-width:520px){.professional-invite-accept{grid-template-columns:1fr}.professional-beta-entry .dialog-actions{display:grid;grid-template-columns:1fr}}
+
+/* Contexte visible lors de la consultation d’un vrai client en bêta pro */
+.professional-beta-context{margin:0 0 14px;padding:14px 16px;border:1px solid rgba(46,130,78,.22);border-radius:18px;background:linear-gradient(135deg,rgba(223,244,214,.92),rgba(246,250,240,.96));box-shadow:0 8px 22px rgba(37,83,55,.07);display:flex;align-items:center;justify-content:space-between;gap:14px}
+.professional-beta-context-copy{min-width:0;display:flex;flex-direction:column;gap:2px}
+.professional-beta-context-copy small{font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.professional-beta-context-copy strong{font-size:1.08rem;color:var(--text)}
+.professional-beta-context-copy span{font-size:.78rem;color:var(--muted)}
+.professional-beta-context-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.professional-beta-context-actions .text-button{font-weight:800;white-space:nowrap}
+@media (max-width:560px){.professional-beta-context{align-items:flex-start;flex-direction:column}.professional-beta-context-actions{width:100%;justify-content:space-between}.professional-beta-context-actions .text-button{margin-left:auto}}
