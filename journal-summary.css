@@ -357,21 +357,21 @@ html[data-theme="dark"] .quick-meal-type-grid button.is-complete {
 .beverage-type-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: .55rem;
+  gap: .42rem;
 }
 .beverage-type-grid button {
-  min-height: 72px;
+  min-height: 60px;
   display: grid;
   place-items: center;
-  gap: .2rem;
-  padding: .5rem .3rem;
+  gap: .12rem;
+  padding: .38rem .28rem;
   border: 1px solid var(--border);
   border-radius: 16px;
   color: var(--text);
   background: var(--bg);
 }
-.beverage-type-grid button span { font-size: 1.45rem; }
-.beverage-type-grid button small { font-size: .62rem; line-height: 1.15; }
+.beverage-type-grid button span { font-size: 1.2rem; }
+.beverage-type-grid button small { font-size: .59rem; line-height: 1.12; font-weight: 700; }
 .beverage-type-grid button.active {
   border-color: var(--accent);
   color: var(--accent-strong);
@@ -415,8 +415,10 @@ html[data-theme="dark"] .quick-meal-type-grid button.is-complete {
 .beverage-empty { margin: 0; color: var(--muted); font-size: .66rem; }
 
 @media (max-width: 390px) {
-  .beverage-type-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .beverage-section-head { align-items: stretch; flex-direction: column; }
+}
+@media (max-width: 330px) {
+  .beverage-type-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 .quick-feeling-choices {

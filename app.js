@@ -592,9 +592,13 @@
     { id: "water", label: "Eau", icon: "💧", amount: 500 },
     { id: "sparkling_water", label: "Eau pétillante", icon: "🫧", amount: 500 },
     { id: "coffee", label: "Café", icon: "☕", amount: 250, caffeine: true },
+    { id: "latte", label: "Café latté", icon: "☕", amount: 300, caffeine: true },
+    { id: "cappuccino", label: "Cappuccino", icon: "☕", amount: 180, caffeine: true },
     { id: "tea", label: "Thé", icon: "🍵", amount: 250, caffeine: true },
     { id: "herbal_tea", label: "Tisane", icon: "🌿", amount: 250 },
+    { id: "hot_chocolate", label: "Chocolat chaud", icon: "🍫", amount: 250 },
     { id: "juice", label: "Jus de fruits", icon: "🧃", amount: 250 },
+    { id: "smoothie", label: "Smoothie", icon: "🥤", amount: 350 },
     { id: "milk", label: "Lait", icon: "🥛", amount: 250 },
     { id: "soft_drink", label: "Boisson gazeuse", icon: "🥤", amount: 355, caffeine: true },
     { id: "energy_drink", label: "Boisson énergisante", icon: "⚡", amount: 250, caffeine: true },
@@ -2366,6 +2370,17 @@
   function mealReferenceQuantity(portion) {
     return mealQuantityFromText(portion);
   }
+  function mealQuantityOnlyFromText(text) {
+    const raw = String(text || "")
+      .toLocaleLowerCase("fr-CA")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[’']/g, " ")
+      .trim(),
+      number = "(\\d+(?:[.,]\\d+)?|\\d+\\s*\\/\\s*\\d+)",
+      unit = "(kg|kilogrammes?|g|grammes?|grams?|ml|millilitres?|l|litres?|tasses?|cups?|c\\.?\\s*a\\s*soupe|cuilleres?\\s*a\\s*soupe|tbsp|c\\.?\\s*a\\s*the|cuilleres?\\s*a\\s*the|tsp)";
+    return new RegExp(`^${number}\\s*${unit}$`, "i").test(raw);
+  }
   function nutritionScaleForSegment(segment, food) {
     const entered = mealQuantityFromText(segment),
       explicitReference = mealReferenceQuantity(food?.portion),
@@ -2384,6 +2399,43 @@
       ? { scale, quantityUsed: true }
       : { scale: 1, quantityUsed: false };
   }
+  function mealNutritionRecognition(text) {
+    const value = String(text || "").trim(),
+      recognizedDish = mealCompositionAnalysis(value)?.dish;
+    if (!value) return { recognized: [], unrecognized: [] };
+    if (recognizedDish?.nutrition && !/[+,;\n\r|]|\s+\/\s+/.test(value))
+      return { recognized: [value], unrecognized: [] };
+
+    const stitchedLines = [];
+    for (const rawLine of value.split(/\r?\n/)) {
+      const line = rawLine.trim();
+      if (!line) continue;
+      const quantityOnly = mealQuantityOnlyFromText(line);
+      if (quantityOnly && stitchedLines.length) stitchedLines[stitchedLines.length - 1] += ` ${line}`;
+      else stitchedLines.push(line);
+    }
+    const primary = stitchedLines
+      .join("\n")
+      .split(/\s*(?:\+|,|;|\n|\r|\u2022|\|)\s*|\s+\/\s+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const recognized = [], unrecognized = [];
+    const classify = (segment) => {
+      if (!segment) return;
+      if (foodMatchForSegment(segment)) recognized.push(segment);
+      else if (!mealQuantityOnlyFromText(segment)) unrecognized.push(segment);
+    };
+    for (const segment of primary.length ? primary : [value]) {
+      const connectorParts = segment
+        .split(/\s+(?:et|and|avec|with)\s+/i)
+        .map((item) => item.trim())
+        .filter(Boolean);
+      if (connectorParts.length > 1) connectorParts.forEach(classify);
+      else classify(segment);
+    }
+    return { recognized, unrecognized: [...new Set(unrecognized)] };
+  }
+
   function splitMealIngredients(text) {
     // Une ligne contenant seulement une quantité complète l’ingrédient précédent.
     // Ex. « poulet / oignon / huile » puis « 1 cuillère à soupe » rattache la quantité à l’huile.
@@ -2391,7 +2443,7 @@
     for (const rawLine of String(text || "").split(/\r?\n/)) {
       const line = rawLine.trim();
       if (!line) continue;
-      const quantityOnly = mealQuantityFromText(line) && !foodMatchForSegment(line);
+      const quantityOnly = mealQuantityOnlyFromText(line);
       if (quantityOnly && stitchedLines.length) stitchedLines[stitchedLines.length - 1] += ` ${line}`;
       else stitchedLines.push(line);
     }
@@ -2708,6 +2760,27 @@
           : "Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.");
     updateMealCalorieEditor();
   }
+  function updateMealCalorieRecognition() {
+    const notice = $("#mealCalorieRecognitionNotice"),
+      list = $("#mealCalorieUnrecognizedList"),
+      mode = $("#mealCalorieMode")?.value || "auto";
+    if (!notice || !list) return;
+    const recognition = mealNutritionRecognition($("#mealDescription")?.value || ""),
+      items = recognition.unrecognized;
+    notice.hidden = mode === "manual" || !items.length;
+    if (notice.hidden) {
+      list.innerHTML = "";
+      return;
+    }
+    notice.textContent = `ⓘ Estimation partielle · ${items.length} élément${items.length > 1 ? "s" : ""} à vérifier`;
+    list.innerHTML = items.map((item) => `<div class="meal-calorie-unrecognized-item"><span aria-hidden="true">?</span><div><strong>${esc(item)}</strong><small>Aucune valeur calorique n’a pu être associée à cet élément.</small></div></div>`).join("");
+  }
+  function openMealCalorieRecognition() {
+    updateMealCalorieRecognition();
+    const dialog = $("#mealCalorieRecognitionDialog");
+    if (dialog && !$("#mealCalorieRecognitionNotice")?.hidden) dialog.showModal();
+  }
+
   function updateMealCalorieEditor() {
     const input = $("#mealCalories"), mode = $("#mealCalorieMode");
     if (!input || !mode) return;
@@ -2716,8 +2789,10 @@
       ? t("Entrez des calories positives ou nulles, ou revenez à l’estimation automatique.") : "");
     if (manual) $("#nutritionCalories").value = value != null && value >= 0 ? value : "";
     else input.value = $("#nutritionCalories").value;
+    updateMealCalorieRecognition();
+    const partial = !manual && !$("#mealCalorieRecognitionNotice")?.hidden;
     $("#mealCalorieStatus").textContent = manual ? t("Ajustées par vous")
-      : input.value !== "" ? t("Estimation automatique · modifiable") : t("Aucune estimation disponible · saisie facultative");
+      : input.value !== "" ? t(partial ? "Estimation automatique partielle · modifiable" : "Estimation automatique · modifiable") : t("Aucune estimation disponible · saisie facultative");
     $("#resetMealCalories").hidden = !manual;
     updateMealCalorieTargetGauge();
   }
@@ -11648,7 +11723,7 @@
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
     });
-    if (caffeineRow) caffeineRow.hidden = !["coffee", "tea", "soft_drink", "energy_drink"].includes(type.id);
+    if (caffeineRow) caffeineRow.hidden = !["coffee", "latte", "cappuccino", "tea", "soft_drink", "energy_drink"].includes(type.id);
     $("#beverageCaffeinated").checked = !!type.caffeine;
   }
   function openBeverage(item = null) {
@@ -12002,6 +12077,9 @@
     updateMealCalorieEditor();
   });
   $("#resetMealCalories").onclick = resetMealCalories;
+  $("#mealCalorieRecognitionNotice").onclick = openMealCalorieRecognition;
+  $("#closeMealCalorieRecognition").onclick = () => $("#mealCalorieRecognitionDialog")?.close();
+  $("#openMealBeverage").onclick = () => openBeverage();
   $$("#mealNutritionSection input").forEach((input) =>
     input.addEventListener("input", () => {
       if (input.id === "nutritionCalories") {

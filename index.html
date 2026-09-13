@@ -15,7 +15,7 @@
     html,body{margin:0;background:#eef8e7;}
     #splashScreen{position:fixed;inset:0;background:#eef8e7;}
   </style>
-  <link rel="stylesheet" href="styles.css?v=3.56.102">
+  <link rel="stylesheet" href="styles.css?v=3.56.104">
   <link rel="stylesheet" href="portrait.css?v=3.56.21">
   <link rel="stylesheet" href="observation-detail.css?v=3.56.21">
   <link rel="stylesheet" href="personal-metrics.css?v=3.56.21">
@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="meal-quick-fill.css?v=3.56.28">
   <link rel="stylesheet" href="beverage-edit.css?v=3.56.29">
   <link rel="stylesheet" href="steps-tracking.css?v=3.56.39">
-  <link rel="stylesheet" href="journal-summary.css?v=3.56.61">
+  <link rel="stylesheet" href="journal-summary.css?v=3.56.105">
   <link rel="stylesheet" href="onboarding.css?v=3.56.52">
   <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.99">
 </head>
@@ -126,6 +126,7 @@
         <button type="button" id="openFavoriteQuickFill"><span aria-hidden="true">⭐</span><span>Favoris</span></button>
         <button type="button" id="openRecentQuickFill"><span aria-hidden="true">🕒</span><span>Récents</span></button>
       </div>
+      <button type="button" id="openMealBeverage" class="meal-inline-beverage-button"><span aria-hidden="true">☕</span><span><strong>Ajouter une boisson</strong><small>Café, eau, thé et autres boissons</small></span><b aria-hidden="true">›</b></button>
       <label id="favoriteMealLabel" class="visually-hidden">Choisir un repas favori
         <select id="favoriteMealSelect" autocomplete="off" tabindex="-1"><option value="">Choisir un favori…</option></select>
       </label>
@@ -144,7 +145,17 @@
         <span class="meal-calorie-unit">kcal</span>
         <small id="mealCalorieStatus" role="status">Aucune estimation disponible · saisie facultative</small>
         <button type="button" class="text-button" id="resetMealCalories" hidden>Auto</button>
+        <button type="button" id="mealCalorieRecognitionNotice" class="meal-calorie-recognition-notice" hidden>ⓘ Estimation partielle · éléments à vérifier</button>
       </section>
+      <dialog id="mealCalorieRecognitionDialog" class="meal-calorie-recognition-dialog">
+        <section class="dialog-card meal-calorie-recognition-card">
+          <div class="dialog-header"><div><p class="eyebrow">Calories estimées</p><h2>Éléments non reconnus</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
+          <p class="muted small">Énergie n’a pas pu associer une valeur calorique aux éléments suivants. Ils ne sont pas inclus dans l’estimation automatique actuelle.</p>
+          <div id="mealCalorieUnrecognizedList" class="meal-calorie-unrecognized-list"></div>
+          <p class="muted tiny">Tu peux préciser l’aliment ou ajuster directement les calories si tu connais la valeur.</p>
+          <button type="button" class="primary" id="closeMealCalorieRecognition">Compris</button>
+        </section>
+      </dialog>
       <section id="mealCalorieTargetGauge" class="meal-calorie-target-gauge" hidden aria-live="polite"></section>
       <div class="meal-description-field">
         <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div>
@@ -607,6 +618,6 @@
   <script src="demo-profiles.js?v=3.56.21"></script>
   <script src="personal-metrics.js?v=3.56.99"></script>
   <script src="onboarding-images.js?v=3.56.52"></script>
-  <script src="app.js?v=3.56.103"></script>
+  <script src="app.js?v=3.56.105"></script>
 </body>
 </html>
