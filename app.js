@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.102";
+  const APP_RELEASE = "3.56.107";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -362,7 +362,15 @@
     missingBeforeContinuation = "summary",
     notificationTimer = null;
   let hasDemoAccess = false;
+  let hasProfessionalBetaAccess = false;
   let professionalDemoMode = false;
+  let professionalBetaMode = false;
+  let professionalPersonalDb = null;
+  let professionalActiveClient = null;
+  let professionalClientLinks = [];
+  let professionalNotesCache = [];
+  let professionalTrackingPlanCache = null;
+  let clientProfessionalLink = null;
   const EATING_REASON_IDS = new Set(["hunger", "routine", "boredom", "pleasure", "other"]);
   const EATING_REASON_META = [
     { id: "hunger", icon: "😋", label: "J’avais faim" },
@@ -399,7 +407,13 @@
     return normalizedEatingReasonState(value, existing).other;
   }
   function nutritionVisibleToViewer() {
-    return !!professionalDemoMode;
+    return !!professionalDemoMode || !!professionalBetaMode;
+  }
+  function isProfessionalWorkspace() {
+    return !!professionalBetaMode;
+  }
+  function hasClientProfessionalFollowup() {
+    return !!clientProfessionalLink && !professionalBetaMode && !db.settings?.demoMode;
   }
   let barcodeReader = null,
     barcodeControls = null,
@@ -915,6 +929,9 @@
     } catch (_) {}
   }
   function saveLocal(reason = "local") {
+    // En espace professionnel réel, les données du client sont chargées en mémoire
+    // seulement. Elles ne doivent jamais remplacer le journal local du professionnel.
+    if (professionalBetaMode) return;
     const demoPersistenceAllowed = /demo|visite/i.test(String(reason));
     if (
       db.settings?.demoMode &&
@@ -1257,6 +1274,13 @@
     db = freshDB();
     db.settings.showWelcome = false;
     professionalDemoMode = false;
+    professionalBetaMode = false;
+    professionalPersonalDb = null;
+    professionalActiveClient = null;
+    professionalClientLinks = [];
+    professionalNotesCache = [];
+    professionalTrackingPlanCache = null;
+    clientProfessionalLink = null;
     currentView = "today";
     selectedDate = todayKey();
     try {
@@ -1504,7 +1528,7 @@
     return true;
   }
   function enqueue(op) {
-    if (db.settings.demoMode) return;
+    if (professionalBetaMode || db.settings.demoMode) return;
     const items = outbox();
     op = { ...op, _queuedAt: `${Date.now()}-${uid()}` };
     const key = `${op.kind}:${op.id || op.date}`;
@@ -1617,7 +1641,7 @@
     return op?._queuedAt || "legacy";
   }
   async function syncNow() {
-    if (db.settings.demoMode || !client || !session || !navigator.onLine)
+    if (professionalBetaMode || db.settings.demoMode || !client || !session || !navigator.onLine)
       return;
     if (syncBusy) {
       syncQueued = true;
@@ -1840,7 +1864,7 @@
     if (!failed.length && !pending) await pullCloud(false);
   }
   async function pullCloud(show = true) {
-    if (db.settings.demoMode || !client || !session || !navigator.onLine)
+    if (professionalBetaMode || db.settings.demoMode || !client || !session || !navigator.onLine)
       return;
     if (show) {
       syncState = "syncing";
@@ -3774,6 +3798,7 @@
   }
   const PROFESSIONAL_NOTES_KEY = "energieProfessionalDemoNotesV1";
   function readProfessionalNotes() {
+    if (professionalBetaMode || hasClientProfessionalFollowup()) return professionalNotesCache || [];
     try {
       const saved = JSON.parse(localStorage.getItem(PROFESSIONAL_NOTES_KEY) || "null");
       if (Array.isArray(saved)) return saved;
@@ -3820,6 +3845,10 @@
     };
   }
   function readProfessionalTrackingPlans() {
+    if (professionalBetaMode || hasClientProfessionalFollowup()) {
+      const id = professionalBetaMode ? professionalActiveClient?.id : session?.user?.id;
+      return id && professionalTrackingPlanCache ? { [id]: professionalTrackingPlanCache } : {};
+    }
     try {
       const saved = JSON.parse(localStorage.getItem(PROFESSIONAL_TRACKING_PLANS_KEY) || "null");
       if (saved && typeof saved === "object") {
@@ -3843,11 +3872,13 @@
     try { localStorage.setItem(PROFESSIONAL_TRACKING_PLANS_KEY, JSON.stringify(plans)); } catch (_) {}
   }
   function activeProfessionalTrackingPlan() {
+    if (professionalBetaMode) return professionalTrackingPlanCache || null;
+    if (hasClientProfessionalFollowup()) return professionalTrackingPlanCache || null;
     if (!db.settings?.demoMode || !db.settings?.demoProfileId) return null;
     return readProfessionalTrackingPlans()[db.settings.demoProfileId] || null;
   }
   function professionalTrackingPlanHtml() {
-    const profile = activeDemoProfile(),
+    const profile = professionalBetaMode ? professionalActiveClient : activeDemoProfile(),
       plan = activeProfessionalTrackingPlan(),
       chosen = new Set((plan?.feelingIds || []).filter((id) => !POSITIVE_FEELING_IDS.has(id))),
       groups = FEELING_CATEGORIES.map((category) => {
@@ -3868,6 +3899,11 @@
     return `<section class="card professional-demo-entry"><div><p class="eyebrow">Prototype local</p><h3>👩‍⚕️ Mode professionnel — Démo</h3><p class="muted small">Consulte les quatre dossiers fictifs en lecture seule et expérimente le suivi professionnel.</p></div><button type="button" class="primary" id="openProfessionalDemo">Ouvrir l’espace professionnel</button></section>`;
   }
   function professionalClientPickerHtml() {
+    if (professionalBetaMode) {
+      const links = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
+      if (!links.length) return `<div class="empty"><span>👥</span><p>Aucun client lié pour le moment.</p></div>`;
+      return links.map((link) => `<button type="button" class="professional-client-option ${professionalActiveClient?.linkId === link.id ? "is-active" : ""}" data-professional-beta-client="${esc(link.client_user_id)}"><span>👤</span><span><strong>${esc(link.client_label || "Client Énergie")}</strong><small>Partage actif</small></span><b>›</b></button>`).join("");
+    }
     const profiles = Object.values(window.EnergieDemoProfiles?.profiles || {});
     return profiles
       .map((profile) => `<button type="button" class="professional-client-option ${db.settings.demoProfileId === profile.id ? "is-active" : ""}" data-professional-client="${profile.id}"><span>${profile.icon}</span><span><strong>${esc(profile.name)}</strong><small>${esc(profile.scenario)}</small></span><b>›</b></button>`)
@@ -3881,13 +3917,22 @@
       return;
     }
     list.innerHTML = professionalClientPickerHtml();
-    $$('[data-professional-client]').forEach((button) =>
-      button.addEventListener("click", () => {
-        professionalDemoMode = true;
-        dialog.close();
-        switchDemoProfile(button.dataset.professionalClient);
-      }),
-    );
+    if (professionalBetaMode) {
+      $$('[data-professional-beta-client]').forEach((button) =>
+        button.addEventListener("click", async () => {
+          dialog.close();
+          await loadProfessionalClientWorkspace(button.dataset.professionalBetaClient);
+        }),
+      );
+    } else {
+      $$('[data-professional-client]').forEach((button) =>
+        button.addEventListener("click", () => {
+          professionalDemoMode = true;
+          dialog.close();
+          switchDemoProfile(button.dataset.professionalClient);
+        }),
+      );
+    }
     try {
       if (!dialog.open) dialog.showModal();
     } catch (_) {
@@ -3897,6 +3942,206 @@
   function startProfessionalDemo() {
     professionalDemoMode = true;
     openProfessionalClientPicker();
+  }
+
+  function professionalProfileLabel() {
+    const meta = session?.user?.user_metadata || {};
+    return String(meta.full_name || meta.name || session?.user?.email?.split("@")[0] || "Professionnel Énergie").trim();
+  }
+  function clientProfileLabel() {
+    const meta = session?.user?.user_metadata || {};
+    return String(meta.full_name || meta.name || session?.user?.email?.split("@")[0] || "Client Énergie").trim();
+  }
+  async function loadProfessionalBetaState() {
+    professionalClientLinks = [];
+    clientProfessionalLink = null;
+    professionalNotesCache = [];
+    professionalTrackingPlanCache = null;
+    if (!client || !session) return;
+    try {
+      const { data, error } = await client
+        .from("professional_client_links")
+        .select("id,professional_user_id,client_user_id,client_label,professional_label,status,invite_code,share_journal,share_photos,created_at,accepted_at")
+        .or(`professional_user_id.eq.${session.user.id},client_user_id.eq.${session.user.id}`)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      professionalClientLinks = data || [];
+      clientProfessionalLink = professionalClientLinks.find((link) => link.status === "active" && link.client_user_id === session.user.id) || null;
+      if (clientProfessionalLink) await loadClientProfessionalFollowup();
+    } catch (error) {
+      // La bêta reste invisible tant que la migration Supabase n'est pas installée.
+      console.info("Suivi professionnel bêta non configuré:", error?.message || error);
+    }
+  }
+  async function loadClientProfessionalFollowup() {
+    if (!client || !session || !clientProfessionalLink) return;
+    const [notesResult, planResult] = await Promise.all([
+      client.from("professional_notes").select("*").eq("link_id", clientProfessionalLink.id).eq("visibility", "shared").order("created_at", { ascending: false }),
+      client.from("professional_tracking_plans").select("*").eq("link_id", clientProfessionalLink.id).maybeSingle(),
+    ]);
+    if (!notesResult.error) professionalNotesCache = (notesResult.data || []).map((note) => ({
+      id: note.id, clientId: session.user.id, visibility: note.visibility, contextType: note.context_type,
+      contextId: note.context_id || "", contextDate: note.context_date || "", contextLabel: note.context_label || "Suivi général",
+      content: note.content, createdAt: note.created_at, updatedAt: note.updated_at,
+    }));
+    if (!planResult.error && planResult.data) professionalTrackingPlanCache = {
+      clientId: session.user.id,
+      feelingIds: normalizeFeelingIds(planResult.data.feeling_ids || []),
+      updatedAt: planResult.data.updated_at,
+    };
+  }
+  function randomProfessionalInviteCode() {
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const values = new Uint32Array(8);
+    crypto.getRandomValues(values);
+    return [...values].map((value) => alphabet[value % alphabet.length]).join("");
+  }
+  async function createProfessionalInvite() {
+    if (!hasProfessionalBetaAccess || !client || !session) return;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const code = randomProfessionalInviteCode();
+      const { data, error } = await client.from("professional_client_links").insert({
+        professional_user_id: session.user.id,
+        professional_label: professionalProfileLabel(),
+        invite_code: code,
+        status: "pending",
+        share_journal: true,
+        share_photos: false,
+      }).select("*").single();
+      if (!error) {
+        await loadProfessionalBetaState();
+        renderProfile();
+        alert(`Code d’invitation : ${data.invite_code}\n\nLe client peut l’entrer dans son Profil Énergie.`);
+        return;
+      }
+      if (!/duplicate|unique/i.test(error.message || "")) {
+        alert(`Impossible de créer l’invitation : ${error.message}`);
+        return;
+      }
+    }
+    alert("Impossible de générer un code unique. Réessaie.");
+  }
+  async function acceptProfessionalInvite(code) {
+    if (!client || !session || !code) return;
+    const { error } = await client.rpc("accept_professional_invite", {
+      p_invite_code: String(code).trim().toUpperCase(),
+      p_client_label: clientProfileLabel(),
+    });
+    if (error) {
+      alert(`Invitation non reconnue : ${error.message}`);
+      return;
+    }
+    await loadProfessionalBetaState();
+    renderProfile();
+    alert("Le suivi professionnel est maintenant lié à ton compte. Tu peux retirer cet accès en tout temps.");
+  }
+  async function revokeProfessionalLink(linkId) {
+    if (!client || !session || !linkId) return;
+    if (!confirm("Retirer l’accès professionnel à ton journal?")) return;
+    const { error } = await client.rpc("revoke_professional_link", { p_link_id: linkId });
+    if (error) {
+      alert(`Impossible de retirer l’accès : ${error.message}`);
+      return;
+    }
+    await loadProfessionalBetaState();
+    render();
+  }
+  function professionalBetaProfileHtml() {
+    if (!session) return "";
+    if (hasProfessionalBetaAccess) {
+      const active = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
+      const pending = professionalClientLinks.filter((link) => link.status === "pending");
+      const pendingCodes = pending.slice(0, 2).map((link) => `<button type="button" class="professional-invite-code" data-copy-professional-code="${esc(link.invite_code)}"><span>Code actif</span><strong>${esc(link.invite_code)}</strong><small>Toucher pour copier</small></button>`).join("");
+      return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""}</small></span></div>${pendingCodes}<div class="dialog-actions"><button type="button" class="secondary" id="createProfessionalInvite">Créer une invitation</button><button type="button" class="primary" id="openProfessionalBeta">Passer en mode professionnel</button></div><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
+    }
+    if (clientProfessionalLink) {
+      return `<section class="card professional-client-link-card"><p class="eyebrow">Suivi professionnel</p><h3>👩‍⚕️ Suivi lié à ${esc(clientProfessionalLink.professional_label || "ton professionnel")}</h3><p class="muted small">Ton journal est partagé pour le suivi. Les notes privées du professionnel ne te sont jamais affichées.</p><div class="dialog-actions"><button type="button" class="secondary" id="openClientFollowup">Ouvrir mon suivi</button><button type="button" class="text-button" id="revokeProfessionalAccess">Retirer l’accès</button></div></section>`;
+    }
+    return `<section class="card professional-client-link-card"><p class="eyebrow">Bêta</p><h3>👩‍⚕️ Lier mon suivi à un professionnel</h3><p class="muted small">Entre le code reçu. En acceptant, tu autorises ce professionnel à consulter ton journal Énergie, incluant repas, ressentis, poids, sommeil, hydratation et activité. Les photos restent exclues pour cette première bêta.</p><div class="professional-invite-accept"><input id="professionalInviteCode" type="text" maxlength="8" autocomplete="one-time-code" autocapitalize="characters" placeholder="CODE"><button type="button" class="primary" id="acceptProfessionalInvite">Accepter</button></div></section>`;
+  }
+  function professionalDbFromCloud(dayRows, mealRows) {
+    const out = freshDB();
+    out.settings.showWelcome = false;
+    for (const r of dayRows || []) {
+      const d = ensureDay(out, r.log_date);
+      d.sleepHours = r.sleep_hours;
+      d.sleepTags = Array.isArray(r.sleep_tags) ? r.sleep_tags : [];
+      d.sleepComment = r.sleep_comment || "";
+      d.water = Number(r.water) || 0;
+      d.beverages = (Array.isArray(r.supplements?.beverages) ? r.supplements.beverages : []).map((item) => normalBeverage(item, r.log_date)).filter(Boolean);
+      d.steps = Number.isFinite(Number(r.supplements?.steps)) ? Math.round(Number(r.supplements.steps)) : null;
+      d.stepsGoal = Number.isFinite(Number(r.supplements?.stepsGoal)) ? Math.round(Number(r.supplements.stepsGoal)) : null;
+      d.activities = (r.activities || []).map(normalizeActivity);
+      d.supplementsTaken = normalizeSupplements(r.supplements?.taken || []);
+      d.weightMeasurement = Metrics.mergeWeight(null, r.supplements?.weightMeasurement);
+      out.settings.personalProfile = Metrics.mergeProfile(out.settings.personalProfile, r.supplements?.personalProfile);
+      d.updatedAt = r.updated_at;
+    }
+    for (const r of mealRows || []) {
+      const d = ensureDay(out, r.meal_date);
+      d.meals.push(normalMeal({
+        id: r.id, date: r.meal_date, time: (r.meal_time || "").slice(0,5), type: r.meal_type,
+        description: r.description, fatigueBefore: r.fatigue_before, fatigueAfter: r.fatigue_after,
+        notes: r.notes, feeling: r.feeling || null, feelingNotifiedAt: r.feeling_notified_at || null,
+        nutrition: r.nutrition || null, recommendation: r.recommendation || null,
+        createdAt: r.created_at, updatedAt: r.updated_at,
+      }, r.meal_date));
+    }
+    return out;
+  }
+  async function loadProfessionalClientWorkspace(clientId) {
+    const link = professionalClientLinks.find((item) => item.status === "active" && item.client_user_id === clientId);
+    if (!link || !client || !session) return;
+    const [daysResult, mealsResult, notesResult, planResult] = await Promise.all([
+      client.from("daily_logs").select("*").eq("user_id", clientId).order("log_date"),
+      client.from("meals").select("*").eq("user_id", clientId).order("meal_date").order("meal_time"),
+      client.from("professional_notes").select("*").eq("link_id", link.id).order("created_at", { ascending: false }),
+      client.from("professional_tracking_plans").select("*").eq("link_id", link.id).maybeSingle(),
+    ]);
+    const failure = daysResult.error || mealsResult.error || notesResult.error || planResult.error;
+    if (failure) {
+      alert(`Impossible d’ouvrir le dossier : ${failure.message || "accès refusé"}`);
+      return;
+    }
+    if (!professionalPersonalDb) professionalPersonalDb = db;
+    db = professionalDbFromCloud(daysResult.data || [], mealsResult.data || []);
+    professionalActiveClient = { id: clientId, name: link.client_label || "Client Énergie", linkId: link.id, link };
+    professionalNotesCache = (notesResult.data || []).map((note) => ({
+      id: note.id, clientId, visibility: note.visibility, contextType: note.context_type,
+      contextId: note.context_id || "", contextDate: note.context_date || "", contextLabel: note.context_label || "Suivi général",
+      content: note.content, createdAt: note.created_at, updatedAt: note.updated_at,
+    }));
+    professionalTrackingPlanCache = planResult.data ? {
+      clientId, feelingIds: normalizeFeelingIds(planResult.data.feeling_ids || []), updatedAt: planResult.data.updated_at,
+    } : { clientId, feelingIds: [], updatedAt: new Date().toISOString() };
+    professionalBetaMode = true;
+    currentView = "followup";
+    render();
+  }
+  async function startProfessionalBeta() {
+    if (!hasProfessionalBetaAccess || !session) return;
+    await loadProfessionalBetaState();
+    const active = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
+    professionalBetaMode = true;
+    professionalPersonalDb = db;
+    if (active.length === 1) {
+      await loadProfessionalClientWorkspace(active[0].client_user_id);
+      return;
+    }
+    professionalActiveClient = null;
+    currentView = "followup";
+    render();
+  }
+  function leaveProfessionalBeta() {
+    if (professionalPersonalDb) db = professionalPersonalDb;
+    professionalPersonalDb = null;
+    professionalBetaMode = false;
+    professionalActiveClient = null;
+    professionalNotesCache = [];
+    professionalTrackingPlanCache = null;
+    currentView = "profile";
+    selectedDate = todayKey();
+    render();
   }
   function professionalContextOptionsHtml() {
     const options = [`<option value="global|||Suivi général">Suivi général</option>`];
@@ -3927,8 +4172,8 @@
   }
   let professionalTrendWeekDetails = [];
   function professionalTrendHtml() {
-    const profile = activeDemoProfile();
-    if (!db.settings.demoMode) return "";
+    const profile = professionalBetaMode ? professionalActiveClient : activeDemoProfile();
+    if (!db.settings.demoMode && !professionalBetaMode) return "";
     const configs = {
       elodie: {
         pattern: /(soya|tofu|edamame|miso)/i,
@@ -4101,27 +4346,48 @@
     return `${summary}<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Évolution dans le temps</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-week-note"><strong>Touchez une semaine pour voir son détail.</strong><span>Chaque semaine commence le dimanche. La valeur au-dessus de chaque point indique l’inconfort moyen sur 5; le nombre sous la courbe indique combien de journées contenaient l’élément suivi.</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small><p>${esc(config.primaryHelp)}</p></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small><p>${esc(config.comparisonHelp)}</p></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small><p>${esc(config.metricHelp)}</p></div></div>${chart}<button type="button" class="secondary professional-trend-expand" data-open-trend-fullscreen><span>↗ Agrandir le graphique</span><small>Tournez votre téléphone horizontalement pour une meilleure vue</small></button><p class="muted tiny">${config.disclaimer}</p></section><dialog class="professional-trend-dialog" id="professionalTrendDialog"><div class="professional-trend-dialog-head"><div><small>Graphique agrandi · Touchez une semaine pour l’explorer</small><strong>${config.title}</strong></div><button type="button" class="secondary" data-close-trend-fullscreen>Revenir au suivi ✕</button></div><div class="professional-trend-fullscreen-frame">${chart}</div><p class="muted tiny">Axe vertical : inconfort moyen sur 5 · Axe horizontal : semaines du dimanche au samedi.</p></dialog>${weekDialog}`;
   }
   function renderFollowup() {
-    if (!db.settings.demoMode) {
+    const clientView = hasClientProfessionalFollowup();
+    if (!db.settings.demoMode && !professionalBetaMode && !clientView) {
       currentView = "profile";
       render();
       return;
     }
-    const profile = activeDemoProfile();
+    if (professionalBetaMode && !professionalActiveClient) {
+      const active = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
+      $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">Espace professionnel · Bêta</p><h2>📝 Mes clients</h2><p>${active.length ? "Choisis un client pour ouvrir son suivi." : "Aucun client n’est encore lié à ton compte."}</p><div class="dialog-actions">${active.length ? `<button type="button" class="primary" id="switchProfessionalClient">Choisir un client</button>` : ""}<button type="button" class="text-button" id="leaveProfessionalBeta">Revenir à mon profil</button></div></section>`;
+      $("#switchProfessionalClient")?.addEventListener("click", openProfessionalClientPicker);
+      $("#leaveProfessionalBeta")?.addEventListener("click", leaveProfessionalBeta);
+      return;
+    }
+    const profile = professionalBetaMode
+      ? professionalActiveClient
+      : clientView
+        ? { id: session.user.id, name: clientProfessionalLink.client_label || "Mon suivi" }
+        : activeDemoProfile();
+    const isProfessionalOperator = professionalDemoMode || professionalBetaMode;
     const allNotes = readProfessionalNotes()
       .filter((note) => note.clientId === profile.id)
-      .filter((note) => professionalDemoMode || note.visibility === "shared")
+      .filter((note) => isProfessionalOperator || note.visibility === "shared")
       .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-    const form = professionalDemoMode
+    const form = isProfessionalOperator
       ? `<form id="professionalNoteForm" class="card professional-followup professional-note-form"><div><p class="eyebrow">Nouvelle note</p><h3>Ajouter au suivi de ${esc(profile.name)}</h3></div><label>Visibilité<select id="professionalNoteVisibility"><option value="shared">Partagée avec le client</option><option value="private">Privée — professionnel seulement</option></select></label><label>Contexte<select id="professionalNoteContext">${professionalContextOptionsHtml()}</select></label><label>Note<textarea id="professionalNoteContent" rows="4" required placeholder="Écrire une observation ou une piste de suivi…"></textarea></label><button type="submit" class="primary">Enregistrer la note</button></form>`
       : "";
     const cards = allNotes.length
-      ? allNotes.map((note) => `<article class="card professional-note-card ${note.visibility === "private" ? "is-private" : "is-shared"}"><div class="professional-note-head"><span>${note.visibility === "private" ? "🔒 Note privée" : "👁️ Partagée avec le client"}</span><time>${esc(professionalNoteTime(note.createdAt))}</time></div><strong>${esc(note.contextLabel || "Suivi général")}</strong><p>${esc(note.content)}</p>${professionalDemoMode ? `<button type="button" class="text-button professional-note-delete" data-delete-professional-note="${note.id}">Supprimer</button>` : ""}</article>`).join("")
+      ? allNotes.map((note) => `<article class="card professional-note-card ${note.visibility === "private" ? "is-private" : "is-shared"}"><div class="professional-note-head"><span>${note.visibility === "private" ? "🔒 Note privée" : "👁️ Partagée avec le client"}</span><time>${esc(professionalNoteTime(note.createdAt))}</time></div><strong>${esc(note.contextLabel || "Suivi général")}</strong><p>${esc(note.content)}</p>${isProfessionalOperator ? `<button type="button" class="text-button professional-note-delete" data-delete-professional-note="${note.id}">Supprimer</button>` : ""}</article>`).join("")
       : `<section class="card empty"><span>📝</span><p>Aucune note partagée n’est disponible pour ce suivi.</p></section>`;
-    const trackingPlanPanel = professionalDemoMode
+    const trackingPlanPanel = isProfessionalOperator
       ? professionalTrackingPlanHtml()
       : clientTrackingPlanSummaryHtml();
-    $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">${professionalDemoMode ? "Espace professionnel · Démo" : "Suivi professionnel"}</p><h2>📝 Suivi de ${esc(profile.name)}</h2><p>${professionalDemoMode ? "Les notes privées et partagées sont visibles dans cet espace professionnel fictif." : "Les notes partagées par le professionnel apparaissent ici en lecture seule."}</p>${professionalDemoMode ? `<div class="dialog-actions"><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalDemo">Quitter le mode professionnel</button></div>` : ""}</section>${professionalTrendHtml()}${trackingPlanPanel}${form}<section class="professional-followup"><div class="section-title"><h2>Chronologie</h2><span class="muted small">${allNotes.length} note${allNotes.length > 1 ? "s" : ""}</span></div><div class="stack">${cards}</div></section>`;
+    const followupEyebrow = professionalBetaMode ? "Espace professionnel · Bêta" : clientView ? "Suivi professionnel" : professionalDemoMode ? "Espace professionnel · Démo" : "Suivi professionnel";
+    const followupIntro = isProfessionalOperator ? "Les notes privées et partagées sont visibles dans cet espace professionnel." : `Les notes partagées par ${esc(clientProfessionalLink?.professional_label || "le professionnel")} apparaissent ici en lecture seule.`;
+    const followupActions = professionalBetaMode
+      ? `<div class="dialog-actions"><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalBeta">Revenir à mon profil</button></div>`
+      : professionalDemoMode
+        ? `<div class="dialog-actions"><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalDemo">Quitter le mode professionnel</button></div>`
+        : "";
+    $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">${followupEyebrow}</p><h2>📝 Suivi de ${esc(profile.name)}</h2><p>${followupIntro}</p>${followupActions}</section>${professionalTrendHtml()}${trackingPlanPanel}${form}<section class="professional-followup"><div class="section-title"><h2>Chronologie</h2><span class="muted small">${allNotes.length} note${allNotes.length > 1 ? "s" : ""}</span></div><div class="stack">${cards}</div></section>`;
     $("#switchProfessionalClient")?.addEventListener("click", openProfessionalClientPicker);
+    $("#leaveProfessionalBeta")?.addEventListener("click", leaveProfessionalBeta);
     $("#leaveProfessionalDemo")?.addEventListener("click", leaveDemoMode);
     $("[data-open-trend-fullscreen]")?.addEventListener("click", async () => {
       const dialog = $("#professionalTrendDialog");
@@ -4180,40 +4446,61 @@
       $$("[data-tracking-feeling]").forEach((input) => { input.checked = false; });
       updateTrackingPlanCount();
     });
-    $("#professionalTrackingPlanForm")?.addEventListener("submit", (event) => {
+    $("#professionalTrackingPlanForm")?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const feelingIds = $$("[data-tracking-feeling]:checked").map((input) => input.dataset.trackingFeeling);
-      const plans = readProfessionalTrackingPlans();
-      plans[profile.id] = { clientId: profile.id, feelingIds, updatedAt: new Date().toISOString() };
-      writeProfessionalTrackingPlans(plans);
+      if (professionalBetaMode) {
+        const { data, error } = await client.from("professional_tracking_plans").upsert({
+          link_id: professionalActiveClient.linkId, professional_user_id: session.user.id,
+          client_user_id: professionalActiveClient.id, feeling_ids: feelingIds, updated_at: new Date().toISOString(),
+        }, { onConflict: "link_id" }).select("*").single();
+        if (error) { alert(`Impossible d’enregistrer le plan : ${error.message}`); return; }
+        professionalTrackingPlanCache = { clientId: profile.id, feelingIds: normalizeFeelingIds(data.feeling_ids || []), updatedAt: data.updated_at };
+      } else {
+        const plans = readProfessionalTrackingPlans();
+        plans[profile.id] = { clientId: profile.id, feelingIds, updatedAt: new Date().toISOString() };
+        writeProfessionalTrackingPlans(plans);
+      }
       renderFollowup();
     });
-    $("#professionalNoteForm")?.addEventListener("submit", (event) => {
+    $("#professionalNoteForm")?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const rawContext = $("#professionalNoteContext").value.split("|");
       const content = $("#professionalNoteContent").value.trim();
       if (!content) return;
       const now = new Date().toISOString();
-      const notes = readProfessionalNotes();
-      notes.push({
-        id: uid(),
-        clientId: profile.id,
-        visibility: $("#professionalNoteVisibility").value === "private" ? "private" : "shared",
-        contextType: rawContext[0] || "global",
-        contextId: rawContext[1] || "",
-        contextDate: rawContext[2] || "",
-        contextLabel: rawContext[3] || "Suivi général",
-        content,
-        createdAt: now,
-        updatedAt: now,
-      });
-      writeProfessionalNotes(notes);
+      const note = {
+        id: uid(), clientId: profile.id, visibility: $("#professionalNoteVisibility").value === "private" ? "private" : "shared",
+        contextType: rawContext[0] || "global", contextId: rawContext[1] || "", contextDate: rawContext[2] || "",
+        contextLabel: rawContext[3] || "Suivi général", content, createdAt: now, updatedAt: now,
+      };
+      if (professionalBetaMode) {
+        const { data, error } = await client.from("professional_notes").insert({
+          link_id: professionalActiveClient.linkId, professional_user_id: session.user.id, client_user_id: professionalActiveClient.id,
+          visibility: note.visibility, context_type: note.contextType, context_id: note.contextId || null,
+          context_date: note.contextDate || null, context_label: note.contextLabel, content: note.content,
+        }).select("*").single();
+        if (error) { alert(`Impossible d’enregistrer la note : ${error.message}`); return; }
+        note.id = data.id; note.createdAt = data.created_at; note.updatedAt = data.updated_at;
+        professionalNotesCache.push(note);
+      } else {
+        const notes = readProfessionalNotes();
+        notes.push(note);
+        writeProfessionalNotes(notes);
+      }
       renderFollowup();
     });
     $$('[data-delete-professional-note]').forEach((button) =>
-      button.addEventListener("click", () => {
+      button.addEventListener("click", async () => {
         if (!confirm("Supprimer cette note de suivi?")) return;
-        writeProfessionalNotes(readProfessionalNotes().filter((note) => note.id !== button.dataset.deleteProfessionalNote));
+        const noteId = button.dataset.deleteProfessionalNote;
+        if (professionalBetaMode) {
+          const { error } = await client.from("professional_notes").delete().eq("id", noteId);
+          if (error) { alert(`Impossible de supprimer la note : ${error.message}`); return; }
+          professionalNotesCache = professionalNotesCache.filter((note) => note.id !== noteId);
+        } else {
+          writeProfessionalNotes(readProfessionalNotes().filter((note) => note.id !== noteId));
+        }
         renderFollowup();
       }),
     );
@@ -4814,12 +5101,13 @@
     if (selectedDate > maxAllowedJournalDate) selectedDate = maxAllowedJournalDate;
     document.documentElement.dataset.theme =
       db.settings.theme === "dark" ? "dark" : "";
+    document.body.classList.toggle("professional-beta-mode", !!professionalBetaMode);
     updateLivingHeader();
     $("#todayLabel").textContent =
       currentView === "today"
         ? formatDate(selectedDate)
         : formatDate(todayKey());
-    const showFollowup = !!db.settings.demoMode;
+    const showFollowup = !!db.settings.demoMode || !!professionalBetaMode || hasClientProfessionalFollowup();
     const followupNav = $('[data-view="followup"]');
     if (followupNav) followupNav.hidden = !showFollowup;
     $(".bottom-nav")?.classList.toggle("has-followup", showFollowup);
@@ -10211,6 +10499,8 @@
         terms: [
           "accompagnement professionnel",
           "mode professionnel",
+          "suivi professionnel",
+          "lier mon suivi",
           "profils de demonstration",
           "mode demo",
         ],
@@ -10372,7 +10662,10 @@
     $("#app").innerHTML =
       `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card recognized-elements-setting-card"><h3>🔎 Éléments reconnus</h3><p class="muted small">Cette petite carte résume ce qu’Énergie reconnaît dans la description du repas. Tu peux la masquer pour alléger la saisie sans désactiver l’analyse du repas ni les estimations nutritionnelles.</p><label class="toggle-row"><span><strong>Afficher « Éléments reconnus »</strong><small>Affiche la carte sous la description du repas</small></span><input id="settingRecognizedElements" type="checkbox" ${db.settings.showRecognizedElements !== false ? "checked" : ""}></label></section><section class="card eating-reasons-setting-card"><h3>💭 Raisons de manger</h3><p class="muted small">La question « Qu’est-ce qui t’a amené à manger? » est facultative. Tu peux la masquer pour alléger la saisie des repas.</p><label class="toggle-row"><span><strong>Afficher « Qu’est-ce qui t’a amené à manger? »</strong><small>Si elle est masquée, la carte correspondante n’apparaît pas non plus dans Observations</small></span><input id="settingEatingReasons" type="checkbox" ${db.settings.showEatingReasons !== false ? "checked" : ""}></label></section><section class="card future-meal-planning-setting-card"><h3>📅 Planification des repas</h3><p class="muted small">Optionnel · utile si tu souhaites préparer ton journal à l’avance.</p><label class="toggle-row"><span><strong>Permettre la saisie de repas à l’avance</strong><small>Autorise la navigation et la saisie jusqu’à 2 jours dans le futur. Cette limite est fixe à 2 jours.</small></span><input id="settingFutureMealPlanning" type="checkbox" ${db.settings.futureMealPlanning === true ? "checked" : ""}></label><p class="muted tiny">Les repas planifiés restent enregistrés, mais ne participent pas aux Observations ni à l’apprentissage d’Énergie avant la date prévue.</p></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="one-time-code"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button><p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p></div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${professionalDemoEntryHtml()}${hasDemoAccess ? demoProfileCardsHtml() : ``}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<details class="card profile-backup-panel"><summary><span><strong>Données et sauvegarde</strong><small>Options avancées · ${backups} copie(s) locale(s)</small></span><span aria-hidden="true">›</span></summary><div class="profile-backup-content"><p class="muted small">Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></div></details></div>`;
     const professionalSettingsSection = $("#settingProfessionalSupport")?.closest("section.card");
-    professionalSettingsSection?.insertAdjacentHTML("afterend", `<section class="card meal-photo-settings-card"><h3>📷 Photos des repas</h3><p class="muted small">Jusqu’à 3 photos peuvent être ajoutées à un repas. Une photo ajoutée est conservée automatiquement; tu peux la retirer manuellement du repas si tu ne souhaites plus la garder.</p><label class="toggle-row"><span><strong>Partager mes photos avec mon professionnel</strong><small>Autorisation distincte, utilisée lorsqu’un professionnel sera lié à ton compte.</small></span><input id="settingShareMealPhotos" type="checkbox" ${db.settings.shareMealPhotosWithProfessional === true ? "checked" : ""}></label><p class="muted tiny">L’analyse par l’IA reste facultative et n’est lancée que lorsque tu choisis « Analyser avec l’IA ».</p></section>`);
+    const professionalBetaHtml = professionalBetaProfileHtml();
+    professionalSettingsSection?.insertAdjacentHTML("afterend", professionalBetaHtml);
+    const photoSettingsAnchor = $(".professional-beta-entry,.professional-client-link-card") || professionalSettingsSection;
+    photoSettingsAnchor?.insertAdjacentHTML("afterend", `<section class="card meal-photo-settings-card"><h3>📷 Photos des repas</h3><p class="muted small">Jusqu’à 3 photos peuvent être ajoutées à un repas. Une photo ajoutée est conservée automatiquement; tu peux la retirer manuellement du repas si tu ne souhaites plus la garder.</p><label class="toggle-row"><span><strong>Partager mes photos avec mon professionnel</strong><small>Autorisation distincte, utilisée lorsqu’un professionnel sera lié à ton compte.</small></span><input id="settingShareMealPhotos" type="checkbox" ${db.settings.shareMealPhotosWithProfessional === true ? "checked" : ""}></label><p class="muted tiny">L’analyse par l’IA reste facultative et n’est lancée que lorsque tu choisis « Analyser avec l’IA ».</p></section>`);
     const welcomeInfoSection = $("#showWelcomeAgain")?.closest("section.card");
     welcomeInfoSection?.insertAdjacentHTML("afterend", `<section class="card energy-guide-profile-card"><div class="settings-row"><div><span class="energy-guide-profile-icon" aria-hidden="true">🌱</span><span><h3>Découvrir Énergie</h3><p class="muted small">Un petit tour des principales fonctions de l’application.</p></span></div><button class="secondary" id="openEnergyGuide" type="button">Voir le guide</button></div></section>`);
     const energyGuideButton = $("#openEnergyGuide");
@@ -10611,6 +10904,15 @@
     );
     $("#replayDemoTour")?.addEventListener("click", startDemoTour);
     $("#leaveDemoProfile")?.addEventListener("click", leaveDemoMode);
+    $("#openProfessionalBeta")?.addEventListener("click", startProfessionalBeta);
+    $("#createProfessionalInvite")?.addEventListener("click", createProfessionalInvite);
+    $("#acceptProfessionalInvite")?.addEventListener("click", () => acceptProfessionalInvite($("#professionalInviteCode")?.value));
+    $("#openClientFollowup")?.addEventListener("click", async () => { await loadClientProfessionalFollowup(); currentView = "followup"; render(); });
+    $("#revokeProfessionalAccess")?.addEventListener("click", () => revokeProfessionalLink(clientProfessionalLink?.id));
+    $$('[data-copy-professional-code]').forEach((button) => button.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(button.dataset.copyProfessionalCode); alert("Code copié."); }
+      catch (_) { alert(`Code : ${button.dataset.copyProfessionalCode}`); }
+    }));
     bindFavoriteActions();
     $("#exportData").onclick = exportData;
     $("#importData").onclick = () => $("#importFile").click();
@@ -13326,25 +13628,28 @@
   });
   async function loadDemoAccess() {
     hasDemoAccess = false;
+    hasProfessionalBetaAccess = false;
     if (!session) return false;
-    if (DEMO_ACCESS_FOR_ALL_ACCOUNTS) {
-      hasDemoAccess = true;
-      return true;
-    }
     if (!client) return false;
     try {
       const { data, error } = await client
         .from("profiles")
-        .select("has_demo_access")
+        .select("has_demo_access,professional_beta_access")
         .eq("id", session.user.id)
         .maybeSingle();
-      if (error) {
-        console.info("Accès démo non configuré:", error.message);
-        return false;
+      if (error && /professional_beta_access|column|schema cache/i.test(error.message || "")) {
+        const fallback = await client.from("profiles").select("has_demo_access").eq("id", session.user.id).maybeSingle();
+        if (!fallback.error) hasDemoAccess = fallback.data?.has_demo_access === true;
+      } else if (error) {
+        console.info("Accès privé non configuré:", error.message);
+      } else {
+        hasDemoAccess = data?.has_demo_access === true;
+        hasProfessionalBetaAccess = data?.professional_beta_access === true;
       }
-      hasDemoAccess = data?.has_demo_access === true;
+      if (DEMO_ACCESS_FOR_ALL_ACCOUNTS) hasDemoAccess = true;
+      await loadProfessionalBetaState();
     } catch (error) {
-      console.info("Accès démo indisponible:", error?.message || error);
+      console.info("Accès privé indisponible:", error?.message || error);
     }
     return hasDemoAccess;
   }
@@ -13361,7 +13666,7 @@
     client.auth.onAuthStateChange((event, newSession) => {
       session = newSession;
       if (newSession) loadDemoAccess().then(() => render());
-      else hasDemoAccess = false;
+      else { hasDemoAccess = false; hasProfessionalBetaAccess = false; clientProfessionalLink = null; }
       updateSyncBadge();
       if (event === "PASSWORD_RECOVERY")
         setTimeout(() => $("#passwordDialog").showModal(), 0);
@@ -13380,7 +13685,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.69");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.107");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
