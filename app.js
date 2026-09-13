@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.108";
+  const APP_RELEASE = "3.56.110";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10537,6 +10537,8 @@
       const matched = cards.filter((card) => {
         if (assigned.has(card)) return false;
         if (card.classList.contains("profile-creator-card")) return false;
+        // Le lien professionnel du client doit rester visible directement dans Profil.
+        if (card.classList.contains("professional-client-link-card")) return false;
 
         const heading =
           card.querySelector("h2,h3,h4,summary")?.textContent ||
@@ -10904,7 +10906,6 @@
     );
     $("#replayDemoTour")?.addEventListener("click", startDemoTour);
     $("#leaveDemoProfile")?.addEventListener("click", leaveDemoMode);
-    $("#acceptProfessionalInvite")?.addEventListener("click", () => acceptProfessionalInvite($("#professionalInviteCode")?.value));
     $("#openClientFollowup")?.addEventListener("click", async () => { await loadClientProfessionalFollowup(); currentView = "followup"; render(); });
     $("#revokeProfessionalAccess")?.addEventListener("click", () => revokeProfessionalLink(clientProfessionalLink?.id));
     $$('[data-copy-professional-code]').forEach((button) => button.addEventListener("click", async () => {
@@ -13683,7 +13684,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.108");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.110");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
@@ -13707,6 +13708,12 @@
     if (createInviteButton) {
       event.preventDefault();
       createProfessionalInvite();
+      return;
+    }
+    const acceptInviteButton = event.target.closest("#acceptProfessionalInvite");
+    if (acceptInviteButton) {
+      event.preventDefault();
+      acceptProfessionalInvite($("#professionalInviteCode")?.value);
       return;
     }
     const professionalBetaButton = event.target.closest("#openProfessionalBeta");
