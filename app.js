@@ -10904,7 +10904,6 @@
     );
     $("#replayDemoTour")?.addEventListener("click", startDemoTour);
     $("#leaveDemoProfile")?.addEventListener("click", leaveDemoMode);
-    $("#createProfessionalInvite")?.addEventListener("click", createProfessionalInvite);
     $("#acceptProfessionalInvite")?.addEventListener("click", () => acceptProfessionalInvite($("#professionalInviteCode")?.value));
     $("#openClientFollowup")?.addEventListener("click", async () => { await loadClientProfessionalFollowup(); currentView = "followup"; render(); });
     $("#revokeProfessionalAccess")?.addEventListener("click", () => revokeProfessionalLink(clientProfessionalLink?.id));
@@ -13702,6 +13701,12 @@
       event.preventDefault();
       const dialog = $("#welcomeDialog");
       if (dialog && !dialog.open) dialog.showModal();
+      return;
+    }
+    const createInviteButton = event.target.closest("#createProfessionalInvite");
+    if (createInviteButton) {
+      event.preventDefault();
+      createProfessionalInvite();
       return;
     }
     const professionalBetaButton = event.target.closest("#openProfessionalBeta");
