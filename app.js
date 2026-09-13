@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.112";
+  const APP_RELEASE = "3.56.113";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -422,6 +422,45 @@
   }
   function hasClientProfessionalFollowup() {
     return !!clientProfessionalLink && !professionalBetaMode && !db.settings?.demoMode;
+  }
+  function clientSharedProfessionalNotes() {
+    if (!hasClientProfessionalFollowup()) return [];
+    return (professionalNotesCache || [])
+      .filter((note) => note.visibility === "shared")
+      .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+  }
+  function clientProfessionalNoteSeenKey() {
+    const linkId = clientProfessionalLink?.id || "none";
+    return `energieProfessionalNoteSeenV1:${session?.user?.id || "anonymous"}:${linkId}`;
+  }
+  function latestClientProfessionalNote() {
+    return clientSharedProfessionalNotes()[0] || null;
+  }
+  function hasUnreadClientProfessionalNote() {
+    const latest = latestClientProfessionalNote();
+    if (!latest?.createdAt) return false;
+    try {
+      const seenAt = localStorage.getItem(clientProfessionalNoteSeenKey()) || "";
+      return String(latest.createdAt) > seenAt;
+    } catch (_) {
+      return true;
+    }
+  }
+  function markClientProfessionalNotesSeen() {
+    const latest = latestClientProfessionalNote();
+    if (!latest?.createdAt) return;
+    try {
+      localStorage.setItem(clientProfessionalNoteSeenKey(), String(latest.createdAt));
+    } catch (_) {}
+    $('[data-view="followup"]')?.classList.remove("has-unread-note");
+  }
+  function clientProfessionalNoteJournalHtml() {
+    if (!hasClientProfessionalFollowup()) return "";
+    const latest = latestClientProfessionalNote();
+    if (!latest) return "";
+    const professional = clientProfessionalLink?.professional_label || "ton professionnel";
+    const unread = hasUnreadClientProfessionalNote();
+    return `<section class="card client-professional-note-preview ${unread ? "is-unread" : ""}"><div class="client-professional-note-preview-icon" aria-hidden="true">📝</div><div class="client-professional-note-preview-copy"><p class="eyebrow">${unread ? "Nouvelle note" : "Suivi professionnel"}</p><h3>${esc(professional)}</h3><strong>${esc(latest.contextLabel || "Suivi général")}</strong><p>${esc(latest.content || "")}</p></div><button type="button" class="secondary small" id="openLatestProfessionalNote">Voir le suivi</button></section>`;
   }
   let barcodeReader = null,
     barcodeControls = null,
@@ -4356,6 +4395,7 @@
   }
   function renderFollowup() {
     const clientView = hasClientProfessionalFollowup();
+    if (clientView) markClientProfessionalNotesSeen();
     if (!db.settings.demoMode && !professionalBetaMode && !clientView) {
       currentView = "profile";
       render();
@@ -5118,7 +5158,10 @@
         : formatDate(todayKey());
     const showFollowup = !!db.settings.demoMode || !!professionalBetaMode || hasClientProfessionalFollowup();
     const followupNav = $('[data-view="followup"]');
-    if (followupNav) followupNav.hidden = !showFollowup;
+    if (followupNav) {
+      followupNav.hidden = !showFollowup;
+      followupNav.classList.toggle("has-unread-note", hasUnreadClientProfessionalNote());
+    }
     $(".bottom-nav")?.classList.toggle("has-followup", showFollowup);
     if (!showFollowup && currentView === "followup") currentView = "today";
     $$(".nav-item").forEach((b) =>
@@ -7199,7 +7242,7 @@
       (d.sleepTags || []).filter((x) => x !== "none").length - 2,
     );
     $("#app").innerHTML =
-      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${isFuture ? '<aside class="future-meal-planning-note"><span aria-hidden="true">📅</span><div><strong>Planification de repas</strong><small>Tu peux préparer tes repas jusqu’à 2 jours d’avance. Ils ne seront pris en compte dans les Observations qu’une fois la date arrivée.</small></div></aside>' : ""}${dailyMacroSummaryHtml(meals)}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? `${d.sleepHours} h` : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><div class="card activity-card-with-steps"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div></section>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
+      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${isFuture ? '<aside class="future-meal-planning-note"><span aria-hidden="true">📅</span><div><strong>Planification de repas</strong><small>Tu peux préparer tes repas jusqu’à 2 jours d’avance. Ils ne seront pris en compte dans les Observations qu’une fois la date arrivée.</small></div></aside>' : ""}${clientProfessionalNoteJournalHtml()}${dailyMacroSummaryHtml(meals)}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? `${d.sleepHours} h` : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><div class="card activity-card-with-steps"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div></section>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
     $("#previousDay").onclick = () => changeJournalDay(-1);
     if (!$("#nextDay").disabled)
       $("#nextDay").onclick = () => changeJournalDay(1);
@@ -7207,6 +7250,11 @@
       selectedDate = db.settings?.demoMode ? latestDate : todayKey();
       render();
     };
+    $("#openLatestProfessionalNote")?.addEventListener("click", () => {
+      markClientProfessionalNotesSeen();
+      currentView = "followup";
+      render();
+    });
     $$('[data-journal-view]').forEach((button) => {
       button.onclick = () => {
         const mode = button.dataset.journalView === "summary" ? "summary" : "detailed";
@@ -13743,7 +13791,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.112");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.113");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});

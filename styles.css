@@ -1380,3 +1380,42 @@ body.professional-beta-mode #journalView [data-supplement-name] {
 body.professional-beta-mode .professional-beta-context-copy span::before {
   content: "🔒 ";
 }
+
+/* v3.56.113 — note partagée visible côté client */
+.client-professional-note-preview {
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr) auto;
+  gap: .7rem;
+  align-items: center;
+  margin: .7rem 0;
+}
+.client-professional-note-preview.is-unread {
+  box-shadow: inset 3px 0 0 currentColor;
+}
+.client-professional-note-preview-icon { font-size: 1.35rem; }
+.client-professional-note-preview-copy { min-width: 0; }
+.client-professional-note-preview-copy h3,
+.client-professional-note-preview-copy p,
+.client-professional-note-preview-copy strong { margin: 0; }
+.client-professional-note-preview-copy > p:last-child {
+  margin-top: .25rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.nav-item.has-unread-note { position: relative; }
+.nav-item.has-unread-note::after {
+  content: "";
+  position: absolute;
+  top: .3rem;
+  right: 22%;
+  width: .48rem;
+  height: .48rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+@media (max-width: 430px) {
+  .client-professional-note-preview { grid-template-columns: auto minmax(0,1fr); }
+  .client-professional-note-preview > button { grid-column: 2; justify-self: start; }
+}
