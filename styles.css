@@ -1366,3 +1366,17 @@ body.professional-beta-mode .sync-badge{display:none}
 .professional-beta-context-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .professional-beta-context-actions .text-button{font-weight:800;white-space:nowrap}
 @media (max-width:560px){.professional-beta-context{align-items:flex-start;flex-direction:column}.professional-beta-context-actions{width:100%;justify-content:space-between}.professional-beta-context-actions .text-button{margin-left:auto}}
+
+/* v3.56.112 — dossier client en lecture seule */
+body.professional-beta-mode #journalView [data-summary-water],
+body.professional-beta-mode #journalView [data-water],
+body.professional-beta-mode #journalView .summary-add-beverage,
+body.professional-beta-mode #journalView #openBeverage,
+body.professional-beta-mode #journalView [data-delete-beverage],
+body.professional-beta-mode #journalView [data-add-activity-favorite],
+body.professional-beta-mode #journalView [data-supplement-name] {
+  display: none !important;
+}
+body.professional-beta-mode .professional-beta-context-copy span::before {
+  content: "🔒 ";
+}

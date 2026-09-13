@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.111";
+  const APP_RELEASE = "3.56.112";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -411,6 +411,14 @@
   }
   function isProfessionalWorkspace() {
     return !!professionalBetaMode;
+  }
+  function professionalClientReadOnly() {
+    return !!professionalBetaMode && !!professionalActiveClient;
+  }
+  function preventProfessionalClientEdit(message = "Le dossier client est en lecture seule. Les modifications se font uniquement dans l’onglet Suivi.") {
+    if (!professionalClientReadOnly()) return false;
+    alert(message);
+    return true;
   }
   function hasClientProfessionalFollowup() {
     return !!clientProfessionalLink && !professionalBetaMode && !db.settings?.demoMode;
@@ -1582,6 +1590,7 @@
     enqueue({ kind: "favorite", id: f.id });
   }
   function deleteMealLocal(meal) {
+    if (professionalClientReadOnly()) return;
     const d = ensureDay(db, meal.date);
     d.meals = d.meals.filter((x) => x.id !== meal.id);
     saveLocal("suppression-repas");
@@ -5127,9 +5136,18 @@
       })[currentView] || renderToday
     )();
     renderProfessionalBetaContextBar();
+    applyProfessionalClientReadOnlyUi();
     decorateSupplementIcons();
     renderDemoChrome();
     bindViewSwipe();
+  }
+  function applyProfessionalClientReadOnlyUi() {
+    if (!professionalClientReadOnly() || currentView !== "profile") return;
+    $$("#app input, #app select, #app textarea, #app button").forEach((control) => {
+      if (control.closest("#professionalBetaContextBar")) return;
+      control.disabled = true;
+      control.setAttribute("aria-disabled", "true");
+    });
   }
   function renderProfessionalBetaContextBar() {
     if (!professionalBetaMode || !professionalActiveClient) return;
@@ -5137,7 +5155,7 @@
     if (!app || $("#professionalBetaContextBar")) return;
     app.insertAdjacentHTML(
       "afterbegin",
-      `<section class="professional-beta-context" id="professionalBetaContextBar"><div class="professional-beta-context-copy"><small>Mode professionnel</small><strong>👤 ${esc(professionalActiveClient.name || "Client Énergie")}</strong><span>Tu consultes actuellement le dossier de ce client.</span></div><div class="professional-beta-context-actions"><button type="button" class="secondary small" id="professionalBetaOpenFollowup">Suivi</button><button type="button" class="text-button" id="professionalBetaReturnPersonal">Revenir à mon profil</button></div></section>`,
+      `<section class="professional-beta-context" id="professionalBetaContextBar"><div class="professional-beta-context-copy"><small>Mode professionnel</small><strong>👤 ${esc(professionalActiveClient.name || "Client Énergie")}</strong><span>Dossier en lecture seule · les modifications se font dans Suivi.</span></div><div class="professional-beta-context-actions"><button type="button" class="secondary small" id="professionalBetaOpenFollowup">Suivi</button><button type="button" class="text-button" id="professionalBetaReturnPersonal">Revenir à mon profil</button></div></section>`,
     );
     $("#professionalBetaOpenFollowup")?.addEventListener("click", () => {
       currentView = "followup";
@@ -5147,7 +5165,8 @@
   }
 
   function mealCard(m, opts = {}) {
-    const feeling = m.feeling;
+    const readOnly = professionalClientReadOnly(),
+      feeling = m.feeling;
     const favorite = favoriteForMeal(m);
     const feelingEligible = isFeelingEligible(m);
     const beforeCount = Object.keys(feelingScoresFor(m, "before")).length;
@@ -5161,7 +5180,7 @@
       !!m.feeling,
       true,
     );
-    return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${(m.photos?.[0]?.url || m.photos?.[0]?.local || m.photoUrl || m.photoLocal) ? `<img src="${esc(m.photos?.[0]?.url || m.photos?.[0]?.local || m.photoUrl || m.photoLocal)}" alt="">` : mealIcon(m.type, m.description)}</div><div class="meal-card-body"><h3 translate="no">${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${mealTypeHtml(m.type)}${opts.showDate ? ` · ${esc(formatDate(m.date))}` : ""}</div>${nutritionVisibleToViewer() && m.nutrition ? `<div class="meal-macros">≈ ${esc(nutritionText(m.nutrition))}</div>` : ""}${feelingPreview}<div class="meal-footer">${beforeCount ? `<span class="chip">Avant · ${beforeCount}</span>` : ""}${feelingEligible ? `<button class="meal-feeling-inline ${feeling ? "is-set" : "is-empty"}" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? `Après · ${afterCount}` : "Ressenti après"}</button>` : ""}</div>${visibleChanges ? `<div class="meal-card-feeling-changes">${visibleChanges}</div>` : ""}</div><div class="meal-actions">${feelingEligible ? `<button class="feeling-meal" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? "😊" : "＋😊"}</button>` : ""}<button class="favorite-meal ${favorite ? "is-favorite" : ""}" data-favorite="${m.id}" title="${favorite ? "Retirer des favoris" : "Ajouter aux favoris"}">${favorite ? "★" : "☆"}</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div></article>`;
+    return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${(m.photos?.[0]?.url || m.photos?.[0]?.local || m.photoUrl || m.photoLocal) ? `<img src="${esc(m.photos?.[0]?.url || m.photos?.[0]?.local || m.photoUrl || m.photoLocal)}" alt="">` : mealIcon(m.type, m.description)}</div><div class="meal-card-body"><h3 translate="no">${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${mealTypeHtml(m.type)}${opts.showDate ? ` · ${esc(formatDate(m.date))}` : ""}</div>${nutritionVisibleToViewer() && m.nutrition ? `<div class="meal-macros">≈ ${esc(nutritionText(m.nutrition))}</div>` : ""}${feelingPreview}<div class="meal-footer">${beforeCount ? `<span class="chip">Avant · ${beforeCount}</span>` : ""}${feelingEligible && !readOnly ? `<button class="meal-feeling-inline ${feeling ? "is-set" : "is-empty"}" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? `Après · ${afterCount}` : "Ressenti après"}</button>` : ""}</div>${visibleChanges ? `<div class="meal-card-feeling-changes">${visibleChanges}</div>` : ""}</div>${readOnly ? "" : `<div class="meal-actions">${feelingEligible ? `<button class="feeling-meal" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? "😊" : "＋😊"}</button>` : ""}<button class="favorite-meal ${favorite ? "is-favorite" : ""}" data-favorite="${m.id}" title="${favorite ? "Retirer des favoris" : "Ajouter aux favoris"}">${favorite ? "★" : "☆"}</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div>`}</article>`;
   }
   function bindMealCards() {
     $$("[data-meal]").forEach(
@@ -6464,6 +6483,7 @@
     $("#feelingCarryNotice").hidden =
       hasAfter || !Object.keys(afterScores).length;
     $("#feelingNotes").value = m.feeling?.notes || "";
+    setDemoDetailReadOnly("#feelingForm", professionalClientReadOnly());
     $("#feelingDialog").showModal();
   }
   function comparableFeelingDeltas(meal) {
@@ -7016,7 +7036,8 @@
   }
 
   function openSteps() {
-    const day = ensureDay(db, selectedDate),
+    const readOnly = professionalClientReadOnly(),
+      day = ensureDay(db, selectedDate),
       goal = stepsGoalForDay(day),
       input = $("#stepsInput"),
       updateProgress = () => {
@@ -7026,8 +7047,9 @@
     input.value = day.steps == null ? "" : String(day.steps);
     input.oninput = updateProgress;
     updateProgress();
+    setDemoDetailReadOnly("#stepsForm", readOnly);
     $("#stepsDialog").showModal();
-    setTimeout(() => input.focus(), 50);
+    if (!readOnly) setTimeout(() => input.focus(), 50);
   }
 
   function summaryHydrationHtml(day) {
@@ -7211,6 +7233,7 @@
     $("#summaryOpenBeverage")?.addEventListener("click", () => openBeverage());
     $$('[data-summary-water]').forEach((button) => {
       button.onclick = () => {
+        if (professionalClientReadOnly()) return preventProfessionalClientEdit();
         const target = Number(button.dataset.summaryWater),
           current = Number(d.water) || 0;
         d.water = target <= current ? Math.max(0, target - 1) : target;
@@ -7242,6 +7265,7 @@
     });
     $$('[data-delete-beverage]').forEach((button) => {
       button.onclick = () => {
+        if (professionalClientReadOnly()) return preventProfessionalClientEdit();
         const index = d.beverages.findIndex((item) => item.id === button.dataset.deleteBeverage);
         if (index < 0) return;
         const [removed] = d.beverages.splice(index, 1);
@@ -7264,6 +7288,7 @@
     $$("[data-water]").forEach(
       (b) =>
         (b.onclick = () => {
+          if (professionalClientReadOnly()) return preventProfessionalClientEdit();
           const target = Number(b.dataset.water),
             current = Number(d.water) || 0;
           d.water = target <= current ? Math.max(0, target - 1) : target;
@@ -7274,6 +7299,7 @@
     $$("[data-supplement-name]").forEach(
       (input) =>
         (input.onchange = () => {
+          if (professionalClientReadOnly()) return preventProfessionalClientEdit();
           const day = ensureDay(db, selectedDate);
           const name = input.dataset.supplementName;
           const taken = normalizeSupplements(day.supplementsTaken || []);
@@ -11772,11 +11798,13 @@
     clearTimeout(mealNutritionPreviewTimer);
     applyMealCompositionLocale();
     const d = ensureDay(db, selectedDate),
-      m = id ? d.meals.find((x) => x.id === id) : null,
-      type = m?.type || presetType || "Déjeuner",
+      m = id ? d.meals.find((x) => x.id === id) : null;
+    if (professionalClientReadOnly() && !m) return preventProfessionalClientEdit();
+    const type = m?.type || presetType || "Déjeuner",
       readOnly = !!(
         m &&
         (forceReadOnly ||
+          professionalClientReadOnly() ||
           (db.settings?.demoMode && db.settings?.demoReadOnly))
       );
     setDemoDetailReadOnly("#mealForm", false);
@@ -11787,7 +11815,7 @@
         : "Ajouter un repas";
     $("#mealId").value = m?.id || "";
     const deleteButton = $("#deleteCurrentMeal");
-    deleteButton.hidden = !m;
+    deleteButton.hidden = !m || readOnly;
     deleteButton.onclick = m
       ? () => {
           if (confirm(`Supprimer « ${m.description} »?`)) {
@@ -11982,12 +12010,14 @@
     updateActivityEstimate();
   }
   function openSleep() {
-    const d = ensureDay(db, selectedDate);
+    const readOnly = professionalClientReadOnly(),
+      d = ensureDay(db, selectedDate);
     $("#sleepHours").value = d.sleepHours ?? "";
     $("#sleepComment").value = d.sleepComment || "";
     $$("[data-sleep-tag]").forEach((input) => {
       input.checked = (d.sleepTags || []).includes(input.value);
     });
+    setDemoDetailReadOnly("#sleepForm", readOnly);
     $("#sleepDialog").showModal();
   }
   function normalizeActivitySearch(value = "") {
@@ -12010,6 +12040,7 @@
     if (empty) empty.hidden = visible > 0;
   }
   function openActivity() {
+    const readOnly = professionalClientReadOnly();
     ensureDay(db, selectedDate);
     $("#activityType").value = "";
     $("#activityMinutes").value = "";
@@ -12028,6 +12059,7 @@
     setActivityIntensity("moderate");
     renderDayActivities();
     updateActivityEstimate();
+    setDemoDetailReadOnly("#activityForm", readOnly);
     $("#activityDialog").showModal();
   }
   function selectBeverageType(typeId, resetAmount = true) {
@@ -12044,6 +12076,8 @@
     $("#beverageCaffeinated").checked = !!type.caffeine;
   }
   function openBeverage(item = null) {
+    const readOnly = professionalClientReadOnly();
+    if (readOnly && !item) return preventProfessionalClientEdit();
     $("#beverageTypeChoices").innerHTML = BEVERAGE_TYPES.map((type) =>
       `<button type="button" data-beverage-type="${type.id}" aria-pressed="false"><span>${type.icon}</span><small>${esc(type.label)}</small></button>`,
     ).join("");
@@ -12059,6 +12093,7 @@
       $("#beverageAmount").value = item.amountMl;
       $("#beverageCaffeinated").checked = !!item.caffeinated;
     }
+    setDemoDetailReadOnly("#beverageForm", readOnly);
     $("#beverageDialog").showModal();
   }
   async function fileToDataUrl(file) {
@@ -12236,6 +12271,7 @@
     );
   }
   function openGlobalObservation(id = null) {
+    if (professionalClientReadOnly() && !id) return preventProfessionalClientEdit();
     const found = id ? findGlobalObservation(id) : null,
       o =
         found?.observation ||
@@ -12250,9 +12286,8 @@
           selectedDate,
         ),
       readOnly = !!(
-        db.settings?.demoMode &&
-        db.settings?.demoReadOnly &&
-        found
+        (professionalClientReadOnly() && found) ||
+        (db.settings?.demoMode && db.settings?.demoReadOnly && found)
       );
     setDemoDetailReadOnly("#globalObservationForm", false);
     $("#globalObservationForm").dataset.autosaveContext = found
@@ -12431,6 +12466,7 @@
     updateMealFeelingsOverview(),
   );
   $("#mealForm").onsubmit = (e) => {
+    if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     e.preventDefault();
     updateMealCalorieEditor();
     if (!$("#mealCalories").reportValidity()) return;
@@ -12539,6 +12575,7 @@
       );
   };
   $("#feelingForm").onsubmit = (e) => {
+    if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     e.preventDefault();
     const m = allMeals().find((x) => x.id === feelingMealId);
     if (!m) return;
@@ -12584,6 +12621,7 @@
     setTimeout(() => finishAfterFeelingFlow(m), 180);
   };
   $("#missingBeforeForm").onsubmit = (e) => {
+    if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     e.preventDefault();
     const meal = allMeals().find((item) => item.id === missingBeforeMealId),
       continuation = missingBeforeContinuation;
@@ -12645,6 +12683,7 @@
     showGlobalObservationPhoto();
   };
   $("#globalObservationForm").onsubmit = (e) => {
+    if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     e.preventDefault();
     const id = $("#globalObservationId").value || uid(),
       date = $("#globalObservationDate").value,
@@ -12701,6 +12740,7 @@
     render();
   };
   $("#sleepForm").onsubmit = (e) => {
+    if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     e.preventDefault();
     const d = ensureDay(db, selectedDate),
       hours = parseAppNumber($("#sleepHours").value);
@@ -12714,6 +12754,7 @@
     render();
   };
   $("#stepsForm").onsubmit = (e) => {
+    if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     e.preventDefault();
     const value = Number($("#stepsInput").value);
     if (!Number.isFinite(value) || value < 0 || value > 200000)
@@ -12740,6 +12781,7 @@
       }),
   );
   $("#beverageForm").onsubmit = (e) => {
+    if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     e.preventDefault();
     const d = ensureDay(db, selectedDate),
       type = beverageType($("#beverageType").value),
@@ -12766,6 +12808,7 @@
     render();
   };
   $("#activityForm").onsubmit = (e) => {
+    if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     e.preventDefault();
     const d = ensureDay(db, selectedDate),
       type = $("#activityType").value,
@@ -13700,7 +13743,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.111");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.112");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
