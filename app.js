@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.107";
+  const APP_RELEASE = "3.56.108";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10904,7 +10904,6 @@
     );
     $("#replayDemoTour")?.addEventListener("click", startDemoTour);
     $("#leaveDemoProfile")?.addEventListener("click", leaveDemoMode);
-    $("#openProfessionalBeta")?.addEventListener("click", startProfessionalBeta);
     $("#createProfessionalInvite")?.addEventListener("click", createProfessionalInvite);
     $("#acceptProfessionalInvite")?.addEventListener("click", () => acceptProfessionalInvite($("#professionalInviteCode")?.value));
     $("#openClientFollowup")?.addEventListener("click", async () => { await loadClientProfessionalFollowup(); currentView = "followup"; render(); });
@@ -13685,7 +13684,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.107");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.108");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
@@ -13703,6 +13702,12 @@
       event.preventDefault();
       const dialog = $("#welcomeDialog");
       if (dialog && !dialog.open) dialog.showModal();
+      return;
+    }
+    const professionalBetaButton = event.target.closest("#openProfessionalBeta");
+    if (professionalBetaButton) {
+      event.preventDefault();
+      startProfessionalBeta();
       return;
     }
     if (!event.target.closest("#openProfessionalDemo")) return;
