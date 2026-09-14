@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = 2;
+  const VERSION = 3;
 
   const normalize = value => String(value ?? "")
     .toLocaleLowerCase("fr-CA")
@@ -111,6 +111,7 @@
     { id:"artichoke", synonyms:["artichaut","artichauts","artichoke","artichokes"], categories:["vegetables","high_fiber"] },
     { id:"okra", synonyms:["okra","gombo","gombos"], categories:["vegetables","high_fiber"] },
     { id:"mixed_salad", synonyms:["salade","salade grecque","greek salad","salade cesar","salade caesar","caesar salad"], categories:["vegetables","high_fiber"] },
+    { id:"ratatouille", synonyms:["ratatouille"], categories:["vegetables","high_fiber"] },
 
     { id:"chickpeas", synonyms:["pois chiche","pois chiches","chickpea","chickpeas","houmous","hummus"], categories:["legumes","plant_protein","high_protein","high_fiber"] },
     { id:"lentils", synonyms:["lentille","lentilles","lentil","lentils"], categories:["legumes","plant_protein","high_protein","high_fiber"] },

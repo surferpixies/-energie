@@ -1,8 +1,9 @@
 (() => {
   "use strict";
 
-  const VERSION = 1;
+  const VERSION = 2;
   const DISHES = [
+    {id:"ratatouille", names:["ratatouille"], probable:["vegetables","fiber","carbs_low"], possible:[], ingredients:["aubergine","courgette","tomate","poivron","oignon"], nutrition:{calories:150,protein:3,carbs:18,fat:8,fiber:5}},
     {id:"pate_chinois", names:["pate chinois","pâté chinois","chinese pie"], probable:["protein","fiber","red_meat","vegetables"], possible:["dairy"], ingredients:["bœuf haché","maïs","pommes de terre"], nutrition:{calories:430,protein:24,carbs:48,fat:16,fiber:5}},
     {id:"shepherds_pie", names:["shepherd s pie","cottage pie","hachis parmentier"], probable:["protein","fiber","red_meat","vegetables"], possible:["dairy"], ingredients:["viande hachée","légumes","pommes de terre"], nutrition:{calories:440,protein:24,carbs:46,fat:17,fiber:5}},
     {id:"lasagna", names:["lasagne","lasagna"], probable:["protein","dairy","gluten","refined_grains","vegetables"], possible:["fiber","red_meat","eggs"], ingredients:["pâtes","sauce tomate","fromage","protéine variable"], nutrition:{calories:520,protein:28,carbs:48,fat:24,fiber:4}},
