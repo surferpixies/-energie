@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.113";
+  const APP_RELEASE = "3.56.114";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -429,38 +429,39 @@
       .filter((note) => note.visibility === "shared")
       .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
   }
-  function clientProfessionalNoteSeenKey() {
+  function clientProfessionalNoteDismissedKey() {
     const linkId = clientProfessionalLink?.id || "none";
-    return `energieProfessionalNoteSeenV1:${session?.user?.id || "anonymous"}:${linkId}`;
+    return `energieProfessionalNoteDismissedV1:${session?.user?.id || "anonymous"}:${linkId}`;
   }
   function latestClientProfessionalNote() {
     return clientSharedProfessionalNotes()[0] || null;
   }
-  function hasUnreadClientProfessionalNote() {
+  function isLatestClientProfessionalNoteDismissed() {
     const latest = latestClientProfessionalNote();
-    if (!latest?.createdAt) return false;
+    if (!latest?.id) return false;
     try {
-      const seenAt = localStorage.getItem(clientProfessionalNoteSeenKey()) || "";
-      return String(latest.createdAt) > seenAt;
+      return localStorage.getItem(clientProfessionalNoteDismissedKey()) === String(latest.id);
     } catch (_) {
-      return true;
+      return false;
     }
   }
-  function markClientProfessionalNotesSeen() {
+  function hasUnreadClientProfessionalNote() {
+    return !!latestClientProfessionalNote() && !isLatestClientProfessionalNoteDismissed();
+  }
+  function dismissLatestClientProfessionalNote() {
     const latest = latestClientProfessionalNote();
-    if (!latest?.createdAt) return;
+    if (!latest?.id) return;
     try {
-      localStorage.setItem(clientProfessionalNoteSeenKey(), String(latest.createdAt));
+      localStorage.setItem(clientProfessionalNoteDismissedKey(), String(latest.id));
     } catch (_) {}
     $('[data-view="followup"]')?.classList.remove("has-unread-note");
   }
   function clientProfessionalNoteJournalHtml() {
     if (!hasClientProfessionalFollowup()) return "";
     const latest = latestClientProfessionalNote();
-    if (!latest) return "";
+    if (!latest || isLatestClientProfessionalNoteDismissed()) return "";
     const professional = clientProfessionalLink?.professional_label || "ton professionnel";
-    const unread = hasUnreadClientProfessionalNote();
-    return `<section class="card client-professional-note-preview ${unread ? "is-unread" : ""}"><div class="client-professional-note-preview-icon" aria-hidden="true">📝</div><div class="client-professional-note-preview-copy"><p class="eyebrow">${unread ? "Nouvelle note" : "Suivi professionnel"}</p><h3>${esc(professional)}</h3><strong>${esc(latest.contextLabel || "Suivi général")}</strong><p>${esc(latest.content || "")}</p></div><button type="button" class="secondary small" id="openLatestProfessionalNote">Voir le suivi</button></section>`;
+    return `<section class="card client-professional-note-preview is-unread"><div class="client-professional-note-preview-icon" aria-hidden="true">📝</div><div class="client-professional-note-preview-copy"><p class="eyebrow">Nouvelle note</p><h3>${esc(professional)}</h3><strong>${esc(latest.contextLabel || "Suivi général")}</strong><p>${esc(latest.content || "")}</p></div><div class="client-professional-note-preview-actions"><button type="button" class="secondary small" id="openLatestProfessionalNote">Voir le suivi</button><button type="button" class="text-button small" id="dismissLatestProfessionalNote">Ne plus afficher</button></div></section>`;
   }
   let barcodeReader = null,
     barcodeControls = null,
@@ -4103,7 +4104,7 @@
       return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""}</small></span></div>${pendingCodes}<div class="dialog-actions"><button type="button" class="secondary" id="createProfessionalInvite">Créer une invitation</button><button type="button" class="primary" id="openProfessionalBeta">Passer en mode professionnel</button></div><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
     }
     if (clientProfessionalLink) {
-      return `<section class="card professional-client-link-card"><p class="eyebrow">Suivi professionnel</p><h3>👩‍⚕️ Suivi lié à ${esc(clientProfessionalLink.professional_label || "ton professionnel")}</h3><p class="muted small">Ton journal est partagé pour le suivi. Les notes privées du professionnel ne te sont jamais affichées.</p><div class="dialog-actions"><button type="button" class="secondary" id="openClientFollowup">Ouvrir mon suivi</button><button type="button" class="text-button" id="revokeProfessionalAccess">Retirer l’accès</button></div></section>`;
+      return `<section class="card professional-client-link-card"><p class="eyebrow">Suivi professionnel</p><h3>👩‍⚕️ Suivi lié à ${esc(clientProfessionalLink.professional_label || "ton professionnel")}</h3><p class="muted small">Ton journal est partagé avec ce professionnel pour ton suivi.</p><div class="dialog-actions"><button type="button" class="secondary" id="openClientFollowup">Ouvrir mon suivi</button><button type="button" class="text-button" id="revokeProfessionalAccess">Retirer l’accès</button></div></section>`;
     }
     return `<section class="card professional-client-link-card"><p class="eyebrow">Bêta</p><h3>👩‍⚕️ Lier mon suivi à un professionnel</h3><p class="muted small">Entre le code reçu. En acceptant, tu autorises ce professionnel à consulter ton journal Énergie, incluant repas, ressentis, poids, sommeil, hydratation et activité. Les photos restent exclues pour cette première bêta.</p><div class="professional-invite-accept"><input id="professionalInviteCode" type="text" maxlength="8" autocomplete="one-time-code" autocapitalize="characters" placeholder="CODE"><button type="button" class="primary" id="acceptProfessionalInvite">Accepter</button></div></section>`;
   }
@@ -4395,7 +4396,6 @@
   }
   function renderFollowup() {
     const clientView = hasClientProfessionalFollowup();
-    if (clientView) markClientProfessionalNotesSeen();
     if (!db.settings.demoMode && !professionalBetaMode && !clientView) {
       currentView = "profile";
       render();
@@ -4428,7 +4428,7 @@
       ? professionalTrackingPlanHtml()
       : clientTrackingPlanSummaryHtml();
     const followupEyebrow = professionalBetaMode ? "Espace professionnel · Bêta" : clientView ? "Suivi professionnel" : professionalDemoMode ? "Espace professionnel · Démo" : "Suivi professionnel";
-    const followupIntro = isProfessionalOperator ? "Les notes privées et partagées sont visibles dans cet espace professionnel." : `Les notes partagées par ${esc(clientProfessionalLink?.professional_label || "le professionnel")} apparaissent ici en lecture seule.`;
+    const followupIntro = isProfessionalOperator ? "Les notes privées et partagées sont visibles dans cet espace professionnel." : `Les notes de ${esc(clientProfessionalLink?.professional_label || "ton professionnel")} apparaissent ici.`;
     const followupActions = professionalBetaMode
       ? `<div class="dialog-actions"><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalBeta">Revenir à mon profil</button></div>`
       : professionalDemoMode
@@ -7251,8 +7251,11 @@
       render();
     };
     $("#openLatestProfessionalNote")?.addEventListener("click", () => {
-      markClientProfessionalNotesSeen();
       currentView = "followup";
+      render();
+    });
+    $("#dismissLatestProfessionalNote")?.addEventListener("click", () => {
+      dismissLatestClientProfessionalNote();
       render();
     });
     $$('[data-journal-view]').forEach((button) => {
@@ -13791,7 +13794,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.113");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.114");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
