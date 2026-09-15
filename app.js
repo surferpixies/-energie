@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.116";
+  const APP_RELEASE = "3.56.115";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -2493,14 +2493,21 @@
       .map((item) => item.trim())
       .filter(Boolean);
     const recognized = [], unrecognized = [];
+    const cleanIngredientPhrase = (segment) => String(segment || "")
+      .trim()
+      .replace(/^(?:de|des|du|d[’']|avec|et|and|with)\s+/i, "")
+      .replace(/^(?:un|une|le|la|les|quelques)\s+/i, "")
+      .trim();
     const classify = (segment) => {
-      if (!segment) return;
-      if (foodMatchForSegment(segment)) recognized.push(segment);
-      else if (!mealQuantityOnlyFromText(segment)) unrecognized.push(segment);
+      const cleaned = cleanIngredientPhrase(segment);
+      if (!cleaned) return;
+      if (foodMatchForSegment(cleaned)) recognized.push(cleaned);
+      else if (!mealQuantityOnlyFromText(cleaned)) unrecognized.push(cleaned);
     };
+    const connectorPattern = /\s+(?:et|and|avec|with|accompagn[eé]e?s?(?:\s+de)?|servi(?:e|s|es)?\s+avec|enrob[eé]e?s?(?:\s+d[’']?une?|\s+de)?|napp[eé]e?s?(?:\s+d[’']?une?|\s+de)?|garni(?:e|s|es)?(?:\s+de)?)\s+/i;
     for (const segment of primary.length ? primary : [value]) {
       const connectorParts = segment
-        .split(/\s+(?:et|and|avec|with)\s+/i)
+        .split(connectorPattern)
         .map((item) => item.trim())
         .filter(Boolean);
       if (connectorParts.length > 1) connectorParts.forEach(classify);
@@ -2531,20 +2538,26 @@
       ? explicit
       : [String(text || "").trim()].filter(Boolean);
     const output = [];
+    const connectorPattern = /\s+(?:et|and|avec|with|accompagn[eé]e?s?(?:\s+de)?|servi(?:e|s|es)?\s+avec|enrob[eé]e?s?(?:\s+d[’']?une?|\s+de)?|napp[eé]e?s?(?:\s+d[’']?une?|\s+de)?|garni(?:e|s|es)?(?:\s+de)?)\s+/i;
+    const cleanIngredientPhrase = (segment) => String(segment || "")
+      .trim()
+      .replace(/^(?:de|des|du|d[’']|avec|et|and|with)\s+/i, "")
+      .replace(/^(?:un|une|le|la|les|quelques)\s+/i, "")
+      .trim();
     for (const segment of initial) {
-      const whole = foodMatchForSegment(segment);
       const connectorParts = segment
-        .split(/\s+(?:et|and|avec|with)\s+/i)
-        .map((x) => x.trim())
+        .split(connectorPattern)
+        .map(cleanIngredientPhrase)
         .filter(Boolean);
       if (connectorParts.length > 1) {
-        const partMatches = connectorParts.map(foodMatchForSegment);
-        if (partMatches.every(Boolean)) {
-          output.push(...connectorParts);
+        const recognizedParts = connectorParts.filter((part) => foodMatchForSegment(part));
+        if (recognizedParts.length) {
+          output.push(...recognizedParts);
           continue;
         }
       }
-      if (whole) output.push(segment);
+      const cleaned = cleanIngredientPhrase(segment);
+      if (foodMatchForSegment(cleaned)) output.push(cleaned);
     }
     return output;
   }
@@ -13794,7 +13807,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.114");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.115");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
