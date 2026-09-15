@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.117";
+  const APP_RELEASE = "3.56.118";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -4445,26 +4445,50 @@
         };
       }).filter(Boolean).sort((a, b) => b.difference - a.difference || b.exposedHit - a.exposedHit).slice(0, 3);
     };
-    const symptomCounts = new Map();
     const tagMeta = Object.fromEntries(FEELING_TAGS.map((tag) => [tag.id, tag]));
-    periodRows.forEach(([, day]) => {
-      (day.meals || []).forEach((meal) => {
+    const symptomMap = new Map();
+    const addSymptomOccurrence = (rawId, occurrence) => {
+      const id = canonicalFeelingId(rawId);
+      const meta = tagMeta[id];
+      if (!meta || meta.group !== "symptom") return;
+      const item = symptomMap.get(id) || { ...meta, count: 0, occurrences: [] };
+      item.count += 1;
+      item.occurrences.push(occurrence);
+      symptomMap.set(id, item);
+    };
+    periodRows.forEach(([date, day]) => {
+      const dayMeals = (day.meals || []).slice().sort((a, b) => String(a.time || "").localeCompare(String(b.time || "")));
+      dayMeals.forEach((meal, mealIndex) => {
         const after = feelingScoresFor(meal, "after");
-        Object.entries(after).forEach(([id, raw]) => {
-          const meta = tagMeta[id], score = Number(raw);
-          if (meta?.group === "symptom" && Number.isFinite(score) && score >= 2)
-            symptomCounts.set(id, (symptomCounts.get(id) || 0) + 1);
+        normalizeFeelingIds(meal.feeling?.tags || []).forEach((id) => {
+          const canonicalId = canonicalFeelingId(id);
+          const score = Number(after[canonicalId] ?? after[id] ?? meal.feeling?.rating ?? 3);
+          if (!Number.isFinite(score) || score < 2) return;
+          addSymptomOccurrence(canonicalId, {
+            date,
+            time: meal.time || "",
+            source: "meal",
+            meal: { description: meal.description || "Repas", type: meal.type || "Repas", time: meal.time || "" },
+            priorMeals: dayMeals.slice(Math.max(0, mealIndex - 3), mealIndex).map((item) => ({ description: item.description || "Repas", type: item.type || "Repas", time: item.time || "" })),
+          });
         });
       });
       (day.observations || []).forEach((observation) => {
-        (observation?.tags || []).forEach((id) => {
-          const meta = tagMeta[id];
-          if (meta?.group === "symptom") symptomCounts.set(id, (symptomCounts.get(id) || 0) + 1);
+        const observationTime = observation?.time || "";
+        normalizeFeelingIds(observation?.tags || []).forEach((id) => {
+          const priorMeals = dayMeals.filter((meal) => !observationTime || !meal.time || meal.time <= observationTime).slice(-3)
+            .map((item) => ({ description: item.description || "Repas", type: item.type || "Repas", time: item.time || "" }));
+          addSymptomOccurrence(id, {
+            date,
+            time: observationTime,
+            source: "observation",
+            note: observation?.notes || "",
+            priorMeals,
+          });
         });
       });
     });
-    const symptoms = [...symptomCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
-      .map(([id, count]) => ({ ...tagMeta[id], count }));
+    const symptoms = [...symptomMap.values()].sort((a, b) => b.count - a.count).slice(0, 3);
     const plan = activeProfessionalTrackingPlan();
     const tracked = normalizeFeelingIds(plan?.feelingIds || []).map((id) => FEELING_TAGS.find((tag) => tag.id === id)).filter(Boolean);
     const existingNotes = readProfessionalNotes().filter((note) => note.clientId === profile.id).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
@@ -4472,6 +4496,29 @@
   }
   function professionalConsultationDateLinks(dates = []) {
     return dates.length ? `<div class="consultation-date-links">${dates.map((date) => `<button type="button" class="text-button small" data-consultation-date="${date}">${esc(formatDate(date))}</button>`).join("")}</div>` : "";
+  }
+  function professionalConsultationOccurrenceContextHtml(occurrence) {
+    const day = db.days?.[occurrence.date] || {};
+    const activityItems = (day.activities || []).map(normalizeActivity);
+    const activityMinutes = activityItems.reduce((sum, item) => sum + (Number(item.minutes) || 0), 0);
+    const activityLabel = activityItems.length
+      ? `${activityItems.slice(0, 2).map((item) => `${activityIcon(item.type)} ${esc(item.type || "Activité")}`).join(" · ")}${activityItems.length > 2 ? ` +${activityItems.length - 2}` : ""}${activityMinutes ? ` · ${Math.round(activityMinutes)} min` : ""}`
+      : "Non notée";
+    const water = Number(day.water) > 0 ? `${(Number(day.water) * 0.5).toLocaleString("fr-CA", { maximumFractionDigits: 1 })} L` : "Non notée";
+    const sleep = day.sleepHours != null ? `${Number(day.sleepHours).toLocaleString("fr-CA", { maximumFractionDigits: 1 })} h` : "Non noté";
+    const steps = day.steps != null && Number(day.steps) > 0 ? Number(day.steps).toLocaleString("fr-CA") : "Non notés";
+    const priorMeals = occurrence.priorMeals || [];
+    const mealHtml = occurrence.meal
+      ? `<div class="consultation-occurrence-meal"><small>Ressenti noté après</small><strong>${mealIcon(occurrence.meal.type, occurrence.meal.description)} ${mealTypeHtml(occurrence.meal.type)}${occurrence.meal.time ? ` · ${esc(occurrence.meal.time)}` : ""}</strong><p>${esc(occurrence.meal.description)}</p></div>`
+      : "";
+    const priorMealsHtml = priorMeals.length
+      ? `<div class="consultation-occurrence-prior"><small>Repas précédents consignés</small>${priorMeals.map((meal) => `<p><b>${esc(meal.time || "—")} · ${mealTypeHtml(meal.type)}</b> — ${esc(meal.description)}</p>`).join("")}</div>`
+      : `<p class="muted tiny consultation-occurrence-no-meal">Aucun repas précédent consigné avant cette occurrence.</p>`;
+    return `<article class="consultation-occurrence"><div class="consultation-occurrence-head"><div><strong>${esc(formatDate(occurrence.date))}</strong><small>${occurrence.source === "observation" ? "Observation globale" : "Après un repas"}${occurrence.time ? ` · ${esc(occurrence.time)}` : ""}</small></div><button type="button" class="text-button small" data-consultation-date="${occurrence.date}">Voir la journée</button></div>${mealHtml}<div class="consultation-occurrence-context"><span>🌙 <b>${esc(sleep)}</b><small>Sommeil</small></span><span>💧 <b>${esc(water)}</b><small>Hydratation</small></span><span>🚶 <b>${activityLabel}</b><small>Activité</small></span><span>👟 <b>${esc(steps)}</b><small>Pas</small></span></div>${priorMealsHtml}${occurrence.note ? `<p class="consultation-occurrence-note"><b>Note :</b> ${esc(occurrence.note)}</p>` : ""}</article>`;
+  }
+  function professionalConsultationSymptomHtml(item) {
+    const occurrences = (item.occurrences || []).slice().sort((a, b) => `${b.date}T${b.time || "23:59"}`.localeCompare(`${a.date}T${a.time || "23:59"}`));
+    return `<details class="consultation-symptom-detail"><summary><span>${item.emoji} ${esc(t(item.label))}</span><b>${item.count} fois</b><small>Voir les journées</small></summary><div class="consultation-symptom-body"><p class="muted small">Contexte autour des occurrences consignées. Ces éléments servent à comparer les journées et ne permettent pas d’identifier une cause.</p>${occurrences.map(professionalConsultationOccurrenceContextHtml).join("")}</div></details>`;
   }
   function professionalConsultationSummaryText(analysis) {
     const lines = [
@@ -4490,7 +4537,7 @@
     const analysis = professionalConsultationAnalysis(profile);
     const lessCards = analysis.less.length ? analysis.less.map((item, index) => `<article class="consultation-priority-card"><span class="consultation-rank">${index + 1}</span><div><small>À revoir en priorité</small><strong>${item.factor.icon} ${esc(item.factor.label)}</strong><p>Ressenti moins favorable dans <b>${Math.round(item.exposedRate * 100)} %</b> des journées correspondantes, contre <b>${Math.round(item.comparisonRate * 100)} %</b> des autres journées analysables.</p>${professionalConsultationDateLinks(item.dates)}</div></article>`).join("") : `<article class="consultation-empty"><span>🌱</span><div><strong>Pas encore assez de répétitions</strong><p>Les 30 derniers jours ne permettent pas de faire ressortir une association assez stable. Les données restent consultables sans forcer de conclusion.</p></div></article>`;
     const goodCards = analysis.good.slice(0, 2).map((item) => `<article class="consultation-signal-card"><span>${item.factor.icon}</span><div><small>Évolution positive à discuter</small><strong>${esc(item.factor.label)}</strong><p>Meilleur ressenti dans ${Math.round(item.exposedRate * 100)} % des journées correspondantes, contre ${Math.round(item.comparisonRate * 100)} % des autres journées.</p>${professionalConsultationDateLinks(item.dates)}</div></article>`).join("");
-    const symptomHtml = analysis.symptoms.length ? analysis.symptoms.map((item) => `<span class="consultation-chip">${item.emoji} ${esc(t(item.label))} · ${item.count}</span>`).join("") : `<span class="muted small">Aucun ressenti dominant ne ressort sur cette période.</span>`;
+    const symptomHtml = analysis.symptoms.length ? analysis.symptoms.map(professionalConsultationSymptomHtml).join("") : `<span class="muted small">Aucun ressenti dominant ne ressort sur cette période.</span>`;
     const trackedHtml = analysis.tracked.length ? analysis.tracked.slice(0, 8).map((item) => `<span class="consultation-chip">${item.emoji} ${esc(t(item.label))}</span>`).join("") : `<span class="muted small">Aucun inconfort particulier n’est ciblé dans le plan actuel.</span>`;
     const prompt = analysis.less[0] ? `La situation « ${analysis.less[0].factor.label} » revient-elle assez régulièrement pour mériter une exploration plus ciblée avec ${profile.name} ?` : `Y a-t-il un élément du journal que ${profile.name} aimerait explorer plus précisément pendant la consultation ?`;
     return `<dialog class="professional-consultation-dialog" id="professionalConsultationDialog"><div class="professional-consultation-sheet"><div class="professional-consultation-head"><div><p class="eyebrow">Résumé avant consultation</p><h2>🩺 ${esc(profile.name)}</h2><p>${esc(formatDate(analysis.startDate))} au ${esc(formatDate(analysis.endDate))}</p></div><button type="button" class="icon-button" data-close-professional-consultation aria-label="Fermer">✕</button></div><div class="consultation-coverage-grid"><div><strong>${analysis.documentedDays}</strong><small>jours documentés / 30</small></div><div><strong>${analysis.meals}</strong><small>repas et collations</small></div><div><strong>${analysis.analyzableDays}</strong><small>journées avec ressentis</small></div></div><section class="consultation-section"><div class="consultation-section-title"><span>🔎</span><div><small>Ce qui mérite une attention</small><h3>Pistes à explorer</h3></div></div><div class="consultation-priority-list">${lessCards}</div></section>${goodCards ? `<section class="consultation-section"><div class="consultation-section-title"><span>🌤️</span><div><small>Ce qui semble aller dans le bon sens</small><h3>Évolution positive</h3></div></div><div class="consultation-signal-list">${goodCards}</div></section>` : ""}<section class="consultation-section consultation-two-column"><div><small class="eyebrow">Ressentis fréquents</small><div class="consultation-chips">${symptomHtml}</div></div><div><small class="eyebrow">Plan convenu</small><div class="consultation-chips">${trackedHtml}</div></div></section><section class="consultation-question"><span>💬</span><div><small>Question pour la consultation</small><strong>${esc(prompt)}</strong></div></section>${analysis.noteCount ? `<section class="consultation-existing-followup"><span>📝</span><div><small>Suivi déjà en place</small><strong>${analysis.noteCount} note${analysis.noteCount > 1 ? "s" : ""} au dossier</strong>${analysis.latestNote ? `<p>Dernière note : ${esc(analysis.latestNote.contextLabel || "Suivi général")} · ${esc(professionalNoteTime(analysis.latestNote.createdAt))}</p>` : ""}</div></section>` : ""}<p class="muted tiny consultation-caution">Résumé exploratoire basé sur les données consignées. Les associations présentées servent à orienter la discussion et ne constituent ni une preuve de cause à effet ni un diagnostic.</p><div class="dialog-actions consultation-actions"><button type="button" class="secondary" data-close-professional-consultation>Fermer</button><button type="button" class="primary" id="addConsultationToFollowup">Ajouter au suivi</button></div></div></dialog>`;

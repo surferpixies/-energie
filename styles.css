@@ -1475,3 +1475,36 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .consultation-existing-followup small { display: block; color: var(--muted, #6d7e73); }
 .consultation-existing-followup strong { display: block; margin-top: 2px; }
 .consultation-existing-followup p { margin: 3px 0 0; font-size: .88rem; color: var(--muted, #6d7e73); }
+
+/* v3.56.118 — Détail des ressentis fréquents dans la préparation de consultation */
+.consultation-symptom-detail { border: 1px solid var(--line, rgba(24,63,42,.12)); border-radius: 16px; background: var(--surface, #fffdf8); overflow: hidden; }
+.consultation-symptom-detail + .consultation-symptom-detail { margin-top: 7px; }
+.consultation-symptom-detail summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 2px 10px; align-items: center; padding: 11px 12px; }
+.consultation-symptom-detail summary::-webkit-details-marker { display: none; }
+.consultation-symptom-detail summary > span { font-weight: 700; }
+.consultation-symptom-detail summary > b { white-space: nowrap; }
+.consultation-symptom-detail summary > small { grid-column: 1 / -1; color: var(--muted, #6d7e73); }
+.consultation-symptom-body { padding: 0 12px 12px; }
+.consultation-symptom-body > .muted { margin: 0 0 9px; }
+.consultation-occurrence { padding: 12px; border-radius: 15px; background: var(--green-soft, #eef7e9); }
+.consultation-occurrence + .consultation-occurrence { margin-top: 8px; }
+.consultation-occurrence-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.consultation-occurrence-head strong, .consultation-occurrence-head small { display: block; }
+.consultation-occurrence-head small { color: var(--muted, #6d7e73); margin-top: 2px; }
+.consultation-occurrence-meal { margin-top: 9px; padding-top: 9px; border-top: 1px solid rgba(24,63,42,.1); }
+.consultation-occurrence-meal small, .consultation-occurrence-prior > small { display: block; color: var(--muted, #6d7e73); margin-bottom: 3px; }
+.consultation-occurrence-meal strong { display: block; }
+.consultation-occurrence-meal p { margin: 3px 0 0; }
+.consultation-occurrence-context { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; margin-top: 10px; }
+.consultation-occurrence-context > span { min-width: 0; padding: 8px 9px; border-radius: 12px; background: rgba(255,255,255,.52); }
+.consultation-occurrence-context b, .consultation-occurrence-context small { display: block; }
+.consultation-occurrence-context b { margin-top: 2px; font-size: .88rem; overflow-wrap: anywhere; }
+.consultation-occurrence-context small { color: var(--muted, #6d7e73); margin-top: 1px; }
+.consultation-occurrence-prior { margin-top: 10px; }
+.consultation-occurrence-prior p { margin: 4px 0 0; font-size: .84rem; line-height: 1.35; }
+.consultation-occurrence-no-meal { margin: 9px 0 0; }
+.consultation-occurrence-note { margin: 9px 0 0; font-size: .86rem; }
+@media (max-width: 560px) {
+  .consultation-occurrence-head { align-items: center; }
+  .consultation-occurrence-context { grid-template-columns: 1fr 1fr; }
+}
