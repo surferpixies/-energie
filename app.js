@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.115";
+  const APP_RELEASE = "3.56.116";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -4407,6 +4407,94 @@
     const weekDialog = `<dialog class="professional-week-dialog" id="professionalTrendWeekDialog"><div class="professional-week-dialog-card"><div class="professional-week-dialog-head"><div><p class="eyebrow">Détail de la semaine</p><h3 id="professionalWeekPeriod"></h3></div><button type="button" class="icon-button" data-close-trend-week aria-label="Fermer">✕</button></div><div class="professional-week-detail-grid"><div><span>📈</span><small>Inconfort moyen</small><strong id="professionalWeekDiscomfort">—</strong></div><div><span>🔎</span><small id="professionalWeekExposureLabel">Journées repérées</small><strong id="professionalWeekExposures">—</strong></div><div><span>🍽️</span><small>Repas et collations</small><strong id="professionalWeekMeals">—</strong></div></div><div class="professional-week-symptoms"><small>Symptômes dominants consignés</small><div id="professionalWeekSymptoms"></div></div><p class="muted tiny">Touchez une autre semaine du graphique pour comparer son portrait.</p></div></dialog>`;
     return `${summary}<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Évolution dans le temps</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-week-note"><strong>Touchez une semaine pour voir son détail.</strong><span>Chaque semaine commence le dimanche. La valeur au-dessus de chaque point indique l’inconfort moyen sur 5; le nombre sous la courbe indique combien de journées contenaient l’élément suivi.</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small><p>${esc(config.primaryHelp)}</p></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small><p>${esc(config.comparisonHelp)}</p></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small><p>${esc(config.metricHelp)}</p></div></div>${chart}<button type="button" class="secondary professional-trend-expand" data-open-trend-fullscreen><span>↗ Agrandir le graphique</span><small>Tournez votre téléphone horizontalement pour une meilleure vue</small></button><p class="muted tiny">${config.disclaimer}</p></section><dialog class="professional-trend-dialog" id="professionalTrendDialog"><div class="professional-trend-dialog-head"><div><small>Graphique agrandi · Touchez une semaine pour l’explorer</small><strong>${config.title}</strong></div><button type="button" class="secondary" data-close-trend-fullscreen>Revenir au suivi ✕</button></div><div class="professional-trend-fullscreen-frame">${chart}</div><p class="muted tiny">Axe vertical : inconfort moyen sur 5 · Axe horizontal : semaines du dimanche au samedi.</p></dialog>${weekDialog}`;
   }
+
+  function professionalConsultationAnalysis(profile) {
+    const today = todayKey();
+    const dates = Object.keys(db.days || {}).filter((date) => date <= today).sort();
+    const endDate = dates.at(-1) || today;
+    const startDate = addDaysKey(endDate, -29);
+    const periodRows = Object.entries(db.days || {})
+      .filter(([date, day]) => date >= startDate && date <= endDate && day)
+      .sort(([a], [b]) => a.localeCompare(b));
+    const documented = periodRows.filter(([, day]) =>
+      (day.meals || []).length || (day.observations || []).length || Number(day.sleepHours) > 0 || Number(day.water) > 0 ||
+      (day.activities || []).length || day.steps != null || day.weightMeasurement
+    );
+    const meals = periodRows.reduce((sum, [, day]) => sum + (day.meals || []).length, 0);
+    const outcomeRows = periodRows.map(([date, day]) => ({ date, day, outcome: observationExplorerDayOutcome(day), factors: observationExplorerFactors(date, day) }))
+      .filter((row) => row.outcome.evidence > 0);
+    const scoreMode = (mode) => {
+      const targetCount = outcomeRows.filter((row) => row.outcome[mode]).length;
+      if (outcomeRows.length < 8 || targetCount < 3) return [];
+      const factorMap = new Map();
+      outcomeRows.forEach((row) => row.factors.forEach((factor) => factorMap.set(factor.id, factor)));
+      return [...factorMap.values()].map((factor) => {
+        const exposed = outcomeRows.filter((row) => row.factors.some((item) => item.id === factor.id));
+        const comparison = outcomeRows.filter((row) => !row.factors.some((item) => item.id === factor.id));
+        if (exposed.length < 3 || comparison.length < 3) return null;
+        const exposedHit = exposed.filter((row) => row.outcome[mode]).length;
+        const comparisonHit = comparison.filter((row) => row.outcome[mode]).length;
+        const exposedRate = exposedHit / exposed.length;
+        const comparisonRate = comparisonHit / comparison.length;
+        const difference = exposedRate - comparisonRate;
+        if (difference < 0.16 || exposedHit < 2) return null;
+        return {
+          factor, exposed: exposed.length, comparison: comparison.length, exposedHit, comparisonHit,
+          exposedRate, comparisonRate, difference,
+          dates: exposed.filter((row) => row.outcome[mode]).map((row) => row.date).slice(-4).reverse(),
+        };
+      }).filter(Boolean).sort((a, b) => b.difference - a.difference || b.exposedHit - a.exposedHit).slice(0, 3);
+    };
+    const symptomCounts = new Map();
+    const tagMeta = Object.fromEntries(FEELING_TAGS.map((tag) => [tag.id, tag]));
+    periodRows.forEach(([, day]) => {
+      (day.meals || []).forEach((meal) => {
+        const after = feelingScoresFor(meal, "after");
+        Object.entries(after).forEach(([id, raw]) => {
+          const meta = tagMeta[id], score = Number(raw);
+          if (meta?.group === "symptom" && Number.isFinite(score) && score >= 2)
+            symptomCounts.set(id, (symptomCounts.get(id) || 0) + 1);
+        });
+      });
+      (day.observations || []).forEach((observation) => {
+        (observation?.tags || []).forEach((id) => {
+          const meta = tagMeta[id];
+          if (meta?.group === "symptom") symptomCounts.set(id, (symptomCounts.get(id) || 0) + 1);
+        });
+      });
+    });
+    const symptoms = [...symptomCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
+      .map(([id, count]) => ({ ...tagMeta[id], count }));
+    const plan = currentProfessionalTrackingPlan();
+    const tracked = normalizeFeelingIds(plan?.feelingIds || []).map((id) => FEELING_TAGS.find((tag) => tag.id === id)).filter(Boolean);
+    const existingNotes = readProfessionalNotes().filter((note) => note.clientId === profile.id).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    return { profile, startDate, endDate, documentedDays: documented.length, meals, analyzableDays: outcomeRows.length, less: scoreMode("less"), good: scoreMode("good"), symptoms, tracked, noteCount: existingNotes.length, latestNote: existingNotes[0] || null };
+  }
+  function professionalConsultationDateLinks(dates = []) {
+    return dates.length ? `<div class="consultation-date-links">${dates.map((date) => `<button type="button" class="text-button small" data-consultation-date="${date}">${esc(formatDate(date))}</button>`).join("")}</div>` : "";
+  }
+  function professionalConsultationSummaryText(analysis) {
+    const lines = [
+      `Préparation de consultation — ${analysis.profile.name}`,
+      `${analysis.documentedDays} jours documentés sur les 30 derniers jours · ${analysis.meals} repas/collations · ${analysis.analyzableDays} journées avec ressentis exploitables.`,
+    ];
+    analysis.less.slice(0, 3).forEach((item) => lines.push(`À explorer : ${item.factor.label} — ressenti moins favorable dans ${Math.round(item.exposedRate * 100)} % des journées correspondantes contre ${Math.round(item.comparisonRate * 100)} % des autres journées.`));
+    analysis.good.slice(0, 2).forEach((item) => lines.push(`Évolution favorable à discuter : ${item.factor.label} — meilleur ressenti dans ${Math.round(item.exposedRate * 100)} % des journées correspondantes contre ${Math.round(item.comparisonRate * 100)} % des autres journées.`));
+    if (analysis.symptoms.length) lines.push(`Ressentis les plus souvent consignés : ${analysis.symptoms.map((item) => `${t(item.label)} (${item.count})`).join(", ")}.`);
+    if (analysis.tracked.length) lines.push(`Plan de suivi : ${analysis.tracked.map((item) => t(item.label)).join(", ")}.`);
+    lines.push("Résumé exploratoire basé sur le journal; aucune association ne constitue une preuve de cause à effet ni un diagnostic.");
+    return lines.join("\n");
+  }
+  function professionalConsultationHtml(profile) {
+    if (!(professionalDemoMode || professionalBetaMode)) return "";
+    const analysis = professionalConsultationAnalysis(profile);
+    const lessCards = analysis.less.length ? analysis.less.map((item, index) => `<article class="consultation-priority-card"><span class="consultation-rank">${index + 1}</span><div><small>À revoir en priorité</small><strong>${item.factor.icon} ${esc(item.factor.label)}</strong><p>Ressenti moins favorable dans <b>${Math.round(item.exposedRate * 100)} %</b> des journées correspondantes, contre <b>${Math.round(item.comparisonRate * 100)} %</b> des autres journées analysables.</p>${professionalConsultationDateLinks(item.dates)}</div></article>`).join("") : `<article class="consultation-empty"><span>🌱</span><div><strong>Pas encore assez de répétitions</strong><p>Les 30 derniers jours ne permettent pas de faire ressortir une association assez stable. Les données restent consultables sans forcer de conclusion.</p></div></article>`;
+    const goodCards = analysis.good.slice(0, 2).map((item) => `<article class="consultation-signal-card"><span>${item.factor.icon}</span><div><small>Évolution positive à discuter</small><strong>${esc(item.factor.label)}</strong><p>Meilleur ressenti dans ${Math.round(item.exposedRate * 100)} % des journées correspondantes, contre ${Math.round(item.comparisonRate * 100)} % des autres journées.</p>${professionalConsultationDateLinks(item.dates)}</div></article>`).join("");
+    const symptomHtml = analysis.symptoms.length ? analysis.symptoms.map((item) => `<span class="consultation-chip">${item.emoji} ${esc(t(item.label))} · ${item.count}</span>`).join("") : `<span class="muted small">Aucun ressenti dominant ne ressort sur cette période.</span>`;
+    const trackedHtml = analysis.tracked.length ? analysis.tracked.slice(0, 8).map((item) => `<span class="consultation-chip">${item.emoji} ${esc(t(item.label))}</span>`).join("") : `<span class="muted small">Aucun inconfort particulier n’est ciblé dans le plan actuel.</span>`;
+    const prompt = analysis.less[0] ? `La situation « ${analysis.less[0].factor.label} » revient-elle assez régulièrement pour mériter une exploration plus ciblée avec ${profile.name} ?` : `Y a-t-il un élément du journal que ${profile.name} aimerait explorer plus précisément pendant la consultation ?`;
+    return `<dialog class="professional-consultation-dialog" id="professionalConsultationDialog"><div class="professional-consultation-sheet"><div class="professional-consultation-head"><div><p class="eyebrow">Résumé avant consultation</p><h2>🩺 ${esc(profile.name)}</h2><p>${esc(formatDate(analysis.startDate))} au ${esc(formatDate(analysis.endDate))}</p></div><button type="button" class="icon-button" data-close-professional-consultation aria-label="Fermer">✕</button></div><div class="consultation-coverage-grid"><div><strong>${analysis.documentedDays}</strong><small>jours documentés / 30</small></div><div><strong>${analysis.meals}</strong><small>repas et collations</small></div><div><strong>${analysis.analyzableDays}</strong><small>journées avec ressentis</small></div></div><section class="consultation-section"><div class="consultation-section-title"><span>🔎</span><div><small>Ce qui mérite une attention</small><h3>Pistes à explorer</h3></div></div><div class="consultation-priority-list">${lessCards}</div></section>${goodCards ? `<section class="consultation-section"><div class="consultation-section-title"><span>🌤️</span><div><small>Ce qui semble aller dans le bon sens</small><h3>Évolution positive</h3></div></div><div class="consultation-signal-list">${goodCards}</div></section>` : ""}<section class="consultation-section consultation-two-column"><div><small class="eyebrow">Ressentis fréquents</small><div class="consultation-chips">${symptomHtml}</div></div><div><small class="eyebrow">Plan convenu</small><div class="consultation-chips">${trackedHtml}</div></div></section><section class="consultation-question"><span>💬</span><div><small>Question pour la consultation</small><strong>${esc(prompt)}</strong></div></section>${analysis.noteCount ? `<section class="consultation-existing-followup"><span>📝</span><div><small>Suivi déjà en place</small><strong>${analysis.noteCount} note${analysis.noteCount > 1 ? "s" : ""} au dossier</strong>${analysis.latestNote ? `<p>Dernière note : ${esc(analysis.latestNote.contextLabel || "Suivi général")} · ${esc(professionalNoteTime(analysis.latestNote.createdAt))}</p>` : ""}</div></section>` : ""}<p class="muted tiny consultation-caution">Résumé exploratoire basé sur les données consignées. Les associations présentées servent à orienter la discussion et ne constituent ni une preuve de cause à effet ni un diagnostic.</p><div class="dialog-actions consultation-actions"><button type="button" class="secondary" data-close-professional-consultation>Fermer</button><button type="button" class="primary" id="addConsultationToFollowup">Ajouter au suivi</button></div></div></dialog>`;
+  }
   function renderFollowup() {
     const clientView = hasClientProfessionalFollowup();
     if (!db.settings.demoMode && !professionalBetaMode && !clientView) {
@@ -4443,14 +4531,34 @@
     const followupEyebrow = professionalBetaMode ? "Espace professionnel · Bêta" : clientView ? "Suivi professionnel" : professionalDemoMode ? "Espace professionnel · Démo" : "Suivi professionnel";
     const followupIntro = isProfessionalOperator ? "Les notes privées et partagées sont visibles dans cet espace professionnel." : `Les notes de ${esc(clientProfessionalLink?.professional_label || "ton professionnel")} apparaissent ici.`;
     const followupActions = professionalBetaMode
-      ? `<div class="dialog-actions"><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalBeta">Revenir à mon profil</button></div>`
+      ? `<div class="dialog-actions"><button type="button" class="primary" id="prepareProfessionalConsultation">✨ Préparer la consultation</button><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalBeta">Revenir à mon profil</button></div>`
       : professionalDemoMode
-        ? `<div class="dialog-actions"><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalDemo">Quitter le mode professionnel</button></div>`
+        ? `<div class="dialog-actions"><button type="button" class="primary" id="prepareProfessionalConsultation">✨ Préparer la consultation</button><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalDemo">Quitter le mode professionnel</button></div>`
         : "";
-    $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">${followupEyebrow}</p><h2>📝 Suivi de ${esc(profile.name)}</h2><p>${followupIntro}</p>${followupActions}</section>${professionalTrendHtml()}${trackingPlanPanel}${form}<section class="professional-followup"><div class="section-title"><h2>Chronologie</h2><span class="muted small">${allNotes.length} note${allNotes.length > 1 ? "s" : ""}</span></div><div class="stack">${cards}</div></section>`;
+    $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">${followupEyebrow}</p><h2>📝 Suivi de ${esc(profile.name)}</h2><p>${followupIntro}</p>${followupActions}</section>${professionalTrendHtml()}${trackingPlanPanel}${form}<section class="professional-followup"><div class="section-title"><h2>Chronologie</h2><span class="muted small">${allNotes.length} note${allNotes.length > 1 ? "s" : ""}</span></div><div class="stack">${cards}</div></section>${professionalConsultationHtml(profile)}`;
     $("#switchProfessionalClient")?.addEventListener("click", openProfessionalClientPicker);
     $("#leaveProfessionalBeta")?.addEventListener("click", leaveProfessionalBeta);
     $("#leaveProfessionalDemo")?.addEventListener("click", leaveDemoMode);
+    $("#prepareProfessionalConsultation")?.addEventListener("click", () => $("#professionalConsultationDialog")?.showModal());
+    $$('[data-close-professional-consultation]').forEach((button) => button.addEventListener("click", () => $("#professionalConsultationDialog")?.close()));
+    $$('[data-consultation-date]').forEach((button) => button.addEventListener("click", () => {
+      selectedDate = button.dataset.consultationDate || selectedDate;
+      currentView = "today";
+      $("#professionalConsultationDialog")?.close();
+      render();
+    }));
+    $("#addConsultationToFollowup")?.addEventListener("click", () => {
+      const analysis = professionalConsultationAnalysis(profile);
+      const textarea = $("#professionalNoteContent");
+      const visibility = $("#professionalNoteVisibility");
+      const context = $("#professionalNoteContext");
+      if (!textarea) return;
+      textarea.value = professionalConsultationSummaryText(analysis);
+      if (visibility) visibility.value = "private";
+      if (context) context.value = "global|||Suivi général";
+      $("#professionalConsultationDialog")?.close();
+      textarea.closest("form")?.requestSubmit();
+    });
     $("[data-open-trend-fullscreen]")?.addEventListener("click", async () => {
       const dialog = $("#professionalTrendDialog");
       if (!dialog) return;
@@ -13807,7 +13915,7 @@
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.115");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.116");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});

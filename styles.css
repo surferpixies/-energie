@@ -1420,3 +1420,58 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   .client-professional-note-preview { grid-template-columns: auto minmax(0,1fr); }
   .client-professional-note-preview-actions { grid-column: 2; justify-content: flex-start; }
 }
+
+/* v3.56.116 — Préparation de consultation professionnelle */
+.professional-consultation-dialog {
+  width: min(760px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  border: 0;
+  padding: 0;
+  border-radius: 28px;
+  background: var(--surface, #fffdf8);
+  color: inherit;
+  overflow: hidden;
+}
+.professional-consultation-dialog::backdrop { background: rgba(22, 37, 29, .56); backdrop-filter: blur(5px); }
+.professional-consultation-sheet { padding: 24px; max-height: calc(100dvh - 24px); overflow: auto; }
+.professional-consultation-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 18px; }
+.professional-consultation-head h2 { margin: 2px 0 3px; }
+.professional-consultation-head p { margin: 0; }
+.consultation-coverage-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 0 18px; }
+.consultation-coverage-grid > div { padding: 14px 12px; border-radius: 18px; background: var(--green-soft, #e9f5df); text-align: center; }
+.consultation-coverage-grid strong { display: block; font-size: 1.55rem; line-height: 1; }
+.consultation-coverage-grid small { display: block; margin-top: 6px; line-height: 1.25; }
+.consultation-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line, rgba(24, 63, 42, .12)); }
+.consultation-section-title { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+.consultation-section-title > span { font-size: 1.45rem; }
+.consultation-section-title small, .consultation-question small, .consultation-priority-card small, .consultation-signal-card small { display: block; color: var(--muted, #6d7e73); }
+.consultation-section-title h3 { margin: 1px 0 0; }
+.consultation-priority-list, .consultation-signal-list { display: grid; gap: 10px; }
+.consultation-priority-card, .consultation-signal-card, .consultation-empty { display: flex; gap: 12px; padding: 14px; border-radius: 18px; background: var(--green-soft, #eef7e9); }
+.consultation-priority-card > div, .consultation-signal-card > div, .consultation-empty > div { min-width: 0; flex: 1; }
+.consultation-priority-card strong, .consultation-signal-card strong, .consultation-empty strong { display: block; margin: 2px 0 5px; }
+.consultation-priority-card p, .consultation-signal-card p, .consultation-empty p { margin: 0; line-height: 1.4; }
+.consultation-rank { width: 30px; height: 30px; flex: 0 0 30px; border-radius: 50%; display: grid; place-items: center; background: rgba(44, 169, 84, .15); font-weight: 800; }
+.consultation-date-links { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 8px; }
+.consultation-date-links .text-button { padding: 2px 0; min-height: 0; text-decoration: underline; }
+.consultation-two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.consultation-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+.consultation-chip { display: inline-flex; align-items: center; padding: 7px 10px; border-radius: 999px; background: var(--green-soft, #eef7e9); font-size: .88rem; }
+.consultation-question { display: flex; gap: 12px; align-items: flex-start; margin-top: 18px; padding: 15px; border-radius: 18px; background: rgba(255, 207, 92, .15); }
+.consultation-question > span { font-size: 1.35rem; }
+.consultation-question strong { display: block; margin-top: 3px; line-height: 1.35; }
+.consultation-caution { margin: 14px 0 0; }
+.consultation-actions { position: sticky; bottom: -24px; margin: 18px -24px -24px; padding: 14px 24px 20px; background: linear-gradient(to bottom, rgba(255,253,248,.75), var(--surface, #fffdf8) 30%); }
+@media (max-width: 560px) {
+  .professional-consultation-sheet { padding: 20px; }
+  .consultation-coverage-grid { gap: 7px; }
+  .consultation-coverage-grid > div { padding: 12px 7px; }
+  .consultation-coverage-grid strong { font-size: 1.35rem; }
+  .consultation-two-column { grid-template-columns: 1fr; }
+  .consultation-actions { margin-left: -20px; margin-right: -20px; margin-bottom: -20px; padding-left: 20px; padding-right: 20px; }
+}
+.consultation-existing-followup { display: flex; gap: 12px; align-items: flex-start; margin-top: 10px; padding: 13px 15px; border-radius: 18px; background: rgba(83, 123, 101, .08); }
+.consultation-existing-followup > span { font-size: 1.25rem; }
+.consultation-existing-followup small { display: block; color: var(--muted, #6d7e73); }
+.consultation-existing-followup strong { display: block; margin-top: 2px; }
+.consultation-existing-followup p { margin: 3px 0 0; font-size: .88rem; color: var(--muted, #6d7e73); }
