@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.116";
+  const APP_RELEASE = "3.56.117";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -4465,7 +4465,7 @@
     });
     const symptoms = [...symptomCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
       .map(([id, count]) => ({ ...tagMeta[id], count }));
-    const plan = currentProfessionalTrackingPlan();
+    const plan = activeProfessionalTrackingPlan();
     const tracked = normalizeFeelingIds(plan?.feelingIds || []).map((id) => FEELING_TAGS.find((tag) => tag.id === id)).filter(Boolean);
     const existingNotes = readProfessionalNotes().filter((note) => note.clientId === profile.id).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
     return { profile, startDate, endDate, documentedDays: documented.length, meals, analyzableDays: outcomeRows.length, less: scoreMode("less"), good: scoreMode("good"), symptoms, tracked, noteCount: existingNotes.length, latestNote: existingNotes[0] || null };
