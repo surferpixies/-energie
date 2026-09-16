@@ -13959,7 +13959,9 @@
     render();
     setTimeout(showExperienceLaunchIfNeeded, 120);
   }
-  if ("serviceWorker" in navigator) {
+  // Le service worker demeure réservé au site Web. Le conteneur Capacitor
+  // distribue déjà ses fichiers localement et n'utilise pas un protocole HTTP.
+  if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
         const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.116");
