@@ -24,6 +24,12 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Énergie utilise la caméra pour ajouter des photos à vos repas.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Énergie peut enregistrer les photos associées à vos repas.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Énergie accède à vos photos pour les associer à vos repas.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
