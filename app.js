@@ -5482,6 +5482,7 @@
       .slice(0, limit);
   }
   function addRecentSnack(source) {
+    if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     if (!source) return;
     const now = new Date(),
       meal = normalMeal(
@@ -5569,6 +5570,7 @@
     }
   }
   function saveQuickSnack() {
+    if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     const description = $("#quickSnackDescription").value.trim();
     if (!description) return;
     const now = new Date(),
@@ -5603,6 +5605,7 @@
     render();
   }
   function openSnackManager() {
+    if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     const d = ensureDay(db, selectedDate),
       snacks = d.meals
         .filter((m) => m.type === "Collation")
