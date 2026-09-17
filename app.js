@@ -2270,6 +2270,9 @@
       ? window.ENERGIE_FOODS
       : [];
   const FOOD_MACROS = [
+    ...(Array.isArray(window.ENERGIE_NUTRITION_CORRECTIONS)
+      ? window.ENERGIE_NUTRITION_CORRECTIONS
+      : []),
     ...FOOD_MACROS_SOURCE,
     {
       keys: ["prosciutto", "proscuitto", "jambon prosciutto"],
