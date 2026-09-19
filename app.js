@@ -10161,10 +10161,18 @@
       latestGoal = rows[rows.length - 1].goal;
     return `<section class="card steps-observation-card"><div class="steps-observation-head"><span aria-hidden="true">👟</span><div><p class="eyebrow">Progression</p><h3>Pas par jour</h3></div><strong>${averageSteps.toLocaleString("fr-CA")}<small>moyenne</small></strong></div><div class="steps-line-chart"><svg viewBox="0 0 700 265" role="img" aria-label="Évolution du nombre de pas par jour et objectif quotidien">${ticks}<polyline class="steps-goal-line" points="${goalPoints}"></polyline><text class="steps-goal-label" x="${chartRight - 4}" y="${Math.max(chartTop + 14, yFor(latestGoal) - 8)}" text-anchor="end">Objectif ${latestGoal.toLocaleString("fr-CA")}</text>${rows.length > 1 ? `<polyline class="steps-data-line" points="${points}"></polyline>` : ""}${circles}${dates}</svg></div><div class="steps-chart-legend"><span><i></i> Pas quotidiens</span><span><i></i> Objectif du jour</span><strong>${reached}/${rows.length} objectif${rows.length > 1 ? "s" : ""} atteint${reached > 1 ? "s" : ""}</strong></div><p class="muted tiny steps-chart-note">Chaque point correspond à une journée. Si l’objectif change, la ligne pointillée évolue à partir de cette date sans modifier les journées précédentes.</p></section>`;
   }
+  function persistProfilePreference(reason = "parametre") {
+    if (saveLocal(reason) === false) return false;
+    if (session && !db.settings.demoMode && !professionalBetaMode)
+      setDayChanged(todayKey());
+    return true;
+  }
   function toggleSetting(id, key) {
-    $(id).onchange = (e) => {
+    const control = $(id);
+    if (!control) return;
+    control.onchange = (e) => {
       db.settings[key] = e.target.checked;
-      saveLocal(`parametre-${key}`);
+      persistProfilePreference(`parametre-${key}`);
       render();
     };
   }
@@ -11070,7 +11078,7 @@
     });
     $("#waterGoal").onchange = (e) => {
       db.settings.waterGoal = clamp(e.target.value, 1, 20);
-      saveLocal("objectif-eau");
+      persistProfilePreference("objectif-eau");
       render();
     };
     $("#settingCalorieBalanceTracking")?.addEventListener("change", (event) => {
@@ -11110,12 +11118,12 @@
     });
     $("#settingStepsTracking")?.addEventListener("change", (event) => {
       db.settings.stepsTracking = event.target.checked;
-      saveLocal("suivi-pas");
+      persistProfilePreference("suivi-pas");
       renderProfile();
     });
     $("#stepsGoal")?.addEventListener("change", (event) => {
       db.settings.stepsGoal = clamp(event.target.value, 100, 100000);
-      saveLocal("objectif-pas");
+      persistProfilePreference("objectif-pas");
       event.target.value = db.settings.stepsGoal;
     });
     $("#addSupplement").onclick = () => {
@@ -11164,7 +11172,7 @@
     if (macroToggle)
       macroToggle.onchange = (e) => {
         db.settings.macroTracking = e.target.checked;
-        saveLocal("parametre-macroTracking");
+        persistProfilePreference("parametre-macroTracking");
         render();
       };
     toggleSetting("#settingAutoNutrition", "autoNutritionEstimates");
@@ -11174,13 +11182,13 @@
     toggleSetting("#settingProfessionalSupport", "professionalSupport");
     $("#settingShareMealPhotos")?.addEventListener("change", (event) => {
       db.settings.shareMealPhotosWithProfessional = event.target.checked;
-      saveLocal("partage-photos-professionnel");
+      persistProfilePreference("partage-photos-professionnel");
     });
     const feelingToggle = $("#settingFeelingReminders");
     if (feelingToggle)
       feelingToggle.onchange = async (e) => {
         db.settings.feelingReminders = e.target.checked;
-        saveLocal("rappels-ressenti");
+        persistProfilePreference("rappels-ressenti");
         if (e.target.checked) await requestFeelingNotifications();
         scheduleFeelingChecks();
         renderProfile();
@@ -11191,14 +11199,14 @@
           db.settings.feelingMealTypes = $$(
             "[data-feeling-meal-type]:checked",
           ).map((x) => x.dataset.feelingMealType);
-          saveLocal("repas-rappels-ressenti");
+          persistProfilePreference("repas-rappels-ressenti");
           scheduleFeelingChecks();
         }),
     );
     $("#feelingDelay")?.addEventListener("change", (e) => {
       db.settings.feelingDelayHours = Number(e.target.value);
       db.settings.feelingDelayPreferenceSet = true;
-      saveLocal("delai-ressenti");
+      persistProfilePreference("delai-ressenti");
       scheduleFeelingChecks();
     });
     $("#enableNotifications")?.addEventListener("click", async () => {
