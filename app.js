@@ -13253,6 +13253,9 @@
     setAuthBusy(true);
     try {
       if (authMode === "signup") {
+        // Important: creating another account while one is already connected must
+        // never seed the new account with the previous user's local journal.
+        const previousUserId = session?.user?.id || null;
         const { data, error } = await client.auth.signUp({
           email,
           password,
@@ -13263,14 +13266,27 @@
           return;
         }
         if (data.session) {
+          const newUserId = data.session.user?.id || null;
           session = data.session;
           $("#authDialog").close();
-          await seedCloudFromLocal();
+          if (previousUserId && newUserId && previousUserId !== newUserId) {
+            clearLocalJournalAfterSignOut();
+            await loadDemoAccess();
+            await pullCloud(false);
+          } else {
+            // First account created from an anonymous/local journal: preserve the
+            // expected migration by seeding that journal to the new account.
+            await seedCloudFromLocal();
+          }
           render();
         } else {
           showSignupConfirmation(email);
         }
       } else {
+        // Capture ownership before Supabase changes the session. If this login
+        // switches identities, discard the previous account's local journal
+        // before reading or syncing anything for the new account.
+        const previousUserId = session?.user?.id || null;
         const { data, error } = await client.auth.signInWithPassword({
           email,
           password,
@@ -13281,8 +13297,11 @@
           else msg.textContent = friendlyAuthError(error);
           return;
         }
+        const newUserId = data.session?.user?.id || null;
         session = data.session;
         $("#authDialog").close();
+        if (previousUserId && newUserId && previousUserId !== newUserId)
+          clearLocalJournalAfterSignOut();
         await loadDemoAccess();
         await pullCloud(false);
         await syncNow();
@@ -13947,6 +13966,16 @@
     const { data } = await client.auth.getSession();
     session = data.session;
     client.auth.onAuthStateChange((event, newSession) => {
+      const previousUserId = session?.user?.id || null;
+      const newUserId = newSession?.user?.id || null;
+      // Covers session changes initiated outside the explicit login form too
+      // (deep links, token/session replacement, future auth providers).
+      if (
+        previousUserId &&
+        newUserId &&
+        previousUserId !== newUserId
+      )
+        clearLocalJournalAfterSignOut();
       session = newSession;
       if (newSession) loadDemoAccess().then(() => render());
       else { hasDemoAccess = false; hasProfessionalBetaAccess = false; clientProfessionalLink = null; }
