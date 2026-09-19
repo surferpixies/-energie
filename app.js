@@ -1787,6 +1787,26 @@
               calorieTargetMode: calorieTargetMode(),
               fixedCalorieTarget: fixedCalorieTarget(),
               calorieDeficitTarget: calorieDeficitTarget(),
+              profilePreferences: {
+                waterGoal: Number(db.settings.waterGoal) || 8,
+                journalViewMode: db.settings.journalViewMode || "detailed",
+                insightsEnabled: db.settings.insightsEnabled !== false,
+                nutritionObservations: db.settings.nutritionObservations !== false,
+                macroTracking: db.settings.macroTracking !== false,
+                autoNutritionEstimates: db.settings.autoNutritionEstimates !== false,
+                generalRecommendations: db.settings.generalRecommendations !== false,
+                showSources: db.settings.showSources !== false,
+                professionalSupport: db.settings.professionalSupport === true,
+                shareMealPhotosWithProfessional: db.settings.shareMealPhotosWithProfessional === true,
+                feelingReminders: db.settings.feelingReminders !== false,
+                feelingDelayHours: Number(db.settings.feelingDelayHours) || 0.5,
+                feelingDelayPreferenceSet: db.settings.feelingDelayPreferenceSet === true,
+                feelingMealTypes: Array.isArray(db.settings.feelingMealTypes) ? db.settings.feelingMealTypes : ["Déjeuner", "Dîner", "Souper"],
+                seasonalIcons: db.settings.seasonalIcons !== false,
+                showRecognizedElements: db.settings.showRecognizedElements !== false,
+                showEatingReasons: db.settings.showEatingReasons !== false,
+                futureMealPlanning: db.settings.futureMealPlanning === true,
+              },
               defaults: db.settings.supplements || [],
               defaultsUpdatedAt: db.settings.supplementsUpdatedAt || db.updatedAt,
               // Les photos de brouillon restent uniquement sur l’appareil : ne pas
@@ -2045,6 +2065,20 @@
           ? new Date().toISOString()
           : remoteSupplementSettings.updatedAt;
       }
+    }
+    const remotePreferenceRows = (dr.data || [])
+      .filter((row) => row.supplements?.profilePreferences && typeof row.supplements.profilePreferences === "object")
+      .sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
+    const remoteProfilePreferences = remotePreferenceRows[0]?.supplements?.profilePreferences;
+    if (remoteProfilePreferences) {
+      const pref = remoteProfilePreferences;
+      if (Number(pref.waterGoal) > 0) db.settings.waterGoal = Math.round(Number(pref.waterGoal));
+      if (["detailed", "summary"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
+      ["insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","showEatingReasons","futureMealPlanning"].forEach((key) => {
+        if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
+      });
+      if (Number(pref.feelingDelayHours) > 0) db.settings.feelingDelayHours = Number(pref.feelingDelayHours);
+      if (Array.isArray(pref.feelingMealTypes)) db.settings.feelingMealTypes = [...pref.feelingMealTypes];
     }
     for (const r of dr.data || []) {
       db.settings.personalProfile = Metrics.mergeProfile(db.settings.personalProfile, r.supplements?.personalProfile);
