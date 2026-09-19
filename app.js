@@ -2406,6 +2406,8 @@
     return best?.food || null;
   }
   function mealQuantityNumber(value) {
+    const parsed = window.ENERGIE_NUTRITION_PORTIONS?.number?.(value);
+    if (parsed != null) return parsed;
     const text = String(value || "").trim().replace(",", ".");
     if (/^\d+\s*\/\s*\d+$/.test(text)) {
       const [a, b] = text.split("/").map(Number);
@@ -2415,6 +2417,8 @@
     return Number.isFinite(n) && n > 0 ? n : null;
   }
   function mealQuantityUnit(value) {
+    const parsed = window.ENERGIE_NUTRITION_PORTIONS?.unit?.(value);
+    if (parsed) return parsed;
     const unit = normalizeFoodText(value);
     if (/^(g|gramme|grammes|gram)$/.test(unit)) return "g";
     if (/^(kg|kilogramme|kilogrammes)$/.test(unit)) return "kg";
@@ -2433,6 +2437,8 @@
     return { value: n, unit: canonical };
   }
   function mealQuantityFromText(text) {
+    const parsed = window.ENERGIE_NUTRITION_PORTIONS?.quantityFromText?.(text);
+    if (parsed) return parsed;
     const raw = String(text || "")
       .toLocaleLowerCase("fr-CA")
       .normalize("NFD")
@@ -2444,9 +2450,10 @@
     return match ? normalizedMealQuantity(match[1], match[2]) : null;
   }
   function mealReferenceQuantity(portion) {
-    return mealQuantityFromText(portion);
+    return window.ENERGIE_NUTRITION_PORTIONS?.referenceQuantity?.(portion) || mealQuantityFromText(portion);
   }
   function mealQuantityOnlyFromText(text) {
+    if (window.ENERGIE_NUTRITION_PORTIONS?.quantityOnlyFromText?.(text)) return true;
     const raw = String(text || "")
       .toLocaleLowerCase("fr-CA")
       .normalize("NFD")
@@ -2458,6 +2465,8 @@
     return new RegExp(`^${number}\\s*${unit}$`, "i").test(raw);
   }
   function nutritionScaleForSegment(segment, food) {
+    const improved = window.ENERGIE_NUTRITION_PORTIONS?.scaleForSegment?.(segment, food);
+    if (improved) return improved;
     const entered = mealQuantityFromText(segment),
       explicitReference = mealReferenceQuantity(food?.portion),
       gramsReference = Number(food?.gramsPerPortion) > 0
@@ -2710,26 +2719,37 @@
     actions.hidden = !missing.length || !!acknowledged;
     section.hidden = false;
   }
+  function estimatedDishNutrition(recognizedDish, text) {
+    if (!recognizedDish?.nutrition) return null;
+    const referenceFood = foodMatchForSegment(recognizedDish.name),
+      portion = window.ENERGIE_NUTRITION_PORTIONS?.scaleForDish?.(text, referenceFood) || {
+        scale: 1,
+        quantityUsed: false,
+        approximate: true,
+        basis: "portion habituelle",
+      },
+      scale = Number(portion.scale) > 0 ? Number(portion.scale) : 1,
+      scaled = {};
+    ["calories", "protein", "carbs", "fat", "fiber", "sugars", "sodium"].forEach((key) => {
+      const value = recognizedDish.nutrition[key];
+      scaled[key] = value == null ? null : Math.round(Number(value) * scale * 10) / 10;
+    });
+    return normalNutrition({
+      ...scaled,
+      source: "energie-dish-knowledge",
+      confidence: portion.quantityUsed && !portion.approximate ? "medium" : "low",
+      basis: `${recognizedDish.name} · ${portion.basis || "portion habituelle"}`,
+      estimated: true,
+    });
+  }
   function estimateNutritionFromText(text) {
     const recognizedDish = mealCompositionAnalysis(text)?.dish;
     if (recognizedDish?.nutrition && !/[+,;\n\r|]|\s+\/\s+/.test(String(text || "")))
-      return normalNutrition({
-        ...recognizedDish.nutrition,
-        source: "energie-dish-knowledge",
-        confidence: "low",
-        basis: `${recognizedDish.name} · recette habituelle`,
-        estimated: true,
-      });
+      return estimatedDishNutrition(recognizedDish, text);
     const segments = splitMealIngredients(text);
     if (!segments.length) {
       if (!recognizedDish?.nutrition) return null;
-      return normalNutrition({
-        ...recognizedDish.nutrition,
-        source: "energie-dish-knowledge",
-        confidence: "low",
-        basis: `${recognizedDish.name} · recette habituelle`,
-        estimated: true,
-      });
+      return estimatedDishNutrition(recognizedDish, text);
     }
     const matched = segments
       .map((segment) => ({ segment, food: foodMatchForSegment(segment) }))
@@ -2758,16 +2778,17 @@
     const portions = [
       ...new Set(enriched.map((x) => x.food.portion).filter(Boolean)),
     ];
-    const quantityUsedCount = enriched.filter((x) => x.quantityUsed).length;
+    const quantityUsedCount = enriched.filter((x) => x.quantityUsed).length,
+      approximateQuantityCount = enriched.filter((x) => x.quantityUsed && x.approximate).length;
     const basis = quantityUsedCount
-      ? `${quantityUsedCount} quantité${quantityUsedCount > 1 ? "s" : ""} utilisée${quantityUsedCount > 1 ? "s" : ""} · ${matched.length} ingrédient${matched.length > 1 ? "s" : ""}`
+      ? `${quantityUsedCount} quantité${quantityUsedCount > 1 ? "s" : ""} utilisée${quantityUsedCount > 1 ? "s" : ""}${approximateQuantityCount ? ` · ${approximateQuantityCount} conversion${approximateQuantityCount > 1 ? "s" : ""} approximative${approximateQuantityCount > 1 ? "s" : ""}` : ""} · ${matched.length} ingrédient${matched.length > 1 ? "s" : ""}`
       : matched.length === 1
         ? portions[0] || "portion courante"
         : `${matched.length} ingrédients estimés`;
     return normalNutrition({
       ...total,
       source: "energie-foods",
-      confidence: quantityUsedCount ? "medium" : matched.length >= 2 ? "medium" : "low",
+      confidence: quantityUsedCount && !approximateQuantityCount ? "medium" : "low",
       basis,
       estimated: true,
     });
