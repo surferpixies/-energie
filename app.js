@@ -1306,6 +1306,38 @@
       return result;
     };
   }
+  const LOCAL_OWNER_KEY = "energieLocalOwnerUserId";
+  const LEGACY_QUARANTINE_KEY = "energieLegacyJournalQuarantine";
+
+  function localJournalOwnerId() {
+    try {
+      return localStorage.getItem(LOCAL_OWNER_KEY) || "";
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function quarantineAndResetLocalJournal() {
+    try {
+      // Keep one recovery copy of a pre-isolation journal. It is deliberately
+      // never loaded or synced automatically, so it cannot contaminate another account.
+      const legacy = localStorage.getItem(APP_KEY);
+      if (legacy && !localStorage.getItem(LEGACY_QUARANTINE_KEY))
+        localStorage.setItem(LEGACY_QUARANTINE_KEY, legacy);
+    } catch (_) {}
+    clearLocalJournalAfterSignOut();
+  }
+
+  function prepareLocalJournalForSession(nextSession) {
+    const userId = nextSession?.user?.id || "";
+    if (!userId) return;
+    const ownerId = localJournalOwnerId();
+    if (ownerId !== userId) quarantineAndResetLocalJournal();
+    try {
+      localStorage.setItem(LOCAL_OWNER_KEY, userId);
+    } catch (_) {}
+  }
+
   function clearLocalJournalAfterSignOut() {
     try {
       [
@@ -1338,6 +1370,9 @@
         memories: [],
         updatedAt: new Date().toISOString(),
       });
+    } catch (_) {}
+    try {
+      localStorage.removeItem(LOCAL_OWNER_KEY);
     } catch (_) {}
   }
   const MEMORY_CLOUD_TABLE = "user_food_memory";
@@ -13270,7 +13305,7 @@
           session = data.session;
           $("#authDialog").close();
           if (previousUserId && newUserId && previousUserId !== newUserId) {
-            clearLocalJournalAfterSignOut();
+            prepareLocalJournalForSession(data.session);
             await loadDemoAccess();
             await pullCloud(false);
           } else {
@@ -13300,8 +13335,7 @@
         const newUserId = data.session?.user?.id || null;
         session = data.session;
         $("#authDialog").close();
-        if (previousUserId && newUserId && previousUserId !== newUserId)
-          clearLocalJournalAfterSignOut();
+        prepareLocalJournalForSession(data.session);
         await loadDemoAccess();
         await pullCloud(false);
         await syncNow();
@@ -13965,6 +13999,7 @@
     }
     const { data } = await client.auth.getSession();
     session = data.session;
+    if (session) prepareLocalJournalForSession(session);
     client.auth.onAuthStateChange((event, newSession) => {
       const previousUserId = session?.user?.id || null;
       const newUserId = newSession?.user?.id || null;
