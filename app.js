@@ -1507,6 +1507,7 @@
     };
   }
   async function syncMemoryCloud() {
+    if (!localJournalMatchesSession()) return false;
     if (
       memorySyncBusy ||
       !client ||
@@ -1548,6 +1549,7 @@
     return brainMemoryState();
   }
   async function replaceMemoryCloudFromJournal() {
+    if (!localJournalMatchesSession()) return false;
     if (!client || !session || !navigator.onLine || !window.Brain?.memory)
       return true;
     try {
@@ -1610,10 +1612,14 @@
     updateSyncBadge();
     return true;
   }
+  function localJournalMatchesSession() {
+    const userId = session?.user?.id || "";
+    return !!userId && localJournalOwnerId() === userId;
+  }
   function enqueue(op) {
     if (professionalBetaMode || db.settings.demoMode) return;
     const items = outbox();
-    op = { ...op, _queuedAt: `${Date.now()}-${uid()}` };
+    op = { ...op, _ownerUserId: session?.user?.id || localJournalOwnerId() || null, _queuedAt: `${Date.now()}-${uid()}` };
     const key = `${op.kind}:${op.id || op.date}`;
     const idx = items.findIndex((x) => `${x.kind}:${x.id || x.date}` === key);
     if (idx >= 0) items[idx] = op;
@@ -1727,6 +1733,12 @@
   async function syncNow() {
     if (professionalBetaMode || db.settings.demoMode || !client || !session || !navigator.onLine)
       return;
+    if (!localJournalMatchesSession()) {
+      syncState = "error";
+      updateSyncBadge();
+      console.warn("Synchronisation bloquée : le journal local n’appartient pas à la session courante.");
+      return;
+    }
     if (syncBusy) {
       syncQueued = true;
       return;
@@ -1749,6 +1761,10 @@
       failed = [];
     for (const op of operations) {
       try {
+        if (op._ownerUserId && op._ownerUserId !== session.user.id) {
+          console.warn("Opération de synchronisation ignorée : propriétaire différent.", op.kind);
+          continue;
+        }
         if (op.kind === "day") {
           const d = ensureDay(db, op.date);
           const dayPayload = {
@@ -2163,7 +2179,7 @@
     if (show || currentView !== "profile") render();
   }
   async function seedCloudFromLocal() {
-    if (!session) return;
+    if (!session || !localJournalMatchesSession()) return;
     const ops = [];
     Object.entries(db.days).forEach(([date, d]) => {
       ops.push({ kind: "day", date });
@@ -14005,12 +14021,8 @@
       const newUserId = newSession?.user?.id || null;
       // Covers session changes initiated outside the explicit login form too
       // (deep links, token/session replacement, future auth providers).
-      if (
-        previousUserId &&
-        newUserId &&
-        previousUserId !== newUserId
-      )
-        clearLocalJournalAfterSignOut();
+      if (newSession) prepareLocalJournalForSession(newSession);
+      else if (previousUserId) clearLocalJournalAfterSignOut();
       session = newSession;
       if (newSession) loadDemoAccess().then(() => render());
       else { hasDemoAccess = false; hasProfessionalBetaAccess = false; clientProfessionalLink = null; }
