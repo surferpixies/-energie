@@ -1744,7 +1744,9 @@
         Health.readSamples({ dataType: "sleep", ...sleepRange, limit: 200, ascending: true }),
         Health.queryWorkouts({ ...range, limit: 100, ascending: true }),
       ]);
-      const stepTotal = Math.round((stepsResult?.samples || []).reduce((sum, sample) => sum + (Number(sample.value) || 0), 0));
+      const stepSamples = stepsResult?.aggregatedData || stepsResult?.samples || [];
+      console.info("[Apple Health] Pas reçus", { raw: stepsResult, samples: stepSamples });
+      const stepTotal = Math.round(stepSamples.reduce((sum, sample) => sum + (Number(sample.value) || 0), 0));
       if ((day.steps == null || health.stepsManaged) && stepTotal >= 0) {
         day.steps = stepTotal;
         health.stepsManaged = true;
