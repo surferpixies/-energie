@@ -14265,6 +14265,12 @@
       }
     }
     render();
+    if (session && !db.settings.demoMode) {
+      // At cold launch the focus/visibility events may already have fired before
+      // authentication and cloud hydration finish. Sync Health once the user's
+      // journal is actually ready.
+      await autoSyncAppleHealth();
+    }
     setTimeout(showExperienceLaunchIfNeeded, 120);
   }
   // Le service worker demeure réservé au site Web. Le conteneur Capacitor
