@@ -2283,7 +2283,6 @@
       portion: "60 g",
       tags: ["protéine", "charcuterie"],
     },
-  ];
     {
       keys: ["noisette", "noisettes", "hazelnut", "hazelnuts", "filbert", "filberts"],
       calories: 628,
@@ -2297,6 +2296,7 @@
       gramsPerPortion: 100,
       tags: ["noix", "nuts", "bon gras"],
     },
+  ];
   const FOOD_NUTRIENT_OVERRIDES = {
     thon: { fiber: 0, sugars: 0, sodium: 320 },
     "thon en conserve": { fiber: 0, sugars: 0, sodium: 320 },
