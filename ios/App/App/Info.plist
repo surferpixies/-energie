@@ -28,6 +28,8 @@
 	<string>Énergie utilise la caméra pour ajouter des photos à vos repas.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>Énergie lit votre sommeil, vos pas et vos activités afin de préremplir votre journal. Ces données restent modifiables dans Énergie.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Énergie n’écrit actuellement aucune donnée dans Santé. Cette autorisation est déclarée pour assurer la compatibilité avec l’intégration Apple Health.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Énergie peut enregistrer les photos associées à vos repas.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
