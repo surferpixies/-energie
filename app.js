@@ -1739,13 +1739,26 @@
         health = day.healthImport,
         range = localDayRange(date),
         sleepRange = sleepRangeForDay(date);
-      const [stepsResult, sleepResult, workoutResult] = await Promise.all([
-        Health.queryAggregated({ dataType: "steps", ...range, bucket: "day", aggregation: "sum" }),
-        Health.readSamples({ dataType: "sleep", ...sleepRange, limit: 200, ascending: true }),
-        Health.queryWorkouts({ ...range, limit: 100, ascending: true }),
-      ]);
-      const stepSamples = stepsResult?.aggregatedData || stepsResult?.samples || [];
-      console.info("[Apple Health] Pas reçus", { raw: stepsResult, samples: stepSamples });
+      let stepsResult = null, sleepResult = null, workoutResult = null;
+      try {
+        stepsResult = await Health.queryAggregated({ dataType: "steps", ...range, bucket: "day", aggregation: "sum" });
+        console.info("[Apple Health] Pas reçus", JSON.stringify(stepsResult));
+      } catch (error) {
+        console.warn("[Apple Health] Erreur pas", String(error?.message || error));
+      }
+      try {
+        sleepResult = await Health.readSamples({ dataType: "sleep", ...sleepRange, limit: 200, ascending: true });
+        console.info("[Apple Health] Sommeil reçu", (sleepResult?.samples || []).length);
+      } catch (error) {
+        console.warn("[Apple Health] Erreur sommeil", String(error?.message || error));
+      }
+      try {
+        workoutResult = await Health.queryWorkouts({ ...range, limit: 100, ascending: true });
+        console.info("[Apple Health] Activités reçues", (workoutResult?.workouts || []).length);
+      } catch (error) {
+        console.warn("[Apple Health] Erreur activités", String(error?.message || error));
+      }
+      const stepSamples = stepsResult?.samples || stepsResult?.aggregatedData || [];
       const stepTotal = Math.round(stepSamples.reduce((sum, sample) => sum + (Number(sample.value) || 0), 0));
       if ((day.steps == null || health.stepsManaged) && stepTotal >= 0) {
         day.steps = stepTotal;
