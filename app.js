@@ -12,7 +12,7 @@
   const POSITIVE_FEELINGS = [
     { id: "positive_wellbeing", emoji: "🙂", label: "Je me sens bien" },
     { id: "positive_lightness", emoji: "🪶", label: "Sensation de légèreté" },
-    { id: "positive_satiety", emoji: "🥗", label: "Rassasié" },
+    { id: "positive_satiety", emoji: "🥗", label: "Rassasié", afterOnly: true },
     { id: "positive_energy", emoji: "⚡", label: "Énergique" },
     { id: "positive_calm", emoji: "🧘", label: "Calme ou détendu" },
   ].map((tag) => ({ ...tag, group: "positive", category: "positive", minScore: 0 }));
@@ -240,6 +240,8 @@
       estimatedCalories,
       actualCalories,
       at: a.at || a.recorded_at || new Date().toISOString(),
+      source: a.source || null,
+      healthId: a.healthId || a.health_id || null,
     };
   }
   function activityToCloud(a = {}) {
@@ -252,6 +254,8 @@
       estimatedCalories: x.estimatedCalories,
       actualCalories: x.actualCalories,
       at: x.at,
+      source: x.source,
+      healthId: x.healthId,
     };
   }
   function estimateActivityCalories(type, minutes, intensity = "moderate") {
@@ -622,6 +626,7 @@
         water: 0,
         steps: null,
         stepsGoal: null,
+        healthImport: { sleepManaged: false, stepsManaged: false, ignoredWorkoutIds: [], lastSyncAt: null },
         beverages: [],
         activities: [],
         meals: [],
@@ -639,6 +644,9 @@
     );
     d.sleepTags = Array.isArray(d.sleepTags) ? d.sleepTags : [];
     d.sleepComment = typeof d.sleepComment === "string" ? d.sleepComment : "";
+    d.healthImport = d.healthImport && typeof d.healthImport === "object"
+      ? { sleepManaged: false, stepsManaged: false, ignoredWorkoutIds: [], lastSyncAt: null, ...d.healthImport }
+      : { sleepManaged: false, stepsManaged: false, ignoredWorkoutIds: [], lastSyncAt: null };
     d.formDrafts =
       d.formDrafts && typeof d.formDrafts === "object" ? d.formDrafts : {};
     d.water = Number(d.water) || 0;
@@ -885,6 +893,9 @@
         day.water = Number(d.water ?? d.waterGlasses ?? d.eau ?? 0) || 0;
         day.steps = Number.isFinite(Number(d.steps)) && Number(d.steps) >= 0 ? Math.round(Number(d.steps)) : null;
         day.stepsGoal = Number.isFinite(Number(d.stepsGoal)) && Number(d.stepsGoal) > 0 ? Math.round(Number(d.stepsGoal)) : null;
+        day.healthImport = d.healthImport && typeof d.healthImport === "object"
+          ? { sleepManaged: false, stepsManaged: false, ignoredWorkoutIds: [], lastSyncAt: null, ...d.healthImport }
+          : { sleepManaged: false, stepsManaged: false, ignoredWorkoutIds: [], lastSyncAt: null };
         day.beverages = (Array.isArray(d.beverages) ? d.beverages : [])
           .map((item) => normalBeverage(item, k))
           .filter(Boolean);
@@ -1661,6 +1672,116 @@
     saveLocal("jour");
     enqueue({ kind: "day", date });
   }
+  function healthPlugin() {
+    return window.Capacitor?.Plugins?.Health || null;
+  }
+  function localDayRange(date) {
+    const start = new Date(`${date}T00:00:00`);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 1);
+    return { startDate: start.toISOString(), endDate: end.toISOString() };
+  }
+  function sleepRangeForDay(date) {
+    const end = new Date(`${date}T12:00:00`);
+    const start = new Date(end);
+    start.setDate(start.getDate() - 1);
+    return { startDate: start.toISOString(), endDate: end.toISOString() };
+  }
+  function mergedSleepHours(samples = []) {
+    const asleepStates = new Set(["asleep", "core", "deep", "rem", "light"]);
+    const intervals = samples
+      .filter((sample) => !sample.sleepState || asleepStates.has(String(sample.sleepState).toLowerCase()))
+      .map((sample) => [Date.parse(sample.startDate), Date.parse(sample.endDate)])
+      .filter(([start, end]) => Number.isFinite(start) && Number.isFinite(end) && end > start)
+      .sort((a, b) => a[0] - b[0]);
+    const merged = [];
+    intervals.forEach(([start, end]) => {
+      const last = merged[merged.length - 1];
+      if (last && start <= last[1]) last[1] = Math.max(last[1], end);
+      else merged.push([start, end]);
+    });
+    const hours = merged.reduce((sum, [start, end]) => sum + (end - start) / 3600000, 0);
+    return hours > 0 ? Math.round(hours * 10) / 10 : null;
+  }
+  function healthWorkoutType(type = "") {
+    const value = String(type).toLowerCase();
+    if (value.includes("walk")) return "Marche";
+    if (value.includes("run")) return "Course";
+    if (value.includes("cycl") || value.includes("bike")) return "Vélo";
+    if (value.includes("swim")) return "Natation";
+    if (value.includes("yoga")) return "Yoga";
+    if (value.includes("strength") || value.includes("weight")) return "Musculation";
+    if (value.includes("hike")) return "Randonnée";
+    if (value.includes("pilates")) return "Pilates";
+    if (value.includes("dance")) return "Danse";
+    if (value.includes("row")) return "Rameur";
+    if (value.includes("tennis")) return "Tennis";
+    if (value.includes("badminton")) return "Badminton";
+    if (value.includes("soccer") || value.includes("football")) return "Soccer";
+    if (value.includes("hockey")) return "Hockey";
+    if (value.includes("ski")) return "Ski de fond";
+    if (value.includes("skating")) return "Patinage";
+    if (value.includes("stair")) return "Escaliers";
+    if (value.includes("hiit") || value.includes("interval")) return "HIIT";
+    return "Autre";
+  }
+  async function importAppleHealth(date = selectedDate, requestPermission = false) {
+    const Health = healthPlugin();
+    if (!Health || window.Capacitor?.getPlatform?.() !== "ios")
+      return { ok: false, message: "Apple Health est disponible seulement dans l’app iPhone." };
+    try {
+      const availability = await Health.isAvailable();
+      if (!availability?.available)
+        return { ok: false, message: "Apple Health n’est pas disponible sur cet appareil." };
+      if (requestPermission)
+        await Health.requestAuthorization({ read: ["steps", "sleep", "workouts"] });
+      const day = ensureDay(db, date),
+        health = day.healthImport,
+        range = localDayRange(date),
+        sleepRange = sleepRangeForDay(date);
+      const [stepsResult, sleepResult, workoutResult] = await Promise.all([
+        Health.queryAggregated({ dataType: "steps", ...range, bucket: "day", aggregation: "sum" }),
+        Health.readSamples({ dataType: "sleep", ...sleepRange, limit: 200, ascending: true }),
+        Health.queryWorkouts({ ...range, limit: 100, ascending: true }),
+      ]);
+      const stepTotal = Math.round((stepsResult?.samples || []).reduce((sum, sample) => sum + (Number(sample.value) || 0), 0));
+      if ((day.steps == null || health.stepsManaged) && stepTotal >= 0) {
+        day.steps = stepTotal;
+        health.stepsManaged = true;
+        db.settings.stepsTracking = true;
+      }
+      const sleepHours = mergedSleepHours(sleepResult?.samples || []);
+      if ((day.sleepHours == null || health.sleepManaged) && sleepHours != null) {
+        day.sleepHours = sleepHours;
+        health.sleepManaged = true;
+      }
+      const ignored = new Set(health.ignoredWorkoutIds || []);
+      const imported = (workoutResult?.workouts || []).map((workout) => {
+        const healthId = String(workout.id || workout.platformId || `${workout.startDate || ""}:${workout.workoutType || "workout"}`);
+        if (ignored.has(healthId)) return null;
+        const minutes = Math.max(1, Math.round((Number(workout.duration) || Math.max(0, Date.parse(workout.endDate) - Date.parse(workout.startDate)) / 1000) / 60));
+        return normalizeActivity({
+          id: `health:${healthId}`,
+          healthId,
+          source: "apple-health",
+          type: healthWorkoutType(workout.workoutType),
+          minutes,
+          intensity: "moderate",
+          actualCalories: Number(workout.calories) > 0 ? Math.round(Number(workout.calories)) : null,
+          at: workout.startDate || new Date().toISOString(),
+        });
+      }).filter(Boolean);
+      const manual = (day.activities || []).filter((activity) => activity.source !== "apple-health");
+      day.activities = [...manual, ...imported];
+      health.lastSyncAt = new Date().toISOString();
+      setDayChanged(date);
+      return { ok: true, message: "Apple Health synchronisé ✓" };
+    } catch (error) {
+      console.warn("Apple Health import failed", error);
+      return { ok: false, message: "Impossible de lire Apple Health. Vérifie les autorisations Santé." };
+    }
+  }
+
   function setMealChanged(meal) {
     saveLocal("repas");
     enqueue({ kind: "meal", id: meal.id, date: meal.date });
@@ -1780,6 +1901,7 @@
               beverages: d.beverages || [],
               steps: d.steps,
               stepsGoal: d.stepsGoal,
+              healthImport: d.healthImport || null,
               stepsTracking: db.settings.stepsTracking === true,
               currentStepsGoal: Number(db.settings.stepsGoal) || 8000,
               calorieBalanceTracking: db.settings.calorieBalanceTracking === true,
@@ -2095,6 +2217,9 @@
           .filter(Boolean);
         d.steps = Number.isFinite(Number(r.supplements?.steps)) ? Math.round(Number(r.supplements.steps)) : null;
         d.stepsGoal = Number.isFinite(Number(r.supplements?.stepsGoal)) ? Math.round(Number(r.supplements.stepsGoal)) : null;
+        d.healthImport = r.supplements?.healthImport && typeof r.supplements.healthImport === "object"
+          ? { sleepManaged: false, stepsManaged: false, ignoredWorkoutIds: [], lastSyncAt: null, ...r.supplements.healthImport }
+          : d.healthImport;
         if (typeof r.supplements?.stepsTracking === "boolean") db.settings.stepsTracking = r.supplements.stepsTracking;
         if (Number(r.supplements?.currentStepsGoal) > 0) db.settings.stepsGoal = Math.round(Number(r.supplements.currentStepsGoal));
         if (typeof r.supplements?.calorieBalanceTracking === "boolean") db.settings.calorieBalanceTracking = r.supplements.calorieBalanceTracking;
@@ -2130,6 +2255,8 @@
             .filter(Boolean);
         if (d.steps == null && Number.isFinite(Number(r.supplements?.steps))) d.steps = Math.round(Number(r.supplements.steps));
         if (d.stepsGoal == null && Number(r.supplements?.stepsGoal) > 0) d.stepsGoal = Math.round(Number(r.supplements.stepsGoal));
+        if (!d.healthImport?.lastSyncAt && r.supplements?.healthImport && typeof r.supplements.healthImport === "object")
+          d.healthImport = { sleepManaged: false, stepsManaged: false, ignoredWorkoutIds: [], lastSyncAt: null, ...r.supplements.healthImport };
         if (!(d.activities || []).length && Array.isArray(r.activities))
           d.activities = r.activities.map(normalizeActivity);
         if (!(d.supplementsTaken || []).length && Array.isArray(r.supplements?.taken))
@@ -11040,6 +11167,23 @@
         ?.insertAdjacentHTML("beforeend", profileSinceHtml);
     $("#app .hero")?.insertAdjacentHTML("beforeend", `<small class="profile-build">Version ${APP_RELEASE}</small>`);
     const waterSettingsSection = $("#waterGoal")?.closest("section.card");
+    const Health = healthPlugin();
+    if (Health && window.Capacitor?.getPlatform?.() === "ios") {
+      const healthDay = ensureDay(db, selectedDate),
+        healthStatus = healthDay.healthImport?.lastSyncAt
+          ? `Dernière synchronisation : ${new Date(healthDay.healthImport.lastSyncAt).toLocaleString("fr-CA")}`
+          : "Aucune synchronisation pour cette journée.";
+      waterSettingsSection?.insertAdjacentHTML("afterend", `<section class="card apple-health-profile-card"><h3>❤️ Apple Health</h3><p class="muted small">Importe le sommeil, les pas et les entraînements enregistrés dans Santé. Les champs restent accessibles dans Énergie et une correction manuelle n’est pas écrasée par la synchronisation suivante.</p><div class="settings-row"><div><strong>Sommeil · pas · activités</strong><small id="appleHealthStatus">${esc(healthStatus)}</small></div><button class="secondary" id="syncAppleHealth" type="button">Synchroniser</button></div><p class="muted tiny">Énergie lit seulement ces données et n’écrit rien dans Apple Health.</p></section>`);
+      $("#syncAppleHealth")?.addEventListener("click", async () => {
+        const button = $("#syncAppleHealth"), status = $("#appleHealthStatus");
+        button.disabled = true;
+        if (status) status.textContent = "Connexion à Apple Health…";
+        const result = await importAppleHealth(selectedDate, true);
+        if (status) status.textContent = result.message;
+        button.disabled = false;
+        if (result.ok) render();
+      });
+    }
     const targetGaugeEnabled = db.settings.calorieTargetGauge === true, targetMode = calorieTargetMode(), fixedTarget = fixedCalorieTarget();
     waterSettingsSection?.insertAdjacentHTML("afterend", `<section class="card calorie-balance-profile-card"><h3>⚖️ Balance énergétique</h3><p class="muted small">Optionnel · utile surtout pour suivre une tendance de déficit ou de surplus calorique.</p><label class="toggle-row"><span><strong>Afficher mon déficit calorique estimé</strong><small>Ajoute un graphique sous « Calories par jour » dans Observations</small></span><input id="settingCalorieBalanceTracking" type="checkbox" ${db.settings.calorieBalanceTracking === true ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher ma cible calorique</strong><small>Transforme « Calories de la journée » en jauge visuelle et l’affiche aussi pendant la saisie des repas</small></span><input id="settingCalorieTargetGauge" type="checkbox" ${targetGaugeEnabled ? "checked" : ""}></label><div class="settings-row setting-dependent calorie-target-method-setting ${targetGaugeEnabled ? "" : "is-disabled"}" id="calorieTargetModeSetting"><span class="calorie-target-method-heading"><strong>Comment veux-tu définir ta cible?</strong><small>Choisis simplement l’option qui te convient. Tu pourras la changer en tout temps.</small></span><div class="calorie-target-method-buttons" role="group" aria-label="Méthode de cible calorique"><button type="button" class="calorie-target-method-button ${targetMode === "estimated" ? "is-selected" : ""}" data-calorie-target-mode="estimated" aria-pressed="${targetMode === "estimated" ? "true" : "false"}" ${targetGaugeEnabled ? "" : "disabled"}><span class="calorie-target-method-icon" aria-hidden="true">⚡</span><span><b>Calcul Énergie</b><small>Selon ton profil, tes activités et le déficit choisi.</small></span></button><button type="button" class="calorie-target-method-button ${targetMode === "fixed" ? "is-selected" : ""}" data-calorie-target-mode="fixed" aria-pressed="${targetMode === "fixed" ? "true" : "false"}" ${targetGaugeEnabled ? "" : "disabled"}><span class="calorie-target-method-icon" aria-hidden="true">🎯</span><span><b>Cible fixe</b><small>Une valeur précise, par exemple celle donnée par ta nutritionniste.</small></span></button></div></div><label class="settings-row setting-dependent ${targetGaugeEnabled && targetMode === "estimated" ? "" : "is-disabled"}" id="calorieDeficitTargetSetting"><span><strong>Déficit quotidien visé</strong><small>Utilisé seulement lorsque la cible est calculée par Énergie</small></span><select id="settingCalorieDeficitTarget" ${targetGaugeEnabled && targetMode === "estimated" ? "" : "disabled"}><option value="250" ${calorieDeficitTarget() === 250 ? "selected" : ""}>250 kcal</option><option value="400" ${calorieDeficitTarget() === 400 ? "selected" : ""}>400 kcal</option><option value="500" ${calorieDeficitTarget() === 500 ? "selected" : ""}>500 kcal</option></select></label><div class="settings-row setting-dependent ${targetGaugeEnabled && targetMode === "fixed" ? "" : "is-disabled"}" id="fixedCalorieTargetSetting"><div><strong>Cible calorique quotidienne</strong><p class="muted tiny">Ex. : valeur recommandée par ta nutritionniste</p></div><label><input id="settingFixedCalorieTarget" type="number" min="100" max="10000" step="10" inputmode="numeric" placeholder="1750" value="${fixedTarget || ""}" ${targetGaugeEnabled && targetMode === "fixed" ? "" : "disabled"}><span>kcal</span></label></div><div class="calorie-balance-formula"><strong>Comment ça fonctionne</strong><p><b>Calculée par Énergie :</b> dépense ≈ métabolisme de repos (Mifflin-St Jeor) × 1,2 + activités; le 🎯 représente le déficit choisi.</p><p><b>Cible fixe :</b> la jauge utilise directement la valeur saisie et ne change pas avec les activités.</p><small>Le graphique « Déficit / surplus calorique » dans Observations conserve toujours son calcul actuel, peu importe la méthode choisie pour la jauge.</small></div></section>`);
     $(".calorie-balance-profile-card")?.insertAdjacentHTML("afterend", `<section class="card steps-profile-card"><h3>👟 Suivi des pas</h3><p class="muted small">Affiche les pas dans le Journal et leur progression dans Observations.</p><label class="toggle-row"><span><strong>Suivre mes pas</strong><small>Tu peux masquer ce suivi sans supprimer ton historique</small></span><input id="settingStepsTracking" type="checkbox" ${db.settings.stepsTracking === true ? "checked" : ""}></label><div id="stepsGoalSetting" class="settings-row ${db.settings.stepsTracking === true ? "" : "is-disabled"}"><div><strong>Objectif quotidien</strong><p class="muted tiny">Utilisé pour les nouvelles journées seulement</p></div><label><input id="stepsGoal" type="number" min="100" max="100000" step="100" inputmode="numeric" value="${Number(db.settings.stepsGoal) || 8000}" ${db.settings.stepsTracking === true ? "" : "disabled"}><span>pas</span></label></div></section>`);
@@ -12301,6 +12445,12 @@
     $$("[data-delete-activity]").forEach(
       (b) =>
         (b.onclick = () => {
+          const removed = d.activities.find((a) => a.id === b.dataset.deleteActivity);
+          if (removed?.source === "apple-health" && removed.healthId) {
+            const ignored = new Set(d.healthImport?.ignoredWorkoutIds || []);
+            ignored.add(removed.healthId);
+            d.healthImport.ignoredWorkoutIds = [...ignored];
+          }
           d.activities = d.activities.filter(
             (a) => a.id !== b.dataset.deleteActivity,
           );
@@ -13065,6 +13215,7 @@
     if (hours !== null && (hours < 0 || hours > 24))
       return alert("Entre une durée de sommeil entre 0 et 24 heures.");
     d.sleepHours = hours;
+    d.healthImport.sleepManaged = false;
     d.sleepTags = $$("[data-sleep-tag]:checked").map((input) => input.value);
     d.sleepComment = $("#sleepComment").value.trim();
     setDayChanged(selectedDate);
@@ -13079,6 +13230,7 @@
       return alert("Entre un nombre de pas entre 0 et 200 000.");
     const day = ensureDay(db, selectedDate);
     day.steps = Math.round(value);
+    day.healthImport.stepsManaged = false;
     if (!(Number(day.stepsGoal) > 0))
       day.stepsGoal = Math.max(100, Number(db.settings?.stepsGoal) || 8000);
     setDayChanged(selectedDate);
