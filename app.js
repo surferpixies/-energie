@@ -1782,6 +1782,23 @@
     }
   }
 
+  let appleHealthAutoSyncInFlight = false;
+  async function autoSyncAppleHealth() {
+    if (appleHealthAutoSyncInFlight || db.settings?.demoMode || professionalClientReadOnly()) return;
+    if (!session || !healthPlugin() || window.Capacitor?.getPlatform?.() !== "ios") return;
+    appleHealthAutoSyncInFlight = true;
+    try {
+      const result = await importAppleHealth(todayKey(), false);
+      if (result.ok && selectedDate === todayKey() && currentView === "journal") render();
+    } finally {
+      appleHealthAutoSyncInFlight = false;
+    }
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") autoSyncAppleHealth();
+  });
+  window.addEventListener("focus", () => autoSyncAppleHealth());
+
   function setMealChanged(meal) {
     saveLocal("repas");
     enqueue({ kind: "meal", id: meal.id, date: meal.date });
