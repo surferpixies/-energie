@@ -1760,7 +1760,7 @@
       }
       const stepSamples = stepsResult?.samples || stepsResult?.aggregatedData || [];
       const stepTotal = Math.round(stepSamples.reduce((sum, sample) => sum + (Number(sample.value) || 0), 0));
-      if ((day.steps == null || health.stepsManaged) && stepTotal >= 0) {
+      if ((requestPermission || day.steps == null || health.stepsManaged) && stepTotal >= 0) {
         day.steps = stepTotal;
         health.stepsManaged = true;
         db.settings.stepsTracking = true;
