@@ -6966,13 +6966,108 @@
         else showMealEnergyResponse(meal);
       }, 120);
   }
+  function nativeLocalNotifications() {
+    return window.Capacitor?.Plugins?.LocalNotifications || null;
+  }
+  function nativeFeelingNotificationId(mealId = "") {
+    let hash = 0;
+    for (let i = 0; i < mealId.length; i += 1)
+      hash = (hash * 31 + mealId.charCodeAt(i)) >>> 0;
+    return 100000000 + (hash % 1900000000);
+  }
+  let nativeFeelingNotificationListenerReady = false;
+  async function initNativeFeelingNotifications() {
+    const plugin = nativeLocalNotifications();
+    if (!plugin || nativeFeelingNotificationListenerReady) return;
+    nativeFeelingNotificationListenerReady = true;
+    try {
+      await plugin.addListener("localNotificationActionPerformed", (action) => {
+        const extra = action?.notification?.extra || {};
+        if (extra.energieKind !== "feeling" || !extra.mealId) return;
+        const meal = allMeals().find((item) => item.id === extra.mealId);
+        if (!meal) return;
+        selectedDate = meal.date;
+        currentView = "today";
+        render();
+        setTimeout(() => openFeeling(meal.id), 120);
+      });
+    } catch (error) {
+      nativeFeelingNotificationListenerReady = false;
+      console.warn("Notifications iOS", error);
+    }
+  }
+  async function nativeFeelingPermission(request = false) {
+    const plugin = nativeLocalNotifications();
+    if (!plugin) return null;
+    try {
+      const status = request
+        ? await plugin.requestPermissions()
+        : await plugin.checkPermissions();
+      return status?.display === "granted";
+    } catch (error) {
+      console.warn("Permission notifications iOS", error);
+      return false;
+    }
+  }
+  async function syncNativeFeelingNotifications() {
+    const plugin = nativeLocalNotifications();
+    if (!plugin) return;
+    await initNativeFeelingNotifications();
+    try {
+      const pending = await plugin.getPending();
+      const ours = (pending?.notifications || []).filter(
+        (item) => item?.extra?.energieKind === "feeling",
+      );
+      if (ours.length)
+        await plugin.cancel({
+          notifications: ours.map((item) => ({ id: item.id })),
+        });
+      if (db.settings.feelingReminders === false) return;
+      if (!(await nativeFeelingPermission(false))) return;
+      const enabledTypes =
+        db.settings.feelingMealTypes || ["Déjeuner", "Dîner", "Souper"];
+      const now = new Date();
+      const notifications = allMeals()
+        .filter(
+          (meal) =>
+            enabledTypes.includes(meal.type) &&
+            !meal.feeling &&
+            feelingDueAt(meal) > now,
+        )
+        .map((meal) => ({
+          id: nativeFeelingNotificationId(meal.id),
+          title: `🍏⚡ ${t("Ressenti")}`,
+          body: t(`Comment te sens-tu après ton ${meal.type.toLowerCase()} ?`),
+          schedule: { at: feelingDueAt(meal) },
+          extra: {
+            energieKind: "feeling",
+            mealId: meal.id,
+            mealDate: meal.date,
+          },
+        }));
+      if (notifications.length) await plugin.schedule({ notifications });
+    } catch (error) {
+      console.warn("Planification notifications iOS", error);
+    }
+  }
   async function requestFeelingNotifications() {
+    const nativePlugin = nativeLocalNotifications();
+    if (nativePlugin) {
+      await initNativeFeelingNotifications();
+      const granted = await nativeFeelingPermission(true);
+      if (granted) await syncNativeFeelingNotifications();
+      return granted;
+    }
     if (!("Notification" in window)) return false;
     if (Notification.permission === "granted") return true;
     if (Notification.permission === "denied") return false;
     return (await Notification.requestPermission()) === "granted";
   }
   function notifyDueFeelings() {
+    // Dans l'app native iOS, les rappels sont programmés par le système et
+    // fonctionnent même lorsque l'app est fermée. Le mécanisme Web historique
+    // reste inchangé pour Safari et les autres navigateurs.
+    if (nativeLocalNotifications()) return;
     if (
       db.settings.feelingReminders === false ||
       !("Notification" in window) ||
@@ -6994,6 +7089,10 @@
   }
   function scheduleFeelingChecks() {
     clearTimeout(notificationTimer);
+    if (nativeLocalNotifications()) {
+      void syncNativeFeelingNotifications();
+      return;
+    }
     notifyDueFeelings();
     if (db.settings.feelingReminders === false) return;
     const upcoming = allMeals()
@@ -11261,7 +11360,9 @@
       alert(
         ok
           ? "Notifications autorisées."
-          : "Les notifications ne sont pas autorisées dans ce navigateur.",
+          : nativeLocalNotifications()
+            ? "Les notifications ne sont pas autorisées sur cet iPhone. Tu peux les réactiver dans Réglages > Notifications > Énergie."
+            : "Les notifications ne sont pas autorisées dans ce navigateur.",
       );
     });
     $("#openEnergyGuide")?.addEventListener("click", openEnergyGuide);
