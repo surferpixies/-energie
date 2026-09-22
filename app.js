@@ -12,7 +12,7 @@
   const POSITIVE_FEELINGS = [
     { id: "positive_wellbeing", emoji: "🙂", label: "Je me sens bien" },
     { id: "positive_lightness", emoji: "🪶", label: "Sensation de légèreté" },
-    { id: "positive_satiety", emoji: "🥗", label: "Rassasié" },
+    { id: "positive_satiety", emoji: "🥗", label: "Rassasié", afterOnly: true },
     { id: "positive_energy", emoji: "⚡", label: "Énergique" },
     { id: "positive_calm", emoji: "🧘", label: "Calme ou détendu" },
   ].map((tag) => ({ ...tag, group: "positive", category: "positive", minScore: 0 }));
@@ -9652,9 +9652,11 @@
         openLess: !!saved.openLess,
         goodOffset: Math.max(0, Number(saved.goodOffset) || 0),
         lessOffset: Math.max(0, Number(saved.lessOffset) || 0),
+        fromDate: /^\d{4}-\d{2}-\d{2}$/.test(saved.fromDate || "") ? saved.fromDate : "",
+        toDate: /^\d{4}-\d{2}-\d{2}$/.test(saved.toDate || "") ? saved.toDate : "",
       };
     } catch (_) {
-      return { openGood: false, openLess: false, goodOffset: 0, lessOffset: 0 };
+      return { openGood: false, openLess: false, goodOffset: 0, lessOffset: 0, fromDate: "", toDate: "" };
     }
   }
   function saveObservationExplorerState(state) {
@@ -9739,8 +9741,10 @@
     return factors;
   }
   function buildObservationExplorerResults(mode) {
+    const range = observationExplorerState();
+    const rangeEnd = range.toDate && range.toDate < selectedDate ? range.toDate : selectedDate;
     const rows = Object.entries(db.days || {})
-      .filter(([date, day]) => date <= selectedDate && day)
+      .filter(([date, day]) => date <= rangeEnd && (!range.fromDate || date >= range.fromDate) && day)
       .sort(([a], [b]) => a.localeCompare(b))
       .slice(-180)
       .map(([date, day]) => ({ date, day, outcome: observationExplorerDayOutcome(day), factors: observationExplorerFactors(date, day) }))
@@ -9830,8 +9834,53 @@
   }
   function observationExplorerHtml() {
     const state = observationExplorerState();
-    return `<section class="card observation-explorer-card"><div class="observation-explorer-heading"><div><p class="eyebrow">Explorer mon historique</p><h2>🔎 Je remarque que…</h2></div><span class="observation-explorer-badge">Recherche libre</span></div><p class="muted">Ouvre une question. Énergie compare les repas, le sommeil, l’hydratation, l’activité, les pas et leurs combinaisons pour faire ressortir les pistes les plus pertinentes.</p><div class="observation-explorer-panels">${observationExplorerPanelHtml("good", state.openGood, state.goodOffset)}${observationExplorerPanelHtml("less", state.openLess, state.lessOffset)}</div></section>`;
+    return `<section class="card observation-explorer-card"><div class="observation-explorer-heading"><div><p class="eyebrow">Explorer mon historique</p><h2>🔎 Je remarque que…</h2></div><span class="observation-explorer-badge">Recherche libre</span></div><p class="muted">Ouvre une question. Énergie compare les repas, le sommeil, l’hydratation, l’activité, les pas et leurs combinaisons pour faire ressortir les pistes les plus pertinentes.</p><div class="personal-weight-grid observation-explorer-range"><label>Du<input type="date" data-explorer-date="from" value="${esc(state.fromDate || "")}" max="${esc(state.toDate || selectedDate)}"></label><label>Au<input type="date" data-explorer-date="to" value="${esc(state.toDate || "")}" max="${selectedDate}"></label></div><p class="muted tiny">Laisse une date vide pour inclure tout l’historique disponible (maximum 180 jours).</p><div class="observation-explorer-panels">${observationExplorerPanelHtml("good", state.openGood, state.goodOffset)}${observationExplorerPanelHtml("less", state.openLess, state.lessOffset)}</div></section>`;
   }
+
+  function weightObservationAnalysis(direction) {
+    const state = observationExplorerState(), profile = personalProfile(), unit = profile.weight?.unit || "kg";
+    const end = state.toDate && state.toDate < selectedDate ? state.toDate : selectedDate;
+    const weights = Object.entries(db.days || {}).filter(([date, day]) =>
+      date <= end && (!state.fromDate || date >= state.fromDate) && Metrics.weightRecord(day?.weightMeasurement)?.kg != null
+    ).sort(([a],[b]) => a.localeCompare(b)).map(([date, day]) => ({date, kg: Metrics.weightRecord(day.weightMeasurement).kg}));
+    if (weights.length < 2) return {weights, period:null, unit};
+    let best = null;
+    for (let i=0;i<weights.length-1;i++) for(let j=i+1;j<weights.length;j++) {
+      const days = Math.max(1, Math.round((Metrics.dateTime(weights[j].date)-Metrics.dateTime(weights[i].date))/86400000));
+      if (days < 3) continue;
+      const delta = weights[j].kg-weights[i].kg;
+      if ((direction==="down" && delta >= -0.3) || (direction==="up" && delta <= 0.3)) continue;
+      const score = Math.abs(delta) * Math.log2(days+2);
+      if (!best || score > best.score) best={start:weights[i],end:weights[j],delta,days,score};
+    }
+    if (!best) return {weights, period:null, unit};
+    const rows = Object.entries(db.days || {}).filter(([date])=>date>=best.start.date && date<=best.end.date);
+    const vals = (fn)=>rows.map(([,d])=>fn(d)).filter(Number.isFinite);
+    const calories=vals(d=>(d.meals||[]).reduce((s,m)=>s+(Number(m?.nutrition?.calories ?? m?.nutrition?.estimatedCalories)||0),0)).filter(n=>n>0);
+    const steps=vals(d=>d.steps==null?NaN:Number(d.steps));
+    const sleep=vals(d=>d.sleepHours==null?NaN:Number(d.sleepHours));
+    const active=vals(d=>(d.activities||[]).reduce((s,a)=>s+(Number(a.minutes)||0),0));
+    const avg=a=>a.length?Math.round(a.reduce((s,n)=>s+n,0)/a.length*10)/10:null;
+    return {weights,period:best,unit,stats:{calories:avg(calories),steps:avg(steps),sleep:avg(sleep),active:avg(active),days:rows.length}};
+  }
+  function weightObservationHtml() {
+    if (personalProfile().weight?.mode !== "provided") return "";
+    return `<section class="card weight-observation-card"><p class="eyebrow">Explorer mon historique</p><h2>⚖️ Explorer les changements de mon poids</h2><p class="muted">Énergie peut rechercher ce qui était différent pendant une période où ton poids a changé. Ces associations ne prouvent pas une cause.</p><div class="quick-actions"><button type="button" class="secondary" data-weight-direction="down">↘ Mon poids a diminué</button><button type="button" class="secondary" data-weight-direction="up">↗ Mon poids a augmenté</button></div><div data-weight-observation-result></div></section>`;
+  }
+  function renderWeightObservationResult(direction) {
+    const host=$("[data-weight-observation-result]"); if(!host) return;
+    const a=weightObservationAnalysis(direction);
+    if(!a.period){host.innerHTML=`<div class="observation-explorer-empty"><span>🌱</span><strong>Pas encore de période assez nette</strong><p>Il faut au moins deux mesures espacées de quelques jours et une variation d’au moins 0,3 kg.</p></div>`;return;}
+    const p=a.period, s=a.stats, display=n=>Metrics.displayWeight(n,a.unit).toLocaleString("fr-CA");
+    const stat=(icon,label,value)=>value==null?"":`<div class="stat-card compact-stat-card"><span>${icon}</span><strong>${label}</strong><div class="metric metric-small">${value}</div></div>`;
+    const series=a.weights.filter(w=>w.date>=p.start.date&&w.date<=p.end.date).map(w=>`<li><strong>${esc(formatCalendarDate(w.date))}</strong> — ${display(w.kg)} ${a.unit}</li>`).join("");
+    host.innerHTML=`<div class="observation-explorer-panel-body"><h3>${esc(formatCalendarDate(p.start.date))} → ${esc(formatCalendarDate(p.end.date))}</h3><p><strong>${direction==="down"?"Diminution":"Augmentation"} de ${display(Math.abs(p.delta))} ${a.unit}</strong> sur ${p.days} jours.</p><div class="grid">${stat("🍽️","Calories estimées moyennes",s.calories!=null?Math.round(s.calories)+" kcal/j":"")}${stat("👟","Pas moyens",s.steps!=null?Math.round(s.steps).toLocaleString("fr-CA")+"/j":"")}${stat("😴","Sommeil moyen",s.sleep!=null?s.sleep.toLocaleString("fr-CA")+" h":"")}${stat("🚶","Activité moyenne",s.active!=null?Math.round(s.active)+" min/j":"")}</div><details><summary>Voir les mesures de poids de cette période</summary><ul>${series}</ul></details><p class="muted tiny">Énergie décrit ce qui accompagne la variation observée dans ton journal. Le poids peut varier pour plusieurs raisons; ces données ne permettent pas d’attribuer une cause.</p></div>`;
+  }
+  function bindWeightObservation() {
+    const card=$(".weight-observation-card"); if(!card) return;
+    card.onclick=(event)=>{const b=event.target.closest("[data-weight-direction]");if(b) renderWeightObservationResult(b.dataset.weightDirection);};
+  }
+
   function refreshObservationExplorerPanel(mode) {
     const state = observationExplorerState(),
       open = mode === "good" ? state.openGood : state.openLess,
@@ -9847,6 +9896,21 @@
   function bindObservationExplorer() {
     const card = $(".observation-explorer-card");
     if (!card) return;
+    card.onchange = (event) => {
+      const input = event.target.closest("[data-explorer-date]");
+      if (!input) return;
+      const state = observationExplorerState();
+      if (input.dataset.explorerDate === "from") state.fromDate = input.value || "";
+      if (input.dataset.explorerDate === "to") state.toDate = input.value || "";
+      if (state.fromDate && state.toDate && state.fromDate > state.toDate) {
+        if (input.dataset.explorerDate === "from") state.toDate = state.fromDate;
+        else state.fromDate = state.toDate;
+      }
+      state.goodOffset = 0; state.lessOffset = 0;
+      saveObservationExplorerState(state);
+      observationExplorerResultsCache.clear();
+      renderInsights();
+    };
     card.onclick = (event) => {
       const why = event.target.closest("[data-explorer-why]");
       if (why && card.contains(why)) {
@@ -10034,6 +10098,7 @@
       `${analysisDateNavigatorHtml()}<section class="hero"><p class="eyebrow">Tableau intelligent</p><h2>Ce qu’Énergie apprend sur toi</h2><p>Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer leurs causes.</p></section>${previewBanner}${discoverySectionHtml(discoveryReport, negativeFeelings)}<div class="grid dashboard-overview"><section class="card stat-card compact-stat-card compact-row-card dashboard-hero-card"><div class="stat-card-heading"><span>🍎</span><div><h3>Tu utilises Énergie depuis</h3><p class="muted small">Date de départ du journal</p></div></div><div class="metric metric-small">${esc(story.since)}</div></section><section class="card stat-card dashboard-mini-card"><span>⭐</span><h3>Point fort</h3><p>${esc(story.strength)}</p></section><section class="card stat-card dashboard-mini-card"><span>💡</span><h3>Habitude observée</h3><p>${esc(story.habit)}</p></section><section class="card stat-card dashboard-mini-card"><span>🎯</span><h3>Suggestion principale</h3><p>${esc(story.suggestion)}</p></section></div>${professionalDiscussionHtml(meals)}<div class="section-title"><h2>🧠 Autres observations</h2><span class="muted small">${insights.length} carte${insights.length > 1 ? "s" : ""}</span></div><div class="insight-grid">${insights.length ? insights.map(insightHtml).join("") : `<section class="card empty wide"><div class="food-art">🧠</div><p>${db.settings.insightsEnabled ? "Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles." : "Les observations sont désactivées dans les paramètres."}</p></section>`}</div>${demoDiscoveryHtml()}${usePreview && !db.settings.demoMode ? '<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>' : ""}`;
     $("#app .hero")?.insertAdjacentHTML("afterend", personalTrendsHtml());
     $("#app .hero")?.insertAdjacentHTML("afterend", observationExplorerHtml());
+    $(".observation-explorer-card")?.insertAdjacentHTML("afterend", weightObservationHtml());
     const personalTrends = $("#app .personal-trends");
     (personalTrends || $("#app .hero"))?.insertAdjacentHTML("afterend", stepsObservationHtml());
     const explorerCard = $(".observation-explorer-card"),
@@ -10103,6 +10168,7 @@
     );
     bindAnalysisDateNavigator();
     bindObservationExplorer();
+    bindWeightObservation();
     bindLazyAllObservations();
     $("#openEnergyPortrait")?.addEventListener("click", openEnergyPortrait);
     decorateSupplementIcons();
