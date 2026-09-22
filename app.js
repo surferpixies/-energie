@@ -10801,11 +10801,45 @@
     const balanceAverage = knownBalance.length ? Math.round(knownBalance.reduce((n, p) => n + p.value, 0) / knownBalance.length) : null;
     const balanceReady = energyBalanceProfileReady(profile);
     const balanceCard = balanceEnabled ? `<article class="card personal-trend-card energy-balance-trend"><div class="metrics-heading"><h3>Déficit / surplus calorique</h3><strong>${balanceAverage == null ? "—" : `≈ ${balanceAverage > 0 ? "+" : ""}${balanceAverage.toLocaleString("fr-CA")} kcal`}</strong></div><p class="muted tiny">${!balanceReady ? "Complète l’âge, le sexe, la taille et au moins une mesure de poids dans Profil." : balanceAverage == null ? "Aucune journée calculable sur cette période" : `Moyenne estimée sur ${knownBalance.length} jour${knownBalance.length > 1 ? "s" : ""}`}</p>${balanceReady ? Metrics.chart(balance, {...data, kind: "balance", unit: "kcal", id: "energyBalanceTrend"}) : '<p class="metrics-empty">Données personnelles insuffisantes pour estimer la dépense.</p>'}<p class="metrics-note">Valeur négative = déficit estimé; valeur positive = surplus estimé. Dépense ≈ métabolisme de repos (Mifflin-St Jeor) × 1,2 + activités enregistrées. Les journées sans Déjeuner, Dîner et Souper complets, ou avec une estimation calorique partielle, sont ignorées. Il s’agit d’un ordre de grandeur, pas d’une mesure exacte.</p></article>` : "";
-    return `<section class="personal-trends" aria-labelledby="personalTrendsTitle"><div class="section-title"><h2 id="personalTrendsTitle">Mes tendances chiffrées</h2><span class="muted small">30 jours · ${db.settings.demoMode ? "données du profil fictif" : "mes données uniquement"}</span></div><div class="personal-trends-grid"><article class="card personal-trend-card"><div class="metrics-heading"><h3>Poids</h3><strong>${declined ? "Non renseigné" : lastWeight ? `${lastWeight.value.toLocaleString("fr-CA")} ${unit}` : "—"}</strong></div><p class="muted tiny">${!declined && lastWeight ? `Dernière mesure de la période · ${esc(formatCalendarDate(lastWeight.date))}` : "Mesures enregistrées dans le Profil"}</p>${declined ? '<p class="metrics-empty">Tu as choisi de ne pas renseigner ton poids. Tu peux modifier ce choix dans le Profil.</p>' : Metrics.chart(data.weights, {...data, kind: "weight", unit, id: "weightTrend"})}<p class="metrics-note">${declined ? "Ton choix est respecté." : data.weights.length === 1 ? "Une première mesure : il en faut au moins deux pour voir une évolution." : "Chaque point est une mesure réelle. Aucun poids n’est inventé pour les jours sans saisie."}</p></article><article class="card personal-trend-card"><div class="metrics-heading"><h3>Calories par jour</h3><strong>${average == null ? "—" : `≈ ${average.toLocaleString("fr-CA")} kcal`}</strong></div><p class="muted tiny">${average == null ? "Repas et collations enregistrés" : `Moyenne sur ${known.length} jour${known.length > 1 ? "s" : ""} avec estimation`}</p>${Metrics.chart(data.calories, {...data, kind: "calories", unit: "kcal", id: "calorieTrend"})}<p class="metrics-note">Estimations des repas saisis, pas un objectif. Les jours sans estimation restent vides; les barres en pointillé indiquent une estimation partielle. Un journal incomplet peut sous-estimer le total.</p></article>${balanceCard}</div></section>`;
+    return `<section class="personal-trends" aria-labelledby="personalTrendsTitle"><div class="section-title"><h2 id="personalTrendsTitle">Mes tendances chiffrées</h2><span class="muted small">30 jours · ${db.settings.demoMode ? "données du profil fictif" : "mes données uniquement"}</span></div><div class="personal-trends-grid"><article class="card personal-trend-card"><div class="metrics-heading"><h3>Poids</h3><strong>${declined ? "Non renseigné" : lastWeight ? `${lastWeight.value.toLocaleString("fr-CA")} ${unit}` : "—"}</strong></div><p class="muted tiny">${!declined && lastWeight ? `Dernière mesure de la période · ${esc(formatCalendarDate(lastWeight.date))}` : "Mesures enregistrées dans le Profil"}</p>${declined ? '<p class="metrics-empty">Tu as choisi de ne pas renseigner ton poids. Tu peux modifier ce choix dans le Profil.</p>' : Metrics.chart(data.weights, {...data, kind: "weight", unit, id: "weightTrend"})}${!declined && data.weights.length ? '<button type="button" class="secondary professional-trend-expand weight-trend-expand" data-open-weight-fullscreen><span>↗ Agrandir le graphique</span><small>Tournez votre téléphone horizontalement pour une meilleure vue</small></button>' : ""}<p class="metrics-note">${declined ? "Ton choix est respecté." : data.weights.length === 1 ? "Une première mesure : il en faut au moins deux pour voir une évolution." : "Chaque point est une mesure réelle. Aucun poids n’est inventé pour les jours sans saisie."}</p></article><article class="card personal-trend-card"><div class="metrics-heading"><h3>Calories par jour</h3><strong>${average == null ? "—" : `≈ ${average.toLocaleString("fr-CA")} kcal`}</strong></div><p class="muted tiny">${average == null ? "Repas et collations enregistrés" : `Moyenne sur ${known.length} jour${known.length > 1 ? "s" : ""} avec estimation`}</p>${Metrics.chart(data.calories, {...data, kind: "calories", unit: "kcal", id: "calorieTrend"})}<p class="metrics-note">Estimations des repas saisis, pas un objectif. Les jours sans estimation restent vides; les barres en pointillé indiquent une estimation partielle. Un journal incomplet peut sous-estimer le total.</p></article>${balanceCard}</div></section>`;
   }
 
 
+  function allWeightTrendData() {
+    const profile = personalProfile(), unit = profile.weight?.unit || "kg";
+    const points = Object.entries(db.days || {})
+      .filter(([date, day]) => date <= todayKey() && Metrics.weightRecord(day?.weightMeasurement)?.kg != null)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, day]) => ({ date, value: Metrics.displayWeight(Metrics.weightRecord(day.weightMeasurement).kg, unit) }));
+    if (!points.length) return { points, unit, start: todayKey(), end: todayKey() };
+    return { points, unit, start: points[0].date, end: points.at(-1).date };
+  }
+  function openWeightTrendFullscreen() {
+    const existing = $("#weightTrendDialog"); if (existing) existing.remove();
+    const data = allWeightTrendData(); if (!data.points.length) return;
+    const dialog = document.createElement("dialog");
+    dialog.id = "weightTrendDialog";
+    dialog.className = "professional-trend-dialog weight-trend-dialog";
+    dialog.innerHTML = `<div class="professional-trend-dialog-head"><div><small>Graphique agrandi · Historique disponible</small><strong>Évolution du poids</strong></div><button type="button" class="secondary" data-close-weight-fullscreen>Revenir aux observations ✕</button></div><div class="professional-trend-fullscreen-frame weight-trend-fullscreen-frame"><div class="weight-trend-scroll">${Metrics.chart(data.points,{start:data.start,end:data.end,kind:"weight",unit:data.unit,id:"weightTrendFullscreen"})}</div></div>`;
+    document.body.appendChild(dialog);
+    dialog.querySelector(".metrics-values")?.remove();
+    dialog.querySelector("[data-close-weight-fullscreen]")?.addEventListener("click", () => dialog.close());
+    dialog.addEventListener("close", () => dialog.remove(), { once:true });
+    dialog.showModal();
+    requestAnimationFrame(() => {
+      const scroller = dialog.querySelector(".weight-trend-fullscreen-frame");
+      if (scroller) scroller.scrollLeft = scroller.scrollWidth;
+    });
+  }
+
   let keepPhysiologicalPanelOpen = false;
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-open-weight-fullscreen]");
+    if (!button) return;
+    event.preventDefault();
+    openWeightTrendFullscreen();
+  });
+
   function physiologicalContextHtml() {
     applyPersonalPhysiology();
     const allowed = new Set(["none", "menstrual", "pregnancy", "menopause"]),
