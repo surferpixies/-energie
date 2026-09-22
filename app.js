@@ -9834,7 +9834,7 @@
   }
   function observationExplorerHtml() {
     const state = observationExplorerState();
-    return `<section class="card observation-explorer-card"><div class="observation-explorer-heading"><div><p class="eyebrow">Explorer mon historique</p><h2>🔎 Je remarque que…</h2></div><span class="observation-explorer-badge">Recherche libre</span></div><p class="muted">Ouvre une question. Énergie compare les repas, le sommeil, l’hydratation, l’activité, les pas et leurs combinaisons pour faire ressortir les pistes les plus pertinentes.</p><div class="personal-weight-grid observation-explorer-range"><label>Du<input type="date" data-explorer-date="from" value="${esc(state.fromDate || "")}" max="${esc(state.toDate || selectedDate)}"></label><label>Au<input type="date" data-explorer-date="to" value="${esc(state.toDate || "")}" max="${selectedDate}"></label></div><p class="muted tiny">Laisse une date vide pour inclure tout l’historique disponible (maximum 180 jours).</p><div class="observation-explorer-panels">${observationExplorerPanelHtml("good", state.openGood, state.goodOffset)}${observationExplorerPanelHtml("less", state.openLess, state.lessOffset)}</div></section>`;
+    return `<section class="card observation-explorer-card"><div class="observation-explorer-heading"><div><p class="eyebrow">Explorer mon historique</p><h2>🔎 Je remarque que…</h2></div><span class="observation-explorer-badge">Recherche libre</span></div><p class="muted">Ouvre une question. Énergie compare les repas, le sommeil, l’hydratation, l’activité, les pas et leurs combinaisons pour faire ressortir les pistes les plus pertinentes.</p><div class="personal-weight-grid observation-explorer-range"><label>Du<span class="observation-date-input"><input type="date" data-explorer-date="from" value="${esc(state.fromDate || "")}" max="${esc(state.toDate || selectedDate)}"><button type="button" class="secondary small" data-explorer-clear-date="from" aria-label="Effacer la date de début">Effacer</button></span></label><label>Au<span class="observation-date-input"><input type="date" data-explorer-date="to" value="${esc(state.toDate || "")}" min="${esc(state.fromDate || "")}" max="${selectedDate}"><button type="button" class="secondary small" data-explorer-clear-date="to" aria-label="Effacer la date de fin">Effacer</button></span></label></div><p class="muted tiny">Laisse une date vide pour inclure tout l’historique disponible (maximum 180 jours).</p><div class="observation-explorer-panels">${observationExplorerPanelHtml("good", state.openGood, state.goodOffset)}${observationExplorerPanelHtml("less", state.openLess, state.lessOffset)}</div></section>`;
   }
 
   function weightObservationAnalysis(direction) {
@@ -9909,8 +9909,22 @@
       state.goodOffset = 0; state.lessOffset = 0;
       saveObservationExplorerState(state);
       observationExplorerResultsCache.clear();
-      renderInsights();
+      ["good", "less"].forEach((mode) => refreshObservationExplorerPanel(mode));
+      const from = card.querySelector('[data-explorer-date="from"]');
+      const to = card.querySelector('[data-explorer-date="to"]');
+      if (from) { from.value = state.fromDate || ""; from.max = state.toDate || selectedDate; }
+      if (to) { to.value = state.toDate || ""; to.min = state.fromDate || ""; }
     };
+    card.querySelectorAll("[data-explorer-clear-date]").forEach((button) => {
+      button.onclick = () => {
+        const state = observationExplorerState(), key = button.dataset.explorerClearDate === "from" ? "fromDate" : "toDate";
+        state[key] = ""; state.goodOffset = 0; state.lessOffset = 0;
+        saveObservationExplorerState(state); observationExplorerResultsCache.clear();
+        const input = card.querySelector(`[data-explorer-date="${button.dataset.explorerClearDate}"]`);
+        if (input) input.value = "";
+        ["good", "less"].forEach((mode) => refreshObservationExplorerPanel(mode));
+      };
+    });
     card.onclick = (event) => {
       const why = event.target.closest("[data-explorer-why]");
       if (why && card.contains(why)) {
