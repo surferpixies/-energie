@@ -1510,3 +1510,12 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   .consultation-occurrence-head { align-items: center; }
   .consultation-occurrence-context { grid-template-columns: 1fr 1fr; }
 }
+
+
+/* Observation explorer — compact date range */
+.observation-explorer-range{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:10px;align-items:end;padding:11px 12px;border:1px solid var(--border);border-radius:16px;background:color-mix(in srgb,var(--surface) 92%,var(--soft))}
+.observation-date-field{display:grid;gap:5px;min-width:0}.observation-date-field>span{font-size:.7rem;font-weight:850;color:var(--muted)}
+.observation-date-control{position:relative;min-width:0}.observation-date-control input{width:100%;min-height:42px;padding:8px 38px 8px 11px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text);font:inherit;font-size:.82rem;font-weight:750;box-sizing:border-box}
+.observation-date-clear{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:28px;height:28px;padding:0;border:0;border-radius:9px;background:var(--soft);color:var(--muted);font-size:1.05rem;line-height:1;cursor:pointer}.observation-date-clear:hover{color:var(--text)}
+.observation-date-reset{min-height:42px;padding:8px 11px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--accent);font-size:.7rem;font-weight:850;cursor:pointer;white-space:nowrap}
+@media(max-width:620px){.observation-explorer-range{grid-template-columns:1fr 1fr}.observation-date-reset{grid-column:1/-1;min-height:36px}}
