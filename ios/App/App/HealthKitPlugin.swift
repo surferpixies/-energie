@@ -11,7 +11,8 @@ public class HealthKitPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "requestAuthorization", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "readSteps", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "readSleep", returnType: CAPPluginReturnPromise),
-        CAPPluginMethod(name: "readWorkouts", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "readWorkouts", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "readWeight", returnType: CAPPluginReturnPromise)
     ]
 
     private let healthStore = HKHealthStore()
@@ -39,6 +40,10 @@ public class HealthKitPlugin: CAPPlugin, CAPBridgedPlugin {
         }
 
         readTypes.insert(HKObjectType.workoutType())
+
+        if let weight = HKObjectType.quantityType(forIdentifier: .bodyMass) {
+            readTypes.insert(weight)
+        }
 
         healthStore.requestAuthorization(toShare: [], read: readTypes) { success, error in
             DispatchQueue.main.async {
@@ -311,6 +316,31 @@ public class HealthKitPlugin: CAPPlugin, CAPBridgedPlugin {
         default:
             return String(describing: type)
         }
+    }
+
+    @objc func readWeight(_ call: CAPPluginCall) {
+        guard let weightType = HKObjectType.quantityType(forIdentifier: .bodyMass) else {
+            call.reject("Le poids n’est pas disponible.")
+            return
+        }
+        let startDate = dateFromCall(call, key: "startDate")
+            ?? Calendar.current.date(byAdding: .day, value: -180, to: Date())!
+        let endDate = dateFromCall(call, key: "endDate") ?? Date()
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+        let query = HKSampleQuery(sampleType: weightType, predicate: predicate, limit: 200, sortDescriptors: [sort]) { _, samples, error in
+            if let error = error {
+                call.reject("Impossible de lire le poids : \(error.localizedDescription)")
+                return
+            }
+            let unit = HKUnit.gramUnit(with: .kilo)
+            let formatter = ISO8601DateFormatter()
+            let values = (samples as? [HKQuantitySample] ?? []).map { sample -> [String: Any] in
+                ["kg": sample.quantity.doubleValue(for: unit), "date": formatter.string(from: sample.endDate)]
+            }
+            call.resolve(["measurements": values])
+        }
+        self.healthStore.execute(query)
     }
 
     private func dateFromCall(_ call: CAPPluginCall, key: String) -> Date? {
