@@ -7214,6 +7214,44 @@ function formatSleepDuration(hours) {
         }
       }
 
+      // POIDS
+      // Les mesures HealthKit sont importées par date. Metrics.mergeWeight
+      // conserve toujours la mesure la plus récente : une correction manuelle
+      // faite ensuite dans Énergie ne sera donc pas écrasée par une ancienne
+      // mesure provenant de Santé.
+      if (typeof plugin.readWeight === "function") {
+        const weightResult = await plugin.readWeight({
+          startDate: healthKitDayStart(today, 180),
+          endDate: healthKitDayEnd(today),
+        });
+
+        (weightResult?.measurements || []).forEach((measurement) => {
+          const kg = Number(measurement?.kg);
+          const dateKey = healthKitDateKey(measurement?.date);
+          const updatedAt = measurement?.date;
+
+          if (!(kg > 0) || !dateKey || !Number.isFinite(Date.parse(updatedAt)))
+            return;
+
+          const day = ensureDay(db, dateKey);
+          const next = Metrics.mergeWeight(day.weightMeasurement, {
+            kg,
+            updatedAt,
+          });
+
+          const previous = Metrics.weightRecord(day.weightMeasurement);
+          if (
+            next &&
+            (!previous ||
+              next.kg !== previous.kg ||
+              next.updatedAt !== previous.updatedAt)
+          ) {
+            day.weightMeasurement = next;
+            changedDates.add(dateKey);
+          }
+        });
+      }
+
       // ACTIVITÉS
       const workoutsResult = await plugin.readWorkouts({
         startDate: healthKitDayStart(today, 7),
@@ -11597,7 +11635,7 @@ function formatSleepDuration(hours) {
         `<section class="card apple-health-profile-card">
           <h3>🍎 Apple Health</h3>
           <p class="muted small">
-            Importe automatiquement le sommeil, les pas et les activités de Santé.
+            Importe automatiquement le sommeil, les pas, les activités et le poids de Santé.
             Les valeurs restent modifiables dans Énergie.
           </p>
           <div class="settings-row">
