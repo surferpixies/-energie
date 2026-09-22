@@ -326,21 +326,32 @@ public class HealthKitPlugin: CAPPlugin, CAPBridgedPlugin {
         let startDate = dateFromCall(call, key: "startDate")
             ?? Calendar.current.date(byAdding: .day, value: -180, to: Date())!
         let endDate = dateFromCall(call, key: "endDate") ?? Date()
-        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
-        let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
-        let query = HKSampleQuery(sampleType: weightType, predicate: predicate, limit: 200, sortDescriptors: [sort]) { _, samples, error in
-            if let error = error {
-                call.reject("Impossible de lire le poids : \(error.localizedDescription)")
+        // HealthKit peut retourner HKError.authorizationNotDetermined lorsque
+        // bodyMass vient d'être ajouté à une installation qui avait déjà autorisé
+        // les autres types. Demander explicitement l'autorisation de lecture du
+        // poids avant la requête évite que la synchronisation complète échoue.
+        healthStore.requestAuthorization(toShare: [], read: [weightType]) { _, authorizationError in
+            if let authorizationError = authorizationError {
+                call.reject("Impossible d’autoriser la lecture du poids : \(authorizationError.localizedDescription)")
                 return
             }
-            let unit = HKUnit.gramUnit(with: .kilo)
-            let formatter = ISO8601DateFormatter()
-            let values = (samples as? [HKQuantitySample] ?? []).map { sample -> [String: Any] in
-                ["kg": sample.quantity.doubleValue(for: unit), "date": formatter.string(from: sample.endDate)]
+
+            let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: .strictStartDate)
+            let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+            let query = HKSampleQuery(sampleType: weightType, predicate: predicate, limit: 200, sortDescriptors: [sort]) { _, samples, error in
+                if let error = error {
+                    call.reject("Impossible de lire le poids : \(error.localizedDescription)")
+                    return
+                }
+                let unit = HKUnit.gramUnit(with: .kilo)
+                let formatter = ISO8601DateFormatter()
+                let values = (samples as? [HKQuantitySample] ?? []).map { sample -> [String: Any] in
+                    ["kg": sample.quantity.doubleValue(for: unit), "date": formatter.string(from: sample.endDate)]
+                }
+                call.resolve(["measurements": values])
             }
-            call.resolve(["measurements": values])
+            self.healthStore.execute(query)
         }
-        self.healthStore.execute(query)
     }
 
     private func dateFromCall(_ call: CAPPluginCall, key: String) -> Date? {
