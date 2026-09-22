@@ -6417,6 +6417,10 @@
     return FEELING_TAGS.filter((tag) => {
       if (mode === "before" && tag.afterOnly) return false;
       if (tag.deprecated && !selected.has(tag.id)) return false;
+      // Before a meal, keep the positive choice intentionally simple.
+      // Historical selections remain visible/editable through selectedIds.
+      if (mode === "before" && POSITIVE_FEELING_IDS.has(tag.id))
+        return tag.id === "positive_wellbeing" || selected.has(tag.id);
       if (POSITIVE_FEELING_IDS.has(tag.id)) return true;
       if (!plan && db.settings?.trackedFeelingsConfigured) {
         const tracked = new Set(trackedFeelingIds());
