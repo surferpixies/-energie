@@ -1736,6 +1736,9 @@
               calorieTargetMode: calorieTargetMode(),
               fixedCalorieTarget: fixedCalorieTarget(),
               calorieDeficitTarget: calorieDeficitTarget(),
+              trackedFeelingIds: trackedFeelingIds(),
+              trackedFeelingsConfigured: db.settings.trackedFeelingsConfigured === true,
+              trackedFeelingsUpdatedAt: db.settings.trackedFeelingsUpdatedAt || db.updatedAt,
               defaults: db.settings.supplements || [],
               defaultsUpdatedAt: db.settings.supplementsUpdatedAt || db.updatedAt,
               // Les photos de brouillon restent uniquement sur l’appareil : ne pas
@@ -1943,6 +1946,24 @@
       updateSyncBadge();
       return;
     }
+    // Les préférences de ressentis suivis voyagent aussi avec le compte.
+    const remoteFeelingSettings = (dr.data || [])
+      .filter((row) => Array.isArray(row.supplements?.trackedFeelingIds))
+      .map((row) => ({
+        ids: normalizeFeelingIds(row.supplements.trackedFeelingIds),
+        configured: row.supplements.trackedFeelingsConfigured === true,
+        updatedAt: row.supplements.trackedFeelingsUpdatedAt || row.updated_at || `${row.log_date}T00:00:00.000Z`,
+      }))
+      .sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0];
+    if (remoteFeelingSettings) {
+      const localAt = db.settings.trackedFeelingsUpdatedAt || "";
+      if (!localAt || new Date(remoteFeelingSettings.updatedAt) >= new Date(localAt)) {
+        db.settings.trackedFeelingIds = remoteFeelingSettings.ids;
+        db.settings.trackedFeelingsConfigured = remoteFeelingSettings.configured;
+        db.settings.trackedFeelingsUpdatedAt = remoteFeelingSettings.updatedAt;
+      }
+    }
+
     // La configuration des suppléments voyage avec le journal quotidien.
     // Les anciennes versions n'avaient pas d'horodatage de configuration :
     // dans ce cas seulement, une dernière liste non vide peut réparer une
@@ -6383,7 +6404,10 @@
     const ids = $$('[data-tracked-feeling]:checked').map((input) => input.dataset.trackedFeeling);
     db.settings.trackedFeelingIds = normalizeFeelingIds(ids);
     db.settings.trackedFeelingsConfigured = true;
+    db.settings.trackedFeelingsUpdatedAt = new Date().toISOString();
     saveLocal("ressentis-suivis");
+    ensureDay(db, todayKey()).updatedAt = db.settings.trackedFeelingsUpdatedAt;
+    enqueue({ kind: "day", date: todayKey() });
     $("#trackedFeelingsDialog").close();
     render();
   };
