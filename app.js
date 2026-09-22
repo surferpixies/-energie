@@ -191,6 +191,8 @@
     Musculation: { low: 3.5, moderate: 5.5, high: 8.0 },
     Yoga: { low: 2.2, moderate: 3.2, high: 4.5 },
     Natation: { low: 5.0, moderate: 8.0, high: 11.0 },
+  "Fitness aquatique": { low: 3.5, moderate: 5.5, high: 7.5 },
+  "Sports aquatiques": { low: 4.0, moderate: 6.5, high: 9.0 },
     Aquabike: { low: 4.5, moderate: 7.0, high: 9.5 },
     Aquagym: { low: 3.5, moderate: 5.5, high: 7.5 },
     Randonnée: { low: 4.0, moderate: 6.0, high: 8.5 },
@@ -217,7 +219,11 @@
     high: "Élevée",
   };
   function normalizeActivity(a = {}) {
-    const type = a.type || a.activity_type || "Autre",
+    const legacyType = a.type || a.activity_type || "Autre",
+    type =
+      legacyType === "Aquabike" || legacyType === "Aquagym"
+        ? "Fitness aquatique"
+        : legacyType,
       minutes = Math.max(0, Number(a.minutes ?? a.duration_minutes) || 0),
       intensity = ["low", "moderate", "high"].includes(a.intensity)
         ? a.intensity
@@ -565,6 +571,7 @@
         waterGoal: 8,
         stepsTracking: false,
         stepsGoal: 8000,
+        appleHealthEnabled: false,
         calorieBalanceTracking: false,
         calorieTargetGauge: false,
         calorieTargetMode: "estimated",
@@ -609,6 +616,19 @@
       days: {},
     };
   }
+function formatSleepDuration(hours) {
+  const value = Number(hours);
+  if (!Number.isFinite(value) || value < 0) return "—";
+
+  const totalMinutes = Math.round(value * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const min = totalMinutes % 60;
+
+  if (h === 0) return `${min} min`;
+  if (min === 0) return `${h} h`;
+
+  return `${h} h ${min} min`;
+}
   function ensureDay(store, key = todayKey()) {
     const defaultSupplements = normalizeSupplements(
       store.settings?.supplements || [],
@@ -4606,7 +4626,7 @@
       ? `${activityItems.slice(0, 2).map((item) => `${activityIcon(item.type)} ${esc(item.type || "Activité")}`).join(" · ")}${activityItems.length > 2 ? ` +${activityItems.length - 2}` : ""}${activityMinutes ? ` · ${Math.round(activityMinutes)} min` : ""}`
       : "Non notée";
     const water = Number(day.water) > 0 ? `${(Number(day.water) * 0.5).toLocaleString("fr-CA", { maximumFractionDigits: 1 })} L` : "Non notée";
-    const sleep = day.sleepHours != null ? `${Number(day.sleepHours).toLocaleString("fr-CA", { maximumFractionDigits: 1 })} h` : "Non noté";
+    const sleep = day.sleepHours != null ? formatSleepDuration(day.sleepHours) : "Non noté";
     const steps = day.steps != null && Number(day.steps) > 0 ? Number(day.steps).toLocaleString("fr-CA") : "Non notés";
     const priorMeals = occurrence.priorMeals || [];
     const mealHtml = occurrence.meal
@@ -6966,6 +6986,303 @@
         else showMealEnergyResponse(meal);
       }, 120);
   }
+
+  function nativeHealthKit() {
+    return window.Capacitor?.Plugins?.HealthKit || null;
+  }
+
+  function healthKitDateKey(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toLocaleDateString("en-CA");
+  }
+
+  function healthKitDayStart(dateKey, daysBack = 0) {
+    const date = new Date(`${dateKey}T00:00:00`);
+    date.setDate(date.getDate() - daysBack);
+    return date.toISOString();
+  }
+
+  function healthKitDayEnd(dateKey) {
+    return new Date(`${dateKey}T23:59:59.999`).toISOString();
+  }
+
+  function healthKitWorkoutType(workout = {}) {
+    const mapped = String(workout.energieType || "").trim();
+
+    if (mapped && mapped !== "Autre")
+      return mapped;
+
+    const original = String(workout.activityName || "").trim();
+
+    return original
+      ? `Autre — ${original}`
+      : "Autre";
+  }
+
+  function healthKitSleepingHours(samples = [], dateKey) {
+  const wakeDay = new Date(`${dateKey}T12:00:00`);
+
+  if (Number.isNaN(wakeDay.getTime())) return null;
+
+  // Une "nuit" appartient au jour du réveil.
+  // On regarde de 18 h la veille jusqu'à midi le jour du réveil.
+  const windowStart = new Date(wakeDay);
+  windowStart.setDate(windowStart.getDate() - 1);
+  windowStart.setHours(18, 0, 0, 0);
+
+  const windowEnd = new Date(wakeDay);
+  windowEnd.setHours(12, 0, 0, 0);
+
+  const intervals = (Array.isArray(samples) ? samples : [])
+    .filter((sample) =>
+      ["asleep", "core", "deep", "rem"].includes(sample.stage),
+    )
+    .map((sample) => [
+      Math.max(
+        new Date(sample.startDate).getTime(),
+        windowStart.getTime(),
+      ),
+      Math.min(
+        new Date(sample.endDate).getTime(),
+        windowEnd.getTime(),
+      ),
+    ])
+    .filter(
+      ([start, end]) =>
+        Number.isFinite(start) &&
+        Number.isFinite(end) &&
+        end > start,
+    )
+    .sort((a, b) => a[0] - b[0]);
+
+  if (!intervals.length) return null;
+
+  // Fusionne les intervalles qui se chevauchent afin d'éviter
+  // de compter deux fois des données HealthKit provenant
+  // éventuellement de plusieurs sources.
+  const merged = [];
+
+  intervals.forEach(([start, end]) => {
+    const last = merged.at(-1);
+
+    if (last && start <= last[1]) {
+      last[1] = Math.max(last[1], end);
+    } else {
+      merged.push([start, end]);
+    }
+  });
+
+  const hours =
+    merged.reduce(
+      (sum, [start, end]) => sum + (end - start),
+      0,
+    ) / 3600000;
+
+  return Math.round(hours * 10) / 10;
+}
+
+  let healthKitSyncBusy = false;
+
+  async function syncAppleHealth({
+    requestAuthorization = false,
+    showResult = false,
+  } = {}) {
+    const plugin = nativeHealthKit();
+
+    if (
+      !plugin ||
+      healthKitSyncBusy ||
+      !session ||
+      db.settings.demoMode ||
+      professionalBetaMode
+    )
+      return false;
+
+    if (
+      db.settings.appleHealthEnabled !== true &&
+      !requestAuthorization
+    )
+      return false;
+
+    healthKitSyncBusy = true;
+
+    try {
+      if (requestAuthorization) {
+        const availability = await plugin.isAvailable();
+
+        if (!availability?.available) {
+          if (showResult)
+            alert("Apple Health n’est pas disponible sur cet appareil.");
+
+          return false;
+        }
+
+        const authorization =
+          await plugin.requestAuthorization();
+
+        if (!authorization?.authorized) {
+          if (showResult)
+            alert("Apple Health n’a pas été autorisé.");
+
+          return false;
+        }
+
+        db.settings.appleHealthEnabled = true;
+        db.settings.stepsTracking = true;
+
+        persistProfilePreference("apple-health");
+      }
+
+      const today = todayKey();
+      const changedDates = new Set();
+
+      // PAS
+      const stepsResult = await plugin.readSteps({
+        startDate: healthKitDayStart(today),
+        endDate: healthKitDayEnd(today),
+      });
+
+      if (Number.isFinite(Number(stepsResult?.steps))) {
+        const day = ensureDay(db, today);
+        const nextSteps = Math.max(
+          0,
+          Math.round(Number(stepsResult.steps)),
+        );
+
+        if (day.steps !== nextSteps) {
+          day.steps = nextSteps;
+
+          if (!(Number(day.stepsGoal) > 0))
+            day.stepsGoal =
+              Number(db.settings.stepsGoal) || 8000;
+
+          changedDates.add(today);
+        }
+      }
+
+      // SOMMEIL
+      const sleepResult = await plugin.readSleep({
+        startDate: healthKitDayStart(today, 3),
+        endDate: healthKitDayEnd(today),
+      });
+
+      for (let offset = 0; offset <= 2; offset += 1) {
+        const date = new Date(`${today}T12:00:00`);
+        date.setDate(date.getDate() - offset);
+
+        const dateKey =
+          date.toLocaleDateString("en-CA");
+
+        const hours = healthKitSleepingHours(
+          sleepResult?.samples,
+          dateKey,
+        );
+
+        if (hours == null) continue;
+
+        const day = ensureDay(db, dateKey);
+
+        if (Number(day.sleepHours) !== Number(hours)) {
+          day.sleepHours = hours;
+          changedDates.add(dateKey);
+        }
+      }
+
+      // ACTIVITÉS
+      const workoutsResult = await plugin.readWorkouts({
+        startDate: healthKitDayStart(today, 7),
+        endDate: healthKitDayEnd(today),
+      });
+
+      (workoutsResult?.workouts || []).forEach(
+        (workout) => {
+          if (!workout?.uuid || !workout?.startDate)
+            return;
+
+          const dateKey =
+            healthKitDateKey(workout.startDate);
+
+          if (!dateKey) return;
+
+          const day = ensureDay(db, dateKey);
+          const id = `healthkit:${workout.uuid}`;
+
+          // Une activité HealthKit déjà importée n'est pas
+          // réécrite : une correction manuelle dans Énergie
+          // reste donc intacte.
+          if (
+            day.activities.some(
+              (activity) => activity.id === id,
+            )
+          )
+            return;
+
+          day.activities.push(
+            normalizeActivity({
+              id,
+              type: healthKitWorkoutType(workout),
+              minutes: Math.max(
+                0,
+                Number(workout.durationMinutes) || 0,
+              ),
+              intensity: "moderate",
+              actualCalories:
+                Number.isFinite(
+                  Number(workout.calories),
+                )
+                  ? Math.max(
+                      0,
+                      Math.round(
+                        Number(workout.calories),
+                      ),
+                    )
+                  : null,
+              at: workout.startDate,
+            }),
+          );
+
+          changedDates.add(dateKey);
+        },
+      );
+
+      changedDates.forEach((date) =>
+        setDayChanged(date),
+      );
+
+      db.settings.appleHealthLastSync =
+        new Date().toISOString();
+
+      saveLocal("apple-health-sync");
+
+      if (showResult) {
+        const count = changedDates.size;
+
+        alert(
+          count
+            ? `Apple Health synchronisé · ${count} journée${count > 1 ? "s" : ""} mise${count > 1 ? "s" : ""} à jour.`
+            : "Apple Health est déjà à jour.",
+        );
+      }
+
+      return true;
+    } catch (error) {
+      console.warn(
+        "Synchronisation Apple Health",
+        error,
+      );
+
+      if (showResult)
+        alert(
+          `Impossible de synchroniser Apple Health : ${error?.message || "réessaie dans un moment"}.`,
+        );
+
+      return false;
+    } finally {
+      healthKitSyncBusy = false;
+    }
+  }
+
   function nativeLocalNotifications() {
     return window.Capacitor?.Plugins?.LocalNotifications || null;
   }
@@ -7613,7 +7930,7 @@
       (d.sleepTags || []).filter((x) => x !== "none").length - 2,
     );
     $("#app").innerHTML =
-      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${isFuture ? '<aside class="future-meal-planning-note"><span aria-hidden="true">📅</span><div><strong>Planification de repas</strong><small>Tu peux préparer tes repas jusqu’à 2 jours d’avance. Ils ne seront pris en compte dans les Observations qu’une fois la date arrivée.</small></div></aside>' : ""}${clientProfessionalNoteJournalHtml()}${dailyMacroSummaryHtml(meals)}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? `${d.sleepHours} h` : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><div class="card activity-card-with-steps"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div></section>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
+      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${isFuture ? '<aside class="future-meal-planning-note"><span aria-hidden="true">📅</span><div><strong>Planification de repas</strong><small>Tu peux préparer tes repas jusqu’à 2 jours d’avance. Ils ne seront pris en compte dans les Observations qu’une fois la date arrivée.</small></div></aside>' : ""}${clientProfessionalNoteJournalHtml()}${dailyMacroSummaryHtml(meals)}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? formatSleepDuration(d.sleepHours) : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><div class="card activity-card-with-steps"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div></section>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
     $("#previousDay").onclick = () => changeJournalDay(-1);
     if (!$("#nextDay").disabled)
       $("#nextDay").onclick = () => changeJournalDay(1);
@@ -8110,7 +8427,7 @@
           key: "sleep",
           detail:
             day?.sleepHours != null
-              ? `${Number(day.sleepHours).toLocaleString("fr-CA", { maximumFractionDigits: 1 })} h`
+              ? formatSleepDuration(day.sleepHours)
               : "Non noté",
         },
         averages,
@@ -11155,6 +11472,53 @@
     const targetGaugeEnabled = db.settings.calorieTargetGauge === true, targetMode = calorieTargetMode(), fixedTarget = fixedCalorieTarget();
     waterSettingsSection?.insertAdjacentHTML("afterend", `<section class="card calorie-balance-profile-card"><h3>⚖️ Balance énergétique</h3><p class="muted small">Optionnel · utile surtout pour suivre une tendance de déficit ou de surplus calorique.</p><label class="toggle-row"><span><strong>Afficher mon déficit calorique estimé</strong><small>Ajoute un graphique sous « Calories par jour » dans Observations</small></span><input id="settingCalorieBalanceTracking" type="checkbox" ${db.settings.calorieBalanceTracking === true ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher ma cible calorique</strong><small>Transforme « Calories de la journée » en jauge visuelle et l’affiche aussi pendant la saisie des repas</small></span><input id="settingCalorieTargetGauge" type="checkbox" ${targetGaugeEnabled ? "checked" : ""}></label><div class="settings-row setting-dependent calorie-target-method-setting ${targetGaugeEnabled ? "" : "is-disabled"}" id="calorieTargetModeSetting"><span class="calorie-target-method-heading"><strong>Comment veux-tu définir ta cible?</strong><small>Choisis simplement l’option qui te convient. Tu pourras la changer en tout temps.</small></span><div class="calorie-target-method-buttons" role="group" aria-label="Méthode de cible calorique"><button type="button" class="calorie-target-method-button ${targetMode === "estimated" ? "is-selected" : ""}" data-calorie-target-mode="estimated" aria-pressed="${targetMode === "estimated" ? "true" : "false"}" ${targetGaugeEnabled ? "" : "disabled"}><span class="calorie-target-method-icon" aria-hidden="true">⚡</span><span><b>Calcul Énergie</b><small>Selon ton profil, tes activités et le déficit choisi.</small></span></button><button type="button" class="calorie-target-method-button ${targetMode === "fixed" ? "is-selected" : ""}" data-calorie-target-mode="fixed" aria-pressed="${targetMode === "fixed" ? "true" : "false"}" ${targetGaugeEnabled ? "" : "disabled"}><span class="calorie-target-method-icon" aria-hidden="true">🎯</span><span><b>Cible fixe</b><small>Une valeur précise, par exemple celle donnée par ta nutritionniste.</small></span></button></div></div><label class="settings-row setting-dependent ${targetGaugeEnabled && targetMode === "estimated" ? "" : "is-disabled"}" id="calorieDeficitTargetSetting"><span><strong>Déficit quotidien visé</strong><small>Utilisé seulement lorsque la cible est calculée par Énergie</small></span><select id="settingCalorieDeficitTarget" ${targetGaugeEnabled && targetMode === "estimated" ? "" : "disabled"}><option value="250" ${calorieDeficitTarget() === 250 ? "selected" : ""}>250 kcal</option><option value="400" ${calorieDeficitTarget() === 400 ? "selected" : ""}>400 kcal</option><option value="500" ${calorieDeficitTarget() === 500 ? "selected" : ""}>500 kcal</option></select></label><div class="settings-row setting-dependent ${targetGaugeEnabled && targetMode === "fixed" ? "" : "is-disabled"}" id="fixedCalorieTargetSetting"><div><strong>Cible calorique quotidienne</strong><p class="muted tiny">Ex. : valeur recommandée par ta nutritionniste</p></div><label><input id="settingFixedCalorieTarget" type="number" min="100" max="10000" step="10" inputmode="numeric" placeholder="1750" value="${fixedTarget || ""}" ${targetGaugeEnabled && targetMode === "fixed" ? "" : "disabled"}><span>kcal</span></label></div><div class="calorie-balance-formula"><strong>Comment ça fonctionne</strong><p><b>Calculée par Énergie :</b> dépense ≈ métabolisme de repos (Mifflin-St Jeor) × 1,2 + activités; le 🎯 représente le déficit choisi.</p><p><b>Cible fixe :</b> la jauge utilise directement la valeur saisie et ne change pas avec les activités.</p><small>Le graphique « Déficit / surplus calorique » dans Observations conserve toujours son calcul actuel, peu importe la méthode choisie pour la jauge.</small></div></section>`);
     $(".calorie-balance-profile-card")?.insertAdjacentHTML("afterend", `<section class="card steps-profile-card"><h3>👟 Suivi des pas</h3><p class="muted small">Affiche les pas dans le Journal et leur progression dans Observations.</p><label class="toggle-row"><span><strong>Suivre mes pas</strong><small>Tu peux masquer ce suivi sans supprimer ton historique</small></span><input id="settingStepsTracking" type="checkbox" ${db.settings.stepsTracking === true ? "checked" : ""}></label><div id="stepsGoalSetting" class="settings-row ${db.settings.stepsTracking === true ? "" : "is-disabled"}"><div><strong>Objectif quotidien</strong><p class="muted tiny">Utilisé pour les nouvelles journées seulement</p></div><label><input id="stepsGoal" type="number" min="100" max="100000" step="100" inputmode="numeric" value="${Number(db.settings.stepsGoal) || 8000}" ${db.settings.stepsTracking === true ? "" : "disabled"}><span>pas</span></label></div></section>`);
+
+    if (nativeHealthKit()) {
+      const healthLastSync =
+        db.settings.appleHealthLastSync
+          ? new Date(
+              db.settings.appleHealthLastSync,
+            ).toLocaleString("fr-CA", {
+              dateStyle: "medium",
+              timeStyle: "short",
+            })
+          : "Jamais synchronisé";
+
+      $(".steps-profile-card")?.insertAdjacentHTML(
+        "afterend",
+        `<section class="card apple-health-profile-card">
+          <h3>🍎 Apple Health</h3>
+          <p class="muted small">
+            Importe automatiquement le sommeil, les pas et les activités de Santé.
+            Les valeurs restent modifiables dans Énergie.
+          </p>
+          <div class="settings-row">
+            <div>
+              <strong>
+                ${db.settings.appleHealthEnabled === true
+                  ? "Apple Health connecté"
+                  : "Connecter Apple Health"}
+              </strong>
+              <p class="muted tiny">
+                Dernière synchronisation : ${esc(healthLastSync)}
+              </p>
+            </div>
+            <button
+              class="${db.settings.appleHealthEnabled === true
+                ? "secondary"
+                : "primary"} small"
+              id="${db.settings.appleHealthEnabled === true
+                ? "syncAppleHealthNow"
+                : "connectAppleHealth"}"
+              type="button">
+              ${db.settings.appleHealthEnabled === true
+                ? "Synchroniser"
+                : "Autoriser"}
+            </button>
+          </div>
+        </section>`,
+      );
+    }
     const feelingSettingsSection = $("#settingFeelingReminders")?.closest("section.card"),
       feelingIntro = feelingSettingsSection?.querySelector(":scope > p");
     if (feelingIntro) feelingIntro.insertAdjacentHTML("afterend", trackedFeelingsProfileHtml());
@@ -11272,6 +11636,29 @@
       persistProfilePreference("objectif-pas");
       event.target.value = db.settings.stepsGoal;
     });
+
+    $("#connectAppleHealth")?.addEventListener(
+      "click",
+      async () => {
+        const ok = await syncAppleHealth({
+          requestAuthorization: true,
+          showResult: true,
+        });
+
+        if (ok) renderProfile();
+      },
+    );
+
+    $("#syncAppleHealthNow")?.addEventListener(
+      "click",
+      async () => {
+        await syncAppleHealth({
+          showResult: true,
+        });
+
+        renderProfile();
+      },
+    );
     $("#addSupplement").onclick = () => {
       const name = $("#supplementNameInput").value.trim();
       if (!name) return;
@@ -14192,6 +14579,7 @@
       if (!db.settings.demoMode) {
         await pullCloud(false);
         await syncNow();
+        await syncAppleHealth();
       }
     }
     render();
@@ -14255,7 +14643,12 @@
 
   setInterval(() => updateLivingHeader(), 30 * 60 * 1000);
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) updateLivingHeader();
+    if (!document.hidden) {
+      updateLivingHeader();
+      syncAppleHealth().catch((error) =>
+        console.warn("Apple Health au retour dans l’app", error),
+      );
+    }
   });
 })();
 function parseAppNumber(value) {
