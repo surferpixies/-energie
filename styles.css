@@ -1519,3 +1519,11 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .observation-date-clear{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:28px;height:28px;padding:0;border:0;border-radius:9px;background:var(--soft);color:var(--muted);font-size:1.05rem;line-height:1;cursor:pointer}.observation-date-clear:hover{color:var(--text)}
 .observation-date-reset{min-height:42px;padding:8px 11px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--accent);font-size:.7rem;font-weight:850;cursor:pointer;white-space:nowrap}
 @media(max-width:620px){.observation-explorer-range{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.observation-date-control{overflow:hidden}.observation-date-control input[type="date"]{display:block;min-width:0;max-width:100%;padding:8px 32px 8px 8px;font-size:.76rem;-webkit-appearance:none;appearance:none}.observation-date-clear{right:3px;width:26px;height:26px}.observation-date-reset{grid-column:1/-1;min-height:36px}}
+
+/* Weight trend — same expand/fullscreen pattern as professional trend */
+.weight-trend-expand{margin-top:10px}
+.weight-trend-fullscreen-frame{display:block;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x;overscroll-behavior-x:contain;padding:8px}
+.weight-trend-scroll{width:max(100%,1200px);min-width:1200px;height:100%;display:grid;align-items:center}
+.weight-trend-scroll .metrics-chart{display:block;width:100%;height:auto;min-width:1200px;max-height:calc(100dvh - 125px)}
+.weight-trend-scroll .metrics-values{display:none}
+@media(orientation:landscape){.weight-trend-scroll .metrics-chart{max-height:calc(100dvh - 90px)}}
