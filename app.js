@@ -14039,10 +14039,8 @@ function formatSleepDuration(hours) {
       const credential = await getAppleCredential();
       const { data, error } = await client.auth.linkIdentity({
         provider: "apple",
-        options: {
-          idToken: credential.idToken,
-          nonce: credential.nonce,
-        },
+        token: credential.idToken,
+        nonce: credential.nonce,
       });
       if (error) throw error;
       const refreshed = await client.auth.getUser();
@@ -14804,6 +14802,32 @@ function formatSleepDuration(hours) {
     }
     return hasDemoAccess;
   }
+  window.EnergieHandleAuthURL = async (url) => {
+    if (!client || !url) return;
+    try {
+      const parsed = new URL(url);
+      const hash = new URLSearchParams(parsed.hash.replace(/^#/, ""));
+      const query = parsed.searchParams;
+      const errorDescription = hash.get("error_description") || query.get("error_description");
+      if (errorDescription) throw new Error(decodeURIComponent(errorDescription));
+      const accessToken = hash.get("access_token");
+      const refreshToken = hash.get("refresh_token");
+      const code = query.get("code");
+      if (accessToken && refreshToken) {
+        const result = await client.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (result.error) throw result.error;
+      } else if (code) {
+        const result = await client.auth.exchangeCodeForSession(code);
+        if (result.error) throw result.error;
+      }
+    } catch (error) {
+      console.warn("Retour d’authentification iOS", error?.message || error);
+      alert("Le lien de récupération n’a pas pu être ouvert dans Énergie. Demande un nouveau lien et réessaie.");
+    }
+  };
   async function initAuth() {
     // Le splash a sa propre durée et ne doit jamais attendre le réseau.
     dismissSplash();
