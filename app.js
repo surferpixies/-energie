@@ -14834,20 +14834,6 @@ function formatSleepDuration(hours) {
       alert("Le lien de récupération n’a pas pu être ouvert dans Énergie. Demande un nouveau lien et réessaie.");
     }
   };
-  window.EnergieDebugApple = async function () {
-    if (!client) {
-      console.log("APPLE DEBUG", { error: "Supabase client unavailable" });
-      return;
-    }
-    const currentUser = await client.auth.getUser();
-    console.log("APPLE DEBUG MANUAL", {
-      error: currentUser.error?.message || null,
-      id: currentUser.data.user?.id || null,
-      identities: currentUser.data.user?.identities?.map((identity) => identity.provider) || [],
-      providers: currentUser.data.user?.app_metadata?.providers || [],
-      provider: currentUser.data.user?.app_metadata?.provider || null,
-    });
-  };
   async function initAuth() {
     // Le splash a sa propre durée et ne doit jamais attendre le réseau.
     dismissSplash();
@@ -14863,12 +14849,6 @@ function formatSleepDuration(hours) {
       // nouvelle identité (ex. Apple) ait été liée. Relire le user serveur afin
       // que le Profil reflète les providers réellement associés dès l'ouverture.
       const currentUser = await client.auth.getUser();
-      console.log("APPLE DEBUG", {
-        id: currentUser.data.user?.id,
-        identities: currentUser.data.user?.identities?.map((identity) => identity.provider),
-        providers: currentUser.data.user?.app_metadata?.providers,
-        provider: currentUser.data.user?.app_metadata?.provider,
-      });
       if (!currentUser.error && currentUser.data.user?.id === session.user?.id)
         session = { ...session, user: currentUser.data.user };
       prepareLocalJournalForSession(session);
@@ -14878,10 +14858,21 @@ function formatSleepDuration(hours) {
       const newUserId = newSession?.user?.id || null;
       // Covers session changes initiated outside the explicit login form too
       // (deep links, token/session replacement, future auth providers).
-      if (newSession) prepareLocalJournalForSession(newSession);
+      let nextSession = newSession;
+      // INITIAL_SESSION / TOKEN_REFRESHED peut renvoyer le user mis en cache
+      // dans la session et écraser le user plus frais relu par getUser().
+      // Pour le même compte, conserver la version qui connaît le plus
+      // d'identités liées (ex. email + Apple).
+      if (newSession && session?.user?.id === newUserId) {
+        const currentIdentityCount = session.user?.identities?.length || 0;
+        const incomingIdentityCount = newSession.user?.identities?.length || 0;
+        if (currentIdentityCount > incomingIdentityCount)
+          nextSession = { ...newSession, user: session.user };
+      }
+      if (nextSession) prepareLocalJournalForSession(nextSession);
       else if (previousUserId) clearLocalJournalAfterSignOut();
-      session = newSession;
-      if (newSession) loadDemoAccess().then(() => render());
+      session = nextSession;
+      if (nextSession) loadDemoAccess().then(() => render());
       else { hasDemoAccess = false; hasProfessionalBetaAccess = false; clientProfessionalLink = null; }
       updateSyncBadge();
       if (event === "PASSWORD_RECOVERY")
