@@ -14834,6 +14834,20 @@ function formatSleepDuration(hours) {
       alert("Le lien de récupération n’a pas pu être ouvert dans Énergie. Demande un nouveau lien et réessaie.");
     }
   };
+  window.EnergieDebugApple = async function () {
+    if (!client) {
+      console.log("APPLE DEBUG", { error: "Supabase client unavailable" });
+      return;
+    }
+    const currentUser = await client.auth.getUser();
+    console.log("APPLE DEBUG MANUAL", {
+      error: currentUser.error?.message || null,
+      id: currentUser.data.user?.id || null,
+      identities: currentUser.data.user?.identities?.map((identity) => identity.provider) || [],
+      providers: currentUser.data.user?.app_metadata?.providers || [],
+      provider: currentUser.data.user?.app_metadata?.provider || null,
+    });
+  };
   async function initAuth() {
     // Le splash a sa propre durée et ne doit jamais attendre le réseau.
     dismissSplash();
