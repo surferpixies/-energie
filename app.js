@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.119";
+  const APP_RELEASE = "3.56.125";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -606,6 +606,7 @@
         showRecognizedElements: true,
         showEatingReasons: true,
         futureMealPlanning: false,
+        pilotMode: false,
         physiologicalContext: "none",
         menstrualLastStart: "",
         pregnancyDueDate: "",
@@ -1826,6 +1827,7 @@ function formatSleepDuration(hours) {
                 showRecognizedElements: db.settings.showRecognizedElements !== false,
                 showEatingReasons: db.settings.showEatingReasons !== false,
                 futureMealPlanning: db.settings.futureMealPlanning === true,
+                pilotMode: db.settings.pilotMode === true,
               },
               defaults: db.settings.supplements || [],
               defaultsUpdatedAt: db.settings.supplementsUpdatedAt || db.updatedAt,
@@ -2112,7 +2114,7 @@ function formatSleepDuration(hours) {
       const pref = remoteProfilePreferences;
       if (Number(pref.waterGoal) > 0) db.settings.waterGoal = Math.round(Number(pref.waterGoal));
       if (["detailed", "summary"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
-      ["insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","showEatingReasons","futureMealPlanning"].forEach((key) => {
+      ["insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","showEatingReasons","futureMealPlanning","pilotMode"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
       });
       if (Number(pref.feelingDelayHours) > 0) db.settings.feelingDelayHours = Number(pref.feelingDelayHours);
@@ -5439,6 +5441,87 @@ function formatSleepDuration(hours) {
     const state = journalBrainDailyMessage(dateKey);
     return `<button type="button" class="card journal-brain-card" id="openJournalBrain" aria-label="Ouvrir le Cerveau"><span class="journal-brain-visual" aria-hidden="true"><span class="journal-brain-plant">${state.plant}</span><span class="journal-brain-icon">🧠</span></span><span class="journal-brain-copy"><span class="journal-brain-top"><span><small>${esc(state.eyebrow)}</small><strong>${esc(state.title)}</strong></span><b>›</b></span><span class="journal-brain-message">${esc(state.text)}</span><span class="journal-brain-progress"><i><em style="width:${state.progress}%"></em></i><small>${state.plant} ${esc(state.label)} · ${state.days} journée${state.days !== 1 ? "s" : ""}</small></span></span></button>`;
   }
+  function pilotContextLabel() {
+    const viewLabels = { today: "Journal", history: "Historique", brain: "Cerveau", insights: "Observations", followup: "Suivi", profile: "Profil" };
+    const dialog = [...document.querySelectorAll("dialog[open]")].filter((item) => item.id !== "pilotFeedbackDialog").at(-1);
+    const dialogTitle = dialog?.querySelector("h1,h2,h3")?.textContent?.trim();
+    return dialogTitle ? `${viewLabels[currentView] || currentView} › ${dialogTitle}` : (viewLabels[currentView] || currentView);
+  }
+  function pilotPlatformLabel() {
+    if (nativeHealthKit()) return "iOS";
+    return /Android/i.test(navigator.userAgent || "") ? "Android" : "Web";
+  }
+  function pilotTimestampLabel(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("fr-CA", { dateStyle: "medium", timeStyle: "short" }).format(date);
+  }
+  function openPilotFeedback() {
+    if (db.settings?.pilotMode !== true || !session || db.settings.demoMode) return;
+    const dialog = $("#pilotFeedbackDialog");
+    if (!dialog) return;
+    const now = new Date().toISOString(), context = pilotContextLabel();
+    $("#pilotFeedbackForm")?.reset();
+    $("[data-pilot-feedback-type]").forEach((button) => { button.classList.remove("is-selected"); button.setAttribute("aria-pressed", "false"); });
+    $("#pilotFeedbackType").value = "";
+    $("#pilotFeedbackTimestamp").value = now;
+    $("#pilotFeedbackContext").value = context;
+    $("#pilotFeedbackDateDisplay").textContent = pilotTimestampLabel(now);
+    $("#pilotFeedbackContextDisplay").textContent = context;
+    $("#pilotFeedbackTechnicalDisplay").textContent = `Énergie ${APP_RELEASE} · ${pilotPlatformLabel()}`;
+    $("#pilotFeedbackStatus").textContent = "";
+    $("#pilotFeedbackSubmit").disabled = false;
+    dialog.showModal();
+  }
+  function renderPilotFeedbackChrome() {
+    document.querySelectorAll(".pilot-feedback-link").forEach((node) => node.remove());
+    if (db.settings?.pilotMode !== true || !session || db.settings.demoMode) return;
+    const link = document.createElement("button");
+    link.type = "button";
+    link.className = "pilot-feedback-link";
+    link.innerHTML = '<span aria-hidden="true">🧪</span><span>Suggestion / bogue</span>';
+    link.setAttribute("aria-label", "Signaler une suggestion, un bogue ou un autre commentaire");
+    link.onclick = openPilotFeedback;
+    document.body.appendChild(link);
+  }
+  async function uploadPilotFeedbackAttachment(feedbackId, file) {
+    if (!file) return null;
+    if (file.size > 10 * 1024 * 1024) throw new Error("La pièce jointe dépasse 10 Mo.");
+    const safeName = String(file.name || "piece-jointe").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-100);
+    const path = `${session.user.id}/${feedbackId}/${Date.now()}-${safeName || "piece-jointe"}`;
+    const { error } = await client.storage.from("pilot-feedback").upload(path, file, { upsert: false, contentType: file.type || "application/octet-stream" });
+    if (error) throw error;
+    return path;
+  }
+  async function submitPilotFeedback(event) {
+    event.preventDefault();
+    if (!client || !session) return;
+    const type = $("#pilotFeedbackType").value, comment = $("#pilotFeedbackComment").value.trim();
+    if (!["suggestion", "bug", "other"].includes(type)) { $("#pilotFeedbackStatus").textContent = "Choisis d’abord le type de commentaire."; return; }
+    if (!comment) { $("#pilotFeedbackStatus").textContent = "Ajoute un court commentaire avant l’envoi."; return; }
+    const submit = $("#pilotFeedbackSubmit");
+    submit.disabled = true;
+    $("#pilotFeedbackStatus").textContent = "Envoi en cours…";
+    const id = uid();
+    let attachmentPath = null;
+    try {
+      attachmentPath = await uploadPilotFeedbackAttachment(id, $("#pilotFeedbackAttachment").files?.[0] || null);
+      const { error } = await client.from("pilot_feedback").insert({
+        id, user_id: session.user.id, feedback_type: type, comment,
+        reported_at: $("#pilotFeedbackTimestamp").value || new Date().toISOString(),
+        context: $("#pilotFeedbackContext").value || pilotContextLabel(),
+        platform: pilotPlatformLabel(), app_version: APP_RELEASE, attachment_path: attachmentPath,
+      });
+      if (error) throw error;
+      $("#pilotFeedbackStatus").textContent = "Merci, ton commentaire a été transmis.";
+      setTimeout(() => $("#pilotFeedbackDialog")?.close(), 900);
+    } catch (error) {
+      console.error("pilot feedback", error);
+      if (attachmentPath) { try { await client.storage.from("pilot-feedback").remove([attachmentPath]); } catch (_) {} }
+      $("#pilotFeedbackStatus").textContent = error?.message || "L’envoi n’a pas fonctionné. Réessaie dans un moment.";
+      submit.disabled = false;
+    }
+  }
+
   function render() {
     flushPersonalProfile?.();
     const demoDataVersions = { marie: "marie-dairy-v3", sophie: "sophie-fiber-v2", elodie: "elodie-soya-v2" };
@@ -5489,6 +5572,7 @@ function formatSleepDuration(hours) {
     applyProfessionalClientReadOnlyUi();
     decorateSupplementIcons();
     renderDemoChrome();
+    renderPilotFeedbackChrome();
     bindViewSwipe();
   }
   function applyProfessionalClientReadOnlyUi() {
@@ -11356,6 +11440,20 @@ function formatSleepDuration(hours) {
   }
 
   let keepPhysiologicalPanelOpen = false;
+  $("#pilotFeedbackForm")?.addEventListener("submit", submitPilotFeedback);
+  $("#closePilotFeedback")?.addEventListener("click", () => $("#pilotFeedbackDialog")?.close());
+  $("[data-pilot-feedback-type]").forEach((button) => {
+    button.addEventListener("click", () => {
+      $("[data-pilot-feedback-type]").forEach((item) => {
+        const selected = item === button;
+        item.classList.toggle("is-selected", selected);
+        item.setAttribute("aria-pressed", selected ? "true" : "false");
+      });
+      $("#pilotFeedbackType").value = button.dataset.pilotFeedbackType;
+      $("#pilotFeedbackStatus").textContent = "";
+    });
+  });
+
   document.addEventListener("click", (event) => {
     const button = event.target.closest("[data-open-weight-fullscreen]");
     if (!button) return;
@@ -11639,6 +11737,7 @@ function formatSleepDuration(hours) {
     photoSettingsAnchor?.insertAdjacentHTML("afterend", `<section class="card meal-photo-settings-card"><h3>📷 Photos des repas</h3><p class="muted small">Jusqu’à 3 photos peuvent être ajoutées à un repas. Une photo ajoutée est conservée automatiquement; tu peux la retirer manuellement du repas si tu ne souhaites plus la garder.</p><label class="toggle-row"><span><strong>Partager mes photos avec mon professionnel</strong><small>Autorisation distincte, utilisée lorsqu’un professionnel sera lié à ton compte.</small></span><input id="settingShareMealPhotos" type="checkbox" ${db.settings.shareMealPhotosWithProfessional === true ? "checked" : ""}></label><p class="muted tiny">L’analyse par l’IA reste facultative et n’est lancée que lorsque tu choisis « Analyser avec l’IA ».</p></section>`);
     const welcomeInfoSection = $("#showWelcomeAgain")?.closest("section.card");
     welcomeInfoSection?.insertAdjacentHTML("afterend", `<section class="card energy-guide-profile-card"><div class="settings-row"><div><span class="energy-guide-profile-icon" aria-hidden="true">🌱</span><span><h3>Découvrir Énergie</h3><p class="muted small">Un petit tour des principales fonctions de l’application.</p></span></div><button class="secondary" id="openEnergyGuide" type="button">Voir le guide</button></div></section>`);
+    $(".energy-guide-profile-card")?.insertAdjacentHTML("afterend", `<section class="card pilot-mode-profile-card"><h3>🧪 Mode pilote</h3><p class="muted small">Active un lien discret dans Énergie pour transmettre rapidement une suggestion, un bogue ou un autre commentaire pendant le projet pilote.</p><label class="toggle-row"><span><strong>Activer le mode pilote</strong><small>Le contexte technique est ajouté automatiquement, jamais le contenu de ton journal.</small></span><input id="settingPilotMode" type="checkbox" ${db.settings.pilotMode === true ? "checked" : ""}></label></section>`);
     const energyGuideButton = $("#openEnergyGuide");
     if (energyGuideButton) energyGuideButton.onclick = openEnergyGuide;
     const nutritionAnchor = $("#settingNutrition")?.closest("label");
@@ -11880,6 +11979,7 @@ function formatSleepDuration(hours) {
     toggleSetting("#settingRecognizedElements", "showRecognizedElements");
     toggleSetting("#settingEatingReasons", "showEatingReasons");
     toggleSetting("#settingFutureMealPlanning", "futureMealPlanning");
+    toggleSetting("#settingPilotMode", "pilotMode");
     toggleSetting("#settingInsights", "insightsEnabled");
     const macroToggle = $("#settingMacros");
     if (macroToggle)
