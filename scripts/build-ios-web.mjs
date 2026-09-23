@@ -78,4 +78,4 @@ for (const file of runtimeFiles) await copyFile(file);
 for (const file of brainFiles) await copyFile(path.join("brain", file));
 await copyActiveAssets();
 
-console.log("Énergie v3.56.120 préparée dans www pour Capacitor iOS.");
+console.log("Énergie v3.56.125 préparée dans www pour Capacitor iOS.");
