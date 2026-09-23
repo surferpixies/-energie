@@ -14849,6 +14849,12 @@ function formatSleepDuration(hours) {
       // nouvelle identité (ex. Apple) ait été liée. Relire le user serveur afin
       // que le Profil reflète les providers réellement associés dès l'ouverture.
       const currentUser = await client.auth.getUser();
+      console.log("APPLE DEBUG", {
+        id: currentUser.data.user?.id,
+        identities: currentUser.data.user?.identities?.map((identity) => identity.provider),
+        providers: currentUser.data.user?.app_metadata?.providers,
+        provider: currentUser.data.user?.app_metadata?.provider,
+      });
       if (!currentUser.error && currentUser.data.user?.id === session.user?.id)
         session = { ...session, user: currentUser.data.user };
       prepareLocalJournalForSession(session);
