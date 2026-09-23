@@ -15,7 +15,7 @@
     html,body{margin:0;background:#eef8e7;}
     #splashScreen{position:fixed;inset:0;background:#eef8e7;}
   </style>
-  <link rel="stylesheet" href="styles.css?v=3.56.119">
+  <link rel="stylesheet" href="styles.css?v=3.56.125">
   <link rel="stylesheet" href="portrait.css?v=3.56.21">
   <link rel="stylesheet" href="observation-detail.css?v=3.56.21">
   <link rel="stylesheet" href="personal-metrics.css?v=3.56.21">
@@ -637,6 +637,25 @@
       </label>
       <button type="submit" class="primary">Enregistrer le mot de passe</button>
       <p id="passwordMessage" class="small muted" aria-live="polite"></p>
+    </form>
+  </dialog>
+
+  <dialog id="pilotFeedbackDialog" class="pilot-feedback-dialog">
+    <form id="pilotFeedbackForm" class="dialog-card pilot-feedback-card">
+      <div class="dialog-header"><div><p class="eyebrow">Mode pilote</p><h2>Partager un commentaire</h2></div><button type="button" class="icon-button" id="closePilotFeedback" aria-label="Fermer">✕</button></div>
+      <p class="muted small">Choisis ce qui correspond le mieux. Le contexte technique est ajouté automatiquement, sans le contenu de ton journal.</p>
+      <input id="pilotFeedbackType" type="hidden"><input id="pilotFeedbackTimestamp" type="hidden"><input id="pilotFeedbackContext" type="hidden">
+      <div class="pilot-feedback-types" role="group" aria-label="Type de commentaire">
+        <button type="button" data-pilot-feedback-type="suggestion" aria-pressed="false"><span>💡</span><strong>Soumettre une suggestion</strong></button>
+        <button type="button" data-pilot-feedback-type="bug" aria-pressed="false"><span>🐛</span><strong>Signaler un bogue</strong></button>
+        <button type="button" data-pilot-feedback-type="other" aria-pressed="false"><span>💬</span><strong>Autre</strong></button>
+      </div>
+      <label>Votre commentaire<textarea id="pilotFeedbackComment" rows="5" maxlength="4000" required placeholder="Décris ce que tu as remarqué, ce que tu essayais de faire ou ce qui pourrait être amélioré…"></textarea></label>
+      <label class="pilot-feedback-attachment">Pièce jointe <span class="muted tiny">(facultatif · max. 10 Mo)</span><input id="pilotFeedbackAttachment" type="file" accept="image/*,application/pdf"></label>
+      <p class="muted tiny">Avant d’ajouter une capture ou un document, vérifie qu’il ne contient pas d’information personnelle que tu ne souhaites pas transmettre.</p>
+      <section class="pilot-feedback-context" aria-label="Contexte transmis automatiquement"><strong>Contexte transmis automatiquement</strong><span>🕒 <b id="pilotFeedbackDateDisplay">—</b></span><span>📍 <b id="pilotFeedbackContextDisplay">—</b></span><span>📱 <b id="pilotFeedbackTechnicalDisplay">—</b></span></section>
+      <p id="pilotFeedbackStatus" class="small muted" role="status" aria-live="polite"></p>
+      <button type="submit" class="primary" id="pilotFeedbackSubmit">Envoyer</button>
     </form>
   </dialog>
 
