@@ -112,3 +112,29 @@ where photo_path is not null
 
 comment on column public.meals.photo_paths is
   'Jusqu’à trois chemins privés dans Storage pour les photos facultatives du repas.';
+
+
+-- Énergie V3.56.125 — Mode pilote V1
+create table if not exists public.pilot_feedback (
+  id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade,
+  feedback_type text not null check (feedback_type in ('suggestion','bug','other')),
+  comment text not null check (char_length(comment) between 1 and 4000), reported_at timestamptz not null default now(),
+  context text not null default '', platform text not null default '', app_version text not null default '',
+  attachment_path text, status text not null default 'new' check (status in ('new','reviewing','resolved')), created_at timestamptz not null default now()
+);
+create index if not exists pilot_feedback_user_created_idx on public.pilot_feedback(user_id, created_at desc);
+alter table public.pilot_feedback enable row level security;
+revoke all on table public.pilot_feedback from anon;
+grant select, insert on table public.pilot_feedback to authenticated;
+drop policy if exists "pilot_feedback_insert_own" on public.pilot_feedback;
+drop policy if exists "pilot_feedback_select_own" on public.pilot_feedback;
+create policy "pilot_feedback_insert_own" on public.pilot_feedback for insert to authenticated with check ((select auth.uid()) = user_id);
+create policy "pilot_feedback_select_own" on public.pilot_feedback for select to authenticated using ((select auth.uid()) = user_id);
+insert into storage.buckets (id,name,public,file_size_limit) values ('pilot-feedback','pilot-feedback',false,10485760)
+on conflict (id) do update set public=false,file_size_limit=10485760;
+drop policy if exists "pilot_feedback_storage_insert_own" on storage.objects;
+drop policy if exists "pilot_feedback_storage_select_own" on storage.objects;
+drop policy if exists "pilot_feedback_storage_delete_own" on storage.objects;
+create policy "pilot_feedback_storage_insert_own" on storage.objects for insert to authenticated with check (bucket_id='pilot-feedback' and (storage.foldername(name))[1]=(select auth.uid())::text);
+create policy "pilot_feedback_storage_select_own" on storage.objects for select to authenticated using (bucket_id='pilot-feedback' and (storage.foldername(name))[1]=(select auth.uid())::text);
+create policy "pilot_feedback_storage_delete_own" on storage.objects for delete to authenticated using (bucket_id='pilot-feedback' and (storage.foldername(name))[1]=(select auth.uid())::text);
