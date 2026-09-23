@@ -14048,7 +14048,13 @@ function formatSleepDuration(hours) {
       if (refreshed.data.user?.id !== originalUserId)
         throw new Error("Sécurité : l’identité Apple n’a pas été associée au compte Énergie attendu.");
       const sessionResult = await client.auth.getSession();
-      session = sessionResult.data.session || session;
+      const currentSession = sessionResult.data.session || session;
+      // getSession() peut conserver une copie du user antérieure au linking.
+      // Réutiliser explicitement le user relu par getUser() pour que le Profil
+      // voie immédiatement la nouvelle identité Apple sans déconnexion/reconnexion.
+      session = currentSession
+        ? { ...currentSession, user: refreshed.data.user }
+        : session;
       if (message) message.textContent = "✓ Compte Apple associé.";
       render();
     } catch (error) {
