@@ -14844,7 +14844,15 @@ function formatSleepDuration(hours) {
     }
     const { data } = await client.auth.getSession();
     session = data.session;
-    if (session) prepareLocalJournalForSession(session);
+    if (session) {
+      // Une session restaurée peut contenir un user mis en cache avant qu'une
+      // nouvelle identité (ex. Apple) ait été liée. Relire le user serveur afin
+      // que le Profil reflète les providers réellement associés dès l'ouverture.
+      const currentUser = await client.auth.getUser();
+      if (!currentUser.error && currentUser.data.user?.id === session.user?.id)
+        session = { ...session, user: currentUser.data.user };
+      prepareLocalJournalForSession(session);
+    }
     client.auth.onAuthStateChange((event, newSession) => {
       const previousUserId = session?.user?.id || null;
       const newUserId = newSession?.user?.id || null;
