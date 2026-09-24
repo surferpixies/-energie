@@ -1527,3 +1527,14 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .weight-trend-scroll .metrics-chart{display:block;width:100%;height:auto;min-width:1200px;max-height:calc(100dvh - 125px)}
 .weight-trend-scroll .metrics-values{display:none}
 @media(orientation:landscape){.weight-trend-scroll .metrics-chart{max-height:calc(100dvh - 90px)}}
+
+/* iOS Apple authentication — intentionally isolated from the existing auth layout. */
+.auth-provider-option{display:grid;gap:9px;text-align:center;margin-top:2px}
+.auth-provider-option>span{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.74rem;font-weight:800}
+.auth-provider-option>span::before,.auth-provider-option>span::after{content:"";height:1px;background:var(--border);flex:1}
+.auth-provider-option small{color:var(--muted);font-size:.7rem;line-height:1.35}
+.apple-auth-button{width:100%;border:0;border-radius:14px;background:#000;color:#fff;padding:12px 14px;font:inherit;font-weight:850;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px}
+.apple-auth-button b{font-size:1.35rem;line-height:1}
+.apple-auth-button:disabled{opacity:.55;cursor:wait}
+.apple-link-card{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:grid;gap:9px}
+.apple-link-card p{margin:0}

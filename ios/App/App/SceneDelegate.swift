@@ -8,14 +8,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = scene as? UIWindowScene else { return }
 
         window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = MyBridgeViewController()
+        let bridgeController = MyBridgeViewController()
+        window?.rootViewController = bridgeController
         window?.makeKeyAndVisible()
+
+        if let url = connectionOptions.urlContexts.first?.url {
+            MyBridgeViewController.pendingAuthURL = url
+        }
 
         SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         SceneDelegateProxy.shared.scene(scene, openURLContexts: URLContexts)
+        guard let url = URLContexts.first?.url else { return }
+        (window?.rootViewController as? MyBridgeViewController)?.handleAuthURL(url)
     }
 
     func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
