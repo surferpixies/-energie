@@ -1,0 +1,267 @@
+energie_alias,current_portion,rank,cnf_food_id,score,cnf_fr,cnf_en,kcal_100g
+mûres,1 tasse,1,1515,2.3,"Mûre, crue","Blackberry, raw",43
+mûres,1 tasse,2,2460,1.5,"Tomate, rouge, mûre, crue, moyenne durant toute l'année","Tomato, red, ripe, raw, year round average",18
+mûres,1 tasse,3,6379,1,"Mûre sauvage, crue","Blackberry, wild, raw",52
+mûres,1 tasse,4,88,0.5,"Oeuf, canard, entier, frais, cru","Egg, duck, whole, fresh, raw",186
+mûres,1 tasse,5,89,0.5,"Oeuf, oie, entier, frais, cru","Egg, goose, whole, fresh, raw",185
+mûres,1 tasse,6,90,0.5,"Oeuf, caille, entier, frais, cru","Egg, quail, whole, fresh, raw",159
+mûres,1 tasse,7,91,0.5,"Oeuf, dinde, entier, frais, cru","Egg, turkey, whole, fresh, raw",171
+mûres,1 tasse,8,125,0.5,"Oeuf, poule, entier, frais ou congelé, cru","Egg, chicken, whole, fresh or frozen, raw",152
+mûres,1 tasse,9,126,0.5,"Oeuf, poule, blanc, frais ou congelé, cru","Egg, chicken, white, fresh or frozen, raw",46
+mûres,1 tasse,10,127,0.5,"Oeuf, poule, jaune, frais ou congelé, cru","Egg, chicken, yolk, fresh or frozen, raw",351
+mûres,1 tasse,11,555,0.5,"Poulet à griller, viande, peau, abats et cou, cru","Chicken, broiler, meat, skin, giblets and neck, raw",213
+mûres,1 tasse,12,560,0.5,"Poulet à griller, viande et peau, crues","Chicken, broiler, meat and skin, raw",215
+dattes,3 dattes,1,1584,1.5,"Jujube (datte chinoise), sec","Jujube (chinese date), dried",281
+dattes,3 dattes,2,1710,1,"Datte, domestique, naturelle et séchée","Date, domestic, natural and dry",282
+dattes,3 dattes,3,83,0.5,"Oeuf, poule, déshydraté, entier","Egg, chicken, dried, whole",592
+dattes,3 dattes,4,84,0.5,"Oeuf, poule, déshydraté, entier, stabilisé","Egg, chicken, dried, whole, stabilized",615
+dattes,3 dattes,5,85,0.5,"Oeuf, poule, blanc, séché, flocons","Egg, chicken, white, pan dried, flakes",351
+dattes,3 dattes,6,87,0.5,"Oeuf, poule, jaune, déshydraté","Egg, chicken, yolk, dried",669
+dattes,3 dattes,7,171,0.5,"Épices, basilic, déshydraté","Spices, basil, dried",233
+dattes,3 dattes,8,176,0.5,"Épices, cerfeuil, déshydraté","Spices, chervil, dried",237
+dattes,3 dattes,9,180,0.5,"Épices, coriandre (cilantro), feuilles, déshydraté","Spices, coriander leaf (cilantro), dried",279
+dattes,3 dattes,10,185,0.5,"Épices, aneth, déshydraté","Spices, dill weed, dried",253
+dattes,3 dattes,11,191,0.5,"Épices, marjolaine, déshydratée","Spices, marjoram, dried",272
+dattes,3 dattes,12,197,0.5,"Épices, persil, déshydraté","Spices, parsley, dried",292
+laitue,2 tasses,1,2073,1.5,"Mâche commune, crue","Cornsalad (lamb's lettuce), raw",21
+laitue,2 tasses,2,2051,1,"Laitue-tige, crue","Celtuce, raw",18
+laitue,2 tasses,3,88,0.5,"Oeuf, canard, entier, frais, cru","Egg, duck, whole, fresh, raw",186
+laitue,2 tasses,4,89,0.5,"Oeuf, oie, entier, frais, cru","Egg, goose, whole, fresh, raw",185
+laitue,2 tasses,5,90,0.5,"Oeuf, caille, entier, frais, cru","Egg, quail, whole, fresh, raw",159
+laitue,2 tasses,6,91,0.5,"Oeuf, dinde, entier, frais, cru","Egg, turkey, whole, fresh, raw",171
+laitue,2 tasses,7,125,0.5,"Oeuf, poule, entier, frais ou congelé, cru","Egg, chicken, whole, fresh or frozen, raw",152
+laitue,2 tasses,8,126,0.5,"Oeuf, poule, blanc, frais ou congelé, cru","Egg, chicken, white, fresh or frozen, raw",46
+laitue,2 tasses,9,127,0.5,"Oeuf, poule, jaune, frais ou congelé, cru","Egg, chicken, yolk, fresh or frozen, raw",351
+laitue,2 tasses,10,555,0.5,"Poulet à griller, viande, peau, abats et cou, cru","Chicken, broiler, meat, skin, giblets and neck, raw",213
+laitue,2 tasses,11,560,0.5,"Poulet à griller, viande et peau, crues","Chicken, broiler, meat and skin, raw",215
+laitue,2 tasses,12,565,0.5,"Poulet à griller, viande seulement, cru","Chicken, broiler, meat only, raw",119
+asperges,1 tasse,1,1991,2.3,"Asperge, bouillie, égouttée","Asparagus, boiled, drained",22
+asperges,1 tasse,2,6360,2.3,"Asperge, bouillie, égouttée, sel ajouté","Asparagus, boiled, drained, with salt",22
+asperges,1 tasse,3,1994,1,"Asperge, congelée, bouillie, égouttée","Asparagus, frozen, boiled, drained",18
+asperges,1 tasse,4,6361,1,"Asperge, congelée, bouillie, égouttée, sel ajouté","Asparagus, frozen, boiled, drained, with salt",18
+asperges,1 tasse,5,129,0.5,"Oeuf, poule, entier, cuit, frit","Egg, chicken, whole, cooked, fried",193
+asperges,1 tasse,6,130,0.5,"Oeuf, poule, entier, cuit, bouilli à la coque, dur","Egg, chicken, whole, cooked, boiled in shell, hard-cooked",141
+asperges,1 tasse,7,132,0.5,"Oeuf, poule, entier, cuit, poché","Egg, chicken, whole, cooked, poached",145
+asperges,1 tasse,8,133,0.5,"Oeuf, poule, entier, cuit, brouillé ou omelette","Egg, chicken, whole, cooked, scrambled or omelet",153
+asperges,1 tasse,9,816,0.5,"Dinde, toutes catégories, hachée, cuite","Turkey, all classes, ground, cooked",196
+asperges,1 tasse,10,919,0.5,"Poulet, haché, maigre, cuit","Chicken, ground, lean, cooked",189
+asperges,1 tasse,11,923,0.5,"Soupe, crème, asperges, conserve, condensée","Soup, cream, asparagus, canned, condensed",69
+asperges,1 tasse,12,965,0.5,"Soupe, crème, asperges, déshydratée","Soup, cream, asparagus, dehydrated",366
+betterave,1 tasse,1,129,0.5,"Oeuf, poule, entier, cuit, frit","Egg, chicken, whole, cooked, fried",193
+betterave,1 tasse,2,130,0.5,"Oeuf, poule, entier, cuit, bouilli à la coque, dur","Egg, chicken, whole, cooked, boiled in shell, hard-cooked",141
+betterave,1 tasse,3,132,0.5,"Oeuf, poule, entier, cuit, poché","Egg, chicken, whole, cooked, poached",145
+betterave,1 tasse,4,133,0.5,"Oeuf, poule, entier, cuit, brouillé ou omelette","Egg, chicken, whole, cooked, scrambled or omelet",153
+betterave,1 tasse,5,816,0.5,"Dinde, toutes catégories, hachée, cuite","Turkey, all classes, ground, cooked",196
+betterave,1 tasse,6,919,0.5,"Poulet, haché, maigre, cuit","Chicken, ground, lean, cooked",189
+betterave,1 tasse,7,1148,0.5,"Charcuterie, jambon, cuit, tranché","Deli-meat, ham, cooked, sliced",122
+betterave,1 tasse,8,1154,0.5,"Charcuterie, boeuf, cuit, tranché","Deli-meat, roast beef, cooked, sliced",116
+betterave,1 tasse,9,1167,0.5,"Saucisse, fumée, porc, pré-cuite","Sausage, smoked, pork, pre-cooked",286
+betterave,1 tasse,10,1172,0.5,"Charcuterie, poitrine de dinde, cuite, tranchée","Deli-meat, turkey breast, cooked, sliced",118
+betterave,1 tasse,11,1175,0.5,"Saucisse, italienne, porc, cuite","Sausage, Italian, pork, cooked",290
+betterave,1 tasse,12,1182,0.5,"Saucisse, Bratwurst, porc, cuite","Sausage, Bratwurst, pork, cooked",314
+rutabaga,1 tasse,1,2445,1,"Rutabaga (chou-navet), bouilli, égoutté","Rutabaga (swede), boiled, drained",30
+rutabaga,1 tasse,2,6531,1,"Rutabaga (chou-navet), bouilli, égoutté, sel ajouté","Rutabaga (swede), boiled, drained, with salt",30
+rutabaga,1 tasse,3,129,0.5,"Oeuf, poule, entier, cuit, frit","Egg, chicken, whole, cooked, fried",193
+rutabaga,1 tasse,4,130,0.5,"Oeuf, poule, entier, cuit, bouilli à la coque, dur","Egg, chicken, whole, cooked, boiled in shell, hard-cooked",141
+rutabaga,1 tasse,5,132,0.5,"Oeuf, poule, entier, cuit, poché","Egg, chicken, whole, cooked, poached",145
+rutabaga,1 tasse,6,133,0.5,"Oeuf, poule, entier, cuit, brouillé ou omelette","Egg, chicken, whole, cooked, scrambled or omelet",153
+rutabaga,1 tasse,7,816,0.5,"Dinde, toutes catégories, hachée, cuite","Turkey, all classes, ground, cooked",196
+rutabaga,1 tasse,8,919,0.5,"Poulet, haché, maigre, cuit","Chicken, ground, lean, cooked",189
+rutabaga,1 tasse,9,1148,0.5,"Charcuterie, jambon, cuit, tranché","Deli-meat, ham, cooked, sliced",122
+rutabaga,1 tasse,10,1154,0.5,"Charcuterie, boeuf, cuit, tranché","Deli-meat, roast beef, cooked, sliced",116
+rutabaga,1 tasse,11,1167,0.5,"Saucisse, fumée, porc, pré-cuite","Sausage, smoked, pork, pre-cooked",286
+rutabaga,1 tasse,12,1172,0.5,"Charcuterie, poitrine de dinde, cuite, tranchée","Deli-meat, turkey breast, cooked, sliced",118
+céréales,1 tasse,1,6356,2.3,"Céréales, prêtes à manger, flocons d'amarante","Cereal, ready-to-eat, amaranth flakes",353
+céréales,1 tasse,2,1222,1,"Céreale, prête-à-manger, granola, fait maison","Cereal, ready to eat, granola, homemade",490
+céréales,1 tasse,3,1230,1,"Céréale, prête-à-manger, alpen (muesli), Weetabix","Cereal, ready to eat, Alpen (muesli), Weetabix",386
+céréales,1 tasse,4,1231,1,"Céréale, prête-a-manger, Alpha-bits, Post","Cereal, ready to eat, Alpha-bits, Post",394
+céréales,1 tasse,5,1232,1,"Céréale, prête-à-manger, 'All Bran' bran flakes, Kellogg's","Cereal, ready to eat, 'All Bran' Bran Flakes, Kellogg's",331
+céréales,1 tasse,6,1235,1,"Céréale, prête-à-manger, Count Chocula, General Mills","Cereal, ready to eat, Count Chocula, General Mills",395
+céréales,1 tasse,7,1236,1,"Céréale, prête-à-manger, Crispix, Kellogg's","Cereal, ready to eat, Crispix, Kellogg's",399
+céréales,1 tasse,8,1238,1,"Céréale, prête-à-manger, Selects: bleuets sauvages et amandes croquantes, Post","Cereal, ready to eat, Selects: Blueberry Almond Crunch, Post",324
+céréales,1 tasse,9,1239,1,"Céréale, prête-à-manger, Selects: dattes, raisins secs et pacanes croquantes, Post","Cereal, ready to eat, Selects: Date and Raisin Pecan Crunch, Post",320
+céréales,1 tasse,10,1240,1,"Céréale, prête-à-manger, Croque Nature: original, Quaker","Cereal, ready to eat, Harvest Crunch: original, Quaker",459
+céréales,1 tasse,11,1242,1,"Céréale, prête-à-manger, flocons de maïs, Kellogg's","Cereal, ready to eat, Corn Flakes, Kellogg's",392
+céréales,1 tasse,12,1244,1,"Céréale, prête-à-manger, Muffets: blé filamenté, Quaker","Cereal, ready to eat, Muffets, Quaker",387
+bacon,3 tranches,1,1979,1,"Porc, salé, bacon en miettes, grillé","Pork, cured, bacon bits, cooked",498
+bacon,3 tranches,2,5405,1,"Porc, salé, bacon, cuit, au four","Pork, cured, bacon, cooked, baked",548
+bacon,3 tranches,3,5406,1,"Porc, salé, bacon, cuit au four à micro-ondes","Pork, cured, bacon, cooked, microwaved",476
+bacon,3 tranches,4,5407,1,"Porc, salé, bacon, cuit, sauté","Pork, cured, bacon, cooked, pan-fried",468
+bacon,3 tranches,5,5409,1,"Porc, bacon, gras fondu, cuit","Pork, cured, bacon, rendered fat, cooked",898
+bacon,3 tranches,6,1167,0.667,"Saucisse, fumée, porc, pré-cuite","Sausage, smoked, pork, pre-cooked",286
+bacon,3 tranches,7,1175,0.667,"Saucisse, italienne, porc, cuite","Sausage, Italian, pork, cooked",290
+bacon,3 tranches,8,1182,0.667,"Saucisse, Bratwurst, porc, cuite","Sausage, Bratwurst, pork, cooked",314
+bacon,3 tranches,9,1183,0.667,"Saucisse, saucisson Braunschweiger (saucisson de foie avec bacon), porc","Sausage, Braunschweiger (liver sausage with bacon), pork",327
+bacon,3 tranches,10,1199,0.667,"Saucisse à déjeuner, en chapelet ou en galette, porc, cuite","Sausage, breakfast links or rounds, pork, cooked",298
+bacon,3 tranches,11,1760,0.667,"Porc, gras séparable, cuit","Pork, separable fat, cooked",626
+bacon,3 tranches,12,1857,0.667,"Porc, salé, tranches pour le déjeuner, cuit","Pork, cured, breakfast strips, cooked",459
+thon,150 g,1,3081,1.5,"Poisson, thon, chair pale, conserve, dans l'eau, égoutté, sel ajouté","Fish, tuna, light, canned in water, drained, salt added",86
+thon,150 g,2,3131,1.5,"Poisson, thon, chair pale, conserve, dans l'eau, égoutté, sans sel","Fish, tuna, light, canned in water, drained, unsalted",116
+thon,150 g,3,3207,1.5,"Poisson, thon, chair pale, conserve, dans l'huile, égoutté, sel ajouté","Fish, tuna, light, canned in oil, drained, salt added",198
+thon,150 g,4,3214,1.5,"Poisson, thon, chair pale, conserve, dans l'huile, égoutté, sans sel","Fish, tuna, light, canned in oil, drained, unsalted",198
+thon,150 g,5,3084,1,"Poisson, thon, chair blanche, conserve, dans l'eau, égoutté, sel ajouté","Fish, tuna, white, canned with water, drained, salt added",128
+thon,150 g,6,3133,1,"Poisson, thon, chair blanche, conserve, dans l'eau, égoutté, sans sel","Fish, tuna, white, canned with water, drained, unsalted",128
+thon,150 g,7,1046,0.667,"Soupe, crème, asperges, conserve, condensée, eau ajoutée","Soup, cream, asparagus, canned, condensed, water added",35
+thon,150 g,8,1047,0.667,"Soupe, fèves et bacon, conserve, condensée, eau ajoutée","Soup, bean with bacon, canned, condensed, water added",65
+thon,150 g,9,1049,0.667,"Soupe, boeuf et nouilles, conserve, condensée, eau ajoutée","Soup, beef noodle, canned, condensed, water added",33
+thon,150 g,10,1050,0.667,"Soupe, crème, céleri, conserve, condensée, eau ajoutée","Soup, cream, celery, canned, condensed, water added",42
+thon,150 g,11,1051,0.667,"Soupe, fromage cheddar, conserve, condensée, eau ajoutée","Soup, cheddar cheese, canned, condensed, water added",56
+thon,150 g,12,1052,0.667,"Soupe, bouillon, poulet, conserve, condensée, eau ajoutée","Soup, broth, chicken, canned, condensed, water added",3
+fromage à la crème,2 c. à soupe,1,28,0.8,"Fromage, produit de fromage à la crème, nature","Cheese, cream cheese product, plain",310
+fromage à la crème,2 c. à soupe,2,4376,0.8,"Glaçage, saveur de fromage à la crème, prêt-à-manger","Icing (frosting), cream cheese flavour, ready to eat",415
+fromage à la crème,2 c. à soupe,3,4722,0.8,"Fromage à la crème, sans gras","Cheese, cream, fat free",105
+fromage à la crème,2 c. à soupe,4,5563,0.8,"Fromage, produit de fromage à la crème, nature, léger","Cheese, cream cheese product, plain, light",196
+fromage à la crème,2 c. à soupe,5,5565,0.8,"Fromage, produit de fromage à la crème, arômatisé, salé","Cheese, cream cheese product, flavoured, savory",295
+fromage à la crème,2 c. à soupe,6,6629,0.8,"Gâteau, carottes, fait maison, avec glaçage au fromage à la crème","Cake, carrot, homemade, with cream cheese icing",407
+fromage à la crème,2 c. à soupe,7,6786,0.8,"Trempette, base de fromage à la crème","Dip, cream cheese base",348
+fromage à la crème,2 c. à soupe,8,7752,0.8,"Fromage, produit de fromage à la crème, arômatisé, sucré","Cheese, cream cheese product, flavoured, sweet",252
+fromage à la crème,2 c. à soupe,9,7819,0.8,"Fromage, produit de fromage à la crème, sans gras à 95%","Cheese, Cream Cheese Product, 95% fat free",133
+fromage à la crème,2 c. à soupe,10,534,0.667,"Vinaigrette, fromage bleu ou roquefort, régulière","Salad dressing, blue or roquefort cheese, regular",484
+fromage à la crème,2 c. à soupe,11,1397,0.667,"Céréale, chaude, crème de blé, nature, sèche","Cereal, hot, cream of wheat, regular, dry",382
+fromage à la crème,2 c. à soupe,12,1398,0.667,"Céréale, chaude, crème de blé, nature, préparée","Cereal, hot, cream of wheat, regular, prepared",33
+crème glacée,1 tasse,1,4157,1.5,"Dessert, congelé, crème glacée, vanille, riche, 16% M.G.","Dessert, frozen, ice cream, vanilla, rich, 16% M.F.",249
+crème glacée,1 tasse,2,4158,1.5,"Dessert, congelé, crème glacée, vanille française, molle","Dessert, frozen, ice cream, French vanilla, soft serve",222
+crème glacée,1 tasse,3,4163,1.5,"Dessert, congelé, crème glacée, vanille, 11% M.G.","Dessert, frozen, ice cream, vanilla, 11% M.F.",208
+crème glacée,1 tasse,4,5453,1.5,"Dessert, congelé, crème glacée, vanille, sans gras","Dessert, frozen, ice cream, vanilla, fat free",138
+crème glacée,1 tasse,5,5750,1.5,"Dessert, congelé, crème glacée, vanille, légère, sans sucre, enrobée de chocolat","Dessert, frozen, ice cream, vanilla, light, no sugar added, chocolate coated",221
+crème glacée,1 tasse,6,6334,1.5,"Dessert, congelé, crème glacée, vanille, réduit en sucre","Dessert, frozen, ice cream, vanilla, reduced sugar",216
+crème glacée,1 tasse,7,7033,1.5,"Dessert, congelé, sandwich à la crème glacée, crème glacée légère, vanille","Dessert, frozen, ice cream sandwich, made with light ice cream, vanilla",186
+crème glacée,1 tasse,8,4156,1,"Dessert, congelé, crème glacée, légère, vanille","Dessert, frozen, ice cream, light, vanilla",181
+crème glacée,1 tasse,9,4164,1,"Dessert, congelé, crème glacée, pauvre en gras, vanille, molle","Dessert, frozen, ice cream, low fat, vanilla, soft serve",126
+crème glacée,1 tasse,10,4557,1,"Aliments prêts à manger, dessert, crème glacée, légère, vanille, molle avec cornet","Fast foods, dessert, ice cream, light, vanilla, soft serve with cone",163
+crème glacée,1 tasse,11,4917,1,"Dessert, congelé, crème glacée, légère, avec aspartame, vanille","Dessert, frozen, ice cream, light, with aspartame, vanilla",169
+crème glacée,1 tasse,12,3819,0.667,"Biscuit, sandwich au chocolat, garniture au chocolat ou crème à la vanille, commercial","Cookie, chocolate sandwich, chocolate or vanilla cream filling, commercial",481.921825403
+barre granola,1 barre,1,6593,2.3,"Barre granola, All Bran, barres et bouchées collation, toutes saveurs, Kellogg's","Granola bar, All Bran, bars and snack bites, all flavours, Kellogg's",493
+barre granola,1 barre,2,6595,2.3,"Barre granola/céréales, farcie aux fruits, toutes saveurs","Granola bar, cereal bar, fruit-filled, all flavours",386
+barre granola,1 barre,3,6596,2.3,"Barre granola, croquante, nature","Granola bar, crunchy, plain",480
+barre granola,1 barre,4,6597,2.3,"Barre granola, croquante, fruits et/ou noix","Granola bar, crunchy, fruit and/or nut",471
+barre granola,1 barre,5,6598,2.3,"Barre granola/céréales, Gruau sur le pouce, toutes saveurs, Quaker","Granola bar, cereal bar, Oatmeal to go, all flavours, Quaker",390
+barre granola,1 barre,6,6599,2.3,"Barre granola, tendre, saveurs de fruits, enrobée de yogourt","Granola bar, chewy, fruit flavour, yogourt (yogurt) coated",401
+barre granola,1 barre,7,6600,2.3,"Barre granola, tendre, enrobée de chocolat, toutes saveurs","Granola bar, chewy, chocolate coated, all flavours",425
+barre granola,1 barre,8,6601,2.3,"Barre granola, tendre, grains de chocolat","Granola bar, chewy, chocolate chip",397
+barre granola,1 barre,9,6602,2.3,"Barre granola, tendre, fruits et/ou noix","Granola bar, chewy, fruit and/or nut",406
+barre granola,1 barre,10,6603,2.3,"Barre granola, tendre, faible en gras","Granola bar, chewy, low fat",371
+barre granola,1 barre,11,6604,2.3,"Barre granola, tendre, salée et sucrée","Granola bar, chewy, sweet and salty",427
+barre granola,1 barre,12,6727,2.3,"Barre granola, tendre, saveurs de fruits, protéines de soya ajoutées, enrobée de yogourt","Granola bar, chewy, fruit flavour, soy protein added, yogourt (yogurt) coated",384
+beigne,1 moyen,1,3891,1,"Beigne, type gâteau, nature (inclus non sucré, à l'ancienne)","Doughnut (donut), cake-type, plain (includes unsugared, old-fashioned)",434
+beigne,1 moyen,2,3892,1,"Beigne, type gâteau, nature, enrobé de chocolat ou glacé","Doughnut (donut), cake-type, plain, chocolate coated or iced",452
+beigne,1 moyen,3,3893,1,"Beigne, type gâteau, nature, enrobé de sucre (givré)","Doughnut (donut), cake-type, plain, sugared or glazed",426
+beigne,1 moyen,4,28,0.5,"Fromage, produit de fromage à la crème, nature","Cheese, cream cheese product, plain",310
+beigne,1 moyen,5,1223,0.5,"Grains céréaliers, germe de blé, grillé","Grains, wheat germ, toasted, plain",382
+beigne,1 moyen,6,1240,0.5,"Céréale, prête-à-manger, Croque Nature: original, Quaker","Cereal, ready to eat, Harvest Crunch: original, Quaker",459
+beigne,1 moyen,7,1305,0.5,"Céréale, prête-à-manger, flocons de maïs au miel, Nature's Path","Cereal, ready to eat, Corn flakes, Honey'd, Nature's Path",383
+beigne,1 moyen,8,1325,0.5,"Céréale, prête-à-manger, Flax Plus: baie rouges croustillantes, Nature's Path","Cereal, ready to eat, Flax Plus: Red Berry Crunch, Nature's Path",460
+beigne,1 moyen,9,1331,0.5,"Céréale, prête-à-manger, Flax plus: croustillantes avec graines de citrouilles et raisins, Nature's Path","Cereal, ready to eat, Flax Plus: Pumpkin Raisin Crunch, Nature's Path",381
+beigne,1 moyen,10,1335,0.5,"Céréale, prête-à-manger, Croque Nature: original, faible en gras, Quaker","Cereal, ready to eat, Harvest Crunch: Honey Nut, Light and Crisp, Quaker",431
+beigne,1 moyen,11,1336,0.5,"Céréale, prête-à-manger, Croque Nature: raisins avec amandes, faible en gras, Quaker","Cereal, ready to eat, Harvest Crunch: Raisins with almonds, low fat, Quaker",435
+beigne,1 moyen,12,1337,0.5,"Céréale, prête-à-manger, Croque Nature: raisins secs et amandes, Quaker","Cereal, ready to eat, Harvest Crunch: Raisins and almonds, Quaker",460
+gâteau au fromage,1 pointe,1,3800,2.3,"Gâteau, au fromage, commercial","Cheesecake, commercial",321
+gâteau au fromage,1 pointe,2,3801,2.3,"Gâteau, au fromage, préparation, type sans cuisson, préparé","Cheesecake, prepared from mix, no bake type",274
+gâteau au fromage,1 pointe,3,6628,2.3,"Gâteau, au fromage, nature, avec garniture aux cerises, fait maison","Cheesecake, plain, with cherry topping, homemade",273
+gâteau au fromage,1 pointe,4,6629,1,"Gâteau, carottes, fait maison, avec glaçage au fromage à la crème","Cake, carrot, homemade, with cream cheese icing",407
+gâteau au fromage,1 pointe,5,2,0.667,Soufflé au fromage,Cheese souffle,204
+gâteau au fromage,1 pointe,6,100,0.667,"Fondue au fromage, suisse/emmental/gruyère, prête-à-servir","Cheese fondue, swiss/emmental/gruyere, ready-to-serve",230
+gâteau au fromage,1 pointe,7,3753,0.667,"Gâteau, fudge aux cerises, avec glaçage au chocolat","Cake, cherry fudge with chocolate icing (frosting)",264
+gâteau au fromage,1 pointe,8,3761,0.667,"Gâteau, gâteau pause-café, fromage","Cake, coffee cake, cheese",339
+gâteau au fromage,1 pointe,9,3784,0.667,"Gâteau, petit gâteau, commercial, fourré à la crème, avec glaçage au chocolat","Cake, snack cake, cream-filled, chocolate with icing (frosting)",399
+gâteau au fromage,1 pointe,10,3873,0.667,"Craquelin, blé, type collation, sandwich, garniture au fromage","Cracker, wheat, standard snack-type, sandwich, cheese filling",506.333817655
+gâteau au fromage,1 pointe,11,4616,0.667,"Aliments prêts à manger, sandwichs et burgers, hambourgeois au fromage, ordinaire, 1 galette, nature","Fast foods, sandwiches and burgers, cheeseburger, regular, single patty, plain",308
+gâteau au fromage,1 pointe,12,4617,0.667,"Aliments prêts à manger, sandwichs et burgers, hambourgeois au fromage, ordinaire, 1 galette, avec condiments","Fast foods, sandwiches and burgers, cheeseburger, regular, single patty, with condiments",270
+smoothie,1 grand verre,1,7580,1.8,"Frappé (smoothie) au jus de fruits, fraises et bananes","Smoothie, fruit juice, strawberry banana",52
+smoothie,1 grand verre,2,7645,1.5,"Aliments prêts à manger, frappé avec yogourt faible en gras et glaçons","Fast foods, smoothie, strawberry banana with low-fat yogourt and ice",65
+smoothie,1 grand verre,3,75,0.5,"Lait frappé, chocolat, épais","Milkshake, chocolate, thick",119
+smoothie,1 grand verre,4,76,0.5,"Lait frappé, vanille, épais","Milkshake, vanilla, thick",112
+smoothie,1 grand verre,5,2905,0.5,"Lait frappé (restauration-minute), chocolat","Milkshake (fast food), chocolate",127
+smoothie,1 grand verre,6,2906,0.5,"Lait frappé (restauration-minute), vanille","Milkshake (fast food), vanilla",148
+smoothie,1 grand verre,7,2932,0.5,"Lait frappé (restauration-minute), fraise","Milkshake (fast food), strawberry",113
+smoothie,1 grand verre,8,5530,0.5,"Lait frappé, non au chocolat, mélange sec, non préparé","Milkshake, not chocolate, dry mix, unprepared",329
+smoothie,1 grand verre,9,7716,0.5,"Lait frappé, chocolat, 2% M.G., prêt-à-servir","Milkshake, chocolate, 2% M.F., ready-to-serve",89
+smoothie,1 grand verre,10,7722,0.5,"Lait frappé, saveurs autres que chocolat, 2% M.G., prêt-à-servir","Milkshake, flavours not chocolate, 2% M.F., ready-to-serve",80
+club sandwich,1,1,6753,2.3,"Sandwich club avec poulet grillé, bacon, tomates, fromage, laitue et mayonnaise","Club sandwich with grilled chicken, bacon, tomato, cheese, lettuce and mayonnaise",220
+club sandwich,1,2,6796,2.3,"Sandwich club avec poulet frit, bacon, tomates, fromage, laitue et mayonnaise","Club sandwich with fried chicken, bacon, tomato, cheese, lettuce and mayonnaise",258
+club sandwich,1,3,415,0.5,"Tartinade pour sandwich, avec cornichons hachés, ordinaire, huile non spécifiée","Sandwich spread, with chopped pickle, regular, unspecified oil",389
+club sandwich,1,4,1144,0.5,"Poulet, tartinade à sandwich, conserve","Chicken spread, canned",159
+club sandwich,1,5,1151,0.5,"Charcuterie, garniture à sandwich, jambon","Deli-meat, sandwich spread, ham",216
+club sandwich,1,6,1164,0.5,"Tartinade pour sandwich, poulet et/ou dinde","Sandwich spread, chicken and/or turkey",200
+club sandwich,1,7,1166,0.5,"Charcuterie, garniture à sandwich, viande non spécifée","Deli-meat, sandwich spread, unspecified meat",235
+club sandwich,1,8,2853,0.5,"Boissons gazeuses, soda nature (club soda)","Carbonated drinks, club soda",0
+club sandwich,1,9,3819,0.5,"Biscuit, sandwich au chocolat, garniture au chocolat ou crème à la vanille, commercial","Cookie, chocolate sandwich, chocolate or vanilla cream filling, commercial",481.921825403
+club sandwich,1,10,3820,0.5,"Biscuit, sandwich au chocolat, garniture crème à la vanille, enrobé de chocolat, commercial","Cookie, chocolate sandwich, vanilla cream filling, chocolate coated, commercial",522.879024542
+club sandwich,1,11,3821,0.5,"Biscuit, sandwich au chocolat, fourré à la crème, extra crème","Cookie, chocolate sandwich, extra cream filling",498
+club sandwich,1,12,3843,0.5,"Biscuit, sandwich, beurre d'arachides","Cookie, peanut butter sandwich",478
+pad thai,1 portion,1,6762,2.3,Pad thaï au poulet,Pad thaï with chicken,128
+pad thai,1 portion,2,7961,1.5,"Met surgelé, met asiatique, poulet avec légumes et pâtes, sauce asiatique (comprend teriyaki, arachide thai, chow mein, pad thai, sésame), réchauffé","Frozen entree, Asian dish, chicken with vegetables and pasta, asian sauce (includes teriyaki, thai peanut, chow mein, pad thai, sesame),heated",114.890446819
+pad thai,1 portion,3,7965,0.5,"Met surgelé, met asiatique, poulet, légumes et riz, sauce asiatique (comprend sésame, cajou, terriyaki, gingembre, thai), réchauffé","Frozen entree, Asian dish, chicken, vegetables and rice, asian sauce (includes sesame, cashew, terriyaki, ginger, thai), heated",109.711413055
+nuggets de poulet,10 morceaux,1,4954,2.3,"Croquettes de poulet, macaroni au fromage, maïs en sauce et pouding au chocolat, congelé","Chicken nuggets, macaroni in cheese sauce, corn in a seasoned sauce and chocolate pudding, frozen",178
+nuggets de poulet,10 morceaux,2,7034,2.3,"Poulet, croquette, viande blanche et brune, précuite, congelée, non réchauffée","Chicken nuggets, dark and white meat, pre-cooked, frozen, not heated",268
+nuggets de poulet,10 morceaux,3,7035,2.3,"Poulet, croquette, viande blanche, précuite, congelée, non réchauffée","Chicken nuggets, white meat, pre-cooked, frozen, not heated",261
+nuggets de poulet,10 morceaux,4,7653,2.3,"Poulet, croquette, panure de blé entier","Chicken nuggets, whole grain breading",270
+nuggets de poulet,10 morceaux,5,7945,1,"Met surgelé, bouchées de poulet (croquettes) avec frites, réchauffé","Frozen entree, chicken bites (nuggets) with fries, heated",184.1916069
+nuggets de poulet,10 morceaux,6,5,0.5,"Mets chinois, chow mein, poulet","Chinese dish, chow mein, chicken",85
+nuggets de poulet,10 morceaux,7,8,0.5,"Met surgelé, poulet frit avec pommes de terre en purée et légumes, réchauffé","Frozen entree, fried chicken with mashed potatoes and vegetables, heated",184.61865195
+nuggets de poulet,10 morceaux,8,83,0.5,"Oeuf, poule, déshydraté, entier","Egg, chicken, dried, whole",592
+nuggets de poulet,10 morceaux,9,84,0.5,"Oeuf, poule, déshydraté, entier, stabilisé","Egg, chicken, dried, whole, stabilized",615
+nuggets de poulet,10 morceaux,10,85,0.5,"Oeuf, poule, blanc, séché, flocons","Egg, chicken, white, pan dried, flakes",351
+nuggets de poulet,10 morceaux,11,87,0.5,"Oeuf, poule, jaune, déshydraté","Egg, chicken, yolk, dried",669
+nuggets de poulet,10 morceaux,12,125,0.5,"Oeuf, poule, entier, frais ou congelé, cru","Egg, chicken, whole, fresh or frozen, raw",152
+salade de pâtes,2 tasses,1,6744,2.3,"Salade de pâtes avec légumes, préparée avec vinaigrette italienne, faite maison","Pasta salad with vegetables, prepared with Italian dressing, homemade",132
+salade de pâtes,2 tasses,2,2187,0.667,"Pomme de terre, salade, faite maison","Potato salad, homemade",143
+salade de pâtes,2 tasses,3,3299,0.667,"Pâtes, nouilles de haricot mungo (nouilles chinoise, cellophane), déshydratées","Pasta, mung beans noodles (chinese, cellophane or long rice noodles), dehydrated",352
+salade de pâtes,2 tasses,4,4610,0.667,"Aliments prêts à manger, mexicain, salade de taco","Fast foods, mexican, taco salad",141
+salade de pâtes,2 tasses,5,4652,0.667,"Aliments prêts à manger, sandwich sous-marin fait avec pain blanc, salade de thon, laitue et tomates","Fast foods, submarine sandwich on white bread, tuna salad with lettuce and tomatoes",218
+salade de pâtes,2 tasses,6,4653,0.667,"Aliments prêts à manger, plat d'accompagnement, salade de chou","Fast foods, side dish, coleslaw",153
+salade de pâtes,2 tasses,7,4666,0.667,"Aliments prêts à manger, plat d'accompagnement, salade de pommes de terre","Fast foods, side dish, potato salad",114
+salade de pâtes,2 tasses,8,4874,0.667,"Pâtes, nouilles de riz, cuites","Pasta, rice noodles, cooked",108
+salade de pâtes,2 tasses,9,4888,0.667,"Pâtes, nouilles de riz, sèches","Pasta, rice noodles, dry",364
+salade de pâtes,2 tasses,10,5496,0.667,"Vinaigrette, salade de chou, teneur réduite en gras","Salad dressing, coleslaw dressing, reduced fat",329
+salade de pâtes,2 tasses,11,5516,0.667,"Vinaigrette, salade de chou","Salad dressing, coleslaw",404
+salade de pâtes,2 tasses,12,5535,0.667,"Pâtes, vermicelles de soya, sec","Pasta, vermicelli, made from soy, dry",331
+riz,1 tasse cuite,1,1225,1.5,"Céréale, chaude, crème de riz, cuite","Cereal, hot, cream of rice, cooked",52
+riz,1 tasse cuite,2,6675,1.5,"Grains céréaliers, riz, blanc, cuit à la vapeur, restaurant chinois","Grains, rice, white, steamed, Chinese restaurant",151
+riz,1 tasse cuite,3,4423,1,"Grains céréaliers, riz brun, grain moyen, cuit","Grains, rice, brown, medium-grain, cooked",112
+riz,1 tasse cuite,4,4425,1,"Grains céréaliers, riz blanc, glutineux, cuit","Grains, rice, white, glutinous, cooked",97
+riz,1 tasse cuite,5,4427,1,"Grains céréaliers, riz blanc avec pâtes et assaisonnements, cuit","Grains, rice, white with pasta and seasonings, cooked",122
+riz,1 tasse cuite,6,4450,1,"Grains céréaliers, riz sauvage, cuit","Grains, rice, wild, cooked",101
+riz,1 tasse cuite,7,4473,1,"Grains céréaliers, riz blanc, grain long, étuvé, cuit","Grains, rice, white, long-grain, parboiled, cooked",123
+riz,1 tasse cuite,8,4475,1,"Grains céréaliers, riz blanc, grain moyen, cuit","Grains, rice, white, medium-grain, cooked",130
+riz,1 tasse cuite,9,4477,1,"Grains céréaliers, riz blanc, grain court, cuit","Grains, rice, white, short-grain, cooked",130
+riz,1 tasse cuite,10,4481,1,"Grains céréaliers, riz blanc, grain long, précuit ou instantané, enrichi, sec","Grains, rice, white, long-grain, pre-cooked or instant, enriched, dry",380
+riz,1 tasse cuite,11,4482,1,"Grains céréaliers, riz blanc, grain long, précuit ou instantané, enrichi, préparé","Grains, rice, white, long-grain, pre-cooked or instant, enriched, prepared",124
+riz,1 tasse cuite,12,4497,1,"Grains céréaliers, riz brun, grain long, cuit","Grains, rice, brown, long-grain, cooked",123
+fromage,30 g,1,119,2.3,"Fromage cheddar, doux","Cheese, cheddar, mild",418
+fromage,30 g,2,5459,2.3,"Fromage cheddar, immitation, faible en cholestérol","Cheese, cheddar, imitation, low cholesterol",390
+fromage,30 g,3,5566,2.3,"Fromage cheddar, imitation","Cheese, cheddar, imitation",239
+fromage,30 g,4,6038,2.3,"Fromage cheddar, doux, teneur réduite en gras","Cheese, cheddar, mild, reduced fat",325
+fromage,30 g,5,7734,2.3,"Fromage cheddar, extra-fort","Cheese, cheddar, extra old",410
+fromage,30 g,6,7735,2.3,"Fromage cheddar, fort","Cheese, cheddar, old",423
+fromage,30 g,7,7736,2.3,"Fromage cheddar, fort, léger","Cheese, cheddar, old, light",297
+fromage,30 g,8,7737,2.3,"Fromage cheddar, mi-fort","Cheese, cheddar, medium",412
+fromage,30 g,9,7738,2.3,"Fromage cheddar, mi-fort, léger","Cheese, cheddar, medium, light",335
+fromage,30 g,10,7741,2.3,"Fromage cheddar, marbré","Cheese, cheddar, marble",428
+fromage,30 g,11,7742,2.3,"Fromage cheddar, marbré, léger","Cheese, cheddar, marble, light",316
+fromage,30 g,12,930,1.5,"Soupe, fromage cheddar, conserve, condensée","Soup, cheddar cheese, canned, condensed",109
+porc effiloché,150 g,1,7093,2.3,Porc effiloché dans une sauce barbecue,Pulled pork in barbecue sauce,168
+porc effiloché,150 g,2,464,0.5,"Gras animal, saindoux (porc)","Animal fat, lard (pork)",849
+porc effiloché,150 g,3,1008,0.5,"Sauce, porc, déshydratée","Gravy, pork, dehydrated",367
+porc effiloché,150 g,4,1139,0.5,"Saucisse, saucisson de bière, porc","Sausage, Beerwurst, beer salami, pork",238
+porc effiloché,150 g,5,1140,0.5,"Saucisse, Bockwurst, porc/veau, lait/oeufs, crue","Sausage, Bockwurst, pork/veal, with milk and eggs, raw",301
+porc effiloché,150 g,6,1142,0.5,"Saucisse Bratwurst, porc et bœuf","Sausage, Brotwurst, pork, beef, with skimmed dry milk",324
+porc effiloché,150 g,7,1143,0.5,"Saucisse fumée, fromage, porc, boeuf","Wiener (cheesefurter), cheddar smokie",284
+porc effiloché,150 g,8,1152,0.5,"Saucisse, italienne, porc, crue","Sausage, Italian, pork, raw",263
+porc effiloché,150 g,9,1153,0.5,"Saucisse, knackwurst (knockwurst), porc, boeuf","Sausage, Knackwurst (knockwurst), raw",277
+porc effiloché,150 g,10,1157,0.5,"Charcuterie, pain de viande aux olives, porc","Deli-meat, olive loaf, pork",235
+porc effiloché,150 g,11,1167,0.5,"Saucisse, fumée, porc, pré-cuite","Sausage, smoked, pork, pre-cooked",286
+porc effiloché,150 g,12,1171,0.5,"Charcuterie, saucisson, thuringer, cervelat, boeuf et porc","Deli-meat, thuringer, cervelat, beef and pork",362
+fajitas,1 portion,1,6774,2.3,Fajita au poulet et aux légumes,Fajita with chicken and vegetables,155
+manioc,1 tasse cuite,1,129,0.5,"Oeuf, poule, entier, cuit, frit","Egg, chicken, whole, cooked, fried",193
+manioc,1 tasse cuite,2,130,0.5,"Oeuf, poule, entier, cuit, bouilli à la coque, dur","Egg, chicken, whole, cooked, boiled in shell, hard-cooked",141
+manioc,1 tasse cuite,3,132,0.5,"Oeuf, poule, entier, cuit, poché","Egg, chicken, whole, cooked, poached",145
+manioc,1 tasse cuite,4,133,0.5,"Oeuf, poule, entier, cuit, brouillé ou omelette","Egg, chicken, whole, cooked, scrambled or omelet",153
+manioc,1 tasse cuite,5,816,0.5,"Dinde, toutes catégories, hachée, cuite","Turkey, all classes, ground, cooked",196
+manioc,1 tasse cuite,6,919,0.5,"Poulet, haché, maigre, cuit","Chicken, ground, lean, cooked",189
+manioc,1 tasse cuite,7,1148,0.5,"Charcuterie, jambon, cuit, tranché","Deli-meat, ham, cooked, sliced",122
+manioc,1 tasse cuite,8,1154,0.5,"Charcuterie, boeuf, cuit, tranché","Deli-meat, roast beef, cooked, sliced",116
+manioc,1 tasse cuite,9,1167,0.5,"Saucisse, fumée, porc, pré-cuite","Sausage, smoked, pork, pre-cooked",286
+manioc,1 tasse cuite,10,1172,0.5,"Charcuterie, poitrine de dinde, cuite, tranchée","Deli-meat, turkey breast, cooked, sliced",118
+manioc,1 tasse cuite,11,1175,0.5,"Saucisse, italienne, porc, cuite","Sausage, Italian, pork, cooked",290
+manioc,1 tasse cuite,12,1182,0.5,"Saucisse, Bratwurst, porc, cuite","Sausage, Bratwurst, pork, cooked",314
