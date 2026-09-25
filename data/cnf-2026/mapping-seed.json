@@ -1664,84 +1664,6 @@
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
   {
-    "legacyIndex": 41,
-    "energieAlias": "épinards",
-    "aliases": [
-      "épinards",
-      "epinards",
-      "spinach"
-    ],
-    "current": {
-      "calories": 41,
-      "protein": 5.3,
-      "carbs": 7,
-      "fat": 0.5,
-      "portion": "1 tasse cuits",
-      "gramsPerPortion": null
-    },
-    "status": "candidate-medium",
-    "cnfFoodId": "2213",
-    "cnfNameFr": "Épinard, cru",
-    "cnfNameEn": "Spinach, raw",
-    "score": 2.35,
-    "nutritionPer100g": {
-      "protein": 2.86,
-      "fat": 0.39,
-      "carbs": 3.63,
-      "calories": 23,
-      "sugars": 0.42,
-      "fiber": 2.2,
-      "calcium": 99,
-      "iron": 2.71,
-      "potassium": 558,
-      "sodium": 79
-    },
-    "portions": [
-      {
-        "grams": 28,
-        "en": "total refuse",
-        "fr": "portion non comestible totale"
-      },
-      {
-        "grams": 28,
-        "en": "large stems and roots",
-        "fr": "grosses tiges et racines"
-      },
-      {
-        "grams": 12.68,
-        "en": "100 ml",
-        "fr": "100 ml"
-      },
-      {
-        "grams": 10,
-        "en": "1 leaf",
-        "fr": "1 feuille (leaf)"
-      },
-      {
-        "grams": 340,
-        "en": "1 bunch",
-        "fr": "1 1 botte"
-      },
-      {
-        "grams": 15.55,
-        "en": "125 ml",
-        "fr": "125 ml"
-      },
-      {
-        "grams": 31.699,
-        "en": "250 ml",
-        "fr": "250 ml"
-      },
-      {
-        "grams": 65,
-        "en": "65 g",
-        "fr": "65 g"
-      }
-    ],
-    "verified": false,
-    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
-  },
-  {
     "legacyIndex": 43,
     "energieAlias": "laitue romaine",
     "aliases": [
@@ -1864,145 +1786,6 @@
         "grams": 58.12,
         "en": "250 ml chopped",
         "fr": "250 ml haché"
-      },
-      {
-        "grams": 85,
-        "en": "85 g",
-        "fr": "85 g"
-      }
-    ],
-    "verified": false,
-    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
-  },
-  {
-    "legacyIndex": 45,
-    "energieAlias": "courgette",
-    "aliases": [
-      "courgette",
-      "zucchini"
-    ],
-    "current": {
-      "calories": 33,
-      "protein": 2.4,
-      "carbs": 6,
-      "fat": 0.6,
-      "portion": "1 moyenne",
-      "gramsPerPortion": null
-    },
-    "status": "candidate-medium",
-    "cnfFoodId": "6760",
-    "cnfNameFr": "Courgettes, en pâte à frire, frites",
-    "cnfNameEn": "Zucchini, battered and fried",
-    "score": 1.65,
-    "nutritionPer100g": {
-      "protein": 2.585,
-      "fat": 13.748,
-      "carbs": 9.284,
-      "calories": 167,
-      "sugars": 2.056,
-      "fiber": 1.178,
-      "calcium": 57.351,
-      "iron": 0.55,
-      "potassium": 212.246,
-      "sodium": 129.843
-    },
-    "portions": [
-      {
-        "grams": 9,
-        "en": "1 stick (7.6 cm long)",
-        "fr": "1 bâtonnet (7.6 cm long)"
-      },
-      {
-        "grams": 90,
-        "en": "10 sticks",
-        "fr": "10 bâtonnets"
-      },
-      {
-        "grams": 140,
-        "en": "140 g",
-        "fr": "140 g"
-      },
-      {
-        "grams": 85,
-        "en": "1 serving",
-        "fr": "1 portion"
-      }
-    ],
-    "verified": false,
-    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
-  },
-  {
-    "legacyIndex": 46,
-    "energieAlias": "aubergine",
-    "aliases": [
-      "aubergine",
-      "eggplant"
-    ],
-    "current": {
-      "calories": 35,
-      "protein": 0.8,
-      "carbs": 9,
-      "fat": 0.2,
-      "portion": "1 tasse cuite",
-      "gramsPerPortion": null
-    },
-    "status": "candidate-medium",
-    "cnfFoodId": "2088",
-    "cnfNameFr": "Aubergine, crue",
-    "cnfNameEn": "Eggplant (aubergine, brinjal), raw",
-    "score": 2.35,
-    "nutritionPer100g": {
-      "protein": 0.98,
-      "fat": 0.18,
-      "carbs": 5.88,
-      "calories": 25,
-      "sugars": 3.53,
-      "fiber": 3,
-      "calcium": 9,
-      "iron": 0.23,
-      "potassium": 229,
-      "sodium": 2
-    },
-    "portions": [
-      {
-        "grams": 19,
-        "en": "total refuse",
-        "fr": "portion non comestible totale"
-      },
-      {
-        "grams": 19,
-        "en": "ends, parings and trimmings",
-        "fr": "bouts, épluchures et parures"
-      },
-      {
-        "grams": 458,
-        "en": "1 eggplant peeled",
-        "fr": "1 aubergine pelé"
-      },
-      {
-        "grams": 548,
-        "en": "1 eggplant unpeeled",
-        "fr": "1 aubergine non pelé"
-      },
-      {
-        "grams": 34.658,
-        "en": "100 ml cubes",
-        "fr": "100 ml en cubes"
-      },
-      {
-        "grams": 43.322,
-        "en": "125 ml cubes",
-        "fr": "125 ml en cubes"
-      },
-      {
-        "grams": 86.644,
-        "en": "250 ml cubes",
-        "fr": "250 ml en cubes"
-      },
-      {
-        "grams": 69.315,
-        "en": "200 ml pieces",
-        "fr": "200 ml morceaux"
       },
       {
         "grams": 85,
@@ -2387,63 +2170,43 @@
       "portion": "1 tasse cuit",
       "gramsPerPortion": null
     },
-    "status": "candidate-medium",
-    "cnfFoodId": "2038",
-    "cnfNameFr": "Bok choy, pak-choi, cru",
-    "cnfNameEn": "Bok choy, pak-choi, raw",
-    "score": 2.25,
+    "status": "candidate-high",
+    "cnfFoodId": "2039",
+    "cnfNameFr": "Bok choy, pak-choi, bouilli, égoutté",
+    "cnfNameEn": "Bok choy, pak-choi, boiled drained",
+    "score": 2.633,
     "nutritionPer100g": {
-      "protein": 1.5,
-      "fat": 0.2,
-      "carbs": 2.18,
-      "calories": 13,
-      "sugars": 1.18,
+      "protein": 1.56,
+      "fat": 0.16,
+      "carbs": 1.78,
+      "calories": 11,
+      "sugars": 0.83,
       "fiber": 1,
-      "calcium": 105,
-      "iron": 0.8,
-      "potassium": 252,
-      "sodium": 65
+      "calcium": 93,
+      "iron": 1.04,
+      "potassium": 371,
+      "sodium": 34
     },
     "portions": [
       {
-        "grams": 29.586,
+        "grams": 71.851,
         "en": "100 ml shredded",
         "fr": "100 ml filamenté"
       },
       {
-        "grams": 36.982,
+        "grams": 89.814,
         "en": "125 ml shredded",
         "fr": "125 ml filamenté"
       },
       {
-        "grams": 73.965,
+        "grams": 179.628,
         "en": "250 ml shredded",
         "fr": "250 ml filamenté"
-      },
-      {
-        "grams": 840,
-        "en": "1 head",
-        "fr": "1 tête"
-      },
-      {
-        "grams": 14,
-        "en": "1 leaf",
-        "fr": "1 feuille (leaf)"
       },
       {
         "grams": 85,
         "en": "85 g",
         "fr": "85 g"
-      },
-      {
-        "grams": 12,
-        "en": "total refuse",
-        "fr": "portion non comestible totale"
-      },
-      {
-        "grams": 12,
-        "en": "base and damaged leaves",
-        "fr": "base et feuilles endommagées"
       }
     ],
     "verified": false,
@@ -2992,68 +2755,6 @@
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
   {
-    "legacyIndex": 82,
-    "energieAlias": "riz blanc",
-    "aliases": [
-      "riz blanc",
-      "white rice"
-    ],
-    "current": {
-      "calories": 205,
-      "protein": 4.3,
-      "carbs": 45,
-      "fat": 0.4,
-      "portion": "1 tasse cuite",
-      "gramsPerPortion": null
-    },
-    "status": "candidate-medium",
-    "cnfFoodId": "7701",
-    "cnfNameFr": "Riz, blanc et sausage, arômatisé, non préparé",
-    "cnfNameEn": "Rice, white and wild, flavoured, unprepared",
-    "score": 1.686,
-    "nutritionPer100g": {
-      "protein": 3.49,
-      "fat": 2.57,
-      "carbs": 26.28,
-      "calories": 142,
-      "sugars": 0.4,
-      "fiber": 0.8,
-      "calcium": 35,
-      "iron": 1.45,
-      "potassium": 113,
-      "sodium": 443
-    },
-    "portions": [
-      {
-        "grams": 96.788,
-        "en": "100 ml",
-        "fr": "100 ml"
-      },
-      {
-        "grams": 120.985,
-        "en": "125 ml",
-        "fr": "125 ml"
-      },
-      {
-        "grams": 241.97,
-        "en": "250 ml",
-        "fr": "250 ml"
-      },
-      {
-        "grams": 45,
-        "en": "45 g",
-        "fr": "45 g"
-      },
-      {
-        "grams": 24,
-        "en": "amount to make 125ml",
-        "fr": "quantité requise pour préparer 125ml"
-      }
-    ],
-    "verified": false,
-    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
-  },
-  {
     "legacyIndex": 92,
     "energieAlias": "céréales",
     "aliases": [
@@ -3229,157 +2930,6 @@
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
   {
-    "legacyIndex": 131,
-    "energieAlias": "lentilles",
-    "aliases": [
-      "lentilles",
-      "lentille",
-      "lentils"
-    ],
-    "current": {
-      "calories": 230,
-      "protein": 18,
-      "carbs": 40,
-      "fat": 0.8,
-      "portion": "1 tasse cuite",
-      "gramsPerPortion": null
-    },
-    "status": "candidate-medium",
-    "cnfFoodId": "2113",
-    "cnfNameFr": "Lentilles, germées, crues",
-    "cnfNameEn": "Lentils, sprouted, raw",
-    "score": 2.183,
-    "nutritionPer100g": {
-      "protein": 8.96,
-      "fat": 0.55,
-      "carbs": 22.14,
-      "calories": 106,
-      "fiber": 1.45,
-      "calcium": 25,
-      "iron": 3.21,
-      "potassium": 322,
-      "sodium": 11
-    },
-    "portions": [
-      {
-        "grams": 32.544,
-        "en": "100 ml",
-        "fr": "100 ml"
-      },
-      {
-        "grams": 40.681,
-        "en": "125 ml",
-        "fr": "125 ml"
-      },
-      {
-        "grams": 81.361,
-        "en": "250 ml",
-        "fr": "250 ml"
-      },
-      {
-        "grams": 65,
-        "en": "65 g",
-        "fr": "65 g"
-      }
-    ],
-    "verified": false,
-    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
-  },
-  {
-    "legacyIndex": 133,
-    "energieAlias": "haricots noirs",
-    "aliases": [
-      "haricots noirs",
-      "black beans"
-    ],
-    "current": {
-      "calories": 227,
-      "protein": 15,
-      "carbs": 41,
-      "fat": 0.9,
-      "portion": "1 tasse",
-      "gramsPerPortion": null
-    },
-    "status": "candidate-medium",
-    "cnfFoodId": "6181",
-    "cnfNameFr": "Haricots, noirs, farine",
-    "cnfNameEn": "Beans, black, flour",
-    "score": 2.067,
-    "nutritionPer100g": {
-      "protein": 22.99,
-      "fat": 1.51,
-      "carbs": 66.38,
-      "calories": 363,
-      "sugars": 2.39,
-      "fiber": 14.68,
-      "calcium": 130.92,
-      "iron": 5.34,
-      "potassium": 1578.5,
-      "sodium": 5.32
-    },
-    "portions": [
-      {
-        "grams": 20,
-        "en": "1 serving",
-        "fr": "1 portion"
-      },
-      {
-        "grams": 15,
-        "en": "15 g",
-        "fr": "15 g"
-      }
-    ],
-    "verified": false,
-    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
-  },
-  {
-    "legacyIndex": 134,
-    "energieAlias": "haricots rouges",
-    "aliases": [
-      "haricots rouges",
-      "kidney beans"
-    ],
-    "current": {
-      "calories": 225,
-      "protein": 15,
-      "carbs": 40,
-      "fat": 0.9,
-      "portion": "1 tasse",
-      "gramsPerPortion": null
-    },
-    "status": "candidate-medium",
-    "cnfFoodId": "5536",
-    "cnfNameFr": "Haricots, rouges, liquide seulement",
-    "cnfNameEn": "Beans, liquid from stewed kidney beans",
-    "score": 1.9,
-    "nutritionPer100g": {
-      "protein": 1.8,
-      "fat": 3.2,
-      "carbs": 2.8,
-      "calories": 47,
-      "sugars": 0,
-      "fiber": 0.1,
-      "calcium": 13,
-      "iron": 1.96,
-      "potassium": 408,
-      "sodium": 2
-    },
-    "portions": [
-      {
-        "grams": 101.437,
-        "en": "100 ml",
-        "fr": "100 ml"
-      },
-      {
-        "grams": 253.593,
-        "en": "250 ml",
-        "fr": "250 ml"
-      }
-    ],
-    "verified": false,
-    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
-  },
-  {
     "legacyIndex": 136,
     "energieAlias": "falafel",
     "aliases": [
@@ -3425,62 +2975,6 @@
         "grams": 140,
         "en": "140 g",
         "fr": "140 g"
-      }
-    ],
-    "verified": false,
-    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
-  },
-  {
-    "legacyIndex": 154,
-    "energieAlias": "mozzarella",
-    "aliases": [
-      "mozzarella"
-    ],
-    "current": {
-      "calories": 85,
-      "protein": 6,
-      "carbs": 1,
-      "fat": 6,
-      "portion": "30 g",
-      "gramsPerPortion": null
-    },
-    "status": "candidate-medium",
-    "cnfFoodId": "6813",
-    "cnfNameFr": "Bâtonnets de fromage mozzarella, frits",
-    "cnfNameEn": "Mozzarella sticks, fried",
-    "score": 1.733,
-    "nutritionPer100g": {
-      "protein": 14.75,
-      "fat": 18.33,
-      "carbs": 25.14,
-      "calories": 325,
-      "sugars": 2.36,
-      "fiber": 2,
-      "calcium": 334,
-      "iron": 0.62,
-      "potassium": 108,
-      "sodium": 861
-    },
-    "portions": [
-      {
-        "grams": 31,
-        "en": "1 piece",
-        "fr": "1 morceau"
-      },
-      {
-        "grams": 186,
-        "en": "6 pieces",
-        "fr": "6 morceaux"
-      },
-      {
-        "grams": 62,
-        "en": "2 pieces",
-        "fr": "2 morceaux"
-      },
-      {
-        "grams": 50,
-        "en": "50 g",
-        "fr": "50 g"
       }
     ],
     "verified": false,
@@ -4107,6 +3601,52 @@
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
   {
+    "legacyIndex": 237,
+    "energieAlias": "club sandwich",
+    "aliases": [
+      "club sandwich"
+    ],
+    "current": {
+      "calories": 700,
+      "protein": 40,
+      "carbs": 55,
+      "fat": 35,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "status": "candidate-medium",
+    "cnfFoodId": "6753",
+    "cnfNameFr": "Sandwich club avec poulet grillé, bacon, tomates, fromage, laitue et mayonnaise",
+    "cnfNameEn": "Club sandwich with grilled chicken, bacon, tomato, cheese, lettuce and mayonnaise",
+    "score": 1.582,
+    "nutritionPer100g": {
+      "protein": 17.19,
+      "fat": 8.05,
+      "carbs": 19.87,
+      "calories": 220,
+      "sugars": 2.15,
+      "fiber": 1.2,
+      "calcium": 95,
+      "iron": 1.37,
+      "potassium": 226,
+      "sodium": 630
+    },
+    "portions": [
+      {
+        "grams": 246,
+        "en": "1 sandwich",
+        "fr": "1 sandwich"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
     "legacyIndex": 246,
     "energieAlias": "pad thai",
     "aliases": [
@@ -4497,7 +4037,7 @@
     "cnfFoodId": "2045",
     "cnfNameFr": "Manioc, cru",
     "cnfNameEn": "Cassava (manioc), raw",
-    "score": 2.35,
+    "score": 1.45,
     "nutritionPer100g": {
       "protein": 1.36,
       "fat": 0.28,
