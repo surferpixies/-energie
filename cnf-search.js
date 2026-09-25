@@ -228,6 +228,34 @@
     );
   }
 
+  function averageSimilarFoods(items, text) {
+    if (!Array.isArray(items) || items.length < 2) return null;
+
+    const foods = items.map(({ row }) => foodFromRow(row, text));
+    const nutrientKeys = ["calories", "protein", "carbs", "fat", "fiber", "sugars", "sodium"];
+    const averaged = { ...foods[0] };
+
+    for (const key of nutrientKeys) {
+      const values = foods.map((food) => Number(food?.[key])).filter(Number.isFinite);
+      averaged[key] = values.length
+        ? Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 1000) / 1000
+        : null;
+    }
+
+    const gramValues = foods.map((food) => Number(food?.gramsPerPortion)).filter(Number.isFinite);
+    if (gramValues.length) {
+      averaged.gramsPerPortion = Math.round((gramValues.reduce((sum, value) => sum + value, 0) / gramValues.length) * 1000) / 1000;
+    }
+
+    averaged.cnfMatchType = "average";
+    averaged.cnfFoodIds = foods.map((food) => food.cnfFoodId).filter(Boolean);
+    averaged.cnfNamesFr = foods.map((food) => food.cnfNameFr).filter(Boolean);
+    averaged.cnfNamesEn = foods.map((food) => food.cnfNameEn).filter(Boolean);
+    averaged.cnfAverageCount = foods.length;
+    averaged.cnfCatalogMatch = true;
+    return averaged;
+  }
+
   function find(text) {
     if (!catalog.length) return null;
 
@@ -251,7 +279,23 @@
     if (second && first.score - second.score < 45) {
       const firstBase = descriptor(first.row).firstFr || descriptor(first.row).firstEn;
       const secondBase = descriptor(second.row).firstFr || descriptor(second.row).firstEn;
-      if (firstBase === secondBase && !hasUnrequestedQualifier(second.row, text)) return null;
+
+      if (firstBase === secondBase) {
+        // Plusieurs fiches FCÉN peuvent être pratiquement équivalentes pour
+        // un aliment courant (variété, pelure, coupe, etc.). Après le scoring,
+        // les états/préparations explicitement demandés par l'utilisateur ont
+        // déjà été favorisés et les qualificatifs non demandés pénalisés.
+        // Plutôt que d'abandonner vers l'ancien repli Énergie, moyenner les
+        // meilleurs candidats réellement similaires.
+        const similar = ranked.filter(({ row, score }) => {
+          if (first.score - score >= 45) return false;
+          const d = descriptor(row);
+          const base = d.firstFr || d.firstEn;
+          return base === firstBase && !hasUnrequestedQualifier(row, text);
+        });
+        const averaged = averageSimilarFoods(similar, text);
+        if (averaged) return averaged;
+      }
     }
     return foodFromRow(first.row, text);
   }
