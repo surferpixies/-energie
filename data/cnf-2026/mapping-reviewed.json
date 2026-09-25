@@ -496,39 +496,34 @@
       "portion": "1 tasse",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "1610",
-    "cnfNameFr": "Mûres blanche, crue",
-    "cnfNameEn": "Mulberry, raw",
+    "cnfFoodId": "1515",
+    "cnfNameFr": "Mûre, crue",
+    "cnfNameEn": "Blackberry, raw",
     "nutritionPer100g": {
-      "protein": 1.44,
-      "fat": 0.39,
-      "carbs": 9.8,
+      "protein": 1.39,
+      "fat": 0.49,
+      "carbs": 9.61,
       "calories": 43,
-      "sugars": 8.1,
-      "fiber": 1.7,
-      "calcium": 39,
-      "iron": 1.85,
-      "potassium": 194,
-      "sodium": 10
+      "sugars": 4.88,
+      "fiber": 5.3,
+      "calcium": 29,
+      "iron": 0.62,
+      "potassium": 162,
+      "sodium": 1
     },
     "portions": [
       {
-        "grams": 59.172,
+        "grams": 60.862,
         "en": "100 ml",
         "fr": "100 ml"
       },
       {
-        "grams": 15,
-        "en": "10 fruits",
-        "fr": "10 fruits"
-      },
-      {
-        "grams": 73.964,
+        "grams": 76.078,
         "en": "125 ml",
         "fr": "125 ml"
       },
       {
-        "grams": 147.929,
+        "grams": 152.156,
         "en": "250 ml",
         "fr": "250 ml"
       },
@@ -536,14 +531,24 @@
         "grams": 140,
         "en": "140 g",
         "fr": "140 g"
+      },
+      {
+        "grams": 4,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 4,
+        "en": "stems and spoiled berries",
+        "fr": "queues et baies gâtées"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 152.156,
+    "matchedPortionBasis": "250 ml (1 tasse) — Mûre, crue",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Le candidat est « mûres blanche »; trop spécifique pour l’alias générique."
+    "note": "Correspondance générique corrigée de « mûres blanche » vers « Mûre, crue »."
   },
   {
     "energieAlias": "ananas",
@@ -1198,26 +1203,46 @@
       "portion": "3 dattes",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "5401",
-    "cnfNameFr": "Datte, variété Medjool",
-    "cnfNameEn": "Date, medjool",
+    "cnfFoodId": "1710",
+    "cnfNameFr": "Datte, domestique, naturelle et séchée",
+    "cnfNameEn": "Date, domestic, natural and dry",
     "nutritionPer100g": {
-      "protein": 1.81,
-      "fat": 0.15,
-      "carbs": 74.97,
-      "calories": 277,
-      "sugars": 66.47,
-      "fiber": 6.7,
-      "calcium": 64,
-      "iron": 0.9,
-      "potassium": 696,
-      "sodium": 1
+      "protein": 2.45,
+      "fat": 0.39,
+      "carbs": 75.03,
+      "calories": 282,
+      "sugars": 63.35,
+      "fiber": 8,
+      "calcium": 39,
+      "iron": 1.02,
+      "potassium": 656,
+      "sodium": 2
     },
     "portions": [
       {
-        "grams": 24,
-        "en": "1 date pitted",
-        "fr": "1 date dénoyauté"
+        "grams": 71,
+        "en": "10 fruits",
+        "fr": "10 fruits"
+      },
+      {
+        "grams": 24.9,
+        "en": "3 fruits",
+        "fr": "3 fruits"
+      },
+      {
+        "grams": 62.133,
+        "en": "100 ml pitted, chopped",
+        "fr": "100 ml dénoyauté, haché"
+      },
+      {
+        "grams": 77.666,
+        "en": "125 ml pitted, chopped",
+        "fr": "125 ml dénoyauté, haché"
+      },
+      {
+        "grams": 155.333,
+        "en": "250 ml pitted, chopped",
+        "fr": "250 ml dénoyauté, haché"
       },
       {
         "grams": 40,
@@ -1225,22 +1250,27 @@
         "fr": "40 g"
       },
       {
-        "grams": 8,
+        "grams": 7.1,
+        "en": "1 fruit",
+        "fr": "1 fruit"
+      },
+      {
+        "grams": 10,
         "en": "total refuse",
         "fr": "portion non comestible totale"
       },
       {
-        "grams": 8,
+        "grams": 10,
         "en": "pits",
         "fr": "noyaux"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 24.9,
+    "matchedPortionBasis": "3 fruits — Datte, domestique, naturelle et séchée",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Le candidat est spécifiquement Medjool; l’alias Énergie est générique."
+    "note": "Correspondance générique corrigée de Medjool vers datte domestique naturelle et séchée; portion FCÉN explicite de 3 fruits."
   },
   {
     "energieAlias": "grenade",
@@ -1832,76 +1862,46 @@
       "portion": "1 tasse",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "1990",
-    "cnfNameFr": "Asperge, crue",
-    "cnfNameEn": "Asparagus, raw",
+    "cnfFoodId": "1991",
+    "cnfNameFr": "Asperge, bouillie, égouttée",
+    "cnfNameEn": "Asparagus, boiled, drained",
     "nutritionPer100g": {
-      "protein": 2.2,
-      "fat": 0.12,
-      "carbs": 3.88,
-      "calories": 20,
-      "sugars": 1.88,
-      "fiber": 2.1,
-      "calcium": 24,
-      "iron": 2.14,
-      "potassium": 202,
-      "sodium": 2
+      "protein": 2.4,
+      "fat": 0.22,
+      "carbs": 4.11,
+      "calories": 22,
+      "sugars": 1.3,
+      "fiber": 2,
+      "calcium": 23,
+      "iron": 0.91,
+      "potassium": 224,
+      "sodium": 14
     },
     "portions": [
       {
-        "grams": 47,
-        "en": "total refuse",
-        "fr": "portion non comestible totale"
+        "grams": 60,
+        "en": "4 spears",
+        "fr": "4 pointes"
       },
       {
-        "grams": 47,
-        "en": "ends",
-        "fr": "bouts"
-      },
-      {
-        "grams": 56.636,
+        "grams": 76.078,
         "en": "100 ml",
         "fr": "100 ml"
       },
       {
-        "grams": 3.5,
-        "en": "1 spear tip (5cm long and less)",
-        "fr": "1 pointe (5 cm long. et moins)"
-      },
-      {
-        "grams": 12,
-        "en": "1 small spear (12.7cm long or less)",
-        "fr": "1 petite tige (12.7cm long. ou moins)"
-      },
-      {
-        "grams": 24,
-        "en": "1 extra large spear (22.2cm to 25.4cm long)",
-        "fr": "1 très grosse tige (22.2cm à 25.4cm long)"
-      },
-      {
-        "grams": 20,
-        "en": "1 large spear (18.4cm to 21.6cm long)",
-        "fr": "1 grosse tige (18.4cm à 21.6cm long)"
-      },
-      {
-        "grams": 16,
-        "en": "1 medium spear (13.3cm to 17.8cm long)",
-        "fr": "1 tige moyenne (13.3cm à 17.8cm long)"
-      },
-      {
-        "grams": 70.795,
+        "grams": 95.097,
         "en": "125 ml",
         "fr": "125 ml"
       },
       {
-        "grams": 141.589,
+        "grams": 190.194,
         "en": "250 ml",
         "fr": "250 ml"
       },
       {
-        "grams": 96,
-        "en": "6 medium spears (13.3cm to 17.8cm long)",
-        "fr": "6 tiges moyennes (13.3cm à 17.8cm long)s"
+        "grams": 90,
+        "en": "6 spears",
+        "fr": "6 pointes"
       },
       {
         "grams": 85,
@@ -1909,17 +1909,17 @@
         "fr": "85 g"
       },
       {
-        "grams": 58,
-        "en": "4 spears",
-        "fr": "4 pointes"
+        "grams": 15,
+        "en": "1 spear",
+        "fr": "1 tige et fleur"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 190.194,
+    "matchedPortionBasis": "250 ml (1 tasse) — Asperge, bouillie, égouttée",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "La fiche est crue alors que la portion Énergie ne précise pas l’état; à décider comme valeur par défaut."
+    "note": "La portion Énergie historique (~40 kcal) concorde avec 1 tasse d’asperges bouillies FCÉN (~42 kcal), donc l’état cuit est retenu comme référence."
   },
   {
     "energieAlias": "betterave",
@@ -2525,61 +2525,51 @@
       "portion": "1 tasse",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "2444",
-    "cnfNameFr": "Rutabaga (chou-navet), cru",
-    "cnfNameEn": "Rutabaga (swede), raw",
+    "cnfFoodId": "2445",
+    "cnfNameFr": "Rutabaga (chou-navet), bouilli, égoutté",
+    "cnfNameEn": "Rutabaga (swede), boiled, drained",
     "nutritionPer100g": {
-      "protein": 1.08,
-      "fat": 0.16,
-      "carbs": 8.62,
-      "calories": 37,
-      "sugars": 4.46,
-      "fiber": 2.4,
-      "calcium": 43,
-      "iron": 0.44,
-      "potassium": 305,
-      "sodium": 12
+      "protein": 0.93,
+      "fat": 0.18,
+      "carbs": 6.84,
+      "calories": 30,
+      "sugars": 3.95,
+      "fiber": 1.8,
+      "calcium": 18,
+      "iron": 0.18,
+      "potassium": 216,
+      "sodium": 5
     },
     "portions": [
       {
-        "grams": 15,
-        "en": "total refuse",
-        "fr": "portion non comestible totale"
-      },
-      {
-        "grams": 15,
-        "en": "parings",
-        "fr": "épluchures"
-      },
-      {
-        "grams": 59.172,
+        "grams": 71.851,
         "en": "100 ml cubes",
         "fr": "100 ml en cubes"
       },
       {
-        "grams": 73.965,
+        "grams": 101.437,
+        "en": "100 ml mashed",
+        "fr": "100 ml en purée"
+      },
+      {
+        "grams": 89.814,
         "en": "125 ml cubes",
         "fr": "125 ml en cubes"
       },
       {
-        "grams": 147.93,
+        "grams": 179.628,
         "en": "250 ml cubes",
         "fr": "250 ml en cubes"
       },
       {
-        "grams": 772,
-        "en": "1 large",
-        "fr": "1 gros"
+        "grams": 126.796,
+        "en": "125 ml mashed",
+        "fr": "125 ml en purée"
       },
       {
-        "grams": 192,
-        "en": "1 small",
-        "fr": "1 petit"
-      },
-      {
-        "grams": 386,
-        "en": "1 medium",
-        "fr": "1 moyen"
+        "grams": 253.593,
+        "en": "250 ml mashed",
+        "fr": "250 ml en purée"
       },
       {
         "grams": 85,
@@ -2587,12 +2577,12 @@
         "fr": "85 g"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 179.628,
+    "matchedPortionBasis": "250 ml (1 tasse), en cubes — Rutabaga bouilli, égoutté",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Correspondance, préparation ou portion à revoir avant utilisation."
+    "note": "Référence cuite retenue pour une portion usuelle de 1 tasse; fiche sans sel ajouté."
   },
   {
     "energieAlias": "artichaut",
@@ -2859,41 +2849,31 @@
       "portion": "3 tranches",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "5462",
-    "cnfNameFr": "Bacon, dinde, cuit",
-    "cnfNameEn": "Turkey, bacon, cooked",
+    "cnfFoodId": "5405",
+    "cnfNameFr": "Porc, salé, bacon, cuit, au four",
+    "cnfNameEn": "Pork, cured, bacon, cooked, baked",
     "nutritionPer100g": {
-      "protein": 29.5,
-      "fat": 25.87,
-      "carbs": 4.24,
-      "calories": 368,
-      "sugars": 4.24,
+      "protein": 35.73,
+      "fat": 43.27,
+      "carbs": 1.35,
+      "calories": 548,
+      "sugars": 0,
       "fiber": 0,
-      "calcium": 163,
-      "iron": 2.63,
-      "potassium": 666,
-      "sodium": 2021
+      "calcium": 10,
+      "iron": 1.49,
+      "potassium": 539,
+      "sodium": 2193
     },
     "portions": [
       {
         "grams": 8.1,
-        "en": "1 slice",
-        "fr": "1 tranche"
+        "en": "1 slice cooked",
+        "fr": "1 tranche cuite"
       },
       {
-        "grams": 34.658,
-        "en": "100 ml pieces",
-        "fr": "100 ml morceaux"
-      },
-      {
-        "grams": 86.644,
-        "en": "250 ml pieces",
-        "fr": "250 ml morceaux"
-      },
-      {
-        "grams": 75,
-        "en": "1 food guide serving = 75g",
-        "fr": "1 portion du guide alimentaire = 75g"
+        "grams": 26,
+        "en": "1 slice raw",
+        "fr": "1 tranche cru"
       },
       {
         "grams": 15,
@@ -2901,12 +2881,12 @@
         "fr": "15 g"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 24.3,
+    "matchedPortionBasis": "3 tranches cuites × 8,1 g — bacon de porc cuit au four",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Le candidat est bacon de dinde; alias générique."
+    "note": "Correspondance corrigée du bacon de dinde vers bacon de porc. Trois tranches FCÉN donnent ~133 kcal, très proche des 130 kcal historiques."
   },
   {
     "energieAlias": "thon",
@@ -3032,31 +3012,36 @@
       "portion": "2 c. à soupe",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "4722",
-    "cnfNameFr": "Fromage à la crème, sans gras",
-    "cnfNameEn": "Cheese, cream, fat free",
+    "cnfFoodId": "28",
+    "cnfNameFr": "Fromage, produit de fromage à la crème, nature",
+    "cnfNameEn": "Cheese, cream cheese product, plain",
     "nutritionPer100g": {
-      "protein": 15.69,
-      "fat": 1,
-      "carbs": 7.66,
-      "calories": 105,
-      "sugars": 5.48,
+      "protein": 6.59,
+      "fat": 28.461,
+      "carbs": 8.3,
+      "calories": 310,
+      "sugars": 6.67,
       "fiber": 0,
-      "calcium": 351,
+      "calcium": 131,
       "iron": 0.19,
-      "potassium": 278,
-      "sodium": 702
+      "potassium": 237,
+      "sodium": 422
     },
     "portions": [
       {
-        "grams": 15.81,
+        "grams": 98,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 14.7,
         "en": "15 ml",
         "fr": "15 ml"
       },
       {
-        "grams": 105.67,
-        "en": "100 ml",
-        "fr": "100 ml"
+        "grams": 245,
+        "en": "250 ml",
+        "fr": "250 ml"
       },
       {
         "grams": 50,
@@ -3064,7 +3049,7 @@
         "fr": "50 g"
       },
       {
-        "grams": 31.7,
+        "grams": 29.4,
         "en": "30 ml",
         "fr": "30 ml"
       },
@@ -3072,14 +3057,19 @@
         "grams": 30,
         "en": "30 g",
         "fr": "30 g"
+      },
+      {
+        "grams": 122.5,
+        "en": "125 ml",
+        "fr": "125 ml"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 29.4,
+    "matchedPortionBasis": "30 ml (2 c. à soupe) — produit de fromage à la crème, nature",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Le candidat est sans gras; alias générique."
+    "note": "Correspondance corrigée de la version sans gras vers la version nature; portion FCÉN explicite de 30 ml."
   },
   {
     "energieAlias": "crème glacée",
@@ -3468,12 +3458,12 @@
         "fr": "125 g"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 125,
+    "matchedPortionBasis": "125 g — gâteau au fromage commercial",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Commercial est plausible, mais trop spécifique sans indication."
+    "note": "La fiche commerciale est retenue comme référence générique. 125 g donnent ~401 kcal, concordant avec les 400 kcal historiques."
   },
   {
     "energieAlias": "smoothie",
