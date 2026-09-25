@@ -15,7 +15,7 @@
     html,body{margin:0;background:#eef8e7;}
     #splashScreen{position:fixed;inset:0;background:#eef8e7;}
   </style>
-  <link rel="stylesheet" href="styles.css?v=3.56.119">
+  <link rel="stylesheet" href="styles.css?v=3.56.125">
   <link rel="stylesheet" href="portrait.css?v=3.56.21">
   <link rel="stylesheet" href="observation-detail.css?v=3.56.21">
   <link rel="stylesheet" href="personal-metrics.css?v=3.56.21">
@@ -207,14 +207,14 @@
             <div class="meal-nutrition-heading"><div><span class="eyebrow">Nutrition facultative</span><strong>Estimation nutritionnelle</strong></div><button type="button" class="secondary small" id="estimateMealNutrition">Estimer</button></div>
             <div class="nutrition-fields">
               <label>Calories<input id="nutritionCalories" type="number" min="0" step="any" inputmode="decimal" placeholder="—"></label>
-              <label>Protéines (g)<input id="nutritionProtein" type="number" min="0" step="0.1" inputmode="decimal" placeholder="—"></label>
-              <label>Glucides (g)<input id="nutritionCarbs" type="number" min="0" step="0.1" inputmode="decimal" placeholder="—"></label>
-              <label>Lipides (g)<input id="nutritionFat" type="number" min="0" step="0.1" inputmode="decimal" placeholder="—"></label>
-              <label>Fibres (g)<input id="nutritionFiber" type="number" min="0" step="0.1" inputmode="decimal" placeholder="—"></label>
-              <label>Sucres (g)<input id="nutritionSugars" type="number" min="0" step="0.1" inputmode="decimal" placeholder="—"></label>
-              <label>Sodium (mg)<input id="nutritionSodium" type="number" min="0" step="1" inputmode="decimal" placeholder="—"></label>
+              <label>Protéines (g)<input id="nutritionProtein" type="number" min="0" step="any" inputmode="decimal" placeholder="—"></label>
+              <label>Glucides (g)<input id="nutritionCarbs" type="number" min="0" step="any" inputmode="decimal" placeholder="—"></label>
+              <label>Lipides (g)<input id="nutritionFat" type="number" min="0" step="any" inputmode="decimal" placeholder="—"></label>
+              <label>Fibres (g)<input id="nutritionFiber" type="number" min="0" step="any" inputmode="decimal" placeholder="—"></label>
+              <label>Sucres (g)<input id="nutritionSugars" type="number" min="0" step="any" inputmode="decimal" placeholder="—"></label>
+              <label>Sodium (mg)<input id="nutritionSodium" type="number" min="0" step="any" inputmode="decimal" placeholder="—"></label>
             </div>
-            <p id="nutritionEstimateNote" class="muted tiny">Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.</p>
+            <p id="nutritionEstimateNote" class="muted tiny">Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.</p>\n            <div class="notice info-notice nutrition-source-note"><strong>Source des données nutritionnelles</strong><p>Les valeurs de référence utilisées par Énergie proviennent du Fichier canadien sur les éléments nutritifs (FCÉN) de Santé Canada, la base de référence officielle canadienne. Énergie adapte ensuite ces valeurs aux aliments et aux quantités reconnus. Les recettes, les marques et les méthodes de préparation peuvent faire varier les valeurs réelles.</p></div>
             <button type="button" class="text-button nutrition-clear" id="clearMealNutrition">Effacer les valeurs</button>
           </section>
         </div>
@@ -329,31 +329,76 @@
       <fieldset class="activity-fieldset"><legend>Choisis une activité</legend>
         <label class="activity-search" for="activitySearch"><span aria-hidden="true">🔎</span><input id="activitySearch" type="search" autocomplete="off" placeholder="Rechercher un sport…" aria-label="Rechercher une activité"></label>
         <div id="activityChoices" class="activity-choices" role="radiogroup" aria-label="Type d’activité">
-          <button type="button" data-activity="Aquabike" data-search="aquabike aqua bike velo piscine water cycling"><span>🚴‍♀️</span><small>Aquabike</small></button>
-          <button type="button" data-activity="Aquagym" data-search="aquagym aqua gym aerobique piscine water aerobics"><span>🤽</span><small>Aquagym</small></button>
+                    <button type="button" data-activity="Tir à l’arc"><span>🏹</span><small>Tir à l’arc</small></button>
+          <button type="button" data-activity="Athlétisme"><span>🏃</span><small>Athlétisme</small></button>
           <button type="button" data-activity="Badminton"><span>🏸</span><small>Badminton</small></button>
-          <button type="button" data-activity="Course" data-search="course jogging running"><span>🏃</span><small>Course</small></button>
-          <button type="button" data-activity="Danse" data-search="danse dance zumba"><span>💃</span><small>Danse</small></button>
-          <button type="button" data-activity="Elliptique" data-search="elliptique elliptical cardio"><span>🏃‍♀️</span><small>Elliptique</small></button>
-          <button type="button" data-activity="Escaliers" data-search="escaliers stairs stairmaster"><span>🪜</span><small>Escaliers</small></button>
-          <button type="button" data-activity="Étirements" data-search="etirements stretching flexibilite"><span>🤸</span><small>Étirements</small></button>
-          <button type="button" data-activity="HIIT" data-search="hiit intervalles cardio interval"><span>⚡</span><small>HIIT</small></button>
+          <button type="button" data-activity="Barre"><span>🩰</span><small>Barre</small></button>
+          <button type="button" data-activity="Baseball"><span>⚾</span><small>Baseball</small></button>
+          <button type="button" data-activity="Basketball"><span>🏀</span><small>Basketball</small></button>
+          <button type="button" data-activity="Bowling"><span>🎳</span><small>Bowling</small></button>
+          <button type="button" data-activity="Boxe"><span>🥊</span><small>Boxe</small></button>
+          <button type="button" data-activity="Cardio mixte"><span>❤️</span><small>Cardio mixte</small></button>
+          <button type="button" data-activity="Corde à sauter"><span>➰</span><small>Corde à sauter</small></button>
+          <button type="button" data-activity="Corps et esprit"><span>🧘</span><small>Corps et esprit</small></button>
+          <button type="button" data-activity="Course"><span>🏃</span><small>Course</small></button>
+          <button type="button" data-activity="Cricket"><span>🏏</span><small>Cricket</small></button>
+          <button type="button" data-activity="Cross-training"><span>🏋️</span><small>Cross-training</small></button>
+          <button type="button" data-activity="Curling"><span>🥌</span><small>Curling</small></button>
+          <button type="button" data-activity="Danse cardio"><span>💃</span><small>Danse cardio</small></button>
+          <button type="button" data-activity="Danse sociale"><span>🕺</span><small>Danse sociale</small></button>
+          <button type="button" data-activity="Elliptique"><span>🏃‍♀️</span><small>Elliptique</small></button>
+          <button type="button" data-activity="Escalade"><span>🧗</span><small>Escalade</small></button>
+          <button type="button" data-activity="Escaliers"><span>🪜</span><small>Escaliers</small></button>
+          <button type="button" data-activity="Escrime"><span>🤺</span><small>Escrime</small></button>
+          <button type="button" data-activity="Étirements"><span>🤸</span><small>Étirements</small></button>
+          <button type="button" data-activity="Fitness aquatique"><span>🤽</span><small>Fitness aquatique</small></button>
+          <button type="button" data-activity="Football américain"><span>🏈</span><small>Football américain</small></button>
+          <button type="button" data-activity="Football australien"><span>🏉</span><small>Football australien</small></button>
+          <button type="button" data-activity="Golf"><span>⛳</span><small>Golf</small></button>
+          <button type="button" data-activity="Gymnastique"><span>🤸</span><small>Gymnastique</small></button>
+          <button type="button" data-activity="Handball"><span>🤾</span><small>Handball</small></button>
+          <button type="button" data-activity="HIIT"><span>⚡</span><small>HIIT</small></button>
           <button type="button" data-activity="Hockey"><span>🏒</span><small>Hockey</small></button>
-          <button type="button" data-activity="Marche" data-search="marche marche rapide walking"><span>🚶</span><small>Marche</small></button>
-          <button type="button" data-activity="Musculation" data-search="musculation poids gym renforcement"><span>🏋️</span><small>Musculation</small></button>
-          <button type="button" data-activity="Natation" data-search="natation nage piscine swimming"><span>🏊</span><small>Natation</small></button>
-          <button type="button" data-activity="Patinage" data-search="patinage patin glace skating"><span>⛸️</span><small>Patinage</small></button>
-          <button type="button" data-activity="Pickleball" data-search="pickleball pickle ball"><span>🏓</span><small>Pickleball</small></button>
+          <button type="button" data-activity="Jeu vidéo actif"><span>🎮</span><small>Jeu vidéo actif</small></button>
+          <button type="button" data-activity="Kickboxing"><span>🥊</span><small>Kickboxing</small></button>
+          <button type="button" data-activity="Lacrosse"><span>🥍</span><small>Lacrosse</small></button>
+          <button type="button" data-activity="Lutte"><span>🤼</span><small>Lutte</small></button>
+          <button type="button" data-activity="Marche"><span>🚶</span><small>Marche</small></button>
+          <button type="button" data-activity="Arts martiaux"><span>🥋</span><small>Arts martiaux</small></button>
+          <button type="button" data-activity="Musculation"><span>🏋️</span><small>Musculation</small></button>
+          <button type="button" data-activity="Musculation fonctionnelle"><span>🏋️</span><small>Musculation fonctionnelle</small></button>
+          <button type="button" data-activity="Natation"><span>🏊</span><small>Natation</small></button>
+          <button type="button" data-activity="Patinage"><span>⛸️</span><small>Patinage</small></button>
+          <button type="button" data-activity="Pêche"><span>🎣</span><small>Pêche</small></button>
+          <button type="button" data-activity="Pickleball"><span>🏓</span><small>Pickleball</small></button>
           <button type="button" data-activity="Pilates"><span>🧘‍♀️</span><small>Pilates</small></button>
-          <button type="button" data-activity="Rameur" data-search="rameur aviron rowing"><span>🚣</span><small>Rameur</small></button>
-          <button type="button" data-activity="Randonnée" data-search="randonnee hiking marche sentier"><span>🥾</span><small>Randonnée</small></button>
-          <button type="button" data-activity="Ski de fond" data-search="ski de fond ski fond cross country"><span>⛷️</span><small>Ski de fond</small></button>
-          <button type="button" data-activity="Soccer" data-search="soccer football foot"><span>⚽</span><small>Soccer</small></button>
+          <button type="button" data-activity="Plongée sous-marine"><span>🤿</span><small>Plongée sous-marine</small></button>
+          <button type="button" data-activity="Racquetball"><span>🎾</span><small>Racquetball</small></button>
+          <button type="button" data-activity="Rameur"><span>🚣</span><small>Rameur</small></button>
+          <button type="button" data-activity="Randonnée"><span>🥾</span><small>Randonnée</small></button>
+          <button type="button" data-activity="Rugby"><span>🏉</span><small>Rugby</small></button>
+          <button type="button" data-activity="Ski alpin"><span>⛷️</span><small>Ski alpin</small></button>
+          <button type="button" data-activity="Ski de fond"><span>⛷️</span><small>Ski de fond</small></button>
+          <button type="button" data-activity="Snowboard"><span>🏂</span><small>Snowboard</small></button>
+          <button type="button" data-activity="Soccer"><span>⚽</span><small>Soccer</small></button>
+          <button type="button" data-activity="Softball"><span>🥎</span><small>Softball</small></button>
+          <button type="button" data-activity="Sports aquatiques"><span>🌊</span><small>Sports aquatiques</small></button>
+          <button type="button" data-activity="Sports de disque"><span>🥏</span><small>Sports de disque</small></button>
+          <button type="button" data-activity="Sports de neige"><span>❄️</span><small>Sports de neige</small></button>
+          <button type="button" data-activity="Sports de pagaie"><span>🛶</span><small>Sports de pagaie</small></button>
+          <button type="button" data-activity="Sports de surf"><span>🏄</span><small>Sports de surf</small></button>
+          <button type="button" data-activity="Squash"><span>🎾</span><small>Squash</small></button>
+          <button type="button" data-activity="Step"><span>🪜</span><small>Step</small></button>
+          <button type="button" data-activity="Tai-chi"><span>☯️</span><small>Tai-chi</small></button>
           <button type="button" data-activity="Tennis"><span>🎾</span><small>Tennis</small></button>
-          <button type="button" data-activity="Vélo" data-search="velo bicyclette cyclisme cycling"><span>🚴</span><small>Vélo</small></button>
-          <button type="button" data-activity="Volleyball" data-search="volleyball volley ball"><span>🏐</span><small>Volleyball</small></button>
+          <button type="button" data-activity="Tennis de table"><span>🏓</span><small>Tennis de table</small></button>
+          <button type="button" data-activity="Triathlon"><span>🏊‍♂️</span><small>Triathlon</small></button>
+          <button type="button" data-activity="Vélo"><span>🚴</span><small>Vélo</small></button>
+          <button type="button" data-activity="Voile"><span>⛵</span><small>Voile</small></button>
+          <button type="button" data-activity="Volleyball"><span>🏐</span><small>Volleyball</small></button>
+          <button type="button" data-activity="Water-polo"><span>🤽</span><small>Water-polo</small></button>
           <button type="button" data-activity="Yoga"><span>🧘</span><small>Yoga</small></button>
-          <button type="button" data-activity="Autre" data-search="autre autre sport"><span>✨</span><small>Autre</small></button>
+          <button type="button" data-activity="Autre"><span>✨</span><small>Autre</small></button>
         </div>
         <p id="activitySearchEmpty" class="activity-search-empty muted small" hidden>Aucune activité trouvée. Tu peux effacer la recherche et choisir « Autre ».</p>
         <input id="activityType" type="hidden">
@@ -551,6 +596,11 @@
           <small id="passwordMatchHint" class="auth-field-hint"></small>
         </label>
         <button type="submit" class="primary" id="authSubmit">Me connecter</button>
+        <div class="auth-provider-option" id="appleLoginOption">
+          <span>ou</span>
+          <button type="button" class="apple-auth-button" id="signInWithApple"><b aria-hidden="true"></b> Se connecter avec Apple</button>
+          <small>Pour un compte Énergie existant, associe d’abord Apple depuis ton Profil.</small>
+        </div>
         <button type="button" class="text-button" id="forgotPassword">Mot de passe oublié ou compte créé avec un lien magique?</button>
       </section>
 
@@ -590,6 +640,25 @@
     </form>
   </dialog>
 
+  <dialog id="pilotFeedbackDialog" class="pilot-feedback-dialog">
+    <form id="pilotFeedbackForm" class="dialog-card pilot-feedback-card">
+      <div class="dialog-header"><div><p class="eyebrow">Mode pilote</p><h2>Partager un commentaire</h2></div><button type="button" class="icon-button" id="closePilotFeedback" aria-label="Fermer">✕</button></div>
+      <p class="muted small">Choisis ce qui correspond le mieux. Le contexte technique est ajouté automatiquement, sans le contenu de ton journal.</p>
+      <input id="pilotFeedbackType" type="hidden"><input id="pilotFeedbackTimestamp" type="hidden"><input id="pilotFeedbackContext" type="hidden">
+      <div class="pilot-feedback-types" role="group" aria-label="Type de commentaire">
+        <button type="button" data-pilot-feedback-type="suggestion" aria-pressed="false"><span>💡</span><strong>Soumettre une suggestion</strong></button>
+        <button type="button" data-pilot-feedback-type="bug" aria-pressed="false"><span>🐛</span><strong>Signaler un bogue</strong></button>
+        <button type="button" data-pilot-feedback-type="other" aria-pressed="false"><span>💬</span><strong>Autre</strong></button>
+      </div>
+      <label>Votre commentaire<textarea id="pilotFeedbackComment" rows="5" maxlength="4000" required placeholder="Décris ce que tu as remarqué, ce que tu essayais de faire ou ce qui pourrait être amélioré…"></textarea></label>
+      <label class="pilot-feedback-attachment">Pièce jointe <span class="muted tiny">(facultatif · max. 10 Mo)</span><input id="pilotFeedbackAttachment" type="file" accept="image/*,application/pdf"></label>
+      <p class="muted tiny">Avant d’ajouter une capture ou un document, vérifie qu’il ne contient pas d’information personnelle que tu ne souhaites pas transmettre.</p>
+      <section class="pilot-feedback-context" aria-label="Contexte transmis automatiquement"><strong>Contexte transmis automatiquement</strong><span>🕒 <b id="pilotFeedbackDateDisplay">—</b></span><span>📍 <b id="pilotFeedbackContextDisplay">—</b></span><span>📱 <b id="pilotFeedbackTechnicalDisplay">—</b></span></section>
+      <p id="pilotFeedbackStatus" class="small muted" role="status" aria-live="polite"></p>
+      <button type="submit" class="primary" id="pilotFeedbackSubmit">Envoyer</button>
+    </form>
+  </dialog>
+
   <input id="importFile" type="file" accept="application/json" hidden>
   <dialog id="professionalClientDialog" class="professional-client-dialog">
     <section class="dialog-card professional-client-picker">
@@ -603,8 +672,10 @@
   <script src="config.js?v=3.7.1"></script>
   <script src="i18n.js?v=3.56.52"></script>
   <script src="foods.js?v=3.56.115"></script>
+  <script src="cnf-runtime.js?v=3.56.126"></script>
+  <script src="cnf-catalog.js?v=3.56.127"></script>
+  <script src="cnf-search.js?v=3.56.127"></script>
   <script src="nutrition-corrections.js?v=3.56.120"></script>
-  <script src="nutrition-portion-engine.js?v=3.56.121"></script>
   <script src="food-categories.js?v=3.31.2"></script>
   <script src="dish-knowledge.js?v=3.31.2"></script>
   <script src="brain/utils.js?v=3.8.0"></script>
@@ -620,6 +691,6 @@
   <script src="demo-profiles.js?v=3.56.21"></script>
   <script src="personal-metrics.js?v=3.56.99"></script>
   <script src="onboarding-images.js?v=3.56.52"></script>
-  <script src="app.js?v=3.56.121"></script>
+  <script src="app.js?v=3.56.125"></script>
 </body>
 </html>
