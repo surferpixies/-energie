@@ -14,6 +14,7 @@ const rows = audit
     legacyIndex: row.legacyIndex,
     energieAlias: row.alias,
     aliases: row.aliases,
+    current: row.current,
     status: row.confidence === "high" ? "candidate-high" : "candidate-medium",
     cnfFoodId: row.candidates[0].cnfFoodId,
     cnfNameFr: row.candidates[0].fr,
