@@ -79,13 +79,13 @@ const [foodRows, nutrientRows, amountRows, measureWeightRows, measureNameRows] =
 
 const nutrientMeta = new Map();
 for (const row of nutrientRows) {
-  const id = getField(row, ["NutrientID", "Nutrient Id", "Nutrient_ID", "Nutrient Code"]);
+  const id = getField(row, ["Nutrient_Code", "NutrientCode", "Nutrient Code", "NutrientID", "Nutrient Id", "Nutrient_ID"]);
   if (!id) continue;
   nutrientMeta.set(String(id), {
     id: String(id),
-    en: getField(row, ["NutrientName", "Nutrient Name", "NutrientNameE", "Nutrient Name English"]),
-    fr: getField(row, ["NutrientNameF", "Nutrient Name French", "Nom de l'élément nutritif"]),
-    unit: getField(row, ["Unit", "UnitName", "Unit Name"])
+    en: getField(row, ["Nutrient_Name_EN", "NutrientName", "Nutrient Name", "NutrientNameE", "Nutrient Name English"]),
+    fr: getField(row, ["Nutrient_Name_FR", "NutrientNameF", "Nutrient Name French", "Nom de l'élément nutritif"]),
+    unit: getField(row, ["Nutrient_Unit", "Unit", "UnitName", "Unit Name"])
   });
 }
 
@@ -113,12 +113,12 @@ for (const meta of nutrientMeta.values()) {
 
 const amountsByFood = new Map();
 for (const row of amountRows) {
-  const foodId = String(getField(row, ["FoodID", "Food Id", "Food_ID"]));
-  const nutrientId = String(getField(row, ["NutrientID", "Nutrient Id", "Nutrient_ID"]));
+  const foodId = String(getField(row, ["Food_Code", "FoodCode", "Food Code", "FoodID", "Food Id", "Food_ID"]));
+  const nutrientId = String(getField(row, ["Nutrient_Code", "NutrientCode", "Nutrient Code", "NutrientID", "Nutrient Id", "Nutrient_ID"]));
   if (!foodId || !nutrientId) continue;
   const kind = [...selectedNutrients.entries()].find(([, id]) => id === nutrientId)?.[0];
   if (!kind) continue;
-  const raw = getField(row, ["NutrientValue", "Nutrient Value", "Amount", "Value"]);
+  const raw = getField(row, ["Nutrient_Amount", "NutrientAmount", "NutrientValue", "Nutrient Value", "Amount", "Value"]);
   const value = Number(String(raw).replace(",", "."));
   if (!Number.isFinite(value)) continue;
   if (!amountsByFood.has(foodId)) amountsByFood.set(foodId, {});
@@ -127,10 +127,10 @@ for (const row of amountRows) {
 
 const measuresByFood = new Map();
 for (const row of measureWeightRows) {
-  const foodId = String(getField(row, ["FoodID", "Food Id", "Food_ID"]));
+  const foodId = String(getField(row, ["Food_Code", "FoodCode", "Food Code", "FoodID", "Food Id", "Food_ID"]));
   if (!foodId) continue;
-  const grams = Number(String(getField(row, ["WeightInGrams", "Weight in Grams", "Weight", "GramWeight"])).replace(",", "."));
-  const measureId = String(getField(row, ["MeasureID", "Measure Id", "Measure_ID"]));
+  const grams = Number(String(getField(row, ["Weight_g", "Weight_G", "Weight_in_grams", "WeightInGrams", "Weight in Grams", "Weight", "GramWeight", "Conversion_Factor_Value", "ConversionFactorValue"])).replace(",", "."));
+  const measureId = String(getField(row, ["Measure_Code", "MeasureCode", "Measure Code", "MeasureID", "Measure Id", "Measure_ID"]));
   if (!Number.isFinite(grams) || grams <= 0) continue;
   if (!measuresByFood.has(foodId)) measuresByFood.set(foodId, []);
   measuresByFood.get(foodId).push({ measureId, grams });
@@ -138,20 +138,20 @@ for (const row of measureWeightRows) {
 
 const measureNames = new Map();
 for (const row of measureNameRows) {
-  const id = String(getField(row, ["MeasureID", "Measure Id", "Measure_ID"]));
+  const id = String(getField(row, ["Measure_Code", "MeasureCode", "Measure Code", "MeasureID", "Measure Id", "Measure_ID"]));
   if (!id) continue;
   measureNames.set(id, {
-    en: getField(row, ["MeasureName", "Measure Name", "MeasureNameE", "Measure Name English"]),
-    fr: getField(row, ["MeasureNameF", "Measure Name French", "Nom de la mesure"])
+    en: getField(row, ["Measure_Description_and_Unit_EN", "MeasureName", "Measure Name", "MeasureNameE", "Measure Name English"]),
+    fr: getField(row, ["Measure_Description_and_Unit_FR", "MeasureNameF", "Measure Name French", "Nom de la mesure"])
   });
 }
 
 const foods = [];
 for (const row of foodRows) {
-  const id = String(getField(row, ["FoodID", "Food Id", "Food_ID", "Food Code"]));
+  const id = String(getField(row, ["Food_Code", "FoodCode", "Food Code", "FoodID", "Food Id", "Food_ID"]));
   if (!id) continue;
-  const en = getField(row, ["FoodDescription", "Food Description", "FoodName", "Food Name", "FoodDescriptionE"]);
-  const fr = getField(row, ["FoodDescriptionF", "Food Description French", "FoodNameF", "Nom de l'aliment"]);
+  const en = getField(row, ["Food_Description_EN", "FoodDescription", "Food Description", "FoodName", "Food Name", "FoodDescriptionE"]);
+  const fr = getField(row, ["Food_Description_FR", "FoodDescriptionF", "Food Description French", "FoodNameF", "Nom de l'aliment"]);
   const nutrition = amountsByFood.get(id) || {};
   const portions = (measuresByFood.get(id) || []).slice(0, 20).map(p => ({
     grams: p.grams,
@@ -177,7 +177,14 @@ const metadata = {
     nutrientAmounts: amountRows.length,
     measureWeights: measureWeightRows.length
   },
-  selectedNutrients: Object.fromEntries(selectedNutrients)
+  selectedNutrients: Object.fromEntries(selectedNutrients),
+  detectedHeaders: {
+    foodNames: Object.keys(foodRows[0] || {}),
+    nutrientNames: Object.keys(nutrientRows[0] || {}),
+    nutrientAmounts: Object.keys(amountRows[0] || {}),
+    measureWeights: Object.keys(measureWeightRows[0] || {}),
+    measureNames: Object.keys(measureNameRows[0] || {})
+  }
 };
 
 await writeFile(path.join(outDir, "metadata.json"), JSON.stringify(metadata, null, 2) + "\n");
