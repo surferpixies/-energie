@@ -1355,6 +1355,9 @@ body.demo-guide-open .bottom-nav{z-index:20}
 .professional-invite-code strong{grid-row:1/3;grid-column:2;font-size:1rem;letter-spacing:.08em}
 .professional-invite-row{display:grid;gap:7px}
 .professional-invite-email{justify-self:end;width:auto;min-height:0;padding:7px 11px;border-radius:11px;font-size:.72rem;line-height:1.2;white-space:nowrap}
+.professional-invite-primary-action{display:grid;margin-top:2px}
+.professional-invite-primary-action .primary{width:100%;min-height:52px;font-size:.9rem}
+
 .professional-invite-accept{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.professional-invite-accept input{text-transform:uppercase;letter-spacing:.12em;font-weight:850;text-align:center}
 body.professional-beta-mode .sync-badge{display:none}
 @media(max-width:520px){.professional-invite-accept{grid-template-columns:1fr}.professional-beta-entry .dialog-actions{display:grid;grid-template-columns:1fr}.professional-invite-email{justify-self:stretch;width:100%}}
