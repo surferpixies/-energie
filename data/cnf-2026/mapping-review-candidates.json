@@ -1,1165 +1,5 @@
 [
   {
-    "energieAlias": "mûres",
-    "current": {
-      "calories": 62,
-      "protein": 2,
-      "carbs": 14,
-      "fat": 0.7,
-      "portion": "1 tasse",
-      "gramsPerPortion": null
-    },
-    "reviewQueries": [
-      "blackberry raw",
-      "mure crue",
-      "blackberries"
-    ],
-    "candidates": [
-      {
-        "cnfFoodId": "1515",
-        "score": 2.3,
-        "fr": "Mûre, crue",
-        "en": "Blackberry, raw",
-        "nutritionPer100g": {
-          "protein": 1.39,
-          "fat": 0.49,
-          "carbs": 9.61,
-          "calories": 43,
-          "sugars": 4.88,
-          "fiber": 5.3,
-          "calcium": 29,
-          "iron": 0.62,
-          "potassium": 162,
-          "sodium": 1
-        },
-        "portions": [
-          {
-            "grams": 60.862,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 76.078,
-            "en": "125 ml",
-            "fr": "125 ml"
-          },
-          {
-            "grams": 152.156,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 140,
-            "en": "140 g",
-            "fr": "140 g"
-          },
-          {
-            "grams": 4,
-            "en": "total refuse",
-            "fr": "portion non comestible totale"
-          },
-          {
-            "grams": 4,
-            "en": "stems and spoiled berries",
-            "fr": "queues et baies gâtées"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "2460",
-        "score": 1.5,
-        "fr": "Tomate, rouge, mûre, crue, moyenne durant toute l'année",
-        "en": "Tomato, red, ripe, raw, year round average",
-        "nutritionPer100g": {
-          "protein": 0.88,
-          "fat": 0.2,
-          "carbs": 3.89,
-          "calories": 18,
-          "sugars": 2.63,
-          "fiber": 1.21,
-          "calcium": 10,
-          "iron": 0.27,
-          "potassium": 237,
-          "sodium": 5
-        },
-        "portions": [
-          {
-            "grams": 9,
-            "en": "total refuse",
-            "fr": "portion non comestible totale"
-          },
-          {
-            "grams": 9,
-            "en": "core and stem",
-            "fr": "noyau et queue (tige)"
-          },
-          {
-            "grams": 76.078,
-            "en": "100 ml chopped or sliced",
-            "fr": "100 ml haché ou tranché"
-          },
-          {
-            "grams": 62.975,
-            "en": "100 ml cherry totatoes",
-            "fr": "100 ml tomate cerise"
-          },
-          {
-            "grams": 17,
-            "en": "1 cherry tomato",
-            "fr": "1 tomate cerise"
-          },
-          {
-            "grams": 62,
-            "en": "1 italian tomato",
-            "fr": "1 tomate italienne"
-          },
-          {
-            "grams": 62,
-            "en": "1 plum tomato",
-            "fr": "1 tomate oblongue"
-          },
-          {
-            "grams": 182,
-            "en": "1 large whole (7.6cm dia)",
-            "fr": "1 gros entier (7.6cm dia)"
-          },
-          {
-            "grams": 123,
-            "en": "1 medium whole (6.6cm dia)",
-            "fr": "1 moyen entier (6.6cm dia)"
-          },
-          {
-            "grams": 91,
-            "en": "1 small whole (6cm dia)",
-            "fr": "1 petit entier (6cm dia)"
-          },
-          {
-            "grams": 31,
-            "en": "1 wedge (1/4 of medium tomato)",
-            "fr": "1 quartier (1/4 de tomate moyenne)"
-          },
-          {
-            "grams": 95.097,
-            "en": "125 ml chopped or sliced",
-            "fr": "125 ml haché ou tranché"
-          },
-          {
-            "grams": 190.194,
-            "en": "250 ml chopped or sliced",
-            "fr": "250 ml haché ou tranché"
-          },
-          {
-            "grams": 78.719,
-            "en": "125 ml cherry tomatoes",
-            "fr": "125 ml tomates cerises"
-          },
-          {
-            "grams": 157.439,
-            "en": "250 ml cherry tomatoes",
-            "fr": "250 ml tomates cerises"
-          },
-          {
-            "grams": 85,
-            "en": "85 g",
-            "fr": "85 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "6379",
-        "score": 1,
-        "fr": "Mûre sauvage, crue",
-        "en": "Blackberry, wild, raw",
-        "nutritionPer100g": {
-          "protein": 0.84,
-          "fat": 1.07,
-          "carbs": 9.84,
-          "calories": 52,
-          "sugars": 3.65,
-          "fiber": 3.2,
-          "calcium": 5,
-          "iron": 0.21,
-          "potassium": 75,
-          "sodium": 6
-        },
-        "portions": [
-          {
-            "grams": 140,
-            "en": "140 g",
-            "fr": "140 g"
-          },
-          {
-            "grams": 76.078,
-            "en": "125 ml",
-            "fr": "125 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "88",
-        "score": 0.5,
-        "fr": "Oeuf, canard, entier, frais, cru",
-        "en": "Egg, duck, whole, fresh, raw",
-        "nutritionPer100g": {
-          "protein": 12.81,
-          "fat": 13.77,
-          "carbs": 1.45,
-          "calories": 186,
-          "sugars": 0.93,
-          "fiber": 0,
-          "calcium": 64,
-          "iron": 3.85,
-          "potassium": 222,
-          "sodium": 146
-        },
-        "portions": [
-          {
-            "grams": 12,
-            "en": "total refuse",
-            "fr": "portion non comestible totale"
-          },
-          {
-            "grams": 70,
-            "en": "1 egg",
-            "fr": "1 oeuf"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "89",
-        "score": 0.5,
-        "fr": "Oeuf, oie, entier, frais, cru",
-        "en": "Egg, goose, whole, fresh, raw",
-        "nutritionPer100g": {
-          "protein": 13.87,
-          "fat": 13.27,
-          "carbs": 1.35,
-          "calories": 185,
-          "sugars": 0.94,
-          "fiber": 0,
-          "calcium": 60,
-          "iron": 3.64,
-          "potassium": 210,
-          "sodium": 138
-        },
-        "portions": [
-          {
-            "grams": 144,
-            "en": "1 egg",
-            "fr": "1 oeuf"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 72,
-            "en": "1/2 egg",
-            "fr": "1/2 oeuf"
-          },
-          {
-            "grams": 13,
-            "en": "total refuse",
-            "fr": "portion non comestible totale"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "90",
-        "score": 0.5,
-        "fr": "Oeuf, caille, entier, frais, cru",
-        "en": "Egg, quail, whole, fresh, raw",
-        "nutritionPer100g": {
-          "protein": 13.05,
-          "fat": 11.09,
-          "carbs": 0.41,
-          "calories": 159,
-          "sugars": 0.4,
-          "fiber": 0,
-          "calcium": 64,
-          "iron": 3.65,
-          "potassium": 132,
-          "sodium": 141
-        },
-        "portions": [
-          {
-            "grams": 8,
-            "en": "total refuse",
-            "fr": "portion non comestible totale"
-          },
-          {
-            "grams": 9,
-            "en": "1 egg",
-            "fr": "1 oeuf"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 90,
-            "en": "10 eggs",
-            "fr": "10 oeufs"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "91",
-        "score": 0.5,
-        "fr": "Oeuf, dinde, entier, frais, cru",
-        "en": "Egg, turkey, whole, fresh, raw",
-        "nutritionPer100g": {
-          "protein": 13.68,
-          "fat": 11.88,
-          "carbs": 1.15,
-          "calories": 171,
-          "fiber": 0,
-          "calcium": 99,
-          "iron": 4.1,
-          "potassium": 142,
-          "sodium": 151
-        },
-        "portions": [
-          {
-            "grams": 79,
-            "en": "1 egg",
-            "fr": "1 oeuf"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 12,
-            "en": "total refuse",
-            "fr": "portion non comestible totale"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "125",
-        "score": 0.5,
-        "fr": "Oeuf, poule, entier, frais ou congelé, cru",
-        "en": "Egg, chicken, whole, fresh or frozen, raw",
-        "nutritionPer100g": {
-          "protein": 12.268,
-          "fat": 10.608,
-          "carbs": 0.793,
-          "calories": 152,
-          "sugars": 0.77,
-          "fiber": 0,
-          "calcium": 50.211,
-          "iron": 1.758,
-          "potassium": 124.838,
-          "sodium": 121.664
-        },
-        "portions": [
-          {
-            "grams": 52.61,
-            "en": "1 large egg",
-            "fr": "1 oeufs large (gros)"
-          },
-          {
-            "grams": 39.13,
-            "en": "1 small egg",
-            "fr": "1 petit oeuf"
-          },
-          {
-            "grams": 128.381,
-            "en": "125 ml",
-            "fr": "125 ml"
-          },
-          {
-            "grams": 256.762,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 58.09,
-            "en": "1 extra large egg",
-            "fr": "1 oeuf extra gros"
-          },
-          {
-            "grams": 45.62,
-            "en": "1 medium egg",
-            "fr": "1 oeuf moyen"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 66.06,
-            "en": "1 jumbo egg",
-            "fr": "1 œuf jumbo"
-          },
-          {
-            "grams": 102.705,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 105.22,
-            "en": "2 large eggs",
-            "fr": "2 oeufs larges (gros)"
-          },
-          {
-            "grams": 34.71,
-            "en": "1 pee wee egg",
-            "fr": "1 très petit oeuf"
-          },
-          {
-            "grams": 12,
-            "en": "total refuse",
-            "fr": "portion non comestible totale"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "126",
-        "score": 0.5,
-        "fr": "Oeuf, poule, blanc, frais ou congelé, cru",
-        "en": "Egg, chicken, white, fresh or frozen, raw",
-        "nutritionPer100g": {
-          "protein": 10.017,
-          "fat": 0,
-          "carbs": 0.628,
-          "calories": 46,
-          "sugars": 0.71,
-          "fiber": 0,
-          "calcium": 7.761,
-          "iron": 0,
-          "potassium": 136,
-          "sodium": 160.8
-        },
-        "portions": [
-          {
-            "grams": 68.9,
-            "en": "100 g whole egg liquid yields",
-            "fr": "100 g - rendement oeuf entier liquide"
-          },
-          {
-            "grams": 102.705,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 34.27,
-            "en": "1 large egg",
-            "fr": "1 oeufs large (gros)"
-          },
-          {
-            "grams": 128.381,
-            "en": "125 ml",
-            "fr": "125 ml"
-          },
-          {
-            "grams": 256.763,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 25.12,
-            "en": "1 pee wee egg",
-            "fr": "1 très petit oeuf"
-          },
-          {
-            "grams": 28.56,
-            "en": "1 small egg",
-            "fr": "1 petit oeuf"
-          },
-          {
-            "grams": 31.5,
-            "en": "1 medium egg",
-            "fr": "1 oeuf moyen"
-          },
-          {
-            "grams": 38.36,
-            "en": "1 extra large egg",
-            "fr": "1 oeuf extra gros"
-          },
-          {
-            "grams": 45.31,
-            "en": "1 jumbo egg",
-            "fr": "1 œuf jumbo"
-          },
-          {
-            "grams": 102.81,
-            "en": "3 egg whites",
-            "fr": "3 blancs d'oeuf"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "127",
-        "score": 0.5,
-        "fr": "Oeuf, poule, jaune, frais ou congelé, cru",
-        "en": "Egg, chicken, yolk, fresh or frozen, raw",
-        "nutritionPer100g": {
-          "protein": 16.474,
-          "fat": 30.43,
-          "carbs": 1.101,
-          "calories": 351,
-          "sugars": 0.56,
-          "fiber": 0,
-          "calcium": 129.533,
-          "iron": 5.043,
-          "potassium": 103.98,
-          "sodium": 48.533
-        },
-        "portions": [
-          {
-            "grams": 102.705,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 18.34,
-            "en": "1 large egg",
-            "fr": "1 oeufs large (gros)"
-          },
-          {
-            "grams": 128.381,
-            "en": "125 ml",
-            "fr": "125 ml"
-          },
-          {
-            "grams": 256.763,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 68,
-            "en": "4 egg yolks",
-            "fr": "4 jaunes d'œuf"
-          },
-          {
-            "grams": 9.6,
-            "en": "1 pee wee egg",
-            "fr": "1 très petit oeuf"
-          },
-          {
-            "grams": 10.57,
-            "en": "1 small egg",
-            "fr": "1 petit oeuf"
-          },
-          {
-            "grams": 14.13,
-            "en": "1 medium egg",
-            "fr": "1 oeuf moyen"
-          },
-          {
-            "grams": 19.73,
-            "en": "1 extra large egg",
-            "fr": "1 oeuf extra gros"
-          },
-          {
-            "grams": 20.75,
-            "en": "1 jumbo egg",
-            "fr": "1 œuf jumbo"
-          },
-          {
-            "grams": 25,
-            "en": "2 egg yolks",
-            "fr": "2 jaunes d'œuf"
-          },
-          {
-            "grams": 31.076,
-            "en": "100 g whole egg liquid yields",
-            "fr": "100 g - rendement oeuf entier liquide"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "555",
-        "score": 0.5,
-        "fr": "Poulet à griller, viande, peau, abats et cou, cru",
-        "en": "Chicken, broiler, meat, skin, giblets and neck, raw",
-        "nutritionPer100g": {
-          "protein": 18.33,
-          "fat": 14.83,
-          "carbs": 0.13,
-          "calories": 213,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 11,
-          "iron": 1.31,
-          "potassium": 189,
-          "sodium": 70
-        },
-        "portions": [
-          {
-            "grams": 31,
-            "en": "total refuse",
-            "fr": "portion non comestible totale"
-          },
-          {
-            "grams": 31,
-            "en": "bone",
-            "fr": "os"
-          },
-          {
-            "grams": 125,
-            "en": "125 g",
-            "fr": "125 g"
-          },
-          {
-            "grams": 90,
-            "en": "1 food guide serving = 90g",
-            "fr": "1 portion du guide alimentaire = 90g"
-          },
-          {
-            "grams": 10.46,
-            "en": "yield from 1512g bird",
-            "fr": "rendement d'une volaille de 1512g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "560",
-        "score": 0.5,
-        "fr": "Poulet à griller, viande et peau, crues",
-        "en": "Chicken, broiler, meat and skin, raw",
-        "nutritionPer100g": {
-          "protein": 18.6,
-          "fat": 15.06,
-          "carbs": 0,
-          "calories": 215,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 11,
-          "iron": 0.9,
-          "potassium": 189,
-          "sodium": 70
-        },
-        "portions": [
-          {
-            "grams": 125,
-            "en": "125 g",
-            "fr": "125 g"
-          },
-          {
-            "grams": 90,
-            "en": "1 food guide serving = 90g",
-            "fr": "1 portion du guide alimentaire = 90g"
-          },
-          {
-            "grams": 304.233,
-            "en": "500 g of raw whole bird, as purchased (including bones)",
-            "fr": "500 g cru, volaille entière, à l'achat (incluant os)"
-          },
-          {
-            "grams": 32,
-            "en": "total refuse",
-            "fr": "portion non comestible totale"
-          },
-          {
-            "grams": 32,
-            "en": "bone",
-            "fr": "os"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "energieAlias": "dattes",
-    "current": {
-      "calories": 133,
-      "protein": 1,
-      "carbs": 36,
-      "fat": 0.2,
-      "portion": "3 dattes",
-      "gramsPerPortion": null
-    },
-    "reviewQueries": [
-      "date deglet noor",
-      "date dried",
-      "datte sechee"
-    ],
-    "candidates": [
-      {
-        "cnfFoodId": "1584",
-        "score": 1.5,
-        "fr": "Jujube (datte chinoise), sec",
-        "en": "Jujube (chinese date), dried",
-        "nutritionPer100g": {
-          "protein": 4.72,
-          "fat": 0.5,
-          "carbs": 72.52,
-          "calories": 281,
-          "fiber": 6,
-          "calcium": 63,
-          "iron": 5.09,
-          "potassium": 217,
-          "sodium": 5
-        },
-        "portions": [
-          {
-            "grams": 11,
-            "en": "total refuse",
-            "fr": "portion non comestible totale"
-          },
-          {
-            "grams": 11,
-            "en": "seeds",
-            "fr": "grains"
-          },
-          {
-            "grams": 140,
-            "en": "140 g",
-            "fr": "140 g"
-          },
-          {
-            "grams": 32.444,
-            "en": "100 ml whole",
-            "fr": "100 ml entier"
-          },
-          {
-            "grams": 40.566,
-            "en": "125 ml whole",
-            "fr": "125 ml entier"
-          },
-          {
-            "grams": 81.111,
-            "en": "250 ml whole",
-            "fr": "250 ml entier"
-          },
-          {
-            "grams": 19.474,
-            "en": "60 ml whole",
-            "fr": "60 ml entier"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1710",
-        "score": 1,
-        "fr": "Datte, domestique, naturelle et séchée",
-        "en": "Date, domestic, natural and dry",
-        "nutritionPer100g": {
-          "protein": 2.45,
-          "fat": 0.39,
-          "carbs": 75.03,
-          "calories": 282,
-          "sugars": 63.35,
-          "fiber": 8,
-          "calcium": 39,
-          "iron": 1.02,
-          "potassium": 656,
-          "sodium": 2
-        },
-        "portions": [
-          {
-            "grams": 71,
-            "en": "10 fruits",
-            "fr": "10 fruits"
-          },
-          {
-            "grams": 24.9,
-            "en": "3 fruits",
-            "fr": "3 fruits"
-          },
-          {
-            "grams": 62.133,
-            "en": "100 ml pitted, chopped",
-            "fr": "100 ml dénoyauté, haché"
-          },
-          {
-            "grams": 77.666,
-            "en": "125 ml pitted, chopped",
-            "fr": "125 ml dénoyauté, haché"
-          },
-          {
-            "grams": 155.333,
-            "en": "250 ml pitted, chopped",
-            "fr": "250 ml dénoyauté, haché"
-          },
-          {
-            "grams": 40,
-            "en": "40 g",
-            "fr": "40 g"
-          },
-          {
-            "grams": 7.1,
-            "en": "1 fruit",
-            "fr": "1 fruit"
-          },
-          {
-            "grams": 10,
-            "en": "total refuse",
-            "fr": "portion non comestible totale"
-          },
-          {
-            "grams": 10,
-            "en": "pits",
-            "fr": "noyaux"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "83",
-        "score": 0.5,
-        "fr": "Oeuf, poule, déshydraté, entier",
-        "en": "Egg, chicken, dried, whole",
-        "nutritionPer100g": {
-          "protein": 48.05,
-          "fat": 43.9,
-          "carbs": 1.13,
-          "calories": 592,
-          "sugars": 0.56,
-          "fiber": 0,
-          "calcium": 244,
-          "iron": 7.2,
-          "potassium": 540,
-          "sodium": 476
-        },
-        "portions": [
-          {
-            "grams": 35.926,
-            "en": "100 ml sifted",
-            "fr": "100 ml tamisé"
-          },
-          {
-            "grams": 89.814,
-            "en": "250 ml, sifted",
-            "fr": "250 ml, tamisé"
-          },
-          {
-            "grams": 5.388,
-            "en": "15 ml, sifted",
-            "fr": "15 ml, tamisé"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "84",
-        "score": 0.5,
-        "fr": "Oeuf, poule, déshydraté, entier, stabilisé",
-        "en": "Egg, chicken, dried, whole, stabilized",
-        "nutritionPer100g": {
-          "protein": 48.17,
-          "fat": 43.95,
-          "carbs": 2.38,
-          "calories": 615,
-          "fiber": 0,
-          "calcium": 222,
-          "iron": 8.28,
-          "potassium": 515,
-          "sodium": 548
-        },
-        "portions": [
-          {
-            "grams": 35.926,
-            "en": "100 ml sifted",
-            "fr": "100 ml tamisé"
-          },
-          {
-            "grams": 89.814,
-            "en": "250 ml, sifted",
-            "fr": "250 ml, tamisé"
-          },
-          {
-            "grams": 5.388,
-            "en": "15 ml, sifted",
-            "fr": "15 ml, tamisé"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "85",
-        "score": 0.5,
-        "fr": "Oeuf, poule, blanc, séché, flocons",
-        "en": "Egg, chicken, white, pan dried, flakes",
-        "nutritionPer100g": {
-          "protein": 76.92,
-          "fat": 0.04,
-          "carbs": 4.17,
-          "calories": 351,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 83,
-          "iron": 0.23,
-          "potassium": 1042,
-          "sodium": 1156
-        },
-        "portions": []
-      },
-      {
-        "cnfFoodId": "87",
-        "score": 0.5,
-        "fr": "Oeuf, poule, jaune, déshydraté",
-        "en": "Egg, chicken, yolk, dried",
-        "nutritionPer100g": {
-          "protein": 33.63,
-          "fat": 59.13,
-          "carbs": 0.66,
-          "calories": 669,
-          "sugars": 0.23,
-          "fiber": 0,
-          "calcium": 289,
-          "iron": 9.56,
-          "potassium": 264,
-          "sodium": 149
-        },
-        "portions": [
-          {
-            "grams": 28.318,
-            "en": "100 ml sifted",
-            "fr": "100 ml tamisé"
-          },
-          {
-            "grams": 70.795,
-            "en": "250 ml, sifted",
-            "fr": "250 ml, tamisé"
-          },
-          {
-            "grams": 4.248,
-            "en": "15 ml, sifted",
-            "fr": "15 ml, tamisé"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "171",
-        "score": 0.5,
-        "fr": "Épices, basilic, déshydraté",
-        "en": "Spices, basil, dried",
-        "nutritionPer100g": {
-          "protein": 22.98,
-          "fat": 4.07,
-          "carbs": 47.75,
-          "calories": 233,
-          "sugars": 1.71,
-          "fiber": 37.7,
-          "calcium": 2240,
-          "iron": 89.8,
-          "potassium": 2630,
-          "sodium": 76
-        },
-        "portions": [
-          {
-            "grams": 1.429,
-            "en": "5 ml, ground",
-            "fr": "5 ml, moulu"
-          },
-          {
-            "grams": 4.561,
-            "en": "15 ml, ground",
-            "fr": "15 ml, moulu"
-          },
-          {
-            "grams": 0.714,
-            "en": "5 ml, leaves",
-            "fr": "5 ml, feuilles"
-          },
-          {
-            "grams": 2.128,
-            "en": "15 ml, leaves",
-            "fr": "15 ml, feuilles"
-          },
-          {
-            "grams": 0.5,
-            "en": "0.5g",
-            "fr": "0.5g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "176",
-        "score": 0.5,
-        "fr": "Épices, cerfeuil, déshydraté",
-        "en": "Spices, chervil, dried",
-        "nutritionPer100g": {
-          "protein": 23.2,
-          "fat": 3.9,
-          "carbs": 49.1,
-          "calories": 237,
-          "fiber": 11.3,
-          "calcium": 1346,
-          "iron": 31.95,
-          "potassium": 4740,
-          "sodium": 83
-        },
-        "portions": [
-          {
-            "grams": 0.612,
-            "en": "5 ml",
-            "fr": "5 ml"
-          },
-          {
-            "grams": 1.926,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 0.5,
-            "en": "0.5g",
-            "fr": "0.5g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "180",
-        "score": 0.5,
-        "fr": "Épices, coriandre (cilantro), feuilles, déshydraté",
-        "en": "Spices, coriander leaf (cilantro), dried",
-        "nutritionPer100g": {
-          "protein": 21.93,
-          "fat": 4.78,
-          "carbs": 52.1,
-          "calories": 279,
-          "sugars": 7.27,
-          "fiber": 10.4,
-          "calcium": 1246,
-          "iron": 42.46,
-          "potassium": 4466,
-          "sodium": 211
-        },
-        "portions": [
-          {
-            "grams": 0.612,
-            "en": "5 ml",
-            "fr": "5 ml"
-          },
-          {
-            "grams": 1.824,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 0.5,
-            "en": "0.5g",
-            "fr": "0.5g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "185",
-        "score": 0.5,
-        "fr": "Épices, aneth, déshydraté",
-        "en": "Spices, dill weed, dried",
-        "nutritionPer100g": {
-          "protein": 19.96,
-          "fat": 4.36,
-          "carbs": 55.82,
-          "calories": 253,
-          "fiber": 13.6,
-          "calcium": 1784,
-          "iron": 48.78,
-          "potassium": 3308,
-          "sodium": 208
-        },
-        "portions": [
-          {
-            "grams": 1.02,
-            "en": "5 ml",
-            "fr": "5 ml"
-          },
-          {
-            "grams": 3.142,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 0.5,
-            "en": "0.5g",
-            "fr": "0.5g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "191",
-        "score": 0.5,
-        "fr": "Épices, marjolaine, déshydratée",
-        "en": "Spices, marjoram, dried",
-        "nutritionPer100g": {
-          "protein": 12.66,
-          "fat": 7.04,
-          "carbs": 60.56,
-          "calories": 272,
-          "sugars": 4.09,
-          "fiber": 40.3,
-          "calcium": 1990,
-          "iron": 82.71,
-          "potassium": 1522,
-          "sodium": 77
-        },
-        "portions": [
-          {
-            "grams": 0.612,
-            "en": "5 ml",
-            "fr": "5 ml"
-          },
-          {
-            "grams": 1.723,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 0.5,
-            "en": "0.5g",
-            "fr": "0.5g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "197",
-        "score": 0.5,
-        "fr": "Épices, persil, déshydraté",
-        "en": "Spices, parsley, dried",
-        "nutritionPer100g": {
-          "protein": 26.63,
-          "fat": 5.48,
-          "carbs": 50.64,
-          "calories": 292,
-          "sugars": 7.27,
-          "fiber": 26.7,
-          "calcium": 1140,
-          "iron": 22.04,
-          "potassium": 2683,
-          "sodium": 452
-        },
-        "portions": [
-          {
-            "grams": 0.306,
-            "en": "5 ml",
-            "fr": "5 ml"
-          },
-          {
-            "grams": 1.318,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 0.5,
-            "en": "0.5g",
-            "fr": "0.5g"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "energieAlias": "laitue",
     "current": {
       "calories": 10,
@@ -1171,7 +11,10 @@
     },
     "reviewQueries": [
       "lettuce raw",
-      "laitue crue"
+      "iceberg lettuce raw",
+      "green leaf lettuce raw",
+      "laitue crue",
+      "laitue iceberg crue"
     ],
     "candidates": [
       {
@@ -1257,6 +100,86 @@
         ]
       },
       {
+        "cnfFoodId": "2398",
+        "score": 0.667,
+        "fr": "Laitue, iceberg (pommée)",
+        "en": "Lettuce, iceberg",
+        "nutritionPer100g": {
+          "protein": 0.9,
+          "fat": 0.14,
+          "carbs": 2.97,
+          "calories": 14,
+          "sugars": 1.97,
+          "fiber": 1.2,
+          "calcium": 18,
+          "iron": 0.41,
+          "potassium": 141,
+          "sodium": 10
+        },
+        "portions": [
+          {
+            "grams": 5,
+            "en": "1 small leaf",
+            "fr": "1 petite feuille"
+          },
+          {
+            "grams": 755,
+            "en": "1 large head",
+            "fr": "1 grosse tête"
+          },
+          {
+            "grams": 23.247,
+            "en": "100 ml shredded or chopped",
+            "fr": "100 ml filamenté ou haché"
+          },
+          {
+            "grams": 539,
+            "en": "1 medium head (15cm dia)",
+            "fr": "1 moyenne tête (15cm dia)"
+          },
+          {
+            "grams": 324,
+            "en": "1 small head",
+            "fr": "1 petite tête"
+          },
+          {
+            "grams": 15,
+            "en": "1 large leaf",
+            "fr": "1 grosse feuille"
+          },
+          {
+            "grams": 8,
+            "en": "1 medium leaf",
+            "fr": "1 feuille moyenne"
+          },
+          {
+            "grams": 29.059,
+            "en": "125 ml shredded or chopped",
+            "fr": "125 ml filamenté ou haché"
+          },
+          {
+            "grams": 65,
+            "en": "65 g",
+            "fr": "65 g"
+          },
+          {
+            "grams": 58.118,
+            "en": "250 ml shredded or chopped",
+            "fr": "250 ml filamenté ou haché"
+          },
+          {
+            "grams": 5,
+            "en": "total refuse",
+            "fr": "portion non comestible totale"
+          },
+          {
+            "grams": 5,
+            "en": "core",
+            "fr": "noyau"
+          }
+        ]
+      },
+      {
         "cnfFoodId": "88",
         "score": 0.5,
         "fr": "Oeuf, canard, entier, frais, cru",
@@ -1739,663 +662,6 @@
             "fr": "os"
           }
         ]
-      },
-      {
-        "cnfFoodId": "565",
-        "score": 0.5,
-        "fr": "Poulet à griller, viande seulement, cru",
-        "en": "Chicken, broiler, meat only, raw",
-        "nutritionPer100g": {
-          "protein": 21.39,
-          "fat": 3.08,
-          "carbs": 0,
-          "calories": 119,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 12,
-          "iron": 0.89,
-          "potassium": 229,
-          "sodium": 77
-        },
-        "portions": [
-          {
-            "grams": 52,
-            "en": "total refuse",
-            "fr": "portion non comestible totale"
-          },
-          {
-            "grams": 32,
-            "en": "bone",
-            "fr": "os"
-          },
-          {
-            "grams": 12,
-            "en": "skin",
-            "fr": "peau (pelure)"
-          },
-          {
-            "grams": 8,
-            "en": "separable fat",
-            "fr": "gras séparable"
-          },
-          {
-            "grams": 329,
-            "en": "1/2 bird",
-            "fr": "1/2 volaille"
-          },
-          {
-            "grams": 125,
-            "en": "125 g",
-            "fr": "125 g"
-          },
-          {
-            "grams": 90,
-            "en": "1 food guide serving = 90g",
-            "fr": "1 portion du guide alimentaire = 90g"
-          },
-          {
-            "grams": 658,
-            "en": "1 raw chicken (1358g)",
-            "fr": "1 poulet cru (1358g)"
-          },
-          {
-            "grams": 217,
-            "en": "500 g of raw whole bird, as purchased (including bones)",
-            "fr": "500 g cru, volaille entière, à l'achat (incluant os)"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "energieAlias": "asperges",
-    "current": {
-      "calories": 40,
-      "protein": 4.3,
-      "carbs": 7,
-      "fat": 0.4,
-      "portion": "1 tasse",
-      "gramsPerPortion": null
-    },
-    "reviewQueries": [
-      "asparagus cooked",
-      "asperge bouillie",
-      "asperge cuite"
-    ],
-    "candidates": [
-      {
-        "cnfFoodId": "1991",
-        "score": 2.3,
-        "fr": "Asperge, bouillie, égouttée",
-        "en": "Asparagus, boiled, drained",
-        "nutritionPer100g": {
-          "protein": 2.4,
-          "fat": 0.22,
-          "carbs": 4.11,
-          "calories": 22,
-          "sugars": 1.3,
-          "fiber": 2,
-          "calcium": 23,
-          "iron": 0.91,
-          "potassium": 224,
-          "sodium": 14
-        },
-        "portions": [
-          {
-            "grams": 60,
-            "en": "4 spears",
-            "fr": "4 pointes"
-          },
-          {
-            "grams": 76.078,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 95.097,
-            "en": "125 ml",
-            "fr": "125 ml"
-          },
-          {
-            "grams": 190.194,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 90,
-            "en": "6 spears",
-            "fr": "6 pointes"
-          },
-          {
-            "grams": 85,
-            "en": "85 g",
-            "fr": "85 g"
-          },
-          {
-            "grams": 15,
-            "en": "1 spear",
-            "fr": "1 tige et fleur"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "6360",
-        "score": 2.3,
-        "fr": "Asperge, bouillie, égouttée, sel ajouté",
-        "en": "Asparagus, boiled, drained, with salt",
-        "nutritionPer100g": {
-          "protein": 2.4,
-          "fat": 0.22,
-          "carbs": 4.11,
-          "calories": 22,
-          "sugars": 1.3,
-          "fiber": 2,
-          "calcium": 23,
-          "iron": 0.91,
-          "potassium": 224,
-          "sodium": 240
-        },
-        "portions": [
-          {
-            "grams": 60,
-            "en": "4 spears",
-            "fr": "4 pointes"
-          },
-          {
-            "grams": 90,
-            "en": "6 spears",
-            "fr": "6 pointes"
-          },
-          {
-            "grams": 15,
-            "en": "1 spear",
-            "fr": "1 tige et fleur"
-          },
-          {
-            "grams": 76.078,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 190.194,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 85,
-            "en": "85 g",
-            "fr": "85 g"
-          },
-          {
-            "grams": 95.01,
-            "en": "125 ml",
-            "fr": "125 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1994",
-        "score": 1,
-        "fr": "Asperge, congelée, bouillie, égouttée",
-        "en": "Asparagus, frozen, boiled, drained",
-        "nutritionPer100g": {
-          "protein": 2.95,
-          "fat": 0.42,
-          "carbs": 1.92,
-          "calories": 18,
-          "sugars": 0.32,
-          "fiber": 1.53,
-          "calcium": 18,
-          "iron": 0.56,
-          "potassium": 172,
-          "sodium": 3
-        },
-        "portions": [
-          {
-            "grams": 60,
-            "en": "4 spears",
-            "fr": "4 pointes"
-          },
-          {
-            "grams": 76.078,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 190.194,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 95.097,
-            "en": "125 ml",
-            "fr": "125 ml"
-          },
-          {
-            "grams": 90,
-            "en": "6 spears",
-            "fr": "6 pointes"
-          },
-          {
-            "grams": 15,
-            "en": "1 spear",
-            "fr": "1 tige et fleur"
-          },
-          {
-            "grams": 85,
-            "en": "85 g",
-            "fr": "85 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "6361",
-        "score": 1,
-        "fr": "Asperge, congelée, bouillie, égouttée, sel ajouté",
-        "en": "Asparagus, frozen, boiled, drained, with salt",
-        "nutritionPer100g": {
-          "protein": 2.95,
-          "fat": 0.42,
-          "carbs": 1.92,
-          "calories": 18,
-          "sugars": 0.32,
-          "fiber": 1.6,
-          "calcium": 18,
-          "iron": 0.56,
-          "potassium": 172,
-          "sodium": 240
-        },
-        "portions": [
-          {
-            "grams": 76.078,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 95.01,
-            "en": "125 ml",
-            "fr": "125 ml"
-          },
-          {
-            "grams": 190.194,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 60,
-            "en": "4 spears",
-            "fr": "4 pointes"
-          },
-          {
-            "grams": 15,
-            "en": "1 spear",
-            "fr": "1 tige et fleur"
-          },
-          {
-            "grams": 90,
-            "en": "6 spears",
-            "fr": "6 pointes"
-          },
-          {
-            "grams": 85,
-            "en": "85 g",
-            "fr": "85 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "129",
-        "score": 0.5,
-        "fr": "Oeuf, poule, entier, cuit, frit",
-        "en": "Egg, chicken, whole, cooked, fried",
-        "nutritionPer100g": {
-          "protein": 12.871,
-          "fat": 14.811,
-          "carbs": 1.106,
-          "calories": 193,
-          "sugars": 0.839,
-          "fiber": 0,
-          "calcium": 49.091,
-          "iron": 1.153,
-          "potassium": 124.832,
-          "sodium": 329.066
-        },
-        "portions": [
-          {
-            "grams": 35,
-            "en": "1 small egg",
-            "fr": "1 petit oeuf"
-          },
-          {
-            "grams": 46,
-            "en": "1 large egg",
-            "fr": "1 oeufs large (gros)"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 92,
-            "en": "2 large eggs",
-            "fr": "2 oeufs larges (gros)"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "130",
-        "score": 0.5,
-        "fr": "Oeuf, poule, entier, cuit, bouilli à la coque, dur",
-        "en": "Egg, chicken, whole, cooked, boiled in shell, hard-cooked",
-        "nutritionPer100g": {
-          "protein": 11.8,
-          "fat": 10.012,
-          "carbs": 1.85,
-          "calories": 141,
-          "sugars": 0.77,
-          "fiber": 0,
-          "calcium": 44.816,
-          "iron": 1.387,
-          "potassium": 113.743,
-          "sodium": 125.456
-        },
-        "portions": [
-          {
-            "grams": 12,
-            "en": "total refuse",
-            "fr": "portion non comestible totale"
-          },
-          {
-            "grams": 50,
-            "en": "1 large egg",
-            "fr": "1 oeufs large (gros)"
-          },
-          {
-            "grams": 57.481,
-            "en": "100 ml chopped",
-            "fr": "100 ml haché"
-          },
-          {
-            "grams": 8.615,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 143.703,
-            "en": "250 ml, chopped",
-            "fr": "250 ml, haché"
-          },
-          {
-            "grams": 100,
-            "en": "2 large eggs",
-            "fr": "2 oeufs larges (gros)"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "132",
-        "score": 0.5,
-        "fr": "Oeuf, poule, entier, cuit, poché",
-        "en": "Egg, chicken, whole, cooked, poached",
-        "nutritionPer100g": {
-          "protein": 11.8,
-          "fat": 10.012,
-          "carbs": 0.981,
-          "calories": 145,
-          "sugars": 0.77,
-          "fiber": 0,
-          "calcium": 44.816,
-          "iron": 1.387,
-          "potassium": 113.743,
-          "sodium": 125.456
-        },
-        "portions": [
-          {
-            "grams": 38,
-            "en": "1 small egg",
-            "fr": "1 petit oeuf"
-          },
-          {
-            "grams": 50,
-            "en": "1 large egg",
-            "fr": "1 oeufs large (gros)"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 100,
-            "en": "2 large eggs",
-            "fr": "2 oeufs larges (gros)"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "133",
-        "score": 0.5,
-        "fr": "Oeuf, poule, entier, cuit, brouillé ou omelette",
-        "en": "Egg, chicken, whole, cooked, scrambled or omelet",
-        "nutritionPer100g": {
-          "protein": 10.388,
-          "fat": 11.394,
-          "carbs": 3.047,
-          "calories": 153,
-          "sugars": 1.39,
-          "fiber": 0,
-          "calcium": 71.643,
-          "iron": 1.113,
-          "potassium": 136.877,
-          "sodium": 369.155
-        },
-        "portions": [
-          {
-            "grams": 48,
-            "en": "1 small egg",
-            "fr": "1 petit oeuf"
-          },
-          {
-            "grams": 61,
-            "en": "1 large egg",
-            "fr": "1 oeufs large (gros)"
-          },
-          {
-            "grams": 232.459,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 92.984,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 110,
-            "en": "110 g",
-            "fr": "110 g"
-          },
-          {
-            "grams": 122,
-            "en": "2 large eggs",
-            "fr": "2 oeufs larges (gros)"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "816",
-        "score": 0.5,
-        "fr": "Dinde, toutes catégories, hachée, cuite",
-        "en": "Turkey, all classes, ground, cooked",
-        "nutritionPer100g": {
-          "protein": 27.628,
-          "fat": 8.706,
-          "carbs": 0,
-          "calories": 196,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 83.244,
-          "iron": 1.077,
-          "potassium": 333.065,
-          "sodium": 84.038
-        },
-        "portions": [
-          {
-            "grams": 82,
-            "en": "1 patty",
-            "fr": "1 boulette"
-          },
-          {
-            "grams": 46.492,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 116.23,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 60,
-            "en": "60 g",
-            "fr": "60 g"
-          },
-          {
-            "grams": 75,
-            "en": "1 food guide serving = 75g",
-            "fr": "1 portion du guide alimentaire = 75g"
-          },
-          {
-            "grams": 73.2143,
-            "en": "100 g raw as purchased",
-            "fr": "100 g acheté, cru"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "919",
-        "score": 0.5,
-        "fr": "Poulet, haché, maigre, cuit",
-        "en": "Chicken, ground, lean, cooked",
-        "nutritionPer100g": {
-          "protein": 23.28,
-          "fat": 10.92,
-          "carbs": 0,
-          "calories": 189,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 8,
-          "iron": 0.93,
-          "potassium": 677,
-          "sodium": 75
-        },
-        "portions": [
-          {
-            "grams": 60,
-            "en": "60 g",
-            "fr": "60 g"
-          },
-          {
-            "grams": 53.677,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 134.193,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 75,
-            "en": "1 food guide serving = 75g",
-            "fr": "1 portion du guide alimentaire = 75g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "923",
-        "score": 0.5,
-        "fr": "Soupe, crème, asperges, conserve, condensée",
-        "en": "Soup, cream, asparagus, canned, condensed",
-        "nutritionPer100g": {
-          "protein": 1.82,
-          "fat": 3.26,
-          "carbs": 8.52,
-          "calories": 69,
-          "sugars": 0.72,
-          "fiber": 0.4,
-          "calcium": 23,
-          "iron": 0.64,
-          "potassium": 138,
-          "sodium": 669
-        },
-        "portions": [
-          {
-            "grams": 106.086,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 301.423,
-            "en": "1 can (284 ml)",
-            "fr": "1 cannette / boite de conserve (284 ml)"
-          },
-          {
-            "grams": 265.216,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 132.61,
-            "en": "125 ml",
-            "fr": "125 ml"
-          },
-          {
-            "grams": 132.61,
-            "en": "amount to make 250ml",
-            "fr": "quantité requise pour préparer 250ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "965",
-        "score": 0.5,
-        "fr": "Soupe, crème, asperges, déshydratée",
-        "en": "Soup, cream, asparagus, dehydrated",
-        "nutritionPer100g": {
-          "protein": 13.75,
-          "fat": 10.8,
-          "carbs": 55.75,
-          "calories": 366,
-          "fiber": 2.4,
-          "calcium": 137,
-          "iron": 3.8,
-          "potassium": 824,
-          "sodium": 4980
-        },
-        "portions": [
-          {
-            "grams": 64,
-            "en": "1 package",
-            "fr": "1 emballage"
-          },
-          {
-            "grams": 6.002,
-            "en": "amount to make 100ml",
-            "fr": "quantité requise pour préparer 100ml"
-          },
-          {
-            "grams": 15.004,
-            "en": "amount to make 250ml",
-            "fr": "quantité requise pour préparer 250ml"
-          }
-        ]
       }
     ]
   },
@@ -2410,615 +676,62 @@
       "gramsPerPortion": null
     },
     "reviewQueries": [
-      "beet root cooked",
-      "betterave racine cuite",
-      "beet cooked"
+      "beet raw",
+      "beets raw",
+      "beet boiled",
+      "beets boiled",
+      "beet root",
+      "betterave crue",
+      "betterave bouillie"
     ],
     "candidates": [
       {
-        "cnfFoodId": "129",
-        "score": 0.5,
-        "fr": "Oeuf, poule, entier, cuit, frit",
-        "en": "Egg, chicken, whole, cooked, fried",
+        "cnfFoodId": "2500",
+        "score": 2.3,
+        "fr": "Betteraves, crues",
+        "en": "Beets, raw",
         "nutritionPer100g": {
-          "protein": 12.871,
-          "fat": 14.811,
-          "carbs": 1.106,
-          "calories": 193,
-          "sugars": 0.839,
-          "fiber": 0,
-          "calcium": 49.091,
-          "iron": 1.153,
-          "potassium": 124.832,
-          "sodium": 329.066
+          "protein": 1.61,
+          "fat": 0.17,
+          "carbs": 9.56,
+          "calories": 43,
+          "sugars": 6.76,
+          "fiber": 1.91,
+          "calcium": 16,
+          "iron": 0.8,
+          "potassium": 325,
+          "sodium": 78
         },
         "portions": [
           {
-            "grams": 35,
-            "en": "1 small egg",
-            "fr": "1 petit oeuf"
-          },
-          {
-            "grams": 46,
-            "en": "1 large egg",
-            "fr": "1 oeufs large (gros)"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 92,
-            "en": "2 large eggs",
-            "fr": "2 oeufs larges (gros)"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "130",
-        "score": 0.5,
-        "fr": "Oeuf, poule, entier, cuit, bouilli à la coque, dur",
-        "en": "Egg, chicken, whole, cooked, boiled in shell, hard-cooked",
-        "nutritionPer100g": {
-          "protein": 11.8,
-          "fat": 10.012,
-          "carbs": 1.85,
-          "calories": 141,
-          "sugars": 0.77,
-          "fiber": 0,
-          "calcium": 44.816,
-          "iron": 1.387,
-          "potassium": 113.743,
-          "sodium": 125.456
-        },
-        "portions": [
-          {
-            "grams": 12,
+            "grams": 33,
             "en": "total refuse",
             "fr": "portion non comestible totale"
           },
           {
-            "grams": 50,
-            "en": "1 large egg",
-            "fr": "1 oeufs large (gros)"
+            "grams": 33,
+            "en": "parings and part tops",
+            "fr": "pelure et partie de la tige"
+          },
+          {
+            "grams": 82,
+            "en": "1 beet (5 cm dia)",
+            "fr": "1 betterave (5 cm dia)"
           },
           {
             "grams": 57.481,
-            "en": "100 ml chopped",
-            "fr": "100 ml haché"
-          },
-          {
-            "grams": 8.615,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 143.703,
-            "en": "250 ml, chopped",
-            "fr": "250 ml, haché"
-          },
-          {
-            "grams": 100,
-            "en": "2 large eggs",
-            "fr": "2 oeufs larges (gros)"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "132",
-        "score": 0.5,
-        "fr": "Oeuf, poule, entier, cuit, poché",
-        "en": "Egg, chicken, whole, cooked, poached",
-        "nutritionPer100g": {
-          "protein": 11.8,
-          "fat": 10.012,
-          "carbs": 0.981,
-          "calories": 145,
-          "sugars": 0.77,
-          "fiber": 0,
-          "calcium": 44.816,
-          "iron": 1.387,
-          "potassium": 113.743,
-          "sodium": 125.456
-        },
-        "portions": [
-          {
-            "grams": 38,
-            "en": "1 small egg",
-            "fr": "1 petit oeuf"
-          },
-          {
-            "grams": 50,
-            "en": "1 large egg",
-            "fr": "1 oeufs large (gros)"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 100,
-            "en": "2 large eggs",
-            "fr": "2 oeufs larges (gros)"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "133",
-        "score": 0.5,
-        "fr": "Oeuf, poule, entier, cuit, brouillé ou omelette",
-        "en": "Egg, chicken, whole, cooked, scrambled or omelet",
-        "nutritionPer100g": {
-          "protein": 10.388,
-          "fat": 11.394,
-          "carbs": 3.047,
-          "calories": 153,
-          "sugars": 1.39,
-          "fiber": 0,
-          "calcium": 71.643,
-          "iron": 1.113,
-          "potassium": 136.877,
-          "sodium": 369.155
-        },
-        "portions": [
-          {
-            "grams": 48,
-            "en": "1 small egg",
-            "fr": "1 petit oeuf"
-          },
-          {
-            "grams": 61,
-            "en": "1 large egg",
-            "fr": "1 oeufs large (gros)"
-          },
-          {
-            "grams": 232.459,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 92.984,
             "en": "100 ml",
             "fr": "100 ml"
           },
           {
-            "grams": 110,
-            "en": "110 g",
-            "fr": "110 g"
-          },
-          {
-            "grams": 122,
-            "en": "2 large eggs",
-            "fr": "2 oeufs larges (gros)"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "816",
-        "score": 0.5,
-        "fr": "Dinde, toutes catégories, hachée, cuite",
-        "en": "Turkey, all classes, ground, cooked",
-        "nutritionPer100g": {
-          "protein": 27.628,
-          "fat": 8.706,
-          "carbs": 0,
-          "calories": 196,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 83.244,
-          "iron": 1.077,
-          "potassium": 333.065,
-          "sodium": 84.038
-        },
-        "portions": [
-          {
-            "grams": 82,
-            "en": "1 patty",
-            "fr": "1 boulette"
-          },
-          {
-            "grams": 46.492,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 116.23,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 60,
-            "en": "60 g",
-            "fr": "60 g"
-          },
-          {
-            "grams": 75,
-            "en": "1 food guide serving = 75g",
-            "fr": "1 portion du guide alimentaire = 75g"
-          },
-          {
-            "grams": 73.2143,
-            "en": "100 g raw as purchased",
-            "fr": "100 g acheté, cru"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "919",
-        "score": 0.5,
-        "fr": "Poulet, haché, maigre, cuit",
-        "en": "Chicken, ground, lean, cooked",
-        "nutritionPer100g": {
-          "protein": 23.28,
-          "fat": 10.92,
-          "carbs": 0,
-          "calories": 189,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 8,
-          "iron": 0.93,
-          "potassium": 677,
-          "sodium": 75
-        },
-        "portions": [
-          {
-            "grams": 60,
-            "en": "60 g",
-            "fr": "60 g"
-          },
-          {
-            "grams": 53.677,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 134.193,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 75,
-            "en": "1 food guide serving = 75g",
-            "fr": "1 portion du guide alimentaire = 75g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1148",
-        "score": 0.5,
-        "fr": "Charcuterie, jambon, cuit, tranché",
-        "en": "Deli-meat, ham, cooked, sliced",
-        "nutritionPer100g": {
-          "protein": 14.59,
-          "fat": 4.13,
-          "carbs": 5.82,
-          "calories": 122,
-          "sugars": 1.83,
-          "fiber": 0,
-          "calcium": 14,
-          "iron": 0.6,
-          "potassium": 240,
-          "sodium": 1249
-        },
-        "portions": [
-          {
-            "grams": 147.94,
-            "en": "250 ml diced",
-            "fr": "250 ml en dés"
-          },
-          {
-            "grams": 59.17,
-            "en": "100 ml diced",
-            "fr": "100 ml en dés"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 75,
-            "en": "75 g",
-            "fr": "75 g"
-          },
-          {
-            "grams": 29.8,
-            "en": "1 slice",
-            "fr": "1 tranche"
-          },
-          {
-            "grams": 58.326,
-            "en": "100 ml chopped",
-            "fr": "100 ml haché"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1154",
-        "score": 0.5,
-        "fr": "Charcuterie, boeuf, cuit, tranché",
-        "en": "Deli-meat, roast beef, cooked, sliced",
-        "nutritionPer100g": {
-          "protein": 19.25,
-          "fat": 2.08,
-          "carbs": 3.96,
-          "calories": 116,
-          "sugars": 0.29,
-          "fiber": 0,
-          "calcium": 8,
-          "iron": 1.8,
-          "potassium": 235,
-          "sodium": 1246
-        },
-        "portions": [
-          {
-            "grams": 19.9,
-            "en": "1 slice",
-            "fr": "1 tranche"
-          },
-          {
-            "grams": 59.172,
-            "en": "100 ml pieces",
-            "fr": "100 ml morceaux"
-          },
-          {
-            "grams": 147.929,
-            "en": "250 ml pieces",
-            "fr": "250 ml morceaux"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 75,
-            "en": "75 g",
-            "fr": "75 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1167",
-        "score": 0.5,
-        "fr": "Saucisse, fumée, porc, pré-cuite",
-        "en": "Sausage, smoked, pork, pre-cooked",
-        "nutritionPer100g": {
-          "protein": 12.69,
-          "fat": 21.6,
-          "carbs": 9.48,
-          "calories": 286,
-          "sugars": 1.16,
-          "fiber": 0,
-          "calcium": 12,
-          "iron": 0.57,
-          "potassium": 153,
-          "sodium": 741
-        },
-        "portions": [
-          {
-            "grams": 108,
-            "en": "1 sausage",
-            "fr": "1 saucisse"
-          },
-          {
-            "grams": 58.33,
-            "en": "100 ml slices",
-            "fr": "100 ml tranches"
-          },
-          {
-            "grams": 145.816,
-            "en": "250 ml slices",
-            "fr": "250 ml tranches"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1172",
-        "score": 0.5,
-        "fr": "Charcuterie, poitrine de dinde, cuite, tranchée",
-        "en": "Deli-meat, turkey breast, cooked, sliced",
-        "nutritionPer100g": {
-          "protein": 20.95,
-          "fat": 2.03,
-          "carbs": 2.61,
-          "calories": 118,
-          "sugars": 0.34,
-          "fiber": 0,
-          "calcium": 7,
-          "iron": 0.42,
-          "potassium": 260,
-          "sodium": 1139
-        },
-        "portions": [
-          {
-            "grams": 15,
-            "en": "1 slice",
-            "fr": "1 tranche"
-          },
-          {
-            "grams": 34.23,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 85.59,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 75,
-            "en": "75 g",
-            "fr": "75 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1175",
-        "score": 0.5,
-        "fr": "Saucisse, italienne, porc, cuite",
-        "en": "Sausage, Italian, pork, cooked",
-        "nutritionPer100g": {
-          "protein": 18.77,
-          "fat": 21.03,
-          "carbs": 5.15,
-          "calories": 290,
-          "sugars": 1.14,
-          "fiber": 0,
-          "calcium": 9,
-          "iron": 0.75,
-          "potassium": 270,
-          "sodium": 819
-        },
-        "portions": [
-          {
-            "grams": 84,
-            "en": "100 g as purchased",
-            "fr": "100 g tel qu'acheté"
-          },
-          {
-            "grams": 56.216,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 140.54,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 80,
-            "en": "1 sausage",
-            "fr": "1 saucisse"
-          },
-          {
-            "grams": 70.27,
+            "grams": 71.851,
             "en": "125 ml",
             "fr": "125 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1182",
-        "score": 0.5,
-        "fr": "Saucisse, Bratwurst, porc, cuite",
-        "en": "Sausage, Bratwurst, pork, cooked",
-        "nutritionPer100g": {
-          "protein": 17.88,
-          "fat": 23.3,
-          "carbs": 7.07,
-          "calories": 314,
-          "sugars": 1.63,
-          "fiber": 0,
-          "calcium": 6,
-          "iron": 0.73,
-          "potassium": 212,
-          "sodium": 828
-        },
-        "portions": [
-          {
-            "grams": 82,
-            "en": "1 sausage",
-            "fr": "1 saucisse"
           },
           {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 0.84,
-            "en": "100 g raw as purchased",
-            "fr": "100 g acheté, cru"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "energieAlias": "rutabaga",
-    "current": {
-      "calories": 66,
-      "protein": 2,
-      "carbs": 15,
-      "fat": 0.4,
-      "portion": "1 tasse",
-      "gramsPerPortion": null
-    },
-    "reviewQueries": [
-      "rutabaga cooked",
-      "rutabaga bouilli"
-    ],
-    "candidates": [
-      {
-        "cnfFoodId": "2445",
-        "score": 1,
-        "fr": "Rutabaga (chou-navet), bouilli, égoutté",
-        "en": "Rutabaga (swede), boiled, drained",
-        "nutritionPer100g": {
-          "protein": 0.93,
-          "fat": 0.18,
-          "carbs": 6.84,
-          "calories": 30,
-          "sugars": 3.95,
-          "fiber": 1.8,
-          "calcium": 18,
-          "iron": 0.18,
-          "potassium": 216,
-          "sodium": 5
-        },
-        "portions": [
-          {
-            "grams": 71.851,
-            "en": "100 ml cubes",
-            "fr": "100 ml en cubes"
-          },
-          {
-            "grams": 101.437,
-            "en": "100 ml mashed",
-            "fr": "100 ml en purée"
-          },
-          {
-            "grams": 89.814,
-            "en": "125 ml cubes",
-            "fr": "125 ml en cubes"
-          },
-          {
-            "grams": 179.628,
-            "en": "250 ml cubes",
-            "fr": "250 ml en cubes"
-          },
-          {
-            "grams": 126.796,
-            "en": "125 ml mashed",
-            "fr": "125 ml en purée"
-          },
-          {
-            "grams": 253.593,
-            "en": "250 ml mashed",
-            "fr": "250 ml en purée"
+            "grams": 143.702,
+            "en": "250 ml",
+            "fr": "250 ml"
           },
           {
             "grams": 85,
@@ -3028,116 +741,241 @@
         ]
       },
       {
-        "cnfFoodId": "6531",
-        "score": 1,
-        "fr": "Rutabaga (chou-navet), bouilli, égoutté, sel ajouté",
-        "en": "Rutabaga (swede), boiled, drained, with salt",
+        "cnfFoodId": "2501",
+        "score": 2.3,
+        "fr": "Betteraves, bouillies, égouttées",
+        "en": "Beets, boiled, drained",
         "nutritionPer100g": {
-          "protein": 0.93,
+          "protein": 1.68,
           "fat": 0.18,
-          "carbs": 6.84,
-          "calories": 30,
-          "sugars": 3.95,
-          "fiber": 1.8,
-          "calcium": 18,
-          "iron": 0.18,
-          "potassium": 216,
-          "sodium": 254
+          "carbs": 9.96,
+          "calories": 44,
+          "sugars": 7.96,
+          "fiber": 2.02,
+          "calcium": 16,
+          "iron": 0.79,
+          "potassium": 305,
+          "sodium": 77
         },
         "portions": [
-          {
-            "grams": 85,
-            "en": "85 g",
-            "fr": "85 g"
-          },
           {
             "grams": 71.851,
-            "en": "100 ml cubes",
-            "fr": "100 ml en cubes"
-          },
-          {
-            "grams": 89.814,
-            "en": "125 ml cubes",
-            "fr": "125 ml en cubes"
-          },
-          {
-            "grams": 179.628,
-            "en": "250 ml cubes",
-            "fr": "250 ml en cubes"
-          },
-          {
-            "grams": 101.437,
-            "en": "100 ml mashed",
-            "fr": "100 ml en purée"
-          },
-          {
-            "grams": 89.814,
-            "en": "125 ml mashed",
-            "fr": "125 ml en purée"
-          },
-          {
-            "grams": 253.593,
-            "en": "250 ml mashed",
-            "fr": "250 ml en purée"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "129",
-        "score": 0.5,
-        "fr": "Oeuf, poule, entier, cuit, frit",
-        "en": "Egg, chicken, whole, cooked, fried",
-        "nutritionPer100g": {
-          "protein": 12.871,
-          "fat": 14.811,
-          "carbs": 1.106,
-          "calories": 193,
-          "sugars": 0.839,
-          "fiber": 0,
-          "calcium": 49.091,
-          "iron": 1.153,
-          "potassium": 124.832,
-          "sodium": 329.066
-        },
-        "portions": [
-          {
-            "grams": 35,
-            "en": "1 small egg",
-            "fr": "1 petit oeuf"
-          },
-          {
-            "grams": 46,
-            "en": "1 large egg",
-            "fr": "1 oeufs large (gros)"
+            "en": "100 ml slices",
+            "fr": "100 ml tranches"
           },
           {
             "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
+            "en": "1 beet (5 cm dia)",
+            "fr": "1 betterave (5 cm dia)"
           },
           {
-            "grams": 92,
-            "en": "2 large eggs",
-            "fr": "2 oeufs larges (gros)"
+            "grams": 89.814,
+            "en": "125 ml slices",
+            "fr": "125 ml tranches"
+          },
+          {
+            "grams": 179.628,
+            "en": "250 ml slices",
+            "fr": "250 ml tranches"
+          },
+          {
+            "grams": 85,
+            "en": "85 g",
+            "fr": "85 g"
           }
         ]
       },
       {
-        "cnfFoodId": "130",
-        "score": 0.5,
-        "fr": "Oeuf, poule, entier, cuit, bouilli à la coque, dur",
-        "en": "Egg, chicken, whole, cooked, boiled in shell, hard-cooked",
+        "cnfFoodId": "6377",
+        "score": 2.3,
+        "fr": "Betteraves, bouillies, égouttées, sel ajouté",
+        "en": "Beets, boiled, drained, with salt",
         "nutritionPer100g": {
-          "protein": 11.8,
-          "fat": 10.012,
-          "carbs": 1.85,
-          "calories": 141,
-          "sugars": 0.77,
+          "protein": 1.68,
+          "fat": 0.18,
+          "carbs": 9.96,
+          "calories": 44,
+          "sugars": 7.96,
+          "fiber": 2,
+          "calcium": 16,
+          "iron": 0.79,
+          "potassium": 305,
+          "sodium": 285
+        },
+        "portions": [
+          {
+            "grams": 71.851,
+            "en": "100 ml slices",
+            "fr": "100 ml tranches"
+          },
+          {
+            "grams": 89.814,
+            "en": "125 ml slices",
+            "fr": "125 ml tranches"
+          },
+          {
+            "grams": 179.628,
+            "en": "250 ml slices",
+            "fr": "250 ml tranches"
+          },
+          {
+            "grams": 85,
+            "en": "85 g",
+            "fr": "85 g"
+          }
+        ]
+      },
+      {
+        "cnfFoodId": "2021",
+        "score": 1,
+        "fr": "Betterave, feuilles, crues",
+        "en": "Beet greens, raw",
+        "nutritionPer100g": {
+          "protein": 2.2,
+          "fat": 0.13,
+          "carbs": 4.33,
+          "calories": 22,
+          "sugars": 0.5,
+          "fiber": 3.7,
+          "calcium": 117,
+          "iron": 2.57,
+          "potassium": 762,
+          "sodium": 226
+        },
+        "portions": [
+          {
+            "grams": 16.061,
+            "en": "100 ml pieces",
+            "fr": "100 ml morceaux"
+          },
+          {
+            "grams": 32,
+            "en": "1 leaf",
+            "fr": "1 feuille (leaf)"
+          },
+          {
+            "grams": 20.076,
+            "en": "125 ml pieces",
+            "fr": "125 ml morceaux"
+          },
+          {
+            "grams": 40.152,
+            "en": "250 ml pieces",
+            "fr": "250 ml morceaux"
+          },
+          {
+            "grams": 65,
+            "en": "65 g",
+            "fr": "65 g"
+          },
+          {
+            "grams": 44,
+            "en": "total refuse",
+            "fr": "portion non comestible totale"
+          },
+          {
+            "grams": 44,
+            "en": "stems, bruised and old leaves",
+            "fr": "tiges, feuilles/vieilles endommagées"
+          }
+        ]
+      },
+      {
+        "cnfFoodId": "2022",
+        "score": 1,
+        "fr": "Betterave, feuilles, bouillies, égouttées",
+        "en": "Beet greens, boiled, drained",
+        "nutritionPer100g": {
+          "protein": 2.57,
+          "fat": 0.2,
+          "carbs": 5.46,
+          "calories": 27,
+          "sugars": 0.6,
+          "fiber": 2.9,
+          "calcium": 114,
+          "iron": 1.9,
+          "potassium": 909,
+          "sodium": 241
+        },
+        "portions": [
+          {
+            "grams": 60.862,
+            "en": "100 ml pieces",
+            "fr": "100 ml morceaux"
+          },
+          {
+            "grams": 76.078,
+            "en": "125 ml pieces",
+            "fr": "125 ml morceaux"
+          },
+          {
+            "grams": 152.156,
+            "en": "250 ml pieces",
+            "fr": "250 ml morceaux"
+          },
+          {
+            "grams": 85,
+            "en": "85 g",
+            "fr": "85 g"
+          }
+        ]
+      },
+      {
+        "cnfFoodId": "6376",
+        "score": 1,
+        "fr": "Betterave, feuilles, bouillies, égouttées, sel ajouté",
+        "en": "Beet greens, boiled, drained, with salt",
+        "nutritionPer100g": {
+          "protein": 2.57,
+          "fat": 0.2,
+          "carbs": 5.46,
+          "calories": 27,
+          "sugars": 0.6,
+          "fiber": 2.9,
+          "calcium": 114,
+          "iron": 1.9,
+          "potassium": 909,
+          "sodium": 477
+        },
+        "portions": [
+          {
+            "grams": 60.862,
+            "en": "100 ml pieces",
+            "fr": "100 ml morceaux"
+          },
+          {
+            "grams": 76.078,
+            "en": "125 ml pieces",
+            "fr": "125 ml morceaux"
+          },
+          {
+            "grams": 152.156,
+            "en": "250 ml pieces",
+            "fr": "250 ml morceaux"
+          },
+          {
+            "grams": 85,
+            "en": "85 g",
+            "fr": "85 g"
+          }
+        ]
+      },
+      {
+        "cnfFoodId": "88",
+        "score": 0.5,
+        "fr": "Oeuf, canard, entier, frais, cru",
+        "en": "Egg, duck, whole, fresh, raw",
+        "nutritionPer100g": {
+          "protein": 12.81,
+          "fat": 13.77,
+          "carbs": 1.45,
+          "calories": 186,
+          "sugars": 0.93,
           "fiber": 0,
-          "calcium": 44.816,
-          "iron": 1.387,
-          "potassium": 113.743,
-          "sodium": 125.456
+          "calcium": 64,
+          "iron": 3.85,
+          "potassium": 222,
+          "sodium": 146
         },
         "portions": [
           {
@@ -3146,19 +984,39 @@
             "fr": "portion non comestible totale"
           },
           {
+            "grams": 70,
+            "en": "1 egg",
+            "fr": "1 oeuf"
+          },
+          {
             "grams": 50,
-            "en": "1 large egg",
-            "fr": "1 oeufs large (gros)"
-          },
+            "en": "50 g",
+            "fr": "50 g"
+          }
+        ]
+      },
+      {
+        "cnfFoodId": "89",
+        "score": 0.5,
+        "fr": "Oeuf, oie, entier, frais, cru",
+        "en": "Egg, goose, whole, fresh, raw",
+        "nutritionPer100g": {
+          "protein": 13.87,
+          "fat": 13.27,
+          "carbs": 1.35,
+          "calories": 185,
+          "sugars": 0.94,
+          "fiber": 0,
+          "calcium": 60,
+          "iron": 3.64,
+          "potassium": 210,
+          "sodium": 138
+        },
+        "portions": [
           {
-            "grams": 57.481,
-            "en": "100 ml chopped",
-            "fr": "100 ml haché"
-          },
-          {
-            "grams": 8.615,
-            "en": "15 ml",
-            "fr": "15 ml"
+            "grams": 144,
+            "en": "1 egg",
+            "fr": "1 oeuf"
           },
           {
             "grams": 50,
@@ -3166,44 +1024,138 @@
             "fr": "50 g"
           },
           {
-            "grams": 143.703,
-            "en": "250 ml, chopped",
-            "fr": "250 ml, haché"
+            "grams": 72,
+            "en": "1/2 egg",
+            "fr": "1/2 oeuf"
           },
           {
-            "grams": 100,
-            "en": "2 large eggs",
-            "fr": "2 oeufs larges (gros)"
+            "grams": 13,
+            "en": "total refuse",
+            "fr": "portion non comestible totale"
           }
         ]
       },
       {
-        "cnfFoodId": "132",
+        "cnfFoodId": "90",
         "score": 0.5,
-        "fr": "Oeuf, poule, entier, cuit, poché",
-        "en": "Egg, chicken, whole, cooked, poached",
+        "fr": "Oeuf, caille, entier, frais, cru",
+        "en": "Egg, quail, whole, fresh, raw",
         "nutritionPer100g": {
-          "protein": 11.8,
-          "fat": 10.012,
-          "carbs": 0.981,
-          "calories": 145,
+          "protein": 13.05,
+          "fat": 11.09,
+          "carbs": 0.41,
+          "calories": 159,
+          "sugars": 0.4,
+          "fiber": 0,
+          "calcium": 64,
+          "iron": 3.65,
+          "potassium": 132,
+          "sodium": 141
+        },
+        "portions": [
+          {
+            "grams": 8,
+            "en": "total refuse",
+            "fr": "portion non comestible totale"
+          },
+          {
+            "grams": 9,
+            "en": "1 egg",
+            "fr": "1 oeuf"
+          },
+          {
+            "grams": 50,
+            "en": "50 g",
+            "fr": "50 g"
+          },
+          {
+            "grams": 90,
+            "en": "10 eggs",
+            "fr": "10 oeufs"
+          }
+        ]
+      },
+      {
+        "cnfFoodId": "91",
+        "score": 0.5,
+        "fr": "Oeuf, dinde, entier, frais, cru",
+        "en": "Egg, turkey, whole, fresh, raw",
+        "nutritionPer100g": {
+          "protein": 13.68,
+          "fat": 11.88,
+          "carbs": 1.15,
+          "calories": 171,
+          "fiber": 0,
+          "calcium": 99,
+          "iron": 4.1,
+          "potassium": 142,
+          "sodium": 151
+        },
+        "portions": [
+          {
+            "grams": 79,
+            "en": "1 egg",
+            "fr": "1 oeuf"
+          },
+          {
+            "grams": 50,
+            "en": "50 g",
+            "fr": "50 g"
+          },
+          {
+            "grams": 12,
+            "en": "total refuse",
+            "fr": "portion non comestible totale"
+          }
+        ]
+      },
+      {
+        "cnfFoodId": "125",
+        "score": 0.5,
+        "fr": "Oeuf, poule, entier, frais ou congelé, cru",
+        "en": "Egg, chicken, whole, fresh or frozen, raw",
+        "nutritionPer100g": {
+          "protein": 12.268,
+          "fat": 10.608,
+          "carbs": 0.793,
+          "calories": 152,
           "sugars": 0.77,
           "fiber": 0,
-          "calcium": 44.816,
-          "iron": 1.387,
-          "potassium": 113.743,
-          "sodium": 125.456
+          "calcium": 50.211,
+          "iron": 1.758,
+          "potassium": 124.838,
+          "sodium": 121.664
         },
         "portions": [
           {
-            "grams": 38,
+            "grams": 52.61,
+            "en": "1 large egg",
+            "fr": "1 oeufs large (gros)"
+          },
+          {
+            "grams": 39.13,
             "en": "1 small egg",
             "fr": "1 petit oeuf"
           },
           {
-            "grams": 50,
-            "en": "1 large egg",
-            "fr": "1 oeufs large (gros)"
+            "grams": 128.381,
+            "en": "125 ml",
+            "fr": "125 ml"
+          },
+          {
+            "grams": 256.762,
+            "en": "250 ml",
+            "fr": "250 ml"
+          },
+          {
+            "grams": 58.09,
+            "en": "1 extra large egg",
+            "fr": "1 oeuf extra gros"
+          },
+          {
+            "grams": 45.62,
+            "en": "1 medium egg",
+            "fr": "1 oeuf moyen"
           },
           {
             "grams": 50,
@@ -3211,329 +1163,109 @@
             "fr": "50 g"
           },
           {
-            "grams": 100,
+            "grams": 66.06,
+            "en": "1 jumbo egg",
+            "fr": "1 œuf jumbo"
+          },
+          {
+            "grams": 102.705,
+            "en": "100 ml",
+            "fr": "100 ml"
+          },
+          {
+            "grams": 105.22,
             "en": "2 large eggs",
             "fr": "2 oeufs larges (gros)"
+          },
+          {
+            "grams": 34.71,
+            "en": "1 pee wee egg",
+            "fr": "1 très petit oeuf"
+          },
+          {
+            "grams": 12,
+            "en": "total refuse",
+            "fr": "portion non comestible totale"
           }
         ]
       },
       {
-        "cnfFoodId": "133",
+        "cnfFoodId": "126",
         "score": 0.5,
-        "fr": "Oeuf, poule, entier, cuit, brouillé ou omelette",
-        "en": "Egg, chicken, whole, cooked, scrambled or omelet",
+        "fr": "Oeuf, poule, blanc, frais ou congelé, cru",
+        "en": "Egg, chicken, white, fresh or frozen, raw",
         "nutritionPer100g": {
-          "protein": 10.388,
-          "fat": 11.394,
-          "carbs": 3.047,
-          "calories": 153,
-          "sugars": 1.39,
+          "protein": 10.017,
+          "fat": 0,
+          "carbs": 0.628,
+          "calories": 46,
+          "sugars": 0.71,
           "fiber": 0,
-          "calcium": 71.643,
-          "iron": 1.113,
-          "potassium": 136.877,
-          "sodium": 369.155
+          "calcium": 7.761,
+          "iron": 0,
+          "potassium": 136,
+          "sodium": 160.8
         },
         "portions": [
           {
-            "grams": 48,
-            "en": "1 small egg",
-            "fr": "1 petit oeuf"
+            "grams": 68.9,
+            "en": "100 g whole egg liquid yields",
+            "fr": "100 g - rendement oeuf entier liquide"
           },
           {
-            "grams": 61,
+            "grams": 102.705,
+            "en": "100 ml",
+            "fr": "100 ml"
+          },
+          {
+            "grams": 34.27,
             "en": "1 large egg",
             "fr": "1 oeufs large (gros)"
           },
           {
-            "grams": 232.459,
+            "grams": 128.381,
+            "en": "125 ml",
+            "fr": "125 ml"
+          },
+          {
+            "grams": 256.763,
             "en": "250 ml",
             "fr": "250 ml"
           },
           {
-            "grams": 92.984,
-            "en": "100 ml",
-            "fr": "100 ml"
+            "grams": 50,
+            "en": "50 g",
+            "fr": "50 g"
           },
           {
-            "grams": 110,
-            "en": "110 g",
-            "fr": "110 g"
+            "grams": 25.12,
+            "en": "1 pee wee egg",
+            "fr": "1 très petit oeuf"
           },
           {
-            "grams": 122,
-            "en": "2 large eggs",
-            "fr": "2 oeufs larges (gros)"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "816",
-        "score": 0.5,
-        "fr": "Dinde, toutes catégories, hachée, cuite",
-        "en": "Turkey, all classes, ground, cooked",
-        "nutritionPer100g": {
-          "protein": 27.628,
-          "fat": 8.706,
-          "carbs": 0,
-          "calories": 196,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 83.244,
-          "iron": 1.077,
-          "potassium": 333.065,
-          "sodium": 84.038
-        },
-        "portions": [
-          {
-            "grams": 82,
-            "en": "1 patty",
-            "fr": "1 boulette"
+            "grams": 28.56,
+            "en": "1 small egg",
+            "fr": "1 petit oeuf"
           },
           {
-            "grams": 46.492,
-            "en": "100 ml",
-            "fr": "100 ml"
+            "grams": 31.5,
+            "en": "1 medium egg",
+            "fr": "1 oeuf moyen"
           },
           {
-            "grams": 116.23,
-            "en": "250 ml",
-            "fr": "250 ml"
+            "grams": 38.36,
+            "en": "1 extra large egg",
+            "fr": "1 oeuf extra gros"
           },
           {
-            "grams": 60,
-            "en": "60 g",
-            "fr": "60 g"
+            "grams": 45.31,
+            "en": "1 jumbo egg",
+            "fr": "1 œuf jumbo"
           },
           {
-            "grams": 75,
-            "en": "1 food guide serving = 75g",
-            "fr": "1 portion du guide alimentaire = 75g"
-          },
-          {
-            "grams": 73.2143,
-            "en": "100 g raw as purchased",
-            "fr": "100 g acheté, cru"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "919",
-        "score": 0.5,
-        "fr": "Poulet, haché, maigre, cuit",
-        "en": "Chicken, ground, lean, cooked",
-        "nutritionPer100g": {
-          "protein": 23.28,
-          "fat": 10.92,
-          "carbs": 0,
-          "calories": 189,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 8,
-          "iron": 0.93,
-          "potassium": 677,
-          "sodium": 75
-        },
-        "portions": [
-          {
-            "grams": 60,
-            "en": "60 g",
-            "fr": "60 g"
-          },
-          {
-            "grams": 53.677,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 134.193,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 75,
-            "en": "1 food guide serving = 75g",
-            "fr": "1 portion du guide alimentaire = 75g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1148",
-        "score": 0.5,
-        "fr": "Charcuterie, jambon, cuit, tranché",
-        "en": "Deli-meat, ham, cooked, sliced",
-        "nutritionPer100g": {
-          "protein": 14.59,
-          "fat": 4.13,
-          "carbs": 5.82,
-          "calories": 122,
-          "sugars": 1.83,
-          "fiber": 0,
-          "calcium": 14,
-          "iron": 0.6,
-          "potassium": 240,
-          "sodium": 1249
-        },
-        "portions": [
-          {
-            "grams": 147.94,
-            "en": "250 ml diced",
-            "fr": "250 ml en dés"
-          },
-          {
-            "grams": 59.17,
-            "en": "100 ml diced",
-            "fr": "100 ml en dés"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 75,
-            "en": "75 g",
-            "fr": "75 g"
-          },
-          {
-            "grams": 29.8,
-            "en": "1 slice",
-            "fr": "1 tranche"
-          },
-          {
-            "grams": 58.326,
-            "en": "100 ml chopped",
-            "fr": "100 ml haché"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1154",
-        "score": 0.5,
-        "fr": "Charcuterie, boeuf, cuit, tranché",
-        "en": "Deli-meat, roast beef, cooked, sliced",
-        "nutritionPer100g": {
-          "protein": 19.25,
-          "fat": 2.08,
-          "carbs": 3.96,
-          "calories": 116,
-          "sugars": 0.29,
-          "fiber": 0,
-          "calcium": 8,
-          "iron": 1.8,
-          "potassium": 235,
-          "sodium": 1246
-        },
-        "portions": [
-          {
-            "grams": 19.9,
-            "en": "1 slice",
-            "fr": "1 tranche"
-          },
-          {
-            "grams": 59.172,
-            "en": "100 ml pieces",
-            "fr": "100 ml morceaux"
-          },
-          {
-            "grams": 147.929,
-            "en": "250 ml pieces",
-            "fr": "250 ml morceaux"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 75,
-            "en": "75 g",
-            "fr": "75 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1167",
-        "score": 0.5,
-        "fr": "Saucisse, fumée, porc, pré-cuite",
-        "en": "Sausage, smoked, pork, pre-cooked",
-        "nutritionPer100g": {
-          "protein": 12.69,
-          "fat": 21.6,
-          "carbs": 9.48,
-          "calories": 286,
-          "sugars": 1.16,
-          "fiber": 0,
-          "calcium": 12,
-          "iron": 0.57,
-          "potassium": 153,
-          "sodium": 741
-        },
-        "portions": [
-          {
-            "grams": 108,
-            "en": "1 sausage",
-            "fr": "1 saucisse"
-          },
-          {
-            "grams": 58.33,
-            "en": "100 ml slices",
-            "fr": "100 ml tranches"
-          },
-          {
-            "grams": 145.816,
-            "en": "250 ml slices",
-            "fr": "250 ml tranches"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1172",
-        "score": 0.5,
-        "fr": "Charcuterie, poitrine de dinde, cuite, tranchée",
-        "en": "Deli-meat, turkey breast, cooked, sliced",
-        "nutritionPer100g": {
-          "protein": 20.95,
-          "fat": 2.03,
-          "carbs": 2.61,
-          "calories": 118,
-          "sugars": 0.34,
-          "fiber": 0,
-          "calcium": 7,
-          "iron": 0.42,
-          "potassium": 260,
-          "sodium": 1139
-        },
-        "portions": [
-          {
-            "grams": 15,
-            "en": "1 slice",
-            "fr": "1 tranche"
-          },
-          {
-            "grams": 34.23,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 85.59,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 75,
-            "en": "75 g",
-            "fr": "75 g"
+            "grams": 102.81,
+            "en": "3 egg whites",
+            "fr": "3 blancs d'oeuf"
           }
         ]
       }
@@ -4042,482 +1774,6 @@
     ]
   },
   {
-    "energieAlias": "bacon",
-    "current": {
-      "calories": 130,
-      "protein": 9,
-      "carbs": 0.5,
-      "fat": 10,
-      "portion": "3 tranches",
-      "gramsPerPortion": null
-    },
-    "reviewQueries": [
-      "pork bacon cooked",
-      "bacon porc cuit"
-    ],
-    "candidates": [
-      {
-        "cnfFoodId": "1979",
-        "score": 1,
-        "fr": "Porc, salé, bacon en miettes, grillé",
-        "en": "Pork, cured, bacon bits, cooked",
-        "nutritionPer100g": {
-          "protein": 33.6,
-          "fat": 39,
-          "carbs": 0.6,
-          "calories": 498,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 23,
-          "potassium": 440,
-          "sodium": 2560
-        },
-        "portions": [
-          {
-            "grams": 5.083,
-            "en": "15 ml bits",
-            "fr": "15 ml petits morceaux"
-          },
-          {
-            "grams": 15,
-            "en": "15 g",
-            "fr": "15 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "5405",
-        "score": 1,
-        "fr": "Porc, salé, bacon, cuit, au four",
-        "en": "Pork, cured, bacon, cooked, baked",
-        "nutritionPer100g": {
-          "protein": 35.73,
-          "fat": 43.27,
-          "carbs": 1.35,
-          "calories": 548,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 10,
-          "iron": 1.49,
-          "potassium": 539,
-          "sodium": 2193
-        },
-        "portions": [
-          {
-            "grams": 8.1,
-            "en": "1 slice cooked",
-            "fr": "1 tranche cuite"
-          },
-          {
-            "grams": 26,
-            "en": "1 slice raw",
-            "fr": "1 tranche cru"
-          },
-          {
-            "grams": 15,
-            "en": "15 g",
-            "fr": "15 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "5406",
-        "score": 1,
-        "fr": "Porc, salé, bacon, cuit au four à micro-ondes",
-        "en": "Pork, cured, bacon, cooked, microwaved",
-        "nutritionPer100g": {
-          "protein": 39.01,
-          "fat": 34.12,
-          "carbs": 0.48,
-          "calories": 476,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 13,
-          "iron": 1.14,
-          "potassium": 525,
-          "sodium": 1783
-        },
-        "portions": [
-          {
-            "grams": 26,
-            "en": "1 slice raw",
-            "fr": "1 tranche cru"
-          },
-          {
-            "grams": 7.5,
-            "en": "1 slice cooked",
-            "fr": "1 tranche cuite"
-          },
-          {
-            "grams": 15,
-            "en": "15 g",
-            "fr": "15 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "5407",
-        "score": 1,
-        "fr": "Porc, salé, bacon, cuit, sauté",
-        "en": "Pork, cured, bacon, cooked, pan-fried",
-        "nutritionPer100g": {
-          "protein": 33.92,
-          "fat": 35.09,
-          "carbs": 1.7,
-          "calories": 468,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 11,
-          "iron": 0.95,
-          "potassium": 499,
-          "sodium": 1684
-        },
-        "portions": [
-          {
-            "grams": 26,
-            "en": "1 slice raw",
-            "fr": "1 tranche cru"
-          },
-          {
-            "grams": 7.9,
-            "en": "1 slice cooked",
-            "fr": "1 tranche cuite"
-          },
-          {
-            "grams": 15,
-            "en": "15 g",
-            "fr": "15 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "5409",
-        "score": 1,
-        "fr": "Porc, bacon, gras fondu, cuit",
-        "en": "Pork, cured, bacon, rendered fat, cooked",
-        "nutritionPer100g": {
-          "protein": 0.07,
-          "fat": 99.5,
-          "carbs": 0,
-          "calories": 898,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 1,
-          "iron": 0.13,
-          "potassium": 15,
-          "sodium": 27
-        },
-        "portions": [
-          {
-            "grams": 12.997,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 86.644,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 10,
-            "en": "10 g",
-            "fr": "10 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1167",
-        "score": 0.667,
-        "fr": "Saucisse, fumée, porc, pré-cuite",
-        "en": "Sausage, smoked, pork, pre-cooked",
-        "nutritionPer100g": {
-          "protein": 12.69,
-          "fat": 21.6,
-          "carbs": 9.48,
-          "calories": 286,
-          "sugars": 1.16,
-          "fiber": 0,
-          "calcium": 12,
-          "iron": 0.57,
-          "potassium": 153,
-          "sodium": 741
-        },
-        "portions": [
-          {
-            "grams": 108,
-            "en": "1 sausage",
-            "fr": "1 saucisse"
-          },
-          {
-            "grams": 58.33,
-            "en": "100 ml slices",
-            "fr": "100 ml tranches"
-          },
-          {
-            "grams": 145.816,
-            "en": "250 ml slices",
-            "fr": "250 ml tranches"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1175",
-        "score": 0.667,
-        "fr": "Saucisse, italienne, porc, cuite",
-        "en": "Sausage, Italian, pork, cooked",
-        "nutritionPer100g": {
-          "protein": 18.77,
-          "fat": 21.03,
-          "carbs": 5.15,
-          "calories": 290,
-          "sugars": 1.14,
-          "fiber": 0,
-          "calcium": 9,
-          "iron": 0.75,
-          "potassium": 270,
-          "sodium": 819
-        },
-        "portions": [
-          {
-            "grams": 84,
-            "en": "100 g as purchased",
-            "fr": "100 g tel qu'acheté"
-          },
-          {
-            "grams": 56.216,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 140.54,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 80,
-            "en": "1 sausage",
-            "fr": "1 saucisse"
-          },
-          {
-            "grams": 70.27,
-            "en": "125 ml",
-            "fr": "125 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1182",
-        "score": 0.667,
-        "fr": "Saucisse, Bratwurst, porc, cuite",
-        "en": "Sausage, Bratwurst, pork, cooked",
-        "nutritionPer100g": {
-          "protein": 17.88,
-          "fat": 23.3,
-          "carbs": 7.07,
-          "calories": 314,
-          "sugars": 1.63,
-          "fiber": 0,
-          "calcium": 6,
-          "iron": 0.73,
-          "potassium": 212,
-          "sodium": 828
-        },
-        "portions": [
-          {
-            "grams": 82,
-            "en": "1 sausage",
-            "fr": "1 saucisse"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 0.84,
-            "en": "100 g raw as purchased",
-            "fr": "100 g acheté, cru"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1183",
-        "score": 0.667,
-        "fr": "Saucisse, saucisson Braunschweiger (saucisson de foie avec bacon), porc",
-        "en": "Sausage, Braunschweiger (liver sausage with bacon), pork",
-        "nutritionPer100g": {
-          "protein": 14.5,
-          "fat": 28.5,
-          "carbs": 3.1,
-          "calories": 327,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 9,
-          "iron": 11.2,
-          "potassium": 199,
-          "sodium": 977
-        },
-        "portions": [
-          {
-            "grams": 15.185,
-            "en": "1 slice (0.6cm x 6cm dia)",
-            "fr": "1 tranche (0.6cm x 6cm dia)"
-          },
-          {
-            "grams": 90.03,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 225.063,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 13.504,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1199",
-        "score": 0.667,
-        "fr": "Saucisse à déjeuner, en chapelet ou en galette, porc, cuite",
-        "en": "Sausage, breakfast links or rounds, pork, cooked",
-        "nutritionPer100g": {
-          "protein": 15.14,
-          "fat": 21.2,
-          "carbs": 11.01,
-          "calories": 298,
-          "sugars": 1.66,
-          "fiber": 0,
-          "calcium": 8,
-          "iron": 0.72,
-          "potassium": 209,
-          "sodium": 765
-        },
-        "portions": [
-          {
-            "grams": 56.216,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 140.54,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 27,
-            "en": "1 link",
-            "fr": "1 saucisson"
-          },
-          {
-            "grams": 70.269,
-            "en": "125 ml",
-            "fr": "125 ml"
-          },
-          {
-            "grams": 86,
-            "en": "100 g raw as purchased",
-            "fr": "100 g acheté, cru"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1760",
-        "score": 0.667,
-        "fr": "Porc, gras séparable, cuit",
-        "en": "Pork, separable fat, cooked",
-        "nutritionPer100g": {
-          "protein": 7.06,
-          "fat": 66.1,
-          "carbs": 0,
-          "calories": 626,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 22,
-          "iron": 0.46,
-          "potassium": 125,
-          "sodium": 56
-        },
-        "portions": [
-          {
-            "grams": 54.1,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 135.249,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 100,
-            "en": "100 g",
-            "fr": "100 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1857",
-        "score": 0.667,
-        "fr": "Porc, salé, tranches pour le déjeuner, cuit",
-        "en": "Pork, cured, breakfast strips, cooked",
-        "nutritionPer100g": {
-          "protein": 28.95,
-          "fat": 36.7,
-          "carbs": 1.05,
-          "calories": 459,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 14,
-          "iron": 1.97,
-          "potassium": 466,
-          "sodium": 2099
-        },
-        "portions": [
-          {
-            "grams": 7.955,
-            "en": "1 slice (1per 175g package)",
-            "fr": "1 tranche (1 par paquet de 175g)"
-          },
-          {
-            "grams": 11.029,
-            "en": "1 slice (17 per 375g package)",
-            "fr": "1 tranche (17 par paquet de 375g)"
-          },
-          {
-            "grams": 15,
-            "en": "15 g",
-            "fr": "15 g"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "energieAlias": "thon",
     "current": {
       "calories": 190,
@@ -4528,14 +1784,69 @@
       "gramsPerPortion": null
     },
     "reviewQueries": [
+      "tuna cooked",
+      "tuna fresh cooked",
+      "tuna yellowfin cooked",
+      "tuna bluefin cooked",
       "tuna canned water",
-      "thon conserve eau",
-      "tuna light canned"
+      "thon cuit",
+      "thon frais cuit",
+      "thon conserve eau"
     ],
     "candidates": [
       {
+        "cnfFoodId": "3080",
+        "score": 1,
+        "fr": "Poisson, thon rouge, frais, cuit au four ou grillé",
+        "en": "Fish, tuna, bluefin, fresh, baked or broiled",
+        "nutritionPer100g": {
+          "protein": 29.91,
+          "fat": 6.28,
+          "carbs": 0,
+          "calories": 184,
+          "sugars": 0,
+          "fiber": 0,
+          "calcium": 10,
+          "iron": 1.31,
+          "potassium": 323,
+          "sodium": 50
+        },
+        "portions": [
+          {
+            "grams": 65,
+            "en": "total refuse",
+            "fr": "portion non comestible totale"
+          },
+          {
+            "grams": 57.481,
+            "en": "100 ml flaked",
+            "fr": "100 ml flocon"
+          },
+          {
+            "grams": 143.702,
+            "en": "250 ml",
+            "fr": "250 ml"
+          },
+          {
+            "grams": 100,
+            "en": "100 g",
+            "fr": "100 g"
+          },
+          {
+            "grams": 75,
+            "en": "1 food guide serving = 75g",
+            "fr": "1 portion du guide alimentaire = 75g"
+          },
+          {
+            "grams": 81.13,
+            "en": "100 g raw boneless",
+            "fr": "100 g cru, désossé"
+          }
+        ]
+      },
+      {
         "cnfFoodId": "3081",
-        "score": 1.5,
+        "score": 1,
         "fr": "Poisson, thon, chair pale, conserve, dans l'eau, égoutté, sel ajouté",
         "en": "Fish, tuna, light, canned in water, drained, salt added",
         "nutritionPer100g": {
@@ -4585,141 +1896,6 @@
             "grams": 81.365,
             "en": "125 ml",
             "fr": "125 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "3131",
-        "score": 1.5,
-        "fr": "Poisson, thon, chair pale, conserve, dans l'eau, égoutté, sans sel",
-        "en": "Fish, tuna, light, canned in water, drained, unsalted",
-        "nutritionPer100g": {
-          "protein": 25.51,
-          "fat": 0.82,
-          "carbs": 0,
-          "calories": 116,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 11,
-          "iron": 1.53,
-          "potassium": 237,
-          "sodium": 50
-        },
-        "portions": [
-          {
-            "grams": 63.398,
-            "en": "100 ml drained",
-            "fr": "100 ml égoutté"
-          },
-          {
-            "grams": 165,
-            "en": "1 can",
-            "fr": "1 cannette / boite de conserve"
-          },
-          {
-            "grams": 158.495,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 75,
-            "en": "1 food guide serving = 75g",
-            "fr": "1 portion du guide alimentaire = 75g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "3207",
-        "score": 1.5,
-        "fr": "Poisson, thon, chair pale, conserve, dans l'huile, égoutté, sel ajouté",
-        "en": "Fish, tuna, light, canned in oil, drained, salt added",
-        "nutritionPer100g": {
-          "protein": 29.13,
-          "fat": 8.21,
-          "carbs": 0,
-          "calories": 198,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 13,
-          "iron": 1.39,
-          "potassium": 207,
-          "sodium": 416
-        },
-        "portions": [
-          {
-            "grams": 61.708,
-            "en": "100 ml drained",
-            "fr": "100 ml égoutté"
-          },
-          {
-            "grams": 171,
-            "en": "1 can",
-            "fr": "1 cannette / boite de conserve"
-          },
-          {
-            "grams": 154.269,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 75,
-            "en": "1 food guide serving = 75g",
-            "fr": "1 portion du guide alimentaire = 75g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "3214",
-        "score": 1.5,
-        "fr": "Poisson, thon, chair pale, conserve, dans l'huile, égoutté, sans sel",
-        "en": "Fish, tuna, light, canned in oil, drained, unsalted",
-        "nutritionPer100g": {
-          "protein": 29.13,
-          "fat": 8.21,
-          "carbs": 0,
-          "calories": 198,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 13,
-          "iron": 1.39,
-          "potassium": 207,
-          "sodium": 50
-        },
-        "portions": [
-          {
-            "grams": 61.708,
-            "en": "100 ml drained",
-            "fr": "100 ml égoutté"
-          },
-          {
-            "grams": 171,
-            "en": "1 can",
-            "fr": "1 cannette / boite de conserve"
-          },
-          {
-            "grams": 154.269,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 75,
-            "en": "1 food guide serving = 75g",
-            "fr": "1 portion du guide alimentaire = 75g"
           }
         ]
       },
@@ -4774,6 +1950,51 @@
         ]
       },
       {
+        "cnfFoodId": "3131",
+        "score": 1,
+        "fr": "Poisson, thon, chair pale, conserve, dans l'eau, égoutté, sans sel",
+        "en": "Fish, tuna, light, canned in water, drained, unsalted",
+        "nutritionPer100g": {
+          "protein": 25.51,
+          "fat": 0.82,
+          "carbs": 0,
+          "calories": 116,
+          "sugars": 0,
+          "fiber": 0,
+          "calcium": 11,
+          "iron": 1.53,
+          "potassium": 237,
+          "sodium": 50
+        },
+        "portions": [
+          {
+            "grams": 63.398,
+            "en": "100 ml drained",
+            "fr": "100 ml égoutté"
+          },
+          {
+            "grams": 165,
+            "en": "1 can",
+            "fr": "1 cannette / boite de conserve"
+          },
+          {
+            "grams": 158.495,
+            "en": "250 ml",
+            "fr": "250 ml"
+          },
+          {
+            "grams": 55,
+            "en": "55 g",
+            "fr": "55 g"
+          },
+          {
+            "grams": 75,
+            "en": "1 food guide serving = 75g",
+            "fr": "1 portion du guide alimentaire = 75g"
+          }
+        ]
+      },
+      {
         "cnfFoodId": "3133",
         "score": 1,
         "fr": "Poisson, thon, chair blanche, conserve, dans l'eau, égoutté, sans sel",
@@ -4815,6 +2036,51 @@
             "grams": 75,
             "en": "1 food guide serving = 75g",
             "fr": "1 portion du guide alimentaire = 75g"
+          }
+        ]
+      },
+      {
+        "cnfFoodId": "3167",
+        "score": 1,
+        "fr": "Poisson, thon à nageoires jaunes, cuit au four ou grillé",
+        "en": "Fish, tuna, yellowfin, baked or broiled",
+        "nutritionPer100g": {
+          "protein": 29.15,
+          "fat": 0.59,
+          "carbs": 0,
+          "calories": 130,
+          "sugars": 0,
+          "fiber": 0,
+          "calcium": 4,
+          "iron": 0.92,
+          "potassium": 527,
+          "sodium": 54
+        },
+        "portions": [
+          {
+            "grams": 57.48,
+            "en": "100 ml flaked",
+            "fr": "100 ml flocon"
+          },
+          {
+            "grams": 143.702,
+            "en": "250 ml",
+            "fr": "250 ml"
+          },
+          {
+            "grams": 100,
+            "en": "100 g",
+            "fr": "100 g"
+          },
+          {
+            "grams": 75,
+            "en": "1 food guide serving = 75g",
+            "fr": "1 portion du guide alimentaire = 75g"
+          },
+          {
+            "grams": 81.13,
+            "en": "100 g raw boneless",
+            "fr": "100 g cru, désossé"
           }
         ]
       },
@@ -5040,521 +2306,6 @@
     ]
   },
   {
-    "energieAlias": "fromage à la crème",
-    "current": {
-      "calories": 100,
-      "protein": 2,
-      "carbs": 2,
-      "fat": 10,
-      "portion": "2 c. à soupe",
-      "gramsPerPortion": null
-    },
-    "reviewQueries": [
-      "cream cheese regular",
-      "fromage a la creme ordinaire"
-    ],
-    "candidates": [
-      {
-        "cnfFoodId": "28",
-        "score": 0.8,
-        "fr": "Fromage, produit de fromage à la crème, nature",
-        "en": "Cheese, cream cheese product, plain",
-        "nutritionPer100g": {
-          "protein": 6.59,
-          "fat": 28.461,
-          "carbs": 8.3,
-          "calories": 310,
-          "sugars": 6.67,
-          "fiber": 0,
-          "calcium": 131,
-          "iron": 0.19,
-          "potassium": 237,
-          "sodium": 422
-        },
-        "portions": [
-          {
-            "grams": 98,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 14.7,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 245,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 29.4,
-            "en": "30 ml",
-            "fr": "30 ml"
-          },
-          {
-            "grams": 30,
-            "en": "30 g",
-            "fr": "30 g"
-          },
-          {
-            "grams": 122.5,
-            "en": "125 ml",
-            "fr": "125 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "4376",
-        "score": 0.8,
-        "fr": "Glaçage, saveur de fromage à la crème, prêt-à-manger",
-        "en": "Icing (frosting), cream cheese flavour, ready to eat",
-        "nutritionPer100g": {
-          "protein": 0.1,
-          "fat": 17.3,
-          "carbs": 67.32,
-          "calories": 415,
-          "sugars": 63.54,
-          "fiber": 0,
-          "calcium": 3,
-          "iron": 0.16,
-          "potassium": 35,
-          "sodium": 191
-        },
-        "portions": [
-          {
-            "grams": 47.19,
-            "en": "35 ml",
-            "fr": "35 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "4722",
-        "score": 0.8,
-        "fr": "Fromage à la crème, sans gras",
-        "en": "Cheese, cream, fat free",
-        "nutritionPer100g": {
-          "protein": 15.69,
-          "fat": 1,
-          "carbs": 7.66,
-          "calories": 105,
-          "sugars": 5.48,
-          "fiber": 0,
-          "calcium": 351,
-          "iron": 0.19,
-          "potassium": 278,
-          "sodium": 702
-        },
-        "portions": [
-          {
-            "grams": 15.81,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 105.67,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 31.7,
-            "en": "30 ml",
-            "fr": "30 ml"
-          },
-          {
-            "grams": 30,
-            "en": "30 g",
-            "fr": "30 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "5563",
-        "score": 0.8,
-        "fr": "Fromage, produit de fromage à la crème, nature, léger",
-        "en": "Cheese, cream cheese product, plain, light",
-        "nutritionPer100g": {
-          "protein": 8.61,
-          "fat": 14.714,
-          "carbs": 7.64,
-          "calories": 196,
-          "sugars": 7.57,
-          "fiber": 0,
-          "calcium": 163,
-          "iron": 0.52,
-          "potassium": 272,
-          "sodium": 472
-        },
-        "portions": [
-          {
-            "grams": 15.6,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 104,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 31.2,
-            "en": "30 ml",
-            "fr": "30 ml"
-          },
-          {
-            "grams": 30,
-            "en": "30 g",
-            "fr": "30 g"
-          },
-          {
-            "grams": 260,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 130,
-            "en": "125 ml",
-            "fr": "125 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "5565",
-        "score": 0.8,
-        "fr": "Fromage, produit de fromage à la crème, arômatisé, salé",
-        "en": "Cheese, cream cheese product, flavoured, savory",
-        "nutritionPer100g": {
-          "protein": 6.51,
-          "fat": 26.034,
-          "carbs": 9.88,
-          "calories": 295,
-          "sugars": 6.51,
-          "fiber": 0,
-          "calcium": 132,
-          "iron": 0.4,
-          "potassium": 244,
-          "sodium": 488
-        },
-        "portions": [
-          {
-            "grams": 15.5,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 103,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 30,
-            "en": "30 g",
-            "fr": "30 g"
-          },
-          {
-            "grams": 128.8,
-            "en": "125 ml",
-            "fr": "125 ml"
-          },
-          {
-            "grams": 257.5,
-            "en": "250 ml",
-            "fr": "250 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "6629",
-        "score": 0.8,
-        "fr": "Gâteau, carottes, fait maison, avec glaçage au fromage à la crème",
-        "en": "Cake, carrot, homemade, with cream cheese icing",
-        "nutritionPer100g": {
-          "protein": 3.818,
-          "fat": 20.846,
-          "carbs": 52.879,
-          "calories": 407,
-          "sugars": 38.994,
-          "fiber": 1.092,
-          "calcium": 37.213,
-          "iron": 1.144,
-          "potassium": 98.785,
-          "sodium": 151.026
-        },
-        "portions": [
-          {
-            "grams": 80,
-            "en": "80 g",
-            "fr": "80 g"
-          },
-          {
-            "grams": 60,
-            "en": "1 cupcake",
-            "fr": "1 petit gâteau"
-          },
-          {
-            "grams": 80,
-            "en": "1/10 cake (1-layer)",
-            "fr": "1/10 gâteau (1-étage)"
-          },
-          {
-            "grams": 11.3,
-            "en": "1/12 cake (2 layer, 20cm dia)",
-            "fr": "1/12 gâteau (2 étage, 20cm dia)"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "6786",
-        "score": 0.8,
-        "fr": "Trempette, base de fromage à la crème",
-        "en": "Dip, cream cheese base",
-        "nutritionPer100g": {
-          "protein": 4.974,
-          "fat": 35.195,
-          "carbs": 4.466,
-          "calories": 348,
-          "sugars": 2.967,
-          "fiber": 0.026,
-          "calcium": 88.514,
-          "iron": 0.47,
-          "potassium": 142.192,
-          "sodium": 598.636
-        },
-        "portions": [
-          {
-            "grams": 15.21,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 101.4,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 126.75,
-            "en": "125 ml",
-            "fr": "125 ml"
-          },
-          {
-            "grams": 253.5,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 30,
-            "en": "30 g",
-            "fr": "30 g"
-          },
-          {
-            "grams": 30.42,
-            "en": "30 ml",
-            "fr": "30 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "7752",
-        "score": 0.8,
-        "fr": "Fromage, produit de fromage à la crème, arômatisé, sucré",
-        "en": "Cheese, cream cheese product, flavoured, sweet",
-        "nutritionPer100g": {
-          "protein": 5.45,
-          "fat": 18.567,
-          "carbs": 17.03,
-          "calories": 252,
-          "sugars": 14.22,
-          "fiber": 0,
-          "calcium": 156,
-          "iron": 0.25,
-          "potassium": 259,
-          "sodium": 445
-        },
-        "portions": [
-          {
-            "grams": 16.2,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 135,
-            "en": "125 ml",
-            "fr": "125 ml"
-          },
-          {
-            "grams": 108,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 270,
-            "en": "250 ml",
-            "fr": "250 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "7819",
-        "score": 0.8,
-        "fr": "Fromage, produit de fromage à la crème, sans gras à 95%",
-        "en": "Cheese, Cream Cheese Product, 95% fat free",
-        "nutritionPer100g": {
-          "protein": 13.33,
-          "fat": 3.33,
-          "carbs": 6.67,
-          "calories": 133,
-          "sugars": 6.67,
-          "fiber": 0,
-          "calcium": 173.33,
-          "sodium": 666.67
-        },
-        "portions": [
-          {
-            "grams": 104,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 15.6,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 30,
-            "en": "30 g",
-            "fr": "30 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "534",
-        "score": 0.667,
-        "fr": "Vinaigrette, fromage bleu ou roquefort, régulière",
-        "en": "Salad dressing, blue or roquefort cheese, regular",
-        "nutritionPer100g": {
-          "protein": 1.37,
-          "fat": 51.1,
-          "carbs": 4.77,
-          "calories": 484,
-          "sugars": 3.48,
-          "fiber": 0.4,
-          "calcium": 37,
-          "iron": 0.09,
-          "potassium": 88,
-          "sodium": 642
-        },
-        "portions": [
-          {
-            "grams": 103.55,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 15.533,
-            "en": "15 ml",
-            "fr": "15 ml"
-          },
-          {
-            "grams": 258.875,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 31.065,
-            "en": "30 ml",
-            "fr": "30 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1397",
-        "score": 0.667,
-        "fr": "Céréale, chaude, crème de blé, nature, sèche",
-        "en": "Cereal, hot, cream of wheat, regular, dry",
-        "nutritionPer100g": {
-          "protein": 13.214,
-          "fat": 1.25,
-          "carbs": 77.143,
-          "calories": 382,
-          "sugars": 2.464,
-          "fiber": 3.93,
-          "calcium": 14.285,
-          "iron": 12.857,
-          "potassium": 121.4286,
-          "sodium": 3.57143
-        },
-        "portions": [
-          {
-            "grams": 73.964,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 40,
-            "en": "40 g",
-            "fr": "40 g"
-          },
-          {
-            "grams": 184.911,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 44,
-            "en": "amount to make 175ml cooked",
-            "fr": "quantité requise pour préparer 175ml cuit"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1398",
-        "score": 0.667,
-        "fr": "Céréale, chaude, crème de blé, nature, préparée",
-        "en": "Cereal, hot, cream of wheat, regular, prepared",
-        "nutritionPer100g": {
-          "protein": 1.126,
-          "fat": 0.107,
-          "carbs": 6.575,
-          "calories": 33,
-          "sugars": 0.21,
-          "fiber": 0.335,
-          "calcium": 3.962,
-          "iron": 1.041,
-          "potassium": 10.747,
-          "sodium": 3.049
-        },
-        "portions": [
-          {
-            "grams": 106.086,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 265.216,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 185.651,
-            "en": "175 ml",
-            "fr": "175 ml"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "energieAlias": "crème glacée",
     "current": {
       "calories": 270,
@@ -5565,7 +2316,9 @@
       "gramsPerPortion": null
     },
     "reviewQueries": [
+      "ice cream vanilla 11 milk fat",
       "ice cream vanilla",
+      "creme glacee vanille 11",
       "creme glacee vanille"
     ],
     "candidates": [
@@ -6943,456 +3696,6 @@
             "grams": 93.445,
             "en": "250 ml",
             "fr": "250 ml"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "energieAlias": "gâteau au fromage",
-    "current": {
-      "calories": 400,
-      "protein": 7,
-      "carbs": 33,
-      "fat": 27,
-      "portion": "1 pointe",
-      "gramsPerPortion": null
-    },
-    "reviewQueries": [
-      "cheesecake",
-      "gateau au fromage"
-    ],
-    "candidates": [
-      {
-        "cnfFoodId": "3800",
-        "score": 2.3,
-        "fr": "Gâteau, au fromage, commercial",
-        "en": "Cheesecake, commercial",
-        "nutritionPer100g": {
-          "protein": 5.5,
-          "fat": 22.5,
-          "carbs": 25.5,
-          "calories": 321,
-          "sugars": 21.8,
-          "fiber": 0.4,
-          "calcium": 51,
-          "iron": 0.63,
-          "potassium": 90,
-          "sodium": 438
-        },
-        "portions": [
-          {
-            "grams": 57,
-            "en": "1 snack cake",
-            "fr": "1 gâteau collation"
-          },
-          {
-            "grams": 80,
-            "en": "1/6 cake (482g)",
-            "fr": "1/6 gâteau (482g)"
-          },
-          {
-            "grams": 60,
-            "en": "1/8 cake (482g)",
-            "fr": "1/8 gâteau (482g)"
-          },
-          {
-            "grams": 125,
-            "en": "125 g",
-            "fr": "125 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "3801",
-        "score": 2.3,
-        "fr": "Gâteau, au fromage, préparation, type sans cuisson, préparé",
-        "en": "Cheesecake, prepared from mix, no bake type",
-        "nutritionPer100g": {
-          "protein": 5.5,
-          "fat": 12.7,
-          "carbs": 35.5,
-          "calories": 274,
-          "fiber": 1.9,
-          "calcium": 172,
-          "iron": 0.47,
-          "potassium": 211,
-          "sodium": 380
-        },
-        "portions": [
-          {
-            "grams": 148.5,
-            "en": "1/8 cake (23cm dia)",
-            "fr": "1/8 gâteau (23cm dia)"
-          },
-          {
-            "grams": 132,
-            "en": "1/6 cake (20cm dia)",
-            "fr": "1/6 gâteau (20cm dia)"
-          },
-          {
-            "grams": 125,
-            "en": "125 g",
-            "fr": "125 g"
-          },
-          {
-            "grams": 100,
-            "en": "1/6 cake (15cm diam)",
-            "fr": "1/6 gâteau (15cm dia)"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "6628",
-        "score": 2.3,
-        "fr": "Gâteau, au fromage, nature, avec garniture aux cerises, fait maison",
-        "en": "Cheesecake, plain, with cherry topping, homemade",
-        "nutritionPer100g": {
-          "protein": 6.218,
-          "fat": 13.579,
-          "carbs": 32.736,
-          "calories": 273,
-          "sugars": 26.605,
-          "fiber": 0.492,
-          "calcium": 36.747,
-          "iron": 0.929,
-          "potassium": 85.288,
-          "sodium": 264.743
-        },
-        "portions": [
-          {
-            "grams": 142,
-            "en": "1/12 cake (23cm dia)",
-            "fr": "1/12 gâteau (23cm dia)"
-          },
-          {
-            "grams": 125,
-            "en": "125 g",
-            "fr": "125 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "6629",
-        "score": 1,
-        "fr": "Gâteau, carottes, fait maison, avec glaçage au fromage à la crème",
-        "en": "Cake, carrot, homemade, with cream cheese icing",
-        "nutritionPer100g": {
-          "protein": 3.818,
-          "fat": 20.846,
-          "carbs": 52.879,
-          "calories": 407,
-          "sugars": 38.994,
-          "fiber": 1.092,
-          "calcium": 37.213,
-          "iron": 1.144,
-          "potassium": 98.785,
-          "sodium": 151.026
-        },
-        "portions": [
-          {
-            "grams": 80,
-            "en": "80 g",
-            "fr": "80 g"
-          },
-          {
-            "grams": 60,
-            "en": "1 cupcake",
-            "fr": "1 petit gâteau"
-          },
-          {
-            "grams": 80,
-            "en": "1/10 cake (1-layer)",
-            "fr": "1/10 gâteau (1-étage)"
-          },
-          {
-            "grams": 11.3,
-            "en": "1/12 cake (2 layer, 20cm dia)",
-            "fr": "1/12 gâteau (2 étage, 20cm dia)"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "2",
-        "score": 0.667,
-        "fr": "Soufflé au fromage",
-        "en": "Cheese souffle",
-        "nutritionPer100g": {
-          "protein": 9.54415,
-          "fat": 15.7047,
-          "carbs": 5.911,
-          "calories": 204,
-          "sugars": 2.661,
-          "fiber": 0.117,
-          "calcium": 184.314,
-          "iron": 0.743,
-          "potassium": 119.443,
-          "sodium": 317.752
-        },
-        "portions": [
-          {
-            "grams": 40.152,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 50.19,
-            "en": "125 ml",
-            "fr": "125 ml"
-          },
-          {
-            "grams": 100.38,
-            "en": "250 ml",
-            "fr": "250 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "100",
-        "score": 0.667,
-        "fr": "Fondue au fromage, suisse/emmental/gruyère, prête-à-servir",
-        "en": "Cheese fondue, swiss/emmental/gruyere, ready-to-serve",
-        "nutritionPer100g": {
-          "protein": 15.19,
-          "fat": 15.141,
-          "carbs": 5.5,
-          "calories": 230,
-          "sugars": 0,
-          "fiber": 0,
-          "calcium": 555,
-          "iron": 0.82,
-          "potassium": 70,
-          "sodium": 662
-        },
-        "portions": [
-          {
-            "grams": 107.5,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 134.4,
-            "en": "125 ml",
-            "fr": "125 ml"
-          },
-          {
-            "grams": 268.8,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 50,
-            "en": "50 g",
-            "fr": "50 g"
-          },
-          {
-            "grams": 100,
-            "en": "100 g",
-            "fr": "100 g"
-          },
-          {
-            "grams": 64.5,
-            "en": "60 ml",
-            "fr": "60 ml"
-          },
-          {
-            "grams": 16.1,
-            "en": "15 ml",
-            "fr": "15 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "3753",
-        "score": 0.667,
-        "fr": "Gâteau, fudge aux cerises, avec glaçage au chocolat",
-        "en": "Cake, cherry fudge with chocolate icing (frosting)",
-        "nutritionPer100g": {
-          "protein": 2.4,
-          "fat": 12.5,
-          "carbs": 38,
-          "calories": 264,
-          "sugars": 32.94,
-          "fiber": 0.5,
-          "calcium": 48,
-          "iron": 1.1,
-          "potassium": 166,
-          "sodium": 164
-        },
-        "portions": [
-          {
-            "grams": 82,
-            "en": "1/8 cake",
-            "fr": "1/8 gâteau"
-          },
-          {
-            "grams": 80,
-            "en": "80 g",
-            "fr": "80 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "3761",
-        "score": 0.667,
-        "fr": "Gâteau, gâteau pause-café, fromage",
-        "en": "Cake, coffee cake, cheese",
-        "nutritionPer100g": {
-          "protein": 7,
-          "fat": 15.2,
-          "carbs": 44.3,
-          "calories": 339,
-          "fiber": 1,
-          "calcium": 59,
-          "iron": 0.64,
-          "potassium": 289,
-          "sodium": 339
-        },
-        "portions": [
-          {
-            "grams": 568,
-            "en": "1 cake (20 cm x 20 cm)",
-            "fr": "1 gâteau (20 cm x 20 cm)"
-          },
-          {
-            "grams": 47,
-            "en": "1/12 cake (20cm x 20cm)",
-            "fr": "1/12 gâteau (20cm x 20cm)"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 63,
-            "en": "1/9 cake (567g)",
-            "fr": "1/9 gâteau (567g)"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "3784",
-        "score": 0.667,
-        "fr": "Gâteau, petit gâteau, commercial, fourré à la crème, avec glaçage au chocolat",
-        "en": "Cake, snack cake, cream-filled, chocolate with icing (frosting)",
-        "nutritionPer100g": {
-          "protein": 3.63,
-          "fat": 15.93,
-          "carbs": 60.31,
-          "calories": 399,
-          "sugars": 37.76,
-          "fiber": 3.2,
-          "calcium": 116,
-          "iron": 3.6,
-          "potassium": 176,
-          "sodium": 332
-        },
-        "portions": [
-          {
-            "grams": 50,
-            "en": "1 snack cake",
-            "fr": "1 gâteau collation"
-          },
-          {
-            "grams": 80,
-            "en": "80 g",
-            "fr": "80 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "3873",
-        "score": 0.667,
-        "fr": "Craquelin, blé, type collation, sandwich, garniture au fromage",
-        "en": "Cracker, wheat, standard snack-type, sandwich, cheese filling",
-        "nutritionPer100g": {
-          "protein": 7.2327,
-          "fat": 25.422839928,
-          "carbs": 62.149364576,
-          "calories": 506.333817655,
-          "sugars": 14.097164794,
-          "fiber": 2.187,
-          "calcium": 182.663138716,
-          "iron": 3.006223688,
-          "potassium": 326.992575861,
-          "sodium": 404.387055955
-        },
-        "portions": [
-          {
-            "grams": 7,
-            "en": "1 sandwich",
-            "fr": "1 sandwich"
-          },
-          {
-            "grams": 28,
-            "en": "4 sandwiches",
-            "fr": "4 sandwiches"
-          },
-          {
-            "grams": 20,
-            "en": "20 g",
-            "fr": "20 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "4616",
-        "score": 0.667,
-        "fr": "Aliments prêts à manger, sandwichs et burgers, hambourgeois au fromage, ordinaire, 1 galette, nature",
-        "en": "Fast foods, sandwiches and burgers, cheeseburger, regular, single patty, plain",
-        "nutritionPer100g": {
-          "protein": 16.51,
-          "fat": 14.72,
-          "carbs": 28.03,
-          "calories": 308,
-          "sugars": 4.88,
-          "fiber": 2,
-          "calcium": 119,
-          "iron": 2.71,
-          "potassium": 196,
-          "sodium": 515
-        },
-        "portions": [
-          {
-            "grams": 91,
-            "en": "1 burger",
-            "fr": "1 burger"
-          },
-          {
-            "grams": 140,
-            "en": "140 g",
-            "fr": "140 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "4617",
-        "score": 0.667,
-        "fr": "Aliments prêts à manger, sandwichs et burgers, hambourgeois au fromage, ordinaire, 1 galette, avec condiments",
-        "en": "Fast foods, sandwiches and burgers, cheeseburger, regular, single patty, with condiments",
-        "nutritionPer100g": {
-          "protein": 13.49,
-          "fat": 12.9,
-          "carbs": 25.46,
-          "calories": 270,
-          "sugars": 5.24,
-          "fiber": 1.9,
-          "calcium": 123,
-          "iron": 2.25,
-          "potassium": 184,
-          "sodium": 628
-        },
-        "portions": [
-          {
-            "grams": 113,
-            "en": "1 burger",
-            "fr": "1 burger"
-          },
-          {
-            "grams": 140,
-            "en": "140 g",
-            "fr": "140 g"
           }
         ]
       }
@@ -9215,7 +5518,10 @@
       "gramsPerPortion": null
     },
     "reviewQueries": [
+      "white rice long grain cooked",
+      "white rice medium grain cooked",
       "white rice cooked",
+      "riz blanc grain long cuit",
       "riz blanc cuit",
       "rice cooked"
     ],
@@ -9703,7 +6009,9 @@
       "gramsPerPortion": null
     },
     "reviewQueries": [
+      "cheddar mild",
       "cheddar cheese",
+      "fromage cheddar doux",
       "fromage cheddar"
     ],
     "candidates": [
@@ -10804,10 +7112,88 @@
     },
     "reviewQueries": [
       "cassava cooked",
+      "cassava boiled",
+      "cassava",
       "manioc cuit",
-      "cassava boiled"
+      "manioc bouilli",
+      "manioc"
     ],
     "candidates": [
+      {
+        "cnfFoodId": "2045",
+        "score": 2.3,
+        "fr": "Manioc, cru",
+        "en": "Cassava (manioc), raw",
+        "nutritionPer100g": {
+          "protein": 1.36,
+          "fat": 0.28,
+          "carbs": 38.06,
+          "calories": 159,
+          "sugars": 1.7,
+          "fiber": 1.8,
+          "calcium": 16,
+          "iron": 0.27,
+          "potassium": 271,
+          "sodium": 14
+        },
+        "portions": [
+          {
+            "grams": 408,
+            "en": "1 root",
+            "fr": "1 racine"
+          },
+          {
+            "grams": 87.07,
+            "en": "100 ml",
+            "fr": "100 ml"
+          },
+          {
+            "grams": 108.833,
+            "en": "125 ml",
+            "fr": "125 ml"
+          },
+          {
+            "grams": 216.667,
+            "en": "250 ml",
+            "fr": "250 ml"
+          },
+          {
+            "grams": 85,
+            "en": "85 g",
+            "fr": "85 g"
+          }
+        ]
+      },
+      {
+        "cnfFoodId": "6184",
+        "score": 1.8,
+        "fr": "Manioc, farine",
+        "en": "Cassava (manioc), flour",
+        "nutritionPer100g": {
+          "protein": 2.97,
+          "fat": 0.61,
+          "carbs": 83.07,
+          "calories": 349,
+          "sugars": 3.71,
+          "fiber": 3.93,
+          "calcium": 34.92,
+          "iron": 0.59,
+          "potassium": 591.47,
+          "sodium": 30.56
+        },
+        "portions": [
+          {
+            "grams": 20,
+            "en": "1 serving",
+            "fr": "1 portion"
+          },
+          {
+            "grams": 30,
+            "en": "30 g",
+            "fr": "30 g"
+          }
+        ]
+      },
       {
         "cnfFoodId": "129",
         "score": 0.5,
@@ -11260,91 +7646,6 @@
             "grams": 75,
             "en": "75 g",
             "fr": "75 g"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1175",
-        "score": 0.5,
-        "fr": "Saucisse, italienne, porc, cuite",
-        "en": "Sausage, Italian, pork, cooked",
-        "nutritionPer100g": {
-          "protein": 18.77,
-          "fat": 21.03,
-          "carbs": 5.15,
-          "calories": 290,
-          "sugars": 1.14,
-          "fiber": 0,
-          "calcium": 9,
-          "iron": 0.75,
-          "potassium": 270,
-          "sodium": 819
-        },
-        "portions": [
-          {
-            "grams": 84,
-            "en": "100 g as purchased",
-            "fr": "100 g tel qu'acheté"
-          },
-          {
-            "grams": 56.216,
-            "en": "100 ml",
-            "fr": "100 ml"
-          },
-          {
-            "grams": 140.54,
-            "en": "250 ml",
-            "fr": "250 ml"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 80,
-            "en": "1 sausage",
-            "fr": "1 saucisse"
-          },
-          {
-            "grams": 70.27,
-            "en": "125 ml",
-            "fr": "125 ml"
-          }
-        ]
-      },
-      {
-        "cnfFoodId": "1182",
-        "score": 0.5,
-        "fr": "Saucisse, Bratwurst, porc, cuite",
-        "en": "Sausage, Bratwurst, pork, cooked",
-        "nutritionPer100g": {
-          "protein": 17.88,
-          "fat": 23.3,
-          "carbs": 7.07,
-          "calories": 314,
-          "sugars": 1.63,
-          "fiber": 0,
-          "calcium": 6,
-          "iron": 0.73,
-          "potassium": 212,
-          "sodium": 828
-        },
-        "portions": [
-          {
-            "grams": 82,
-            "en": "1 sausage",
-            "fr": "1 saucisse"
-          },
-          {
-            "grams": 55,
-            "en": "55 g",
-            "fr": "55 g"
-          },
-          {
-            "grams": 0.84,
-            "en": "100 g raw as purchased",
-            "fr": "100 g acheté, cru"
           }
         ]
       }
