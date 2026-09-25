@@ -28,6 +28,21 @@ for (const [label, food] of Object.entries({ chicken, chickenBreast })) {
 assert(chicken.cnfFoodId === "567", `poulet: fiche inattendue ${chicken.cnfFoodId}`);
 assert(chickenBreast.cnfFoodId === "842", `poitrine de poulet: fiche inattendue ${chickenBreast.cnfFoodId}`);
 
+const commonFoods = {
+  apple: search.find("100 g pomme"),
+  broccoli: search.find("100 g brocoli"),
+  salmon: search.find("100 g saumon"),
+  groundBeef: search.find("100 g boeuf haché"),
+  cheddar: search.find("100 g cheddar"),
+  plainYogurt: search.find("100 g yogourt nature"),
+};
+
+for (const [label, food] of Object.entries(commonFoods)) {
+  assert(food, `${label}: aucune correspondance FCÉN`);
+  assert(food.nutritionSource === "cnf", `${label}: source non FCÉN`);
+  assert(Number.isFinite(Number(food.calories)), `${label}: calories invalides`);
+}
+
 console.log("CNF full-catalog search tests passed");
 console.log({
   artichaut: { id: artichaut.cnfFoodId, name: artichaut.cnfNameFr, kcal100g: artichaut.calories },
@@ -35,4 +50,11 @@ console.log({
   tilapia: { id: tilapia.cnfFoodId, name: tilapia.cnfNameFr, kcal100g: tilapia.calories },
   chicken: { id: chicken.cnfFoodId, name: chicken.cnfNameFr, kcal100g: chicken.calories },
   chickenBreast: { id: chickenBreast.cnfFoodId, name: chickenBreast.cnfNameFr, kcal100g: chickenBreast.calories },
+  ...Object.fromEntries(Object.entries(commonFoods).map(([label, food]) => [label, {
+    id: food.cnfFoodId,
+    ids: food.cnfFoodIds,
+    matchType: food.cnfMatchType || "single",
+    name: food.cnfNameFr,
+    kcal100g: food.calories,
+  }])),
 });
