@@ -1878,8 +1878,8 @@
     ],
     "verified": true,
     "reviewStatus": "verified",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "Laitue iceberg (pommée), FCÉN; portion Énergie générique 2 tasses à normaliser par volume au runtime.",
+    "matchedPortionGrams": 116.236,
+    "matchedPortionBasis": "2 × 250 ml filamenté ou haché — Laitue iceberg (FCÉN)",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Référence générique retenue: laitue iceberg, plus appropriée que laitue-tige ou mâche pour l’alias simple « laitue »."
   },
@@ -2015,8 +2015,8 @@
     ],
     "verified": true,
     "reviewStatus": "verified",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "Betteraves bouillies, égouttées; portion 1 tasse à convertir via mesure FCÉN au runtime.",
+    "matchedPortionGrams": 179.628,
+    "matchedPortionBasis": "250 ml (1 tasse) tranches — Betteraves bouillies, égouttées (FCÉN)",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Référence corrigée des feuilles vers la racine cuite. La valeur historique de 58 kcal est compatible avec une tasse de betteraves cuites."
   },
