@@ -1347,15 +1347,23 @@ body.demo-guide-open .bottom-nav{z-index:20}
 \n\n/* v3.56.107 — bêta privée du mode professionnel */
 .professional-beta-entry,.professional-client-link-card{display:grid;gap:12px}
 .professional-beta-entry .dialog-actions,.professional-client-link-card .dialog-actions{margin-top:0}
+.professional-beta-overview{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.95fr);gap:10px;align-items:stretch}
 .professional-beta-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .professional-beta-metrics>span{display:grid;gap:2px;padding:10px 12px;border:1px solid var(--border);border-radius:13px;background:var(--surface2)}
 .professional-beta-metrics strong{font-size:1.05rem}.professional-beta-metrics small{color:var(--muted);font-size:.7rem}
 .professional-invite-code{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;width:100%;padding:10px 12px;border:1px dashed color-mix(in srgb,var(--accent) 55%,var(--border));border-radius:13px;background:color-mix(in srgb,var(--accent) 6%,var(--surface));text-align:left;color:inherit}
 .professional-invite-code span,.professional-invite-code small{font-size:.68rem;color:var(--muted)}
 .professional-invite-code strong{grid-row:1/3;grid-column:2;font-size:1rem;letter-spacing:.08em}
+.professional-invite-row{display:grid;gap:7px}
+.professional-invite-email{justify-self:end;width:auto;min-height:0;padding:7px 11px;border-radius:11px;font-size:.72rem;line-height:1.2;white-space:nowrap}
+.professional-invite-primary-action{display:grid}
+.professional-invite-primary-action .primary{width:100%;height:100%;min-height:52px;font-size:.9rem}
+.professional-mode-action{display:grid;margin-top:8px}
+.professional-mode-action .secondary{width:100%;min-height:48px;font-size:.88rem}
+
 .professional-invite-accept{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.professional-invite-accept input{text-transform:uppercase;letter-spacing:.12em;font-weight:850;text-align:center}
 body.professional-beta-mode .sync-badge{display:none}
-@media(max-width:520px){.professional-invite-accept{grid-template-columns:1fr}.professional-beta-entry .dialog-actions{display:grid;grid-template-columns:1fr}}
+@media(max-width:760px){.professional-beta-overview{grid-template-columns:1fr}.professional-invite-primary-action .primary{min-height:50px}}@media(max-width:520px){.professional-invite-accept{grid-template-columns:1fr}.professional-beta-entry .dialog-actions{display:grid;grid-template-columns:1fr}.professional-invite-email{justify-self:stretch;width:100%}}
 
 /* Contexte visible lors de la consultation d’un vrai client en bêta pro */
 .professional-beta-context{margin:0 0 14px;padding:14px 16px;border:1px solid rgba(46,130,78,.22);border-radius:18px;background:linear-gradient(135deg,rgba(223,244,214,.92),rgba(246,250,240,.96));box-shadow:0 8px 22px rgba(37,83,55,.07);display:flex;align-items:center;justify-content:space-between;gap:14px}
@@ -1527,3 +1535,20 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .weight-trend-scroll .metrics-chart{display:block;width:100%;height:auto;min-width:1200px;max-height:calc(100dvh - 125px)}
 .weight-trend-scroll .metrics-values{display:none}
 @media(orientation:landscape){.weight-trend-scroll .metrics-chart{max-height:calc(100dvh - 90px)}}
+
+
+/* iOS Apple authentication — intentionally isolated from the existing auth layout. */
+.auth-provider-option{display:grid;gap:9px;text-align:center;margin-top:2px}
+.auth-provider-option>span{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.74rem;font-weight:800}
+.auth-provider-option>span::before,.auth-provider-option>span::after{content:"";height:1px;background:var(--border);flex:1}
+.auth-provider-option small{color:var(--muted);font-size:.7rem;line-height:1.35}
+.apple-auth-button{width:100%;border:0;border-radius:14px;background:#000;color:#fff;padding:12px 14px;font:inherit;font-weight:850;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px}
+.apple-auth-button b{font-size:1.35rem;line-height:1}
+.apple-auth-button:disabled{opacity:.55;cursor:wait}
+.apple-link-card{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:grid;gap:9px}
+.apple-link-card p{margin:0}
+
+/* Énergie 3.56.125 — Mode pilote V1 */
+.pilot-feedback-link{position:fixed;z-index:9999;top:max(10px,calc(env(safe-area-inset-top) + 6px));left:50%;transform:translateX(-50%);border:1px solid color-mix(in srgb,var(--accent) 24%,var(--border));background:color-mix(in srgb,var(--surface) 94%,transparent);color:var(--text);box-shadow:0 6px 18px rgba(30,50,38,.12);backdrop-filter:blur(14px);border-radius:999px;padding:7px 11px;display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:850;cursor:pointer;max-width:calc(100vw - 150px);white-space:nowrap}.pilot-feedback-link span:last-child{overflow:hidden;text-overflow:ellipsis}
+.pilot-feedback-dialog{width:min(92vw,520px);max-height:min(88dvh,680px)}.pilot-feedback-card{gap:9px;padding:16px}.pilot-feedback-card h2{margin:0;font-size:1.15rem}.pilot-feedback-card>p{margin:0}.pilot-feedback-card textarea{min-height:72px;max-height:110px}.pilot-feedback-types{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.pilot-feedback-types button{border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:12px;padding:8px 6px;display:flex;gap:5px;align-items:center;justify-content:center;text-align:center;cursor:pointer;min-height:44px}.pilot-feedback-types button span{font-size:1rem}.pilot-feedback-types button strong{font-size:.68rem;line-height:1.12}.pilot-feedback-types button.is-selected{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 12%,transparent)}.pilot-feedback-attachment{margin:0}.pilot-feedback-context{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px 8px;padding:8px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)}.pilot-feedback-context>strong{grid-column:1/-1;font-size:.68rem}.pilot-feedback-context span{display:flex;align-items:flex-start;gap:4px;color:var(--muted);font-size:.64rem;min-width:0}.pilot-feedback-context b{color:var(--text);font-weight:750;overflow:hidden;text-overflow:ellipsis}.pilot-mode-profile-card{border-color:color-mix(in srgb,var(--accent) 20%,var(--border))}
+@media(max-width:520px){.pilot-feedback-dialog{width:min(94vw,480px);max-height:90dvh}.pilot-feedback-card{gap:7px;padding:13px}.pilot-feedback-types{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.pilot-feedback-types button{padding:7px 4px;min-height:40px;flex-direction:column;gap:2px}.pilot-feedback-types button span{font-size:.95rem}.pilot-feedback-types button strong{font-size:.61rem}.pilot-feedback-card textarea{min-height:64px;max-height:84px}.pilot-feedback-context{grid-template-columns:1fr;gap:3px;padding:7px 9px}.pilot-feedback-context>strong{grid-column:auto}.pilot-feedback-context span{font-size:.62rem}.pilot-feedback-link{max-width:calc(100vw - 170px);font-size:.66rem}}
