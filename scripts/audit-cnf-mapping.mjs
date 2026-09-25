@@ -50,7 +50,32 @@ function qualifierPenalty(alias, description) {
   return p;
 }
 
-function candidateScore(alias, food) {
+function preparationAdjustment(portion, food) {
+  const p = normalize(portion);
+  const en = normalize(food.names?.en);
+  const fr = normalize(food.names?.fr);
+  const d = `${en} ${fr}`;
+
+  const wantsCooked = /\b(cuit|cuite|cuits|cuites|cooked|boiled|steamed|braised|baked|roasted)\b/.test(p);
+  const wantsRaw = /\b(cru|crue|crus|crues|raw)\b/.test(p);
+
+  let score = 0;
+  if (wantsCooked) {
+    if (/\b(cuit|cuite|cuits|cuites|cooked|boiled|steamed|braised|baked|roasted)\b/.test(d)) score += 0.9;
+    if (/\b(cru|crue|crus|crues|raw)\b/.test(d)) score -= 0.9;
+  } else if (wantsRaw) {
+    if (/\b(cru|crue|crus|crues|raw)\b/.test(d)) score += 0.6;
+    if (/\b(cuit|cuite|cuits|cuites|cooked|boiled|steamed|braised|baked|roasted)\b/.test(d)) score -= 0.6;
+  }
+
+  if (/\bfrit|frite|frits|frites|fried\b/.test(d) && !/\bfrit|frite|frits|frites|fried\b/.test(p)) score -= 0.8;
+  if (/\bfarine|flour\b/.test(d) && !/\bfarine|flour\b/.test(p)) score -= 0.8;
+  if (/\bliquide seulement|liquid only\b/.test(d)) score -= 0.8;
+
+  return score;
+}
+
+function candidateScore(alias, food, portion = "") {
   const a = normalize(alias);
   const en = normalize(food.names?.en);
   const fr = normalize(food.names?.fr);
@@ -83,11 +108,12 @@ function candidateScore(alias, food) {
   if (tokens(a).length === 1 && firstAlias && firstEn !== firstAlias && firstFr !== firstAlias && !exact)
     score -= 0.55;
 
+  score += preparationAdjustment(portion, food);
   return score;
 }
 
-function rankCandidates(aliases, food) {
-  return Math.max(...aliases.map(a => candidateScore(a, food)));
+function rankCandidates(aliases, food, portion) {
+  return Math.max(...aliases.map(a => candidateScore(a, food, portion)));
 }
 
 function confidenceFor(candidates) {
@@ -103,7 +129,7 @@ function confidenceFor(candidates) {
 const rows = legacy.map((food, index) => {
   const aliases = food.keys || [];
   const candidates = cnf
-    .map(item => ({ item, score: rankCandidates(aliases, item) }))
+    .map(item => ({ item, score: rankCandidates(aliases, item, food.portion || "") }))
     .filter(x => x.score > 0.15)
     .sort((a, b) => b.score - a.score)
     .slice(0, 8);
