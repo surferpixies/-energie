@@ -2544,7 +2544,8 @@ function formatSleepDuration(hours) {
       const score = exact + coverage + keyWords * 100 + key.length + positionBonus;
       if (!best || score > best.score) best = { ...candidate, score };
     }
-    return best?.food || null;
+    if (best?.food) return best.food;
+    return window.ENERGIE_CNF_SEARCH?.find?.(segment) || null;
   }
   function mealQuantityNumber(value) {
     const text = String(value || "").trim().replace(",", ".");
