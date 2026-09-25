@@ -219,6 +219,11 @@
       ["feuille", "feuilles", "green", "greens"],
       ["congele", "congelee", "congelees", "frozen"],
       ["conserve", "canned"],
+      ["seche", "sechee", "sechees", "dried", "dehydrate", "dehydrated"],
+      ["sucre", "sucree", "sucrees", "sweetened", "sugar added"],
+      ["jus", "juice"],
+      ["compote", "sauce"],
+      ["granola", "cereale", "cereales", "cereal", "topping", "garniture"],
       ["sel ajoute", "with salt"],
       ["marine", "marinee", "marinated"],
     ];
@@ -287,11 +292,24 @@
         // déjà été favorisés et les qualificatifs non demandés pénalisés.
         // Plutôt que d'abandonner vers l'ancien repli Énergie, moyenner les
         // meilleurs candidats réellement similaires.
+        const firstStates = states(`${first.row?.[1] || ""} ${first.row?.[2] || ""}`);
+        const wantedStates = states(text);
         const similar = ranked.filter(({ row, score }) => {
           if (first.score - score >= 45) return false;
           const d = descriptor(row);
           const base = d.firstFr || d.firstEn;
-          return base === firstBase && !hasUnrequestedQualifier(row, text);
+          if (base !== firstBase || hasUnrequestedQualifier(row, text)) return false;
+
+          // Si l'utilisateur n'a pas précisé l'état, ne mélange pas cru,
+          // cuit, séché, frit, etc. dans une même moyenne. On garde le
+          // groupe correspondant au meilleur candidat.
+          if (!wantedStates.length) {
+            const rowStates = states(`${row?.[1] || ""} ${row?.[2] || ""}`);
+            if (firstStates.length || rowStates.length) {
+              return firstStates.some((state) => rowStates.includes(state));
+            }
+          }
+          return true;
         });
         const averaged = averageSimilarFoods(similar, text);
         if (averaged) return averaged;
