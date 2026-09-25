@@ -2476,6 +2476,9 @@ function formatSleepDuration(hours) {
     prosciutto: { fiber: 0, sugars: 0, sodium: 1050 },
   };
   function foodNutrients(food) {
+    // Les valeurs FCÉN sont la source nutritionnelle de référence et ne doivent
+    // jamais être remplacées par les anciens ajustements manuels Énergie.
+    if (food?.nutritionSource === "cnf") return { ...food };
     const key = normalizeFoodText(food?.keys?.[0] || "");
     const extra = FOOD_NUTRIENT_OVERRIDES[key] || {};
     const categories = new Set(
@@ -2544,8 +2547,16 @@ function formatSleepDuration(hours) {
       const score = exact + coverage + keyWords * 100 + key.length + positionBonus;
       if (!best || score > best.score) best = { ...candidate, score };
     }
-    if (best?.food) return best.food;
-    return window.ENERGIE_CNF_SEARCH?.find?.(segment) || null;
+    // Un mapping vérifié FCÉN est prioritaire.
+    if (best?.food?.nutritionSource === "cnf") return best.food;
+
+    // Sinon, chercher d'abord dans le catalogue FCÉN complet. Les anciennes
+    // valeurs Énergie ne servent qu'en repli lorsqu'aucune correspondance FCÉN
+    // suffisamment fiable n'est trouvée.
+    const cnfMatch = window.ENERGIE_CNF_SEARCH?.find?.(segment);
+    if (cnfMatch) return cnfMatch;
+
+    return best?.food || null;
   }
   function mealQuantityNumber(value) {
     const text = String(value || "").trim().replace(",", ".");
@@ -3033,8 +3044,16 @@ function formatSleepDuration(hours) {
     else input.value = $("#nutritionCalories").value;
     updateMealCalorieRecognition();
     const partial = !manual && !$("#mealCalorieRecognitionNotice")?.hidden;
+    const nutritionSource = $("#mealNutritionSection")?.dataset.source || "";
+    const automaticStatus = partial
+      ? "Estimation automatique partielle · modifiable"
+      : nutritionSource === "cnf"
+        ? "Estimation FCÉN · modifiable"
+        : nutritionSource === "mixed"
+          ? "Estimation FCÉN + repli · modifiable"
+          : "Estimation automatique · modifiable";
     $("#mealCalorieStatus").textContent = manual ? t("Ajustées par vous")
-      : input.value !== "" ? t(partial ? "Estimation automatique partielle · modifiable" : "Estimation automatique · modifiable") : t("Aucune estimation disponible · saisie facultative");
+      : input.value !== "" ? t(automaticStatus) : t("Aucune estimation disponible · saisie facultative");
     $("#resetMealCalories").hidden = !manual;
     updateMealCalorieTargetGauge();
   }
