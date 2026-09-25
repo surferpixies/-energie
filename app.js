@@ -4251,7 +4251,7 @@ function formatSleepDuration(hours) {
     window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
 
-  async function createProfessionalInvite() {
+  async function createProfessionalInvite(options = {}) {
     if (!hasProfessionalBetaAccess || !client || !session) return;
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const code = randomProfessionalInviteCode();
@@ -4266,7 +4266,11 @@ function formatSleepDuration(hours) {
       if (!error) {
         await loadProfessionalBetaState();
         renderProfile();
-        alert(`Code d’invitation : ${data.invite_code}\n\nLe client peut l’entrer dans son Profil Énergie.`);
+        if (options.openEmail === true) {
+          openProfessionalInviteEmail(data.invite_code);
+        } else {
+          alert(`Code d’invitation : ${data.invite_code}\n\nLe client peut l’entrer dans son Profil Énergie.`);
+        }
         return;
       }
       if (!/duplicate|unique/i.test(error.message || "")) {
@@ -4307,7 +4311,7 @@ function formatSleepDuration(hours) {
       const active = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
       const pending = professionalClientLinks.filter((link) => link.status === "pending");
       const pendingCodes = pending.slice(0, 2).map((link) => `<div class="professional-invite-row"><button type="button" class="professional-invite-code" data-copy-professional-code="${esc(link.invite_code)}"><span>Code actif</span><strong>${esc(link.invite_code)}</strong><small>Toucher pour copier</small></button><button type="button" class="secondary professional-invite-email" data-email-professional-code="${esc(link.invite_code)}">✉️ Envoyer par courriel</button></div>`).join("");
-      return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""}</small></span></div>${pendingCodes}<div class="dialog-actions"><button type="button" class="secondary" id="createProfessionalInvite">Créer une invitation</button><button type="button" class="primary" id="openProfessionalBeta">Passer en mode professionnel</button></div><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
+      return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""}</small></span></div>${pendingCodes}<div class="professional-invite-primary-action"><button type="button" class="primary" id="createProfessionalInvite">✉️ Envoyer une nouvelle invitation par courriel</button></div><div class="dialog-actions"><button type="button" class="secondary" id="openProfessionalBeta">Passer en mode professionnel</button></div><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
     }
     if (clientProfessionalLink) {
       return `<section class="card professional-client-link-card"><p class="eyebrow">Suivi professionnel</p><h3>👩‍⚕️ Suivi lié à ${esc(clientProfessionalLink.professional_label || "ton professionnel")}</h3><p class="muted small">Ton journal est partagé avec ce professionnel pour ton suivi.</p><div class="dialog-actions"><button type="button" class="secondary" id="openClientFollowup">Ouvrir mon suivi</button><button type="button" class="text-button" id="revokeProfessionalAccess">Retirer l’accès</button></div></section>`;
@@ -15080,7 +15084,7 @@ function formatSleepDuration(hours) {
     const createInviteButton = event.target.closest("#createProfessionalInvite");
     if (createInviteButton) {
       event.preventDefault();
-      createProfessionalInvite();
+      createProfessionalInvite({ openEmail: true });
       return;
     }
     const acceptInviteButton = event.target.closest("#acceptProfessionalInvite");
