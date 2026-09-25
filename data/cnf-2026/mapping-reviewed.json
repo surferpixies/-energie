@@ -1799,53 +1799,89 @@
       "portion": "2 tasses",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "2051",
-    "cnfNameFr": "Laitue-tige, crue",
-    "cnfNameEn": "Celtuce, raw",
+    "cnfFoodId": "2398",
+    "cnfNameFr": "Laitue, iceberg (pommée)",
+    "cnfNameEn": "Lettuce, iceberg",
     "nutritionPer100g": {
-      "protein": 0.85,
-      "fat": 0.3,
-      "carbs": 3.65,
-      "calories": 18,
-      "fiber": 1.7,
-      "calcium": 39,
-      "iron": 0.55,
-      "potassium": 330,
-      "sodium": 11
+      "protein": 0.9,
+      "fat": 0.14,
+      "carbs": 2.97,
+      "calories": 14,
+      "sugars": 1.97,
+      "fiber": 1.2,
+      "calcium": 18,
+      "iron": 0.41,
+      "potassium": 141,
+      "sodium": 10
     },
     "portions": [
       {
-        "grams": 25,
+        "grams": 5,
+        "en": "1 small leaf",
+        "fr": "1 petite feuille"
+      },
+      {
+        "grams": 755,
+        "en": "1 large head",
+        "fr": "1 grosse tête"
+      },
+      {
+        "grams": 23.247,
+        "en": "100 ml shredded or chopped",
+        "fr": "100 ml filamenté ou haché"
+      },
+      {
+        "grams": 539,
+        "en": "1 medium head (15cm dia)",
+        "fr": "1 moyenne tête (15cm dia)"
+      },
+      {
+        "grams": 324,
+        "en": "1 small head",
+        "fr": "1 petite tête"
+      },
+      {
+        "grams": 15,
+        "en": "1 large leaf",
+        "fr": "1 grosse feuille"
+      },
+      {
+        "grams": 8,
+        "en": "1 medium leaf",
+        "fr": "1 feuille moyenne"
+      },
+      {
+        "grams": 29.059,
+        "en": "125 ml shredded or chopped",
+        "fr": "125 ml filamenté ou haché"
+      },
+      {
+        "grams": 65,
+        "en": "65 g",
+        "fr": "65 g"
+      },
+      {
+        "grams": 58.118,
+        "en": "250 ml shredded or chopped",
+        "fr": "250 ml filamenté ou haché"
+      },
+      {
+        "grams": 5,
         "en": "total refuse",
         "fr": "portion non comestible totale"
       },
       {
-        "grams": 25,
-        "en": "tough stems and leaves",
-        "fr": "pédoncules (tiges) coriaces et feuilles"
-      },
-      {
-        "grams": 8,
-        "en": "1 leaf",
-        "fr": "1 feuille (leaf)"
-      },
-      {
-        "grams": 58.12,
-        "en": "250 ml chopped",
-        "fr": "250 ml haché"
-      },
-      {
-        "grams": 85,
-        "en": "85 g",
-        "fr": "85 g"
+        "grams": 5,
+        "en": "core",
+        "fr": "noyau"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
+    "verified": true,
+    "reviewStatus": "verified",
     "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "matchedPortionBasis": "Laitue iceberg (pommée), FCÉN; portion Énergie générique 2 tasses à normaliser par volume au runtime.",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Le candidat est laitue-tige, trop spécifique."
+    "note": "Référence générique retenue: laitue iceberg, plus appropriée que laitue-tige ou mâche pour l’alias simple « laitue »."
   },
   {
     "energieAlias": "asperges",
@@ -1935,64 +1971,54 @@
       "portion": "1 tasse",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "2021",
-    "cnfNameFr": "Betterave, feuilles, crues",
-    "cnfNameEn": "Beet greens, raw",
+    "cnfFoodId": "2501",
+    "cnfNameFr": "Betteraves, bouillies, égouttées",
+    "cnfNameEn": "Beets, boiled, drained",
     "nutritionPer100g": {
-      "protein": 2.2,
-      "fat": 0.13,
-      "carbs": 4.33,
-      "calories": 22,
-      "sugars": 0.5,
-      "fiber": 3.7,
-      "calcium": 117,
-      "iron": 2.57,
-      "potassium": 762,
-      "sodium": 226
+      "protein": 1.68,
+      "fat": 0.18,
+      "carbs": 9.96,
+      "calories": 44,
+      "sugars": 7.96,
+      "fiber": 2.02,
+      "calcium": 16,
+      "iron": 0.79,
+      "potassium": 305,
+      "sodium": 77
     },
     "portions": [
       {
-        "grams": 16.061,
-        "en": "100 ml pieces",
-        "fr": "100 ml morceaux"
+        "grams": 71.851,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
       },
       {
-        "grams": 32,
-        "en": "1 leaf",
-        "fr": "1 feuille (leaf)"
+        "grams": 50,
+        "en": "1 beet (5 cm dia)",
+        "fr": "1 betterave (5 cm dia)"
       },
       {
-        "grams": 20.076,
-        "en": "125 ml pieces",
-        "fr": "125 ml morceaux"
+        "grams": 89.814,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
       },
       {
-        "grams": 40.152,
-        "en": "250 ml pieces",
-        "fr": "250 ml morceaux"
+        "grams": 179.628,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
       },
       {
-        "grams": 65,
-        "en": "65 g",
-        "fr": "65 g"
-      },
-      {
-        "grams": 44,
-        "en": "total refuse",
-        "fr": "portion non comestible totale"
-      },
-      {
-        "grams": 44,
-        "en": "stems, bruised and old leaves",
-        "fr": "tiges, feuilles/vieilles endommagées"
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
+    "verified": true,
+    "reviewStatus": "verified",
     "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "matchedPortionBasis": "Betteraves bouillies, égouttées; portion 1 tasse à convertir via mesure FCÉN au runtime.",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Le candidat correspond aux feuilles, pas à la racine."
+    "note": "Référence corrigée des feuilles vers la racine cuite. La valeur historique de 58 kcal est compatible avec une tasse de betteraves cuites."
   },
   {
     "energieAlias": "chou de bruxelles",
@@ -2830,11 +2856,11 @@
       }
     ],
     "verified": false,
-    "reviewStatus": "needs-review",
+    "reviewStatus": "generic-fallback",
     "matchedPortionGrams": null,
     "matchedPortionBasis": "",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Alias trop générique pour une fiche FCÉN unique."
+    "note": "Alias volontairement générique; aucune fiche FCÉN unique n’est suffisamment représentative. Conserver le fallback Énergie jusqu’à précision du type de céréales."
   },
   {
     "energieAlias": "bacon",
@@ -2902,28 +2928,34 @@
       "portion": "150 g",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "3086",
-    "cnfNameFr": "Thon, salade",
-    "cnfNameEn": "Tuna salad",
+    "cnfFoodId": "3080",
+    "cnfNameFr": "Poisson, thon rouge, frais, cuit au four ou grillé",
+    "cnfNameEn": "Fish, tuna, bluefin, fresh, baked or broiled",
     "nutritionPer100g": {
-      "protein": 16.04,
-      "fat": 9.26,
-      "carbs": 9.41,
-      "calories": 187,
+      "protein": 29.91,
+      "fat": 6.28,
+      "carbs": 0,
+      "calories": 184,
+      "sugars": 0,
       "fiber": 0,
-      "calcium": 17,
-      "iron": 1,
-      "potassium": 178,
-      "sodium": 402
+      "calcium": 10,
+      "iron": 1.31,
+      "potassium": 323,
+      "sodium": 50
     },
     "portions": [
       {
-        "grams": 86.644,
-        "en": "100 ml",
-        "fr": "100 ml"
+        "grams": 65,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
       },
       {
-        "grams": 216.61,
+        "grams": 57.481,
+        "en": "100 ml flaked",
+        "fr": "100 ml flocon"
+      },
+      {
+        "grams": 143.702,
         "en": "250 ml",
         "fr": "250 ml"
       },
@@ -2933,17 +2965,22 @@
         "fr": "100 g"
       },
       {
-        "grams": 108.305,
-        "en": "125 ml",
-        "fr": "125 ml"
+        "grams": 75,
+        "en": "1 food guide serving = 75g",
+        "fr": "1 portion du guide alimentaire = 75g"
+      },
+      {
+        "grams": 81.13,
+        "en": "100 g raw boneless",
+        "fr": "100 g cru, désossé"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 150,
+    "matchedPortionBasis": "150 g — thon rouge frais, cuit au four ou grillé",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Le candidat est salade de thon; incorrect."
+    "note": "L’alias générique « thon » avec portion de 150 g correspond mieux à un filet de thon cuit qu’à du thon en conserve. L’entrée distincte « thon en conserve » demeure séparée dans Énergie."
   },
   {
     "energieAlias": "falafel",
@@ -3086,44 +3123,44 @@
       "portion": "1 tasse",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "3913",
-    "cnfNameFr": "Crème glacée, cornet, type gâteau ou gaufrette",
-    "cnfNameEn": "Ice cream cone, cake or wafer-type",
+    "cnfFoodId": "4163",
+    "cnfNameFr": "Dessert, congelé, crème glacée, vanille, 11% M.G.",
+    "cnfNameEn": "Dessert, frozen, ice cream, vanilla, 11% M.F.",
     "nutritionPer100g": {
-      "protein": 8.1,
-      "fat": 6.9,
-      "carbs": 79,
-      "calories": 417,
-      "sugars": 6,
-      "fiber": 3,
-      "calcium": 25,
-      "iron": 3.6,
-      "potassium": 112,
-      "sodium": 256
+      "protein": 3.5,
+      "fat": 11,
+      "carbs": 23.6,
+      "calories": 208,
+      "sugars": 21.22,
+      "fiber": 0.7,
+      "calcium": 128,
+      "iron": 0.09,
+      "potassium": 199,
+      "sodium": 80
     },
     "portions": [
       {
-        "grams": 4,
-        "en": "1 cone",
-        "fr": "1 cornet"
+        "grams": 55.79,
+        "en": "100 ml",
+        "fr": "100 ml"
       },
       {
-        "grams": 29,
-        "en": "1 waffle cone",
-        "fr": "1 cornet gaufré"
+        "grams": 69.74,
+        "en": "125 ml",
+        "fr": "125 ml"
       },
       {
-        "grams": 5,
-        "en": "5 g",
-        "fr": "5 g"
+        "grams": 139.48,
+        "en": "250 ml",
+        "fr": "250 ml"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 139.48,
+    "matchedPortionBasis": "250 ml (1 tasse) — crème glacée vanille 11% M.G.",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Le candidat correspond au cornet, pas à la crème glacée seule."
+    "note": "Référence standardisée retenue: crème glacée vanille régulière 11% M.G.; portion FCÉN explicite de 250 ml."
   },
   {
     "energieAlias": "noix de grenoble",
@@ -3352,11 +3389,11 @@
       }
     ],
     "verified": false,
-    "reviewStatus": "needs-review",
+    "reviewStatus": "generic-fallback",
     "matchedPortionGrams": null,
     "matchedPortionBasis": "",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Variété croquante nature trop spécifique pour l’alias générique."
+    "note": "Catégorie trop variable (croquante, tendre, chocolat, fruits, etc.). Conserver le fallback Énergie tant que le type n’est pas précisé."
   },
   {
     "energieAlias": "beigne",
@@ -3372,26 +3409,36 @@
       "portion": "1 moyen",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "3895",
-    "cnfNameFr": "Beigne, roussette, givré",
-    "cnfNameEn": "Doughnut (donut), French cruller, glazed",
+    "cnfFoodId": "3891",
+    "cnfNameFr": "Beigne, type gâteau, nature (inclus non sucré, à l'ancienne)",
+    "cnfNameEn": "Doughnut (donut), cake-type, plain (includes unsugared, old-fashioned)",
     "nutritionPer100g": {
-      "protein": 3.1,
-      "fat": 18.3,
-      "carbs": 59.5,
-      "calories": 412,
-      "sugars": 35.11,
-      "fiber": 1.2,
-      "calcium": 26,
-      "iron": 2.42,
-      "potassium": 78,
-      "sodium": 345
+      "protein": 5.31,
+      "fat": 24.93,
+      "carbs": 47.06,
+      "calories": 434,
+      "sugars": 18.15,
+      "fiber": 1.7,
+      "calcium": 40,
+      "iron": 2.53,
+      "potassium": 134,
+      "sodium": 477
     },
     "portions": [
       {
-        "grams": 41,
-        "en": "1 doughnut (7.6 cm dia)",
-        "fr": "1 beigne (7.6 cm dia)"
+        "grams": 54,
+        "en": "1 doughnut (8.3cm dia)",
+        "fr": "1 beigne (8.3cm dia)"
+      },
+      {
+        "grams": 71,
+        "en": "1 doughnut (10,2 cm dia)",
+        "fr": "1 beigne (10,2 cm dia)"
+      },
+      {
+        "grams": 14,
+        "en": "1 mini doughnut (3.81cm) or doughnut hole",
+        "fr": "1 mini beigne (3.81cm) ou trou de beigne"
       },
       {
         "grams": 55,
@@ -3399,12 +3446,12 @@
         "fr": "55 g"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 71,
+    "matchedPortionBasis": "1 gros beigne nature 10,2 cm — fiche FCÉN type gâteau, nature",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Variété roussette givrée trop spécifique."
+    "note": "Référence générique retenue: beigne type gâteau nature. La portion 71 g donne ~308 kcal, proche des 290 kcal historiques."
   },
   {
     "energieAlias": "gâteau au fromage",
@@ -3511,11 +3558,11 @@
       }
     ],
     "verified": false,
-    "reviewStatus": "needs-review",
+    "reviewStatus": "generic-fallback",
     "matchedPortionGrams": null,
     "matchedPortionBasis": "",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Recette fraise-banane trop spécifique."
+    "note": "Recette trop variable; les fiches FCÉN disponibles imposent une composition précise. Conserver le fallback Énergie pour l’alias générique."
   },
   {
     "energieAlias": "eau de coco",
@@ -3677,12 +3724,12 @@
         "fr": "140 g"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 246,
+    "matchedPortionBasis": "1 sandwich — club avec poulet grillé, bacon, tomate, fromage, laitue et mayonnaise",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "La fiche impose poulet grillé, bacon, fromage, laitue et mayonnaise; alias Énergie trop générique."
+    "note": "La fiche FCÉN décrit explicitement un club sandwich standard complet et fournit une portion de 1 sandwich."
   },
   {
     "energieAlias": "pad thai",
@@ -3729,11 +3776,11 @@
       }
     ],
     "verified": false,
-    "reviewStatus": "needs-review",
+    "reviewStatus": "composite-fallback",
     "matchedPortionGrams": null,
     "matchedPortionBasis": "",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Le candidat est au poulet; alias générique."
+    "note": "Plat très variable; la seule fiche directe est « au poulet ». Conserver le fallback Énergie pour l’alias générique, utiliser FCÉN si la variante est explicitement au poulet."
   },
   {
     "energieAlias": "nuggets de poulet",
@@ -3749,39 +3796,44 @@
       "portion": "10 morceaux",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "7653",
-    "cnfNameFr": "Poulet, croquette, panure de blé entier",
-    "cnfNameEn": "Chicken nuggets, whole grain breading",
+    "cnfFoodId": "7034",
+    "cnfNameFr": "Poulet, croquette, viande blanche et brune, précuite, congelée, non réchauffée",
+    "cnfNameEn": "Chicken nuggets, dark and white meat, pre-cooked, frozen, not heated",
     "nutritionPer100g": {
-      "protein": 15.67,
-      "fat": 12.9,
-      "carbs": 22.86,
-      "calories": 270,
-      "sugars": 0.49,
-      "fiber": 2.2,
-      "calcium": 32,
-      "iron": 1.99,
-      "potassium": 231,
-      "sodium": 511
+      "protein": 12.02,
+      "fat": 17.31,
+      "carbs": 16.09,
+      "calories": 268,
+      "sugars": 0.72,
+      "fiber": 1.6,
+      "calcium": 47,
+      "iron": 0.95,
+      "potassium": 206,
+      "sodium": 540
     },
     "portions": [
+      {
+        "grams": 18,
+        "en": "1 piece",
+        "fr": "1 morceau"
+      },
+      {
+        "grams": 87,
+        "en": "1 serving",
+        "fr": "1 portion"
+      },
       {
         "grams": 60,
         "en": "60 g",
         "fr": "60 g"
-      },
-      {
-        "grams": 88,
-        "en": "5 pieces",
-        "fr": "5 morceaux"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 180,
+    "matchedPortionBasis": "10 morceaux × 18 g — croquettes viande blanche et brune, précuites",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Panure de blé entier trop spécifique."
+    "note": "Référence générique retenue plutôt que la version panure blé entier; portion FCÉN explicite de 18 g par morceau."
   },
   {
     "energieAlias": "salade de pâtes",
@@ -3835,12 +3887,12 @@
         "fr": "140 g"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 374.06,
+    "matchedPortionBasis": "2 × 250 ml — salade de pâtes maison avec légumes et vinaigrette italienne",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Recette/vinaigrette trop spécifique."
+    "note": "Plat composite FCÉN retenu comme référence explicite; l’alias reste estimatif car les recettes varient."
   },
   {
     "energieAlias": "riz",
@@ -3856,36 +3908,35 @@
       "portion": "1 tasse cuite",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "7448",
-    "cnfNameFr": "Riz espagnol",
-    "cnfNameEn": "Rice, Spanish rice",
+    "cnfFoodId": "4475",
+    "cnfNameFr": "Grains céréaliers, riz blanc, grain moyen, cuit",
+    "cnfNameEn": "Grains, rice, white, medium-grain, cooked",
     "nutritionPer100g": {
-      "protein": 3.28,
-      "fat": 5.29,
-      "carbs": 31.16,
-      "calories": 185,
-      "sugars": 1.3,
-      "fiber": 1.2,
-      "calcium": 20,
-      "iron": 1.15,
-      "potassium": 116,
-      "sodium": 528
+      "protein": 2.38,
+      "fat": 0.21,
+      "carbs": 28.59,
+      "calories": 130,
+      "sugars": 0.05,
+      "calcium": 3,
+      "iron": 0.2,
+      "potassium": 29,
+      "sodium": 0
     },
     "portions": [
       {
-        "grams": 49.03,
-        "en": "100 ml",
-        "fr": "100 ml"
-      },
-      {
-        "grams": 61.288,
+        "grams": 98.267,
         "en": "125 ml",
         "fr": "125 ml"
       },
       {
-        "grams": 122.576,
+        "grams": 196.534,
         "en": "250 ml",
         "fr": "250 ml"
+      },
+      {
+        "grams": 78.614,
+        "en": "100 ml",
+        "fr": "100 ml"
       },
       {
         "grams": 140,
@@ -3893,12 +3944,12 @@
         "fr": "140 g"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 196.534,
+    "matchedPortionBasis": "250 ml (1 tasse) — riz blanc grain moyen, cuit",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Le candidat est riz espagnol; incorrect."
+    "note": "Référence générique corrigée du riz espagnol vers riz blanc cuit. La portion donne ~255 kcal, supérieure à l’estimation historique; la valeur officielle FCÉN est conservée."
   },
   {
     "energieAlias": "fromage",
@@ -3914,19 +3965,20 @@
       "portion": "30 g",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "22",
-    "cnfNameFr": "Fromage carvi",
-    "cnfNameEn": "Cheese, caraway",
+    "cnfFoodId": "119",
+    "cnfNameFr": "Fromage cheddar, doux",
+    "cnfNameEn": "Cheese, cheddar, mild",
     "nutritionPer100g": {
-      "protein": 25.18,
-      "fat": 29.2,
-      "carbs": 3.06,
-      "calories": 376,
+      "protein": 23.29,
+      "fat": 31.756,
+      "carbs": 10.27,
+      "calories": 418,
+      "sugars": 0.13,
       "fiber": 0,
-      "calcium": 673,
-      "iron": 0.64,
-      "potassium": 93,
-      "sodium": 690
+      "calcium": 800,
+      "iron": 1.26,
+      "potassium": 83,
+      "sodium": 784
     },
     "portions": [
       {
@@ -3940,22 +3992,42 @@
         "fr": "100 ml en dés"
       },
       {
-        "grams": 30,
-        "en": "30 g",
-        "fr": "30 g"
+        "grams": 103.128,
+        "en": "100 ml melted",
+        "fr": "100 ml fondu"
       },
       {
         "grams": 50,
         "en": "50 g",
         "fr": "50 g"
+      },
+      {
+        "grams": 139.476,
+        "en": "250 ml, diced",
+        "fr": "250 ml, en dés"
+      },
+      {
+        "grams": 119.4,
+        "en": "250 ml, shredded",
+        "fr": "250 ml, filamenté"
+      },
+      {
+        "grams": 257.819,
+        "en": "250 ml, melted",
+        "fr": "250 ml, fondu"
+      },
+      {
+        "grams": 30,
+        "en": "30 g",
+        "fr": "30 g"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 30,
+    "matchedPortionBasis": "30 g — cheddar doux",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Fromage au carvi; incorrect."
+    "note": "Pour l’alias générique « fromage », cheddar doux est retenu comme référence par défaut; les fromages nommés gardent leurs propres fiches."
   },
   {
     "energieAlias": "porc effiloché",
@@ -4009,11 +4081,11 @@
       }
     ],
     "verified": false,
-    "reviewStatus": "needs-review",
+    "reviewStatus": "composite-fallback",
     "matchedPortionGrams": null,
     "matchedPortionBasis": "",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "La fiche impose une sauce barbecue; à garder distincte de l’alias générique."
+    "note": "La fiche FCÉN disponible impose une sauce barbecue. Conserver le fallback Énergie pour l’alias générique; utiliser FCÉN si BBQ est explicitement reconnu."
   },
   {
     "energieAlias": "fajitas",
@@ -4056,12 +4128,12 @@
         "fr": "140 g"
       }
     ],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "matchedPortionGrams": null,
-    "matchedPortionBasis": "",
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 223,
+    "matchedPortionBasis": "1 fajita — poulet et légumes",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Le candidat est poulet+légumes; alias générique."
+    "note": "Plat composite FCÉN retenu comme référence explicite pour l’alias générique; la composition reste une estimation de référence."
   },
   {
     "energieAlias": "manioc",
@@ -4120,11 +4192,11 @@
       }
     ],
     "verified": false,
-    "reviewStatus": "needs-review",
+    "reviewStatus": "legacy-fallback",
     "matchedPortionGrams": null,
     "matchedPortionBasis": "",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Énergie indique cuit; candidat FCÉN cru."
+    "note": "La FCÉN 2026 importée contient le manioc cru mais pas de fiche cuite suffisamment explicite. Conserver le fallback Énergie pour « 1 tasse cuite »."
   },
   {
     "energieAlias": "fruits",
@@ -4198,10 +4270,10 @@
       }
     ],
     "verified": false,
-    "reviewStatus": "needs-review",
+    "reviewStatus": "generic-fallback",
     "matchedPortionGrams": null,
     "matchedPortionBasis": "",
     "source": "Health Canada / Santé Canada — FCÉN 2026",
-    "note": "Alias trop générique; candidat fruit à pain incorrect."
+    "note": "Alias volontairement générique; aucune fiche FCÉN unique ne peut représenter « fruits ». Conserver le fallback Énergie."
   }
 ]
