@@ -8,7 +8,8 @@
     "ios:add": "npm run build:ios-web && npx cap add ios",
     "ios:sync": "npm run build:ios-web && npx cap sync ios",
     "ios:open": "npx cap open ios",
-    "cnf:import": "node scripts/import-cnf.mjs"
+    "cnf:import": "node scripts/import-cnf.mjs",
+    "cnf:audit": "node scripts/audit-cnf-mapping.mjs"
   },
   "dependencies": {
     "@capacitor/core": "^8.0.0",
