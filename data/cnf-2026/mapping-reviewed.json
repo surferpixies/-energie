@@ -1,0 +1,2178 @@
+[
+  {
+    "energieAlias": "banane",
+    "aliases": [
+      "banane",
+      "banana"
+    ],
+    "current": {
+      "calories": 105,
+      "protein": 1.3,
+      "carbs": 27,
+      "fat": 0.4,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1704",
+    "cnfNameFr": "Banane, crue",
+    "cnfNameEn": "Banana, raw",
+    "nutritionPer100g": {
+      "protein": 1.09,
+      "fat": 0.33,
+      "carbs": 22.84,
+      "calories": 89,
+      "sugars": 12.23,
+      "fiber": 1.74,
+      "calcium": 5,
+      "iron": 0.26,
+      "potassium": 358,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "clémentine",
+    "aliases": [
+      "clémentine",
+      "clementine",
+      "mandarine"
+    ],
+    "current": {
+      "calories": 35,
+      "protein": 0.6,
+      "carbs": 9,
+      "fat": 0.1,
+      "portion": "1 fruit",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "5956",
+    "cnfNameFr": "Clémentine, crue",
+    "cnfNameEn": "Clementine, raw",
+    "nutritionPer100g": {
+      "protein": 0.85,
+      "fat": 0.15,
+      "carbs": 12.02,
+      "calories": 47,
+      "sugars": 9.19,
+      "fiber": 1.7,
+      "calcium": 30,
+      "iron": 0.14,
+      "potassium": 177,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "pêche",
+    "aliases": [
+      "pêche",
+      "peche",
+      "peach"
+    ],
+    "current": {
+      "calories": 59,
+      "protein": 1.4,
+      "carbs": 14,
+      "fat": 0.4,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1728",
+    "cnfNameFr": "Pêche, crue",
+    "cnfNameEn": "Peach, raw",
+    "nutritionPer100g": {
+      "protein": 0.91,
+      "fat": 0.25,
+      "carbs": 9.54,
+      "calories": 39,
+      "sugars": 8.39,
+      "fiber": 1.93,
+      "calcium": 6,
+      "iron": 0.25,
+      "potassium": 190,
+      "sodium": 0
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "nectarine",
+    "aliases": [
+      "nectarine"
+    ],
+    "current": {
+      "calories": 63,
+      "protein": 1.5,
+      "carbs": 15,
+      "fat": 0.5,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1611",
+    "cnfNameFr": "Nectarine, crue",
+    "cnfNameEn": "Nectarine, raw",
+    "nutritionPer100g": {
+      "protein": 1.06,
+      "fat": 0.32,
+      "carbs": 10.55,
+      "calories": 44,
+      "sugars": 7.89,
+      "fiber": 1.7,
+      "calcium": 6,
+      "iron": 0.28,
+      "potassium": 201,
+      "sodium": 0
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "fraises",
+    "aliases": [
+      "fraises",
+      "fraise",
+      "strawberries"
+    ],
+    "current": {
+      "calories": 49,
+      "protein": 1,
+      "carbs": 12,
+      "fat": 0.5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1749",
+    "cnfNameFr": "Fraise, crue",
+    "cnfNameEn": "Strawberry, raw",
+    "nutritionPer100g": {
+      "protein": 0.67,
+      "fat": 0.3,
+      "carbs": 7.68,
+      "calories": 33,
+      "sugars": 4.89,
+      "fiber": 2.24,
+      "calcium": 16,
+      "iron": 0.41,
+      "potassium": 153,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "mûres",
+    "aliases": [
+      "mûres",
+      "mures",
+      "blackberries"
+    ],
+    "current": {
+      "calories": 62,
+      "protein": 2,
+      "carbs": 14,
+      "fat": 0.7,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1610",
+    "cnfNameFr": "Mûres blanche, crue",
+    "cnfNameEn": "Mulberry, raw",
+    "nutritionPer100g": {
+      "protein": 1.44,
+      "fat": 0.39,
+      "carbs": 9.8,
+      "calories": 43,
+      "sugars": 8.1,
+      "fiber": 1.7,
+      "calcium": 39,
+      "iron": 1.85,
+      "potassium": 194,
+      "sodium": 10
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat est « mûres blanche »; trop spécifique pour l’alias générique."
+  },
+  {
+    "energieAlias": "ananas",
+    "aliases": [
+      "ananas",
+      "pineapple"
+    ],
+    "current": {
+      "calories": 82,
+      "protein": 0.9,
+      "carbs": 22,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1734",
+    "cnfNameFr": "Ananas, cru",
+    "cnfNameEn": "Pineapple, raw",
+    "nutritionPer100g": {
+      "protein": 0.54,
+      "fat": 0.12,
+      "carbs": 13.12,
+      "calories": 50,
+      "sugars": 9.85,
+      "fiber": 1.4,
+      "calcium": 13,
+      "iron": 0.29,
+      "potassium": 109,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "mangue",
+    "aliases": [
+      "mangue",
+      "mango"
+    ],
+    "current": {
+      "calories": 99,
+      "protein": 1.4,
+      "carbs": 25,
+      "fat": 0.6,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1603",
+    "cnfNameFr": "Mangue, crue",
+    "cnfNameEn": "Mango, raw",
+    "nutritionPer100g": {
+      "protein": 0.82,
+      "fat": 0.38,
+      "carbs": 14.98,
+      "calories": 60,
+      "sugars": 13.66,
+      "fiber": 1.6,
+      "calcium": 11,
+      "iron": 0.16,
+      "potassium": 168,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "papaye",
+    "aliases": [
+      "papaye",
+      "papaya"
+    ],
+    "current": {
+      "calories": 62,
+      "protein": 0.7,
+      "carbs": 16,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1628",
+    "cnfNameFr": "Papaye, crue",
+    "cnfNameEn": "Papaya, raw",
+    "nutritionPer100g": {
+      "protein": 0.47,
+      "fat": 0.26,
+      "carbs": 10.82,
+      "calories": 43,
+      "sugars": 7.82,
+      "fiber": 1.7,
+      "calcium": 20,
+      "iron": 0.25,
+      "potassium": 182,
+      "sodium": 8
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "melon miel",
+    "aliases": [
+      "melon miel",
+      "honeydew"
+    ],
+    "current": {
+      "calories": 61,
+      "protein": 0.9,
+      "carbs": 15,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1605",
+    "cnfNameFr": "Melon, miel (honeydew), cru",
+    "cnfNameEn": "Melon, honeydew, raw",
+    "nutritionPer100g": {
+      "protein": 0.54,
+      "fat": 0.14,
+      "carbs": 9.09,
+      "calories": 36,
+      "sugars": 8.12,
+      "fiber": 0.8,
+      "calcium": 6,
+      "iron": 0.17,
+      "potassium": 228,
+      "sodium": 18
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "melon d eau",
+    "aliases": [
+      "melon d eau",
+      "pastèque",
+      "pasteque",
+      "watermelon"
+    ],
+    "current": {
+      "calories": 46,
+      "protein": 0.9,
+      "carbs": 12,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1691",
+    "cnfNameFr": "Melon d'eau (pasteque), cru",
+    "cnfNameEn": "Watermelon, raw",
+    "nutritionPer100g": {
+      "protein": 0.61,
+      "fat": 0.15,
+      "carbs": 7.55,
+      "calories": 30,
+      "sugars": 6.2,
+      "fiber": 0.4,
+      "calcium": 7,
+      "iron": 0.24,
+      "potassium": 112,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "prune",
+    "aliases": [
+      "prune",
+      "plum"
+    ],
+    "current": {
+      "calories": 30,
+      "protein": 0.5,
+      "carbs": 8,
+      "fat": 0.2,
+      "portion": "1 fruit",
+      "gramsPerPortion": 66
+    },
+    "cnfFoodId": "1740",
+    "cnfNameFr": "Prune, crue",
+    "cnfNameEn": "Plum, raw",
+    "nutritionPer100g": {
+      "protein": 0.7,
+      "fat": 0.28,
+      "carbs": 11.42,
+      "calories": 46,
+      "sugars": 9.92,
+      "fiber": 1.6,
+      "calcium": 6,
+      "iron": 0.17,
+      "potassium": 157,
+      "sodium": 0
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "abricot",
+    "aliases": [
+      "abricot",
+      "apricot"
+    ],
+    "current": {
+      "calories": 17,
+      "protein": 0.5,
+      "carbs": 4,
+      "fat": 0.1,
+      "portion": "1 fruit",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1498",
+    "cnfNameFr": "Abricot, cru",
+    "cnfNameEn": "Apricot, raw",
+    "nutritionPer100g": {
+      "protein": 1.4,
+      "fat": 0.39,
+      "carbs": 11.12,
+      "calories": 48,
+      "sugars": 9.24,
+      "fiber": 2,
+      "calcium": 13,
+      "iron": 0.39,
+      "potassium": 259,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "dattes",
+    "aliases": [
+      "dattes",
+      "datte",
+      "dates"
+    ],
+    "current": {
+      "calories": 133,
+      "protein": 1,
+      "carbs": 36,
+      "fat": 0.2,
+      "portion": "3 dattes",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "5401",
+    "cnfNameFr": "Datte, variété Medjool",
+    "cnfNameEn": "Date, medjool",
+    "nutritionPer100g": {
+      "protein": 1.81,
+      "fat": 0.15,
+      "carbs": 74.97,
+      "calories": 277,
+      "sugars": 66.47,
+      "fiber": 6.7,
+      "calcium": 64,
+      "iron": 0.9,
+      "potassium": 696,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat est spécifiquement Medjool; l’alias Énergie est générique."
+  },
+  {
+    "energieAlias": "grenade",
+    "aliases": [
+      "grenade",
+      "pomegranate"
+    ],
+    "current": {
+      "calories": 144,
+      "protein": 3,
+      "carbs": 33,
+      "fat": 2,
+      "portion": "1 tasse grains",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1667",
+    "cnfNameFr": "Grenade, crue",
+    "cnfNameEn": "Pomegranate, raw",
+    "nutritionPer100g": {
+      "protein": 1.67,
+      "fat": 1.17,
+      "carbs": 18.7,
+      "calories": 83,
+      "sugars": 13.67,
+      "fiber": 4,
+      "calcium": 10,
+      "iron": 0.3,
+      "potassium": 236,
+      "sodium": 3
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "fruit de la passion",
+    "aliases": [
+      "fruit de la passion",
+      "passion fruit"
+    ],
+    "current": {
+      "calories": 68,
+      "protein": 1.6,
+      "carbs": 16,
+      "fat": 0.5,
+      "portion": "3 fruits",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1630",
+    "cnfNameFr": "Grenadille (fruit de la passion), crue",
+    "cnfNameEn": "Passion fruit, purple, raw",
+    "nutritionPer100g": {
+      "protein": 2.2,
+      "fat": 0.7,
+      "carbs": 23.38,
+      "calories": 97,
+      "sugars": 11.2,
+      "fiber": 10.4,
+      "calcium": 12,
+      "iron": 1.6,
+      "potassium": 348,
+      "sodium": 28
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "litchi",
+    "aliases": [
+      "litchi",
+      "lychee"
+    ],
+    "current": {
+      "calories": 125,
+      "protein": 1.6,
+      "carbs": 31,
+      "fat": 0.8,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1596",
+    "cnfNameFr": "Litchi, cru",
+    "cnfNameEn": "Lychee (litchi), raw",
+    "nutritionPer100g": {
+      "protein": 0.83,
+      "fat": 0.44,
+      "carbs": 16.53,
+      "calories": 66,
+      "sugars": 15.23,
+      "fiber": 1.3,
+      "calcium": 5,
+      "iron": 0.31,
+      "potassium": 171,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "poivron rouge",
+    "aliases": [
+      "poivron rouge",
+      "red pepper"
+    ],
+    "current": {
+      "calories": 46,
+      "protein": 1.5,
+      "carbs": 9,
+      "fat": 0.5,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2484",
+    "cnfNameFr": "Poivron rouge, cru",
+    "cnfNameEn": "Pepper, sweet, red, raw",
+    "nutritionPer100g": {
+      "protein": 0.99,
+      "fat": 0.3,
+      "carbs": 6.03,
+      "calories": 26,
+      "sugars": 4.2,
+      "fiber": 1.41,
+      "calcium": 7,
+      "iron": 0.43,
+      "potassium": 211,
+      "sodium": 4
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "poivron vert",
+    "aliases": [
+      "poivron vert",
+      "green pepper"
+    ],
+    "current": {
+      "calories": 24,
+      "protein": 1,
+      "carbs": 6,
+      "fat": 0.2,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2413",
+    "cnfNameFr": "Poivron vert, cru",
+    "cnfNameEn": "Pepper, sweet, green, raw",
+    "nutritionPer100g": {
+      "protein": 0.86,
+      "fat": 0.17,
+      "carbs": 4.64,
+      "calories": 20,
+      "sugars": 2.4,
+      "fiber": 1.41,
+      "calcium": 10,
+      "iron": 0.34,
+      "potassium": 175,
+      "sodium": 3
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "épinards",
+    "aliases": [
+      "épinards",
+      "epinards",
+      "spinach"
+    ],
+    "current": {
+      "calories": 41,
+      "protein": 5.3,
+      "carbs": 7,
+      "fat": 0.5,
+      "portion": "1 tasse cuits",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2213",
+    "cnfNameFr": "Épinard, cru",
+    "cnfNameEn": "Spinach, raw",
+    "nutritionPer100g": {
+      "protein": 2.86,
+      "fat": 0.39,
+      "carbs": 3.63,
+      "calories": 23,
+      "sugars": 0.42,
+      "fiber": 2.2,
+      "calcium": 99,
+      "iron": 2.71,
+      "potassium": 558,
+      "sodium": 79
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Énergie indique « 1 tasse cuits », mais le candidat FCÉN est cru."
+  },
+  {
+    "energieAlias": "laitue romaine",
+    "aliases": [
+      "laitue romaine",
+      "romaine"
+    ],
+    "current": {
+      "calories": 15,
+      "protein": 1,
+      "carbs": 3,
+      "fat": 0.2,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2116",
+    "cnfNameFr": "Laitue, romaine",
+    "cnfNameEn": "Lettuce, cos or romaine",
+    "nutritionPer100g": {
+      "protein": 1.23,
+      "fat": 0.3,
+      "carbs": 3.29,
+      "calories": 17,
+      "sugars": 1.19,
+      "fiber": 2.1,
+      "calcium": 33,
+      "iron": 0.97,
+      "potassium": 247,
+      "sodium": 8
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "laitue",
+    "aliases": [
+      "laitue",
+      "lettuce"
+    ],
+    "current": {
+      "calories": 10,
+      "protein": 0.7,
+      "carbs": 2,
+      "fat": 0.1,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2051",
+    "cnfNameFr": "Laitue-tige, crue",
+    "cnfNameEn": "Celtuce, raw",
+    "nutritionPer100g": {
+      "protein": 0.85,
+      "fat": 0.3,
+      "carbs": 3.65,
+      "calories": 18,
+      "fiber": 1.7,
+      "calcium": 39,
+      "iron": 0.55,
+      "potassium": 330,
+      "sodium": 11
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat est laitue-tige, trop spécifique."
+  },
+  {
+    "energieAlias": "courgette",
+    "aliases": [
+      "courgette",
+      "zucchini"
+    ],
+    "current": {
+      "calories": 33,
+      "protein": 2.4,
+      "carbs": 6,
+      "fat": 0.6,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "6760",
+    "cnfNameFr": "Courgettes, en pâte à frire, frites",
+    "cnfNameEn": "Zucchini, battered and fried",
+    "nutritionPer100g": {
+      "protein": 2.585,
+      "fat": 13.748,
+      "carbs": 9.284,
+      "calories": 167,
+      "sugars": 2.056,
+      "fiber": 1.178,
+      "calcium": 57.351,
+      "iron": 0.55,
+      "potassium": 212.246,
+      "sodium": 129.843
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat est frit/en pâte, incorrect pour l’alias générique."
+  },
+  {
+    "energieAlias": "aubergine",
+    "aliases": [
+      "aubergine",
+      "eggplant"
+    ],
+    "current": {
+      "calories": 35,
+      "protein": 0.8,
+      "carbs": 9,
+      "fat": 0.2,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2088",
+    "cnfNameFr": "Aubergine, crue",
+    "cnfNameEn": "Eggplant (aubergine, brinjal), raw",
+    "nutritionPer100g": {
+      "protein": 0.98,
+      "fat": 0.18,
+      "carbs": 5.88,
+      "calories": 25,
+      "sugars": 3.53,
+      "fiber": 3,
+      "calcium": 9,
+      "iron": 0.23,
+      "potassium": 229,
+      "sodium": 2
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Énergie indique une portion cuite, candidat FCÉN cru."
+  },
+  {
+    "energieAlias": "asperges",
+    "aliases": [
+      "asperges",
+      "asperge",
+      "asparagus"
+    ],
+    "current": {
+      "calories": 40,
+      "protein": 4.3,
+      "carbs": 7,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1990",
+    "cnfNameFr": "Asperge, crue",
+    "cnfNameEn": "Asparagus, raw",
+    "nutritionPer100g": {
+      "protein": 2.2,
+      "fat": 0.12,
+      "carbs": 3.88,
+      "calories": 20,
+      "sugars": 1.88,
+      "fiber": 2.1,
+      "calcium": 24,
+      "iron": 2.14,
+      "potassium": 202,
+      "sodium": 2
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "État de préparation à préciser avant validation."
+  },
+  {
+    "energieAlias": "betterave",
+    "aliases": [
+      "betterave",
+      "beet"
+    ],
+    "current": {
+      "calories": 58,
+      "protein": 2.2,
+      "carbs": 13,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2021",
+    "cnfNameFr": "Betterave, feuilles, crues",
+    "cnfNameEn": "Beet greens, raw",
+    "nutritionPer100g": {
+      "protein": 2.2,
+      "fat": 0.13,
+      "carbs": 4.33,
+      "calories": 22,
+      "sugars": 0.5,
+      "fiber": 3.7,
+      "calcium": 117,
+      "iron": 2.57,
+      "potassium": 762,
+      "sodium": 226
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat correspond aux feuilles, pas à la racine."
+  },
+  {
+    "energieAlias": "chou de bruxelles",
+    "aliases": [
+      "chou de bruxelles",
+      "brussels sprouts"
+    ],
+    "current": {
+      "calories": 56,
+      "protein": 4,
+      "carbs": 11,
+      "fat": 0.8,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2378",
+    "cnfNameFr": "Choux de Bruxelles, crus",
+    "cnfNameEn": "Brussels sprouts, raw",
+    "nutritionPer100g": {
+      "protein": 3.38,
+      "fat": 0.3,
+      "carbs": 8.95,
+      "calories": 43,
+      "sugars": 2.2,
+      "fiber": 4.12,
+      "calcium": 42,
+      "iron": 1.4,
+      "potassium": 389,
+      "sodium": 25
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "chou rouge",
+    "aliases": [
+      "chou rouge",
+      "red cabbage"
+    ],
+    "current": {
+      "calories": 28,
+      "protein": 1.3,
+      "carbs": 7,
+      "fat": 0.1,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2034",
+    "cnfNameFr": "Chou rouge, cru",
+    "cnfNameEn": "Cabbage, red, raw",
+    "nutritionPer100g": {
+      "protein": 1.43,
+      "fat": 0.16,
+      "carbs": 7.37,
+      "calories": 31,
+      "sugars": 3.83,
+      "fiber": 2.1,
+      "calcium": 45,
+      "iron": 0.8,
+      "potassium": 243,
+      "sodium": 27
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "bok choy",
+    "aliases": [
+      "bok choy",
+      "pak choi"
+    ],
+    "current": {
+      "calories": 20,
+      "protein": 2.7,
+      "carbs": 3,
+      "fat": 0.3,
+      "portion": "1 tasse cuit",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2038",
+    "cnfNameFr": "Bok choy, pak-choi, cru",
+    "cnfNameEn": "Bok choy, pak-choi, raw",
+    "nutritionPer100g": {
+      "protein": 1.5,
+      "fat": 0.2,
+      "carbs": 2.18,
+      "calories": 13,
+      "sugars": 1.18,
+      "fiber": 1,
+      "calcium": 105,
+      "iron": 0.8,
+      "potassium": 252,
+      "sodium": 65
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Énergie indique cuit, candidat FCÉN cru."
+  },
+  {
+    "energieAlias": "pois mange-tout",
+    "aliases": [
+      "pois mange-tout",
+      "snow peas"
+    ],
+    "current": {
+      "calories": 41,
+      "protein": 2.7,
+      "carbs": 7,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2408",
+    "cnfNameFr": "Pois mange-tout, crus",
+    "cnfNameEn": "Peas, edible-podded (snow peas), raw",
+    "nutritionPer100g": {
+      "protein": 2.8,
+      "fat": 0.2,
+      "carbs": 7.55,
+      "calories": 42,
+      "sugars": 4,
+      "fiber": 1.77,
+      "calcium": 43,
+      "iron": 2.08,
+      "potassium": 200,
+      "sodium": 4
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "ail",
+    "aliases": [
+      "ail",
+      "garlic"
+    ],
+    "current": {
+      "calories": 13,
+      "protein": 0.6,
+      "carbs": 3,
+      "fat": 0,
+      "portion": "3 gousses",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2394",
+    "cnfNameFr": "Ail, cru",
+    "cnfNameEn": "Garlic, raw",
+    "nutritionPer100g": {
+      "protein": 6.36,
+      "fat": 0.5,
+      "carbs": 33.06,
+      "calories": 149,
+      "sugars": 1,
+      "fiber": 2.1,
+      "calcium": 181,
+      "iron": 1.7,
+      "potassium": 401,
+      "sodium": 17
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "État/portion à valider avec une mesure FCÉN appropriée."
+  },
+  {
+    "energieAlias": "radis",
+    "aliases": [
+      "radis",
+      "radish"
+    ],
+    "current": {
+      "calories": 19,
+      "protein": 0.8,
+      "carbs": 4,
+      "fat": 0.1,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2443",
+    "cnfNameFr": "Radis, cru",
+    "cnfNameEn": "Radish, raw",
+    "nutritionPer100g": {
+      "protein": 0.68,
+      "fat": 0.1,
+      "carbs": 3.4,
+      "calories": 16,
+      "sugars": 1.86,
+      "fiber": 1.6,
+      "calcium": 25,
+      "iron": 0.34,
+      "potassium": 233,
+      "sodium": 39
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Portion à valider avec une mesure FCÉN."
+  },
+  {
+    "energieAlias": "rutabaga",
+    "aliases": [
+      "rutabaga"
+    ],
+    "current": {
+      "calories": 66,
+      "protein": 2,
+      "carbs": 15,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2444",
+    "cnfNameFr": "Rutabaga (chou-navet), cru",
+    "cnfNameEn": "Rutabaga (swede), raw",
+    "nutritionPer100g": {
+      "protein": 1.08,
+      "fat": 0.16,
+      "carbs": 8.62,
+      "calories": 37,
+      "sugars": 4.46,
+      "fiber": 2.4,
+      "calcium": 43,
+      "iron": 0.44,
+      "potassium": 305,
+      "sodium": 12
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "État de préparation à préciser."
+  },
+  {
+    "energieAlias": "artichaut",
+    "aliases": [
+      "artichaut",
+      "artichoke"
+    ],
+    "current": {
+      "calories": 60,
+      "protein": 4.2,
+      "carbs": 13,
+      "fat": 0.2,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2364",
+    "cnfNameFr": "Artichaut, cru",
+    "cnfNameEn": "Artichoke (Globe, French), raw",
+    "nutritionPer100g": {
+      "protein": 3.27,
+      "fat": 0.15,
+      "carbs": 10.51,
+      "calories": 47,
+      "fiber": 4.58,
+      "calcium": 44,
+      "iron": 1.28,
+      "potassium": 370,
+      "sodium": 94
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "État de préparation à préciser."
+  },
+  {
+    "energieAlias": "okra",
+    "aliases": [
+      "okra",
+      "gombo"
+    ],
+    "current": {
+      "calories": 35,
+      "protein": 3,
+      "carbs": 7,
+      "fat": 0.3,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2134",
+    "cnfNameFr": "Okra (gombo), cru",
+    "cnfNameEn": "Okra (gumbo), raw",
+    "nutritionPer100g": {
+      "protein": 1.93,
+      "fat": 0.19,
+      "carbs": 7.45,
+      "calories": 33,
+      "sugars": 1.48,
+      "fiber": 3.2,
+      "calcium": 82,
+      "iron": 0.62,
+      "potassium": 299,
+      "sodium": 7
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "État de préparation à préciser."
+  },
+  {
+    "energieAlias": "salade grecque",
+    "aliases": [
+      "salade grecque",
+      "greek salad"
+    ],
+    "current": {
+      "calories": 320,
+      "protein": 10,
+      "carbs": 18,
+      "fat": 24,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "6738",
+    "cnfNameFr": "Salade grecque, faite maison",
+    "cnfNameEn": "Salad, Greek, homemade",
+    "nutritionPer100g": {
+      "protein": 3.334,
+      "fat": 11.352,
+      "carbs": 3.934,
+      "calories": 126,
+      "sugars": 2.141,
+      "fiber": 0.959,
+      "calcium": 108.428,
+      "iron": 0.583,
+      "potassium": 116.551,
+      "sodium": 283.461
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "riz blanc",
+    "aliases": [
+      "riz blanc",
+      "white rice"
+    ],
+    "current": {
+      "calories": 205,
+      "protein": 4.3,
+      "carbs": 45,
+      "fat": 0.4,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "7701",
+    "cnfNameFr": "Riz, blanc et sausage, arômatisé, non préparé",
+    "cnfNameEn": "Rice, white and wild, flavoured, unprepared",
+    "nutritionPer100g": {
+      "protein": 3.49,
+      "fat": 2.57,
+      "carbs": 26.28,
+      "calories": 142,
+      "sugars": 0.4,
+      "fiber": 0.8,
+      "calcium": 35,
+      "iron": 1.45,
+      "potassium": 113,
+      "sodium": 443
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat contient saucisse/aromatisation; incorrect."
+  },
+  {
+    "energieAlias": "céréales",
+    "aliases": [
+      "céréales",
+      "cereales",
+      "breakfast cereal"
+    ],
+    "current": {
+      "calories": 150,
+      "protein": 4,
+      "carbs": 32,
+      "fat": 2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "6356",
+    "cnfNameFr": "Céréales, prêtes à manger, flocons d'amarante",
+    "cnfNameEn": "Cereal, ready-to-eat, amaranth flakes",
+    "nutritionPer100g": {
+      "protein": 15.54,
+      "fat": 7,
+      "carbs": 71.15,
+      "calories": 353,
+      "sugars": 0.42,
+      "fiber": 9.5,
+      "calcium": 17,
+      "iron": 1.76,
+      "potassium": 353,
+      "sodium": 35
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Alias trop générique pour une fiche FCÉN unique."
+  },
+  {
+    "energieAlias": "bacon",
+    "aliases": [
+      "bacon"
+    ],
+    "current": {
+      "calories": 130,
+      "protein": 9,
+      "carbs": 0.5,
+      "fat": 10,
+      "portion": "3 tranches",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "5462",
+    "cnfNameFr": "Bacon, dinde, cuit",
+    "cnfNameEn": "Turkey, bacon, cooked",
+    "nutritionPer100g": {
+      "protein": 29.5,
+      "fat": 25.87,
+      "carbs": 4.24,
+      "calories": 368,
+      "sugars": 4.24,
+      "fiber": 0,
+      "calcium": 163,
+      "iron": 2.63,
+      "potassium": 666,
+      "sodium": 2021
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat est bacon de dinde; alias générique."
+  },
+  {
+    "energieAlias": "thon",
+    "aliases": [
+      "thon",
+      "tuna"
+    ],
+    "current": {
+      "calories": 190,
+      "protein": 40,
+      "carbs": 0,
+      "fat": 2,
+      "portion": "150 g",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "3086",
+    "cnfNameFr": "Thon, salade",
+    "cnfNameEn": "Tuna salad",
+    "nutritionPer100g": {
+      "protein": 16.04,
+      "fat": 9.26,
+      "carbs": 9.41,
+      "calories": 187,
+      "fiber": 0,
+      "calcium": 17,
+      "iron": 1,
+      "potassium": 178,
+      "sodium": 402
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat est salade de thon; incorrect."
+  },
+  {
+    "energieAlias": "lentilles",
+    "aliases": [
+      "lentilles",
+      "lentille",
+      "lentils"
+    ],
+    "current": {
+      "calories": 230,
+      "protein": 18,
+      "carbs": 40,
+      "fat": 0.8,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2113",
+    "cnfNameFr": "Lentilles, germées, crues",
+    "cnfNameEn": "Lentils, sprouted, raw",
+    "nutritionPer100g": {
+      "protein": 8.96,
+      "fat": 0.55,
+      "carbs": 22.14,
+      "calories": 106,
+      "fiber": 1.45,
+      "calcium": 25,
+      "iron": 3.21,
+      "potassium": 322,
+      "sodium": 11
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat est germé/cru; Énergie indique cuit."
+  },
+  {
+    "energieAlias": "haricots noirs",
+    "aliases": [
+      "haricots noirs",
+      "black beans"
+    ],
+    "current": {
+      "calories": 227,
+      "protein": 15,
+      "carbs": 41,
+      "fat": 0.9,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "6181",
+    "cnfNameFr": "Haricots, noirs, farine",
+    "cnfNameEn": "Beans, black, flour",
+    "nutritionPer100g": {
+      "protein": 22.99,
+      "fat": 1.51,
+      "carbs": 66.38,
+      "calories": 363,
+      "sugars": 2.39,
+      "fiber": 14.68,
+      "calcium": 130.92,
+      "iron": 5.34,
+      "potassium": 1578.5,
+      "sodium": 5.32
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat est farine; incorrect."
+  },
+  {
+    "energieAlias": "haricots rouges",
+    "aliases": [
+      "haricots rouges",
+      "kidney beans"
+    ],
+    "current": {
+      "calories": 225,
+      "protein": 15,
+      "carbs": 40,
+      "fat": 0.9,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "5536",
+    "cnfNameFr": "Haricots, rouges, liquide seulement",
+    "cnfNameEn": "Beans, liquid from stewed kidney beans",
+    "nutritionPer100g": {
+      "protein": 1.8,
+      "fat": 3.2,
+      "carbs": 2.8,
+      "calories": 47,
+      "sugars": 0,
+      "fiber": 0.1,
+      "calcium": 13,
+      "iron": 1.96,
+      "potassium": 408,
+      "sodium": 2
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat est liquide seulement; incorrect."
+  },
+  {
+    "energieAlias": "falafel",
+    "aliases": [
+      "falafel"
+    ],
+    "current": {
+      "calories": 330,
+      "protein": 13,
+      "carbs": 32,
+      "fat": 18,
+      "portion": "5 morceaux",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "3339",
+    "cnfNameFr": "Falafel, fait maison",
+    "cnfNameEn": "Falafel, homemade",
+    "nutritionPer100g": {
+      "protein": 13.31,
+      "fat": 17.8,
+      "carbs": 31.84,
+      "calories": 333,
+      "sugars": 3.26364,
+      "fiber": 7.8,
+      "calcium": 54,
+      "iron": 3.42,
+      "potassium": 585,
+      "sodium": 294
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "mozzarella",
+    "aliases": [
+      "mozzarella"
+    ],
+    "current": {
+      "calories": 85,
+      "protein": 6,
+      "carbs": 1,
+      "fat": 6,
+      "portion": "30 g",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "6813",
+    "cnfNameFr": "Bâtonnets de fromage mozzarella, frits",
+    "cnfNameEn": "Mozzarella sticks, fried",
+    "nutritionPer100g": {
+      "protein": 14.75,
+      "fat": 18.33,
+      "carbs": 25.14,
+      "calories": 325,
+      "sugars": 2.36,
+      "fiber": 2,
+      "calcium": 334,
+      "iron": 0.62,
+      "potassium": 108,
+      "sodium": 861
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat est bâtonnets frits; incorrect."
+  },
+  {
+    "energieAlias": "fromage à la crème",
+    "aliases": [
+      "fromage à la crème",
+      "fromage a la creme",
+      "cream cheese"
+    ],
+    "current": {
+      "calories": 100,
+      "protein": 2,
+      "carbs": 2,
+      "fat": 10,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "4722",
+    "cnfNameFr": "Fromage à la crème, sans gras",
+    "cnfNameEn": "Cheese, cream, fat free",
+    "nutritionPer100g": {
+      "protein": 15.69,
+      "fat": 1,
+      "carbs": 7.66,
+      "calories": 105,
+      "sugars": 5.48,
+      "fiber": 0,
+      "calcium": 351,
+      "iron": 0.19,
+      "potassium": 278,
+      "sodium": 702
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat est sans gras; alias générique."
+  },
+  {
+    "energieAlias": "crème glacée",
+    "aliases": [
+      "crème glacée",
+      "creme glacee",
+      "ice cream"
+    ],
+    "current": {
+      "calories": 270,
+      "protein": 5,
+      "carbs": 31,
+      "fat": 14,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "3913",
+    "cnfNameFr": "Crème glacée, cornet, type gâteau ou gaufrette",
+    "cnfNameEn": "Ice cream cone, cake or wafer-type",
+    "nutritionPer100g": {
+      "protein": 8.1,
+      "fat": 6.9,
+      "carbs": 79,
+      "calories": 417,
+      "sugars": 6,
+      "fiber": 3,
+      "calcium": 25,
+      "iron": 3.6,
+      "potassium": 112,
+      "sodium": 256
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat inclut un cornet; incorrect."
+  },
+  {
+    "energieAlias": "noix de grenoble",
+    "aliases": [
+      "noix de grenoble",
+      "walnuts"
+    ],
+    "current": {
+      "calories": 190,
+      "protein": 4.5,
+      "carbs": 4,
+      "fat": 18,
+      "portion": "1/4 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2590",
+    "cnfNameFr": "Noix de Grenoble",
+    "cnfNameEn": "Nuts, walnuts, English or Persian",
+    "nutritionPer100g": {
+      "protein": 15.23,
+      "fat": 65.21,
+      "carbs": 13.71,
+      "calories": 655,
+      "sugars": 2.61,
+      "fiber": 6.7,
+      "calcium": 98,
+      "iron": 2.91,
+      "potassium": 441,
+      "sodium": 2
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "graines de chia",
+    "aliases": [
+      "graines de chia",
+      "chia seeds"
+    ],
+    "current": {
+      "calories": 140,
+      "protein": 5,
+      "carbs": 12,
+      "fat": 9,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2511",
+    "cnfNameFr": "Graines de chia, déshydratées",
+    "cnfNameEn": "Seeds, chia seeds, dried",
+    "nutritionPer100g": {
+      "protein": 16.54,
+      "fat": 30.74,
+      "carbs": 42.12,
+      "calories": 486,
+      "fiber": 34.4,
+      "calcium": 631,
+      "iron": 7.72,
+      "potassium": 407,
+      "sodium": 16
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "barre granola",
+    "aliases": [
+      "barre granola",
+      "granola bar"
+    ],
+    "current": {
+      "calories": 190,
+      "protein": 4,
+      "carbs": 29,
+      "fat": 7,
+      "portion": "1 barre",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "6596",
+    "cnfNameFr": "Barre granola, croquante, nature",
+    "cnfNameEn": "Granola bar, crunchy, plain",
+    "nutritionPer100g": {
+      "protein": 9.013,
+      "fat": 21.507,
+      "carbs": 64.3897,
+      "calories": 480,
+      "sugars": 26.41,
+      "fiber": 6.2,
+      "calcium": 49,
+      "iron": 2.5533,
+      "potassium": 296.667,
+      "sodium": 351
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Variété « croquante, nature » trop spécifique pour l’alias générique."
+  },
+  {
+    "energieAlias": "beigne",
+    "aliases": [
+      "beigne",
+      "donut"
+    ],
+    "current": {
+      "calories": 290,
+      "protein": 4,
+      "carbs": 34,
+      "fat": 16,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "3895",
+    "cnfNameFr": "Beigne, roussette, givré",
+    "cnfNameEn": "Doughnut (donut), French cruller, glazed",
+    "nutritionPer100g": {
+      "protein": 3.1,
+      "fat": 18.3,
+      "carbs": 59.5,
+      "calories": 412,
+      "sugars": 35.11,
+      "fiber": 1.2,
+      "calcium": 26,
+      "iron": 2.42,
+      "potassium": 78,
+      "sodium": 345
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Variété « roussette, givré » trop spécifique."
+  },
+  {
+    "energieAlias": "gâteau au fromage",
+    "aliases": [
+      "gâteau au fromage",
+      "gateau au fromage",
+      "cheesecake"
+    ],
+    "current": {
+      "calories": 400,
+      "protein": 7,
+      "carbs": 33,
+      "fat": 27,
+      "portion": "1 pointe",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "3800",
+    "cnfNameFr": "Gâteau, au fromage, commercial",
+    "cnfNameEn": "Cheesecake, commercial",
+    "nutritionPer100g": {
+      "protein": 5.5,
+      "fat": 22.5,
+      "carbs": 25.5,
+      "calories": 321,
+      "sugars": 21.8,
+      "fiber": 0.4,
+      "calcium": 51,
+      "iron": 0.63,
+      "potassium": 90,
+      "sodium": 438
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Commercial est plausible mais trop spécifique sans indication."
+  },
+  {
+    "energieAlias": "smoothie",
+    "aliases": [
+      "smoothie"
+    ],
+    "current": {
+      "calories": 260,
+      "protein": 8,
+      "carbs": 48,
+      "fat": 5,
+      "portion": "1 grand verre",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "7580",
+    "cnfNameFr": "Frappé (smoothie) au jus de fruits, fraises et bananes",
+    "cnfNameEn": "Smoothie, fruit juice, strawberry banana",
+    "nutritionPer100g": {
+      "protein": 0.44,
+      "fat": 0.3,
+      "carbs": 12.37,
+      "calories": 52,
+      "sugars": 10.33,
+      "fiber": 0.6,
+      "calcium": 11,
+      "iron": 0.32,
+      "potassium": 184,
+      "sodium": 5
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Recette fraise-banane trop spécifique."
+  },
+  {
+    "energieAlias": "eau de coco",
+    "aliases": [
+      "eau de coco",
+      "coconut water"
+    ],
+    "current": {
+      "calories": 45,
+      "protein": 0,
+      "carbs": 11,
+      "fat": 0,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2566",
+    "cnfNameFr": "Noix de coco, eau (liquide de la noix)",
+    "cnfNameEn": "Coconut water (liquid from coconut)",
+    "nutritionPer100g": {
+      "protein": 0.72,
+      "fat": 0.2,
+      "carbs": 3.71,
+      "calories": 19,
+      "sugars": 2.61,
+      "fiber": 1.1,
+      "calcium": 24,
+      "iron": 0.29,
+      "potassium": 250,
+      "sodium": 105
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "poutine",
+    "aliases": [
+      "poutine"
+    ],
+    "current": {
+      "calories": 850,
+      "protein": 24,
+      "carbs": 95,
+      "fat": 42,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "6772",
+    "cnfNameFr": "Poutine",
+    "cnfNameEn": "Poutine",
+    "nutritionPer100g": {
+      "protein": 7.494,
+      "fat": 15.312,
+      "carbs": 15.245,
+      "calories": 226,
+      "sugars": 0.417,
+      "fiber": 1.129,
+      "calcium": 175.751,
+      "iron": 0.674,
+      "potassium": 276.582,
+      "sodium": 614.364
+    },
+    "portions": [],
+    "verified": true,
+    "reviewStatus": "verified",
+    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+  },
+  {
+    "energieAlias": "pad thai",
+    "aliases": [
+      "pad thai"
+    ],
+    "current": {
+      "calories": 750,
+      "protein": 30,
+      "carbs": 95,
+      "fat": 28,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "6762",
+    "cnfNameFr": "Pad thaï au poulet",
+    "cnfNameEn": "Pad thaï with chicken",
+    "nutritionPer100g": {
+      "protein": 8.681,
+      "fat": 3.425,
+      "carbs": 15.193,
+      "calories": 128,
+      "fiber": 0.886,
+      "calcium": 13.63,
+      "iron": 0.523,
+      "potassium": 149.016,
+      "sodium": 203.617
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat est au poulet; alias générique."
+  },
+  {
+    "energieAlias": "nuggets de poulet",
+    "aliases": [
+      "nuggets de poulet",
+      "chicken nuggets"
+    ],
+    "current": {
+      "calories": 420,
+      "protein": 24,
+      "carbs": 26,
+      "fat": 24,
+      "portion": "10 morceaux",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "7653",
+    "cnfNameFr": "Poulet, croquette, panure de blé entier",
+    "cnfNameEn": "Chicken nuggets, whole grain breading",
+    "nutritionPer100g": {
+      "protein": 15.67,
+      "fat": 12.9,
+      "carbs": 22.86,
+      "calories": 270,
+      "sugars": 0.49,
+      "fiber": 2.2,
+      "calcium": 32,
+      "iron": 1.99,
+      "potassium": 231,
+      "sodium": 511
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Panure de blé entier trop spécifique."
+  },
+  {
+    "energieAlias": "salade de pâtes",
+    "aliases": [
+      "salade de pâtes",
+      "salade de pates",
+      "pasta salad"
+    ],
+    "current": {
+      "calories": 430,
+      "protein": 12,
+      "carbs": 55,
+      "fat": 18,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "6744",
+    "cnfNameFr": "Salade de pâtes avec légumes, préparée avec vinaigrette italienne, faite maison",
+    "cnfNameEn": "Pasta salad with vegetables, prepared with Italian dressing, homemade",
+    "nutritionPer100g": {
+      "protein": 2.746,
+      "fat": 5.564,
+      "carbs": 17.982,
+      "calories": 132,
+      "sugars": 2.549,
+      "fiber": 1.164,
+      "calcium": 14.181,
+      "iron": 0.909,
+      "potassium": 92.224,
+      "sodium": 658.431
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Recette/vinaigrette trop spécifique."
+  },
+  {
+    "energieAlias": "riz",
+    "aliases": [
+      "riz",
+      "rice"
+    ],
+    "current": {
+      "calories": 205,
+      "protein": 4.3,
+      "carbs": 45,
+      "fat": 0.4,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "7448",
+    "cnfNameFr": "Riz espagnol",
+    "cnfNameEn": "Rice, Spanish rice",
+    "nutritionPer100g": {
+      "protein": 3.28,
+      "fat": 5.29,
+      "carbs": 31.16,
+      "calories": 185,
+      "sugars": 1.3,
+      "fiber": 1.2,
+      "calcium": 20,
+      "iron": 1.15,
+      "potassium": 116,
+      "sodium": 528
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat est riz espagnol; incorrect."
+  },
+  {
+    "energieAlias": "fromage",
+    "aliases": [
+      "fromage",
+      "cheese"
+    ],
+    "current": {
+      "calories": 115,
+      "protein": 7,
+      "carbs": 1,
+      "fat": 9,
+      "portion": "30 g",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "22",
+    "cnfNameFr": "Fromage carvi",
+    "cnfNameEn": "Cheese, caraway",
+    "nutritionPer100g": {
+      "protein": 25.18,
+      "fat": 29.2,
+      "carbs": 3.06,
+      "calories": 376,
+      "fiber": 0,
+      "calcium": 673,
+      "iron": 0.64,
+      "potassium": 93,
+      "sodium": 690
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Fromage au carvi; incorrect."
+  },
+  {
+    "energieAlias": "porc effiloché",
+    "aliases": [
+      "porc effiloché",
+      "pulled pork"
+    ],
+    "current": {
+      "calories": 330,
+      "protein": 30,
+      "carbs": 8,
+      "fat": 20,
+      "portion": "150 g",
+      "gramsPerPortion": 150
+    },
+    "cnfFoodId": "7093",
+    "cnfNameFr": "Porc effiloché dans une sauce barbecue",
+    "cnfNameEn": "Pulled pork in barbecue sauce",
+    "nutritionPer100g": {
+      "protein": 13.19,
+      "fat": 4.42,
+      "carbs": 18.74,
+      "calories": 168,
+      "sugars": 15.2,
+      "fiber": 1.2,
+      "calcium": 44,
+      "iron": 1.24,
+      "potassium": 305,
+      "sodium": 666
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Sauce BBQ spécifique; peut convenir mais doit rester explicite."
+  },
+  {
+    "energieAlias": "fajitas",
+    "aliases": [
+      "fajitas",
+      "fajita"
+    ],
+    "current": {
+      "calories": 550,
+      "protein": 35,
+      "carbs": 50,
+      "fat": 22,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "6774",
+    "cnfNameFr": "Fajita au poulet et aux légumes",
+    "cnfNameEn": "Fajita with chicken and vegetables",
+    "nutritionPer100g": {
+      "protein": 7.667,
+      "fat": 4.664,
+      "carbs": 20.79,
+      "calories": 155,
+      "sugars": 2.58,
+      "fiber": 2.281,
+      "calcium": 22.285,
+      "iron": 1.395,
+      "potassium": 205.757,
+      "sodium": 213.312
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Le candidat est poulet+légumes; alias générique."
+  },
+  {
+    "energieAlias": "manioc",
+    "aliases": [
+      "manioc",
+      "cassava"
+    ],
+    "current": {
+      "calories": 330,
+      "protein": 3,
+      "carbs": 78,
+      "fat": 1,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "2045",
+    "cnfNameFr": "Manioc, cru",
+    "cnfNameEn": "Cassava (manioc), raw",
+    "nutritionPer100g": {
+      "protein": 1.36,
+      "fat": 0.28,
+      "carbs": 38.06,
+      "calories": 159,
+      "sugars": 1.7,
+      "fiber": 1.8,
+      "calcium": 16,
+      "iron": 0.27,
+      "potassium": 271,
+      "sodium": 14
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Énergie indique cuit, candidat FCÉN cru."
+  },
+  {
+    "energieAlias": "fruits",
+    "aliases": [
+      "fruits",
+      "fruit"
+    ],
+    "current": {
+      "calories": 80,
+      "protein": 1,
+      "carbs": 20,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "1522",
+    "cnfNameFr": "Fruit à pain, cru",
+    "cnfNameEn": "Breadfruit, raw",
+    "nutritionPer100g": {
+      "protein": 1.07,
+      "fat": 0.23,
+      "carbs": 27.12,
+      "calories": 103,
+      "sugars": 11,
+      "fiber": 4.9,
+      "calcium": 17,
+      "iron": 0.54,
+      "potassium": 490,
+      "sodium": 2
+    },
+    "portions": [],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "note": "Alias trop générique; candidat fruit à pain incorrect."
+  }
+]
