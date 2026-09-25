@@ -2395,6 +2395,9 @@ function formatSleepDuration(hours) {
       ? window.ENERGIE_FOODS
       : [];
   const FOOD_MACROS = [
+    ...(Array.isArray(window.ENERGIE_CNF_OVERRIDES)
+      ? window.ENERGIE_CNF_OVERRIDES
+      : []),
     ...(Array.isArray(window.ENERGIE_NUTRITION_CORRECTIONS)
       ? window.ENERGIE_NUTRITION_CORRECTIONS
       : []),
@@ -2902,9 +2905,16 @@ function formatSleepDuration(hours) {
       : matched.length === 1
         ? portions[0] || "portion courante"
         : `${matched.length} ingrédients estimés`;
+    const sourceKinds = new Set(enriched.map((x) => x.food?.nutritionSource || "legacy"));
+    const nutritionSource =
+      sourceKinds.size === 1 && sourceKinds.has("cnf")
+        ? "cnf"
+        : sourceKinds.has("cnf")
+          ? "mixed"
+          : "energie-foods";
     return normalNutrition({
       ...total,
-      source: "energie-foods",
+      source: nutritionSource,
       confidence: quantityUsedCount ? "medium" : matched.length >= 2 ? "medium" : "low",
       basis,
       estimated: true,
@@ -2982,9 +2992,13 @@ function formatSleepDuration(hours) {
       note ||
       (n?.source === "barcode"
         ? `Valeurs ${n.basis || "du produit"} provenant de l’étiquette Open Food Facts. Vérifie-les au besoin.`
-        : n?.source === "energie-foods" && /quantité/.test(n?.basis || "")
-          ? `Estimation ajustée selon les quantités reconnues (${n.basis}). Les recettes et valeurs de référence peuvent varier.`
-          : "Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.");
+        : n?.source === "cnf"
+          ? `Valeurs de référence du Fichier canadien sur les éléments nutritifs (FCÉN) 2026 de Santé Canada, ajustées selon les quantités reconnues (${n.basis || "portion courante"}). Les recettes, marques et préparations peuvent varier.`
+          : n?.source === "mixed"
+            ? `Estimation combinant des valeurs FCÉN de Santé Canada et des valeurs de repli Énergie (${n.basis || "portion courante"}). Les recettes et portions réelles peuvent varier.`
+            : n?.source === "energie-foods" && /quantité/.test(n?.basis || "")
+              ? `Estimation ajustée selon les quantités reconnues (${n.basis}). Les recettes et valeurs de référence peuvent varier.`
+              : "Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.");
     updateMealCalorieEditor();
   }
   function updateMealCalorieRecognition() {
