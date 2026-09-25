@@ -1,0 +1,1794 @@
+[
+  {
+    "legacyIndex": 1,
+    "energieAlias": "banane",
+    "aliases": [
+      "banane",
+      "banana"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1704",
+    "cnfNameFr": "Banane, crue",
+    "cnfNameEn": "Banana, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 1.09,
+      "fat": 0.33,
+      "carbs": 22.84,
+      "calories": 89,
+      "sugars": 12.23,
+      "fiber": 1.74,
+      "calcium": 5,
+      "iron": 0.26,
+      "potassium": 358,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 3,
+    "energieAlias": "clémentine",
+    "aliases": [
+      "clémentine",
+      "clementine",
+      "mandarine"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "5956",
+    "cnfNameFr": "Clémentine, crue",
+    "cnfNameEn": "Clementine, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 0.85,
+      "fat": 0.15,
+      "carbs": 12.02,
+      "calories": 47,
+      "sugars": 9.19,
+      "fiber": 1.7,
+      "calcium": 30,
+      "iron": 0.14,
+      "potassium": 177,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 4,
+    "energieAlias": "pêche",
+    "aliases": [
+      "pêche",
+      "peche",
+      "peach"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1728",
+    "cnfNameFr": "Pêche, crue",
+    "cnfNameEn": "Peach, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 0.91,
+      "fat": 0.25,
+      "carbs": 9.54,
+      "calories": 39,
+      "sugars": 8.39,
+      "fiber": 1.93,
+      "calcium": 6,
+      "iron": 0.25,
+      "potassium": 190,
+      "sodium": 0
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 5,
+    "energieAlias": "nectarine",
+    "aliases": [
+      "nectarine"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1611",
+    "cnfNameFr": "Nectarine, crue",
+    "cnfNameEn": "Nectarine, raw",
+    "score": 1.9,
+    "nutritionPer100g": {
+      "protein": 1.06,
+      "fat": 0.32,
+      "carbs": 10.55,
+      "calories": 44,
+      "sugars": 7.89,
+      "fiber": 1.7,
+      "calcium": 6,
+      "iron": 0.28,
+      "potassium": 201,
+      "sodium": 0
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 9,
+    "energieAlias": "fraises",
+    "aliases": [
+      "fraises",
+      "fraise",
+      "strawberries"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1749",
+    "cnfNameFr": "Fraise, crue",
+    "cnfNameEn": "Strawberry, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 0.67,
+      "fat": 0.3,
+      "carbs": 7.68,
+      "calories": 33,
+      "sugars": 4.89,
+      "fiber": 2.24,
+      "calcium": 16,
+      "iron": 0.41,
+      "potassium": 153,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 12,
+    "energieAlias": "mûres",
+    "aliases": [
+      "mûres",
+      "mures",
+      "blackberries"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1610",
+    "cnfNameFr": "Mûres blanche, crue",
+    "cnfNameEn": "Mulberry, raw",
+    "score": 2.183,
+    "nutritionPer100g": {
+      "protein": 1.44,
+      "fat": 0.39,
+      "carbs": 9.8,
+      "calories": 43,
+      "sugars": 8.1,
+      "fiber": 1.7,
+      "calcium": 39,
+      "iron": 1.85,
+      "potassium": 194,
+      "sodium": 10
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 14,
+    "energieAlias": "ananas",
+    "aliases": [
+      "ananas",
+      "pineapple"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1734",
+    "cnfNameFr": "Ananas, cru",
+    "cnfNameEn": "Pineapple, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 0.54,
+      "fat": 0.12,
+      "carbs": 13.12,
+      "calories": 50,
+      "sugars": 9.85,
+      "fiber": 1.4,
+      "calcium": 13,
+      "iron": 0.29,
+      "potassium": 109,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 15,
+    "energieAlias": "mangue",
+    "aliases": [
+      "mangue",
+      "mango"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1603",
+    "cnfNameFr": "Mangue, crue",
+    "cnfNameEn": "Mango, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 0.82,
+      "fat": 0.38,
+      "carbs": 14.98,
+      "calories": 60,
+      "sugars": 13.66,
+      "fiber": 1.6,
+      "calcium": 11,
+      "iron": 0.16,
+      "potassium": 168,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 16,
+    "energieAlias": "papaye",
+    "aliases": [
+      "papaye",
+      "papaya"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1628",
+    "cnfNameFr": "Papaye, crue",
+    "cnfNameEn": "Papaya, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 0.47,
+      "fat": 0.26,
+      "carbs": 10.82,
+      "calories": 43,
+      "sugars": 7.82,
+      "fiber": 1.7,
+      "calcium": 20,
+      "iron": 0.25,
+      "potassium": 182,
+      "sodium": 8
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 17,
+    "energieAlias": "melon miel",
+    "aliases": [
+      "melon miel",
+      "honeydew"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1605",
+    "cnfNameFr": "Melon, miel (honeydew), cru",
+    "cnfNameEn": "Melon, honeydew, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 0.54,
+      "fat": 0.14,
+      "carbs": 9.09,
+      "calories": 36,
+      "sugars": 8.12,
+      "fiber": 0.8,
+      "calcium": 6,
+      "iron": 0.17,
+      "potassium": 228,
+      "sodium": 18
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 19,
+    "energieAlias": "melon d eau",
+    "aliases": [
+      "melon d eau",
+      "pastèque",
+      "pasteque",
+      "watermelon"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1691",
+    "cnfNameFr": "Melon d'eau (pasteque), cru",
+    "cnfNameEn": "Watermelon, raw",
+    "score": 2.45,
+    "nutritionPer100g": {
+      "protein": 0.61,
+      "fat": 0.15,
+      "carbs": 7.55,
+      "calories": 30,
+      "sugars": 6.2,
+      "fiber": 0.4,
+      "calcium": 7,
+      "iron": 0.24,
+      "potassium": 112,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 20,
+    "energieAlias": "prune",
+    "aliases": [
+      "prune",
+      "plum"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1740",
+    "cnfNameFr": "Prune, crue",
+    "cnfNameEn": "Plum, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 0.7,
+      "fat": 0.28,
+      "carbs": 11.42,
+      "calories": 46,
+      "sugars": 9.92,
+      "fiber": 1.6,
+      "calcium": 6,
+      "iron": 0.17,
+      "potassium": 157,
+      "sodium": 0
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 21,
+    "energieAlias": "abricot",
+    "aliases": [
+      "abricot",
+      "apricot"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1498",
+    "cnfNameFr": "Abricot, cru",
+    "cnfNameEn": "Apricot, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 1.4,
+      "fat": 0.39,
+      "carbs": 11.12,
+      "calories": 48,
+      "sugars": 9.24,
+      "fiber": 2,
+      "calcium": 13,
+      "iron": 0.39,
+      "potassium": 259,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 23,
+    "energieAlias": "dattes",
+    "aliases": [
+      "dattes",
+      "datte",
+      "dates"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "5401",
+    "cnfNameFr": "Datte, variété Medjool",
+    "cnfNameEn": "Date, medjool",
+    "score": 1.733,
+    "nutritionPer100g": {
+      "protein": 1.81,
+      "fat": 0.15,
+      "carbs": 74.97,
+      "calories": 277,
+      "sugars": 66.47,
+      "fiber": 6.7,
+      "calcium": 64,
+      "iron": 0.9,
+      "potassium": 696,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 24,
+    "energieAlias": "grenade",
+    "aliases": [
+      "grenade",
+      "pomegranate"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1667",
+    "cnfNameFr": "Grenade, crue",
+    "cnfNameEn": "Pomegranate, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 1.67,
+      "fat": 1.17,
+      "carbs": 18.7,
+      "calories": 83,
+      "sugars": 13.67,
+      "fiber": 4,
+      "calcium": 10,
+      "iron": 0.3,
+      "potassium": 236,
+      "sodium": 3
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 26,
+    "energieAlias": "fruit de la passion",
+    "aliases": [
+      "fruit de la passion",
+      "passion fruit"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1630",
+    "cnfNameFr": "Grenadille (fruit de la passion), crue",
+    "cnfNameEn": "Passion fruit, purple, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 2.2,
+      "fat": 0.7,
+      "carbs": 23.38,
+      "calories": 97,
+      "sugars": 11.2,
+      "fiber": 10.4,
+      "calcium": 12,
+      "iron": 1.6,
+      "potassium": 348,
+      "sodium": 28
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 27,
+    "energieAlias": "litchi",
+    "aliases": [
+      "litchi",
+      "lychee"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1596",
+    "cnfNameFr": "Litchi, cru",
+    "cnfNameEn": "Lychee (litchi), raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 0.83,
+      "fat": 0.44,
+      "carbs": 16.53,
+      "calories": 66,
+      "sugars": 15.23,
+      "fiber": 1.3,
+      "calcium": 5,
+      "iron": 0.31,
+      "potassium": 171,
+      "sodium": 1
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 39,
+    "energieAlias": "poivron rouge",
+    "aliases": [
+      "poivron rouge",
+      "red pepper"
+    ],
+    "status": "candidate-high",
+    "cnfFoodId": "2484",
+    "cnfNameFr": "Poivron rouge, cru",
+    "cnfNameEn": "Pepper, sweet, red, raw",
+    "score": 2.517,
+    "nutritionPer100g": {
+      "protein": 0.99,
+      "fat": 0.3,
+      "carbs": 6.03,
+      "calories": 26,
+      "sugars": 4.2,
+      "fiber": 1.41,
+      "calcium": 7,
+      "iron": 0.43,
+      "potassium": 211,
+      "sodium": 4
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 40,
+    "energieAlias": "poivron vert",
+    "aliases": [
+      "poivron vert",
+      "green pepper"
+    ],
+    "status": "candidate-high",
+    "cnfFoodId": "2413",
+    "cnfNameFr": "Poivron vert, cru",
+    "cnfNameEn": "Pepper, sweet, green, raw",
+    "score": 2.517,
+    "nutritionPer100g": {
+      "protein": 0.86,
+      "fat": 0.17,
+      "carbs": 4.64,
+      "calories": 20,
+      "sugars": 2.4,
+      "fiber": 1.41,
+      "calcium": 10,
+      "iron": 0.34,
+      "potassium": 175,
+      "sodium": 3
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 41,
+    "energieAlias": "épinards",
+    "aliases": [
+      "épinards",
+      "epinards",
+      "spinach"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "2213",
+    "cnfNameFr": "Épinard, cru",
+    "cnfNameEn": "Spinach, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 2.86,
+      "fat": 0.39,
+      "carbs": 3.63,
+      "calories": 23,
+      "sugars": 0.42,
+      "fiber": 2.2,
+      "calcium": 99,
+      "iron": 2.71,
+      "potassium": 558,
+      "sodium": 79
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 43,
+    "energieAlias": "laitue romaine",
+    "aliases": [
+      "laitue romaine",
+      "romaine"
+    ],
+    "status": "candidate-high",
+    "cnfFoodId": "2116",
+    "cnfNameFr": "Laitue, romaine",
+    "cnfNameEn": "Lettuce, cos or romaine",
+    "score": 4,
+    "nutritionPer100g": {
+      "protein": 1.23,
+      "fat": 0.3,
+      "carbs": 3.29,
+      "calories": 17,
+      "sugars": 1.19,
+      "fiber": 2.1,
+      "calcium": 33,
+      "iron": 0.97,
+      "potassium": 247,
+      "sodium": 8
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 44,
+    "energieAlias": "laitue",
+    "aliases": [
+      "laitue",
+      "lettuce"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "2051",
+    "cnfNameFr": "Laitue-tige, crue",
+    "cnfNameEn": "Celtuce, raw",
+    "score": 2.183,
+    "nutritionPer100g": {
+      "protein": 0.85,
+      "fat": 0.3,
+      "carbs": 3.65,
+      "calories": 18,
+      "fiber": 1.7,
+      "calcium": 39,
+      "iron": 0.55,
+      "potassium": 330,
+      "sodium": 11
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 45,
+    "energieAlias": "courgette",
+    "aliases": [
+      "courgette",
+      "zucchini"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "6760",
+    "cnfNameFr": "Courgettes, en pâte à frire, frites",
+    "cnfNameEn": "Zucchini, battered and fried",
+    "score": 1.65,
+    "nutritionPer100g": {
+      "protein": 2.585,
+      "fat": 13.748,
+      "carbs": 9.284,
+      "calories": 167,
+      "sugars": 2.056,
+      "fiber": 1.178,
+      "calcium": 57.351,
+      "iron": 0.55,
+      "potassium": 212.246,
+      "sodium": 129.843
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 46,
+    "energieAlias": "aubergine",
+    "aliases": [
+      "aubergine",
+      "eggplant"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "2088",
+    "cnfNameFr": "Aubergine, crue",
+    "cnfNameEn": "Eggplant (aubergine, brinjal), raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 0.98,
+      "fat": 0.18,
+      "carbs": 5.88,
+      "calories": 25,
+      "sugars": 3.53,
+      "fiber": 3,
+      "calcium": 9,
+      "iron": 0.23,
+      "potassium": 229,
+      "sodium": 2
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 47,
+    "energieAlias": "asperges",
+    "aliases": [
+      "asperges",
+      "asperge",
+      "asparagus"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1990",
+    "cnfNameFr": "Asperge, crue",
+    "cnfNameEn": "Asparagus, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 2.2,
+      "fat": 0.12,
+      "carbs": 3.88,
+      "calories": 20,
+      "sugars": 1.88,
+      "fiber": 2.1,
+      "calcium": 24,
+      "iron": 2.14,
+      "potassium": 202,
+      "sodium": 2
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 51,
+    "energieAlias": "betterave",
+    "aliases": [
+      "betterave",
+      "beet"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "2021",
+    "cnfNameFr": "Betterave, feuilles, crues",
+    "cnfNameEn": "Beet greens, raw",
+    "score": 2.183,
+    "nutritionPer100g": {
+      "protein": 2.2,
+      "fat": 0.13,
+      "carbs": 4.33,
+      "calories": 22,
+      "sugars": 0.5,
+      "fiber": 3.7,
+      "calcium": 117,
+      "iron": 2.57,
+      "potassium": 762,
+      "sodium": 226
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 52,
+    "energieAlias": "chou de bruxelles",
+    "aliases": [
+      "chou de bruxelles",
+      "brussels sprouts"
+    ],
+    "status": "candidate-high",
+    "cnfFoodId": "2378",
+    "cnfNameFr": "Choux de Bruxelles, crus",
+    "cnfNameEn": "Brussels sprouts, raw",
+    "score": 2.517,
+    "nutritionPer100g": {
+      "protein": 3.38,
+      "fat": 0.3,
+      "carbs": 8.95,
+      "calories": 43,
+      "sugars": 2.2,
+      "fiber": 4.12,
+      "calcium": 42,
+      "iron": 1.4,
+      "potassium": 389,
+      "sodium": 25
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 53,
+    "energieAlias": "chou rouge",
+    "aliases": [
+      "chou rouge",
+      "red cabbage"
+    ],
+    "status": "candidate-high",
+    "cnfFoodId": "2034",
+    "cnfNameFr": "Chou rouge, cru",
+    "cnfNameEn": "Cabbage, red, raw",
+    "score": 2.517,
+    "nutritionPer100g": {
+      "protein": 1.43,
+      "fat": 0.16,
+      "carbs": 7.37,
+      "calories": 31,
+      "sugars": 3.83,
+      "fiber": 2.1,
+      "calcium": 45,
+      "iron": 0.8,
+      "potassium": 243,
+      "sodium": 27
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 55,
+    "energieAlias": "bok choy",
+    "aliases": [
+      "bok choy",
+      "pak choi"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "2038",
+    "cnfNameFr": "Bok choy, pak-choi, cru",
+    "cnfNameEn": "Bok choy, pak-choi, raw",
+    "score": 2.25,
+    "nutritionPer100g": {
+      "protein": 1.5,
+      "fat": 0.2,
+      "carbs": 2.18,
+      "calories": 13,
+      "sugars": 1.18,
+      "fiber": 1,
+      "calcium": 105,
+      "iron": 0.8,
+      "potassium": 252,
+      "sodium": 65
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 56,
+    "energieAlias": "pois mange-tout",
+    "aliases": [
+      "pois mange-tout",
+      "snow peas"
+    ],
+    "status": "candidate-high",
+    "cnfFoodId": "2408",
+    "cnfNameFr": "Pois mange-tout, crus",
+    "cnfNameEn": "Peas, edible-podded (snow peas), raw",
+    "score": 2.6,
+    "nutritionPer100g": {
+      "protein": 2.8,
+      "fat": 0.2,
+      "carbs": 7.55,
+      "calories": 42,
+      "sugars": 4,
+      "fiber": 1.77,
+      "calcium": 43,
+      "iron": 2.08,
+      "potassium": 200,
+      "sodium": 4
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 60,
+    "energieAlias": "ail",
+    "aliases": [
+      "ail",
+      "garlic"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "2394",
+    "cnfNameFr": "Ail, cru",
+    "cnfNameEn": "Garlic, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 6.36,
+      "fat": 0.5,
+      "carbs": 33.06,
+      "calories": 149,
+      "sugars": 1,
+      "fiber": 2.1,
+      "calcium": 181,
+      "iron": 1.7,
+      "potassium": 401,
+      "sodium": 17
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 62,
+    "energieAlias": "radis",
+    "aliases": [
+      "radis",
+      "radish"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "2443",
+    "cnfNameFr": "Radis, cru",
+    "cnfNameEn": "Radish, raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 0.68,
+      "fat": 0.1,
+      "carbs": 3.4,
+      "calories": 16,
+      "sugars": 1.86,
+      "fiber": 1.6,
+      "calcium": 25,
+      "iron": 0.34,
+      "potassium": 233,
+      "sodium": 39
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 64,
+    "energieAlias": "rutabaga",
+    "aliases": [
+      "rutabaga"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "2444",
+    "cnfNameFr": "Rutabaga (chou-navet), cru",
+    "cnfNameEn": "Rutabaga (swede), raw",
+    "score": 2.183,
+    "nutritionPer100g": {
+      "protein": 1.08,
+      "fat": 0.16,
+      "carbs": 8.62,
+      "calories": 37,
+      "sugars": 4.46,
+      "fiber": 2.4,
+      "calcium": 43,
+      "iron": 0.44,
+      "potassium": 305,
+      "sodium": 12
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 68,
+    "energieAlias": "artichaut",
+    "aliases": [
+      "artichaut",
+      "artichoke"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "2364",
+    "cnfNameFr": "Artichaut, cru",
+    "cnfNameEn": "Artichoke (Globe, French), raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 3.27,
+      "fat": 0.15,
+      "carbs": 10.51,
+      "calories": 47,
+      "fiber": 4.58,
+      "calcium": 44,
+      "iron": 1.28,
+      "potassium": 370,
+      "sodium": 94
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 69,
+    "energieAlias": "okra",
+    "aliases": [
+      "okra",
+      "gombo"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "2134",
+    "cnfNameFr": "Okra (gombo), cru",
+    "cnfNameEn": "Okra (gumbo), raw",
+    "score": 2.183,
+    "nutritionPer100g": {
+      "protein": 1.93,
+      "fat": 0.19,
+      "carbs": 7.45,
+      "calories": 33,
+      "sugars": 1.48,
+      "fiber": 3.2,
+      "calcium": 82,
+      "iron": 0.62,
+      "potassium": 299,
+      "sodium": 7
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 71,
+    "energieAlias": "salade grecque",
+    "aliases": [
+      "salade grecque",
+      "greek salad"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "6738",
+    "cnfNameFr": "Salade grecque, faite maison",
+    "cnfNameEn": "Salad, Greek, homemade",
+    "score": 1.9,
+    "nutritionPer100g": {
+      "protein": 3.334,
+      "fat": 11.352,
+      "carbs": 3.934,
+      "calories": 126,
+      "sugars": 2.141,
+      "fiber": 0.959,
+      "calcium": 108.428,
+      "iron": 0.583,
+      "potassium": 116.551,
+      "sodium": 283.461
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 82,
+    "energieAlias": "riz blanc",
+    "aliases": [
+      "riz blanc",
+      "white rice"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "7701",
+    "cnfNameFr": "Riz, blanc et sausage, arômatisé, non préparé",
+    "cnfNameEn": "Rice, white and wild, flavoured, unprepared",
+    "score": 1.686,
+    "nutritionPer100g": {
+      "protein": 3.49,
+      "fat": 2.57,
+      "carbs": 26.28,
+      "calories": 142,
+      "sugars": 0.4,
+      "fiber": 0.8,
+      "calcium": 35,
+      "iron": 1.45,
+      "potassium": 113,
+      "sodium": 443
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 92,
+    "energieAlias": "céréales",
+    "aliases": [
+      "céréales",
+      "cereales",
+      "breakfast cereal"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "6356",
+    "cnfNameFr": "Céréales, prêtes à manger, flocons d'amarante",
+    "cnfNameEn": "Cereal, ready-to-eat, amaranth flakes",
+    "score": 1.543,
+    "nutritionPer100g": {
+      "protein": 15.54,
+      "fat": 7,
+      "carbs": 71.15,
+      "calories": 353,
+      "sugars": 0.42,
+      "fiber": 9.5,
+      "calcium": 17,
+      "iron": 1.76,
+      "potassium": 353,
+      "sodium": 35
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 116,
+    "energieAlias": "bacon",
+    "aliases": [
+      "bacon"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "5462",
+    "cnfNameFr": "Bacon, dinde, cuit",
+    "cnfNameEn": "Turkey, bacon, cooked",
+    "score": 1.733,
+    "nutritionPer100g": {
+      "protein": 29.5,
+      "fat": 25.87,
+      "carbs": 4.24,
+      "calories": 368,
+      "sugars": 4.24,
+      "fiber": 0,
+      "calcium": 163,
+      "iron": 2.63,
+      "potassium": 666,
+      "sodium": 2021
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 121,
+    "energieAlias": "thon",
+    "aliases": [
+      "thon",
+      "tuna"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "3086",
+    "cnfNameFr": "Thon, salade",
+    "cnfNameEn": "Tuna salad",
+    "score": 1.9,
+    "nutritionPer100g": {
+      "protein": 16.04,
+      "fat": 9.26,
+      "carbs": 9.41,
+      "calories": 187,
+      "fiber": 0,
+      "calcium": 17,
+      "iron": 1,
+      "potassium": 178,
+      "sodium": 402
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 131,
+    "energieAlias": "lentilles",
+    "aliases": [
+      "lentilles",
+      "lentille",
+      "lentils"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "2113",
+    "cnfNameFr": "Lentilles, germées, crues",
+    "cnfNameEn": "Lentils, sprouted, raw",
+    "score": 2.183,
+    "nutritionPer100g": {
+      "protein": 8.96,
+      "fat": 0.55,
+      "carbs": 22.14,
+      "calories": 106,
+      "fiber": 1.45,
+      "calcium": 25,
+      "iron": 3.21,
+      "potassium": 322,
+      "sodium": 11
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 133,
+    "energieAlias": "haricots noirs",
+    "aliases": [
+      "haricots noirs",
+      "black beans"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "6181",
+    "cnfNameFr": "Haricots, noirs, farine",
+    "cnfNameEn": "Beans, black, flour",
+    "score": 2.067,
+    "nutritionPer100g": {
+      "protein": 22.99,
+      "fat": 1.51,
+      "carbs": 66.38,
+      "calories": 363,
+      "sugars": 2.39,
+      "fiber": 14.68,
+      "calcium": 130.92,
+      "iron": 5.34,
+      "potassium": 1578.5,
+      "sodium": 5.32
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 134,
+    "energieAlias": "haricots rouges",
+    "aliases": [
+      "haricots rouges",
+      "kidney beans"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "5536",
+    "cnfNameFr": "Haricots, rouges, liquide seulement",
+    "cnfNameEn": "Beans, liquid from stewed kidney beans",
+    "score": 1.9,
+    "nutritionPer100g": {
+      "protein": 1.8,
+      "fat": 3.2,
+      "carbs": 2.8,
+      "calories": 47,
+      "sugars": 0,
+      "fiber": 0.1,
+      "calcium": 13,
+      "iron": 1.96,
+      "potassium": 408,
+      "sodium": 2
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 136,
+    "energieAlias": "falafel",
+    "aliases": [
+      "falafel"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "3339",
+    "cnfNameFr": "Falafel, fait maison",
+    "cnfNameEn": "Falafel, homemade",
+    "score": 1.9,
+    "nutritionPer100g": {
+      "protein": 13.31,
+      "fat": 17.8,
+      "carbs": 31.84,
+      "calories": 333,
+      "sugars": 3.26364,
+      "fiber": 7.8,
+      "calcium": 54,
+      "iron": 3.42,
+      "potassium": 585,
+      "sodium": 294
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 154,
+    "energieAlias": "mozzarella",
+    "aliases": [
+      "mozzarella"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "6813",
+    "cnfNameFr": "Bâtonnets de fromage mozzarella, frits",
+    "cnfNameEn": "Mozzarella sticks, fried",
+    "score": 1.733,
+    "nutritionPer100g": {
+      "protein": 14.75,
+      "fat": 18.33,
+      "carbs": 25.14,
+      "calories": 325,
+      "sugars": 2.36,
+      "fiber": 2,
+      "calcium": 334,
+      "iron": 0.62,
+      "potassium": 108,
+      "sodium": 861
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 157,
+    "energieAlias": "fromage à la crème",
+    "aliases": [
+      "fromage à la crème",
+      "fromage a la creme",
+      "cream cheese"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "4722",
+    "cnfNameFr": "Fromage à la crème, sans gras",
+    "cnfNameEn": "Cheese, cream, fat free",
+    "score": 2.067,
+    "nutritionPer100g": {
+      "protein": 15.69,
+      "fat": 1,
+      "carbs": 7.66,
+      "calories": 105,
+      "sugars": 5.48,
+      "fiber": 0,
+      "calcium": 351,
+      "iron": 0.19,
+      "potassium": 278,
+      "sodium": 702
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 159,
+    "energieAlias": "crème glacée",
+    "aliases": [
+      "crème glacée",
+      "creme glacee",
+      "ice cream"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "3913",
+    "cnfNameFr": "Crème glacée, cornet, type gâteau ou gaufrette",
+    "cnfNameEn": "Ice cream cone, cake or wafer-type",
+    "score": 1.686,
+    "nutritionPer100g": {
+      "protein": 8.1,
+      "fat": 6.9,
+      "carbs": 79,
+      "calories": 417,
+      "sugars": 6,
+      "fiber": 3,
+      "calcium": 25,
+      "iron": 3.6,
+      "potassium": 112,
+      "sodium": 256
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 161,
+    "energieAlias": "noix de grenoble",
+    "aliases": [
+      "noix de grenoble",
+      "walnuts"
+    ],
+    "status": "candidate-high",
+    "cnfFoodId": "2590",
+    "cnfNameFr": "Noix de Grenoble",
+    "cnfNameEn": "Nuts, walnuts, English or Persian",
+    "score": 4,
+    "nutritionPer100g": {
+      "protein": 15.23,
+      "fat": 65.21,
+      "carbs": 13.71,
+      "calories": 655,
+      "sugars": 2.61,
+      "fiber": 6.7,
+      "calcium": 98,
+      "iron": 2.91,
+      "potassium": 441,
+      "sodium": 2
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 168,
+    "energieAlias": "graines de chia",
+    "aliases": [
+      "graines de chia",
+      "chia seeds"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "2511",
+    "cnfNameFr": "Graines de chia, déshydratées",
+    "cnfNameEn": "Seeds, chia seeds, dried",
+    "score": 1.87,
+    "nutritionPer100g": {
+      "protein": 16.54,
+      "fat": 30.74,
+      "carbs": 42.12,
+      "calories": 486,
+      "fiber": 34.4,
+      "calcium": 631,
+      "iron": 7.72,
+      "potassium": 407,
+      "sodium": 16
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 191,
+    "energieAlias": "barre granola",
+    "aliases": [
+      "barre granola",
+      "granola bar"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "6596",
+    "cnfNameFr": "Barre granola, croquante, nature",
+    "cnfNameEn": "Granola bar, crunchy, plain",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 9.013,
+      "fat": 21.507,
+      "carbs": 64.3897,
+      "calories": 480,
+      "sugars": 26.41,
+      "fiber": 6.2,
+      "calcium": 49,
+      "iron": 2.5533,
+      "potassium": 296.667,
+      "sodium": 351
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 205,
+    "energieAlias": "beigne",
+    "aliases": [
+      "beigne",
+      "donut"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "3895",
+    "cnfNameFr": "Beigne, roussette, givré",
+    "cnfNameEn": "Doughnut (donut), French cruller, glazed",
+    "score": 2.183,
+    "nutritionPer100g": {
+      "protein": 3.1,
+      "fat": 18.3,
+      "carbs": 59.5,
+      "calories": 412,
+      "sugars": 35.11,
+      "fiber": 1.2,
+      "calcium": 26,
+      "iron": 2.42,
+      "potassium": 78,
+      "sodium": 345
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 208,
+    "energieAlias": "gâteau au fromage",
+    "aliases": [
+      "gâteau au fromage",
+      "gateau au fromage",
+      "cheesecake"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "3800",
+    "cnfNameFr": "Gâteau, au fromage, commercial",
+    "cnfNameEn": "Cheesecake, commercial",
+    "score": 2.15,
+    "nutritionPer100g": {
+      "protein": 5.5,
+      "fat": 22.5,
+      "carbs": 25.5,
+      "calories": 321,
+      "sugars": 21.8,
+      "fiber": 0.4,
+      "calcium": 51,
+      "iron": 0.63,
+      "potassium": 90,
+      "sodium": 438
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 223,
+    "energieAlias": "smoothie",
+    "aliases": [
+      "smoothie"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "7580",
+    "cnfNameFr": "Frappé (smoothie) au jus de fruits, fraises et bananes",
+    "cnfNameEn": "Smoothie, fruit juice, strawberry banana",
+    "score": 1.77,
+    "nutritionPer100g": {
+      "protein": 0.44,
+      "fat": 0.3,
+      "carbs": 12.37,
+      "calories": 52,
+      "sugars": 10.33,
+      "fiber": 0.6,
+      "calcium": 11,
+      "iron": 0.32,
+      "potassium": 184,
+      "sodium": 5
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 230,
+    "energieAlias": "eau de coco",
+    "aliases": [
+      "eau de coco",
+      "coconut water"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "2566",
+    "cnfNameFr": "Noix de coco, eau (liquide de la noix)",
+    "cnfNameEn": "Coconut water (liquid from coconut)",
+    "score": 1.9,
+    "nutritionPer100g": {
+      "protein": 0.72,
+      "fat": 0.2,
+      "carbs": 3.71,
+      "calories": 19,
+      "sugars": 2.61,
+      "fiber": 1.1,
+      "calcium": 24,
+      "iron": 0.29,
+      "potassium": 250,
+      "sodium": 105
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 233,
+    "energieAlias": "poutine",
+    "aliases": [
+      "poutine"
+    ],
+    "status": "candidate-high",
+    "cnfFoodId": "6772",
+    "cnfNameFr": "Poutine",
+    "cnfNameEn": "Poutine",
+    "score": 4,
+    "nutritionPer100g": {
+      "protein": 7.494,
+      "fat": 15.312,
+      "carbs": 15.245,
+      "calories": 226,
+      "sugars": 0.417,
+      "fiber": 1.129,
+      "calcium": 175.751,
+      "iron": 0.674,
+      "potassium": 276.582,
+      "sodium": 614.364
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 246,
+    "energieAlias": "pad thai",
+    "aliases": [
+      "pad thai"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "6762",
+    "cnfNameFr": "Pad thaï au poulet",
+    "cnfNameEn": "Pad thaï with chicken",
+    "score": 1.9,
+    "nutritionPer100g": {
+      "protein": 8.681,
+      "fat": 3.425,
+      "carbs": 15.193,
+      "calories": 128,
+      "fiber": 0.886,
+      "calcium": 13.63,
+      "iron": 0.523,
+      "potassium": 149.016,
+      "sodium": 203.617
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 258,
+    "energieAlias": "nuggets de poulet",
+    "aliases": [
+      "nuggets de poulet",
+      "chicken nuggets"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "7653",
+    "cnfNameFr": "Poulet, croquette, panure de blé entier",
+    "cnfNameEn": "Chicken nuggets, whole grain breading",
+    "score": 1.8,
+    "nutritionPer100g": {
+      "protein": 15.67,
+      "fat": 12.9,
+      "carbs": 22.86,
+      "calories": 270,
+      "sugars": 0.49,
+      "fiber": 2.2,
+      "calcium": 32,
+      "iron": 1.99,
+      "potassium": 231,
+      "sodium": 511
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 261,
+    "energieAlias": "salade de pâtes",
+    "aliases": [
+      "salade de pâtes",
+      "salade de pates",
+      "pasta salad"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "6744",
+    "cnfNameFr": "Salade de pâtes avec légumes, préparée avec vinaigrette italienne, faite maison",
+    "cnfNameEn": "Pasta salad with vegetables, prepared with Italian dressing, homemade",
+    "score": 1.7,
+    "nutritionPer100g": {
+      "protein": 2.746,
+      "fat": 5.564,
+      "carbs": 17.982,
+      "calories": 132,
+      "sugars": 2.549,
+      "fiber": 1.164,
+      "calcium": 14.181,
+      "iron": 0.909,
+      "potassium": 92.224,
+      "sodium": 658.431
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 273,
+    "energieAlias": "riz",
+    "aliases": [
+      "riz",
+      "rice"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "7448",
+    "cnfNameFr": "Riz espagnol",
+    "cnfNameEn": "Rice, Spanish rice",
+    "score": 1.9,
+    "nutritionPer100g": {
+      "protein": 3.28,
+      "fat": 5.29,
+      "carbs": 31.16,
+      "calories": 185,
+      "sugars": 1.3,
+      "fiber": 1.2,
+      "calcium": 20,
+      "iron": 1.15,
+      "potassium": 116,
+      "sodium": 528
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 278,
+    "energieAlias": "fromage",
+    "aliases": [
+      "fromage",
+      "cheese"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "22",
+    "cnfNameFr": "Fromage carvi",
+    "cnfNameEn": "Cheese, caraway",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 25.18,
+      "fat": 29.2,
+      "carbs": 3.06,
+      "calories": 376,
+      "fiber": 0,
+      "calcium": 673,
+      "iron": 0.64,
+      "potassium": 93,
+      "sodium": 690
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 289,
+    "energieAlias": "porc effiloché",
+    "aliases": [
+      "porc effiloché",
+      "pulled pork"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "7093",
+    "cnfNameFr": "Porc effiloché dans une sauce barbecue",
+    "cnfNameEn": "Pulled pork in barbecue sauce",
+    "score": 1.8,
+    "nutritionPer100g": {
+      "protein": 13.19,
+      "fat": 4.42,
+      "carbs": 18.74,
+      "calories": 168,
+      "sugars": 15.2,
+      "fiber": 1.2,
+      "calcium": 44,
+      "iron": 1.24,
+      "potassium": 305,
+      "sodium": 666
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 338,
+    "energieAlias": "fajitas",
+    "aliases": [
+      "fajitas",
+      "fajita"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "6774",
+    "cnfNameFr": "Fajita au poulet et aux légumes",
+    "cnfNameEn": "Fajita with chicken and vegetables",
+    "score": 1.6,
+    "nutritionPer100g": {
+      "protein": 7.667,
+      "fat": 4.664,
+      "carbs": 20.79,
+      "calories": 155,
+      "sugars": 2.58,
+      "fiber": 2.281,
+      "calcium": 22.285,
+      "iron": 1.395,
+      "potassium": 205.757,
+      "sodium": 213.312
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 349,
+    "energieAlias": "manioc",
+    "aliases": [
+      "manioc",
+      "cassava"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "2045",
+    "cnfNameFr": "Manioc, cru",
+    "cnfNameEn": "Cassava (manioc), raw",
+    "score": 2.35,
+    "nutritionPer100g": {
+      "protein": 1.36,
+      "fat": 0.28,
+      "carbs": 38.06,
+      "calories": 159,
+      "sugars": 1.7,
+      "fiber": 1.8,
+      "calcium": 16,
+      "iron": 0.27,
+      "potassium": 271,
+      "sodium": 14
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  },
+  {
+    "legacyIndex": 351,
+    "energieAlias": "fruits",
+    "aliases": [
+      "fruits",
+      "fruit"
+    ],
+    "status": "candidate-medium",
+    "cnfFoodId": "1522",
+    "cnfNameFr": "Fruit à pain, cru",
+    "cnfNameEn": "Breadfruit, raw",
+    "score": 2.1,
+    "nutritionPer100g": {
+      "protein": 1.07,
+      "fat": 0.23,
+      "carbs": 27.12,
+      "calories": 103,
+      "sugars": 11,
+      "fiber": 4.9,
+      "calcium": 17,
+      "iron": 0.54,
+      "potassium": 490,
+      "sodium": 2
+    },
+    "portions": [],
+    "verified": false,
+    "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
+  }
+]
