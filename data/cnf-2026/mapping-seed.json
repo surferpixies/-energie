@@ -6,6 +6,14 @@
       "banane",
       "banana"
     ],
+    "current": {
+      "calories": 105,
+      "protein": 1.3,
+      "carbs": 27,
+      "fat": 0.4,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1704",
     "cnfNameFr": "Banane, crue",
@@ -35,6 +43,14 @@
       "clementine",
       "mandarine"
     ],
+    "current": {
+      "calories": 35,
+      "protein": 0.6,
+      "carbs": 9,
+      "fat": 0.1,
+      "portion": "1 fruit",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "5956",
     "cnfNameFr": "Clémentine, crue",
@@ -64,6 +80,14 @@
       "peche",
       "peach"
     ],
+    "current": {
+      "calories": 59,
+      "protein": 1.4,
+      "carbs": 14,
+      "fat": 0.4,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1728",
     "cnfNameFr": "Pêche, crue",
@@ -91,6 +115,14 @@
     "aliases": [
       "nectarine"
     ],
+    "current": {
+      "calories": 63,
+      "protein": 1.5,
+      "carbs": 15,
+      "fat": 0.5,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1611",
     "cnfNameFr": "Nectarine, crue",
@@ -120,6 +152,14 @@
       "fraise",
       "strawberries"
     ],
+    "current": {
+      "calories": 49,
+      "protein": 1,
+      "carbs": 12,
+      "fat": 0.5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1749",
     "cnfNameFr": "Fraise, crue",
@@ -149,6 +189,14 @@
       "mures",
       "blackberries"
     ],
+    "current": {
+      "calories": 62,
+      "protein": 2,
+      "carbs": 14,
+      "fat": 0.7,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1610",
     "cnfNameFr": "Mûres blanche, crue",
@@ -177,6 +225,14 @@
       "ananas",
       "pineapple"
     ],
+    "current": {
+      "calories": 82,
+      "protein": 0.9,
+      "carbs": 22,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1734",
     "cnfNameFr": "Ananas, cru",
@@ -205,6 +261,14 @@
       "mangue",
       "mango"
     ],
+    "current": {
+      "calories": 99,
+      "protein": 1.4,
+      "carbs": 25,
+      "fat": 0.6,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1603",
     "cnfNameFr": "Mangue, crue",
@@ -233,6 +297,14 @@
       "papaye",
       "papaya"
     ],
+    "current": {
+      "calories": 62,
+      "protein": 0.7,
+      "carbs": 16,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1628",
     "cnfNameFr": "Papaye, crue",
@@ -261,6 +333,14 @@
       "melon miel",
       "honeydew"
     ],
+    "current": {
+      "calories": 61,
+      "protein": 0.9,
+      "carbs": 15,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1605",
     "cnfNameFr": "Melon, miel (honeydew), cru",
@@ -291,6 +371,14 @@
       "pasteque",
       "watermelon"
     ],
+    "current": {
+      "calories": 46,
+      "protein": 0.9,
+      "carbs": 12,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1691",
     "cnfNameFr": "Melon d'eau (pasteque), cru",
@@ -319,6 +407,14 @@
       "prune",
       "plum"
     ],
+    "current": {
+      "calories": 30,
+      "protein": 0.5,
+      "carbs": 8,
+      "fat": 0.2,
+      "portion": "1 fruit",
+      "gramsPerPortion": 66
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1740",
     "cnfNameFr": "Prune, crue",
@@ -347,6 +443,14 @@
       "abricot",
       "apricot"
     ],
+    "current": {
+      "calories": 17,
+      "protein": 0.5,
+      "carbs": 4,
+      "fat": 0.1,
+      "portion": "1 fruit",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1498",
     "cnfNameFr": "Abricot, cru",
@@ -376,6 +480,14 @@
       "datte",
       "dates"
     ],
+    "current": {
+      "calories": 133,
+      "protein": 1,
+      "carbs": 36,
+      "fat": 0.2,
+      "portion": "3 dattes",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "5401",
     "cnfNameFr": "Datte, variété Medjool",
@@ -404,6 +516,14 @@
       "grenade",
       "pomegranate"
     ],
+    "current": {
+      "calories": 144,
+      "protein": 3,
+      "carbs": 33,
+      "fat": 2,
+      "portion": "1 tasse grains",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1667",
     "cnfNameFr": "Grenade, crue",
@@ -432,6 +552,14 @@
       "fruit de la passion",
       "passion fruit"
     ],
+    "current": {
+      "calories": 68,
+      "protein": 1.6,
+      "carbs": 16,
+      "fat": 0.5,
+      "portion": "3 fruits",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1630",
     "cnfNameFr": "Grenadille (fruit de la passion), crue",
@@ -460,6 +588,14 @@
       "litchi",
       "lychee"
     ],
+    "current": {
+      "calories": 125,
+      "protein": 1.6,
+      "carbs": 31,
+      "fat": 0.8,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1596",
     "cnfNameFr": "Litchi, cru",
@@ -488,6 +624,14 @@
       "poivron rouge",
       "red pepper"
     ],
+    "current": {
+      "calories": 46,
+      "protein": 1.5,
+      "carbs": 9,
+      "fat": 0.5,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
     "status": "candidate-high",
     "cnfFoodId": "2484",
     "cnfNameFr": "Poivron rouge, cru",
@@ -516,6 +660,14 @@
       "poivron vert",
       "green pepper"
     ],
+    "current": {
+      "calories": 24,
+      "protein": 1,
+      "carbs": 6,
+      "fat": 0.2,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
     "status": "candidate-high",
     "cnfFoodId": "2413",
     "cnfNameFr": "Poivron vert, cru",
@@ -545,6 +697,14 @@
       "epinards",
       "spinach"
     ],
+    "current": {
+      "calories": 41,
+      "protein": 5.3,
+      "carbs": 7,
+      "fat": 0.5,
+      "portion": "1 tasse cuits",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "2213",
     "cnfNameFr": "Épinard, cru",
@@ -573,6 +733,14 @@
       "laitue romaine",
       "romaine"
     ],
+    "current": {
+      "calories": 15,
+      "protein": 1,
+      "carbs": 3,
+      "fat": 0.2,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
     "status": "candidate-high",
     "cnfFoodId": "2116",
     "cnfNameFr": "Laitue, romaine",
@@ -601,6 +769,14 @@
       "laitue",
       "lettuce"
     ],
+    "current": {
+      "calories": 10,
+      "protein": 0.7,
+      "carbs": 2,
+      "fat": 0.1,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "2051",
     "cnfNameFr": "Laitue-tige, crue",
@@ -628,6 +804,14 @@
       "courgette",
       "zucchini"
     ],
+    "current": {
+      "calories": 33,
+      "protein": 2.4,
+      "carbs": 6,
+      "fat": 0.6,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "6760",
     "cnfNameFr": "Courgettes, en pâte à frire, frites",
@@ -656,6 +840,14 @@
       "aubergine",
       "eggplant"
     ],
+    "current": {
+      "calories": 35,
+      "protein": 0.8,
+      "carbs": 9,
+      "fat": 0.2,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "2088",
     "cnfNameFr": "Aubergine, crue",
@@ -685,6 +877,14 @@
       "asperge",
       "asparagus"
     ],
+    "current": {
+      "calories": 40,
+      "protein": 4.3,
+      "carbs": 7,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1990",
     "cnfNameFr": "Asperge, crue",
@@ -713,6 +913,14 @@
       "betterave",
       "beet"
     ],
+    "current": {
+      "calories": 58,
+      "protein": 2.2,
+      "carbs": 13,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "2021",
     "cnfNameFr": "Betterave, feuilles, crues",
@@ -741,6 +949,14 @@
       "chou de bruxelles",
       "brussels sprouts"
     ],
+    "current": {
+      "calories": 56,
+      "protein": 4,
+      "carbs": 11,
+      "fat": 0.8,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-high",
     "cnfFoodId": "2378",
     "cnfNameFr": "Choux de Bruxelles, crus",
@@ -769,6 +985,14 @@
       "chou rouge",
       "red cabbage"
     ],
+    "current": {
+      "calories": 28,
+      "protein": 1.3,
+      "carbs": 7,
+      "fat": 0.1,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-high",
     "cnfFoodId": "2034",
     "cnfNameFr": "Chou rouge, cru",
@@ -797,6 +1021,14 @@
       "bok choy",
       "pak choi"
     ],
+    "current": {
+      "calories": 20,
+      "protein": 2.7,
+      "carbs": 3,
+      "fat": 0.3,
+      "portion": "1 tasse cuit",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "2038",
     "cnfNameFr": "Bok choy, pak-choi, cru",
@@ -825,6 +1057,14 @@
       "pois mange-tout",
       "snow peas"
     ],
+    "current": {
+      "calories": 41,
+      "protein": 2.7,
+      "carbs": 7,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-high",
     "cnfFoodId": "2408",
     "cnfNameFr": "Pois mange-tout, crus",
@@ -853,6 +1093,14 @@
       "ail",
       "garlic"
     ],
+    "current": {
+      "calories": 13,
+      "protein": 0.6,
+      "carbs": 3,
+      "fat": 0,
+      "portion": "3 gousses",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "2394",
     "cnfNameFr": "Ail, cru",
@@ -881,6 +1129,14 @@
       "radis",
       "radish"
     ],
+    "current": {
+      "calories": 19,
+      "protein": 0.8,
+      "carbs": 4,
+      "fat": 0.1,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "2443",
     "cnfNameFr": "Radis, cru",
@@ -908,6 +1164,14 @@
     "aliases": [
       "rutabaga"
     ],
+    "current": {
+      "calories": 66,
+      "protein": 2,
+      "carbs": 15,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "2444",
     "cnfNameFr": "Rutabaga (chou-navet), cru",
@@ -936,6 +1200,14 @@
       "artichaut",
       "artichoke"
     ],
+    "current": {
+      "calories": 60,
+      "protein": 4.2,
+      "carbs": 13,
+      "fat": 0.2,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "2364",
     "cnfNameFr": "Artichaut, cru",
@@ -963,6 +1235,14 @@
       "okra",
       "gombo"
     ],
+    "current": {
+      "calories": 35,
+      "protein": 3,
+      "carbs": 7,
+      "fat": 0.3,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "2134",
     "cnfNameFr": "Okra (gombo), cru",
@@ -991,6 +1271,14 @@
       "salade grecque",
       "greek salad"
     ],
+    "current": {
+      "calories": 320,
+      "protein": 10,
+      "carbs": 18,
+      "fat": 24,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "6738",
     "cnfNameFr": "Salade grecque, faite maison",
@@ -1019,6 +1307,14 @@
       "riz blanc",
       "white rice"
     ],
+    "current": {
+      "calories": 205,
+      "protein": 4.3,
+      "carbs": 45,
+      "fat": 0.4,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "7701",
     "cnfNameFr": "Riz, blanc et sausage, arômatisé, non préparé",
@@ -1048,6 +1344,14 @@
       "cereales",
       "breakfast cereal"
     ],
+    "current": {
+      "calories": 150,
+      "protein": 4,
+      "carbs": 32,
+      "fat": 2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "6356",
     "cnfNameFr": "Céréales, prêtes à manger, flocons d'amarante",
@@ -1075,6 +1379,14 @@
     "aliases": [
       "bacon"
     ],
+    "current": {
+      "calories": 130,
+      "protein": 9,
+      "carbs": 0.5,
+      "fat": 10,
+      "portion": "3 tranches",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "5462",
     "cnfNameFr": "Bacon, dinde, cuit",
@@ -1103,6 +1415,14 @@
       "thon",
       "tuna"
     ],
+    "current": {
+      "calories": 190,
+      "protein": 40,
+      "carbs": 0,
+      "fat": 2,
+      "portion": "150 g",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "3086",
     "cnfNameFr": "Thon, salade",
@@ -1131,6 +1451,14 @@
       "lentille",
       "lentils"
     ],
+    "current": {
+      "calories": 230,
+      "protein": 18,
+      "carbs": 40,
+      "fat": 0.8,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "2113",
     "cnfNameFr": "Lentilles, germées, crues",
@@ -1158,6 +1486,14 @@
       "haricots noirs",
       "black beans"
     ],
+    "current": {
+      "calories": 227,
+      "protein": 15,
+      "carbs": 41,
+      "fat": 0.9,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "6181",
     "cnfNameFr": "Haricots, noirs, farine",
@@ -1186,6 +1522,14 @@
       "haricots rouges",
       "kidney beans"
     ],
+    "current": {
+      "calories": 225,
+      "protein": 15,
+      "carbs": 40,
+      "fat": 0.9,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "5536",
     "cnfNameFr": "Haricots, rouges, liquide seulement",
@@ -1213,6 +1557,14 @@
     "aliases": [
       "falafel"
     ],
+    "current": {
+      "calories": 330,
+      "protein": 13,
+      "carbs": 32,
+      "fat": 18,
+      "portion": "5 morceaux",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "3339",
     "cnfNameFr": "Falafel, fait maison",
@@ -1240,6 +1592,14 @@
     "aliases": [
       "mozzarella"
     ],
+    "current": {
+      "calories": 85,
+      "protein": 6,
+      "carbs": 1,
+      "fat": 6,
+      "portion": "30 g",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "6813",
     "cnfNameFr": "Bâtonnets de fromage mozzarella, frits",
@@ -1269,6 +1629,14 @@
       "fromage a la creme",
       "cream cheese"
     ],
+    "current": {
+      "calories": 100,
+      "protein": 2,
+      "carbs": 2,
+      "fat": 10,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "4722",
     "cnfNameFr": "Fromage à la crème, sans gras",
@@ -1298,6 +1666,14 @@
       "creme glacee",
       "ice cream"
     ],
+    "current": {
+      "calories": 270,
+      "protein": 5,
+      "carbs": 31,
+      "fat": 14,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "3913",
     "cnfNameFr": "Crème glacée, cornet, type gâteau ou gaufrette",
@@ -1326,6 +1702,14 @@
       "noix de grenoble",
       "walnuts"
     ],
+    "current": {
+      "calories": 190,
+      "protein": 4.5,
+      "carbs": 4,
+      "fat": 18,
+      "portion": "1/4 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-high",
     "cnfFoodId": "2590",
     "cnfNameFr": "Noix de Grenoble",
@@ -1354,6 +1738,14 @@
       "graines de chia",
       "chia seeds"
     ],
+    "current": {
+      "calories": 140,
+      "protein": 5,
+      "carbs": 12,
+      "fat": 9,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "2511",
     "cnfNameFr": "Graines de chia, déshydratées",
@@ -1381,6 +1773,14 @@
       "barre granola",
       "granola bar"
     ],
+    "current": {
+      "calories": 190,
+      "protein": 4,
+      "carbs": 29,
+      "fat": 7,
+      "portion": "1 barre",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "6596",
     "cnfNameFr": "Barre granola, croquante, nature",
@@ -1409,6 +1809,14 @@
       "beigne",
       "donut"
     ],
+    "current": {
+      "calories": 290,
+      "protein": 4,
+      "carbs": 34,
+      "fat": 16,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "3895",
     "cnfNameFr": "Beigne, roussette, givré",
@@ -1438,6 +1846,14 @@
       "gateau au fromage",
       "cheesecake"
     ],
+    "current": {
+      "calories": 400,
+      "protein": 7,
+      "carbs": 33,
+      "fat": 27,
+      "portion": "1 pointe",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "3800",
     "cnfNameFr": "Gâteau, au fromage, commercial",
@@ -1465,6 +1881,14 @@
     "aliases": [
       "smoothie"
     ],
+    "current": {
+      "calories": 260,
+      "protein": 8,
+      "carbs": 48,
+      "fat": 5,
+      "portion": "1 grand verre",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "7580",
     "cnfNameFr": "Frappé (smoothie) au jus de fruits, fraises et bananes",
@@ -1493,6 +1917,14 @@
       "eau de coco",
       "coconut water"
     ],
+    "current": {
+      "calories": 45,
+      "protein": 0,
+      "carbs": 11,
+      "fat": 0,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "2566",
     "cnfNameFr": "Noix de coco, eau (liquide de la noix)",
@@ -1520,6 +1952,14 @@
     "aliases": [
       "poutine"
     ],
+    "current": {
+      "calories": 850,
+      "protein": 24,
+      "carbs": 95,
+      "fat": 42,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
     "status": "candidate-high",
     "cnfFoodId": "6772",
     "cnfNameFr": "Poutine",
@@ -1547,6 +1987,14 @@
     "aliases": [
       "pad thai"
     ],
+    "current": {
+      "calories": 750,
+      "protein": 30,
+      "carbs": 95,
+      "fat": 28,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "6762",
     "cnfNameFr": "Pad thaï au poulet",
@@ -1574,6 +2022,14 @@
       "nuggets de poulet",
       "chicken nuggets"
     ],
+    "current": {
+      "calories": 420,
+      "protein": 24,
+      "carbs": 26,
+      "fat": 24,
+      "portion": "10 morceaux",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "7653",
     "cnfNameFr": "Poulet, croquette, panure de blé entier",
@@ -1603,6 +2059,14 @@
       "salade de pates",
       "pasta salad"
     ],
+    "current": {
+      "calories": 430,
+      "protein": 12,
+      "carbs": 55,
+      "fat": 18,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "6744",
     "cnfNameFr": "Salade de pâtes avec légumes, préparée avec vinaigrette italienne, faite maison",
@@ -1631,6 +2095,14 @@
       "riz",
       "rice"
     ],
+    "current": {
+      "calories": 205,
+      "protein": 4.3,
+      "carbs": 45,
+      "fat": 0.4,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "7448",
     "cnfNameFr": "Riz espagnol",
@@ -1659,6 +2131,14 @@
       "fromage",
       "cheese"
     ],
+    "current": {
+      "calories": 115,
+      "protein": 7,
+      "carbs": 1,
+      "fat": 9,
+      "portion": "30 g",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "22",
     "cnfNameFr": "Fromage carvi",
@@ -1686,6 +2166,14 @@
       "porc effiloché",
       "pulled pork"
     ],
+    "current": {
+      "calories": 330,
+      "protein": 30,
+      "carbs": 8,
+      "fat": 20,
+      "portion": "150 g",
+      "gramsPerPortion": 150
+    },
     "status": "candidate-medium",
     "cnfFoodId": "7093",
     "cnfNameFr": "Porc effiloché dans une sauce barbecue",
@@ -1714,6 +2202,14 @@
       "fajitas",
       "fajita"
     ],
+    "current": {
+      "calories": 550,
+      "protein": 35,
+      "carbs": 50,
+      "fat": 22,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "6774",
     "cnfNameFr": "Fajita au poulet et aux légumes",
@@ -1742,6 +2238,14 @@
       "manioc",
       "cassava"
     ],
+    "current": {
+      "calories": 330,
+      "protein": 3,
+      "carbs": 78,
+      "fat": 1,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "2045",
     "cnfNameFr": "Manioc, cru",
@@ -1770,6 +2274,14 @@
       "fruits",
       "fruit"
     ],
+    "current": {
+      "calories": 80,
+      "protein": 1,
+      "carbs": 20,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
     "status": "candidate-medium",
     "cnfFoodId": "1522",
     "cnfNameFr": "Fruit à pain, cru",
