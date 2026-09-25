@@ -12,6 +12,14 @@
     .replace(/\s+/g, " ")
     .trim();
 
+  // La recherche FCÉN est appelée plusieurs fois pendant une même frappe
+  // (reconnaissance, composition, calories). Ces caches gardent exactement
+  // le même résultat tout en évitant de retraiter des milliers de fiches.
+  const descriptorCache = new WeakMap();
+  const rowMetaCache = new WeakMap();
+  const stateCache = new Map();
+  const findCache = new Map();
+
   const stateWords = {
     raw: ["cru", "crue", "raw"],
     cooked: ["cuit", "cuite", "cooked"],
@@ -43,9 +51,13 @@
 
   function states(text) {
     const n = normalize(text);
-    return Object.entries(stateWords)
+    if (stateCache.has(n)) return stateCache.get(n);
+    const result = Object.entries(stateWords)
       .filter(([, words]) => words.some((word) => n.includes(word)))
       .map(([key]) => key);
+    if (stateCache.size > 500) stateCache.clear();
+    stateCache.set(n, result);
+    return result;
   }
 
   function stateCompatibility(wanted, candidate) {
@@ -64,9 +76,10 @@
   }
 
   function descriptor(row) {
+    if (row && typeof row === "object" && descriptorCache.has(row)) return descriptorCache.get(row);
     const fr = normalize(row?.[1]);
     const en = normalize(row?.[2]);
-    return {
+    const value = {
       fr,
       en,
       primaryFr: fr.split(" ").slice(0, fr.includes(" ") ? undefined : 1).join(" "),
@@ -74,12 +87,29 @@
       firstFr: normalize(String(row?.[1] || "").split(",")[0]),
       firstEn: normalize(String(row?.[2] || "").split(",")[0]),
     };
+    if (row && typeof row === "object") descriptorCache.set(row, value);
+    return value;
+  }
+
+  function rowSearchMeta(row) {
+    if (row && typeof row === "object" && rowMetaCache.has(row)) return rowMetaCache.get(row);
+    const d = descriptor(row);
+    const normalizedCombined = normalize(`${row?.[1] || ""} ${row?.[2] || ""}`);
+    const value = {
+      descriptor: d,
+      candidateText: ` ${normalizedCombined} `,
+      candidateStates: states(normalizedCombined),
+      frWordCount: d.fr ? d.fr.split(" ").length : 0,
+    };
+    if (row && typeof row === "object") rowMetaCache.set(row, value);
+    return value;
   }
 
   function scoreRow(row, text) {
     const query = stripQuantity(text);
     if (!query) return -Infinity;
-    const d = descriptor(row);
+    const meta = rowSearchMeta(row);
+    const d = meta.descriptor;
     const aliases = [d.fr, d.en, d.firstFr, d.firstEn].filter(Boolean);
     let score = -Infinity;
 
@@ -93,7 +123,7 @@
     // Permettre un nom simple (« tilapia ») s'il apparaît comme mot entier,
     // tout en laissant l'étape d'ambiguïté refuser les correspondances serrées.
     const queryWords = query.split(" ").filter((word) => word.length >= 4);
-    const candidateText = ` ${normalize(`${row?.[1] || ""} ${row?.[2] || ""}`)} `;
+    const candidateText = meta.candidateText;
     if (queryWords.length && queryWords.every((word) => candidateText.includes(` ${word} `))) {
       score = Math.max(score, 690 + queryWords.length * 35);
     }
@@ -101,7 +131,7 @@
     if (!Number.isFinite(score)) return score;
 
     const wantedStates = states(text);
-    const candidateStates = states(`${row?.[1] || ""} ${row?.[2] || ""}`);
+    const candidateStates = meta.candidateStates;
     score += stateCompatibility(wantedStates, candidateStates).bonus;
 
     // Éviter qu'un aliment composé dont le nom commence par la requête
@@ -110,7 +140,7 @@
     if (d.firstFr && d.firstFr !== query && d.firstFr.startsWith(`${query} `)) score -= 240;
     if (d.firstEn && d.firstEn !== query && d.firstEn.startsWith(`${query} `)) score -= 240;
 
-    const qualifiers = Math.max(0, normalize(row?.[1]).split(" ").length - d.firstFr.split(" ").length);
+    const qualifiers = Math.max(0, meta.frWordCount - d.firstFr.split(" ").length);
     score -= Math.min(120, qualifiers * 4);
 
     // Éviter de confondre l'aliment lui-même avec une partie différente
@@ -220,7 +250,7 @@
 
   function hasUnrequestedQualifier(row, text) {
     const query = ` ${normalize(text)} `;
-    const candidate = ` ${normalize(`${row?.[1] || ""} ${row?.[2] || ""}`)} `;
+    const candidate = rowSearchMeta(row).candidateText;
     const qualifiers = [
       ["feuille", "feuilles", "green", "greens"],
       ["congele", "congelee", "congelees", "frozen"],
@@ -274,13 +304,21 @@
 
   function find(text) {
     if (!catalog.length) return null;
+    const cacheKey = normalize(text);
+    if (findCache.has(cacheKey)) return findCache.get(cacheKey);
+
+    const remember = (value) => {
+      if (findCache.size > 300) findCache.clear();
+      findCache.set(cacheKey, value);
+      return value;
+    };
 
     // Pour certains aliments très courants, le FCÉN contient de nombreuses
     // variantes proches. Énergie choisit une référence FCÉN cuite courante par
     // défaut plutôt que de retomber sur l'ancienne base faute de pouvoir
     // départager des dizaines de fiches équivalentes.
     const preferred = preferredCommonFood(text);
-    if (preferred) return foodFromRow(preferred, text);
+    if (preferred) return remember(foodFromRow(preferred, text));
 
     const ranked = [];
     for (const row of catalog) {
@@ -290,7 +328,7 @@
       if (unrequestedQualifier) score -= 140;
       if (score >= 600) ranked.push({ row, score, unrequestedQualifier });
     }
-    if (!ranked.length) return null;
+    if (!ranked.length) return remember(null);
 
     // Quand au moins une fiche correspondant au texte sans qualificatif
     // supplémentaire existe, ignorer complètement les variantes que
@@ -331,10 +369,10 @@
           return true;
         });
         const averaged = averageSimilarFoods(similar, text);
-        if (averaged) return averaged;
+        if (averaged) return remember(averaged);
       }
     }
-    return foodFromRow(first.row, text);
+    return remember(foodFromRow(first.row, text));
   }
 
   const api = Object.freeze({ version: 1, find, scoreRow, stripQuantity, quantityKind });
