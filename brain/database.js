@@ -2,7 +2,9 @@
   "use strict";
   const U = window.EnergieBrainModules?.utils;
   if (!U) throw new Error("EnergieBrain: utils.js doit être chargé avant database.js");
-  const source = Array.isArray(window.ENERGIE_FOODS) ? window.ENERGIE_FOODS : [];
+  const legacySource = Array.isArray(window.ENERGIE_FOODS) ? window.ENERGIE_FOODS : [];
+  const cnfSource = Array.isArray(window.ENERGIE_CNF_OVERRIDES) ? window.ENERGIE_CNF_OVERRIDES : [];
+  const source = [...cnfSource, ...legacySource];
   const categoryEngine = window.ENERGIE_FOOD_CATEGORIES;
   const slug = value => U.normalize(value).replace(/\s+/g, "-") || "food";
   const categoryAliases = {
