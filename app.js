@@ -12102,11 +12102,11 @@ function formatSleepDuration(hours) {
     $("#leaveDemoProfile")?.addEventListener("click", leaveDemoMode);
     $("#openClientFollowup")?.addEventListener("click", async () => { await loadClientProfessionalFollowup(); currentView = "followup"; render(); });
     $("#revokeProfessionalAccess")?.addEventListener("click", () => revokeProfessionalLink(clientProfessionalLink?.id));
-    $('[data-copy-professional-code]').forEach((button) => button.addEventListener("click", async () => {
+    document.querySelectorAll('[data-copy-professional-code]').forEach((button) => button.addEventListener("click", async () => {
       try { await navigator.clipboard.writeText(button.dataset.copyProfessionalCode); alert("Code copié."); }
       catch (_) { alert(`Code : ${button.dataset.copyProfessionalCode}`); }
     }));
-    $('[data-email-professional-code]').forEach((button) => button.addEventListener("click", () => {
+    document.querySelectorAll('[data-email-professional-code]').forEach((button) => button.addEventListener("click", () => {
       openProfessionalInviteEmail(button.dataset.emailProfessionalCode);
     }));
     bindFavoriteActions();
