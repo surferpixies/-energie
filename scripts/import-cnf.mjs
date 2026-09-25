@@ -92,7 +92,10 @@ for (const row of nutrientRows) {
 function nutrientKind(meta) {
   const text = norm(`${meta.en} ${meta.fr}`);
   const unit = norm(meta.unit);
-  if ((text.includes("energy") || text.includes("energie")) && (unit.includes("kcal") || text.includes("kcal"))) return "calories";
+  // Le FCÉN conserve les codes de nutriments USDA; 208 = énergie en kilocalories.
+  // Le code explicite évite qu’un changement de libellé/localisation fasse disparaître les calories.
+  if (String(meta.id) === "208") return "calories";
+  if ((text.includes("energy") || text.includes("energie")) && (unit.includes("kcal") || text.includes("kilocalorie") || text.includes("kcal"))) return "calories";
   if (text.includes("protein") || text.includes("proteine")) return "protein";
   if (text.includes("carbohydrate") || text.includes("glucide")) return "carbs";
   if ((text.includes("fat") || text.includes("lipide") || text.includes("gras")) && !text.includes("fattyacid")) return "fat";
