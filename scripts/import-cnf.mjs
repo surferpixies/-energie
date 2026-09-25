@@ -132,7 +132,7 @@ const measuresByFood = new Map();
 for (const row of measureWeightRows) {
   const foodId = String(getField(row, ["Food_Code", "FoodCode", "Food Code", "FoodID", "Food Id", "Food_ID"]));
   if (!foodId) continue;
-  const grams = Number(String(getField(row, ["Weight_g", "Weight_G", "Weight_in_grams", "WeightInGrams", "Weight in Grams", "Weight", "GramWeight", "Conversion_Factor_Value", "ConversionFactorValue"])).replace(",", "."));
+  const grams = Number(String(getField(row, ["Measure_Weight_Conversion", "MeasureWeightConversion", "Weight_g", "Weight_G", "Weight_in_grams", "WeightInGrams", "Weight in Grams", "Weight", "GramWeight", "Conversion_Factor_Value", "ConversionFactorValue"])).replace(",", "."));
   const measureId = String(getField(row, ["Measure_Code", "MeasureCode", "Measure Code", "MeasureID", "Measure Id", "Measure_ID"]));
   if (!Number.isFinite(grams) || grams <= 0) continue;
   if (!measuresByFood.has(foodId)) measuresByFood.set(foodId, []);
