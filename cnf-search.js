@@ -188,6 +188,14 @@
 
   function preferredCommonFood(text) {
     const n = normalize(text);
+
+    // « salade verte » désigne normalement une salade de feuilles/laitue,
+    // pas une salade composée avec vinaigrette, pâtes, fromage, etc.
+    // Utiliser une laitue simple comme référence FCÉN par défaut.
+    if (/\b(salade verte|green salad|salade de laitue|lettuce salad)\b/.test(n)) {
+      return catalogById.get("2398") || catalogById.get("2116") || null;
+    }
+
     const hasChicken = /\b(poulet|chicken)\b/.test(n);
     if (!hasChicken) return null;
 
