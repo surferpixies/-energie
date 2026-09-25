@@ -13,6 +13,8 @@ const runtimeFiles = [
   "i18n.js",
   "foods.js",
   "cnf-runtime.js",
+  "cnf-catalog.js",
+  "cnf-search.js",
   "food-categories.js",
   "dish-knowledge.js",
   "observation-engine.js",
