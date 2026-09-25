@@ -13,7 +13,8 @@
     "cnf:seed": "node scripts/build-cnf-mapping-seed.mjs",
     "cnf:review": "node scripts/review-cnf-unresolved.mjs",
     "test:cnf-runtime": "node tests/cnf-runtime.test.js",
-    "cnf:catalog": "node scripts/build-cnf-catalog.mjs"
+    "cnf:catalog": "node scripts/build-cnf-catalog.mjs",
+    "test:cnf-search": "node tests/cnf-search.test.js"
   },
   "dependencies": {
     "@capacitor/core": "^8.0.0",
