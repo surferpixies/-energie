@@ -4233,6 +4233,24 @@ function formatSleepDuration(hours) {
     crypto.getRandomValues(values);
     return [...values].map((value) => alphabet[value % alphabet.length]).join("");
   }
+  function openProfessionalInviteEmail(code) {
+    const inviteCode = String(code || "").trim().toUpperCase();
+    if (!inviteCode) return;
+    const subject = "Invitation à mon suivi Énergie";
+    const body = [
+      "Bonjour,",
+      "",
+      "Je vous invite à me donner accès à mon journal Énergie pour mon suivi professionnel.",
+      "",
+      `Code d’invitation : ${inviteCode}`,
+      "",
+      "Pour accepter l’invitation, ouvrez Énergie, allez dans Profil, puis entrez ce code dans la section « Lier mon suivi à un professionnel ».",
+      "",
+      "Merci."
+    ].join("\n");
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
   async function createProfessionalInvite() {
     if (!hasProfessionalBetaAccess || !client || !session) return;
     for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -4288,7 +4306,7 @@ function formatSleepDuration(hours) {
     if (hasProfessionalBetaAccess) {
       const active = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
       const pending = professionalClientLinks.filter((link) => link.status === "pending");
-      const pendingCodes = pending.slice(0, 2).map((link) => `<button type="button" class="professional-invite-code" data-copy-professional-code="${esc(link.invite_code)}"><span>Code actif</span><strong>${esc(link.invite_code)}</strong><small>Toucher pour copier</small></button>`).join("");
+      const pendingCodes = pending.slice(0, 2).map((link) => `<div class="professional-invite-row"><button type="button" class="professional-invite-code" data-copy-professional-code="${esc(link.invite_code)}"><span>Code actif</span><strong>${esc(link.invite_code)}</strong><small>Toucher pour copier</small></button><button type="button" class="secondary professional-invite-email" data-email-professional-code="${esc(link.invite_code)}">✉️ Envoyer par courriel</button></div>`).join("");
       return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""}</small></span></div>${pendingCodes}<div class="dialog-actions"><button type="button" class="secondary" id="createProfessionalInvite">Créer une invitation</button><button type="button" class="primary" id="openProfessionalBeta">Passer en mode professionnel</button></div><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
     }
     if (clientProfessionalLink) {
@@ -12084,9 +12102,12 @@ function formatSleepDuration(hours) {
     $("#leaveDemoProfile")?.addEventListener("click", leaveDemoMode);
     $("#openClientFollowup")?.addEventListener("click", async () => { await loadClientProfessionalFollowup(); currentView = "followup"; render(); });
     $("#revokeProfessionalAccess")?.addEventListener("click", () => revokeProfessionalLink(clientProfessionalLink?.id));
-    $$('[data-copy-professional-code]').forEach((button) => button.addEventListener("click", async () => {
+    $('[data-copy-professional-code]').forEach((button) => button.addEventListener("click", async () => {
       try { await navigator.clipboard.writeText(button.dataset.copyProfessionalCode); alert("Code copié."); }
       catch (_) { alert(`Code : ${button.dataset.copyProfessionalCode}`); }
+    }));
+    $('[data-email-professional-code]').forEach((button) => button.addEventListener("click", () => {
+      openProfessionalInviteEmail(button.dataset.emailProfessionalCode);
     }));
     bindFavoriteActions();
     $("#exportData").onclick = exportData;
