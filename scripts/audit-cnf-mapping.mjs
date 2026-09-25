@@ -20,9 +20,11 @@ const normalize = value => String(value || "")
   .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
   .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
-const tokens = value => new Set(normalize(value).split(/\s+/).filter(Boolean));
+const tokens = value => normalize(value).split(/\s+/).filter(Boolean);
+const tokenSet = value => new Set(tokens(value));
+
 const overlapScore = (a, b) => {
-  const A = tokens(a), B = tokens(b);
+  const A = tokenSet(a), B = tokenSet(b);
   if (!A.size || !B.size) return 0;
   let common = 0;
   for (const t of A) if (B.has(t)) common++;
@@ -30,24 +32,81 @@ const overlapScore = (a, b) => {
   return union ? common / union : 0;
 };
 
+const undesirableGeneric = [
+  "juice","jus","nectar","canned","conserve","dried","seche","sechee","seches","sechees",
+  "frozen","congele","congelee","sweetened","sucre","sucree","syrup","sirop","powder","poudre",
+  "babyfood","bebe","puree","concentrate","concentre","drink","boisson"
+];
+
+const rawWords = ["raw","cru","crue","frais","fraiche"];
+
+function qualifierPenalty(alias, description) {
+  const a = normalize(alias);
+  const d = normalize(description);
+  let p = 0;
+  if (!undesirableGeneric.some(w => a.includes(w))) {
+    for (const w of undesirableGeneric) if (d.includes(w)) p += 0.28;
+  }
+  return p;
+}
+
 function candidateScore(alias, food) {
   const a = normalize(alias);
   const en = normalize(food.names?.en);
   const fr = normalize(food.names?.fr);
+
+  const exact = en === a || fr === a;
+  const start = en.startsWith(a + " ") || fr.startsWith(a + " ");
+  const contains = en.includes(a) || fr.includes(a);
+
   let score = Math.max(overlapScore(a, en), overlapScore(a, fr));
-  if (en === a || fr === a) score += 2;
-  else if (en.startsWith(a) || fr.startsWith(a)) score += 0.8;
-  else if (en.includes(a) || fr.includes(a)) score += 0.4;
+  if (exact) score += 3;
+  else if (start) score += 1.4;
+  else if (contains) score += 0.35;
+
+  // A generic whole-food alias should prefer the plain/raw item over juices,
+  // canned/sweetened/dried variants. This only affects audit ranking.
+  const genericAlias = tokens(a).length <= 3 &&
+    !undesirableGeneric.some(w => a.includes(w));
+  if (genericAlias && rawWords.some(w => en.includes(w) || fr.includes(w))) score += 0.45;
+
+  score -= Math.max(
+    qualifierPenalty(a, en),
+    qualifierPenalty(a, fr)
+  );
+
+  // Avoid false positives where a short alias appears only as part of a compound
+  // food name (e.g. "apple" -> "sugar-apple").
+  const firstEn = tokens(en)[0] || "";
+  const firstFr = tokens(fr)[0] || "";
+  const firstAlias = tokens(a)[0] || "";
+  if (tokens(a).length === 1 && firstAlias && firstEn !== firstAlias && firstFr !== firstAlias && !exact)
+    score -= 0.55;
+
   return score;
+}
+
+function rankCandidates(aliases, food) {
+  return Math.max(...aliases.map(a => candidateScore(a, food)));
+}
+
+function confidenceFor(candidates) {
+  if (!candidates.length) return "none";
+  const best = candidates[0]?.score ?? 0;
+  const second = candidates[1]?.score ?? -Infinity;
+  const gap = best - second;
+  if (best >= 2.5 && gap >= 0.45) return "high";
+  if (best >= 1.35 && gap >= 0.2) return "medium";
+  return "review";
 }
 
 const rows = legacy.map((food, index) => {
   const aliases = food.keys || [];
   const candidates = cnf
-    .map(item => ({ item, score: Math.max(...aliases.map(a => candidateScore(a, item))) }))
-    .filter(x => x.score > 0)
+    .map(item => ({ item, score: rankCandidates(aliases, item) }))
+    .filter(x => x.score > 0.15)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
+    .slice(0, 8);
 
   return {
     legacyIndex: index,
@@ -61,12 +120,14 @@ const rows = legacy.map((food, index) => {
       portion: food.portion,
       gramsPerPortion: food.gramsPerPortion || null
     },
+    confidence: confidenceFor(candidates),
     candidates: candidates.map(({ item, score }) => ({
       cnfFoodId: item.cnfFoodId,
       score: Number(score.toFixed(3)),
       en: item.names?.en || "",
       fr: item.names?.fr || "",
-      nutritionPer100g: item.nutritionPer100g || {}
+      nutritionPer100g: item.nutritionPer100g || {},
+      portions: item.portions || []
     }))
   };
 });
@@ -78,10 +139,11 @@ const csvEscape = value => {
   return /[",\n]/.test(s) ? '"' + s.replaceAll('"', '""') + '"' : s;
 };
 const csv = [
-  ["legacy_alias","current_portion","candidate_rank","cnf_food_id","score","cnf_fr","cnf_en","kcal_100g","protein_100g","carbs_100g","fat_100g"].join(","),
+  ["legacy_alias","current_portion","confidence","candidate_rank","cnf_food_id","score","cnf_fr","cnf_en","kcal_100g","protein_100g","carbs_100g","fat_100g"].join(","),
   ...rows.flatMap(row => row.candidates.map((c, i) => [
     row.alias,
     row.current.portion || "",
+    row.confidence,
     i + 1,
     c.cnfFoodId,
     c.score,
@@ -95,5 +157,13 @@ const csv = [
 ].join("\n") + "\n";
 
 await writeFile(path.join(outDir, "mapping-audit.csv"), csv);
+
+const summary = rows.reduce((acc, row) => {
+  acc[row.confidence] = (acc[row.confidence] || 0) + 1;
+  return acc;
+}, {});
+await writeFile(path.join(outDir, "mapping-summary.json"), JSON.stringify(summary, null, 2) + "\n");
+
 console.log(`Audit créé pour ${rows.length} fiches Énergie.`);
-console.log("À valider manuellement avant toute substitution nutritionnelle.");
+console.log(`Confiance: ${JSON.stringify(summary)}`);
+console.log("Aucune substitution nutritionnelle n'est effectuée automatiquement.");
