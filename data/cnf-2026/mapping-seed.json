@@ -31,7 +31,78 @@
       "potassium": 358,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 95.102,
+        "en": "100 ml mashed",
+        "fr": "100 ml en purée"
+      },
+      {
+        "grams": 63.401,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 79.252,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 158.503,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 118.878,
+        "en": "125 ml mashed",
+        "fr": "125 ml en purée"
+      },
+      {
+        "grams": 237.755,
+        "en": "250 ml mashed",
+        "fr": "250 ml en purée"
+      },
+      {
+        "grams": 81,
+        "en": "1 extra small (less than 15cm long)",
+        "fr": "1 très petit (moins de 15 cm long)"
+      },
+      {
+        "grams": 101,
+        "en": "1 small (15cm to 17.5cm long)",
+        "fr": "1 petit (15cm to 17.5cm long)"
+      },
+      {
+        "grams": 118,
+        "en": "1 medium (18cm to 20cm long)",
+        "fr": "1 moyen (18cm à 20cm long)"
+      },
+      {
+        "grams": 136,
+        "en": "1 large (20cm to 22.5cm long)",
+        "fr": "1 gros (20cm to 22.5cm long)"
+      },
+      {
+        "grams": 152,
+        "en": "1 extra large (23cm or longer)",
+        "fr": "1 extra gros (23cm ou plus long)"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 36,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 36,
+        "en": "skin",
+        "fr": "peau (pelure)"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -68,7 +139,43 @@
       "potassium": 177,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 23,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 23,
+        "en": "peel and seeds",
+        "fr": "pelure et pépins"
+      },
+      {
+        "grams": 74,
+        "en": "1 fruit",
+        "fr": "1 fruit"
+      },
+      {
+        "grams": 82.418,
+        "en": "100 ml sections",
+        "fr": "100 ml sections"
+      },
+      {
+        "grams": 103.022,
+        "en": "125 ml sections",
+        "fr": "125 ml sections"
+      },
+      {
+        "grams": 206.044,
+        "en": "250 ml sections",
+        "fr": "250 ml sections"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -105,7 +212,58 @@
       "potassium": 190,
       "sodium": 0
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 65.092,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 175,
+        "en": "",
+        "fr": ""
+      },
+      {
+        "grams": 150,
+        "en": "1 medium (6.4cm dia)",
+        "fr": "1 moyen (6.4cm dia)"
+      },
+      {
+        "grams": 130,
+        "en": "1 small (5cm dia)",
+        "fr": "1 petit (5cm dia)"
+      },
+      {
+        "grams": 81.365,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 162.73,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 224,
+        "en": "1 extra large (7.6 cm dia)",
+        "fr": "1 extra gros (7.6 cm dia)"
+      },
+      {
+        "grams": 13,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 13,
+        "en": "pits and skin",
+        "fr": "noyaux et pelure"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -140,7 +298,43 @@
       "potassium": 201,
       "sodium": 0
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 58.326,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 136,
+        "en": "1 fruit (6.4 cm dia)",
+        "fr": "1 fruit (6.4 cm dia)"
+      },
+      {
+        "grams": 72.908,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 145.816,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 9,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 9,
+        "en": "pits",
+        "fr": "noyaux"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -177,7 +371,108 @@
       "potassium": 153,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 6,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 6,
+        "en": "caps and stems",
+        "fr": "capuchons et queues"
+      },
+      {
+        "grams": 60.862,
+        "en": "100 ml whole",
+        "fr": "100 ml entier"
+      },
+      {
+        "grams": 70.161,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 64.243,
+        "en": "100 ml halves",
+        "fr": "100 ml moitiés"
+      },
+      {
+        "grams": 80.304,
+        "en": "125 ml halves",
+        "fr": "125 ml moitiés"
+      },
+      {
+        "grams": 160.609,
+        "en": "250 ml halves",
+        "fr": "250 ml moitiés"
+      },
+      {
+        "grams": 98.056,
+        "en": "100 ml puree",
+        "fr": "100 ml purée"
+      },
+      {
+        "grams": 122.569,
+        "en": "125 ml puree",
+        "fr": "125 ml purée"
+      },
+      {
+        "grams": 245.139,
+        "en": "250 ml puree",
+        "fr": "250 ml purée"
+      },
+      {
+        "grams": 87.701,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 175.402,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 76.078,
+        "en": "125 ml whole",
+        "fr": "125 ml entier"
+      },
+      {
+        "grams": 152.156,
+        "en": "250 ml whole",
+        "fr": "250 ml entier"
+      },
+      {
+        "grams": 7,
+        "en": "1 small (2.5cm dia)",
+        "fr": "1 petit (2.5cm dia)"
+      },
+      {
+        "grams": 12,
+        "en": "1 medium (3.2cm dia)",
+        "fr": "1 moyen (3.2cm dia)"
+      },
+      {
+        "grams": 18,
+        "en": "1 large (3.5cm dia)",
+        "fr": "1 gros (3.5cm dia)"
+      },
+      {
+        "grams": 27,
+        "en": "1 extra large (4.1cm dia)",
+        "fr": "1 extra gros (4.1cm dia)"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 84,
+        "en": "7 medium",
+        "fr": "7 moyen"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -214,7 +509,33 @@
       "potassium": 194,
       "sodium": 10
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 59.172,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 15,
+        "en": "10 fruits",
+        "fr": "10 fruits"
+      },
+      {
+        "grams": 73.964,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 147.929,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -250,7 +571,63 @@
       "potassium": 109,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 69.74,
+        "en": "100 ml diced",
+        "fr": "100 ml en dés"
+      },
+      {
+        "grams": 84,
+        "en": "1 slice (2cm x 9cm dia)",
+        "fr": "1 tranche (2cm x 9cm dia)"
+      },
+      {
+        "grams": 56,
+        "en": "1 thin slice (1.3cm x 9cm dia)",
+        "fr": "1 tranche mince (1.3cm x 9cm dia)"
+      },
+      {
+        "grams": 905,
+        "en": "1 fruit",
+        "fr": "1 fruit"
+      },
+      {
+        "grams": 87.177,
+        "en": "125 ml diced",
+        "fr": "125 ml en dés"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 174.354,
+        "en": "250 ml diced",
+        "fr": "250 ml en dés"
+      },
+      {
+        "grams": 48,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 6,
+        "en": "core",
+        "fr": "noyau"
+      },
+      {
+        "grams": 10,
+        "en": "crown",
+        "fr": "couronne"
+      },
+      {
+        "grams": 32,
+        "en": "parings",
+        "fr": "épluchures"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -286,7 +663,48 @@
       "potassium": 168,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 29,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 29,
+        "en": "seeds and skin",
+        "fr": "noyau (pépins) et peau (pelure)"
+      },
+      {
+        "grams": 69.738,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 207,
+        "en": "1 fruit",
+        "fr": "1 fruit"
+      },
+      {
+        "grams": 87.172,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 174.345,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 103.5,
+        "en": "1/2 fruit",
+        "fr": "1/2 fruit"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -322,7 +740,73 @@
       "potassium": 182,
       "sodium": 8
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 59.172,
+        "en": "100 ml cubes",
+        "fr": "100 ml en cubes"
+      },
+      {
+        "grams": 97.21,
+        "en": "100 ml mashed",
+        "fr": "100 ml en purée"
+      },
+      {
+        "grams": 380,
+        "en": "1 large (14.6cm long x 8.3cm dia)",
+        "fr": "1 gros (14.6cm long x 8.3cm dia)"
+      },
+      {
+        "grams": 304,
+        "en": "1 medium (13cm long x 7.6cm dia)",
+        "fr": "1 moyen (13cm long x 7.6cm dia)"
+      },
+      {
+        "grams": 152,
+        "en": "1 small (11.4cm long x 7cm dia)",
+        "fr": "1 petit (11.4cm long x 7cm dia)"
+      },
+      {
+        "grams": 243.026,
+        "en": "250 ml mashed",
+        "fr": "250 ml en purée"
+      },
+      {
+        "grams": 152.5,
+        "en": "1/2 fruit (13cm dia)",
+        "fr": "1/2 fruit (13cm dia)"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 73.964,
+        "en": "125 ml cubes",
+        "fr": "125 ml en cubes"
+      },
+      {
+        "grams": 147.929,
+        "en": "250 ml cubes",
+        "fr": "250 ml en cubes"
+      },
+      {
+        "grams": 121.513,
+        "en": "125 ml mashed",
+        "fr": "125 ml en purée"
+      },
+      {
+        "grams": 38,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 38,
+        "en": "seeds and skin",
+        "fr": "noyau (pépins) et peau (pelure)"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -358,7 +842,83 @@
       "potassium": 228,
       "sodium": 18
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 54,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 5,
+        "en": "cavity contents",
+        "fr": "contenu cavité"
+      },
+      {
+        "grams": 49,
+        "en": "rind",
+        "fr": "zeste / pelure / écorce"
+      },
+      {
+        "grams": 71.851,
+        "en": "100 ml cubes",
+        "fr": "100 ml en cubes"
+      },
+      {
+        "grams": 138,
+        "en": "10 melon balls",
+        "fr": "10 boules de melon"
+      },
+      {
+        "grams": 74.81,
+        "en": "100 ml balls",
+        "fr": "100 ml boules"
+      },
+      {
+        "grams": 1000,
+        "en": "1 melon (13.3cm dia)",
+        "fr": "1 melon (13.3cm dia)"
+      },
+      {
+        "grams": 1280,
+        "en": "1 melon (15.2cm - 17.8cm dia)",
+        "fr": "1 melon (15.2cm - 17.8cm dia)"
+      },
+      {
+        "grams": 125,
+        "en": "1 wedge (1/8 of a 13.3cm dia melon)",
+        "fr": "1 quartier (1/8 d'un melon de 13.3cm dia)"
+      },
+      {
+        "grams": 160,
+        "en": "1 wedge (1/8 of a 15.2cm to 17.8cm dia melon)",
+        "fr": "1 quartier (1/8 d'un melon de 15.2cm à 17.8cm dia)"
+      },
+      {
+        "grams": 89.814,
+        "en": "125 ml cubes",
+        "fr": "125 ml en cubes"
+      },
+      {
+        "grams": 179.628,
+        "en": "250 ml cubes",
+        "fr": "250 ml en cubes"
+      },
+      {
+        "grams": 150,
+        "en": "150 g",
+        "fr": "150 g"
+      },
+      {
+        "grams": 93.512,
+        "en": "125 ml balls",
+        "fr": "125 ml boules"
+      },
+      {
+        "grams": 187.025,
+        "en": "250 ml balls",
+        "fr": "250 ml boules"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -396,7 +956,58 @@
       "potassium": 112,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 40,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 40,
+        "en": "rind, seeds and cutting loss",
+        "fr": "pelure, noyaux et pertes/manipulations"
+      },
+      {
+        "grams": 64.243,
+        "en": "100 ml diced",
+        "fr": "100 ml en dés"
+      },
+      {
+        "grams": 80.304,
+        "en": "125 ml diced",
+        "fr": "125 ml en dés"
+      },
+      {
+        "grams": 160.609,
+        "en": "250 ml diced",
+        "fr": "250 ml en dés"
+      },
+      {
+        "grams": 150,
+        "en": "150 g",
+        "fr": "150 g"
+      },
+      {
+        "grams": 1825,
+        "en": "1 small",
+        "fr": "1 petit"
+      },
+      {
+        "grams": 2793,
+        "en": "1 medium",
+        "fr": "1 moyen"
+      },
+      {
+        "grams": 3754,
+        "en": "1 large",
+        "fr": "1 gros"
+      },
+      {
+        "grams": 128,
+        "en": "1 wedge yields",
+        "fr": "1 quartier donne"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -432,7 +1043,43 @@
       "potassium": 157,
       "sodium": 0
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 69.738,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 66,
+        "en": "1 fruit (5.4cm dai)",
+        "fr": "1 fruit (5.4cm dai)"
+      },
+      {
+        "grams": 87.172,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 174.345,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 6,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 6,
+        "en": "pits",
+        "fr": "noyaux"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -468,7 +1115,58 @@
       "potassium": 259,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 7,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 7,
+        "en": "pits",
+        "fr": "noyaux"
+      },
+      {
+        "grams": 65.511,
+        "en": "100 ml halves",
+        "fr": "100 ml moitiés"
+      },
+      {
+        "grams": 105,
+        "en": "3 fruits",
+        "fr": "3 fruits"
+      },
+      {
+        "grams": 174.345,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 69.738,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 81.889,
+        "en": "125 ml halves",
+        "fr": "125 ml moitiés"
+      },
+      {
+        "grams": 87.172,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 163.779,
+        "en": "250 ml halves",
+        "fr": "250 ml moitiés"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -505,7 +1203,28 @@
       "potassium": 696,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 24,
+        "en": "1 date pitted",
+        "fr": "1 date dénoyauté"
+      },
+      {
+        "grams": 40,
+        "en": "40 g",
+        "fr": "40 g"
+      },
+      {
+        "grams": 8,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 8,
+        "en": "pits",
+        "fr": "noyaux"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -541,7 +1260,53 @@
       "potassium": 236,
       "sodium": 3
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 44,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 44,
+        "en": "skin and membrane",
+        "fr": "peau et membranes"
+      },
+      {
+        "grams": 282,
+        "en": "1 fruit (10cm diam.)",
+        "fr": "1 fruit (10cm diam.)"
+      },
+      {
+        "grams": 141,
+        "en": "1/2 fruit (approx 10cm dia)",
+        "fr": "1/2 fruit (approx 10cm dia)"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 73.546,
+        "en": "100 ml seeds/ arils",
+        "fr": "100 ml graine / arille"
+      },
+      {
+        "grams": 91.932,
+        "en": "125 ml seeds / arils",
+        "fr": "125 ml graines / arilles"
+      },
+      {
+        "grams": 183.864,
+        "en": "250 ml seeds / arils",
+        "fr": "250 ml graines / arilles"
+      },
+      {
+        "grams": 44.127,
+        "en": "60 ml seeds / arils",
+        "fr": "60 ml graines / arilles"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -577,7 +1342,48 @@
       "potassium": 348,
       "sodium": 28
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 18,
+        "en": "1 fruit",
+        "fr": "1 fruit"
+      },
+      {
+        "grams": 99.746,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 124.683,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 249.366,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 36,
+        "en": "2 fruits",
+        "fr": "2 fruits"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 48,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 48,
+        "en": "shells / husks",
+        "fr": "enveloppes/ écales"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -613,7 +1419,48 @@
       "potassium": 171,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 9.6,
+        "en": "1 fruit",
+        "fr": "1 fruit"
+      },
+      {
+        "grams": 80.304,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 96,
+        "en": "10 fruits",
+        "fr": "10 fruits"
+      },
+      {
+        "grams": 100.38,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 200.761,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 40,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 40,
+        "en": "shell + membrane",
+        "fr": "coquille et membrane"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -649,7 +1496,73 @@
       "potassium": 211,
       "sodium": 4
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 18,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 62.975,
+        "en": "100 ml chopped",
+        "fr": "100 ml haché"
+      },
+      {
+        "grams": 38.884,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 119,
+        "en": "1 medium (7cm long, 6.4cm dia)",
+        "fr": "1 moyen (7cm long, 6.4cm dia)"
+      },
+      {
+        "grams": 74,
+        "en": "1 small",
+        "fr": "1 petit"
+      },
+      {
+        "grams": 10,
+        "en": "1 ring (7.6cm dia, 0.6cm thick)",
+        "fr": "1 anneau (7.6cm dia, 0.6cm épaisseur)"
+      },
+      {
+        "grams": 164,
+        "en": "1 large (9.5cm long, 7.6cm dia)",
+        "fr": "1 gros (9.5cm long, 7.6cm dia)"
+      },
+      {
+        "grams": 78.719,
+        "en": "125 ml chopped",
+        "fr": "125 ml haché"
+      },
+      {
+        "grams": 157.439,
+        "en": "250 ml chopped",
+        "fr": "250 ml haché"
+      },
+      {
+        "grams": 48.605,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 97.21,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      },
+      {
+        "grams": 59.5,
+        "en": "1/2 medium",
+        "fr": "1/2 moyen"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -685,7 +1598,68 @@
       "potassium": 175,
       "sodium": 3
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 18,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 18,
+        "en": "stem ends, seeds and core",
+        "fr": "bout de la tige, pépins et noyau"
+      },
+      {
+        "grams": 62.975,
+        "en": "100 ml chopped",
+        "fr": "100 ml haché"
+      },
+      {
+        "grams": 164,
+        "en": "1 large",
+        "fr": "1 gros"
+      },
+      {
+        "grams": 38.884,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 48.605,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 97.21,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 78.719,
+        "en": "125 ml chopped",
+        "fr": "125 ml haché"
+      },
+      {
+        "grams": 157.439,
+        "en": "250 ml chopped",
+        "fr": "250 ml haché"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      },
+      {
+        "grams": 82,
+        "en": "1/2 medium",
+        "fr": "1/2 moyen"
+      },
+      {
+        "grams": 27,
+        "en": "10 strips",
+        "fr": "10 frites (strips)"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -722,7 +1696,48 @@
       "potassium": 558,
       "sodium": 79
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 28,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 28,
+        "en": "large stems and roots",
+        "fr": "grosses tiges et racines"
+      },
+      {
+        "grams": 12.68,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 10,
+        "en": "1 leaf",
+        "fr": "1 feuille (leaf)"
+      },
+      {
+        "grams": 340,
+        "en": "1 bunch",
+        "fr": "1 1 botte"
+      },
+      {
+        "grams": 15.55,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 31.699,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 65,
+        "en": "65 g",
+        "fr": "65 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -758,7 +1773,43 @@
       "potassium": 247,
       "sodium": 8
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 10,
+        "en": "1 leaf",
+        "fr": "1 feuille (leaf)"
+      },
+      {
+        "grams": 23.669,
+        "en": "100 ml shredded",
+        "fr": "100 ml filamenté"
+      },
+      {
+        "grams": 29.586,
+        "en": "125 ml shredded",
+        "fr": "125 ml filamenté"
+      },
+      {
+        "grams": 59.172,
+        "en": "250 ml shredded",
+        "fr": "250 ml filamenté"
+      },
+      {
+        "grams": 65,
+        "en": "65 g",
+        "fr": "65 g"
+      },
+      {
+        "grams": 6,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 6,
+        "en": "core",
+        "fr": "noyau"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -793,7 +1844,33 @@
       "potassium": 330,
       "sodium": 11
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 25,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 25,
+        "en": "tough stems and leaves",
+        "fr": "pédoncules (tiges) coriaces et feuilles"
+      },
+      {
+        "grams": 8,
+        "en": "1 leaf",
+        "fr": "1 feuille (leaf)"
+      },
+      {
+        "grams": 58.12,
+        "en": "250 ml chopped",
+        "fr": "250 ml haché"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -829,7 +1906,28 @@
       "potassium": 212.246,
       "sodium": 129.843
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 9,
+        "en": "1 stick (7.6 cm long)",
+        "fr": "1 bâtonnet (7.6 cm long)"
+      },
+      {
+        "grams": 90,
+        "en": "10 sticks",
+        "fr": "10 bâtonnets"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 85,
+        "en": "1 serving",
+        "fr": "1 portion"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -865,7 +1963,53 @@
       "potassium": 229,
       "sodium": 2
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 19,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 19,
+        "en": "ends, parings and trimmings",
+        "fr": "bouts, épluchures et parures"
+      },
+      {
+        "grams": 458,
+        "en": "1 eggplant peeled",
+        "fr": "1 aubergine pelé"
+      },
+      {
+        "grams": 548,
+        "en": "1 eggplant unpeeled",
+        "fr": "1 aubergine non pelé"
+      },
+      {
+        "grams": 34.658,
+        "en": "100 ml cubes",
+        "fr": "100 ml en cubes"
+      },
+      {
+        "grams": 43.322,
+        "en": "125 ml cubes",
+        "fr": "125 ml en cubes"
+      },
+      {
+        "grams": 86.644,
+        "en": "250 ml cubes",
+        "fr": "250 ml en cubes"
+      },
+      {
+        "grams": 69.315,
+        "en": "200 ml pieces",
+        "fr": "200 ml morceaux"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -902,7 +2046,73 @@
       "potassium": 202,
       "sodium": 2
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 47,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 47,
+        "en": "ends",
+        "fr": "bouts"
+      },
+      {
+        "grams": 56.636,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 3.5,
+        "en": "1 spear tip (5cm long and less)",
+        "fr": "1 pointe (5 cm long. et moins)"
+      },
+      {
+        "grams": 12,
+        "en": "1 small spear (12.7cm long or less)",
+        "fr": "1 petite tige (12.7cm long. ou moins)"
+      },
+      {
+        "grams": 24,
+        "en": "1 extra large spear (22.2cm to 25.4cm long)",
+        "fr": "1 très grosse tige (22.2cm à 25.4cm long)"
+      },
+      {
+        "grams": 20,
+        "en": "1 large spear (18.4cm to 21.6cm long)",
+        "fr": "1 grosse tige (18.4cm à 21.6cm long)"
+      },
+      {
+        "grams": 16,
+        "en": "1 medium spear (13.3cm to 17.8cm long)",
+        "fr": "1 tige moyenne (13.3cm à 17.8cm long)"
+      },
+      {
+        "grams": 70.795,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 141.589,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 96,
+        "en": "6 medium spears (13.3cm to 17.8cm long)",
+        "fr": "6 tiges moyennes (13.3cm à 17.8cm long)s"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      },
+      {
+        "grams": 58,
+        "en": "4 spears",
+        "fr": "4 pointes"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -938,7 +2148,43 @@
       "potassium": 762,
       "sodium": 226
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 16.061,
+        "en": "100 ml pieces",
+        "fr": "100 ml morceaux"
+      },
+      {
+        "grams": 32,
+        "en": "1 leaf",
+        "fr": "1 feuille (leaf)"
+      },
+      {
+        "grams": 20.076,
+        "en": "125 ml pieces",
+        "fr": "125 ml morceaux"
+      },
+      {
+        "grams": 40.152,
+        "en": "250 ml pieces",
+        "fr": "250 ml morceaux"
+      },
+      {
+        "grams": 65,
+        "en": "65 g",
+        "fr": "65 g"
+      },
+      {
+        "grams": 44,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 44,
+        "en": "stems, bruised and old leaves",
+        "fr": "tiges, feuilles/vieilles endommagées"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -974,7 +2220,48 @@
       "potassium": 389,
       "sodium": 25
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 10,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 10,
+        "en": "outer leaves",
+        "fr": "feuilles extérieures"
+      },
+      {
+        "grams": 19,
+        "en": "1 sprout",
+        "fr": "1 chou"
+      },
+      {
+        "grams": 37.194,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 92.984,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 46.492,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 76,
+        "en": "4 sprouts",
+        "fr": "4 graines germées"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1010,7 +2297,78 @@
       "potassium": 243,
       "sodium": 27
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 29.586,
+        "en": "100 ml shredded",
+        "fr": "100 ml filamenté"
+      },
+      {
+        "grams": 37.616,
+        "en": "100 ml chopped",
+        "fr": "100 ml haché"
+      },
+      {
+        "grams": 567,
+        "en": "1 small (10.2cm dia)",
+        "fr": "1 petit (10.2cm dia)"
+      },
+      {
+        "grams": 839,
+        "en": "1 medium (12.7cm dia)",
+        "fr": "1 moyen (12.7cm dia)"
+      },
+      {
+        "grams": 1134,
+        "en": "1 large (14cm dia)",
+        "fr": "1 gros (14cm dia)"
+      },
+      {
+        "grams": 23,
+        "en": "1 leaf",
+        "fr": "1 feuille (leaf)"
+      },
+      {
+        "grams": 36.983,
+        "en": "125 ml shredded",
+        "fr": "125 ml filamenté"
+      },
+      {
+        "grams": 73.965,
+        "en": "250 ml shredded",
+        "fr": "250 ml filamenté"
+      },
+      {
+        "grams": 47.02,
+        "en": "125 ml chopped",
+        "fr": "125 ml haché"
+      },
+      {
+        "grams": 94.041,
+        "en": "1 (0.8cm x 7.6cm dia) + liquid",
+        "fr": "1 (0.8cm x 7.6cm dia) + liquide"
+      },
+      {
+        "grams": 94.04,
+        "en": "250 ml chopped",
+        "fr": "250 ml haché"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      },
+      {
+        "grams": 20,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 20,
+        "en": "outer leaves, core and trimmings",
+        "fr": "feuilles extérieures, noyau et parures"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1046,7 +2404,48 @@
       "potassium": 252,
       "sodium": 65
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 29.586,
+        "en": "100 ml shredded",
+        "fr": "100 ml filamenté"
+      },
+      {
+        "grams": 36.982,
+        "en": "125 ml shredded",
+        "fr": "125 ml filamenté"
+      },
+      {
+        "grams": 73.965,
+        "en": "250 ml shredded",
+        "fr": "250 ml filamenté"
+      },
+      {
+        "grams": 840,
+        "en": "1 head",
+        "fr": "1 tête"
+      },
+      {
+        "grams": 14,
+        "en": "1 leaf",
+        "fr": "1 feuille (leaf)"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      },
+      {
+        "grams": 12,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 12,
+        "en": "base and damaged leaves",
+        "fr": "base et feuilles endommagées"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1082,7 +2481,63 @@
       "potassium": 200,
       "sodium": 4
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 6,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 6,
+        "en": "end and strings",
+        "fr": "bouts et fils"
+      },
+      {
+        "grams": 26.627,
+        "en": "100 ml whole",
+        "fr": "100 ml entier"
+      },
+      {
+        "grams": 41.42,
+        "en": "100 ml chopped",
+        "fr": "100 ml haché"
+      },
+      {
+        "grams": 51.775,
+        "en": "125 ml chopped",
+        "fr": "125 ml haché"
+      },
+      {
+        "grams": 103.55,
+        "en": "250 ml chopped",
+        "fr": "250 ml haché"
+      },
+      {
+        "grams": 33.284,
+        "en": "125 ml whole",
+        "fr": "125 ml entier"
+      },
+      {
+        "grams": 66.568,
+        "en": "250 ml whole",
+        "fr": "250 ml entier"
+      },
+      {
+        "grams": 34,
+        "en": "10 pods",
+        "fr": "10 cosses"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      },
+      {
+        "grams": 68,
+        "en": "20 pieces",
+        "fr": "20 morceaux"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1118,7 +2573,53 @@
       "potassium": 401,
       "sodium": 17
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 3,
+        "en": "1 clove",
+        "fr": "1 gousse"
+      },
+      {
+        "grams": 57.481,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 71.851,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 143.702,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 2.857,
+        "en": "5 ml",
+        "fr": "5 ml"
+      },
+      {
+        "grams": 24,
+        "en": "1 bulb",
+        "fr": "1 bulbe"
+      },
+      {
+        "grams": 4,
+        "en": "4 g",
+        "fr": "4 g"
+      },
+      {
+        "grams": 13,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 13,
+        "en": "knob and skin",
+        "fr": "bourse et peau"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1154,7 +2655,68 @@
       "potassium": 233,
       "sodium": 39
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 45,
+        "en": "10 radishes",
+        "fr": "10 radis"
+      },
+      {
+        "grams": 49.028,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 9,
+        "en": "1 large (2.5cm to 3.2cm dia)",
+        "fr": "1 gros (2.5cm to 3.2cm dia)"
+      },
+      {
+        "grams": 2,
+        "en": "1 small",
+        "fr": "1 petit"
+      },
+      {
+        "grams": 4.5,
+        "en": "1 medium (1.9cm to 2.5cm dia)",
+        "fr": "1 moyen (1.9cm à 2.5cm dia)"
+      },
+      {
+        "grams": 1,
+        "en": "1 slice",
+        "fr": "1 tranche"
+      },
+      {
+        "grams": 61.285,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 122.569,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      },
+      {
+        "grams": 13.5,
+        "en": "3 medium",
+        "fr": "3 moyen"
+      },
+      {
+        "grams": 10,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 10,
+        "en": "stem ends, rootlets and trimmings",
+        "fr": "bout de tiges, radicelle et parures"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1189,7 +2751,53 @@
       "potassium": 305,
       "sodium": 12
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 15,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 15,
+        "en": "parings",
+        "fr": "épluchures"
+      },
+      {
+        "grams": 59.172,
+        "en": "100 ml cubes",
+        "fr": "100 ml en cubes"
+      },
+      {
+        "grams": 73.965,
+        "en": "125 ml cubes",
+        "fr": "125 ml en cubes"
+      },
+      {
+        "grams": 147.93,
+        "en": "250 ml cubes",
+        "fr": "250 ml en cubes"
+      },
+      {
+        "grams": 772,
+        "en": "1 large",
+        "fr": "1 gros"
+      },
+      {
+        "grams": 192,
+        "en": "1 small",
+        "fr": "1 petit"
+      },
+      {
+        "grams": 386,
+        "en": "1 medium",
+        "fr": "1 moyen"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1224,7 +2832,33 @@
       "potassium": 370,
       "sodium": 94
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 60,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 60,
+        "en": "stems and inedible parts of bracts and flower",
+        "fr": "tiges et parties non comestible de la fleur et de la bractée"
+      },
+      {
+        "grams": 128,
+        "en": "1 medium",
+        "fr": "1 moyen"
+      },
+      {
+        "grams": 162,
+        "en": "1 large",
+        "fr": "1 gros"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1260,7 +2894,43 @@
       "potassium": 299,
       "sodium": 7
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 14,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 14,
+        "en": "crown and tips",
+        "fr": "bout de la tige et petits bouts"
+      },
+      {
+        "grams": 11.875,
+        "en": "1 pod (8cm x 2cm dia)",
+        "fr": "1 cosse (8cm x 2cm dia)"
+      },
+      {
+        "grams": 42.265,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 52.83,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 105.66,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1296,7 +2966,28 @@
       "potassium": 116.551,
       "sodium": 283.461
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 44.38,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 55.48,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 110.95,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 100,
+        "en": "100 g",
+        "fr": "100 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1332,7 +3023,33 @@
       "potassium": 113,
       "sodium": 443
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 96.788,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 120.985,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 241.97,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 45,
+        "en": "45 g",
+        "fr": "45 g"
+      },
+      {
+        "grams": 24,
+        "en": "amount to make 125ml",
+        "fr": "quantité requise pour préparer 125ml"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1369,7 +3086,28 @@
       "potassium": 353,
       "sodium": 35
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 40.152,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 16.061,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 30,
+        "en": "30 g",
+        "fr": "30 g"
+      },
+      {
+        "grams": 30,
+        "en": "1 serving",
+        "fr": "1 portion"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1404,7 +3142,33 @@
       "potassium": 666,
       "sodium": 2021
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 8.1,
+        "en": "1 slice",
+        "fr": "1 tranche"
+      },
+      {
+        "grams": 34.658,
+        "en": "100 ml pieces",
+        "fr": "100 ml morceaux"
+      },
+      {
+        "grams": 86.644,
+        "en": "250 ml pieces",
+        "fr": "250 ml morceaux"
+      },
+      {
+        "grams": 75,
+        "en": "1 food guide serving = 75g",
+        "fr": "1 portion du guide alimentaire = 75g"
+      },
+      {
+        "grams": 15,
+        "en": "15 g",
+        "fr": "15 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1439,7 +3203,28 @@
       "potassium": 178,
       "sodium": 402
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 86.644,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 216.61,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 100,
+        "en": "100 g",
+        "fr": "100 g"
+      },
+      {
+        "grams": 108.305,
+        "en": "125 ml",
+        "fr": "125 ml"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1475,7 +3260,28 @@
       "potassium": 322,
       "sodium": 11
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 32.544,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 40.681,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 81.361,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 65,
+        "en": "65 g",
+        "fr": "65 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1511,7 +3317,18 @@
       "potassium": 1578.5,
       "sodium": 5.32
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 20,
+        "en": "1 serving",
+        "fr": "1 portion"
+      },
+      {
+        "grams": 15,
+        "en": "15 g",
+        "fr": "15 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1547,7 +3364,18 @@
       "potassium": 408,
       "sodium": 2
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 101.437,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 253.593,
+        "en": "250 ml",
+        "fr": "250 ml"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1582,7 +3410,23 @@
       "potassium": 585,
       "sodium": 294
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 17,
+        "en": "1 patty (5.7 cm dia)",
+        "fr": "1 boulette (5.7 cm dia)"
+      },
+      {
+        "grams": 51,
+        "en": "3 patties (5.7cm dia)",
+        "fr": "3 boulettes (5.7cm dia)"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1617,7 +3461,28 @@
       "potassium": 108,
       "sodium": 861
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 31,
+        "en": "1 piece",
+        "fr": "1 morceau"
+      },
+      {
+        "grams": 186,
+        "en": "6 pieces",
+        "fr": "6 morceaux"
+      },
+      {
+        "grams": 62,
+        "en": "2 pieces",
+        "fr": "2 morceaux"
+      },
+      {
+        "grams": 50,
+        "en": "50 g",
+        "fr": "50 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1654,7 +3519,33 @@
       "potassium": 278,
       "sodium": 702
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 15.81,
+        "en": "15 ml",
+        "fr": "15 ml"
+      },
+      {
+        "grams": 105.67,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 50,
+        "en": "50 g",
+        "fr": "50 g"
+      },
+      {
+        "grams": 31.7,
+        "en": "30 ml",
+        "fr": "30 ml"
+      },
+      {
+        "grams": 30,
+        "en": "30 g",
+        "fr": "30 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1691,7 +3582,23 @@
       "potassium": 112,
       "sodium": 256
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 4,
+        "en": "1 cone",
+        "fr": "1 cornet"
+      },
+      {
+        "grams": 29,
+        "en": "1 waffle cone",
+        "fr": "1 cornet gaufré"
+      },
+      {
+        "grams": 5,
+        "en": "5 g",
+        "fr": "5 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1727,7 +3634,88 @@
       "potassium": 441,
       "sodium": 2
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 42.265,
+        "en": "100 ml halves",
+        "fr": "100 ml moitiés"
+      },
+      {
+        "grams": 50.719,
+        "en": "100 ml pieces",
+        "fr": "100 ml morceaux"
+      },
+      {
+        "grams": 49.451,
+        "en": "100 ml chopped",
+        "fr": "100 ml haché"
+      },
+      {
+        "grams": 29.67,
+        "en": "60 ml chopped",
+        "fr": "60 ml haché"
+      },
+      {
+        "grams": 61.813,
+        "en": "125 ml chopped",
+        "fr": "125 ml haché"
+      },
+      {
+        "grams": 33.812,
+        "en": "100 ml ground",
+        "fr": "100 ml moulu"
+      },
+      {
+        "grams": 20.287,
+        "en": "60 ml ground",
+        "fr": "60 ml moulu"
+      },
+      {
+        "grams": 42.265,
+        "en": "125 ml ground",
+        "fr": "125 ml moulu"
+      },
+      {
+        "grams": 30.431,
+        "en": "60 ml pieces",
+        "fr": "60 ml morceaux"
+      },
+      {
+        "grams": 63.398,
+        "en": "125 ml pieces",
+        "fr": "125 ml morceaux"
+      },
+      {
+        "grams": 52.832,
+        "en": "125 ml halves",
+        "fr": "125 ml moitiés"
+      },
+      {
+        "grams": 25.359,
+        "en": "60 ml halves",
+        "fr": "60 ml moitiés"
+      },
+      {
+        "grams": 30,
+        "en": "30 g",
+        "fr": "30 g"
+      },
+      {
+        "grams": 55,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 55,
+        "en": "shells / husks",
+        "fr": "enveloppes/ écales"
+      },
+      {
+        "grams": 29.586,
+        "en": "250 ml with shell, yields",
+        "fr": "250 ml avec écales - rendement"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1762,7 +3750,33 @@
       "potassium": 407,
       "sodium": 16
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 30,
+        "en": "30 g",
+        "fr": "30 g"
+      },
+      {
+        "grams": 43.216,
+        "en": "60 ml",
+        "fr": "60 ml"
+      },
+      {
+        "grams": 10.804,
+        "en": "15 ml",
+        "fr": "15 ml"
+      },
+      {
+        "grams": 72.027,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 90.034,
+        "en": "125 ml",
+        "fr": "125 ml"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1798,7 +3812,23 @@
       "potassium": 296.667,
       "sodium": 351
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 46,
+        "en": "2 bars",
+        "fr": "2 barres"
+      },
+      {
+        "grams": 30,
+        "en": "30 g",
+        "fr": "30 g"
+      },
+      {
+        "grams": 23,
+        "en": "1 bar",
+        "fr": "1 barre"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1834,7 +3864,18 @@
       "potassium": 78,
       "sodium": 345
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 41,
+        "en": "1 doughnut (7.6 cm dia)",
+        "fr": "1 beigne (7.6 cm dia)"
+      },
+      {
+        "grams": 55,
+        "en": "55 g",
+        "fr": "55 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1871,7 +3912,28 @@
       "potassium": 90,
       "sodium": 438
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 57,
+        "en": "1 snack cake",
+        "fr": "1 gâteau collation"
+      },
+      {
+        "grams": 80,
+        "en": "1/6 cake (482g)",
+        "fr": "1/6 gâteau (482g)"
+      },
+      {
+        "grams": 60,
+        "en": "1/8 cake (482g)",
+        "fr": "1/8 gâteau (482g)"
+      },
+      {
+        "grams": 125,
+        "en": "125 g",
+        "fr": "125 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1906,7 +3968,23 @@
       "potassium": 184,
       "sodium": 5
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 98.478,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 246.196,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 123.098,
+        "en": "125 ml",
+        "fr": "125 ml"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1942,7 +4020,33 @@
       "potassium": 250,
       "sodium": 105
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 101.437,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 15.203,
+        "en": "15 ml",
+        "fr": "15 ml"
+      },
+      {
+        "grams": 126.796,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 60.862,
+        "en": "60 ml",
+        "fr": "60 ml"
+      },
+      {
+        "grams": 2.06,
+        "en": "yield from 1 coconut",
+        "fr": "rendement d'une noix de coco"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -1977,7 +4081,28 @@
       "potassium": 276.582,
       "sodium": 614.364
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 66,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 82.5,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 165,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 195,
+        "en": "195 g",
+        "fr": "195 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -2011,7 +4136,23 @@
       "potassium": 149.016,
       "sodium": 203.617
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 84.535,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 105.669,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 211.338,
+        "en": "250 ml",
+        "fr": "250 ml"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -2047,7 +4188,18 @@
       "potassium": 231,
       "sodium": 511
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 60,
+        "en": "60 g",
+        "fr": "60 g"
+      },
+      {
+        "grams": 88,
+        "en": "5 pieces",
+        "fr": "5 morceaux"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -2084,7 +4236,28 @@
       "potassium": 92.224,
       "sodium": 658.431
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 74.81,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 93.51,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 187.03,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -2120,7 +4293,28 @@
       "potassium": 116,
       "sodium": 528
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 49.03,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 61.288,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 122.576,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -2155,7 +4349,28 @@
       "potassium": 93,
       "sodium": 690
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 47.76,
+        "en": "100 ml shredded",
+        "fr": "100 ml filamenté"
+      },
+      {
+        "grams": 55.79,
+        "en": "100 ml diced",
+        "fr": "100 ml en dés"
+      },
+      {
+        "grams": 30,
+        "en": "30 g",
+        "fr": "30 g"
+      },
+      {
+        "grams": 50,
+        "en": "50 g",
+        "fr": "50 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -2191,7 +4406,28 @@
       "potassium": 305,
       "sodium": 666
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 105.241,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 131.551,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 263.102,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -2227,7 +4463,18 @@
       "potassium": 205.757,
       "sodium": 213.312
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 223,
+        "en": "1 fajita",
+        "fr": "1 fajita"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -2263,7 +4510,33 @@
       "potassium": 271,
       "sodium": 14
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 408,
+        "en": "1 root",
+        "fr": "1 racine"
+      },
+      {
+        "grams": 87.07,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 108.833,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 216.667,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   },
@@ -2299,7 +4572,48 @@
       "potassium": 490,
       "sodium": 2
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 22,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 13,
+        "en": "skin",
+        "fr": "peau (pelure)"
+      },
+      {
+        "grams": 9,
+        "en": "core",
+        "fr": "noyau"
+      },
+      {
+        "grams": 96,
+        "en": "1/4 small fruit",
+        "fr": "1/4 petit fruit"
+      },
+      {
+        "grams": 92.984,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 116.23,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 232.46,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "note": "Candidat généré automatiquement — à valider avant utilisation dans les calculs."
   }

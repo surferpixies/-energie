@@ -11,7 +11,7 @@
     "measureWeights": "https://open.canada.ca/data/dataset/1b6139bd-ed7e-4043-bc28-ff00e10f3109/resource/bb76d816-3ac0-4749-8c4b-f0dbfd0fac76/download/measure_weight_conversion.csv",
     "measureNames": "https://open.canada.ca/data/dataset/1b6139bd-ed7e-4043-bc28-ff00e10f3109/resource/104adbc9-f4cc-40b1-9aaa-08290648e24b/download/measure_name.csv"
   },
-  "importedAt": "2026-09-25T18:01:32.580Z",
+  "importedAt": "2026-09-25T18:20:30.306Z",
   "counts": {
     "foods": 5993,
     "nutrientNames": 173,
