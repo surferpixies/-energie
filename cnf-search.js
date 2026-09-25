@@ -168,12 +168,30 @@
     };
   }
 
+  function hasUnrequestedQualifier(row, text) {
+    const query = ` ${normalize(text)} `;
+    const candidate = ` ${normalize(`${row?.[1] || ""} ${row?.[2] || ""}`)} `;
+    const qualifiers = [
+      ["feuille", "feuilles", "green", "greens"],
+      ["congele", "congelee", "congelees", "frozen"],
+      ["conserve", "canned"],
+      ["sel ajoute", "with salt"],
+      ["marine", "marinee", "marinated"],
+    ];
+    return qualifiers.some((words) =>
+      words.some((word) => candidate.includes(` ${word} `)) &&
+      !words.some((word) => query.includes(` ${word} `))
+    );
+  }
+
   function find(text) {
     if (!catalog.length) return null;
     const ranked = [];
     for (const row of catalog) {
-      const score = scoreRow(row, text);
-      if (Number.isFinite(score) && score >= 600) ranked.push({ row, score });
+      let score = scoreRow(row, text);
+      if (!Number.isFinite(score)) continue;
+      if (hasUnrequestedQualifier(row, text)) score -= 140;
+      if (score >= 600) ranked.push({ row, score });
     }
     if (!ranked.length) return null;
     ranked.sort((a, b) => b.score - a.score);
@@ -181,7 +199,7 @@
     if (second && first.score - second.score < 45) {
       const firstBase = descriptor(first.row).firstFr || descriptor(first.row).firstEn;
       const secondBase = descriptor(second.row).firstFr || descriptor(second.row).firstEn;
-      if (firstBase === secondBase) return null;
+      if (firstBase === secondBase && !hasUnrequestedQualifier(second.row, text)) return null;
     }
     return foodFromRow(first.row, text);
   }
