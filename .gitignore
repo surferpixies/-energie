@@ -2,3 +2,7 @@ node_modules/
 www/
 .DS_Store
 npm-debug.log*
+
+# Generated CNF runtime/data (recreated by npm run cnf:import)
+cnf-foods.js
+data/cnf-2026/foods.json
