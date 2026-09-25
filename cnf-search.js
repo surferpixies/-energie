@@ -233,6 +233,7 @@
       ["chevre", "goat"],
       ["brebis", "sheep"],
       ["soya", "soy"],
+      ["tofu"],
       ["grec", "greek"],
       ["sel ajoute", "with salt"],
       ["marine", "marinee", "marinated"],
