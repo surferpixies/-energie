@@ -28,10 +28,84 @@
       "potassium": 358,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 95.102,
+        "en": "100 ml mashed",
+        "fr": "100 ml en purée"
+      },
+      {
+        "grams": 63.401,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 79.252,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 158.503,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 118.878,
+        "en": "125 ml mashed",
+        "fr": "125 ml en purée"
+      },
+      {
+        "grams": 237.755,
+        "en": "250 ml mashed",
+        "fr": "250 ml en purée"
+      },
+      {
+        "grams": 81,
+        "en": "1 extra small (less than 15cm long)",
+        "fr": "1 très petit (moins de 15 cm long)"
+      },
+      {
+        "grams": 101,
+        "en": "1 small (15cm to 17.5cm long)",
+        "fr": "1 petit (15cm to 17.5cm long)"
+      },
+      {
+        "grams": 118,
+        "en": "1 medium (18cm to 20cm long)",
+        "fr": "1 moyen (18cm à 20cm long)"
+      },
+      {
+        "grams": 136,
+        "en": "1 large (20cm to 22.5cm long)",
+        "fr": "1 gros (20cm to 22.5cm long)"
+      },
+      {
+        "grams": 152,
+        "en": "1 extra large (23cm or longer)",
+        "fr": "1 extra gros (23cm ou plus long)"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 36,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 36,
+        "en": "skin",
+        "fr": "peau (pelure)"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 118,
+    "matchedPortionBasis": "1 moyen (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "clémentine",
@@ -63,10 +137,49 @@
       "potassium": 177,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 23,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 23,
+        "en": "peel and seeds",
+        "fr": "pelure et pépins"
+      },
+      {
+        "grams": 74,
+        "en": "1 fruit",
+        "fr": "1 fruit"
+      },
+      {
+        "grams": 82.418,
+        "en": "100 ml sections",
+        "fr": "100 ml sections"
+      },
+      {
+        "grams": 103.022,
+        "en": "125 ml sections",
+        "fr": "125 ml sections"
+      },
+      {
+        "grams": 206.044,
+        "en": "250 ml sections",
+        "fr": "250 ml sections"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 74,
+    "matchedPortionBasis": "1 fruit (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "pêche",
@@ -98,10 +211,64 @@
       "potassium": 190,
       "sodium": 0
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 65.092,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 175,
+        "en": "",
+        "fr": ""
+      },
+      {
+        "grams": 150,
+        "en": "1 medium (6.4cm dia)",
+        "fr": "1 moyen (6.4cm dia)"
+      },
+      {
+        "grams": 130,
+        "en": "1 small (5cm dia)",
+        "fr": "1 petit (5cm dia)"
+      },
+      {
+        "grams": 81.365,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 162.73,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 224,
+        "en": "1 extra large (7.6 cm dia)",
+        "fr": "1 extra gros (7.6 cm dia)"
+      },
+      {
+        "grams": 13,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 13,
+        "en": "pits and skin",
+        "fr": "noyaux et pelure"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 150,
+    "matchedPortionBasis": "1 moyen (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "nectarine",
@@ -131,10 +298,49 @@
       "potassium": 201,
       "sodium": 0
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 58.326,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 136,
+        "en": "1 fruit (6.4 cm dia)",
+        "fr": "1 fruit (6.4 cm dia)"
+      },
+      {
+        "grams": 72.908,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 145.816,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 9,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 9,
+        "en": "pits",
+        "fr": "noyaux"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 136,
+    "matchedPortionBasis": "1 fruit 6,4 cm (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "fraises",
@@ -166,10 +372,114 @@
       "potassium": 153,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 6,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 6,
+        "en": "caps and stems",
+        "fr": "capuchons et queues"
+      },
+      {
+        "grams": 60.862,
+        "en": "100 ml whole",
+        "fr": "100 ml entier"
+      },
+      {
+        "grams": 70.161,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 64.243,
+        "en": "100 ml halves",
+        "fr": "100 ml moitiés"
+      },
+      {
+        "grams": 80.304,
+        "en": "125 ml halves",
+        "fr": "125 ml moitiés"
+      },
+      {
+        "grams": 160.609,
+        "en": "250 ml halves",
+        "fr": "250 ml moitiés"
+      },
+      {
+        "grams": 98.056,
+        "en": "100 ml puree",
+        "fr": "100 ml purée"
+      },
+      {
+        "grams": 122.569,
+        "en": "125 ml puree",
+        "fr": "125 ml purée"
+      },
+      {
+        "grams": 245.139,
+        "en": "250 ml puree",
+        "fr": "250 ml purée"
+      },
+      {
+        "grams": 87.701,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 175.402,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 76.078,
+        "en": "125 ml whole",
+        "fr": "125 ml entier"
+      },
+      {
+        "grams": 152.156,
+        "en": "250 ml whole",
+        "fr": "250 ml entier"
+      },
+      {
+        "grams": 7,
+        "en": "1 small (2.5cm dia)",
+        "fr": "1 petit (2.5cm dia)"
+      },
+      {
+        "grams": 12,
+        "en": "1 medium (3.2cm dia)",
+        "fr": "1 moyen (3.2cm dia)"
+      },
+      {
+        "grams": 18,
+        "en": "1 large (3.5cm dia)",
+        "fr": "1 gros (3.5cm dia)"
+      },
+      {
+        "grams": 27,
+        "en": "1 extra large (4.1cm dia)",
+        "fr": "1 extra gros (4.1cm dia)"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 84,
+        "en": "7 medium",
+        "fr": "7 moyen"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 160.609,
+    "matchedPortionBasis": "250 ml, moitiés (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "mûres",
@@ -201,9 +511,38 @@
       "potassium": 194,
       "sodium": 10
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 59.172,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 15,
+        "en": "10 fruits",
+        "fr": "10 fruits"
+      },
+      {
+        "grams": 73.964,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 147.929,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Le candidat est « mûres blanche »; trop spécifique pour l’alias générique."
   },
   {
@@ -235,10 +574,69 @@
       "potassium": 109,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 69.74,
+        "en": "100 ml diced",
+        "fr": "100 ml en dés"
+      },
+      {
+        "grams": 84,
+        "en": "1 slice (2cm x 9cm dia)",
+        "fr": "1 tranche (2cm x 9cm dia)"
+      },
+      {
+        "grams": 56,
+        "en": "1 thin slice (1.3cm x 9cm dia)",
+        "fr": "1 tranche mince (1.3cm x 9cm dia)"
+      },
+      {
+        "grams": 905,
+        "en": "1 fruit",
+        "fr": "1 fruit"
+      },
+      {
+        "grams": 87.177,
+        "en": "125 ml diced",
+        "fr": "125 ml en dés"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 174.354,
+        "en": "250 ml diced",
+        "fr": "250 ml en dés"
+      },
+      {
+        "grams": 48,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 6,
+        "en": "core",
+        "fr": "noyau"
+      },
+      {
+        "grams": 10,
+        "en": "crown",
+        "fr": "couronne"
+      },
+      {
+        "grams": 32,
+        "en": "parings",
+        "fr": "épluchures"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 174.354,
+    "matchedPortionBasis": "250 ml, en dés (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "mangue",
@@ -269,10 +667,54 @@
       "potassium": 168,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 29,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 29,
+        "en": "seeds and skin",
+        "fr": "noyau (pépins) et peau (pelure)"
+      },
+      {
+        "grams": 69.738,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 207,
+        "en": "1 fruit",
+        "fr": "1 fruit"
+      },
+      {
+        "grams": 87.172,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 174.345,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 103.5,
+        "en": "1/2 fruit",
+        "fr": "1/2 fruit"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 174.345,
+    "matchedPortionBasis": "250 ml, tranches (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "papaye",
@@ -303,10 +745,79 @@
       "potassium": 182,
       "sodium": 8
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 59.172,
+        "en": "100 ml cubes",
+        "fr": "100 ml en cubes"
+      },
+      {
+        "grams": 97.21,
+        "en": "100 ml mashed",
+        "fr": "100 ml en purée"
+      },
+      {
+        "grams": 380,
+        "en": "1 large (14.6cm long x 8.3cm dia)",
+        "fr": "1 gros (14.6cm long x 8.3cm dia)"
+      },
+      {
+        "grams": 304,
+        "en": "1 medium (13cm long x 7.6cm dia)",
+        "fr": "1 moyen (13cm long x 7.6cm dia)"
+      },
+      {
+        "grams": 152,
+        "en": "1 small (11.4cm long x 7cm dia)",
+        "fr": "1 petit (11.4cm long x 7cm dia)"
+      },
+      {
+        "grams": 243.026,
+        "en": "250 ml mashed",
+        "fr": "250 ml en purée"
+      },
+      {
+        "grams": 152.5,
+        "en": "1/2 fruit (13cm dia)",
+        "fr": "1/2 fruit (13cm dia)"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 73.964,
+        "en": "125 ml cubes",
+        "fr": "125 ml en cubes"
+      },
+      {
+        "grams": 147.929,
+        "en": "250 ml cubes",
+        "fr": "250 ml en cubes"
+      },
+      {
+        "grams": 121.513,
+        "en": "125 ml mashed",
+        "fr": "125 ml en purée"
+      },
+      {
+        "grams": 38,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 38,
+        "en": "seeds and skin",
+        "fr": "noyau (pépins) et peau (pelure)"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 147.929,
+    "matchedPortionBasis": "250 ml, cubes (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "melon miel",
@@ -337,10 +848,89 @@
       "potassium": 228,
       "sodium": 18
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 54,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 5,
+        "en": "cavity contents",
+        "fr": "contenu cavité"
+      },
+      {
+        "grams": 49,
+        "en": "rind",
+        "fr": "zeste / pelure / écorce"
+      },
+      {
+        "grams": 71.851,
+        "en": "100 ml cubes",
+        "fr": "100 ml en cubes"
+      },
+      {
+        "grams": 138,
+        "en": "10 melon balls",
+        "fr": "10 boules de melon"
+      },
+      {
+        "grams": 74.81,
+        "en": "100 ml balls",
+        "fr": "100 ml boules"
+      },
+      {
+        "grams": 1000,
+        "en": "1 melon (13.3cm dia)",
+        "fr": "1 melon (13.3cm dia)"
+      },
+      {
+        "grams": 1280,
+        "en": "1 melon (15.2cm - 17.8cm dia)",
+        "fr": "1 melon (15.2cm - 17.8cm dia)"
+      },
+      {
+        "grams": 125,
+        "en": "1 wedge (1/8 of a 13.3cm dia melon)",
+        "fr": "1 quartier (1/8 d'un melon de 13.3cm dia)"
+      },
+      {
+        "grams": 160,
+        "en": "1 wedge (1/8 of a 15.2cm to 17.8cm dia melon)",
+        "fr": "1 quartier (1/8 d'un melon de 15.2cm à 17.8cm dia)"
+      },
+      {
+        "grams": 89.814,
+        "en": "125 ml cubes",
+        "fr": "125 ml en cubes"
+      },
+      {
+        "grams": 179.628,
+        "en": "250 ml cubes",
+        "fr": "250 ml en cubes"
+      },
+      {
+        "grams": 150,
+        "en": "150 g",
+        "fr": "150 g"
+      },
+      {
+        "grams": 93.512,
+        "en": "125 ml balls",
+        "fr": "125 ml boules"
+      },
+      {
+        "grams": 187.025,
+        "en": "250 ml balls",
+        "fr": "250 ml boules"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 179.628,
+    "matchedPortionBasis": "250 ml, cubes (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "melon d eau",
@@ -373,10 +963,64 @@
       "potassium": 112,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 40,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 40,
+        "en": "rind, seeds and cutting loss",
+        "fr": "pelure, noyaux et pertes/manipulations"
+      },
+      {
+        "grams": 64.243,
+        "en": "100 ml diced",
+        "fr": "100 ml en dés"
+      },
+      {
+        "grams": 80.304,
+        "en": "125 ml diced",
+        "fr": "125 ml en dés"
+      },
+      {
+        "grams": 160.609,
+        "en": "250 ml diced",
+        "fr": "250 ml en dés"
+      },
+      {
+        "grams": 150,
+        "en": "150 g",
+        "fr": "150 g"
+      },
+      {
+        "grams": 1825,
+        "en": "1 small",
+        "fr": "1 petit"
+      },
+      {
+        "grams": 2793,
+        "en": "1 medium",
+        "fr": "1 moyen"
+      },
+      {
+        "grams": 3754,
+        "en": "1 large",
+        "fr": "1 gros"
+      },
+      {
+        "grams": 128,
+        "en": "1 wedge yields",
+        "fr": "1 quartier donne"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 160.609,
+    "matchedPortionBasis": "250 ml, en dés (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "prune",
@@ -407,10 +1051,49 @@
       "potassium": 157,
       "sodium": 0
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 69.738,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 66,
+        "en": "1 fruit (5.4cm dai)",
+        "fr": "1 fruit (5.4cm dai)"
+      },
+      {
+        "grams": 87.172,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 174.345,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 6,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 6,
+        "en": "pits",
+        "fr": "noyaux"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 66,
+    "matchedPortionBasis": "1 fruit (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "abricot",
@@ -441,10 +1124,64 @@
       "potassium": 259,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 7,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 7,
+        "en": "pits",
+        "fr": "noyaux"
+      },
+      {
+        "grams": 65.511,
+        "en": "100 ml halves",
+        "fr": "100 ml moitiés"
+      },
+      {
+        "grams": 105,
+        "en": "3 fruits",
+        "fr": "3 fruits"
+      },
+      {
+        "grams": 174.345,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 69.738,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 81.889,
+        "en": "125 ml halves",
+        "fr": "125 ml moitiés"
+      },
+      {
+        "grams": 87.172,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 163.779,
+        "en": "250 ml halves",
+        "fr": "250 ml moitiés"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 35,
+    "matchedPortionBasis": "1 fruit, dérivé de 3 fruits = 105 g (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "dattes",
@@ -476,9 +1213,33 @@
       "potassium": 696,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 24,
+        "en": "1 date pitted",
+        "fr": "1 date dénoyauté"
+      },
+      {
+        "grams": 40,
+        "en": "40 g",
+        "fr": "40 g"
+      },
+      {
+        "grams": 8,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 8,
+        "en": "pits",
+        "fr": "noyaux"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Le candidat est spécifiquement Medjool; l’alias Énergie est générique."
   },
   {
@@ -510,10 +1271,59 @@
       "potassium": 236,
       "sodium": 3
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 44,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 44,
+        "en": "skin and membrane",
+        "fr": "peau et membranes"
+      },
+      {
+        "grams": 282,
+        "en": "1 fruit (10cm diam.)",
+        "fr": "1 fruit (10cm diam.)"
+      },
+      {
+        "grams": 141,
+        "en": "1/2 fruit (approx 10cm dia)",
+        "fr": "1/2 fruit (approx 10cm dia)"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 73.546,
+        "en": "100 ml seeds/ arils",
+        "fr": "100 ml graine / arille"
+      },
+      {
+        "grams": 91.932,
+        "en": "125 ml seeds / arils",
+        "fr": "125 ml graines / arilles"
+      },
+      {
+        "grams": 183.864,
+        "en": "250 ml seeds / arils",
+        "fr": "250 ml graines / arilles"
+      },
+      {
+        "grams": 44.127,
+        "en": "60 ml seeds / arils",
+        "fr": "60 ml graines / arilles"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 183.864,
+    "matchedPortionBasis": "250 ml, graines/arilles (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "fruit de la passion",
@@ -544,10 +1354,54 @@
       "potassium": 348,
       "sodium": 28
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 18,
+        "en": "1 fruit",
+        "fr": "1 fruit"
+      },
+      {
+        "grams": 99.746,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 124.683,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 249.366,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 36,
+        "en": "2 fruits",
+        "fr": "2 fruits"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 48,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 48,
+        "en": "shells / husks",
+        "fr": "enveloppes/ écales"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 54,
+    "matchedPortionBasis": "3 fruits, dérivé de 1 fruit = 18 g (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "litchi",
@@ -578,10 +1432,54 @@
       "potassium": 171,
       "sodium": 1
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 9.6,
+        "en": "1 fruit",
+        "fr": "1 fruit"
+      },
+      {
+        "grams": 80.304,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 96,
+        "en": "10 fruits",
+        "fr": "10 fruits"
+      },
+      {
+        "grams": 100.38,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 200.761,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      },
+      {
+        "grams": 40,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 40,
+        "en": "shell + membrane",
+        "fr": "coquille et membrane"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 200.761,
+    "matchedPortionBasis": "250 ml (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "poivron rouge",
@@ -612,10 +1510,79 @@
       "potassium": 211,
       "sodium": 4
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 18,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 62.975,
+        "en": "100 ml chopped",
+        "fr": "100 ml haché"
+      },
+      {
+        "grams": 38.884,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 119,
+        "en": "1 medium (7cm long, 6.4cm dia)",
+        "fr": "1 moyen (7cm long, 6.4cm dia)"
+      },
+      {
+        "grams": 74,
+        "en": "1 small",
+        "fr": "1 petit"
+      },
+      {
+        "grams": 10,
+        "en": "1 ring (7.6cm dia, 0.6cm thick)",
+        "fr": "1 anneau (7.6cm dia, 0.6cm épaisseur)"
+      },
+      {
+        "grams": 164,
+        "en": "1 large (9.5cm long, 7.6cm dia)",
+        "fr": "1 gros (9.5cm long, 7.6cm dia)"
+      },
+      {
+        "grams": 78.719,
+        "en": "125 ml chopped",
+        "fr": "125 ml haché"
+      },
+      {
+        "grams": 157.439,
+        "en": "250 ml chopped",
+        "fr": "250 ml haché"
+      },
+      {
+        "grams": 48.605,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 97.21,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      },
+      {
+        "grams": 59.5,
+        "en": "1/2 medium",
+        "fr": "1/2 moyen"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 119,
+    "matchedPortionBasis": "1 moyen (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "poivron vert",
@@ -646,45 +1613,74 @@
       "potassium": 175,
       "sodium": 3
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 18,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 18,
+        "en": "stem ends, seeds and core",
+        "fr": "bout de la tige, pépins et noyau"
+      },
+      {
+        "grams": 62.975,
+        "en": "100 ml chopped",
+        "fr": "100 ml haché"
+      },
+      {
+        "grams": 164,
+        "en": "1 large",
+        "fr": "1 gros"
+      },
+      {
+        "grams": 38.884,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 48.605,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 97.21,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 78.719,
+        "en": "125 ml chopped",
+        "fr": "125 ml haché"
+      },
+      {
+        "grams": 157.439,
+        "en": "250 ml chopped",
+        "fr": "250 ml haché"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      },
+      {
+        "grams": 82,
+        "en": "1/2 medium",
+        "fr": "1/2 moyen"
+      },
+      {
+        "grams": 27,
+        "en": "10 strips",
+        "fr": "10 frites (strips)"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
-  },
-  {
-    "energieAlias": "épinards",
-    "aliases": [
-      "épinards",
-      "epinards",
-      "spinach"
-    ],
-    "current": {
-      "calories": 41,
-      "protein": 5.3,
-      "carbs": 7,
-      "fat": 0.5,
-      "portion": "1 tasse cuits",
-      "gramsPerPortion": null
-    },
-    "cnfFoodId": "2213",
-    "cnfNameFr": "Épinard, cru",
-    "cnfNameEn": "Spinach, raw",
-    "nutritionPer100g": {
-      "protein": 2.86,
-      "fat": 0.39,
-      "carbs": 3.63,
-      "calories": 23,
-      "sugars": 0.42,
-      "fiber": 2.2,
-      "calcium": 99,
-      "iron": 2.71,
-      "potassium": 558,
-      "sodium": 79
-    },
-    "portions": [],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "note": "Énergie indique « 1 tasse cuits », mais le candidat FCÉN est cru."
+    "matchedPortionGrams": 164,
+    "matchedPortionBasis": "1 moyen estimé à partir de la fiche FCÉN disponible; à confirmer avant activation",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "laitue romaine",
@@ -715,10 +1711,49 @@
       "potassium": 247,
       "sodium": 8
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 10,
+        "en": "1 leaf",
+        "fr": "1 feuille (leaf)"
+      },
+      {
+        "grams": 23.669,
+        "en": "100 ml shredded",
+        "fr": "100 ml filamenté"
+      },
+      {
+        "grams": 29.586,
+        "en": "125 ml shredded",
+        "fr": "125 ml filamenté"
+      },
+      {
+        "grams": 59.172,
+        "en": "250 ml shredded",
+        "fr": "250 ml filamenté"
+      },
+      {
+        "grams": 65,
+        "en": "65 g",
+        "fr": "65 g"
+      },
+      {
+        "grams": 6,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 6,
+        "en": "core",
+        "fr": "noyau"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 118.344,
+    "matchedPortionBasis": "2 × 250 ml filamenté (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "laitue",
@@ -748,78 +1783,39 @@
       "potassium": 330,
       "sodium": 11
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 25,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 25,
+        "en": "tough stems and leaves",
+        "fr": "pédoncules (tiges) coriaces et feuilles"
+      },
+      {
+        "grams": 8,
+        "en": "1 leaf",
+        "fr": "1 feuille (leaf)"
+      },
+      {
+        "grams": 58.12,
+        "en": "250 ml chopped",
+        "fr": "250 ml haché"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Le candidat est laitue-tige, trop spécifique."
-  },
-  {
-    "energieAlias": "courgette",
-    "aliases": [
-      "courgette",
-      "zucchini"
-    ],
-    "current": {
-      "calories": 33,
-      "protein": 2.4,
-      "carbs": 6,
-      "fat": 0.6,
-      "portion": "1 moyenne",
-      "gramsPerPortion": null
-    },
-    "cnfFoodId": "6760",
-    "cnfNameFr": "Courgettes, en pâte à frire, frites",
-    "cnfNameEn": "Zucchini, battered and fried",
-    "nutritionPer100g": {
-      "protein": 2.585,
-      "fat": 13.748,
-      "carbs": 9.284,
-      "calories": 167,
-      "sugars": 2.056,
-      "fiber": 1.178,
-      "calcium": 57.351,
-      "iron": 0.55,
-      "potassium": 212.246,
-      "sodium": 129.843
-    },
-    "portions": [],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "note": "Le candidat est frit/en pâte, incorrect pour l’alias générique."
-  },
-  {
-    "energieAlias": "aubergine",
-    "aliases": [
-      "aubergine",
-      "eggplant"
-    ],
-    "current": {
-      "calories": 35,
-      "protein": 0.8,
-      "carbs": 9,
-      "fat": 0.2,
-      "portion": "1 tasse cuite",
-      "gramsPerPortion": null
-    },
-    "cnfFoodId": "2088",
-    "cnfNameFr": "Aubergine, crue",
-    "cnfNameEn": "Eggplant (aubergine, brinjal), raw",
-    "nutritionPer100g": {
-      "protein": 0.98,
-      "fat": 0.18,
-      "carbs": 5.88,
-      "calories": 25,
-      "sugars": 3.53,
-      "fiber": 3,
-      "calcium": 9,
-      "iron": 0.23,
-      "potassium": 229,
-      "sodium": 2
-    },
-    "portions": [],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "note": "Énergie indique une portion cuite, candidat FCÉN cru."
   },
   {
     "energieAlias": "asperges",
@@ -851,10 +1847,79 @@
       "potassium": 202,
       "sodium": 2
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 47,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 47,
+        "en": "ends",
+        "fr": "bouts"
+      },
+      {
+        "grams": 56.636,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 3.5,
+        "en": "1 spear tip (5cm long and less)",
+        "fr": "1 pointe (5 cm long. et moins)"
+      },
+      {
+        "grams": 12,
+        "en": "1 small spear (12.7cm long or less)",
+        "fr": "1 petite tige (12.7cm long. ou moins)"
+      },
+      {
+        "grams": 24,
+        "en": "1 extra large spear (22.2cm to 25.4cm long)",
+        "fr": "1 très grosse tige (22.2cm à 25.4cm long)"
+      },
+      {
+        "grams": 20,
+        "en": "1 large spear (18.4cm to 21.6cm long)",
+        "fr": "1 grosse tige (18.4cm à 21.6cm long)"
+      },
+      {
+        "grams": 16,
+        "en": "1 medium spear (13.3cm to 17.8cm long)",
+        "fr": "1 tige moyenne (13.3cm à 17.8cm long)"
+      },
+      {
+        "grams": 70.795,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 141.589,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 96,
+        "en": "6 medium spears (13.3cm to 17.8cm long)",
+        "fr": "6 tiges moyennes (13.3cm à 17.8cm long)s"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      },
+      {
+        "grams": 58,
+        "en": "4 spears",
+        "fr": "4 pointes"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
-    "note": "État de préparation à préciser avant validation."
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "La fiche est crue alors que la portion Énergie ne précise pas l’état; à décider comme valeur par défaut."
   },
   {
     "energieAlias": "betterave",
@@ -885,9 +1950,48 @@
       "potassium": 762,
       "sodium": 226
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 16.061,
+        "en": "100 ml pieces",
+        "fr": "100 ml morceaux"
+      },
+      {
+        "grams": 32,
+        "en": "1 leaf",
+        "fr": "1 feuille (leaf)"
+      },
+      {
+        "grams": 20.076,
+        "en": "125 ml pieces",
+        "fr": "125 ml morceaux"
+      },
+      {
+        "grams": 40.152,
+        "en": "250 ml pieces",
+        "fr": "250 ml morceaux"
+      },
+      {
+        "grams": 65,
+        "en": "65 g",
+        "fr": "65 g"
+      },
+      {
+        "grams": 44,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 44,
+        "en": "stems, bruised and old leaves",
+        "fr": "tiges, feuilles/vieilles endommagées"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Le candidat correspond aux feuilles, pas à la racine."
   },
   {
@@ -919,10 +2023,54 @@
       "potassium": 389,
       "sodium": 25
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 10,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 10,
+        "en": "outer leaves",
+        "fr": "feuilles extérieures"
+      },
+      {
+        "grams": 19,
+        "en": "1 sprout",
+        "fr": "1 chou"
+      },
+      {
+        "grams": 37.194,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 92.984,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 46.492,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 76,
+        "en": "4 sprouts",
+        "fr": "4 graines germées"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 92.984,
+    "matchedPortionBasis": "250 ml (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "chou rouge",
@@ -953,10 +2101,84 @@
       "potassium": 243,
       "sodium": 27
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 29.586,
+        "en": "100 ml shredded",
+        "fr": "100 ml filamenté"
+      },
+      {
+        "grams": 37.616,
+        "en": "100 ml chopped",
+        "fr": "100 ml haché"
+      },
+      {
+        "grams": 567,
+        "en": "1 small (10.2cm dia)",
+        "fr": "1 petit (10.2cm dia)"
+      },
+      {
+        "grams": 839,
+        "en": "1 medium (12.7cm dia)",
+        "fr": "1 moyen (12.7cm dia)"
+      },
+      {
+        "grams": 1134,
+        "en": "1 large (14cm dia)",
+        "fr": "1 gros (14cm dia)"
+      },
+      {
+        "grams": 23,
+        "en": "1 leaf",
+        "fr": "1 feuille (leaf)"
+      },
+      {
+        "grams": 36.983,
+        "en": "125 ml shredded",
+        "fr": "125 ml filamenté"
+      },
+      {
+        "grams": 73.965,
+        "en": "250 ml shredded",
+        "fr": "250 ml filamenté"
+      },
+      {
+        "grams": 47.02,
+        "en": "125 ml chopped",
+        "fr": "125 ml haché"
+      },
+      {
+        "grams": 94.041,
+        "en": "1 (0.8cm x 7.6cm dia) + liquid",
+        "fr": "1 (0.8cm x 7.6cm dia) + liquide"
+      },
+      {
+        "grams": 94.04,
+        "en": "250 ml chopped",
+        "fr": "250 ml haché"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      },
+      {
+        "grams": 20,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 20,
+        "en": "outer leaves, core and trimmings",
+        "fr": "feuilles extérieures, noyau et parures"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 73.965,
+    "matchedPortionBasis": "250 ml filamenté (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "bok choy",
@@ -972,25 +2194,49 @@
       "portion": "1 tasse cuit",
       "gramsPerPortion": null
     },
-    "cnfFoodId": "2038",
-    "cnfNameFr": "Bok choy, pak-choi, cru",
-    "cnfNameEn": "Bok choy, pak-choi, raw",
+    "cnfFoodId": "2039",
+    "cnfNameFr": "Bok choy, pak-choi, bouilli, égoutté",
+    "cnfNameEn": "Bok choy, pak-choi, boiled drained",
     "nutritionPer100g": {
-      "protein": 1.5,
-      "fat": 0.2,
-      "carbs": 2.18,
-      "calories": 13,
-      "sugars": 1.18,
+      "protein": 1.56,
+      "fat": 0.16,
+      "carbs": 1.78,
+      "calories": 11,
+      "sugars": 0.83,
       "fiber": 1,
-      "calcium": 105,
-      "iron": 0.8,
-      "potassium": 252,
-      "sodium": 65
+      "calcium": 93,
+      "iron": 1.04,
+      "potassium": 371,
+      "sodium": 34
     },
-    "portions": [],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "note": "Énergie indique cuit, candidat FCÉN cru."
+    "portions": [
+      {
+        "grams": 71.851,
+        "en": "100 ml shredded",
+        "fr": "100 ml filamenté"
+      },
+      {
+        "grams": 89.814,
+        "en": "125 ml shredded",
+        "fr": "125 ml filamenté"
+      },
+      {
+        "grams": 179.628,
+        "en": "250 ml shredded",
+        "fr": "250 ml filamenté"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      }
+    ],
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 179.628,
+    "matchedPortionBasis": "250 ml filamenté, bouilli/égoutté (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "pois mange-tout",
@@ -1021,10 +2267,69 @@
       "potassium": 200,
       "sodium": 4
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 6,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 6,
+        "en": "end and strings",
+        "fr": "bouts et fils"
+      },
+      {
+        "grams": 26.627,
+        "en": "100 ml whole",
+        "fr": "100 ml entier"
+      },
+      {
+        "grams": 41.42,
+        "en": "100 ml chopped",
+        "fr": "100 ml haché"
+      },
+      {
+        "grams": 51.775,
+        "en": "125 ml chopped",
+        "fr": "125 ml haché"
+      },
+      {
+        "grams": 103.55,
+        "en": "250 ml chopped",
+        "fr": "250 ml haché"
+      },
+      {
+        "grams": 33.284,
+        "en": "125 ml whole",
+        "fr": "125 ml entier"
+      },
+      {
+        "grams": 66.568,
+        "en": "250 ml whole",
+        "fr": "250 ml entier"
+      },
+      {
+        "grams": 34,
+        "en": "10 pods",
+        "fr": "10 cosses"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      },
+      {
+        "grams": 68,
+        "en": "20 pieces",
+        "fr": "20 morceaux"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 66.568,
+    "matchedPortionBasis": "250 ml entier (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "ail",
@@ -1055,10 +2360,59 @@
       "potassium": 401,
       "sodium": 17
     },
-    "portions": [],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "note": "État/portion à valider avec une mesure FCÉN appropriée."
+    "portions": [
+      {
+        "grams": 3,
+        "en": "1 clove",
+        "fr": "1 gousse"
+      },
+      {
+        "grams": 57.481,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 71.851,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 143.702,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 2.857,
+        "en": "5 ml",
+        "fr": "5 ml"
+      },
+      {
+        "grams": 24,
+        "en": "1 bulb",
+        "fr": "1 bulbe"
+      },
+      {
+        "grams": 4,
+        "en": "4 g",
+        "fr": "4 g"
+      },
+      {
+        "grams": 13,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 13,
+        "en": "knob and skin",
+        "fr": "bourse et peau"
+      }
+    ],
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 9,
+    "matchedPortionBasis": "3 gousses × 3 g (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "radis",
@@ -1089,10 +2443,74 @@
       "potassium": 233,
       "sodium": 39
     },
-    "portions": [],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "note": "Portion à valider avec une mesure FCÉN."
+    "portions": [
+      {
+        "grams": 45,
+        "en": "10 radishes",
+        "fr": "10 radis"
+      },
+      {
+        "grams": 49.028,
+        "en": "100 ml slices",
+        "fr": "100 ml tranches"
+      },
+      {
+        "grams": 9,
+        "en": "1 large (2.5cm to 3.2cm dia)",
+        "fr": "1 gros (2.5cm to 3.2cm dia)"
+      },
+      {
+        "grams": 2,
+        "en": "1 small",
+        "fr": "1 petit"
+      },
+      {
+        "grams": 4.5,
+        "en": "1 medium (1.9cm to 2.5cm dia)",
+        "fr": "1 moyen (1.9cm à 2.5cm dia)"
+      },
+      {
+        "grams": 1,
+        "en": "1 slice",
+        "fr": "1 tranche"
+      },
+      {
+        "grams": 61.285,
+        "en": "125 ml slices",
+        "fr": "125 ml tranches"
+      },
+      {
+        "grams": 122.569,
+        "en": "250 ml slices",
+        "fr": "250 ml tranches"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      },
+      {
+        "grams": 13.5,
+        "en": "3 medium",
+        "fr": "3 moyen"
+      },
+      {
+        "grams": 10,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 10,
+        "en": "stem ends, rootlets and trimmings",
+        "fr": "bout de tiges, radicelle et parures"
+      }
+    ],
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 122.569,
+    "matchedPortionBasis": "250 ml tranches (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "rutabaga",
@@ -1122,10 +2540,59 @@
       "potassium": 305,
       "sodium": 12
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 15,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 15,
+        "en": "parings",
+        "fr": "épluchures"
+      },
+      {
+        "grams": 59.172,
+        "en": "100 ml cubes",
+        "fr": "100 ml en cubes"
+      },
+      {
+        "grams": 73.965,
+        "en": "125 ml cubes",
+        "fr": "125 ml en cubes"
+      },
+      {
+        "grams": 147.93,
+        "en": "250 ml cubes",
+        "fr": "250 ml en cubes"
+      },
+      {
+        "grams": 772,
+        "en": "1 large",
+        "fr": "1 gros"
+      },
+      {
+        "grams": 192,
+        "en": "1 small",
+        "fr": "1 petit"
+      },
+      {
+        "grams": 386,
+        "en": "1 medium",
+        "fr": "1 moyen"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
-    "note": "État de préparation à préciser."
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance, préparation ou portion à revoir avant utilisation."
   },
   {
     "energieAlias": "artichaut",
@@ -1155,10 +2622,39 @@
       "potassium": 370,
       "sodium": 94
     },
-    "portions": [],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "note": "État de préparation à préciser."
+    "portions": [
+      {
+        "grams": 60,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 60,
+        "en": "stems and inedible parts of bracts and flower",
+        "fr": "tiges et parties non comestible de la fleur et de la bractée"
+      },
+      {
+        "grams": 128,
+        "en": "1 medium",
+        "fr": "1 moyen"
+      },
+      {
+        "grams": 162,
+        "en": "1 large",
+        "fr": "1 gros"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      }
+    ],
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 128,
+    "matchedPortionBasis": "1 moyen (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "okra",
@@ -1189,10 +2685,49 @@
       "potassium": 299,
       "sodium": 7
     },
-    "portions": [],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "note": "État de préparation à préciser."
+    "portions": [
+      {
+        "grams": 14,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 14,
+        "en": "crown and tips",
+        "fr": "bout de la tige et petits bouts"
+      },
+      {
+        "grams": 11.875,
+        "en": "1 pod (8cm x 2cm dia)",
+        "fr": "1 cosse (8cm x 2cm dia)"
+      },
+      {
+        "grams": 42.265,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 52.83,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 105.66,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      }
+    ],
+    "verified": true,
+    "reviewStatus": "verified",
+    "matchedPortionGrams": 105.66,
+    "matchedPortionBasis": "250 ml (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "salade grecque",
@@ -1223,44 +2758,34 @@
       "potassium": 116.551,
       "sodium": 283.461
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 44.38,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 55.48,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 110.95,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 100,
+        "en": "100 g",
+        "fr": "100 g"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
-  },
-  {
-    "energieAlias": "riz blanc",
-    "aliases": [
-      "riz blanc",
-      "white rice"
-    ],
-    "current": {
-      "calories": 205,
-      "protein": 4.3,
-      "carbs": 45,
-      "fat": 0.4,
-      "portion": "1 tasse cuite",
-      "gramsPerPortion": null
-    },
-    "cnfFoodId": "7701",
-    "cnfNameFr": "Riz, blanc et sausage, arômatisé, non préparé",
-    "cnfNameEn": "Rice, white and wild, flavoured, unprepared",
-    "nutritionPer100g": {
-      "protein": 3.49,
-      "fat": 2.57,
-      "carbs": 26.28,
-      "calories": 142,
-      "sugars": 0.4,
-      "fiber": 0.8,
-      "calcium": 35,
-      "iron": 1.45,
-      "potassium": 113,
-      "sodium": 443
-    },
-    "portions": [],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "note": "Le candidat contient saucisse/aromatisation; incorrect."
+    "matchedPortionGrams": 110.95,
+    "matchedPortionBasis": "250 ml; portion Énergie « 1 portion » reste à normaliser",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "céréales",
@@ -1292,9 +2817,33 @@
       "potassium": 353,
       "sodium": 35
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 40.152,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 16.061,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 30,
+        "en": "30 g",
+        "fr": "30 g"
+      },
+      {
+        "grams": 30,
+        "en": "1 serving",
+        "fr": "1 portion"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Alias trop générique pour une fiche FCÉN unique."
   },
   {
@@ -1325,9 +2874,38 @@
       "potassium": 666,
       "sodium": 2021
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 8.1,
+        "en": "1 slice",
+        "fr": "1 tranche"
+      },
+      {
+        "grams": 34.658,
+        "en": "100 ml pieces",
+        "fr": "100 ml morceaux"
+      },
+      {
+        "grams": 86.644,
+        "en": "250 ml pieces",
+        "fr": "250 ml morceaux"
+      },
+      {
+        "grams": 75,
+        "en": "1 food guide serving = 75g",
+        "fr": "1 portion du guide alimentaire = 75g"
+      },
+      {
+        "grams": 15,
+        "en": "15 g",
+        "fr": "15 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Le candidat est bacon de dinde; alias générique."
   },
   {
@@ -1358,112 +2936,34 @@
       "potassium": 178,
       "sodium": 402
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 86.644,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 216.61,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 100,
+        "en": "100 g",
+        "fr": "100 g"
+      },
+      {
+        "grams": 108.305,
+        "en": "125 ml",
+        "fr": "125 ml"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Le candidat est salade de thon; incorrect."
-  },
-  {
-    "energieAlias": "lentilles",
-    "aliases": [
-      "lentilles",
-      "lentille",
-      "lentils"
-    ],
-    "current": {
-      "calories": 230,
-      "protein": 18,
-      "carbs": 40,
-      "fat": 0.8,
-      "portion": "1 tasse cuite",
-      "gramsPerPortion": null
-    },
-    "cnfFoodId": "2113",
-    "cnfNameFr": "Lentilles, germées, crues",
-    "cnfNameEn": "Lentils, sprouted, raw",
-    "nutritionPer100g": {
-      "protein": 8.96,
-      "fat": 0.55,
-      "carbs": 22.14,
-      "calories": 106,
-      "fiber": 1.45,
-      "calcium": 25,
-      "iron": 3.21,
-      "potassium": 322,
-      "sodium": 11
-    },
-    "portions": [],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "note": "Le candidat est germé/cru; Énergie indique cuit."
-  },
-  {
-    "energieAlias": "haricots noirs",
-    "aliases": [
-      "haricots noirs",
-      "black beans"
-    ],
-    "current": {
-      "calories": 227,
-      "protein": 15,
-      "carbs": 41,
-      "fat": 0.9,
-      "portion": "1 tasse",
-      "gramsPerPortion": null
-    },
-    "cnfFoodId": "6181",
-    "cnfNameFr": "Haricots, noirs, farine",
-    "cnfNameEn": "Beans, black, flour",
-    "nutritionPer100g": {
-      "protein": 22.99,
-      "fat": 1.51,
-      "carbs": 66.38,
-      "calories": 363,
-      "sugars": 2.39,
-      "fiber": 14.68,
-      "calcium": 130.92,
-      "iron": 5.34,
-      "potassium": 1578.5,
-      "sodium": 5.32
-    },
-    "portions": [],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "note": "Le candidat est farine; incorrect."
-  },
-  {
-    "energieAlias": "haricots rouges",
-    "aliases": [
-      "haricots rouges",
-      "kidney beans"
-    ],
-    "current": {
-      "calories": 225,
-      "protein": 15,
-      "carbs": 40,
-      "fat": 0.9,
-      "portion": "1 tasse",
-      "gramsPerPortion": null
-    },
-    "cnfFoodId": "5536",
-    "cnfNameFr": "Haricots, rouges, liquide seulement",
-    "cnfNameEn": "Beans, liquid from stewed kidney beans",
-    "nutritionPer100g": {
-      "protein": 1.8,
-      "fat": 3.2,
-      "carbs": 2.8,
-      "calories": 47,
-      "sugars": 0,
-      "fiber": 0.1,
-      "calcium": 13,
-      "iron": 1.96,
-      "potassium": 408,
-      "sodium": 2
-    },
-    "portions": [],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "note": "Le candidat est liquide seulement; incorrect."
   },
   {
     "energieAlias": "falafel",
@@ -1493,43 +2993,29 @@
       "potassium": 585,
       "sodium": 294
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 17,
+        "en": "1 patty (5.7 cm dia)",
+        "fr": "1 boulette (5.7 cm dia)"
+      },
+      {
+        "grams": 51,
+        "en": "3 patties (5.7cm dia)",
+        "fr": "3 boulettes (5.7cm dia)"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
-  },
-  {
-    "energieAlias": "mozzarella",
-    "aliases": [
-      "mozzarella"
-    ],
-    "current": {
-      "calories": 85,
-      "protein": 6,
-      "carbs": 1,
-      "fat": 6,
-      "portion": "30 g",
-      "gramsPerPortion": null
-    },
-    "cnfFoodId": "6813",
-    "cnfNameFr": "Bâtonnets de fromage mozzarella, frits",
-    "cnfNameEn": "Mozzarella sticks, fried",
-    "nutritionPer100g": {
-      "protein": 14.75,
-      "fat": 18.33,
-      "carbs": 25.14,
-      "calories": 325,
-      "sugars": 2.36,
-      "fiber": 2,
-      "calcium": 334,
-      "iron": 0.62,
-      "potassium": 108,
-      "sodium": 861
-    },
-    "portions": [],
-    "verified": false,
-    "reviewStatus": "needs-review",
-    "note": "Le candidat est bâtonnets frits; incorrect."
+    "matchedPortionGrams": 85,
+    "matchedPortionBasis": "5 boulettes × 17 g (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "fromage à la crème",
@@ -1561,9 +3047,38 @@
       "potassium": 278,
       "sodium": 702
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 15.81,
+        "en": "15 ml",
+        "fr": "15 ml"
+      },
+      {
+        "grams": 105.67,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 50,
+        "en": "50 g",
+        "fr": "50 g"
+      },
+      {
+        "grams": 31.7,
+        "en": "30 ml",
+        "fr": "30 ml"
+      },
+      {
+        "grams": 30,
+        "en": "30 g",
+        "fr": "30 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Le candidat est sans gras; alias générique."
   },
   {
@@ -1596,10 +3111,29 @@
       "potassium": 112,
       "sodium": 256
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 4,
+        "en": "1 cone",
+        "fr": "1 cornet"
+      },
+      {
+        "grams": 29,
+        "en": "1 waffle cone",
+        "fr": "1 cornet gaufré"
+      },
+      {
+        "grams": 5,
+        "en": "5 g",
+        "fr": "5 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
-    "note": "Le candidat inclut un cornet; incorrect."
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Le candidat correspond au cornet, pas à la crème glacée seule."
   },
   {
     "energieAlias": "noix de grenoble",
@@ -1630,10 +3164,94 @@
       "potassium": 441,
       "sodium": 2
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 42.265,
+        "en": "100 ml halves",
+        "fr": "100 ml moitiés"
+      },
+      {
+        "grams": 50.719,
+        "en": "100 ml pieces",
+        "fr": "100 ml morceaux"
+      },
+      {
+        "grams": 49.451,
+        "en": "100 ml chopped",
+        "fr": "100 ml haché"
+      },
+      {
+        "grams": 29.67,
+        "en": "60 ml chopped",
+        "fr": "60 ml haché"
+      },
+      {
+        "grams": 61.813,
+        "en": "125 ml chopped",
+        "fr": "125 ml haché"
+      },
+      {
+        "grams": 33.812,
+        "en": "100 ml ground",
+        "fr": "100 ml moulu"
+      },
+      {
+        "grams": 20.287,
+        "en": "60 ml ground",
+        "fr": "60 ml moulu"
+      },
+      {
+        "grams": 42.265,
+        "en": "125 ml ground",
+        "fr": "125 ml moulu"
+      },
+      {
+        "grams": 30.431,
+        "en": "60 ml pieces",
+        "fr": "60 ml morceaux"
+      },
+      {
+        "grams": 63.398,
+        "en": "125 ml pieces",
+        "fr": "125 ml morceaux"
+      },
+      {
+        "grams": 52.832,
+        "en": "125 ml halves",
+        "fr": "125 ml moitiés"
+      },
+      {
+        "grams": 25.359,
+        "en": "60 ml halves",
+        "fr": "60 ml moitiés"
+      },
+      {
+        "grams": 30,
+        "en": "30 g",
+        "fr": "30 g"
+      },
+      {
+        "grams": 55,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 55,
+        "en": "shells / husks",
+        "fr": "enveloppes/ écales"
+      },
+      {
+        "grams": 29.586,
+        "en": "250 ml with shell, yields",
+        "fr": "250 ml avec écales - rendement"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 30.431,
+    "matchedPortionBasis": "60 ml morceaux (≈ 1/4 tasse, FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "graines de chia",
@@ -1663,10 +3281,39 @@
       "potassium": 407,
       "sodium": 16
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 30,
+        "en": "30 g",
+        "fr": "30 g"
+      },
+      {
+        "grams": 43.216,
+        "en": "60 ml",
+        "fr": "60 ml"
+      },
+      {
+        "grams": 10.804,
+        "en": "15 ml",
+        "fr": "15 ml"
+      },
+      {
+        "grams": 72.027,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 90.034,
+        "en": "125 ml",
+        "fr": "125 ml"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 21.608,
+    "matchedPortionBasis": "30 ml = 2 c. à soupe, dérivé de 15 ml = 10,804 g (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "barre granola",
@@ -1697,10 +3344,29 @@
       "potassium": 296.667,
       "sodium": 351
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 46,
+        "en": "2 bars",
+        "fr": "2 barres"
+      },
+      {
+        "grams": 30,
+        "en": "30 g",
+        "fr": "30 g"
+      },
+      {
+        "grams": 23,
+        "en": "1 bar",
+        "fr": "1 barre"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
-    "note": "Variété « croquante, nature » trop spécifique pour l’alias générique."
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Variété croquante nature trop spécifique pour l’alias générique."
   },
   {
     "energieAlias": "beigne",
@@ -1731,10 +3397,24 @@
       "potassium": 78,
       "sodium": 345
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 41,
+        "en": "1 doughnut (7.6 cm dia)",
+        "fr": "1 beigne (7.6 cm dia)"
+      },
+      {
+        "grams": 55,
+        "en": "55 g",
+        "fr": "55 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
-    "note": "Variété « roussette, givré » trop spécifique."
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Variété roussette givrée trop spécifique."
   },
   {
     "energieAlias": "gâteau au fromage",
@@ -1766,10 +3446,34 @@
       "potassium": 90,
       "sodium": 438
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 57,
+        "en": "1 snack cake",
+        "fr": "1 gâteau collation"
+      },
+      {
+        "grams": 80,
+        "en": "1/6 cake (482g)",
+        "fr": "1/6 gâteau (482g)"
+      },
+      {
+        "grams": 60,
+        "en": "1/8 cake (482g)",
+        "fr": "1/8 gâteau (482g)"
+      },
+      {
+        "grams": 125,
+        "en": "125 g",
+        "fr": "125 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
-    "note": "Commercial est plausible mais trop spécifique sans indication."
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Commercial est plausible, mais trop spécifique sans indication."
   },
   {
     "energieAlias": "smoothie",
@@ -1799,9 +3503,28 @@
       "potassium": 184,
       "sodium": 5
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 98.478,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 246.196,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 123.098,
+        "en": "125 ml",
+        "fr": "125 ml"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Recette fraise-banane trop spécifique."
   },
   {
@@ -1833,10 +3556,39 @@
       "potassium": 250,
       "sodium": 105
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 101.437,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 15.203,
+        "en": "15 ml",
+        "fr": "15 ml"
+      },
+      {
+        "grams": 126.796,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 60.862,
+        "en": "60 ml",
+        "fr": "60 ml"
+      },
+      {
+        "grams": 2.06,
+        "en": "yield from 1 coconut",
+        "fr": "rendement d'une noix de coco"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 253.592,
+    "matchedPortionBasis": "250 ml, dérivé de 125 ml = 126,796 g (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
   },
   {
     "energieAlias": "poutine",
@@ -1866,10 +3618,81 @@
       "potassium": 276.582,
       "sodium": 614.364
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 66,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 82.5,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 165,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 195,
+        "en": "195 g",
+        "fr": "195 g"
+      }
+    ],
     "verified": true,
     "reviewStatus": "verified",
-    "note": "Correspondance aliment/état jugée suffisamment explicite pour servir de mapping de référence. La conversion de portion sera validée séparément avant activation dans les calculs."
+    "matchedPortionGrams": 195,
+    "matchedPortionBasis": "portion de référence 195 g (FCÉN)",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Correspondance aliment/état jugée suffisamment explicite. Valeurs FCÉN par 100 g conservées; portion de référence documentée séparément."
+  },
+  {
+    "energieAlias": "club sandwich",
+    "aliases": [
+      "club sandwich"
+    ],
+    "current": {
+      "calories": 700,
+      "protein": 40,
+      "carbs": 55,
+      "fat": 35,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "cnfFoodId": "6753",
+    "cnfNameFr": "Sandwich club avec poulet grillé, bacon, tomates, fromage, laitue et mayonnaise",
+    "cnfNameEn": "Club sandwich with grilled chicken, bacon, tomato, cheese, lettuce and mayonnaise",
+    "nutritionPer100g": {
+      "protein": 17.19,
+      "fat": 8.05,
+      "carbs": 19.87,
+      "calories": 220,
+      "sugars": 2.15,
+      "fiber": 1.2,
+      "calcium": 95,
+      "iron": 1.37,
+      "potassium": 226,
+      "sodium": 630
+    },
+    "portions": [
+      {
+        "grams": 246,
+        "en": "1 sandwich",
+        "fr": "1 sandwich"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
+    "verified": false,
+    "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "La fiche impose poulet grillé, bacon, fromage, laitue et mayonnaise; alias Énergie trop générique."
   },
   {
     "energieAlias": "pad thai",
@@ -1898,9 +3721,28 @@
       "potassium": 149.016,
       "sodium": 203.617
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 84.535,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 105.669,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 211.338,
+        "en": "250 ml",
+        "fr": "250 ml"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Le candidat est au poulet; alias générique."
   },
   {
@@ -1932,9 +3774,23 @@
       "potassium": 231,
       "sodium": 511
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 60,
+        "en": "60 g",
+        "fr": "60 g"
+      },
+      {
+        "grams": 88,
+        "en": "5 pieces",
+        "fr": "5 morceaux"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Panure de blé entier trop spécifique."
   },
   {
@@ -1967,9 +3823,33 @@
       "potassium": 92.224,
       "sodium": 658.431
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 74.81,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 93.51,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 187.03,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Recette/vinaigrette trop spécifique."
   },
   {
@@ -2001,9 +3881,33 @@
       "potassium": 116,
       "sodium": 528
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 49.03,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 61.288,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 122.576,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Le candidat est riz espagnol; incorrect."
   },
   {
@@ -2034,9 +3938,33 @@
       "potassium": 93,
       "sodium": 690
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 47.76,
+        "en": "100 ml shredded",
+        "fr": "100 ml filamenté"
+      },
+      {
+        "grams": 55.79,
+        "en": "100 ml diced",
+        "fr": "100 ml en dés"
+      },
+      {
+        "grams": 30,
+        "en": "30 g",
+        "fr": "30 g"
+      },
+      {
+        "grams": 50,
+        "en": "50 g",
+        "fr": "50 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Fromage au carvi; incorrect."
   },
   {
@@ -2068,10 +3996,34 @@
       "potassium": 305,
       "sodium": 666
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 105.241,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 131.551,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 263.102,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
-    "note": "Sauce BBQ spécifique; peut convenir mais doit rester explicite."
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "La fiche impose une sauce barbecue; à garder distincte de l’alias générique."
   },
   {
     "energieAlias": "fajitas",
@@ -2102,9 +4054,23 @@
       "potassium": 205.757,
       "sodium": 213.312
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 223,
+        "en": "1 fajita",
+        "fr": "1 fajita"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Le candidat est poulet+légumes; alias générique."
   },
   {
@@ -2136,10 +4102,39 @@
       "potassium": 271,
       "sodium": 14
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 408,
+        "en": "1 root",
+        "fr": "1 racine"
+      },
+      {
+        "grams": 87.07,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 108.833,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 216.667,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 85,
+        "en": "85 g",
+        "fr": "85 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
-    "note": "Énergie indique cuit, candidat FCÉN cru."
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
+    "note": "Énergie indique cuit; candidat FCÉN cru."
   },
   {
     "energieAlias": "fruits",
@@ -2170,9 +4165,53 @@
       "potassium": 490,
       "sodium": 2
     },
-    "portions": [],
+    "portions": [
+      {
+        "grams": 22,
+        "en": "total refuse",
+        "fr": "portion non comestible totale"
+      },
+      {
+        "grams": 13,
+        "en": "skin",
+        "fr": "peau (pelure)"
+      },
+      {
+        "grams": 9,
+        "en": "core",
+        "fr": "noyau"
+      },
+      {
+        "grams": 96,
+        "en": "1/4 small fruit",
+        "fr": "1/4 petit fruit"
+      },
+      {
+        "grams": 92.984,
+        "en": "100 ml",
+        "fr": "100 ml"
+      },
+      {
+        "grams": 116.23,
+        "en": "125 ml",
+        "fr": "125 ml"
+      },
+      {
+        "grams": 232.46,
+        "en": "250 ml",
+        "fr": "250 ml"
+      },
+      {
+        "grams": 140,
+        "en": "140 g",
+        "fr": "140 g"
+      }
+    ],
     "verified": false,
     "reviewStatus": "needs-review",
+    "matchedPortionGrams": null,
+    "matchedPortionBasis": "",
+    "source": "Health Canada / Santé Canada — FCÉN 2026",
     "note": "Alias trop générique; candidat fruit à pain incorrect."
   }
 ]
