@@ -5475,7 +5475,7 @@ function formatSleepDuration(hours) {
     if (!dialog) return;
     const now = new Date().toISOString(), context = pilotContextLabel();
     $("#pilotFeedbackForm")?.reset();
-    $("[data-pilot-feedback-type]").forEach((button) => { button.classList.remove("is-selected"); button.setAttribute("aria-pressed", "false"); });
+    $$("[data-pilot-feedback-type]").forEach((button) => { button.classList.remove("is-selected"); button.setAttribute("aria-pressed", "false"); });
     $("#pilotFeedbackType").value = "";
     $("#pilotFeedbackTimestamp").value = now;
     $("#pilotFeedbackContext").value = context;
@@ -11456,9 +11456,9 @@ function formatSleepDuration(hours) {
   let keepPhysiologicalPanelOpen = false;
   $("#pilotFeedbackForm")?.addEventListener("submit", submitPilotFeedback);
   $("#closePilotFeedback")?.addEventListener("click", () => $("#pilotFeedbackDialog")?.close());
-  $("[data-pilot-feedback-type]").forEach((button) => {
+  $$("[data-pilot-feedback-type]").forEach((button) => {
     button.addEventListener("click", () => {
-      $("[data-pilot-feedback-type]").forEach((item) => {
+      $$("[data-pilot-feedback-type]").forEach((item) => {
         const selected = item === button;
         item.classList.toggle("is-selected", selected);
         item.setAttribute("aria-pressed", selected ? "true" : "false");
