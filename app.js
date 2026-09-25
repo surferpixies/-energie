@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.119";
+  const APP_RELEASE = "3.56.125";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -191,6 +191,8 @@
     Musculation: { low: 3.5, moderate: 5.5, high: 8.0 },
     Yoga: { low: 2.2, moderate: 3.2, high: 4.5 },
     Natation: { low: 5.0, moderate: 8.0, high: 11.0 },
+  "Fitness aquatique": { low: 3.5, moderate: 5.5, high: 7.5 },
+  "Sports aquatiques": { low: 4.0, moderate: 6.5, high: 9.0 },
     Aquabike: { low: 4.5, moderate: 7.0, high: 9.5 },
     Aquagym: { low: 3.5, moderate: 5.5, high: 7.5 },
     Randonnée: { low: 4.0, moderate: 6.0, high: 8.5 },
@@ -217,7 +219,11 @@
     high: "Élevée",
   };
   function normalizeActivity(a = {}) {
-    const type = a.type || a.activity_type || "Autre",
+    const legacyType = a.type || a.activity_type || "Autre",
+    type =
+      legacyType === "Aquabike" || legacyType === "Aquagym"
+        ? "Fitness aquatique"
+        : legacyType,
       minutes = Math.max(0, Number(a.minutes ?? a.duration_minutes) || 0),
       intensity = ["low", "moderate", "high"].includes(a.intensity)
         ? a.intensity
@@ -565,6 +571,7 @@
         waterGoal: 8,
         stepsTracking: false,
         stepsGoal: 8000,
+        appleHealthEnabled: false,
         calorieBalanceTracking: false,
         calorieTargetGauge: false,
         calorieTargetMode: "estimated",
@@ -599,6 +606,7 @@
         showRecognizedElements: true,
         showEatingReasons: true,
         futureMealPlanning: false,
+        pilotMode: false,
         physiologicalContext: "none",
         menstrualLastStart: "",
         pregnancyDueDate: "",
@@ -609,6 +617,19 @@
       days: {},
     };
   }
+function formatSleepDuration(hours) {
+  const value = Number(hours);
+  if (!Number.isFinite(value) || value < 0) return "—";
+
+  const totalMinutes = Math.round(value * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const min = totalMinutes % 60;
+
+  if (h === 0) return `${min} min`;
+  if (min === 0) return `${h} h`;
+
+  return `${h} h ${min} min`;
+}
   function ensureDay(store, key = todayKey()) {
     const defaultSupplements = normalizeSupplements(
       store.settings?.supplements || [],
@@ -1306,6 +1327,38 @@
       return result;
     };
   }
+  const LOCAL_OWNER_KEY = "energieLocalOwnerUserId";
+  const LEGACY_QUARANTINE_KEY = "energieLegacyJournalQuarantine";
+
+  function localJournalOwnerId() {
+    try {
+      return localStorage.getItem(LOCAL_OWNER_KEY) || "";
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function quarantineAndResetLocalJournal() {
+    try {
+      // Keep one recovery copy of a pre-isolation journal. It is deliberately
+      // never loaded or synced automatically, so it cannot contaminate another account.
+      const legacy = localStorage.getItem(APP_KEY);
+      if (legacy && !localStorage.getItem(LEGACY_QUARANTINE_KEY))
+        localStorage.setItem(LEGACY_QUARANTINE_KEY, legacy);
+    } catch (_) {}
+    clearLocalJournalAfterSignOut();
+  }
+
+  function prepareLocalJournalForSession(nextSession) {
+    const userId = nextSession?.user?.id || "";
+    if (!userId) return;
+    const ownerId = localJournalOwnerId();
+    if (ownerId !== userId) quarantineAndResetLocalJournal();
+    try {
+      localStorage.setItem(LOCAL_OWNER_KEY, userId);
+    } catch (_) {}
+  }
+
   function clearLocalJournalAfterSignOut() {
     try {
       [
@@ -1338,6 +1391,9 @@
         memories: [],
         updatedAt: new Date().toISOString(),
       });
+    } catch (_) {}
+    try {
+      localStorage.removeItem(LOCAL_OWNER_KEY);
     } catch (_) {}
   }
   const MEMORY_CLOUD_TABLE = "user_food_memory";
@@ -1472,6 +1528,7 @@
     };
   }
   async function syncMemoryCloud() {
+    if (!localJournalMatchesSession()) return false;
     if (
       memorySyncBusy ||
       !client ||
@@ -1513,6 +1570,7 @@
     return brainMemoryState();
   }
   async function replaceMemoryCloudFromJournal() {
+    if (!localJournalMatchesSession()) return false;
     if (!client || !session || !navigator.onLine || !window.Brain?.memory)
       return true;
     try {
@@ -1575,10 +1633,14 @@
     updateSyncBadge();
     return true;
   }
+  function localJournalMatchesSession() {
+    const userId = session?.user?.id || "";
+    return !!userId && localJournalOwnerId() === userId;
+  }
   function enqueue(op) {
     if (professionalBetaMode || db.settings.demoMode) return;
     const items = outbox();
-    op = { ...op, _queuedAt: `${Date.now()}-${uid()}` };
+    op = { ...op, _ownerUserId: session?.user?.id || localJournalOwnerId() || null, _queuedAt: `${Date.now()}-${uid()}` };
     const key = `${op.kind}:${op.id || op.date}`;
     const idx = items.findIndex((x) => `${x.kind}:${x.id || x.date}` === key);
     if (idx >= 0) items[idx] = op;
@@ -1692,6 +1754,12 @@
   async function syncNow() {
     if (professionalBetaMode || db.settings.demoMode || !client || !session || !navigator.onLine)
       return;
+    if (!localJournalMatchesSession()) {
+      syncState = "error";
+      updateSyncBadge();
+      console.warn("Synchronisation bloquée : le journal local n’appartient pas à la session courante.");
+      return;
+    }
     if (syncBusy) {
       syncQueued = true;
       return;
@@ -1714,6 +1782,10 @@
       failed = [];
     for (const op of operations) {
       try {
+        if (op._ownerUserId && op._ownerUserId !== session.user.id) {
+          console.warn("Opération de synchronisation ignorée : propriétaire différent.", op.kind);
+          continue;
+        }
         if (op.kind === "day") {
           const d = ensureDay(db, op.date);
           const dayPayload = {
@@ -1736,9 +1808,27 @@
               calorieTargetMode: calorieTargetMode(),
               fixedCalorieTarget: fixedCalorieTarget(),
               calorieDeficitTarget: calorieDeficitTarget(),
-              trackedFeelingIds: trackedFeelingIds(),
-              trackedFeelingsConfigured: db.settings.trackedFeelingsConfigured === true,
-              trackedFeelingsUpdatedAt: db.settings.trackedFeelingsUpdatedAt || db.updatedAt,
+              profilePreferences: {
+                waterGoal: Number(db.settings.waterGoal) || 8,
+                journalViewMode: db.settings.journalViewMode || "detailed",
+                insightsEnabled: db.settings.insightsEnabled !== false,
+                nutritionObservations: db.settings.nutritionObservations !== false,
+                macroTracking: db.settings.macroTracking !== false,
+                autoNutritionEstimates: db.settings.autoNutritionEstimates !== false,
+                generalRecommendations: db.settings.generalRecommendations !== false,
+                showSources: db.settings.showSources !== false,
+                professionalSupport: db.settings.professionalSupport === true,
+                shareMealPhotosWithProfessional: db.settings.shareMealPhotosWithProfessional === true,
+                feelingReminders: db.settings.feelingReminders !== false,
+                feelingDelayHours: Number(db.settings.feelingDelayHours) || 0.5,
+                feelingDelayPreferenceSet: db.settings.feelingDelayPreferenceSet === true,
+                feelingMealTypes: Array.isArray(db.settings.feelingMealTypes) ? db.settings.feelingMealTypes : ["Déjeuner", "Dîner", "Souper"],
+                seasonalIcons: db.settings.seasonalIcons !== false,
+                showRecognizedElements: db.settings.showRecognizedElements !== false,
+                showEatingReasons: db.settings.showEatingReasons !== false,
+                futureMealPlanning: db.settings.futureMealPlanning === true,
+                pilotMode: db.settings.pilotMode === true,
+              },
               defaults: db.settings.supplements || [],
               defaultsUpdatedAt: db.settings.supplementsUpdatedAt || db.updatedAt,
               // Les photos de brouillon restent uniquement sur l’appareil : ne pas
@@ -2016,6 +2106,20 @@
           : remoteSupplementSettings.updatedAt;
       }
     }
+    const remotePreferenceRows = (dr.data || [])
+      .filter((row) => row.supplements?.profilePreferences && typeof row.supplements.profilePreferences === "object")
+      .sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
+    const remoteProfilePreferences = remotePreferenceRows[0]?.supplements?.profilePreferences;
+    if (remoteProfilePreferences) {
+      const pref = remoteProfilePreferences;
+      if (Number(pref.waterGoal) > 0) db.settings.waterGoal = Math.round(Number(pref.waterGoal));
+      if (["detailed", "summary"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
+      ["insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","showEatingReasons","futureMealPlanning","pilotMode"].forEach((key) => {
+        if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
+      });
+      if (Number(pref.feelingDelayHours) > 0) db.settings.feelingDelayHours = Number(pref.feelingDelayHours);
+      if (Array.isArray(pref.feelingMealTypes)) db.settings.feelingMealTypes = [...pref.feelingMealTypes];
+    }
     for (const r of dr.data || []) {
       db.settings.personalProfile = Metrics.mergeProfile(db.settings.personalProfile, r.supplements?.personalProfile);
       const d = ensureDay(db, r.log_date);
@@ -2149,7 +2253,7 @@
     if (show || currentView !== "profile") render();
   }
   async function seedCloudFromLocal() {
-    if (!session) return;
+    if (!session || !localJournalMatchesSession()) return;
     const ops = [];
     Object.entries(db.days).forEach(([date, d]) => {
       ops.push({ kind: "day", date });
@@ -2291,6 +2395,9 @@
       ? window.ENERGIE_FOODS
       : [];
   const FOOD_MACROS = [
+    ...(Array.isArray(window.ENERGIE_CNF_OVERRIDES)
+      ? window.ENERGIE_CNF_OVERRIDES
+      : []),
     ...(Array.isArray(window.ENERGIE_NUTRITION_CORRECTIONS)
       ? window.ENERGIE_NUTRITION_CORRECTIONS
       : []),
@@ -2369,6 +2476,9 @@
     prosciutto: { fiber: 0, sugars: 0, sodium: 1050 },
   };
   function foodNutrients(food) {
+    // Les valeurs FCÉN sont la source nutritionnelle de référence et ne doivent
+    // jamais être remplacées par les anciens ajustements manuels Énergie.
+    if (food?.nutritionSource === "cnf") return { ...food };
     const key = normalizeFoodText(food?.keys?.[0] || "");
     const extra = FOOD_NUTRIENT_OVERRIDES[key] || {};
     const categories = new Set(
@@ -2437,11 +2547,18 @@
       const score = exact + coverage + keyWords * 100 + key.length + positionBonus;
       if (!best || score > best.score) best = { ...candidate, score };
     }
+    // Un mapping vérifié FCÉN est prioritaire.
+    if (best?.food?.nutritionSource === "cnf") return best.food;
+
+    // Sinon, chercher d'abord dans le catalogue FCÉN complet. Les anciennes
+    // valeurs Énergie ne servent qu'en repli lorsqu'aucune correspondance FCÉN
+    // suffisamment fiable n'est trouvée.
+    const cnfMatch = window.ENERGIE_CNF_SEARCH?.find?.(segment);
+    if (cnfMatch) return cnfMatch;
+
     return best?.food || null;
   }
   function mealQuantityNumber(value) {
-    const parsed = window.ENERGIE_NUTRITION_PORTIONS?.number?.(value);
-    if (parsed != null) return parsed;
     const text = String(value || "").trim().replace(",", ".");
     if (/^\d+\s*\/\s*\d+$/.test(text)) {
       const [a, b] = text.split("/").map(Number);
@@ -2451,8 +2568,6 @@
     return Number.isFinite(n) && n > 0 ? n : null;
   }
   function mealQuantityUnit(value) {
-    const parsed = window.ENERGIE_NUTRITION_PORTIONS?.unit?.(value);
-    if (parsed) return parsed;
     const unit = normalizeFoodText(value);
     if (/^(g|gramme|grammes|gram)$/.test(unit)) return "g";
     if (/^(kg|kilogramme|kilogrammes)$/.test(unit)) return "kg";
@@ -2471,8 +2586,6 @@
     return { value: n, unit: canonical };
   }
   function mealQuantityFromText(text) {
-    const parsed = window.ENERGIE_NUTRITION_PORTIONS?.quantityFromText?.(text);
-    if (parsed) return parsed;
     const raw = String(text || "")
       .toLocaleLowerCase("fr-CA")
       .normalize("NFD")
@@ -2484,10 +2597,9 @@
     return match ? normalizedMealQuantity(match[1], match[2]) : null;
   }
   function mealReferenceQuantity(portion) {
-    return window.ENERGIE_NUTRITION_PORTIONS?.referenceQuantity?.(portion) || mealQuantityFromText(portion);
+    return mealQuantityFromText(portion);
   }
   function mealQuantityOnlyFromText(text) {
-    if (window.ENERGIE_NUTRITION_PORTIONS?.quantityOnlyFromText?.(text)) return true;
     const raw = String(text || "")
       .toLocaleLowerCase("fr-CA")
       .normalize("NFD")
@@ -2499,8 +2611,6 @@
     return new RegExp(`^${number}\\s*${unit}$`, "i").test(raw);
   }
   function nutritionScaleForSegment(segment, food) {
-    const improved = window.ENERGIE_NUTRITION_PORTIONS?.scaleForSegment?.(segment, food);
-    if (improved) return improved;
     const entered = mealQuantityFromText(segment),
       explicitReference = mealReferenceQuantity(food?.portion),
       gramsReference = Number(food?.gramsPerPortion) > 0
@@ -2753,37 +2863,26 @@
     actions.hidden = !missing.length || !!acknowledged;
     section.hidden = false;
   }
-  function estimatedDishNutrition(recognizedDish, text) {
-    if (!recognizedDish?.nutrition) return null;
-    const referenceFood = foodMatchForSegment(recognizedDish.name),
-      portion = window.ENERGIE_NUTRITION_PORTIONS?.scaleForDish?.(text, referenceFood) || {
-        scale: 1,
-        quantityUsed: false,
-        approximate: true,
-        basis: "portion habituelle",
-      },
-      scale = Number(portion.scale) > 0 ? Number(portion.scale) : 1,
-      scaled = {};
-    ["calories", "protein", "carbs", "fat", "fiber", "sugars", "sodium"].forEach((key) => {
-      const value = recognizedDish.nutrition[key];
-      scaled[key] = value == null ? null : Math.round(Number(value) * scale * 10) / 10;
-    });
-    return normalNutrition({
-      ...scaled,
-      source: "energie-dish-knowledge",
-      confidence: portion.quantityUsed && !portion.approximate ? "medium" : "low",
-      basis: `${recognizedDish.name} · ${portion.basis || "portion habituelle"}`,
-      estimated: true,
-    });
-  }
   function estimateNutritionFromText(text) {
     const recognizedDish = mealCompositionAnalysis(text)?.dish;
     if (recognizedDish?.nutrition && !/[+,;\n\r|]|\s+\/\s+/.test(String(text || "")))
-      return estimatedDishNutrition(recognizedDish, text);
+      return normalNutrition({
+        ...recognizedDish.nutrition,
+        source: "energie-dish-knowledge",
+        confidence: "low",
+        basis: `${recognizedDish.name} · recette habituelle`,
+        estimated: true,
+      });
     const segments = splitMealIngredients(text);
     if (!segments.length) {
       if (!recognizedDish?.nutrition) return null;
-      return estimatedDishNutrition(recognizedDish, text);
+      return normalNutrition({
+        ...recognizedDish.nutrition,
+        source: "energie-dish-knowledge",
+        confidence: "low",
+        basis: `${recognizedDish.name} · recette habituelle`,
+        estimated: true,
+      });
     }
     const matched = segments
       .map((segment) => ({ segment, food: foodMatchForSegment(segment) }))
@@ -2812,17 +2911,23 @@
     const portions = [
       ...new Set(enriched.map((x) => x.food.portion).filter(Boolean)),
     ];
-    const quantityUsedCount = enriched.filter((x) => x.quantityUsed).length,
-      approximateQuantityCount = enriched.filter((x) => x.quantityUsed && x.approximate).length;
+    const quantityUsedCount = enriched.filter((x) => x.quantityUsed).length;
     const basis = quantityUsedCount
-      ? `${quantityUsedCount} quantité${quantityUsedCount > 1 ? "s" : ""} utilisée${quantityUsedCount > 1 ? "s" : ""}${approximateQuantityCount ? ` · ${approximateQuantityCount} conversion${approximateQuantityCount > 1 ? "s" : ""} approximative${approximateQuantityCount > 1 ? "s" : ""}` : ""} · ${matched.length} ingrédient${matched.length > 1 ? "s" : ""}`
+      ? `${quantityUsedCount} quantité${quantityUsedCount > 1 ? "s" : ""} utilisée${quantityUsedCount > 1 ? "s" : ""} · ${matched.length} ingrédient${matched.length > 1 ? "s" : ""}`
       : matched.length === 1
         ? portions[0] || "portion courante"
         : `${matched.length} ingrédients estimés`;
+    const sourceKinds = new Set(enriched.map((x) => x.food?.nutritionSource || "legacy"));
+    const nutritionSource =
+      sourceKinds.size === 1 && sourceKinds.has("cnf")
+        ? "cnf"
+        : sourceKinds.has("cnf")
+          ? "mixed"
+          : "energie-foods";
     return normalNutrition({
       ...total,
-      source: "energie-foods",
-      confidence: quantityUsedCount && !approximateQuantityCount ? "medium" : "low",
+      source: nutritionSource,
+      confidence: quantityUsedCount ? "medium" : matched.length >= 2 ? "medium" : "low",
       basis,
       estimated: true,
     });
@@ -2899,9 +3004,13 @@
       note ||
       (n?.source === "barcode"
         ? `Valeurs ${n.basis || "du produit"} provenant de l’étiquette Open Food Facts. Vérifie-les au besoin.`
-        : n?.source === "energie-foods" && /quantité/.test(n?.basis || "")
-          ? `Estimation ajustée selon les quantités reconnues (${n.basis}). Les recettes et valeurs de référence peuvent varier.`
-          : "Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.");
+        : n?.source === "cnf"
+          ? `Valeurs de référence du Fichier canadien sur les éléments nutritifs (FCÉN) 2026 de Santé Canada, ajustées selon les quantités reconnues (${n.basis || "portion courante"}). Les recettes, marques et préparations peuvent varier.`
+          : n?.source === "mixed"
+            ? `Estimation combinant des valeurs FCÉN de Santé Canada et des valeurs de repli Énergie (${n.basis || "portion courante"}). Les recettes et portions réelles peuvent varier.`
+            : n?.source === "energie-foods" && /quantité/.test(n?.basis || "")
+              ? `Estimation ajustée selon les quantités reconnues (${n.basis}). Les recettes et valeurs de référence peuvent varier.`
+              : "Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.");
     updateMealCalorieEditor();
   }
   function updateMealCalorieRecognition() {
@@ -2935,8 +3044,16 @@
     else input.value = $("#nutritionCalories").value;
     updateMealCalorieRecognition();
     const partial = !manual && !$("#mealCalorieRecognitionNotice")?.hidden;
+    const nutritionSource = $("#mealNutritionSection")?.dataset.source || "";
+    const automaticStatus = partial
+      ? "Estimation automatique partielle · modifiable"
+      : nutritionSource === "cnf"
+        ? "Estimation FCÉN · modifiable"
+        : nutritionSource === "mixed"
+          ? "Estimation FCÉN + repli · modifiable"
+          : "Estimation automatique · modifiable";
     $("#mealCalorieStatus").textContent = manual ? t("Ajustées par vous")
-      : input.value !== "" ? t(partial ? "Estimation automatique partielle · modifiable" : "Estimation automatique · modifiable") : t("Aucune estimation disponible · saisie facultative");
+      : input.value !== "" ? t(automaticStatus) : t("Aucune estimation disponible · saisie facultative");
     $("#resetMealCalories").hidden = !manual;
     updateMealCalorieTargetGauge();
   }
@@ -4116,7 +4233,25 @@
     crypto.getRandomValues(values);
     return [...values].map((value) => alphabet[value % alphabet.length]).join("");
   }
-  async function createProfessionalInvite() {
+  function openProfessionalInviteEmail(code) {
+    const inviteCode = String(code || "").trim().toUpperCase();
+    if (!inviteCode) return;
+    const subject = "Invitation à mon suivi Énergie";
+    const body = [
+      "Bonjour,",
+      "",
+      "Je vous invite à me donner accès à mon journal Énergie pour mon suivi professionnel.",
+      "",
+      `Code d’invitation : ${inviteCode}`,
+      "",
+      "Pour accepter l’invitation, ouvrez Énergie, allez dans Profil, puis entrez ce code dans la section « Lier mon suivi à un professionnel ».",
+      "",
+      "Merci."
+    ].join("\n");
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
+  async function createProfessionalInvite(options = {}) {
     if (!hasProfessionalBetaAccess || !client || !session) return;
     for (let attempt = 0; attempt < 3; attempt += 1) {
       const code = randomProfessionalInviteCode();
@@ -4131,7 +4266,11 @@
       if (!error) {
         await loadProfessionalBetaState();
         renderProfile();
-        alert(`Code d’invitation : ${data.invite_code}\n\nLe client peut l’entrer dans son Profil Énergie.`);
+        if (options.openEmail === true) {
+          openProfessionalInviteEmail(data.invite_code);
+        } else {
+          alert(`Code d’invitation : ${data.invite_code}\n\nLe client peut l’entrer dans son Profil Énergie.`);
+        }
         return;
       }
       if (!/duplicate|unique/i.test(error.message || "")) {
@@ -4171,8 +4310,7 @@
     if (hasProfessionalBetaAccess) {
       const active = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
       const pending = professionalClientLinks.filter((link) => link.status === "pending");
-      const pendingCodes = pending.slice(0, 2).map((link) => `<button type="button" class="professional-invite-code" data-copy-professional-code="${esc(link.invite_code)}"><span>Code actif</span><strong>${esc(link.invite_code)}</strong><small>Toucher pour copier</small></button>`).join("");
-      return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""}</small></span></div>${pendingCodes}<div class="dialog-actions"><button type="button" class="secondary" id="createProfessionalInvite">Créer une invitation</button><button type="button" class="primary" id="openProfessionalBeta">Passer en mode professionnel</button></div><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
+      return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-overview"><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""} en attente</small></span></div><div class="professional-invite-primary-action"><button type="button" class="primary" id="createProfessionalInvite">✉️ Envoyer une nouvelle invitation par courriel</button></div></div><div class="professional-mode-action"><button type="button" class="secondary" id="openProfessionalBeta">Passer en mode professionnel</button></div><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
     }
     if (clientProfessionalLink) {
       return `<section class="card professional-client-link-card"><p class="eyebrow">Suivi professionnel</p><h3>👩‍⚕️ Suivi lié à ${esc(clientProfessionalLink.professional_label || "ton professionnel")}</h3><p class="muted small">Ton journal est partagé avec ce professionnel pour ton suivi.</p><div class="dialog-actions"><button type="button" class="secondary" id="openClientFollowup">Ouvrir mon suivi</button><button type="button" class="text-button" id="revokeProfessionalAccess">Retirer l’accès</button></div></section>`;
@@ -4563,7 +4701,7 @@
       ? `${activityItems.slice(0, 2).map((item) => `${activityIcon(item.type)} ${esc(item.type || "Activité")}`).join(" · ")}${activityItems.length > 2 ? ` +${activityItems.length - 2}` : ""}${activityMinutes ? ` · ${Math.round(activityMinutes)} min` : ""}`
       : "Non notée";
     const water = Number(day.water) > 0 ? `${(Number(day.water) * 0.5).toLocaleString("fr-CA", { maximumFractionDigits: 1 })} L` : "Non notée";
-    const sleep = day.sleepHours != null ? `${Number(day.sleepHours).toLocaleString("fr-CA", { maximumFractionDigits: 1 })} h` : "Non noté";
+    const sleep = day.sleepHours != null ? formatSleepDuration(day.sleepHours) : "Non noté";
     const steps = day.steps != null && Number(day.steps) > 0 ? Number(day.steps).toLocaleString("fr-CA") : "Non notés";
     const priorMeals = occurrence.priorMeals || [];
     const mealHtml = occurrence.meal
@@ -5358,6 +5496,87 @@
     const state = journalBrainDailyMessage(dateKey);
     return `<button type="button" class="card journal-brain-card" id="openJournalBrain" aria-label="Ouvrir le Cerveau"><span class="journal-brain-visual" aria-hidden="true"><span class="journal-brain-plant">${state.plant}</span><span class="journal-brain-icon">🧠</span></span><span class="journal-brain-copy"><span class="journal-brain-top"><span><small>${esc(state.eyebrow)}</small><strong>${esc(state.title)}</strong></span><b>›</b></span><span class="journal-brain-message">${esc(state.text)}</span><span class="journal-brain-progress"><i><em style="width:${state.progress}%"></em></i><small>${state.plant} ${esc(state.label)} · ${state.days} journée${state.days !== 1 ? "s" : ""}</small></span></span></button>`;
   }
+  function pilotContextLabel() {
+    const viewLabels = { today: "Journal", history: "Historique", brain: "Cerveau", insights: "Observations", followup: "Suivi", profile: "Profil" };
+    const dialog = [...document.querySelectorAll("dialog[open]")].filter((item) => item.id !== "pilotFeedbackDialog").at(-1);
+    const dialogTitle = dialog?.querySelector("h1,h2,h3")?.textContent?.trim();
+    return dialogTitle ? `${viewLabels[currentView] || currentView} › ${dialogTitle}` : (viewLabels[currentView] || currentView);
+  }
+  function pilotPlatformLabel() {
+    if (nativeHealthKit()) return "iOS";
+    return /Android/i.test(navigator.userAgent || "") ? "Android" : "Web";
+  }
+  function pilotTimestampLabel(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("fr-CA", { dateStyle: "medium", timeStyle: "short" }).format(date);
+  }
+  function openPilotFeedback() {
+    if (db.settings?.pilotMode !== true || !session || db.settings.demoMode) return;
+    const dialog = $("#pilotFeedbackDialog");
+    if (!dialog) return;
+    const now = new Date().toISOString(), context = pilotContextLabel();
+    $("#pilotFeedbackForm")?.reset();
+    document.querySelectorAll("[data-pilot-feedback-type]").forEach((button) => { button.classList.remove("is-selected"); button.setAttribute("aria-pressed", "false"); });
+    $("#pilotFeedbackType").value = "";
+    $("#pilotFeedbackTimestamp").value = now;
+    $("#pilotFeedbackContext").value = context;
+    $("#pilotFeedbackDateDisplay").textContent = pilotTimestampLabel(now);
+    $("#pilotFeedbackContextDisplay").textContent = context;
+    $("#pilotFeedbackTechnicalDisplay").textContent = `Énergie ${APP_RELEASE} · ${pilotPlatformLabel()}`;
+    $("#pilotFeedbackStatus").textContent = "";
+    $("#pilotFeedbackSubmit").disabled = false;
+    dialog.showModal();
+  }
+  function renderPilotFeedbackChrome() {
+    document.querySelectorAll(".pilot-feedback-link").forEach((node) => node.remove());
+    if (db.settings?.pilotMode !== true || !session || db.settings.demoMode) return;
+    const link = document.createElement("button");
+    link.type = "button";
+    link.className = "pilot-feedback-link";
+    link.innerHTML = '<span aria-hidden="true">🧪</span><span>Suggestion / bogue</span>';
+    link.setAttribute("aria-label", "Signaler une suggestion, un bogue ou un autre commentaire");
+    link.onclick = openPilotFeedback;
+    document.body.appendChild(link);
+  }
+  async function uploadPilotFeedbackAttachment(feedbackId, file) {
+    if (!file) return null;
+    if (file.size > 10 * 1024 * 1024) throw new Error("La pièce jointe dépasse 10 Mo.");
+    const safeName = String(file.name || "piece-jointe").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-100);
+    const path = `${session.user.id}/${feedbackId}/${Date.now()}-${safeName || "piece-jointe"}`;
+    const { error } = await client.storage.from("pilot-feedback").upload(path, file, { upsert: false, contentType: file.type || "application/octet-stream" });
+    if (error) throw error;
+    return path;
+  }
+  async function submitPilotFeedback(event) {
+    event.preventDefault();
+    if (!client || !session) return;
+    const type = $("#pilotFeedbackType").value, comment = $("#pilotFeedbackComment").value.trim();
+    if (!["suggestion", "bug", "other"].includes(type)) { $("#pilotFeedbackStatus").textContent = "Choisis d’abord le type de commentaire."; return; }
+    if (!comment) { $("#pilotFeedbackStatus").textContent = "Ajoute un court commentaire avant l’envoi."; return; }
+    const submit = $("#pilotFeedbackSubmit");
+    submit.disabled = true;
+    $("#pilotFeedbackStatus").textContent = "Envoi en cours…";
+    const id = uid();
+    let attachmentPath = null;
+    try {
+      attachmentPath = await uploadPilotFeedbackAttachment(id, $("#pilotFeedbackAttachment").files?.[0] || null);
+      const { error } = await client.from("pilot_feedback").insert({
+        id, user_id: session.user.id, feedback_type: type, comment,
+        reported_at: $("#pilotFeedbackTimestamp").value || new Date().toISOString(),
+        context: $("#pilotFeedbackContext").value || pilotContextLabel(),
+        platform: pilotPlatformLabel(), app_version: APP_RELEASE, attachment_path: attachmentPath,
+      });
+      if (error) throw error;
+      $("#pilotFeedbackStatus").textContent = "Merci, ton commentaire a été transmis.";
+      setTimeout(() => $("#pilotFeedbackDialog")?.close(), 900);
+    } catch (error) {
+      console.error("pilot feedback", error);
+      if (attachmentPath) { try { await client.storage.from("pilot-feedback").remove([attachmentPath]); } catch (_) {} }
+      $("#pilotFeedbackStatus").textContent = error?.message || "L’envoi n’a pas fonctionné. Réessaie dans un moment.";
+      submit.disabled = false;
+    }
+  }
+
   function render() {
     flushPersonalProfile?.();
     const demoDataVersions = { marie: "marie-dairy-v3", sophie: "sophie-fiber-v2", elodie: "elodie-soya-v2" };
@@ -5408,6 +5627,7 @@
     applyProfessionalClientReadOnlyUi();
     decorateSupplementIcons();
     renderDemoChrome();
+    renderPilotFeedbackChrome();
     bindViewSwipe();
   }
   function applyProfessionalClientReadOnlyUi() {
@@ -6930,13 +7150,443 @@
         else showMealEnergyResponse(meal);
       }, 120);
   }
+
+  function nativeHealthKit() {
+    return window.Capacitor?.Plugins?.HealthKit || null;
+  }
+
+  function healthKitDateKey(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+    return date.toLocaleDateString("en-CA");
+  }
+
+  function healthKitDayStart(dateKey, daysBack = 0) {
+    const date = new Date(`${dateKey}T00:00:00`);
+    date.setDate(date.getDate() - daysBack);
+    return date.toISOString();
+  }
+
+  function healthKitDayEnd(dateKey) {
+    return new Date(`${dateKey}T23:59:59.999`).toISOString();
+  }
+
+  function healthKitWorkoutType(workout = {}) {
+    const mapped = String(workout.energieType || "").trim();
+
+    if (mapped && mapped !== "Autre")
+      return mapped;
+
+    const original = String(workout.activityName || "").trim();
+
+    return original
+      ? `Autre — ${original}`
+      : "Autre";
+  }
+
+  function healthKitSleepingHours(samples = [], dateKey) {
+  const wakeDay = new Date(`${dateKey}T12:00:00`);
+
+  if (Number.isNaN(wakeDay.getTime())) return null;
+
+  // Une "nuit" appartient au jour du réveil.
+  // On regarde de 18 h la veille jusqu'à midi le jour du réveil.
+  const windowStart = new Date(wakeDay);
+  windowStart.setDate(windowStart.getDate() - 1);
+  windowStart.setHours(18, 0, 0, 0);
+
+  const windowEnd = new Date(wakeDay);
+  windowEnd.setHours(12, 0, 0, 0);
+
+  const intervals = (Array.isArray(samples) ? samples : [])
+    .filter((sample) =>
+      ["asleep", "core", "deep", "rem"].includes(sample.stage),
+    )
+    .map((sample) => [
+      Math.max(
+        new Date(sample.startDate).getTime(),
+        windowStart.getTime(),
+      ),
+      Math.min(
+        new Date(sample.endDate).getTime(),
+        windowEnd.getTime(),
+      ),
+    ])
+    .filter(
+      ([start, end]) =>
+        Number.isFinite(start) &&
+        Number.isFinite(end) &&
+        end > start,
+    )
+    .sort((a, b) => a[0] - b[0]);
+
+  if (!intervals.length) return null;
+
+  // Fusionne les intervalles qui se chevauchent afin d'éviter
+  // de compter deux fois des données HealthKit provenant
+  // éventuellement de plusieurs sources.
+  const merged = [];
+
+  intervals.forEach(([start, end]) => {
+    const last = merged.at(-1);
+
+    if (last && start <= last[1]) {
+      last[1] = Math.max(last[1], end);
+    } else {
+      merged.push([start, end]);
+    }
+  });
+
+  const hours =
+    merged.reduce(
+      (sum, [start, end]) => sum + (end - start),
+      0,
+    ) / 3600000;
+
+  return Math.round(hours * 10) / 10;
+}
+
+  let healthKitSyncBusy = false;
+
+  async function syncAppleHealth({
+    requestAuthorization = false,
+    showResult = false,
+  } = {}) {
+    const plugin = nativeHealthKit();
+
+    if (
+      !plugin ||
+      healthKitSyncBusy ||
+      !session ||
+      db.settings.demoMode ||
+      professionalBetaMode
+    )
+      return false;
+
+    if (
+      db.settings.appleHealthEnabled !== true &&
+      !requestAuthorization
+    )
+      return false;
+
+    healthKitSyncBusy = true;
+
+    try {
+      if (requestAuthorization) {
+        const availability = await plugin.isAvailable();
+
+        if (!availability?.available) {
+          if (showResult)
+            alert("Apple Health n’est pas disponible sur cet appareil.");
+
+          return false;
+        }
+
+        const authorization =
+          await plugin.requestAuthorization();
+
+        if (!authorization?.authorized) {
+          if (showResult)
+            alert("Apple Health n’a pas été autorisé.");
+
+          return false;
+        }
+
+        db.settings.appleHealthEnabled = true;
+        db.settings.stepsTracking = true;
+
+        persistProfilePreference("apple-health");
+      }
+
+      const today = todayKey();
+      const changedDates = new Set();
+
+      // PAS
+      const stepsResult = await plugin.readSteps({
+        startDate: healthKitDayStart(today),
+        endDate: healthKitDayEnd(today),
+      });
+
+      if (Number.isFinite(Number(stepsResult?.steps))) {
+        const day = ensureDay(db, today);
+        const nextSteps = Math.max(
+          0,
+          Math.round(Number(stepsResult.steps)),
+        );
+
+        if (day.steps !== nextSteps) {
+          day.steps = nextSteps;
+
+          if (!(Number(day.stepsGoal) > 0))
+            day.stepsGoal =
+              Number(db.settings.stepsGoal) || 8000;
+
+          changedDates.add(today);
+        }
+      }
+
+      // SOMMEIL
+      const sleepResult = await plugin.readSleep({
+        startDate: healthKitDayStart(today, 3),
+        endDate: healthKitDayEnd(today),
+      });
+
+      for (let offset = 0; offset <= 2; offset += 1) {
+        const date = new Date(`${today}T12:00:00`);
+        date.setDate(date.getDate() - offset);
+
+        const dateKey =
+          date.toLocaleDateString("en-CA");
+
+        const hours = healthKitSleepingHours(
+          sleepResult?.samples,
+          dateKey,
+        );
+
+        if (hours == null) continue;
+
+        const day = ensureDay(db, dateKey);
+
+        if (Number(day.sleepHours) !== Number(hours)) {
+          day.sleepHours = hours;
+          changedDates.add(dateKey);
+        }
+      }
+
+      // POIDS
+      // Les mesures HealthKit sont importées par date. Metrics.mergeWeight
+      // conserve toujours la mesure la plus récente : une correction manuelle
+      // faite ensuite dans Énergie ne sera donc pas écrasée par une ancienne
+      // mesure provenant de Santé.
+      if (typeof plugin.readWeight === "function") {
+        const weightResult = await plugin.readWeight({
+          startDate: healthKitDayStart(today, 180),
+          endDate: healthKitDayEnd(today),
+        });
+
+        (weightResult?.measurements || []).forEach((measurement) => {
+          const kg = Number(measurement?.kg);
+          const dateKey = healthKitDateKey(measurement?.date);
+          const updatedAt = measurement?.date;
+
+          if (!(kg > 0) || !dateKey || !Number.isFinite(Date.parse(updatedAt)))
+            return;
+
+          const day = ensureDay(db, dateKey);
+          const next = Metrics.mergeWeight(day.weightMeasurement, {
+            kg,
+            updatedAt,
+          });
+
+          const previous = Metrics.weightRecord(day.weightMeasurement);
+          if (
+            next &&
+            (!previous ||
+              next.kg !== previous.kg ||
+              next.updatedAt !== previous.updatedAt)
+          ) {
+            day.weightMeasurement = next;
+            changedDates.add(dateKey);
+          }
+        });
+      }
+
+      // ACTIVITÉS
+      const workoutsResult = await plugin.readWorkouts({
+        startDate: healthKitDayStart(today, 7),
+        endDate: healthKitDayEnd(today),
+      });
+
+      (workoutsResult?.workouts || []).forEach(
+        (workout) => {
+          if (!workout?.uuid || !workout?.startDate)
+            return;
+
+          const dateKey =
+            healthKitDateKey(workout.startDate);
+
+          if (!dateKey) return;
+
+          const day = ensureDay(db, dateKey);
+          const id = `healthkit:${workout.uuid}`;
+
+          // Une activité HealthKit déjà importée n'est pas
+          // réécrite : une correction manuelle dans Énergie
+          // reste donc intacte.
+          if (
+            day.activities.some(
+              (activity) => activity.id === id,
+            )
+          )
+            return;
+
+          day.activities.push(
+            normalizeActivity({
+              id,
+              type: healthKitWorkoutType(workout),
+              minutes: Math.max(
+                0,
+                Number(workout.durationMinutes) || 0,
+              ),
+              intensity: "moderate",
+              actualCalories:
+                Number.isFinite(
+                  Number(workout.calories),
+                )
+                  ? Math.max(
+                      0,
+                      Math.round(
+                        Number(workout.calories),
+                      ),
+                    )
+                  : null,
+              at: workout.startDate,
+            }),
+          );
+
+          changedDates.add(dateKey);
+        },
+      );
+
+      changedDates.forEach((date) =>
+        setDayChanged(date),
+      );
+
+      db.settings.appleHealthLastSync =
+        new Date().toISOString();
+
+      saveLocal("apple-health-sync");
+
+      if (showResult) {
+        const count = changedDates.size;
+
+        alert(
+          count
+            ? `Apple Health synchronisé · ${count} journée${count > 1 ? "s" : ""} mise${count > 1 ? "s" : ""} à jour.`
+            : "Apple Health est déjà à jour.",
+        );
+      }
+
+      return true;
+    } catch (error) {
+      console.warn(
+        "Synchronisation Apple Health",
+        error,
+      );
+
+      if (showResult)
+        alert(
+          `Impossible de synchroniser Apple Health : ${error?.message || "réessaie dans un moment"}.`,
+        );
+
+      return false;
+    } finally {
+      healthKitSyncBusy = false;
+    }
+  }
+
+  function nativeLocalNotifications() {
+    return window.Capacitor?.Plugins?.LocalNotifications || null;
+  }
+  function nativeFeelingNotificationId(mealId = "") {
+    let hash = 0;
+    for (let i = 0; i < mealId.length; i += 1)
+      hash = (hash * 31 + mealId.charCodeAt(i)) >>> 0;
+    return 100000000 + (hash % 1900000000);
+  }
+  let nativeFeelingNotificationListenerReady = false;
+  async function initNativeFeelingNotifications() {
+    const plugin = nativeLocalNotifications();
+    if (!plugin || nativeFeelingNotificationListenerReady) return;
+    nativeFeelingNotificationListenerReady = true;
+    try {
+      await plugin.addListener("localNotificationActionPerformed", (action) => {
+        const extra = action?.notification?.extra || {};
+        if (extra.energieKind !== "feeling" || !extra.mealId) return;
+        const meal = allMeals().find((item) => item.id === extra.mealId);
+        if (!meal) return;
+        selectedDate = meal.date;
+        currentView = "today";
+        render();
+        setTimeout(() => openFeeling(meal.id), 120);
+      });
+    } catch (error) {
+      nativeFeelingNotificationListenerReady = false;
+      console.warn("Notifications iOS", error);
+    }
+  }
+  async function nativeFeelingPermission(request = false) {
+    const plugin = nativeLocalNotifications();
+    if (!plugin) return null;
+    try {
+      const status = request
+        ? await plugin.requestPermissions()
+        : await plugin.checkPermissions();
+      return status?.display === "granted";
+    } catch (error) {
+      console.warn("Permission notifications iOS", error);
+      return false;
+    }
+  }
+  async function syncNativeFeelingNotifications() {
+    const plugin = nativeLocalNotifications();
+    if (!plugin) return;
+    await initNativeFeelingNotifications();
+    try {
+      const pending = await plugin.getPending();
+      const ours = (pending?.notifications || []).filter(
+        (item) => item?.extra?.energieKind === "feeling",
+      );
+      if (ours.length)
+        await plugin.cancel({
+          notifications: ours.map((item) => ({ id: item.id })),
+        });
+      if (db.settings.feelingReminders === false) return;
+      if (!(await nativeFeelingPermission(false))) return;
+      const enabledTypes =
+        db.settings.feelingMealTypes || ["Déjeuner", "Dîner", "Souper"];
+      const now = new Date();
+      const notifications = allMeals()
+        .filter(
+          (meal) =>
+            enabledTypes.includes(meal.type) &&
+            !meal.feeling &&
+            feelingDueAt(meal) > now,
+        )
+        .map((meal) => ({
+          id: nativeFeelingNotificationId(meal.id),
+          title: `🍏⚡ ${t("Ressenti")}`,
+          body: t(`Comment te sens-tu après ${meal.type === "Collation" ? "ta" : "ton"} ${meal.type.toLowerCase()} ?`),
+          schedule: { at: feelingDueAt(meal) },
+          extra: {
+            energieKind: "feeling",
+            mealId: meal.id,
+            mealDate: meal.date,
+          },
+        }));
+      if (notifications.length) await plugin.schedule({ notifications });
+    } catch (error) {
+      console.warn("Planification notifications iOS", error);
+    }
+  }
   async function requestFeelingNotifications() {
+    const nativePlugin = nativeLocalNotifications();
+    if (nativePlugin) {
+      await initNativeFeelingNotifications();
+      const granted = await nativeFeelingPermission(true);
+      if (granted) await syncNativeFeelingNotifications();
+      return granted;
+    }
     if (!("Notification" in window)) return false;
     if (Notification.permission === "granted") return true;
     if (Notification.permission === "denied") return false;
     return (await Notification.requestPermission()) === "granted";
   }
   function notifyDueFeelings() {
+    // Dans l'app native iOS, les rappels sont programmés par le système et
+    // fonctionnent même lorsque l'app est fermée. Le mécanisme Web historique
+    // reste inchangé pour Safari et les autres navigateurs.
+    if (nativeLocalNotifications()) return;
     if (
       db.settings.feelingReminders === false ||
       !("Notification" in window) ||
@@ -6958,6 +7608,10 @@
   }
   function scheduleFeelingChecks() {
     clearTimeout(notificationTimer);
+    if (nativeLocalNotifications()) {
+      void syncNativeFeelingNotifications();
+      return;
+    }
     notifyDueFeelings();
     if (db.settings.feelingReminders === false) return;
     const upcoming = allMeals()
@@ -7478,7 +8132,7 @@
       (d.sleepTags || []).filter((x) => x !== "none").length - 2,
     );
     $("#app").innerHTML =
-      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${isFuture ? '<aside class="future-meal-planning-note"><span aria-hidden="true">📅</span><div><strong>Planification de repas</strong><small>Tu peux préparer tes repas jusqu’à 2 jours d’avance. Ils ne seront pris en compte dans les Observations qu’une fois la date arrivée.</small></div></aside>' : ""}${clientProfessionalNoteJournalHtml()}${dailyMacroSummaryHtml(meals)}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? `${d.sleepHours} h` : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><div class="card activity-card-with-steps"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div></section>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
+      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${isFuture ? '<aside class="future-meal-planning-note"><span aria-hidden="true">📅</span><div><strong>Planification de repas</strong><small>Tu peux préparer tes repas jusqu’à 2 jours d’avance. Ils ne seront pris en compte dans les Observations qu’une fois la date arrivée.</small></div></aside>' : ""}${clientProfessionalNoteJournalHtml()}${dailyMacroSummaryHtml(meals)}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? formatSleepDuration(d.sleepHours) : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><div class="card activity-card-with-steps"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div></section>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
     $("#previousDay").onclick = () => changeJournalDay(-1);
     if (!$("#nextDay").disabled)
       $("#nextDay").onclick = () => changeJournalDay(1);
@@ -7975,7 +8629,7 @@
           key: "sleep",
           detail:
             day?.sleepHours != null
-              ? `${Number(day.sleepHours).toLocaleString("fr-CA", { maximumFractionDigits: 1 })} h`
+              ? formatSleepDuration(day.sleepHours)
               : "Non noté",
         },
         averages,
@@ -10255,10 +10909,18 @@
       latestGoal = rows[rows.length - 1].goal;
     return `<section class="card steps-observation-card"><div class="steps-observation-head"><span aria-hidden="true">👟</span><div><p class="eyebrow">Progression</p><h3>Pas par jour</h3></div><strong>${averageSteps.toLocaleString("fr-CA")}<small>moyenne</small></strong></div><div class="steps-line-chart"><svg viewBox="0 0 700 265" role="img" aria-label="Évolution du nombre de pas par jour et objectif quotidien">${ticks}<polyline class="steps-goal-line" points="${goalPoints}"></polyline><text class="steps-goal-label" x="${chartRight - 4}" y="${Math.max(chartTop + 14, yFor(latestGoal) - 8)}" text-anchor="end">Objectif ${latestGoal.toLocaleString("fr-CA")}</text>${rows.length > 1 ? `<polyline class="steps-data-line" points="${points}"></polyline>` : ""}${circles}${dates}</svg></div><div class="steps-chart-legend"><span><i></i> Pas quotidiens</span><span><i></i> Objectif du jour</span><strong>${reached}/${rows.length} objectif${rows.length > 1 ? "s" : ""} atteint${reached > 1 ? "s" : ""}</strong></div><p class="muted tiny steps-chart-note">Chaque point correspond à une journée. Si l’objectif change, la ligne pointillée évolue à partir de cette date sans modifier les journées précédentes.</p></section>`;
   }
+  function persistProfilePreference(reason = "parametre") {
+    if (saveLocal(reason) === false) return false;
+    if (session && !db.settings.demoMode && !professionalBetaMode)
+      setDayChanged(todayKey());
+    return true;
+  }
   function toggleSetting(id, key) {
-    $(id).onchange = (e) => {
+    const control = $(id);
+    if (!control) return;
+    control.onchange = (e) => {
       db.settings[key] = e.target.checked;
-      saveLocal(`parametre-${key}`);
+      persistProfilePreference(`parametre-${key}`);
       render();
     };
   }
@@ -10833,6 +11495,20 @@
   }
 
   let keepPhysiologicalPanelOpen = false;
+  $("#pilotFeedbackForm")?.addEventListener("submit", submitPilotFeedback);
+  $("#closePilotFeedback")?.addEventListener("click", () => $("#pilotFeedbackDialog")?.close());
+  document.querySelectorAll("[data-pilot-feedback-type]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll("[data-pilot-feedback-type]").forEach((item) => {
+        const selected = item === button;
+        item.classList.toggle("is-selected", selected);
+        item.setAttribute("aria-pressed", selected ? "true" : "false");
+      });
+      $("#pilotFeedbackType").value = button.dataset.pilotFeedbackType;
+      $("#pilotFeedbackStatus").textContent = "";
+    });
+  });
+
   document.addEventListener("click", (event) => {
     const button = event.target.closest("[data-open-weight-fullscreen]");
     if (!button) return;
@@ -11108,7 +11784,7 @@
         ? `<div class="notice info-notice"><strong>Estimations nutritionnelles professionnelles</strong><p>Le Journal affiche uniquement le total calorique. Les détails des nutriments restent réservés à cette vue professionnelle.</p></div>`
         : `<div class="notice info-notice"><strong>Calories estimées, sans objectif</strong><p>Seul le total calorique est affiché en haut du Journal, avec sa tendance dans Observations. Les autres chiffres nutritionnels restent masqués.</p></div>`;
     $("#app").innerHTML =
-      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card recognized-elements-setting-card"><h3>🔎 Éléments reconnus</h3><p class="muted small">Cette petite carte résume ce qu’Énergie reconnaît dans la description du repas. Tu peux la masquer pour alléger la saisie sans désactiver l’analyse du repas ni les estimations nutritionnelles.</p><label class="toggle-row"><span><strong>Afficher « Éléments reconnus »</strong><small>Affiche la carte sous la description du repas</small></span><input id="settingRecognizedElements" type="checkbox" ${db.settings.showRecognizedElements !== false ? "checked" : ""}></label></section><section class="card eating-reasons-setting-card"><h3>💭 Raisons de manger</h3><p class="muted small">La question « Qu’est-ce qui t’a amené à manger? » est facultative. Tu peux la masquer pour alléger la saisie des repas.</p><label class="toggle-row"><span><strong>Afficher « Qu’est-ce qui t’a amené à manger? »</strong><small>Si elle est masquée, la carte correspondante n’apparaît pas non plus dans Observations</small></span><input id="settingEatingReasons" type="checkbox" ${db.settings.showEatingReasons !== false ? "checked" : ""}></label></section><section class="card future-meal-planning-setting-card"><h3>📅 Planification des repas</h3><p class="muted small">Optionnel · utile si tu souhaites préparer ton journal à l’avance.</p><label class="toggle-row"><span><strong>Permettre la saisie de repas à l’avance</strong><small>Autorise la navigation et la saisie jusqu’à 2 jours dans le futur. Cette limite est fixe à 2 jours.</small></span><input id="settingFutureMealPlanning" type="checkbox" ${db.settings.futureMealPlanning === true ? "checked" : ""}></label><p class="muted tiny">Les repas planifiés restent enregistrés, mais ne participent pas aux Observations ni à l’apprentissage d’Énergie avant la date prévue.</p></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="one-time-code"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button><p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p></div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${professionalDemoEntryHtml()}${hasDemoAccess ? demoProfileCardsHtml() : ``}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<details class="card profile-backup-panel"><summary><span><strong>Données et sauvegarde</strong><small>Options avancées · ${backups} copie(s) locale(s)</small></span><span aria-hidden="true">›</span></summary><div class="profile-backup-content"><p class="muted small">Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></div></details></div>`;
+      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><div class="apple-link-card"><div><strong>Connexion Apple</strong><p class="muted small">${hasAppleIdentity() ? "✓ Ton identifiant Apple est associé à ce compte Énergie." : "Associe Apple à ce compte avant d’utiliser « Se connecter avec Apple »."}</p></div>${hasAppleIdentity() ? "" : `<button type="button" class="apple-auth-button" id="linkAppleIdentity"><b aria-hidden="true"></b> Associer mon compte Apple</button><p id="appleIdentityMessage" class="muted tiny" aria-live="polite"></p>`}</div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card recognized-elements-setting-card"><h3>🔎 Éléments reconnus</h3><p class="muted small">Cette petite carte résume ce qu’Énergie reconnaît dans la description du repas. Tu peux la masquer pour alléger la saisie sans désactiver l’analyse du repas ni les estimations nutritionnelles.</p><label class="toggle-row"><span><strong>Afficher « Éléments reconnus »</strong><small>Affiche la carte sous la description du repas</small></span><input id="settingRecognizedElements" type="checkbox" ${db.settings.showRecognizedElements !== false ? "checked" : ""}></label></section><section class="card eating-reasons-setting-card"><h3>💭 Raisons de manger</h3><p class="muted small">La question « Qu’est-ce qui t’a amené à manger? » est facultative. Tu peux la masquer pour alléger la saisie des repas.</p><label class="toggle-row"><span><strong>Afficher « Qu’est-ce qui t’a amené à manger? »</strong><small>Si elle est masquée, la carte correspondante n’apparaît pas non plus dans Observations</small></span><input id="settingEatingReasons" type="checkbox" ${db.settings.showEatingReasons !== false ? "checked" : ""}></label></section><section class="card future-meal-planning-setting-card"><h3>📅 Planification des repas</h3><p class="muted small">Optionnel · utile si tu souhaites préparer ton journal à l’avance.</p><label class="toggle-row"><span><strong>Permettre la saisie de repas à l’avance</strong><small>Autorise la navigation et la saisie jusqu’à 2 jours dans le futur. Cette limite est fixe à 2 jours.</small></span><input id="settingFutureMealPlanning" type="checkbox" ${db.settings.futureMealPlanning === true ? "checked" : ""}></label><p class="muted tiny">Les repas planifiés restent enregistrés, mais ne participent pas aux Observations ni à l’apprentissage d’Énergie avant la date prévue.</p></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="one-time-code"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button>${nativeLocalNotifications() ? `<p class="muted tiny">Sur iPhone, les rappels peuvent apparaître même lorsque Énergie n’est pas ouverte, si les notifications sont autorisées.</p>` : `<p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p>`}</div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${professionalDemoEntryHtml()}${hasDemoAccess ? demoProfileCardsHtml() : ``}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<details class="card profile-backup-panel"><summary><span><strong>Données et sauvegarde</strong><small>Options avancées · ${backups} copie(s) locale(s)</small></span><span aria-hidden="true">›</span></summary><div class="profile-backup-content"><p class="muted small">Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></div></details></div>`;
     const professionalSettingsSection = $("#settingProfessionalSupport")?.closest("section.card");
     const professionalBetaHtml = professionalBetaProfileHtml();
     professionalSettingsSection?.insertAdjacentHTML("afterend", professionalBetaHtml);
@@ -11116,9 +11792,11 @@
     photoSettingsAnchor?.insertAdjacentHTML("afterend", `<section class="card meal-photo-settings-card"><h3>📷 Photos des repas</h3><p class="muted small">Jusqu’à 3 photos peuvent être ajoutées à un repas. Une photo ajoutée est conservée automatiquement; tu peux la retirer manuellement du repas si tu ne souhaites plus la garder.</p><label class="toggle-row"><span><strong>Partager mes photos avec mon professionnel</strong><small>Autorisation distincte, utilisée lorsqu’un professionnel sera lié à ton compte.</small></span><input id="settingShareMealPhotos" type="checkbox" ${db.settings.shareMealPhotosWithProfessional === true ? "checked" : ""}></label><p class="muted tiny">L’analyse par l’IA reste facultative et n’est lancée que lorsque tu choisis « Analyser avec l’IA ».</p></section>`);
     const welcomeInfoSection = $("#showWelcomeAgain")?.closest("section.card");
     welcomeInfoSection?.insertAdjacentHTML("afterend", `<section class="card energy-guide-profile-card"><div class="settings-row"><div><span class="energy-guide-profile-icon" aria-hidden="true">🌱</span><span><h3>Découvrir Énergie</h3><p class="muted small">Un petit tour des principales fonctions de l’application.</p></span></div><button class="secondary" id="openEnergyGuide" type="button">Voir le guide</button></div></section>`);
+    $(".energy-guide-profile-card")?.insertAdjacentHTML("afterend", `<section class="card pilot-mode-profile-card"><h3>🧪 Mode pilote</h3><p class="muted small">Active un lien discret dans Énergie pour transmettre rapidement une suggestion, un bogue ou un autre commentaire pendant le projet pilote.</p><label class="toggle-row"><span><strong>Activer le mode pilote</strong><small>Le contexte technique est ajouté automatiquement, jamais le contenu de ton journal.</small></span><input id="settingPilotMode" type="checkbox" ${db.settings.pilotMode === true ? "checked" : ""}></label></section>`);
     const energyGuideButton = $("#openEnergyGuide");
     if (energyGuideButton) energyGuideButton.onclick = openEnergyGuide;
     const nutritionAnchor = $("#settingNutrition")?.closest("label");
+    nutritionAnchor?.closest("section.card")?.insertAdjacentHTML("afterend", `<section class="card nutrition-source-profile-card"><h3>📚 Source des données nutritionnelles</h3><p class="muted small">Énergie s’appuie sur le <strong>Fichier canadien sur les éléments nutritifs (FCÉN) de Santé Canada</strong>, la base de référence officielle canadienne sur la composition des aliments. Les valeurs de référence sont ensuite adaptées aux aliments et aux quantités reconnus dans le repas.</p><p class="muted tiny">Pour les produits scannés, les données de l’étiquette peuvent provenir d’Open Food Facts lorsqu’elles sont disponibles. Les recettes, les marques et les méthodes de préparation peuvent faire varier les valeurs réelles.</p></section>`);
     if (session && profileSinceHtml)
       $("#syncNow")
         ?.closest(".settings-row")
@@ -11129,6 +11807,53 @@
     const targetGaugeEnabled = db.settings.calorieTargetGauge === true, targetMode = calorieTargetMode(), fixedTarget = fixedCalorieTarget();
     waterSettingsSection?.insertAdjacentHTML("afterend", `<section class="card calorie-balance-profile-card"><h3>⚖️ Balance énergétique</h3><p class="muted small">Optionnel · utile surtout pour suivre une tendance de déficit ou de surplus calorique.</p><label class="toggle-row"><span><strong>Afficher mon déficit calorique estimé</strong><small>Ajoute un graphique sous « Calories par jour » dans Observations</small></span><input id="settingCalorieBalanceTracking" type="checkbox" ${db.settings.calorieBalanceTracking === true ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher ma cible calorique</strong><small>Transforme « Calories de la journée » en jauge visuelle et l’affiche aussi pendant la saisie des repas</small></span><input id="settingCalorieTargetGauge" type="checkbox" ${targetGaugeEnabled ? "checked" : ""}></label><div class="settings-row setting-dependent calorie-target-method-setting ${targetGaugeEnabled ? "" : "is-disabled"}" id="calorieTargetModeSetting"><span class="calorie-target-method-heading"><strong>Comment veux-tu définir ta cible?</strong><small>Choisis simplement l’option qui te convient. Tu pourras la changer en tout temps.</small></span><div class="calorie-target-method-buttons" role="group" aria-label="Méthode de cible calorique"><button type="button" class="calorie-target-method-button ${targetMode === "estimated" ? "is-selected" : ""}" data-calorie-target-mode="estimated" aria-pressed="${targetMode === "estimated" ? "true" : "false"}" ${targetGaugeEnabled ? "" : "disabled"}><span class="calorie-target-method-icon" aria-hidden="true">⚡</span><span><b>Calcul Énergie</b><small>Selon ton profil, tes activités et le déficit choisi.</small></span></button><button type="button" class="calorie-target-method-button ${targetMode === "fixed" ? "is-selected" : ""}" data-calorie-target-mode="fixed" aria-pressed="${targetMode === "fixed" ? "true" : "false"}" ${targetGaugeEnabled ? "" : "disabled"}><span class="calorie-target-method-icon" aria-hidden="true">🎯</span><span><b>Cible fixe</b><small>Une valeur précise, par exemple celle donnée par ta nutritionniste.</small></span></button></div></div><label class="settings-row setting-dependent ${targetGaugeEnabled && targetMode === "estimated" ? "" : "is-disabled"}" id="calorieDeficitTargetSetting"><span><strong>Déficit quotidien visé</strong><small>Utilisé seulement lorsque la cible est calculée par Énergie</small></span><select id="settingCalorieDeficitTarget" ${targetGaugeEnabled && targetMode === "estimated" ? "" : "disabled"}><option value="250" ${calorieDeficitTarget() === 250 ? "selected" : ""}>250 kcal</option><option value="400" ${calorieDeficitTarget() === 400 ? "selected" : ""}>400 kcal</option><option value="500" ${calorieDeficitTarget() === 500 ? "selected" : ""}>500 kcal</option></select></label><div class="settings-row setting-dependent ${targetGaugeEnabled && targetMode === "fixed" ? "" : "is-disabled"}" id="fixedCalorieTargetSetting"><div><strong>Cible calorique quotidienne</strong><p class="muted tiny">Ex. : valeur recommandée par ta nutritionniste</p></div><label><input id="settingFixedCalorieTarget" type="number" min="100" max="10000" step="10" inputmode="numeric" placeholder="1750" value="${fixedTarget || ""}" ${targetGaugeEnabled && targetMode === "fixed" ? "" : "disabled"}><span>kcal</span></label></div><div class="calorie-balance-formula"><strong>Comment ça fonctionne</strong><p><b>Calculée par Énergie :</b> dépense ≈ métabolisme de repos (Mifflin-St Jeor) × 1,2 + activités; le 🎯 représente le déficit choisi.</p><p><b>Cible fixe :</b> la jauge utilise directement la valeur saisie et ne change pas avec les activités.</p><small>Le graphique « Déficit / surplus calorique » dans Observations conserve toujours son calcul actuel, peu importe la méthode choisie pour la jauge.</small></div></section>`);
     $(".calorie-balance-profile-card")?.insertAdjacentHTML("afterend", `<section class="card steps-profile-card"><h3>👟 Suivi des pas</h3><p class="muted small">Affiche les pas dans le Journal et leur progression dans Observations.</p><label class="toggle-row"><span><strong>Suivre mes pas</strong><small>Tu peux masquer ce suivi sans supprimer ton historique</small></span><input id="settingStepsTracking" type="checkbox" ${db.settings.stepsTracking === true ? "checked" : ""}></label><div id="stepsGoalSetting" class="settings-row ${db.settings.stepsTracking === true ? "" : "is-disabled"}"><div><strong>Objectif quotidien</strong><p class="muted tiny">Utilisé pour les nouvelles journées seulement</p></div><label><input id="stepsGoal" type="number" min="100" max="100000" step="100" inputmode="numeric" value="${Number(db.settings.stepsGoal) || 8000}" ${db.settings.stepsTracking === true ? "" : "disabled"}><span>pas</span></label></div></section>`);
+
+    if (nativeHealthKit()) {
+      const healthLastSync =
+        db.settings.appleHealthLastSync
+          ? new Date(
+              db.settings.appleHealthLastSync,
+            ).toLocaleString("fr-CA", {
+              dateStyle: "medium",
+              timeStyle: "short",
+            })
+          : "Jamais synchronisé";
+
+      $(".steps-profile-card")?.insertAdjacentHTML(
+        "afterend",
+        `<section class="card apple-health-profile-card">
+          <h3>🍎 Apple Health</h3>
+          <p class="muted small">
+            Importe automatiquement le sommeil, les pas, les activités et le poids de Santé.
+            Les valeurs restent modifiables dans Énergie.
+          </p>
+          <div class="settings-row">
+            <div>
+              <strong>
+                ${db.settings.appleHealthEnabled === true
+                  ? "Apple Health connecté"
+                  : "Connecter Apple Health"}
+              </strong>
+              <p class="muted tiny">
+                Dernière synchronisation : ${esc(healthLastSync)}
+              </p>
+            </div>
+            <button
+              class="${db.settings.appleHealthEnabled === true
+                ? "secondary"
+                : "primary"} small"
+              id="${db.settings.appleHealthEnabled === true
+                ? "syncAppleHealthNow"
+                : "connectAppleHealth"}"
+              type="button">
+              ${db.settings.appleHealthEnabled === true
+                ? "Synchroniser"
+                : "Autoriser"}
+            </button>
+          </div>
+        </section>`,
+      );
+    }
     const feelingSettingsSection = $("#settingFeelingReminders")?.closest("section.card"),
       feelingIntro = feelingSettingsSection?.querySelector(":scope > p");
     if (feelingIntro) feelingIntro.insertAdjacentHTML("afterend", trackedFeelingsProfileHtml());
@@ -11198,7 +11923,7 @@
     });
     $("#waterGoal").onchange = (e) => {
       db.settings.waterGoal = clamp(e.target.value, 1, 20);
-      saveLocal("objectif-eau");
+      persistProfilePreference("objectif-eau");
       render();
     };
     $("#settingCalorieBalanceTracking")?.addEventListener("change", (event) => {
@@ -11238,14 +11963,37 @@
     });
     $("#settingStepsTracking")?.addEventListener("change", (event) => {
       db.settings.stepsTracking = event.target.checked;
-      saveLocal("suivi-pas");
+      persistProfilePreference("suivi-pas");
       renderProfile();
     });
     $("#stepsGoal")?.addEventListener("change", (event) => {
       db.settings.stepsGoal = clamp(event.target.value, 100, 100000);
-      saveLocal("objectif-pas");
+      persistProfilePreference("objectif-pas");
       event.target.value = db.settings.stepsGoal;
     });
+
+    $("#connectAppleHealth")?.addEventListener(
+      "click",
+      async () => {
+        const ok = await syncAppleHealth({
+          requestAuthorization: true,
+          showResult: true,
+        });
+
+        if (ok) renderProfile();
+      },
+    );
+
+    $("#syncAppleHealthNow")?.addEventListener(
+      "click",
+      async () => {
+        await syncAppleHealth({
+          showResult: true,
+        });
+
+        renderProfile();
+      },
+    );
     $("#addSupplement").onclick = () => {
       const name = $("#supplementNameInput").value.trim();
       if (!name) return;
@@ -11287,12 +12035,13 @@
     toggleSetting("#settingRecognizedElements", "showRecognizedElements");
     toggleSetting("#settingEatingReasons", "showEatingReasons");
     toggleSetting("#settingFutureMealPlanning", "futureMealPlanning");
+    toggleSetting("#settingPilotMode", "pilotMode");
     toggleSetting("#settingInsights", "insightsEnabled");
     const macroToggle = $("#settingMacros");
     if (macroToggle)
       macroToggle.onchange = (e) => {
         db.settings.macroTracking = e.target.checked;
-        saveLocal("parametre-macroTracking");
+        persistProfilePreference("parametre-macroTracking");
         render();
       };
     toggleSetting("#settingAutoNutrition", "autoNutritionEstimates");
@@ -11302,13 +12051,13 @@
     toggleSetting("#settingProfessionalSupport", "professionalSupport");
     $("#settingShareMealPhotos")?.addEventListener("change", (event) => {
       db.settings.shareMealPhotosWithProfessional = event.target.checked;
-      saveLocal("partage-photos-professionnel");
+      persistProfilePreference("partage-photos-professionnel");
     });
     const feelingToggle = $("#settingFeelingReminders");
     if (feelingToggle)
       feelingToggle.onchange = async (e) => {
         db.settings.feelingReminders = e.target.checked;
-        saveLocal("rappels-ressenti");
+        persistProfilePreference("rappels-ressenti");
         if (e.target.checked) await requestFeelingNotifications();
         scheduleFeelingChecks();
         renderProfile();
@@ -11319,14 +12068,14 @@
           db.settings.feelingMealTypes = $$(
             "[data-feeling-meal-type]:checked",
           ).map((x) => x.dataset.feelingMealType);
-          saveLocal("repas-rappels-ressenti");
+          persistProfilePreference("repas-rappels-ressenti");
           scheduleFeelingChecks();
         }),
     );
     $("#feelingDelay")?.addEventListener("change", (e) => {
       db.settings.feelingDelayHours = Number(e.target.value);
       db.settings.feelingDelayPreferenceSet = true;
-      saveLocal("delai-ressenti");
+      persistProfilePreference("delai-ressenti");
       scheduleFeelingChecks();
     });
     $("#enableNotifications")?.addEventListener("click", async () => {
@@ -11334,7 +12083,9 @@
       alert(
         ok
           ? "Notifications autorisées."
-          : "Les notifications ne sont pas autorisées dans ce navigateur.",
+          : nativeLocalNotifications()
+            ? "Les notifications ne sont pas autorisées sur cet iPhone. Tu peux les réactiver dans Réglages > Notifications > Énergie."
+            : "Les notifications ne sont pas autorisées dans ce navigateur.",
       );
     });
     $("#openEnergyGuide")?.addEventListener("click", openEnergyGuide);
@@ -11354,10 +12105,6 @@
     $("#leaveDemoProfile")?.addEventListener("click", leaveDemoMode);
     $("#openClientFollowup")?.addEventListener("click", async () => { await loadClientProfessionalFollowup(); currentView = "followup"; render(); });
     $("#revokeProfessionalAccess")?.addEventListener("click", () => revokeProfessionalLink(clientProfessionalLink?.id));
-    $$('[data-copy-professional-code]').forEach((button) => button.addEventListener("click", async () => {
-      try { await navigator.clipboard.writeText(button.dataset.copyProfessionalCode); alert("Code copié."); }
-      catch (_) { alert(`Code : ${button.dataset.copyProfessionalCode}`); }
-    }));
     bindFavoriteActions();
     $("#exportData").onclick = exportData;
     $("#importData").onclick = () => $("#importFile").click();
@@ -12932,9 +13679,16 @@
     if (old) Object.assign(old, meal);
     else d.meals.push(meal);
     const savedMeal = old || meal;
-    const recommendation = ["Déjeuner", "Dîner", "Souper"].includes(savedMeal.type)
-      ? chooseMealRecommendation(selectedDate, savedMeal)
-      : null;
+    let recommendation = null;
+    if (["Déjeuner", "Dîner", "Souper"].includes(savedMeal.type)) {
+      try {
+        recommendation = chooseMealRecommendation(selectedDate, savedMeal);
+      } catch (recommendationError) {
+        // Une suggestion est facultative et ne doit jamais empêcher
+        // l'enregistrement ou la fermeture du formulaire de repas.
+        console.warn("Suggestion après repas ignorée", recommendationError);
+      }
+    }
     savedMeal.recommendation = recommendation || null;
     setMealChanged(savedMeal);
     if (removedMealPhotoPaths.size) {
@@ -13355,6 +14109,8 @@
       ? "new-password"
       : "current-password";
     $("#forgotPassword").hidden = signup;
+    const appleOption = $("#appleLoginOption");
+    if (appleOption) appleOption.hidden = signup;
     $("#authStepIntro").textContent = signup
       ? "Crée ton compte en trois étapes : remplis les champs, confirme ton courriel, puis connecte-toi."
       : "Entre les informations de ton compte pour te connecter.";
@@ -13391,8 +14147,84 @@
       return "Trop de tentatives rapprochées. Attends un peu puis réessaie.";
     return error?.message || "Une erreur est survenue.";
   }
+  function appleAuthPlugin() {
+    return window.Capacitor?.Plugins?.AppleAuth || null;
+  }
+  function hasAppleIdentity(user = session?.user) {
+    return !!user?.identities?.some((identity) => identity.provider === "apple");
+  }
+  async function getAppleCredential() {
+    const plugin = appleAuthPlugin();
+    if (!plugin?.signIn)
+      throw new Error("La connexion Apple est disponible uniquement dans l’app iPhone.");
+    return plugin.signIn();
+  }
+  async function signInWithApple() {
+    const button = $("#signInWithApple"),
+      msg = $("#authMessage");
+    if (!client || session) return;
+    if (button) button.disabled = true;
+    if (msg) msg.textContent = "Connexion avec Apple…";
+    try {
+      const credential = await getAppleCredential();
+      const { data, error } = await client.auth.signInWithIdToken({
+        provider: "apple",
+        token: credential.idToken,
+        nonce: credential.nonce,
+      });
+      if (error) throw error;
+      if (!data?.session?.user?.id) throw new Error("Apple n’a pas retourné de session Énergie.");
+      session = data.session;
+      prepareLocalJournalForSession(data.session);
+      $("#authDialog")?.close();
+      await loadDemoAccess();
+      await pullCloud(false);
+      await syncNow();
+      render();
+    } catch (error) {
+      if (msg) msg.textContent = friendlyAuthError(error);
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+  async function linkAppleIdentity() {
+    const button = $("#linkAppleIdentity"),
+      message = $("#appleIdentityMessage");
+    if (!client || !session || hasAppleIdentity()) return;
+    if (button) button.disabled = true;
+    if (message) message.textContent = "Association avec Apple…";
+    const originalUserId = session.user.id;
+    try {
+      const credential = await getAppleCredential();
+      const { data, error } = await client.auth.linkIdentity({
+        provider: "apple",
+        token: credential.idToken,
+        nonce: credential.nonce,
+      });
+      if (error) throw error;
+      const refreshed = await client.auth.getUser();
+      if (refreshed.error) throw refreshed.error;
+      if (refreshed.data.user?.id !== originalUserId)
+        throw new Error("Sécurité : l’identité Apple n’a pas été associée au compte Énergie attendu.");
+      const sessionResult = await client.auth.getSession();
+      const currentSession = sessionResult.data.session || session;
+      // getSession() peut conserver une copie du user antérieure au linking.
+      // Réutiliser explicitement le user relu par getUser() pour que le Profil
+      // voie immédiatement la nouvelle identité Apple sans déconnexion/reconnexion.
+      session = currentSession
+        ? { ...currentSession, user: refreshed.data.user }
+        : session;
+      if (message) message.textContent = "✓ Compte Apple associé.";
+      render();
+    } catch (error) {
+      if (message) message.textContent = friendlyAuthError(error);
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
   $("#loginTab").onclick = () => setAuthMode("login");
   $("#signupTab").onclick = () => setAuthMode("signup");
+  $("#signInWithApple").onclick = signInWithApple;
   $("#authPasswordConfirm").addEventListener("input", () => {
     if (authMode !== "signup") return;
     const password = $("#authPassword").value,
@@ -13432,6 +14264,9 @@
     setAuthBusy(true);
     try {
       if (authMode === "signup") {
+        // Important: creating another account while one is already connected must
+        // never seed the new account with the previous user's local journal.
+        const previousUserId = session?.user?.id || null;
         const { data, error } = await client.auth.signUp({
           email,
           password,
@@ -13442,14 +14277,27 @@
           return;
         }
         if (data.session) {
+          const newUserId = data.session.user?.id || null;
           session = data.session;
           $("#authDialog").close();
-          await seedCloudFromLocal();
+          if (previousUserId && newUserId && previousUserId !== newUserId) {
+            prepareLocalJournalForSession(data.session);
+            await loadDemoAccess();
+            await pullCloud(false);
+          } else {
+            // First account created from an anonymous/local journal: preserve the
+            // expected migration by seeding that journal to the new account.
+            await seedCloudFromLocal();
+          }
           render();
         } else {
           showSignupConfirmation(email);
         }
       } else {
+        // Capture ownership before Supabase changes the session. If this login
+        // switches identities, discard the previous account's local journal
+        // before reading or syncing anything for the new account.
+        const previousUserId = session?.user?.id || null;
         const { data, error } = await client.auth.signInWithPassword({
           email,
           password,
@@ -13460,8 +14308,10 @@
           else msg.textContent = friendlyAuthError(error);
           return;
         }
+        const newUserId = data.session?.user?.id || null;
         session = data.session;
         $("#authDialog").close();
+        prepareLocalJournalForSession(data.session);
         await loadDemoAccess();
         await pullCloud(false);
         await syncNow();
@@ -13518,7 +14368,9 @@
       return;
     }
     const { error } = await client.auth.resetPasswordForEmail(email, {
-      redirectTo: `${location.origin}${location.pathname}`,
+      redirectTo: window.Capacitor?.isNativePlatform?.()
+        ? "ca.surferpixies.energie://auth/recovery"
+        : `${location.origin}${location.pathname}`,
     });
     msg.textContent = error
       ? friendlyAuthError(error)
@@ -14115,6 +14967,32 @@
     }
     return hasDemoAccess;
   }
+  window.EnergieHandleAuthURL = async (url) => {
+    if (!client || !url) return;
+    try {
+      const parsed = new URL(url);
+      const hash = new URLSearchParams(parsed.hash.replace(/^#/, ""));
+      const query = parsed.searchParams;
+      const errorDescription = hash.get("error_description") || query.get("error_description");
+      if (errorDescription) throw new Error(decodeURIComponent(errorDescription));
+      const accessToken = hash.get("access_token");
+      const refreshToken = hash.get("refresh_token");
+      const code = query.get("code");
+      if (accessToken && refreshToken) {
+        const result = await client.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (result.error) throw result.error;
+      } else if (code) {
+        const result = await client.auth.exchangeCodeForSession(code);
+        if (result.error) throw result.error;
+      }
+    } catch (error) {
+      console.warn("Retour d’authentification iOS", error?.message || error);
+      alert("Le lien de récupération n’a pas pu être ouvert dans Énergie. Demande un nouveau lien et réessaie.");
+    }
+  };
   async function initAuth() {
     // Le splash a sa propre durée et ne doit jamais attendre le réseau.
     dismissSplash();
@@ -14125,9 +15003,35 @@
     }
     const { data } = await client.auth.getSession();
     session = data.session;
+    if (session) {
+      // Une session restaurée peut contenir un user mis en cache avant qu'une
+      // nouvelle identité (ex. Apple) ait été liée. Relire le user serveur afin
+      // que le Profil reflète les providers réellement associés dès l'ouverture.
+      const currentUser = await client.auth.getUser();
+      if (!currentUser.error && currentUser.data.user?.id === session.user?.id)
+        session = { ...session, user: currentUser.data.user };
+      prepareLocalJournalForSession(session);
+    }
     client.auth.onAuthStateChange((event, newSession) => {
-      session = newSession;
-      if (newSession) loadDemoAccess().then(() => render());
+      const previousUserId = session?.user?.id || null;
+      const newUserId = newSession?.user?.id || null;
+      // Covers session changes initiated outside the explicit login form too
+      // (deep links, token/session replacement, future auth providers).
+      let nextSession = newSession;
+      // INITIAL_SESSION / TOKEN_REFRESHED peut renvoyer le user mis en cache
+      // dans la session et écraser le user plus frais relu par getUser().
+      // Pour le même compte, conserver la version qui connaît le plus
+      // d'identités liées (ex. email + Apple).
+      if (newSession && session?.user?.id === newUserId) {
+        const currentIdentityCount = session.user?.identities?.length || 0;
+        const incomingIdentityCount = newSession.user?.identities?.length || 0;
+        if (currentIdentityCount > incomingIdentityCount)
+          nextSession = { ...newSession, user: session.user };
+      }
+      if (nextSession) prepareLocalJournalForSession(nextSession);
+      else if (previousUserId) clearLocalJournalAfterSignOut();
+      session = nextSession;
+      if (nextSession) loadDemoAccess().then(() => render());
       else { hasDemoAccess = false; hasProfessionalBetaAccess = false; clientProfessionalLink = null; }
       updateSyncBadge();
       if (event === "PASSWORD_RECOVERY")
@@ -14139,12 +15043,15 @@
       if (!db.settings.demoMode) {
         await pullCloud(false);
         await syncNow();
+        await syncAppleHealth();
       }
     }
     render();
     setTimeout(showExperienceLaunchIfNeeded, 120);
   }
-  if ("serviceWorker" in navigator) {
+  // Le service worker demeure réservé au site Web. Le conteneur Capacitor
+  // distribue déjà ses fichiers localement et n'utilise pas un protocole HTTP.
+  if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
         const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.116");
@@ -14160,7 +15067,13 @@
 
   // Filet de sécurité pour les boutons recréés lors d'un rendu ou d'une synchro.
   document.addEventListener("click", (event) => {
-    const informationButton = event.target.closest("#showWelcomeAgain");
+    const appleLinkButton = event.target.closest("#linkAppleIdentity");
+    if (appleLinkButton) {
+      event.preventDefault();
+      linkAppleIdentity();
+      return;
+    }
+        const informationButton = event.target.closest("#showWelcomeAgain");
     if (informationButton) {
       event.preventDefault();
       const dialog = $("#welcomeDialog");
@@ -14170,7 +15083,7 @@
     const createInviteButton = event.target.closest("#createProfessionalInvite");
     if (createInviteButton) {
       event.preventDefault();
-      createProfessionalInvite();
+      createProfessionalInvite({ openEmail: true });
       return;
     }
     const acceptInviteButton = event.target.closest("#acceptProfessionalInvite");
@@ -14200,7 +15113,12 @@
 
   setInterval(() => updateLivingHeader(), 30 * 60 * 1000);
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) updateLivingHeader();
+    if (!document.hidden) {
+      updateLivingHeader();
+      syncAppleHealth().catch((error) =>
+        console.warn("Apple Health au retour dans l’app", error),
+      );
+    }
   });
 })();
 function parseAppNumber(value) {
