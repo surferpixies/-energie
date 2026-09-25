@@ -13679,9 +13679,16 @@ function formatSleepDuration(hours) {
     if (old) Object.assign(old, meal);
     else d.meals.push(meal);
     const savedMeal = old || meal;
-    const recommendation = ["Déjeuner", "Dîner", "Souper"].includes(savedMeal.type)
-      ? chooseMealRecommendation(selectedDate, savedMeal)
-      : null;
+    let recommendation = null;
+    if (["Déjeuner", "Dîner", "Souper"].includes(savedMeal.type)) {
+      try {
+        recommendation = chooseMealRecommendation(selectedDate, savedMeal);
+      } catch (recommendationError) {
+        // Une suggestion est facultative et ne doit jamais empêcher
+        // l'enregistrement ou la fermeture du formulaire de repas.
+        console.warn("Suggestion après repas ignorée", recommendationError);
+      }
+    }
     savedMeal.recommendation = recommendation || null;
     setMealChanged(savedMeal);
     if (removedMealPhotoPaths.size) {
