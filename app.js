@@ -11741,6 +11741,7 @@ function formatSleepDuration(hours) {
     const energyGuideButton = $("#openEnergyGuide");
     if (energyGuideButton) energyGuideButton.onclick = openEnergyGuide;
     const nutritionAnchor = $("#settingNutrition")?.closest("label");
+    nutritionAnchor?.closest("section.card")?.insertAdjacentHTML("afterend", `<section class="card nutrition-source-profile-card"><h3>📚 Source des données nutritionnelles</h3><p class="muted small">Énergie s’appuie sur le <strong>Fichier canadien sur les éléments nutritifs (FCÉN) de Santé Canada</strong>, la base de référence officielle canadienne sur la composition des aliments. Les valeurs de référence sont ensuite adaptées aux aliments et aux quantités reconnus dans le repas.</p><p class="muted tiny">Pour les produits scannés, les données de l’étiquette peuvent provenir d’Open Food Facts lorsqu’elles sont disponibles. Les recettes, les marques et les méthodes de préparation peuvent faire varier les valeurs réelles.</p></section>`);
     if (session && profileSinceHtml)
       $("#syncNow")
         ?.closest(".settings-row")
