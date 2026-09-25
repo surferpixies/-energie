@@ -1,0 +1,22 @@
+{
+  "publisher": "Health Canada / Santé Canada",
+  "dataset": "Canadian Nutrient File / Fichier canadien sur les éléments nutritifs",
+  "edition": "2026",
+  "licence": "Open Government Licence - Canada",
+  "datasetUrl": "https://open.canada.ca/data/en/dataset/1b6139bd-ed7e-4043-bc28-ff00e10f3109",
+  "files": {
+    "foodNames": "https://open.canada.ca/data/dataset/1b6139bd-ed7e-4043-bc28-ff00e10f3109/resource/e1ffee62-58cb-4e3e-b359-115c658388ad/download/food_name.csv",
+    "nutrientAmounts": "https://open.canada.ca/data/dataset/1b6139bd-ed7e-4043-bc28-ff00e10f3109/resource/0ff718fc-1133-4154-80c5-3d619e6c63be/download/nutrient_amount.csv",
+    "nutrientNames": "https://open.canada.ca/data/dataset/1b6139bd-ed7e-4043-bc28-ff00e10f3109/resource/e0aca283-16b5-4eba-a54a-4994490a3262/download/nutrient_name.csv",
+    "measureWeights": "https://open.canada.ca/data/dataset/1b6139bd-ed7e-4043-bc28-ff00e10f3109/resource/bb76d816-3ac0-4749-8c4b-f0dbfd0fac76/download/measure_weight_conversion.csv",
+    "measureNames": "https://open.canada.ca/data/dataset/1b6139bd-ed7e-4043-bc28-ff00e10f3109/resource/104adbc9-f4cc-40b1-9aaa-08290648e24b/download/measure_name.csv"
+  },
+  "importedAt": "2026-09-25T17:49:05.832Z",
+  "counts": {
+    "foods": 5993,
+    "nutrientNames": 173,
+    "nutrientAmounts": 565409,
+    "measureWeights": 29868
+  },
+  "selectedNutrients": {}
+}

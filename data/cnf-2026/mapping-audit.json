@@ -1,0 +1,5983 @@
+[
+  {
+    "legacyIndex": 0,
+    "alias": "pomme",
+    "aliases": [
+      "pomme",
+      "apple"
+    ],
+    "current": {
+      "calories": 95,
+      "protein": 0.5,
+      "carbs": 25,
+      "fat": 0.3,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 1,
+    "alias": "banane",
+    "aliases": [
+      "banane",
+      "banana"
+    ],
+    "current": {
+      "calories": 105,
+      "protein": 1.3,
+      "carbs": 27,
+      "fat": 0.4,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 2,
+    "alias": "orange",
+    "aliases": [
+      "orange"
+    ],
+    "current": {
+      "calories": 62,
+      "protein": 1.2,
+      "carbs": 15,
+      "fat": 0.2,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 3,
+    "alias": "clémentine",
+    "aliases": [
+      "clémentine",
+      "clementine",
+      "mandarine"
+    ],
+    "current": {
+      "calories": 35,
+      "protein": 0.6,
+      "carbs": 9,
+      "fat": 0.1,
+      "portion": "1 fruit",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 4,
+    "alias": "pêche",
+    "aliases": [
+      "pêche",
+      "peche",
+      "peach"
+    ],
+    "current": {
+      "calories": 59,
+      "protein": 1.4,
+      "carbs": 14,
+      "fat": 0.4,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 5,
+    "alias": "nectarine",
+    "aliases": [
+      "nectarine"
+    ],
+    "current": {
+      "calories": 63,
+      "protein": 1.5,
+      "carbs": 15,
+      "fat": 0.5,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 6,
+    "alias": "poire",
+    "aliases": [
+      "poire",
+      "pear"
+    ],
+    "current": {
+      "calories": 101,
+      "protein": 0.6,
+      "carbs": 27,
+      "fat": 0.3,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 7,
+    "alias": "kiwi",
+    "aliases": [
+      "kiwi"
+    ],
+    "current": {
+      "calories": 42,
+      "protein": 0.8,
+      "carbs": 10,
+      "fat": 0.4,
+      "portion": "1 fruit",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 8,
+    "alias": "raisins",
+    "aliases": [
+      "raisins",
+      "raisin",
+      "grapes"
+    ],
+    "current": {
+      "calories": 104,
+      "protein": 1.1,
+      "carbs": 27,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 9,
+    "alias": "fraises",
+    "aliases": [
+      "fraises",
+      "fraise",
+      "strawberries"
+    ],
+    "current": {
+      "calories": 49,
+      "protein": 1,
+      "carbs": 12,
+      "fat": 0.5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 10,
+    "alias": "bleuets",
+    "aliases": [
+      "bleuets",
+      "bleuet",
+      "blueberries"
+    ],
+    "current": {
+      "calories": 84,
+      "protein": 1.1,
+      "carbs": 21,
+      "fat": 0.5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 11,
+    "alias": "framboises",
+    "aliases": [
+      "framboises",
+      "framboise",
+      "raspberries"
+    ],
+    "current": {
+      "calories": 64,
+      "protein": 1.5,
+      "carbs": 15,
+      "fat": 0.8,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 12,
+    "alias": "mûres",
+    "aliases": [
+      "mûres",
+      "mures",
+      "blackberries"
+    ],
+    "current": {
+      "calories": 62,
+      "protein": 2,
+      "carbs": 14,
+      "fat": 0.7,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 13,
+    "alias": "cerises",
+    "aliases": [
+      "cerises",
+      "cerise",
+      "cherries"
+    ],
+    "current": {
+      "calories": 87,
+      "protein": 1.5,
+      "carbs": 22,
+      "fat": 0.3,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 14,
+    "alias": "ananas",
+    "aliases": [
+      "ananas",
+      "pineapple"
+    ],
+    "current": {
+      "calories": 82,
+      "protein": 0.9,
+      "carbs": 22,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 15,
+    "alias": "mangue",
+    "aliases": [
+      "mangue",
+      "mango"
+    ],
+    "current": {
+      "calories": 99,
+      "protein": 1.4,
+      "carbs": 25,
+      "fat": 0.6,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 16,
+    "alias": "papaye",
+    "aliases": [
+      "papaye",
+      "papaya"
+    ],
+    "current": {
+      "calories": 62,
+      "protein": 0.7,
+      "carbs": 16,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 17,
+    "alias": "melon miel",
+    "aliases": [
+      "melon miel",
+      "honeydew"
+    ],
+    "current": {
+      "calories": 61,
+      "protein": 0.9,
+      "carbs": 15,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 18,
+    "alias": "cantaloup",
+    "aliases": [
+      "cantaloup",
+      "cantaloupe"
+    ],
+    "current": {
+      "calories": 54,
+      "protein": 1.3,
+      "carbs": 13,
+      "fat": 0.3,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 19,
+    "alias": "melon d eau",
+    "aliases": [
+      "melon d eau",
+      "pastèque",
+      "pasteque",
+      "watermelon"
+    ],
+    "current": {
+      "calories": 46,
+      "protein": 0.9,
+      "carbs": 12,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 20,
+    "alias": "prune",
+    "aliases": [
+      "prune",
+      "plum"
+    ],
+    "current": {
+      "calories": 30,
+      "protein": 0.5,
+      "carbs": 8,
+      "fat": 0.2,
+      "portion": "1 fruit",
+      "gramsPerPortion": 66
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 21,
+    "alias": "abricot",
+    "aliases": [
+      "abricot",
+      "apricot"
+    ],
+    "current": {
+      "calories": 17,
+      "protein": 0.5,
+      "carbs": 4,
+      "fat": 0.1,
+      "portion": "1 fruit",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 22,
+    "alias": "figue fraîche",
+    "aliases": [
+      "figue fraîche",
+      "figue fraiche",
+      "fresh fig"
+    ],
+    "current": {
+      "calories": 37,
+      "protein": 0.4,
+      "carbs": 10,
+      "fat": 0.2,
+      "portion": "1 fruit",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 23,
+    "alias": "dattes",
+    "aliases": [
+      "dattes",
+      "datte",
+      "dates"
+    ],
+    "current": {
+      "calories": 133,
+      "protein": 1,
+      "carbs": 36,
+      "fat": 0.2,
+      "portion": "3 dattes",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 24,
+    "alias": "grenade",
+    "aliases": [
+      "grenade",
+      "pomegranate"
+    ],
+    "current": {
+      "calories": 144,
+      "protein": 3,
+      "carbs": 33,
+      "fat": 2,
+      "portion": "1 tasse grains",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 25,
+    "alias": "pamplemousse",
+    "aliases": [
+      "pamplemousse",
+      "grapefruit"
+    ],
+    "current": {
+      "calories": 82,
+      "protein": 1.6,
+      "carbs": 21,
+      "fat": 0.3,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 26,
+    "alias": "fruit de la passion",
+    "aliases": [
+      "fruit de la passion",
+      "passion fruit"
+    ],
+    "current": {
+      "calories": 68,
+      "protein": 1.6,
+      "carbs": 16,
+      "fat": 0.5,
+      "portion": "3 fruits",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 27,
+    "alias": "litchi",
+    "aliases": [
+      "litchi",
+      "lychee"
+    ],
+    "current": {
+      "calories": 125,
+      "protein": 1.6,
+      "carbs": 31,
+      "fat": 0.8,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 28,
+    "alias": "goyave",
+    "aliases": [
+      "goyave",
+      "guava"
+    ],
+    "current": {
+      "calories": 112,
+      "protein": 4.2,
+      "carbs": 24,
+      "fat": 1.6,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 29,
+    "alias": "noix de coco fraîche",
+    "aliases": [
+      "noix de coco fraîche",
+      "noix de coco fraiche",
+      "coconut"
+    ],
+    "current": {
+      "calories": 159,
+      "protein": 1.5,
+      "carbs": 6.8,
+      "fat": 15,
+      "portion": "1/2 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 30,
+    "alias": "compote de pommes",
+    "aliases": [
+      "compote de pommes",
+      "apple sauce"
+    ],
+    "current": {
+      "calories": 100,
+      "protein": 0.3,
+      "carbs": 27,
+      "fat": 0.2,
+      "portion": "1/2 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 31,
+    "alias": "fruits séchés",
+    "aliases": [
+      "fruits séchés",
+      "fruits seches",
+      "dried fruit"
+    ],
+    "current": {
+      "calories": 130,
+      "protein": 1,
+      "carbs": 34,
+      "fat": 0.3,
+      "portion": "1/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 32,
+    "alias": "canneberges séchées",
+    "aliases": [
+      "canneberges séchées",
+      "canneberges sechees",
+      "dried cranberries"
+    ],
+    "current": {
+      "calories": 123,
+      "protein": 0.1,
+      "carbs": 33,
+      "fat": 0.4,
+      "portion": "1/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 33,
+    "alias": "brocoli",
+    "aliases": [
+      "brocoli",
+      "broccoli"
+    ],
+    "current": {
+      "calories": 55,
+      "protein": 3.7,
+      "carbs": 11,
+      "fat": 0.6,
+      "portion": "1 tasse cuit",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 34,
+    "alias": "chou-fleur",
+    "aliases": [
+      "chou-fleur",
+      "chou fleur",
+      "cauliflower"
+    ],
+    "current": {
+      "calories": 40,
+      "protein": 3,
+      "carbs": 8,
+      "fat": 0.5,
+      "portion": "1 tasse cuit",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 35,
+    "alias": "carotte",
+    "aliases": [
+      "carotte",
+      "carrots"
+    ],
+    "current": {
+      "calories": 52,
+      "protein": 1.2,
+      "carbs": 12,
+      "fat": 0.3,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 36,
+    "alias": "concombre",
+    "aliases": [
+      "concombre",
+      "cucumber"
+    ],
+    "current": {
+      "calories": 16,
+      "protein": 0.7,
+      "carbs": 4,
+      "fat": 0.1,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 37,
+    "alias": "tomates cerises",
+    "aliases": [
+      "tomates cerises",
+      "tomate cerise",
+      "cherry tomatoes"
+    ],
+    "current": {
+      "calories": 27,
+      "protein": 1.3,
+      "carbs": 6,
+      "fat": 0.3,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 38,
+    "alias": "tomate",
+    "aliases": [
+      "tomate",
+      "tomato"
+    ],
+    "current": {
+      "calories": 22,
+      "protein": 1.1,
+      "carbs": 5,
+      "fat": 0.2,
+      "portion": "1 moyenne",
+      "gramsPerPortion": 123
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 39,
+    "alias": "poivron rouge",
+    "aliases": [
+      "poivron rouge",
+      "red pepper"
+    ],
+    "current": {
+      "calories": 46,
+      "protein": 1.5,
+      "carbs": 9,
+      "fat": 0.5,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 40,
+    "alias": "poivron vert",
+    "aliases": [
+      "poivron vert",
+      "green pepper"
+    ],
+    "current": {
+      "calories": 24,
+      "protein": 1,
+      "carbs": 6,
+      "fat": 0.2,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 41,
+    "alias": "épinards",
+    "aliases": [
+      "épinards",
+      "epinards",
+      "spinach"
+    ],
+    "current": {
+      "calories": 41,
+      "protein": 5.3,
+      "carbs": 7,
+      "fat": 0.5,
+      "portion": "1 tasse cuits",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 42,
+    "alias": "kale",
+    "aliases": [
+      "kale",
+      "chou frisé",
+      "chou frise"
+    ],
+    "current": {
+      "calories": 36,
+      "protein": 2.5,
+      "carbs": 7,
+      "fat": 0.5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 43,
+    "alias": "laitue romaine",
+    "aliases": [
+      "laitue romaine",
+      "romaine"
+    ],
+    "current": {
+      "calories": 15,
+      "protein": 1,
+      "carbs": 3,
+      "fat": 0.2,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 44,
+    "alias": "laitue",
+    "aliases": [
+      "laitue",
+      "lettuce"
+    ],
+    "current": {
+      "calories": 10,
+      "protein": 0.7,
+      "carbs": 2,
+      "fat": 0.1,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 45,
+    "alias": "courgette",
+    "aliases": [
+      "courgette",
+      "zucchini"
+    ],
+    "current": {
+      "calories": 33,
+      "protein": 2.4,
+      "carbs": 6,
+      "fat": 0.6,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 46,
+    "alias": "aubergine",
+    "aliases": [
+      "aubergine",
+      "eggplant"
+    ],
+    "current": {
+      "calories": 35,
+      "protein": 0.8,
+      "carbs": 9,
+      "fat": 0.2,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 47,
+    "alias": "asperges",
+    "aliases": [
+      "asperges",
+      "asperge",
+      "asparagus"
+    ],
+    "current": {
+      "calories": 40,
+      "protein": 4.3,
+      "carbs": 7,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 48,
+    "alias": "champignons",
+    "aliases": [
+      "champignons",
+      "champignon",
+      "mushrooms"
+    ],
+    "current": {
+      "calories": 28,
+      "protein": 4,
+      "carbs": 4,
+      "fat": 0.4,
+      "portion": "1 tasse cuits",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 49,
+    "alias": "céleri",
+    "aliases": [
+      "céleri",
+      "celeri",
+      "celery"
+    ],
+    "current": {
+      "calories": 14,
+      "protein": 0.7,
+      "carbs": 3,
+      "fat": 0.2,
+      "portion": "2 branches",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 50,
+    "alias": "haricots verts",
+    "aliases": [
+      "haricots verts",
+      "haricot vert",
+      "green beans"
+    ],
+    "current": {
+      "calories": 44,
+      "protein": 2.4,
+      "carbs": 10,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": 125
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 51,
+    "alias": "betterave",
+    "aliases": [
+      "betterave",
+      "beet"
+    ],
+    "current": {
+      "calories": 58,
+      "protein": 2.2,
+      "carbs": 13,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 52,
+    "alias": "chou de bruxelles",
+    "aliases": [
+      "chou de bruxelles",
+      "brussels sprouts"
+    ],
+    "current": {
+      "calories": 56,
+      "protein": 4,
+      "carbs": 11,
+      "fat": 0.8,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 53,
+    "alias": "chou rouge",
+    "aliases": [
+      "chou rouge",
+      "red cabbage"
+    ],
+    "current": {
+      "calories": 28,
+      "protein": 1.3,
+      "carbs": 7,
+      "fat": 0.1,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 54,
+    "alias": "chou",
+    "aliases": [
+      "chou",
+      "cabbage"
+    ],
+    "current": {
+      "calories": 34,
+      "protein": 1.9,
+      "carbs": 8,
+      "fat": 0.1,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 55,
+    "alias": "bok choy",
+    "aliases": [
+      "bok choy",
+      "pak choi"
+    ],
+    "current": {
+      "calories": 20,
+      "protein": 2.7,
+      "carbs": 3,
+      "fat": 0.3,
+      "portion": "1 tasse cuit",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 56,
+    "alias": "pois mange-tout",
+    "aliases": [
+      "pois mange-tout",
+      "snow peas"
+    ],
+    "current": {
+      "calories": 41,
+      "protein": 2.7,
+      "carbs": 7,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 57,
+    "alias": "petits pois",
+    "aliases": [
+      "petits pois",
+      "pois verts",
+      "green peas"
+    ],
+    "current": {
+      "calories": 134,
+      "protein": 8.6,
+      "carbs": 25,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 58,
+    "alias": "maïs",
+    "aliases": [
+      "maïs",
+      "mais",
+      "corn"
+    ],
+    "current": {
+      "calories": 143,
+      "protein": 5,
+      "carbs": 31,
+      "fat": 2.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 59,
+    "alias": "oignon",
+    "aliases": [
+      "oignon",
+      "onion"
+    ],
+    "current": {
+      "calories": 44,
+      "protein": 1.2,
+      "carbs": 10,
+      "fat": 0.1,
+      "portion": "1 moyen",
+      "gramsPerPortion": 110
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 60,
+    "alias": "ail",
+    "aliases": [
+      "ail",
+      "garlic"
+    ],
+    "current": {
+      "calories": 13,
+      "protein": 0.6,
+      "carbs": 3,
+      "fat": 0,
+      "portion": "3 gousses",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 61,
+    "alias": "poireau",
+    "aliases": [
+      "poireau",
+      "leek"
+    ],
+    "current": {
+      "calories": 54,
+      "protein": 1.6,
+      "carbs": 13,
+      "fat": 0.3,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 62,
+    "alias": "radis",
+    "aliases": [
+      "radis",
+      "radish"
+    ],
+    "current": {
+      "calories": 19,
+      "protein": 0.8,
+      "carbs": 4,
+      "fat": 0.1,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 63,
+    "alias": "navet",
+    "aliases": [
+      "navet",
+      "turnip"
+    ],
+    "current": {
+      "calories": 36,
+      "protein": 1.2,
+      "carbs": 8,
+      "fat": 0.1,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 64,
+    "alias": "rutabaga",
+    "aliases": [
+      "rutabaga"
+    ],
+    "current": {
+      "calories": 66,
+      "protein": 2,
+      "carbs": 15,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 65,
+    "alias": "citrouille",
+    "aliases": [
+      "citrouille",
+      "pumpkin"
+    ],
+    "current": {
+      "calories": 49,
+      "protein": 1.8,
+      "carbs": 12,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 66,
+    "alias": "courge butternut",
+    "aliases": [
+      "courge butternut",
+      "butternut squash"
+    ],
+    "current": {
+      "calories": 82,
+      "protein": 1.8,
+      "carbs": 22,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 67,
+    "alias": "courge spaghetti",
+    "aliases": [
+      "courge spaghetti",
+      "spaghetti squash"
+    ],
+    "current": {
+      "calories": 42,
+      "protein": 1,
+      "carbs": 10,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 68,
+    "alias": "artichaut",
+    "aliases": [
+      "artichaut",
+      "artichoke"
+    ],
+    "current": {
+      "calories": 60,
+      "protein": 4.2,
+      "carbs": 13,
+      "fat": 0.2,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 69,
+    "alias": "okra",
+    "aliases": [
+      "okra",
+      "gombo"
+    ],
+    "current": {
+      "calories": 35,
+      "protein": 3,
+      "carbs": 7,
+      "fat": 0.3,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 70,
+    "alias": "avocat",
+    "aliases": [
+      "avocat",
+      "avocado"
+    ],
+    "current": {
+      "calories": 240,
+      "protein": 3,
+      "carbs": 13,
+      "fat": 22,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 71,
+    "alias": "salade grecque",
+    "aliases": [
+      "salade grecque",
+      "greek salad"
+    ],
+    "current": {
+      "calories": 320,
+      "protein": 10,
+      "carbs": 18,
+      "fat": 24,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 72,
+    "alias": "salade césar",
+    "aliases": [
+      "salade césar",
+      "salade cesar",
+      "caesar salad"
+    ],
+    "current": {
+      "calories": 470,
+      "protein": 15,
+      "carbs": 24,
+      "fat": 35,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 73,
+    "alias": "salade verte",
+    "aliases": [
+      "salade verte",
+      "green salad"
+    ],
+    "current": {
+      "calories": 90,
+      "protein": 3,
+      "carbs": 12,
+      "fat": 4,
+      "portion": "1 bol",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 74,
+    "alias": "pain blanc",
+    "aliases": [
+      "pain blanc",
+      "white bread"
+    ],
+    "current": {
+      "calories": 80,
+      "protein": 2.5,
+      "carbs": 15,
+      "fat": 1,
+      "portion": "1 tranche",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 75,
+    "alias": "pain brun",
+    "aliases": [
+      "pain brun",
+      "pain blé entier",
+      "pain ble entier",
+      "whole wheat bread"
+    ],
+    "current": {
+      "calories": 90,
+      "protein": 4,
+      "carbs": 17,
+      "fat": 1.2,
+      "portion": "1 tranche",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 76,
+    "alias": "pain multigrain",
+    "aliases": [
+      "pain multigrain",
+      "multigrain bread"
+    ],
+    "current": {
+      "calories": 100,
+      "protein": 4.5,
+      "carbs": 18,
+      "fat": 1.5,
+      "portion": "1 tranche",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 77,
+    "alias": "pain pita",
+    "aliases": [
+      "pain pita",
+      "pita"
+    ],
+    "current": {
+      "calories": 170,
+      "protein": 6,
+      "carbs": 35,
+      "fat": 1.5,
+      "portion": "1 pita",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 78,
+    "alias": "bagel",
+    "aliases": [
+      "bagel"
+    ],
+    "current": {
+      "calories": 280,
+      "protein": 10,
+      "carbs": 56,
+      "fat": 2,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 79,
+    "alias": "muffin anglais",
+    "aliases": [
+      "muffin anglais",
+      "english muffin"
+    ],
+    "current": {
+      "calories": 130,
+      "protein": 5,
+      "carbs": 25,
+      "fat": 1,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 80,
+    "alias": "croissant",
+    "aliases": [
+      "croissant"
+    ],
+    "current": {
+      "calories": 230,
+      "protein": 5,
+      "carbs": 26,
+      "fat": 12,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 81,
+    "alias": "tortilla",
+    "aliases": [
+      "tortilla",
+      "wrap nature"
+    ],
+    "current": {
+      "calories": 150,
+      "protein": 4,
+      "carbs": 25,
+      "fat": 4,
+      "portion": "1 grande",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 82,
+    "alias": "riz blanc",
+    "aliases": [
+      "riz blanc",
+      "white rice"
+    ],
+    "current": {
+      "calories": 205,
+      "protein": 4.3,
+      "carbs": 45,
+      "fat": 0.4,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 83,
+    "alias": "riz brun",
+    "aliases": [
+      "riz brun",
+      "brown rice"
+    ],
+    "current": {
+      "calories": 216,
+      "protein": 5,
+      "carbs": 45,
+      "fat": 1.8,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 84,
+    "alias": "riz basmati",
+    "aliases": [
+      "riz basmati",
+      "basmati rice"
+    ],
+    "current": {
+      "calories": 210,
+      "protein": 4.4,
+      "carbs": 46,
+      "fat": 0.5,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 85,
+    "alias": "riz sauvage",
+    "aliases": [
+      "riz sauvage",
+      "wild rice"
+    ],
+    "current": {
+      "calories": 166,
+      "protein": 6.5,
+      "carbs": 35,
+      "fat": 0.6,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 86,
+    "alias": "quinoa",
+    "aliases": [
+      "quinoa"
+    ],
+    "current": {
+      "calories": 222,
+      "protein": 8,
+      "carbs": 39,
+      "fat": 3.6,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 87,
+    "alias": "couscous",
+    "aliases": [
+      "couscous"
+    ],
+    "current": {
+      "calories": 176,
+      "protein": 6,
+      "carbs": 36,
+      "fat": 0.3,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 88,
+    "alias": "boulgour",
+    "aliases": [
+      "boulgour",
+      "bulgur"
+    ],
+    "current": {
+      "calories": 151,
+      "protein": 5.6,
+      "carbs": 34,
+      "fat": 0.4,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 89,
+    "alias": "orge",
+    "aliases": [
+      "orge",
+      "barley"
+    ],
+    "current": {
+      "calories": 193,
+      "protein": 3.6,
+      "carbs": 44,
+      "fat": 0.7,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 90,
+    "alias": "gruau",
+    "aliases": [
+      "gruau",
+      "avoine",
+      "oatmeal"
+    ],
+    "current": {
+      "calories": 180,
+      "protein": 6,
+      "carbs": 32,
+      "fat": 3.5,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 91,
+    "alias": "granola",
+    "aliases": [
+      "granola"
+    ],
+    "current": {
+      "calories": 220,
+      "protein": 6,
+      "carbs": 36,
+      "fat": 7,
+      "portion": "1/2 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 92,
+    "alias": "céréales",
+    "aliases": [
+      "céréales",
+      "cereales",
+      "breakfast cereal"
+    ],
+    "current": {
+      "calories": 150,
+      "protein": 4,
+      "carbs": 32,
+      "fat": 2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 93,
+    "alias": "corn flakes",
+    "aliases": [
+      "corn flakes"
+    ],
+    "current": {
+      "calories": 110,
+      "protein": 2,
+      "carbs": 25,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 94,
+    "alias": "cheerios",
+    "aliases": [
+      "cheerios"
+    ],
+    "current": {
+      "calories": 140,
+      "protein": 5,
+      "carbs": 29,
+      "fat": 2.5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 95,
+    "alias": "pâtes blanches",
+    "aliases": [
+      "pâtes blanches",
+      "pates blanches",
+      "white pasta"
+    ],
+    "current": {
+      "calories": 220,
+      "protein": 8,
+      "carbs": 43,
+      "fat": 1.3,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 96,
+    "alias": "pâtes de blé entier",
+    "aliases": [
+      "pâtes de blé entier",
+      "pates de ble entier",
+      "whole wheat pasta"
+    ],
+    "current": {
+      "calories": 174,
+      "protein": 7.5,
+      "carbs": 37,
+      "fat": 0.8,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 97,
+    "alias": "spaghetti",
+    "aliases": [
+      "spaghetti"
+    ],
+    "current": {
+      "calories": 430,
+      "protein": 16,
+      "carbs": 72,
+      "fat": 9,
+      "portion": "1 assiette",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 98,
+    "alias": "macaroni",
+    "aliases": [
+      "macaroni"
+    ],
+    "current": {
+      "calories": 220,
+      "protein": 8,
+      "carbs": 43,
+      "fat": 1.3,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 99,
+    "alias": "lasagne",
+    "aliases": [
+      "lasagne",
+      "lasagna"
+    ],
+    "current": {
+      "calories": 520,
+      "protein": 28,
+      "carbs": 48,
+      "fat": 24,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 100,
+    "alias": "gnocchi",
+    "aliases": [
+      "gnocchi"
+    ],
+    "current": {
+      "calories": 250,
+      "protein": 7,
+      "carbs": 52,
+      "fat": 1,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 101,
+    "alias": "nouilles ramen",
+    "aliases": [
+      "nouilles ramen",
+      "ramen noodles"
+    ],
+    "current": {
+      "calories": 380,
+      "protein": 9,
+      "carbs": 52,
+      "fat": 15,
+      "portion": "1 paquet",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 102,
+    "alias": "nouilles de riz",
+    "aliases": [
+      "nouilles de riz",
+      "rice noodles"
+    ],
+    "current": {
+      "calories": 190,
+      "protein": 3,
+      "carbs": 43,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 103,
+    "alias": "patate douce",
+    "aliases": [
+      "patate douce",
+      "sweet potato"
+    ],
+    "current": {
+      "calories": 180,
+      "protein": 4,
+      "carbs": 41,
+      "fat": 0.3,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 104,
+    "alias": "pomme de terre",
+    "aliases": [
+      "pomme de terre",
+      "patate",
+      "potato"
+    ],
+    "current": {
+      "calories": 190,
+      "protein": 5,
+      "carbs": 43,
+      "fat": 0.2,
+      "portion": "1 moyenne",
+      "gramsPerPortion": 213
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 105,
+    "alias": "purée de pommes de terre",
+    "aliases": [
+      "purée de pommes de terre",
+      "puree de pommes de terre",
+      "mashed potatoes"
+    ],
+    "current": {
+      "calories": 210,
+      "protein": 4,
+      "carbs": 35,
+      "fat": 7,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 106,
+    "alias": "frites",
+    "aliases": [
+      "frites",
+      "french fries"
+    ],
+    "current": {
+      "calories": 365,
+      "protein": 4,
+      "carbs": 48,
+      "fat": 17,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 107,
+    "alias": "hachis brun",
+    "aliases": [
+      "hachis brun",
+      "hash brown"
+    ],
+    "current": {
+      "calories": 270,
+      "protein": 4,
+      "carbs": 32,
+      "fat": 14,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 108,
+    "alias": "oeufs",
+    "aliases": [
+      "oeufs",
+      "œufs",
+      "eggs"
+    ],
+    "current": {
+      "calories": 156,
+      "protein": 12.6,
+      "carbs": 1.2,
+      "fat": 10.6,
+      "portion": "2 gros",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 109,
+    "alias": "oeuf",
+    "aliases": [
+      "oeuf",
+      "œuf",
+      "egg"
+    ],
+    "current": {
+      "calories": 78,
+      "protein": 6.3,
+      "carbs": 0.6,
+      "fat": 5.3,
+      "portion": "1 gros",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 110,
+    "alias": "blancs d oeufs",
+    "aliases": [
+      "blancs d oeufs",
+      "blancs oeufs",
+      "egg whites"
+    ],
+    "current": {
+      "calories": 51,
+      "protein": 11,
+      "carbs": 0.7,
+      "fat": 0.2,
+      "portion": "3 blancs",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 111,
+    "alias": "poitrine de poulet",
+    "aliases": [
+      "poitrine de poulet",
+      "chicken breast"
+    ],
+    "current": {
+      "calories": 250,
+      "protein": 46,
+      "carbs": 0,
+      "fat": 5,
+      "portion": "170 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 112,
+    "alias": "poulet rôti",
+    "aliases": [
+      "poulet rôti",
+      "poulet roti",
+      "roast chicken"
+    ],
+    "current": {
+      "calories": 280,
+      "protein": 40,
+      "carbs": 0,
+      "fat": 12,
+      "portion": "170 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 113,
+    "alias": "dinde",
+    "aliases": [
+      "dinde",
+      "turkey"
+    ],
+    "current": {
+      "calories": 220,
+      "protein": 42,
+      "carbs": 0,
+      "fat": 5,
+      "portion": "170 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 114,
+    "alias": "jambon",
+    "aliases": [
+      "jambon",
+      "ham"
+    ],
+    "current": {
+      "calories": 180,
+      "protein": 28,
+      "carbs": 3,
+      "fat": 7,
+      "portion": "150 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 115,
+    "alias": "porc",
+    "aliases": [
+      "porc",
+      "pork"
+    ],
+    "current": {
+      "calories": 300,
+      "protein": 38,
+      "carbs": 0,
+      "fat": 16,
+      "portion": "170 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 116,
+    "alias": "bacon",
+    "aliases": [
+      "bacon"
+    ],
+    "current": {
+      "calories": 130,
+      "protein": 9,
+      "carbs": 0.5,
+      "fat": 10,
+      "portion": "3 tranches",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 117,
+    "alias": "boeuf haché",
+    "aliases": [
+      "boeuf haché",
+      "bœuf haché",
+      "ground beef"
+    ],
+    "current": {
+      "calories": 340,
+      "protein": 35,
+      "carbs": 0,
+      "fat": 23,
+      "portion": "170 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 118,
+    "alias": "steak",
+    "aliases": [
+      "steak",
+      "boeuf",
+      "bœuf",
+      "beef"
+    ],
+    "current": {
+      "calories": 330,
+      "protein": 38,
+      "carbs": 0,
+      "fat": 20,
+      "portion": "170 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 119,
+    "alias": "saumon",
+    "aliases": [
+      "saumon",
+      "salmon"
+    ],
+    "current": {
+      "calories": 280,
+      "protein": 34,
+      "carbs": 0,
+      "fat": 16,
+      "portion": "150 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 120,
+    "alias": "thon en conserve",
+    "aliases": [
+      "thon en conserve",
+      "canned tuna"
+    ],
+    "current": {
+      "calories": 180,
+      "protein": 38,
+      "carbs": 0,
+      "fat": 2,
+      "portion": "1 conserve",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 121,
+    "alias": "thon",
+    "aliases": [
+      "thon",
+      "tuna"
+    ],
+    "current": {
+      "calories": 190,
+      "protein": 40,
+      "carbs": 0,
+      "fat": 2,
+      "portion": "150 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 122,
+    "alias": "truite",
+    "aliases": [
+      "truite",
+      "trout"
+    ],
+    "current": {
+      "calories": 250,
+      "protein": 34,
+      "carbs": 0,
+      "fat": 12,
+      "portion": "150 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 123,
+    "alias": "morue",
+    "aliases": [
+      "morue",
+      "cod"
+    ],
+    "current": {
+      "calories": 135,
+      "protein": 31,
+      "carbs": 0,
+      "fat": 1,
+      "portion": "150 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 124,
+    "alias": "tilapia",
+    "aliases": [
+      "tilapia"
+    ],
+    "current": {
+      "calories": 190,
+      "protein": 39,
+      "carbs": 0,
+      "fat": 4,
+      "portion": "170 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 125,
+    "alias": "crevettes",
+    "aliases": [
+      "crevettes",
+      "shrimp"
+    ],
+    "current": {
+      "calories": 170,
+      "protein": 36,
+      "carbs": 2,
+      "fat": 2,
+      "portion": "170 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 126,
+    "alias": "pétoncles",
+    "aliases": [
+      "pétoncles",
+      "petoncles",
+      "scallops"
+    ],
+    "current": {
+      "calories": 150,
+      "protein": 27,
+      "carbs": 7,
+      "fat": 1,
+      "portion": "170 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 127,
+    "alias": "tofu ferme",
+    "aliases": [
+      "tofu ferme",
+      "firm tofu"
+    ],
+    "current": {
+      "calories": 180,
+      "protein": 20,
+      "carbs": 5,
+      "fat": 11,
+      "portion": "150 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 128,
+    "alias": "tofu",
+    "aliases": [
+      "tofu"
+    ],
+    "current": {
+      "calories": 145,
+      "protein": 16,
+      "carbs": 4,
+      "fat": 9,
+      "portion": "150 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 129,
+    "alias": "tempeh",
+    "aliases": [
+      "tempeh"
+    ],
+    "current": {
+      "calories": 290,
+      "protein": 28,
+      "carbs": 12,
+      "fat": 16,
+      "portion": "150 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 130,
+    "alias": "seitan",
+    "aliases": [
+      "seitan"
+    ],
+    "current": {
+      "calories": 210,
+      "protein": 38,
+      "carbs": 12,
+      "fat": 3,
+      "portion": "150 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 131,
+    "alias": "lentilles",
+    "aliases": [
+      "lentilles",
+      "lentille",
+      "lentils"
+    ],
+    "current": {
+      "calories": 230,
+      "protein": 18,
+      "carbs": 40,
+      "fat": 0.8,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 132,
+    "alias": "pois chiches",
+    "aliases": [
+      "pois chiches",
+      "pois chiche",
+      "chickpeas"
+    ],
+    "current": {
+      "calories": 269,
+      "protein": 14.5,
+      "carbs": 45,
+      "fat": 4.3,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 133,
+    "alias": "haricots noirs",
+    "aliases": [
+      "haricots noirs",
+      "black beans"
+    ],
+    "current": {
+      "calories": 227,
+      "protein": 15,
+      "carbs": 41,
+      "fat": 0.9,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 134,
+    "alias": "haricots rouges",
+    "aliases": [
+      "haricots rouges",
+      "kidney beans"
+    ],
+    "current": {
+      "calories": 225,
+      "protein": 15,
+      "carbs": 40,
+      "fat": 0.9,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 135,
+    "alias": "edamame",
+    "aliases": [
+      "edamame"
+    ],
+    "current": {
+      "calories": 188,
+      "protein": 18,
+      "carbs": 14,
+      "fat": 8,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 136,
+    "alias": "falafel",
+    "aliases": [
+      "falafel"
+    ],
+    "current": {
+      "calories": 330,
+      "protein": 13,
+      "carbs": 32,
+      "fat": 18,
+      "portion": "5 morceaux",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 137,
+    "alias": "chili",
+    "aliases": [
+      "chili"
+    ],
+    "current": {
+      "calories": 420,
+      "protein": 28,
+      "carbs": 45,
+      "fat": 15,
+      "portion": "1 bol",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 138,
+    "alias": "burger de boeuf",
+    "aliases": [
+      "burger de boeuf",
+      "burger de bœuf",
+      "beef burger"
+    ],
+    "current": {
+      "calories": 550,
+      "protein": 30,
+      "carbs": 42,
+      "fat": 29,
+      "portion": "1 burger",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 139,
+    "alias": "burger végétarien",
+    "aliases": [
+      "burger végétarien",
+      "burger vegetarien",
+      "veggie burger"
+    ],
+    "current": {
+      "calories": 390,
+      "protein": 20,
+      "carbs": 48,
+      "fat": 14,
+      "portion": "1 burger",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 140,
+    "alias": "lait écrémé",
+    "aliases": [
+      "lait écrémé",
+      "lait ecreme",
+      "skim milk"
+    ],
+    "current": {
+      "calories": 90,
+      "protein": 9,
+      "carbs": 13,
+      "fat": 0.2,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 141,
+    "alias": "lait 1%",
+    "aliases": [
+      "lait 1%"
+    ],
+    "current": {
+      "calories": 105,
+      "protein": 8.5,
+      "carbs": 12,
+      "fat": 2.5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 142,
+    "alias": "lait 2%",
+    "aliases": [
+      "lait 2%"
+    ],
+    "current": {
+      "calories": 130,
+      "protein": 9,
+      "carbs": 12,
+      "fat": 5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 143,
+    "alias": "lait entier",
+    "aliases": [
+      "lait entier",
+      "whole milk"
+    ],
+    "current": {
+      "calories": 150,
+      "protein": 8,
+      "carbs": 12,
+      "fat": 8,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 144,
+    "alias": "lait au chocolat",
+    "aliases": [
+      "lait au chocolat",
+      "chocolate milk"
+    ],
+    "current": {
+      "calories": 190,
+      "protein": 8,
+      "carbs": 30,
+      "fat": 5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 145,
+    "alias": "lait d amande",
+    "aliases": [
+      "lait d amande",
+      "almond milk"
+    ],
+    "current": {
+      "calories": 40,
+      "protein": 1,
+      "carbs": 2.5,
+      "fat": 3,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 146,
+    "alias": "lait de soya",
+    "aliases": [
+      "lait de soya",
+      "soy milk"
+    ],
+    "current": {
+      "calories": 100,
+      "protein": 7,
+      "carbs": 8,
+      "fat": 4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 147,
+    "alias": "lait d avoine",
+    "aliases": [
+      "lait d avoine",
+      "oat milk"
+    ],
+    "current": {
+      "calories": 120,
+      "protein": 3,
+      "carbs": 16,
+      "fat": 5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 148,
+    "alias": "yogourt grec nature",
+    "aliases": [
+      "yogourt grec nature",
+      "greek yogurt plain"
+    ],
+    "current": {
+      "calories": 130,
+      "protein": 17,
+      "carbs": 8,
+      "fat": 3,
+      "portion": "3/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 149,
+    "alias": "yogourt grec",
+    "aliases": [
+      "yogourt grec",
+      "greek yogurt"
+    ],
+    "current": {
+      "calories": 150,
+      "protein": 15,
+      "carbs": 15,
+      "fat": 3,
+      "portion": "3/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 150,
+    "alias": "yogourt nature",
+    "aliases": [
+      "yogourt nature",
+      "plain yogurt"
+    ],
+    "current": {
+      "calories": 120,
+      "protein": 9,
+      "carbs": 12,
+      "fat": 4,
+      "portion": "3/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 151,
+    "alias": "yogourt aux fruits",
+    "aliases": [
+      "yogourt aux fruits",
+      "fruit yogurt"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 8,
+      "carbs": 25,
+      "fat": 3,
+      "portion": "3/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 152,
+    "alias": "fromage cottage",
+    "aliases": [
+      "fromage cottage",
+      "cottage cheese"
+    ],
+    "current": {
+      "calories": 180,
+      "protein": 24,
+      "carbs": 8,
+      "fat": 5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 153,
+    "alias": "cheddar",
+    "aliases": [
+      "cheddar"
+    ],
+    "current": {
+      "calories": 115,
+      "protein": 7,
+      "carbs": 1,
+      "fat": 9,
+      "portion": "30 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 154,
+    "alias": "mozzarella",
+    "aliases": [
+      "mozzarella"
+    ],
+    "current": {
+      "calories": 85,
+      "protein": 6,
+      "carbs": 1,
+      "fat": 6,
+      "portion": "30 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 155,
+    "alias": "feta",
+    "aliases": [
+      "feta"
+    ],
+    "current": {
+      "calories": 80,
+      "protein": 4,
+      "carbs": 1,
+      "fat": 6,
+      "portion": "30 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 156,
+    "alias": "parmesan",
+    "aliases": [
+      "parmesan"
+    ],
+    "current": {
+      "calories": 110,
+      "protein": 10,
+      "carbs": 1,
+      "fat": 7,
+      "portion": "30 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 157,
+    "alias": "fromage à la crème",
+    "aliases": [
+      "fromage à la crème",
+      "fromage a la creme",
+      "cream cheese"
+    ],
+    "current": {
+      "calories": 100,
+      "protein": 2,
+      "carbs": 2,
+      "fat": 10,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 158,
+    "alias": "crème sure",
+    "aliases": [
+      "crème sure",
+      "creme sure",
+      "sour cream"
+    ],
+    "current": {
+      "calories": 60,
+      "protein": 1,
+      "carbs": 2,
+      "fat": 5,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 159,
+    "alias": "crème glacée",
+    "aliases": [
+      "crème glacée",
+      "creme glacee",
+      "ice cream"
+    ],
+    "current": {
+      "calories": 270,
+      "protein": 5,
+      "carbs": 31,
+      "fat": 14,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 160,
+    "alias": "amandes",
+    "aliases": [
+      "amandes",
+      "almonds"
+    ],
+    "current": {
+      "calories": 170,
+      "protein": 6,
+      "carbs": 6,
+      "fat": 15,
+      "portion": "1/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 161,
+    "alias": "noix de grenoble",
+    "aliases": [
+      "noix de grenoble",
+      "walnuts"
+    ],
+    "current": {
+      "calories": 190,
+      "protein": 4.5,
+      "carbs": 4,
+      "fat": 18,
+      "portion": "1/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 162,
+    "alias": "noix de cajou",
+    "aliases": [
+      "noix de cajou",
+      "cashews"
+    ],
+    "current": {
+      "calories": 180,
+      "protein": 5,
+      "carbs": 10,
+      "fat": 14,
+      "portion": "1/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 163,
+    "alias": "pistaches",
+    "aliases": [
+      "pistaches",
+      "pistachios"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 6,
+      "carbs": 8,
+      "fat": 13,
+      "portion": "1/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 164,
+    "alias": "pacanes",
+    "aliases": [
+      "pacanes",
+      "pecans"
+    ],
+    "current": {
+      "calories": 200,
+      "protein": 3,
+      "carbs": 4,
+      "fat": 20,
+      "portion": "1/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 165,
+    "alias": "arachides",
+    "aliases": [
+      "arachides",
+      "peanuts"
+    ],
+    "current": {
+      "calories": 170,
+      "protein": 7,
+      "carbs": 6,
+      "fat": 14,
+      "portion": "1/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 166,
+    "alias": "beurre d arachide",
+    "aliases": [
+      "beurre d arachide",
+      "beurre de pinotte",
+      "peanut butter"
+    ],
+    "current": {
+      "calories": 190,
+      "protein": 8,
+      "carbs": 7,
+      "fat": 16,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 167,
+    "alias": "beurre d amande",
+    "aliases": [
+      "beurre d amande",
+      "almond butter"
+    ],
+    "current": {
+      "calories": 196,
+      "protein": 7,
+      "carbs": 7,
+      "fat": 18,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 168,
+    "alias": "graines de chia",
+    "aliases": [
+      "graines de chia",
+      "chia seeds"
+    ],
+    "current": {
+      "calories": 140,
+      "protein": 5,
+      "carbs": 12,
+      "fat": 9,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 169,
+    "alias": "graines de lin",
+    "aliases": [
+      "graines de lin",
+      "flax seeds"
+    ],
+    "current": {
+      "calories": 110,
+      "protein": 4,
+      "carbs": 6,
+      "fat": 8,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 170,
+    "alias": "graines de tournesol",
+    "aliases": [
+      "graines de tournesol",
+      "sunflower seeds"
+    ],
+    "current": {
+      "calories": 165,
+      "protein": 6,
+      "carbs": 7,
+      "fat": 14,
+      "portion": "1/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 171,
+    "alias": "graines de citrouille",
+    "aliases": [
+      "graines de citrouille",
+      "pumpkin seeds"
+    ],
+    "current": {
+      "calories": 180,
+      "protein": 9,
+      "carbs": 4,
+      "fat": 15,
+      "portion": "1/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 172,
+    "alias": "houmous",
+    "aliases": [
+      "houmous",
+      "hummus"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 5,
+      "carbs": 14,
+      "fat": 10,
+      "portion": "1/2 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 173,
+    "alias": "guacamole",
+    "aliases": [
+      "guacamole"
+    ],
+    "current": {
+      "calories": 150,
+      "protein": 2,
+      "carbs": 8,
+      "fat": 13,
+      "portion": "1/2 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 174,
+    "alias": "chips nature",
+    "aliases": [
+      "chips nature",
+      "croustilles nature",
+      "plain chips",
+      "lays original"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 2,
+      "carbs": 15,
+      "fat": 10,
+      "portion": "28 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 175,
+    "alias": "doritos",
+    "aliases": [
+      "doritos"
+    ],
+    "current": {
+      "calories": 150,
+      "protein": 2,
+      "carbs": 18,
+      "fat": 8,
+      "portion": "28 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 176,
+    "alias": "ruffles",
+    "aliases": [
+      "ruffles"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 2,
+      "carbs": 15,
+      "fat": 10,
+      "portion": "28 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 177,
+    "alias": "pringles",
+    "aliases": [
+      "pringles"
+    ],
+    "current": {
+      "calories": 150,
+      "protein": 1,
+      "carbs": 16,
+      "fat": 9,
+      "portion": "28 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 178,
+    "alias": "cheetos",
+    "aliases": [
+      "cheetos"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 2,
+      "carbs": 13,
+      "fat": 11,
+      "portion": "28 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 179,
+    "alias": "tostitos",
+    "aliases": [
+      "tostitos"
+    ],
+    "current": {
+      "calories": 140,
+      "protein": 2,
+      "carbs": 19,
+      "fat": 7,
+      "portion": "28 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 180,
+    "alias": "miss vickies",
+    "aliases": [
+      "miss vickies"
+    ],
+    "current": {
+      "calories": 210,
+      "protein": 3,
+      "carbs": 23,
+      "fat": 13,
+      "portion": "40 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 181,
+    "alias": "kettle chips",
+    "aliases": [
+      "kettle chips"
+    ],
+    "current": {
+      "calories": 150,
+      "protein": 2,
+      "carbs": 16,
+      "fat": 9,
+      "portion": "28 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 182,
+    "alias": "sun chips",
+    "aliases": [
+      "sun chips"
+    ],
+    "current": {
+      "calories": 140,
+      "protein": 2,
+      "carbs": 19,
+      "fat": 6,
+      "portion": "28 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 183,
+    "alias": "popcorn au beurre",
+    "aliases": [
+      "popcorn au beurre",
+      "buttered popcorn"
+    ],
+    "current": {
+      "calories": 220,
+      "protein": 4,
+      "carbs": 24,
+      "fat": 13,
+      "portion": "3 tasses",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 184,
+    "alias": "popcorn nature",
+    "aliases": [
+      "popcorn nature",
+      "plain popcorn"
+    ],
+    "current": {
+      "calories": 93,
+      "protein": 3,
+      "carbs": 19,
+      "fat": 1,
+      "portion": "3 tasses",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 185,
+    "alias": "bretzels",
+    "aliases": [
+      "bretzels",
+      "pretzels"
+    ],
+    "current": {
+      "calories": 110,
+      "protein": 3,
+      "carbs": 23,
+      "fat": 1,
+      "portion": "28 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 186,
+    "alias": "crackers ritz",
+    "aliases": [
+      "crackers ritz",
+      "ritz"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 2,
+      "carbs": 20,
+      "fat": 8,
+      "portion": "6 craquelins",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 187,
+    "alias": "triscuit",
+    "aliases": [
+      "triscuit"
+    ],
+    "current": {
+      "calories": 120,
+      "protein": 3,
+      "carbs": 20,
+      "fat": 4,
+      "portion": "6 craquelins",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 188,
+    "alias": "wheat thins",
+    "aliases": [
+      "wheat thins"
+    ],
+    "current": {
+      "calories": 140,
+      "protein": 2,
+      "carbs": 22,
+      "fat": 5,
+      "portion": "16 craquelins",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 189,
+    "alias": "goldfish",
+    "aliases": [
+      "goldfish"
+    ],
+    "current": {
+      "calories": 140,
+      "protein": 3,
+      "carbs": 20,
+      "fat": 5,
+      "portion": "30 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 190,
+    "alias": "craquelins salés",
+    "aliases": [
+      "craquelins salés",
+      "craquelins sales",
+      "saltine crackers"
+    ],
+    "current": {
+      "calories": 70,
+      "protein": 2,
+      "carbs": 12,
+      "fat": 1.5,
+      "portion": "5 craquelins",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 191,
+    "alias": "barre granola",
+    "aliases": [
+      "barre granola",
+      "granola bar"
+    ],
+    "current": {
+      "calories": 190,
+      "protein": 4,
+      "carbs": 29,
+      "fat": 7,
+      "portion": "1 barre",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 192,
+    "alias": "barre protéinée",
+    "aliases": [
+      "barre protéinée",
+      "barre proteinee",
+      "protein bar"
+    ],
+    "current": {
+      "calories": 220,
+      "protein": 20,
+      "carbs": 24,
+      "fat": 8,
+      "portion": "1 barre",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 193,
+    "alias": "galettes de riz",
+    "aliases": [
+      "galettes de riz",
+      "rice cakes"
+    ],
+    "current": {
+      "calories": 70,
+      "protein": 1.5,
+      "carbs": 15,
+      "fat": 0.6,
+      "portion": "2 galettes",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 194,
+    "alias": "mélange du randonneur",
+    "aliases": [
+      "mélange du randonneur",
+      "melange du randonneur",
+      "trail mix"
+    ],
+    "current": {
+      "calories": 210,
+      "protein": 6,
+      "carbs": 20,
+      "fat": 13,
+      "portion": "1/3 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 195,
+    "alias": "chocolat noir",
+    "aliases": [
+      "chocolat noir",
+      "dark chocolate"
+    ],
+    "current": {
+      "calories": 170,
+      "protein": 2,
+      "carbs": 13,
+      "fat": 12,
+      "portion": "30 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 196,
+    "alias": "chocolat au lait",
+    "aliases": [
+      "chocolat au lait",
+      "milk chocolate"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 2,
+      "carbs": 18,
+      "fat": 10,
+      "portion": "30 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 197,
+    "alias": "kitkat",
+    "aliases": [
+      "kitkat",
+      "kit kat"
+    ],
+    "current": {
+      "calories": 210,
+      "protein": 3,
+      "carbs": 27,
+      "fat": 11,
+      "portion": "1 barre",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 198,
+    "alias": "snickers",
+    "aliases": [
+      "snickers"
+    ],
+    "current": {
+      "calories": 250,
+      "protein": 4,
+      "carbs": 33,
+      "fat": 12,
+      "portion": "1 barre",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 199,
+    "alias": "mars bar",
+    "aliases": [
+      "mars bar",
+      "barre mars"
+    ],
+    "current": {
+      "calories": 230,
+      "protein": 2,
+      "carbs": 36,
+      "fat": 9,
+      "portion": "1 barre",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 200,
+    "alias": "smarties",
+    "aliases": [
+      "smarties"
+    ],
+    "current": {
+      "calories": 220,
+      "protein": 2,
+      "carbs": 34,
+      "fat": 9,
+      "portion": "1 boîte",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 201,
+    "alias": "m&m",
+    "aliases": [
+      "m&m",
+      "m et m",
+      "mms"
+    ],
+    "current": {
+      "calories": 240,
+      "protein": 2,
+      "carbs": 34,
+      "fat": 10,
+      "portion": "1 sachet",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 202,
+    "alias": "oreo",
+    "aliases": [
+      "oreo"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 2,
+      "carbs": 25,
+      "fat": 7,
+      "portion": "3 biscuits",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 203,
+    "alias": "chips ahoy",
+    "aliases": [
+      "chips ahoy"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 2,
+      "carbs": 22,
+      "fat": 8,
+      "portion": "3 biscuits",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 204,
+    "alias": "biscuit aux pépites",
+    "aliases": [
+      "biscuit aux pépites",
+      "biscuit aux pepites",
+      "chocolate chip cookie"
+    ],
+    "current": {
+      "calories": 180,
+      "protein": 2,
+      "carbs": 24,
+      "fat": 9,
+      "portion": "2 biscuits",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 205,
+    "alias": "beigne",
+    "aliases": [
+      "beigne",
+      "donut"
+    ],
+    "current": {
+      "calories": 290,
+      "protein": 4,
+      "carbs": 34,
+      "fat": 16,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 206,
+    "alias": "muffin",
+    "aliases": [
+      "muffin"
+    ],
+    "current": {
+      "calories": 400,
+      "protein": 6,
+      "carbs": 58,
+      "fat": 17,
+      "portion": "1 gros",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 207,
+    "alias": "gâteau au chocolat",
+    "aliases": [
+      "gâteau au chocolat",
+      "gateau au chocolat",
+      "chocolate cake"
+    ],
+    "current": {
+      "calories": 350,
+      "protein": 5,
+      "carbs": 50,
+      "fat": 15,
+      "portion": "1 pointe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 208,
+    "alias": "gâteau au fromage",
+    "aliases": [
+      "gâteau au fromage",
+      "gateau au fromage",
+      "cheesecake"
+    ],
+    "current": {
+      "calories": 400,
+      "protein": 7,
+      "carbs": 33,
+      "fat": 27,
+      "portion": "1 pointe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 209,
+    "alias": "brownie",
+    "aliases": [
+      "brownie"
+    ],
+    "current": {
+      "calories": 240,
+      "protein": 3,
+      "carbs": 36,
+      "fat": 10,
+      "portion": "1 morceau",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 210,
+    "alias": "tarte aux pommes",
+    "aliases": [
+      "tarte aux pommes",
+      "apple pie"
+    ],
+    "current": {
+      "calories": 320,
+      "protein": 3,
+      "carbs": 48,
+      "fat": 14,
+      "portion": "1 pointe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 211,
+    "alias": "bonbons gélifiés",
+    "aliases": [
+      "bonbons gélifiés",
+      "bonbons gelifies",
+      "gummy candy"
+    ],
+    "current": {
+      "calories": 140,
+      "protein": 2,
+      "carbs": 32,
+      "fat": 0,
+      "portion": "40 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 212,
+    "alias": "sirop d érable",
+    "aliases": [
+      "sirop d érable",
+      "sirop erable",
+      "maple syrup"
+    ],
+    "current": {
+      "calories": 104,
+      "protein": 0,
+      "carbs": 27,
+      "fat": 0,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 213,
+    "alias": "nutella",
+    "aliases": [
+      "nutella"
+    ],
+    "current": {
+      "calories": 200,
+      "protein": 2,
+      "carbs": 23,
+      "fat": 12,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 214,
+    "alias": "popsicle",
+    "aliases": [
+      "popsicle",
+      "popsicle glacé"
+    ],
+    "current": {
+      "calories": 80,
+      "protein": 0,
+      "carbs": 20,
+      "fat": 0,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 215,
+    "alias": "café noir",
+    "aliases": [
+      "café noir",
+      "cafe noir",
+      "black coffee"
+    ],
+    "current": {
+      "calories": 3,
+      "protein": 0,
+      "carbs": 0,
+      "fat": 0,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 216,
+    "alias": "latte",
+    "aliases": [
+      "latte"
+    ],
+    "current": {
+      "calories": 190,
+      "protein": 10,
+      "carbs": 18,
+      "fat": 7,
+      "portion": "grande 355 ml",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 217,
+    "alias": "cappuccino",
+    "aliases": [
+      "cappuccino"
+    ],
+    "current": {
+      "calories": 120,
+      "protein": 6,
+      "carbs": 10,
+      "fat": 5,
+      "portion": "355 ml",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 218,
+    "alias": "frappuccino",
+    "aliases": [
+      "frappuccino"
+    ],
+    "current": {
+      "calories": 350,
+      "protein": 5,
+      "carbs": 55,
+      "fat": 12,
+      "portion": "grande",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 219,
+    "alias": "thé",
+    "aliases": [
+      "thé",
+      "the",
+      "tea"
+    ],
+    "current": {
+      "calories": 2,
+      "protein": 0,
+      "carbs": 0,
+      "fat": 0,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 220,
+    "alias": "jus d orange",
+    "aliases": [
+      "jus d orange",
+      "orange juice"
+    ],
+    "current": {
+      "calories": 112,
+      "protein": 1.7,
+      "carbs": 26,
+      "fat": 0.5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 221,
+    "alias": "jus de pomme",
+    "aliases": [
+      "jus de pomme",
+      "apple juice"
+    ],
+    "current": {
+      "calories": 114,
+      "protein": 0.2,
+      "carbs": 28,
+      "fat": 0.3,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 222,
+    "alias": "jus vert",
+    "aliases": [
+      "jus vert",
+      "green juice"
+    ],
+    "current": {
+      "calories": 120,
+      "protein": 2,
+      "carbs": 28,
+      "fat": 0.5,
+      "portion": "355 ml",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 223,
+    "alias": "smoothie",
+    "aliases": [
+      "smoothie"
+    ],
+    "current": {
+      "calories": 260,
+      "protein": 8,
+      "carbs": 48,
+      "fat": 5,
+      "portion": "1 grand verre",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 224,
+    "alias": "coca cola",
+    "aliases": [
+      "coca cola",
+      "coke",
+      "cola"
+    ],
+    "current": {
+      "calories": 140,
+      "protein": 0,
+      "carbs": 39,
+      "fat": 0,
+      "portion": "355 ml",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 225,
+    "alias": "pepsi",
+    "aliases": [
+      "pepsi"
+    ],
+    "current": {
+      "calories": 150,
+      "protein": 0,
+      "carbs": 41,
+      "fat": 0,
+      "portion": "355 ml",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 226,
+    "alias": "sprite",
+    "aliases": [
+      "sprite",
+      "7up"
+    ],
+    "current": {
+      "calories": 140,
+      "protein": 0,
+      "carbs": 38,
+      "fat": 0,
+      "portion": "355 ml",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 227,
+    "alias": "boisson gazeuse diète",
+    "aliases": [
+      "boisson gazeuse diète",
+      "boisson gazeuse diete",
+      "diet soda"
+    ],
+    "current": {
+      "calories": 0,
+      "protein": 0,
+      "carbs": 0,
+      "fat": 0,
+      "portion": "355 ml",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 228,
+    "alias": "gatorade",
+    "aliases": [
+      "gatorade"
+    ],
+    "current": {
+      "calories": 140,
+      "protein": 0,
+      "carbs": 36,
+      "fat": 0,
+      "portion": "591 ml",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 229,
+    "alias": "boisson énergisante",
+    "aliases": [
+      "boisson énergisante",
+      "boisson energisante",
+      "energy drink"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 0,
+      "carbs": 40,
+      "fat": 0,
+      "portion": "473 ml",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 230,
+    "alias": "eau de coco",
+    "aliases": [
+      "eau de coco",
+      "coconut water"
+    ],
+    "current": {
+      "calories": 45,
+      "protein": 0,
+      "carbs": 11,
+      "fat": 0,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 231,
+    "alias": "chocolat chaud",
+    "aliases": [
+      "chocolat chaud",
+      "hot chocolate"
+    ],
+    "current": {
+      "calories": 190,
+      "protein": 7,
+      "carbs": 27,
+      "fat": 7,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 232,
+    "alias": "pizza",
+    "aliases": [
+      "pizza"
+    ],
+    "current": {
+      "calories": 570,
+      "protein": 24,
+      "carbs": 66,
+      "fat": 23,
+      "portion": "2 pointes",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 233,
+    "alias": "poutine",
+    "aliases": [
+      "poutine"
+    ],
+    "current": {
+      "calories": 850,
+      "protein": 24,
+      "carbs": 95,
+      "fat": 42,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 234,
+    "alias": "hamburger",
+    "aliases": [
+      "hamburger"
+    ],
+    "current": {
+      "calories": 520,
+      "protein": 28,
+      "carbs": 42,
+      "fat": 27,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 235,
+    "alias": "cheeseburger",
+    "aliases": [
+      "cheeseburger"
+    ],
+    "current": {
+      "calories": 610,
+      "protein": 32,
+      "carbs": 43,
+      "fat": 34,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 236,
+    "alias": "hot dog",
+    "aliases": [
+      "hot dog"
+    ],
+    "current": {
+      "calories": 300,
+      "protein": 11,
+      "carbs": 26,
+      "fat": 17,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 237,
+    "alias": "club sandwich",
+    "aliases": [
+      "club sandwich"
+    ],
+    "current": {
+      "calories": 700,
+      "protein": 40,
+      "carbs": 55,
+      "fat": 35,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 238,
+    "alias": "sandwich",
+    "aliases": [
+      "sandwich"
+    ],
+    "current": {
+      "calories": 430,
+      "protein": 22,
+      "carbs": 48,
+      "fat": 17,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 239,
+    "alias": "wrap au poulet",
+    "aliases": [
+      "wrap au poulet",
+      "chicken wrap"
+    ],
+    "current": {
+      "calories": 450,
+      "protein": 25,
+      "carbs": 45,
+      "fat": 18,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 240,
+    "alias": "tacos",
+    "aliases": [
+      "tacos"
+    ],
+    "current": {
+      "calories": 520,
+      "protein": 25,
+      "carbs": 48,
+      "fat": 26,
+      "portion": "3 tacos",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 241,
+    "alias": "burrito",
+    "aliases": [
+      "burrito"
+    ],
+    "current": {
+      "calories": 700,
+      "protein": 32,
+      "carbs": 90,
+      "fat": 24,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 242,
+    "alias": "quesadilla",
+    "aliases": [
+      "quesadilla"
+    ],
+    "current": {
+      "calories": 620,
+      "protein": 28,
+      "carbs": 52,
+      "fat": 33,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 243,
+    "alias": "nachos",
+    "aliases": [
+      "nachos"
+    ],
+    "current": {
+      "calories": 650,
+      "protein": 20,
+      "carbs": 65,
+      "fat": 35,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 244,
+    "alias": "sushi",
+    "aliases": [
+      "sushi"
+    ],
+    "current": {
+      "calories": 380,
+      "protein": 16,
+      "carbs": 68,
+      "fat": 5,
+      "portion": "8 morceaux",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 245,
+    "alias": "poke bowl",
+    "aliases": [
+      "poke bowl"
+    ],
+    "current": {
+      "calories": 650,
+      "protein": 35,
+      "carbs": 80,
+      "fat": 20,
+      "portion": "1 bol",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 246,
+    "alias": "pad thai",
+    "aliases": [
+      "pad thai"
+    ],
+    "current": {
+      "calories": 750,
+      "protein": 30,
+      "carbs": 95,
+      "fat": 28,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 247,
+    "alias": "sauté asiatique",
+    "aliases": [
+      "sauté asiatique",
+      "saute asiatique",
+      "stir fry"
+    ],
+    "current": {
+      "calories": 520,
+      "protein": 30,
+      "carbs": 55,
+      "fat": 20,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 248,
+    "alias": "cari de poulet",
+    "aliases": [
+      "cari de poulet",
+      "curry de poulet",
+      "chicken curry"
+    ],
+    "current": {
+      "calories": 550,
+      "protein": 35,
+      "carbs": 45,
+      "fat": 25,
+      "portion": "1 bol",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 249,
+    "alias": "soupe aux légumes",
+    "aliases": [
+      "soupe aux légumes",
+      "soupe aux legumes",
+      "vegetable soup"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 6,
+      "carbs": 28,
+      "fat": 3,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 250,
+    "alias": "soupe poulet nouilles",
+    "aliases": [
+      "soupe poulet nouilles",
+      "chicken noodle soup"
+    ],
+    "current": {
+      "calories": 220,
+      "protein": 15,
+      "carbs": 25,
+      "fat": 7,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 251,
+    "alias": "soupe tomate",
+    "aliases": [
+      "soupe tomate",
+      "tomato soup"
+    ],
+    "current": {
+      "calories": 180,
+      "protein": 4,
+      "carbs": 30,
+      "fat": 5,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 252,
+    "alias": "omelette",
+    "aliases": [
+      "omelette"
+    ],
+    "current": {
+      "calories": 300,
+      "protein": 22,
+      "carbs": 6,
+      "fat": 21,
+      "portion": "3 œufs",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 253,
+    "alias": "quiche",
+    "aliases": [
+      "quiche"
+    ],
+    "current": {
+      "calories": 450,
+      "protein": 18,
+      "carbs": 32,
+      "fat": 28,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 254,
+    "alias": "grilled cheese",
+    "aliases": [
+      "grilled cheese",
+      "sandwich au fromage grillé",
+      "sandwich au fromage grille"
+    ],
+    "current": {
+      "calories": 430,
+      "protein": 17,
+      "carbs": 38,
+      "fat": 24,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 255,
+    "alias": "mac and cheese",
+    "aliases": [
+      "mac and cheese",
+      "macaroni au fromage"
+    ],
+    "current": {
+      "calories": 500,
+      "protein": 20,
+      "carbs": 60,
+      "fat": 22,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 256,
+    "alias": "fish and chips",
+    "aliases": [
+      "fish and chips"
+    ],
+    "current": {
+      "calories": 900,
+      "protein": 35,
+      "carbs": 95,
+      "fat": 42,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 257,
+    "alias": "ailes de poulet",
+    "aliases": [
+      "ailes de poulet",
+      "chicken wings"
+    ],
+    "current": {
+      "calories": 650,
+      "protein": 45,
+      "carbs": 15,
+      "fat": 45,
+      "portion": "10 ailes",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 258,
+    "alias": "nuggets de poulet",
+    "aliases": [
+      "nuggets de poulet",
+      "chicken nuggets"
+    ],
+    "current": {
+      "calories": 420,
+      "protein": 24,
+      "carbs": 26,
+      "fat": 24,
+      "portion": "10 morceaux",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 259,
+    "alias": "shawarma",
+    "aliases": [
+      "shawarma"
+    ],
+    "current": {
+      "calories": 650,
+      "protein": 35,
+      "carbs": 65,
+      "fat": 27,
+      "portion": "1 wrap",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 260,
+    "alias": "gyros",
+    "aliases": [
+      "gyros",
+      "gyro"
+    ],
+    "current": {
+      "calories": 600,
+      "protein": 30,
+      "carbs": 55,
+      "fat": 28,
+      "portion": "1 pita",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 261,
+    "alias": "salade de pâtes",
+    "aliases": [
+      "salade de pâtes",
+      "salade de pates",
+      "pasta salad"
+    ],
+    "current": {
+      "calories": 430,
+      "protein": 12,
+      "carbs": 55,
+      "fat": 18,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 262,
+    "alias": "huile d olive",
+    "aliases": [
+      "huile d olive",
+      "huile",
+      "olive oil",
+      "oil"
+    ],
+    "current": {
+      "calories": 120,
+      "protein": 0,
+      "carbs": 0,
+      "fat": 14,
+      "portion": "1 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 263,
+    "alias": "beurre",
+    "aliases": [
+      "beurre"
+    ],
+    "current": {
+      "calories": 102,
+      "protein": 0.1,
+      "carbs": 0,
+      "fat": 11.5,
+      "portion": "1 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 264,
+    "alias": "mayonnaise",
+    "aliases": [
+      "mayonnaise"
+    ],
+    "current": {
+      "calories": 100,
+      "protein": 0.1,
+      "carbs": 0.1,
+      "fat": 11,
+      "portion": "1 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 265,
+    "alias": "ketchup",
+    "aliases": [
+      "ketchup"
+    ],
+    "current": {
+      "calories": 20,
+      "protein": 0.2,
+      "carbs": 5,
+      "fat": 0,
+      "portion": "1 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 266,
+    "alias": "vinaigrette",
+    "aliases": [
+      "vinaigrette"
+    ],
+    "current": {
+      "calories": 120,
+      "protein": 0,
+      "carbs": 3,
+      "fat": 12,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 267,
+    "alias": "sauce ranch",
+    "aliases": [
+      "sauce ranch",
+      "ranch"
+    ],
+    "current": {
+      "calories": 130,
+      "protein": 1,
+      "carbs": 2,
+      "fat": 13,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 268,
+    "alias": "sauce césar",
+    "aliases": [
+      "sauce césar",
+      "sauce cesar",
+      "caesar dressing"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 1,
+      "carbs": 2,
+      "fat": 17,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 269,
+    "alias": "salsa",
+    "aliases": [
+      "salsa"
+    ],
+    "current": {
+      "calories": 20,
+      "protein": 1,
+      "carbs": 4,
+      "fat": 0,
+      "portion": "1/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 270,
+    "alias": "miel",
+    "aliases": [
+      "miel",
+      "honey"
+    ],
+    "current": {
+      "calories": 64,
+      "protein": 0,
+      "carbs": 17,
+      "fat": 0,
+      "portion": "1 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 271,
+    "alias": "confiture",
+    "aliases": [
+      "confiture",
+      "jam"
+    ],
+    "current": {
+      "calories": 50,
+      "protein": 0,
+      "carbs": 13,
+      "fat": 0,
+      "portion": "1 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 272,
+    "alias": "pain",
+    "aliases": [
+      "pain",
+      "bread"
+    ],
+    "current": {
+      "calories": 90,
+      "protein": 3.5,
+      "carbs": 17,
+      "fat": 1.2,
+      "portion": "1 tranche",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 273,
+    "alias": "riz",
+    "aliases": [
+      "riz",
+      "rice"
+    ],
+    "current": {
+      "calories": 205,
+      "protein": 4.3,
+      "carbs": 45,
+      "fat": 0.4,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 274,
+    "alias": "pâtes",
+    "aliases": [
+      "pâtes",
+      "pates",
+      "pasta"
+    ],
+    "current": {
+      "calories": 220,
+      "protein": 8,
+      "carbs": 43,
+      "fat": 1.3,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 275,
+    "alias": "skyr 0%",
+    "aliases": [
+      "skyr 0%",
+      "skyr 0 %",
+      "skyr nature",
+      "skyr"
+    ],
+    "current": {
+      "calories": 90,
+      "protein": 16,
+      "carbs": 6,
+      "fat": 0.2,
+      "portion": "1 contenant (150 g)",
+      "gramsPerPortion": 150
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 276,
+    "alias": "yogourt",
+    "aliases": [
+      "yogourt",
+      "yaourt",
+      "yogurt"
+    ],
+    "current": {
+      "calories": 130,
+      "protein": 9,
+      "carbs": 15,
+      "fat": 4,
+      "portion": "3/4 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 277,
+    "alias": "poulet",
+    "aliases": [
+      "poulet",
+      "chicken"
+    ],
+    "current": {
+      "calories": 250,
+      "protein": 42,
+      "carbs": 0,
+      "fat": 8,
+      "portion": "170 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 278,
+    "alias": "fromage",
+    "aliases": [
+      "fromage",
+      "cheese"
+    ],
+    "current": {
+      "calories": 115,
+      "protein": 7,
+      "carbs": 1,
+      "fat": 9,
+      "portion": "30 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 279,
+    "alias": "lait",
+    "aliases": [
+      "lait",
+      "milk"
+    ],
+    "current": {
+      "calories": 130,
+      "protein": 9,
+      "carbs": 12,
+      "fat": 5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 280,
+    "alias": "chips",
+    "aliases": [
+      "chips",
+      "croustilles",
+      "potato chips"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 2,
+      "carbs": 15,
+      "fat": 10,
+      "portion": "28 g",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 281,
+    "alias": "salade",
+    "aliases": [
+      "salade",
+      "salad"
+    ],
+    "current": {
+      "calories": 90,
+      "protein": 3,
+      "carbs": 12,
+      "fat": 4,
+      "portion": "1 bol",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 282,
+    "alias": "ricotta",
+    "aliases": [
+      "ricotta"
+    ],
+    "current": {
+      "calories": 170,
+      "protein": 11,
+      "carbs": 6,
+      "fat": 10,
+      "portion": "1/2 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 283,
+    "alias": "poivron",
+    "aliases": [
+      "poivron",
+      "poivrons",
+      "bell pepper"
+    ],
+    "current": {
+      "calories": 35,
+      "protein": 1,
+      "carbs": 8,
+      "fat": 0.3,
+      "portion": "1 moyen",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 284,
+    "alias": "pesto",
+    "aliases": [
+      "pesto",
+      "sauce pesto"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 3,
+      "carbs": 4,
+      "fat": 15,
+      "portion": "2 c. à soupe",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 285,
+    "alias": "fusilli",
+    "aliases": [
+      "fusilli",
+      "fusillis"
+    ],
+    "current": {
+      "calories": 220,
+      "protein": 8,
+      "carbs": 43,
+      "fat": 1.3,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 286,
+    "alias": "cannelloni",
+    "aliases": [
+      "cannelloni",
+      "cannellonis"
+    ],
+    "current": {
+      "calories": 320,
+      "protein": 16,
+      "carbs": 38,
+      "fat": 12,
+      "portion": "2 cannellonis",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 287,
+    "alias": "veau",
+    "aliases": [
+      "veau",
+      "viande de veau"
+    ],
+    "current": {
+      "calories": 230,
+      "protein": 35,
+      "carbs": 0,
+      "fat": 9,
+      "portion": "150 g",
+      "gramsPerPortion": 150
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 288,
+    "alias": "viande effilochée",
+    "aliases": [
+      "viande effilochée",
+      "boeuf effiloché",
+      "bœuf effiloché",
+      "pulled beef"
+    ],
+    "current": {
+      "calories": 280,
+      "protein": 32,
+      "carbs": 2,
+      "fat": 16,
+      "portion": "150 g",
+      "gramsPerPortion": 150
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 289,
+    "alias": "porc effiloché",
+    "aliases": [
+      "porc effiloché",
+      "pulled pork"
+    ],
+    "current": {
+      "calories": 330,
+      "protein": 30,
+      "carbs": 8,
+      "fat": 20,
+      "portion": "150 g",
+      "gramsPerPortion": 150
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 290,
+    "alias": "petits fruits",
+    "aliases": [
+      "petits fruits",
+      "baies mélangées",
+      "mixed berries"
+    ],
+    "current": {
+      "calories": 80,
+      "protein": 1,
+      "carbs": 19,
+      "fat": 0.5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 291,
+    "alias": "fruits mélangés",
+    "aliases": [
+      "fruits mélangés",
+      "salade de fruits"
+    ],
+    "current": {
+      "calories": 120,
+      "protein": 2,
+      "carbs": 30,
+      "fat": 0.5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 292,
+    "alias": "polenta",
+    "aliases": [
+      "polenta"
+    ],
+    "current": {
+      "calories": 145,
+      "protein": 3,
+      "carbs": 31,
+      "fat": 1,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 293,
+    "alias": "ravioli",
+    "aliases": [
+      "ravioli",
+      "raviolis"
+    ],
+    "current": {
+      "calories": 300,
+      "protein": 14,
+      "carbs": 40,
+      "fat": 10,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 294,
+    "alias": "spaghetti bolognaise",
+    "aliases": [
+      "spaghetti bolognaise",
+      "spaghetti bolognese"
+    ],
+    "current": {
+      "calories": 550,
+      "protein": 28,
+      "carbs": 65,
+      "fat": 20,
+      "portion": "1 assiette",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 295,
+    "alias": "carbonara",
+    "aliases": [
+      "carbonara",
+      "spaghetti carbonara"
+    ],
+    "current": {
+      "calories": 650,
+      "protein": 25,
+      "carbs": 70,
+      "fat": 30,
+      "portion": "1 assiette",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 296,
+    "alias": "risotto",
+    "aliases": [
+      "risotto"
+    ],
+    "current": {
+      "calories": 430,
+      "protein": 10,
+      "carbs": 65,
+      "fat": 14,
+      "portion": "1 assiette",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 297,
+    "alias": "ratatouille",
+    "aliases": [
+      "ratatouille"
+    ],
+    "current": {
+      "calories": 160,
+      "protein": 4,
+      "carbs": 20,
+      "fat": 8,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 298,
+    "alias": "boeuf bourguignon",
+    "aliases": [
+      "boeuf bourguignon",
+      "bœuf bourguignon"
+    ],
+    "current": {
+      "calories": 500,
+      "protein": 40,
+      "carbs": 20,
+      "fat": 28,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 299,
+    "alias": "blanquette de veau",
+    "aliases": [
+      "blanquette de veau"
+    ],
+    "current": {
+      "calories": 480,
+      "protein": 35,
+      "carbs": 22,
+      "fat": 27,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 300,
+    "alias": "coq au vin",
+    "aliases": [
+      "coq au vin"
+    ],
+    "current": {
+      "calories": 460,
+      "protein": 38,
+      "carbs": 12,
+      "fat": 28,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 301,
+    "alias": "cassoulet",
+    "aliases": [
+      "cassoulet"
+    ],
+    "current": {
+      "calories": 600,
+      "protein": 35,
+      "carbs": 55,
+      "fat": 28,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 302,
+    "alias": "hachis parmentier",
+    "aliases": [
+      "hachis parmentier"
+    ],
+    "current": {
+      "calories": 520,
+      "protein": 28,
+      "carbs": 55,
+      "fat": 22,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 303,
+    "alias": "gratin dauphinois",
+    "aliases": [
+      "gratin dauphinois"
+    ],
+    "current": {
+      "calories": 430,
+      "protein": 10,
+      "carbs": 45,
+      "fat": 24,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 304,
+    "alias": "croque monsieur",
+    "aliases": [
+      "croque monsieur"
+    ],
+    "current": {
+      "calories": 480,
+      "protein": 24,
+      "carbs": 38,
+      "fat": 25,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 305,
+    "alias": "croque madame",
+    "aliases": [
+      "croque madame"
+    ],
+    "current": {
+      "calories": 560,
+      "protein": 30,
+      "carbs": 39,
+      "fat": 31,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 306,
+    "alias": "crêpe",
+    "aliases": [
+      "crêpe",
+      "crepe"
+    ],
+    "current": {
+      "calories": 120,
+      "protein": 4,
+      "carbs": 18,
+      "fat": 4,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 307,
+    "alias": "galette bretonne",
+    "aliases": [
+      "galette bretonne",
+      "galette de sarrasin"
+    ],
+    "current": {
+      "calories": 220,
+      "protein": 8,
+      "carbs": 35,
+      "fat": 5,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 308,
+    "alias": "baguette",
+    "aliases": [
+      "baguette"
+    ],
+    "current": {
+      "calories": 170,
+      "protein": 6,
+      "carbs": 35,
+      "fat": 1,
+      "portion": "1/4 baguette",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 309,
+    "alias": "camembert",
+    "aliases": [
+      "camembert"
+    ],
+    "current": {
+      "calories": 90,
+      "protein": 6,
+      "carbs": 0.2,
+      "fat": 7,
+      "portion": "30 g",
+      "gramsPerPortion": 30
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 310,
+    "alias": "brie",
+    "aliases": [
+      "brie"
+    ],
+    "current": {
+      "calories": 100,
+      "protein": 6,
+      "carbs": 0.1,
+      "fat": 8,
+      "portion": "30 g",
+      "gramsPerPortion": 30
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 311,
+    "alias": "comté",
+    "aliases": [
+      "comté",
+      "comte"
+    ],
+    "current": {
+      "calories": 120,
+      "protein": 8,
+      "carbs": 0,
+      "fat": 10,
+      "portion": "30 g",
+      "gramsPerPortion": 30
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 312,
+    "alias": "chèvre",
+    "aliases": [
+      "chèvre",
+      "fromage de chèvre",
+      "chevre"
+    ],
+    "current": {
+      "calories": 105,
+      "protein": 6,
+      "carbs": 0.5,
+      "fat": 9,
+      "portion": "30 g",
+      "gramsPerPortion": 30
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 313,
+    "alias": "roquefort",
+    "aliases": [
+      "roquefort"
+    ],
+    "current": {
+      "calories": 110,
+      "protein": 6,
+      "carbs": 0.6,
+      "fat": 9,
+      "portion": "30 g",
+      "gramsPerPortion": 30
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 314,
+    "alias": "raclette",
+    "aliases": [
+      "raclette"
+    ],
+    "current": {
+      "calories": 120,
+      "protein": 8,
+      "carbs": 0.5,
+      "fat": 10,
+      "portion": "30 g",
+      "gramsPerPortion": 30
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 315,
+    "alias": "saucisson",
+    "aliases": [
+      "saucisson"
+    ],
+    "current": {
+      "calories": 180,
+      "protein": 8,
+      "carbs": 1,
+      "fat": 16,
+      "portion": "50 g",
+      "gramsPerPortion": 50
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 316,
+    "alias": "merguez",
+    "aliases": [
+      "merguez"
+    ],
+    "current": {
+      "calories": 260,
+      "protein": 17,
+      "carbs": 2,
+      "fat": 21,
+      "portion": "100 g",
+      "gramsPerPortion": 100
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 317,
+    "alias": "canard",
+    "aliases": [
+      "canard",
+      "magret de canard"
+    ],
+    "current": {
+      "calories": 300,
+      "protein": 30,
+      "carbs": 0,
+      "fat": 20,
+      "portion": "150 g",
+      "gramsPerPortion": 150
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 318,
+    "alias": "agneau",
+    "aliases": [
+      "agneau"
+    ],
+    "current": {
+      "calories": 310,
+      "protein": 32,
+      "carbs": 0,
+      "fat": 20,
+      "portion": "150 g",
+      "gramsPerPortion": 150
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 319,
+    "alias": "moules",
+    "aliases": [
+      "moules"
+    ],
+    "current": {
+      "calories": 220,
+      "protein": 30,
+      "carbs": 10,
+      "fat": 6,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 320,
+    "alias": "taboulé",
+    "aliases": [
+      "taboulé",
+      "taboule"
+    ],
+    "current": {
+      "calories": 180,
+      "protein": 5,
+      "carbs": 30,
+      "fat": 5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 321,
+    "alias": "baba ganoush",
+    "aliases": [
+      "baba ganoush",
+      "baba ghanoush"
+    ],
+    "current": {
+      "calories": 120,
+      "protein": 3,
+      "carbs": 10,
+      "fat": 8,
+      "portion": "1/2 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 322,
+    "alias": "shakshuka",
+    "aliases": [
+      "shakshuka"
+    ],
+    "current": {
+      "calories": 380,
+      "protein": 20,
+      "carbs": 28,
+      "fat": 22,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 323,
+    "alias": "tajine",
+    "aliases": [
+      "tajine",
+      "tagine"
+    ],
+    "current": {
+      "calories": 500,
+      "protein": 30,
+      "carbs": 55,
+      "fat": 18,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 324,
+    "alias": "couscous royal",
+    "aliases": [
+      "couscous royal"
+    ],
+    "current": {
+      "calories": 700,
+      "protein": 35,
+      "carbs": 90,
+      "fat": 22,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 325,
+    "alias": "pho",
+    "aliases": [
+      "pho",
+      "phở"
+    ],
+    "current": {
+      "calories": 500,
+      "protein": 30,
+      "carbs": 70,
+      "fat": 12,
+      "portion": "1 grand bol",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 326,
+    "alias": "ramen",
+    "aliases": [
+      "ramen"
+    ],
+    "current": {
+      "calories": 600,
+      "protein": 25,
+      "carbs": 75,
+      "fat": 22,
+      "portion": "1 bol",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 327,
+    "alias": "bibimbap",
+    "aliases": [
+      "bibimbap"
+    ],
+    "current": {
+      "calories": 650,
+      "protein": 30,
+      "carbs": 85,
+      "fat": 22,
+      "portion": "1 bol",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 328,
+    "alias": "kimchi",
+    "aliases": [
+      "kimchi"
+    ],
+    "current": {
+      "calories": 30,
+      "protein": 2,
+      "carbs": 5,
+      "fat": 0.5,
+      "portion": "1/2 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 329,
+    "alias": "dumplings",
+    "aliases": [
+      "dumplings",
+      "gyoza",
+      "raviolis chinois"
+    ],
+    "current": {
+      "calories": 300,
+      "protein": 14,
+      "carbs": 38,
+      "fat": 10,
+      "portion": "6 morceaux",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 330,
+    "alias": "rouleaux impériaux",
+    "aliases": [
+      "rouleaux impériaux",
+      "rouleaux imperiaux",
+      "spring rolls"
+    ],
+    "current": {
+      "calories": 260,
+      "protein": 8,
+      "carbs": 34,
+      "fat": 10,
+      "portion": "3",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 331,
+    "alias": "samosa",
+    "aliases": [
+      "samosa",
+      "samosas"
+    ],
+    "current": {
+      "calories": 260,
+      "protein": 7,
+      "carbs": 32,
+      "fat": 12,
+      "portion": "2",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 332,
+    "alias": "dal",
+    "aliases": [
+      "dal",
+      "dahl",
+      "lentilles indiennes"
+    ],
+    "current": {
+      "calories": 350,
+      "protein": 18,
+      "carbs": 50,
+      "fat": 10,
+      "portion": "1 bol",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 333,
+    "alias": "butter chicken",
+    "aliases": [
+      "butter chicken",
+      "poulet au beurre"
+    ],
+    "current": {
+      "calories": 650,
+      "protein": 35,
+      "carbs": 35,
+      "fat": 40,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 334,
+    "alias": "tikka masala",
+    "aliases": [
+      "tikka masala",
+      "chicken tikka masala"
+    ],
+    "current": {
+      "calories": 600,
+      "protein": 35,
+      "carbs": 35,
+      "fat": 35,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 335,
+    "alias": "naan",
+    "aliases": [
+      "naan",
+      "pain naan"
+    ],
+    "current": {
+      "calories": 260,
+      "protein": 8,
+      "carbs": 45,
+      "fat": 6,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 336,
+    "alias": "biryani",
+    "aliases": [
+      "biryani"
+    ],
+    "current": {
+      "calories": 600,
+      "protein": 25,
+      "carbs": 85,
+      "fat": 20,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 337,
+    "alias": "enchiladas",
+    "aliases": [
+      "enchiladas",
+      "enchilada"
+    ],
+    "current": {
+      "calories": 600,
+      "protein": 30,
+      "carbs": 60,
+      "fat": 28,
+      "portion": "2",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 338,
+    "alias": "fajitas",
+    "aliases": [
+      "fajitas",
+      "fajita"
+    ],
+    "current": {
+      "calories": 550,
+      "protein": 35,
+      "carbs": 50,
+      "fat": 22,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 339,
+    "alias": "empanada",
+    "aliases": [
+      "empanada",
+      "empanadas"
+    ],
+    "current": {
+      "calories": 300,
+      "protein": 12,
+      "carbs": 35,
+      "fat": 13,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 340,
+    "alias": "arepa",
+    "aliases": [
+      "arepa",
+      "arepas"
+    ],
+    "current": {
+      "calories": 220,
+      "protein": 5,
+      "carbs": 40,
+      "fat": 5,
+      "portion": "1",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 341,
+    "alias": "ceviche",
+    "aliases": [
+      "ceviche"
+    ],
+    "current": {
+      "calories": 250,
+      "protein": 30,
+      "carbs": 18,
+      "fat": 7,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 342,
+    "alias": "paella",
+    "aliases": [
+      "paella"
+    ],
+    "current": {
+      "calories": 600,
+      "protein": 30,
+      "carbs": 80,
+      "fat": 18,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 343,
+    "alias": "gazpacho",
+    "aliases": [
+      "gazpacho"
+    ],
+    "current": {
+      "calories": 120,
+      "protein": 3,
+      "carbs": 18,
+      "fat": 5,
+      "portion": "2 tasses",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 344,
+    "alias": "moussaka",
+    "aliases": [
+      "moussaka"
+    ],
+    "current": {
+      "calories": 520,
+      "protein": 28,
+      "carbs": 35,
+      "fat": 30,
+      "portion": "1 portion",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 345,
+    "alias": "spanakopita",
+    "aliases": [
+      "spanakopita"
+    ],
+    "current": {
+      "calories": 360,
+      "protein": 12,
+      "carbs": 34,
+      "fat": 20,
+      "portion": "2 morceaux",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 346,
+    "alias": "tzatziki",
+    "aliases": [
+      "tzatziki"
+    ],
+    "current": {
+      "calories": 90,
+      "protein": 5,
+      "carbs": 6,
+      "fat": 5,
+      "portion": "1/2 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 347,
+    "alias": "baklava",
+    "aliases": [
+      "baklava"
+    ],
+    "current": {
+      "calories": 300,
+      "protein": 5,
+      "carbs": 38,
+      "fat": 15,
+      "portion": "2 morceaux",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 348,
+    "alias": "plantain",
+    "aliases": [
+      "plantain",
+      "banane plantain"
+    ],
+    "current": {
+      "calories": 220,
+      "protein": 2,
+      "carbs": 57,
+      "fat": 0.7,
+      "portion": "1 moyenne",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 349,
+    "alias": "manioc",
+    "aliases": [
+      "manioc",
+      "cassava"
+    ],
+    "current": {
+      "calories": 330,
+      "protein": 3,
+      "carbs": 78,
+      "fat": 1,
+      "portion": "1 tasse cuite",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 350,
+    "alias": "miso",
+    "aliases": [
+      "miso",
+      "soupe miso"
+    ],
+    "current": {
+      "calories": 80,
+      "protein": 6,
+      "carbs": 10,
+      "fat": 3,
+      "portion": "1 bol",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 351,
+    "alias": "fruits",
+    "aliases": [
+      "fruits",
+      "fruit"
+    ],
+    "current": {
+      "calories": 80,
+      "protein": 1,
+      "carbs": 20,
+      "fat": 0.4,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  },
+  {
+    "legacyIndex": 352,
+    "alias": "légumes",
+    "aliases": [
+      "légumes",
+      "legumes",
+      "vegetables"
+    ],
+    "current": {
+      "calories": 60,
+      "protein": 3,
+      "carbs": 12,
+      "fat": 0.5,
+      "portion": "1 tasse",
+      "gramsPerPortion": null
+    },
+    "candidates": []
+  }
+]
