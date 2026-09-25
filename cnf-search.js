@@ -104,6 +104,12 @@
     const candidateStates = states(`${row?.[1] || ""} ${row?.[2] || ""}`);
     score += stateCompatibility(wantedStates, candidateStates).bonus;
 
+    // Éviter qu'un aliment composé dont le nom commence par la requête
+    // (ex. « pomme cannelle ») gagne contre l'aliment générique « pomme ».
+    // Les cas comme « tilapia » dans « Poisson, tilapia » ne sont pas touchés.
+    if (d.firstFr && d.firstFr !== query && d.firstFr.startsWith(`${query} `)) score -= 240;
+    if (d.firstEn && d.firstEn !== query && d.firstEn.startsWith(`${query} `)) score -= 240;
+
     const qualifiers = Math.max(0, normalize(row?.[1]).split(" ").length - d.firstFr.split(" ").length);
     score -= Math.min(120, qualifiers * 4);
 
@@ -224,6 +230,9 @@
       ["jus", "juice"],
       ["compote", "sauce"],
       ["granola", "cereale", "cereales", "cereal", "topping", "garniture"],
+      ["chevre", "goat"],
+      ["brebis", "sheep"],
+      ["grec", "greek"],
       ["sel ajoute", "with salt"],
       ["marine", "marinee", "marinated"],
     ];
