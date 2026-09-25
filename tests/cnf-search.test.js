@@ -29,6 +29,8 @@ assert(chicken.cnfFoodId === "567", `poulet: fiche inattendue ${chicken.cnfFoodI
 assert(chickenBreast.cnfFoodId === "842", `poitrine de poulet: fiche inattendue ${chickenBreast.cnfFoodId}`);
 
 const commonFoods = {
+  greenSalad: search.find("salade verte"),
+  greenSalad100g: search.find("100 g salade verte"),
   apple: search.find("100 g pomme"),
   broccoli: search.find("100 g brocoli"),
   salmon: search.find("100 g saumon"),
@@ -42,6 +44,8 @@ for (const [label, food] of Object.entries(commonFoods)) {
   assert(food.nutritionSource === "cnf", `${label}: source non FCÉN`);
   assert(Number.isFinite(Number(food.calories)), `${label}: calories invalides`);
 }
+assert(commonFoods.greenSalad100g.calories < 30, `salade verte 100 g: estimation trop élevée ${commonFoods.greenSalad100g.calories}`);
+assert(commonFoods.greenSalad.calories < 40, `salade verte: estimation trop élevée ${commonFoods.greenSalad.calories}`);
 
 console.log("CNF full-catalog search tests passed");
 console.log({
