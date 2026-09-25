@@ -48,6 +48,21 @@
       .map(([key]) => key);
   }
 
+  function stateCompatibility(wanted, candidate) {
+    if (!wanted.length) return { bonus: candidate.includes("raw") ? 55 : -candidate.length * 18 };
+    // « cuit » est volontairement générique : bouilli, frit, rôti, etc. sont
+    // tous des aliments cuits. Une préparation précise reste, elle, prioritaire.
+    if (wanted.includes("cooked")) {
+      const cookedStates = new Set(["cooked", "boiled", "fried", "baked"]);
+      return candidate.some((state) => cookedStates.has(state))
+        ? { bonus: 150 }
+        : { bonus: -260 };
+    }
+    return wanted.some((state) => candidate.includes(state))
+      ? { bonus: 180 }
+      : { bonus: -420 };
+  }
+
   function descriptor(row) {
     const fr = normalize(row?.[1]);
     const en = normalize(row?.[2]);
@@ -73,16 +88,21 @@
       else if ((` ${query} `).includes(` ${alias} `)) score = Math.max(score, 720 + alias.split(" ").length * 20);
       else if ((` ${alias} `).includes(` ${query} `) && query.split(" ").length >= 2) score = Math.max(score, 620 + query.split(" ").length * 20);
     }
+
+    // Le FCÉN nomme souvent les aliments comme « Poisson, tilapia, ... ».
+    // Permettre un nom simple (« tilapia ») s'il apparaît comme mot entier,
+    // tout en laissant l'étape d'ambiguïté refuser les correspondances serrées.
+    const queryWords = query.split(" ").filter((word) => word.length >= 4);
+    const candidateText = ` ${normalize(`${row?.[1] || ""} ${row?.[2] || ""}`)} `;
+    if (queryWords.length && queryWords.every((word) => candidateText.includes(` ${word} `))) {
+      score = Math.max(score, 690 + queryWords.length * 35);
+    }
+
     if (!Number.isFinite(score)) return score;
 
     const wantedStates = states(text);
     const candidateStates = states(`${row?.[1] || ""} ${row?.[2] || ""}`);
-    if (wantedStates.length) {
-      if (wantedStates.some((state) => candidateStates.includes(state))) score += 180;
-      else score -= 420;
-    } else {
-      score -= candidateStates.length * 18;
-    }
+    score += stateCompatibility(wantedStates, candidateStates).bonus;
 
     const qualifiers = Math.max(0, normalize(row?.[1]).split(" ").length - d.firstFr.split(" ").length);
     score -= Math.min(120, qualifiers * 4);
