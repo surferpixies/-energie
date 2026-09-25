@@ -148,6 +148,31 @@
     return out;
   }
 
+  const catalogById = new Map(catalog.map((row) => [String(row?.[0]), row]));
+
+  function preferredCommonFood(text) {
+    const n = normalize(text);
+    const hasChicken = /\b(poulet|chicken)\b/.test(n);
+    if (!hasChicken) return null;
+
+    const hasBreast = /\b(poitrine|breast)\b/.test(n);
+    const wantedStates = states(text);
+
+    if (hasBreast) {
+      if (wantedStates.includes("raw")) return catalogById.get("841") || null;
+      if (wantedStates.includes("fried")) return catalogById.get("603") || null;
+      if (wantedStates.includes("cooked") || wantedStates.includes("baked") || wantedStates.length === 0)
+        return catalogById.get("842") || null;
+    }
+
+    if (wantedStates.includes("raw")) return catalogById.get("565") || null;
+    if (wantedStates.includes("fried")) return catalogById.get("566") || null;
+    if (wantedStates.includes("cooked") || wantedStates.includes("baked") || wantedStates.length === 0)
+      return catalogById.get("567") || null;
+
+    return null;
+  }
+
   function foodFromRow(row, text) {
     const [id, fr, en, nutrition, portions] = row;
     const kind = quantityKind(text);
@@ -205,6 +230,14 @@
 
   function find(text) {
     if (!catalog.length) return null;
+
+    // Pour certains aliments très courants, le FCÉN contient de nombreuses
+    // variantes proches. Énergie choisit une référence FCÉN cuite courante par
+    // défaut plutôt que de retomber sur l'ancienne base faute de pouvoir
+    // départager des dizaines de fiches équivalentes.
+    const preferred = preferredCommonFood(text);
+    if (preferred) return foodFromRow(preferred, text);
+
     const ranked = [];
     for (const row of catalog) {
       let score = scoreRow(row, text);
