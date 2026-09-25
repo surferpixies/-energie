@@ -106,6 +106,25 @@
 
     const qualifiers = Math.max(0, normalize(row?.[1]).split(" ").length - d.firstFr.split(" ").length);
     score -= Math.min(120, qualifiers * 4);
+
+    // Éviter de confondre l'aliment lui-même avec une partie différente
+    // (ex. « navet » vs « feuilles de navet ») lorsque l'utilisateur ne
+    // demande pas explicitement cette partie.
+    const queryText = ` ${query} `;
+    const partQualifiers = [
+      ["feuille", "feuilles", "greens", "leaves"],
+      ["jus", "juice"],
+      ["graine", "graines", "seed", "seeds"],
+      ["germe", "germes", "sprout", "sprouts"],
+      ["peau", "skin"],
+      ["son", "bran"],
+    ];
+    for (const words of partQualifiers) {
+      const candidateHasPart = words.some((word) => candidateText.includes(` ${word} `));
+      const queryHasPart = words.some((word) => queryText.includes(` ${word} `));
+      if (candidateHasPart && !queryHasPart) score -= 220;
+      else if (candidateHasPart && queryHasPart) score += 80;
+    }
     return score;
   }
 
