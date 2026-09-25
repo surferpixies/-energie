@@ -232,6 +232,7 @@
       ["granola", "cereale", "cereales", "cereal", "topping", "garniture"],
       ["chevre", "goat"],
       ["brebis", "sheep"],
+      ["soya", "soy"],
       ["grec", "greek"],
       ["sel ajoute", "with salt"],
       ["marine", "marinee", "marinated"],
@@ -284,12 +285,20 @@
     for (const row of catalog) {
       let score = scoreRow(row, text);
       if (!Number.isFinite(score)) continue;
-      if (hasUnrequestedQualifier(row, text)) score -= 140;
-      if (score >= 600) ranked.push({ row, score });
+      const unrequestedQualifier = hasUnrequestedQualifier(row, text);
+      if (unrequestedQualifier) score -= 140;
+      if (score >= 600) ranked.push({ row, score, unrequestedQualifier });
     }
     if (!ranked.length) return null;
-    ranked.sort((a, b) => b.score - a.score);
-    const first = ranked[0], second = ranked[1];
+
+    // Quand au moins une fiche correspondant au texte sans qualificatif
+    // supplémentaire existe, ignorer complètement les variantes que
+    // l'utilisateur n'a pas demandées (conserve, séché, soya, chèvre, etc.).
+    // Elles restent disponibles si l'utilisateur les précise explicitement.
+    const cleanRanked = ranked.filter((item) => !item.unrequestedQualifier);
+    const candidates = cleanRanked.length ? cleanRanked : ranked;
+    candidates.sort((a, b) => b.score - a.score);
+    const first = candidates[0], second = candidates[1];
     if (second && first.score - second.score < 45) {
       const firstBase = descriptor(first.row).firstFr || descriptor(first.row).firstEn;
       const secondBase = descriptor(second.row).firstFr || descriptor(second.row).firstEn;
@@ -303,7 +312,7 @@
         // meilleurs candidats réellement similaires.
         const firstStates = states(`${first.row?.[1] || ""} ${first.row?.[2] || ""}`);
         const wantedStates = states(text);
-        const similar = ranked.filter(({ row, score }) => {
+        const similar = candidates.filter(({ row, score }) => {
           if (first.score - score >= 45) return false;
           const d = descriptor(row);
           const base = d.firstFr || d.firstEn;
