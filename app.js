@@ -13959,7 +13959,7 @@ function formatSleepDuration(hours) {
     d.sleepHours = hours;
     d.sleepStartTime = $("#sleepStartTime").value || "";
     d.sleepEndTime = $("#sleepEndTime").value || "";
-    d.sleepTags = $("[data-sleep-tag]:checked").map((input) => input.value);
+    d.sleepTags = [...document.querySelectorAll("[data-sleep-tag]:checked")].map((input) => input.value);
     d.sleepComment = $("#sleepComment").value.trim();
     setDayChanged(selectedDate);
     $("#sleepDialog").close();
