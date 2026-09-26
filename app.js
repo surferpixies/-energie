@@ -6052,10 +6052,8 @@ function formatSleepDuration(hours) {
         : "+";
     const actionLabel =
       main && type !== "Collation" ? `Modifier ${type}` : `Ajouter ${type}`;
-    const visibleChanges = main
-      ? feelingChangesHtml(feelingScoresFor(main, "before"), feelingScoresFor(main, "after"), !!main.feeling, true)
-      : "";
-    return `<button class="meal-quick-card ${done ? "is-complete" : ""} ${visibleChanges ? "has-feeling-changes" : ""}" data-quick-meal="${esc(type)}" ${main && type !== "Collation" ? `data-edit-meal="${main.id}"` : ""} aria-label="${esc(actionLabel)}"><span class="meal-quick-icon">${done && type !== "Collation" ? "✓" : icon}</span><span><strong>${mealTypeHtml(type)}</strong><small${main && type !== "Collation" ? ' translate="no"' : ""}>${subtitle}</small></span><span class="meal-quick-action">${actionIcon}</span>${visibleChanges ? `<span class="meal-quick-feeling-changes">${visibleChanges}</span>` : ""}</button>`;
+    const feelingStatus = main ? mealFeelingStatus(main) : null;
+    return `<button class="meal-quick-card ${done ? "is-complete" : ""} ${feelingStatus ? "has-feeling-status" : ""}" data-quick-meal="${esc(type)}" ${main && type !== "Collation" ? `data-edit-meal="${main.id}"` : ""} aria-label="${esc(actionLabel)}"><span class="meal-quick-icon">${done && type !== "Collation" ? "✓" : icon}</span><span><strong>${mealTypeHtml(type)}</strong><small${main && type !== "Collation" ? ' translate="no"' : ""}>${subtitle}</small></span><span class="meal-quick-action">${actionIcon}</span>${feelingStatus ? `<span class="meal-quick-feeling-status is-${feelingStatus.tone}"><i aria-hidden="true">${feelingStatus.icon}</i><span>${esc(feelingStatus.label)}</span></span>` : ""}</button>`;
   }
   function journalMaxDate() {
     if (db.settings?.demoMode) {
