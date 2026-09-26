@@ -13214,6 +13214,8 @@ function formatSleepDuration(hours) {
     const readOnly = professionalClientReadOnly(),
       d = ensureDay(db, selectedDate);
     $("#sleepHours").value = d.sleepHours ?? "";
+    $("#sleepStartTime").value = d.sleepStartTime || "";
+    $("#sleepEndTime").value = d.sleepEndTime || "";
     $("#sleepComment").value = d.sleepComment || "";
     $$("[data-sleep-tag]").forEach((input) => {
       input.checked = (d.sleepTags || []).includes(input.value);
@@ -13955,7 +13957,9 @@ function formatSleepDuration(hours) {
     if (hours !== null && (hours < 0 || hours > 24))
       return alert("Entre une durée de sommeil entre 0 et 24 heures.");
     d.sleepHours = hours;
-    d.sleepTags = $$("[data-sleep-tag]:checked").map((input) => input.value);
+    d.sleepStartTime = $("#sleepStartTime").value || "";
+    d.sleepEndTime = $("#sleepEndTime").value || "";
+    d.sleepTags = $("[data-sleep-tag]:checked").map((input) => input.value);
     d.sleepComment = $("#sleepComment").value.trim();
     setDayChanged(selectedDate);
     $("#sleepDialog").close();
