@@ -12818,9 +12818,12 @@ function formatSleepDuration(hours) {
     });
     if (!rows.length) return "";
     const groupedRows = feelingGroupsHtml(rows, (row) => row.html);
-    return compact
-      ? `<span class="feeling-change-pills"><strong>Évolution</strong><span>${groupedRows}</span></span>`
-      : `<span class="feeling-changes"><strong>Évolution après le repas</strong>${groupedRows}<small class="feeling-change-caution">Ces changements décrivent une évolution autour du repas, sans établir qu’il en est la cause.</small></span>`;
+    if (compact) {
+      const visibleRows = rows.slice(0, 4),
+        hiddenCount = Math.max(0, rows.length - visibleRows.length);
+      return `<span class="feeling-change-pills meal-card-feeling-compact"><strong>Évolution</strong><span class="meal-card-feeling-chip-list">${visibleRows.map((row) => row.html).join("")}${hiddenCount ? `<span class="feeling-change-pill feeling-change-more" title="${hiddenCount} autre${hiddenCount > 1 ? "s" : ""} ressenti${hiddenCount > 1 ? "s" : ""}">+${hiddenCount}</span>` : ""}</span></span>`;
+    }
+    return `<span class="feeling-changes"><strong>Évolution après le repas</strong>${groupedRows}<small class="feeling-change-caution">Ces changements décrivent une évolution autour du repas, sans établir qu’il en est la cause.</small></span>`;
   }
   function updateMealFeelingsOverview(meal = null) {
     const collapsed = $("#mealFeelingsCollapsedPreview"),
