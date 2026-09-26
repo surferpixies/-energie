@@ -660,6 +660,8 @@ function formatSleepDuration(hours) {
     d.observations = (Array.isArray(d.observations) ? d.observations : []).map(
       (o) => normalObservation(o, key),
     );
+    d.sleepStartTime = typeof d.sleepStartTime === "string" ? d.sleepStartTime : "";
+    d.sleepEndTime = typeof d.sleepEndTime === "string" ? d.sleepEndTime : "";
     d.sleepTags = Array.isArray(d.sleepTags) ? d.sleepTags : [];
     d.sleepComment = typeof d.sleepComment === "string" ? d.sleepComment : "";
     d.formDrafts =
