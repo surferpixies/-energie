@@ -1619,3 +1619,68 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .meal-quick-feeling-status.is-unfavorable{color:#9f1d14}.meal-quick-feeling-status.is-unfavorable i{background:#fee4e2}
 .meal-quick-feeling-status.is-mixed{color:#8a5b13}.meal-quick-feeling-status.is-mixed i{background:#fef0c7}
 .meal-quick-feeling-status.is-missing i{background:transparent;border:1px solid var(--border)}
+
+
+/* V3.56.130 — hiérarchie détaillée : sommeil en haut, activité en bas */
+.sleep-card-wide{
+  width:100%;
+  margin-bottom:10px;
+  padding:10px 13px;
+  gap:7px;
+}
+.sleep-card-wide .wellness-head{
+  grid-template-columns:34px minmax(0,1fr) auto;
+  gap:9px;
+}
+.sleep-card-wide .wellness-icon{
+  font-size:1.25rem;
+}
+.sleep-card-wide .wellness-head>div{
+  min-width:0;
+}
+.sleep-card-wide .wellness-head small{
+  font-size:.62rem;
+}
+.sleep-card-wide .wellness-head strong{
+  font-size:.9rem;
+}
+.sleep-time-summary{
+  display:block;
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.6rem;
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.sleep-card-wide .sleep-bar{
+  height:5px;
+}
+.sleep-card-wide .sleep-chip-row{
+  gap:4px;
+}
+.sleep-card-wide .sleep-chip{
+  padding:3px 6px;
+  font-size:.58rem;
+}
+.activity-card-wide{
+  width:100%;
+  margin-bottom:10px;
+  display:grid;
+  gap:8px;
+}
+.activity-card-wide .activity-card{
+  padding:0;
+  border:0;
+  box-shadow:none;
+  background:transparent;
+}
+.sleep-time-fields{
+  align-items:end;
+}
+@media(max-width:520px){
+  .sleep-card-wide{padding:9px 11px}
+  .sleep-card-wide .wellness-head{grid-template-columns:30px minmax(0,1fr) auto}
+  .sleep-card-wide .wellness-icon{font-size:1.15rem}
+}
