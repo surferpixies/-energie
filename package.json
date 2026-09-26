@@ -18,7 +18,8 @@
     "build:android-web": "node scripts/build-android-web.mjs",
     "android:add": "npm run build:android-web && npx cap add android",
     "android:sync": "npm run build:android-web && npx cap sync android",
-    "android:open": "npx cap open android"
+    "android:open": "npx cap open android",
+    "android:assets": "npx @capacitor/assets generate --android --iconBackgroundColor '#eef8e7' --iconBackgroundColorDark '#eef8e7'"
   },
   "dependencies": {
     "@capacitor/core": "^8.0.0",
