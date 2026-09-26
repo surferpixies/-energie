@@ -1608,3 +1608,14 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
     max-width:165px;
   }
 }
+
+
+/* V3.56.129 feeling status */
+.meal-quick-card.has-feeling-status{align-content:center;min-height:98px}
+.meal-quick-feeling-status{grid-column:1/-1;display:flex;align-items:center;gap:7px;min-width:0;padding-top:7px;border-top:1px solid var(--border);color:var(--muted);font-size:.62rem;font-weight:800;line-height:1.2}
+.meal-quick-feeling-status i{flex:0 0 auto;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;font-style:normal;font-size:.72rem;font-weight:950;background:var(--surface2)}
+.meal-quick-feeling-status span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meal-quick-feeling-status.is-favorable{color:#067647}.meal-quick-feeling-status.is-favorable i{background:#dcfae6}
+.meal-quick-feeling-status.is-unfavorable{color:#9f1d14}.meal-quick-feeling-status.is-unfavorable i{background:#fee4e2}
+.meal-quick-feeling-status.is-mixed{color:#8a5b13}.meal-quick-feeling-status.is-mixed i{background:#fef0c7}
+.meal-quick-feeling-status.is-missing i{background:transparent;border:1px solid var(--border)}
