@@ -13230,7 +13230,7 @@ function formatSleepDuration(hours) {
     if (endMinutes < startMinutes) endMinutes += 24 * 60;
 
     const duration = (endMinutes - startMinutes) / 60;
-    $("#sleepHours").value = Number(duration.toFixed(1));
+    $("#sleepHours").value = formatSleepDuration(duration);
   }
 
   $("#sleepStartTime")?.addEventListener("input", updateSleepHoursFromTimes);
@@ -13239,7 +13239,7 @@ function formatSleepDuration(hours) {
   function openSleep() {
     const readOnly = professionalClientReadOnly(),
       d = ensureDay(db, selectedDate);
-    $("#sleepHours").value = d.sleepHours ?? "";
+    $("#sleepHours").value = d.sleepHours != null ? formatSleepDuration(d.sleepHours) : "";
     $("#sleepStartTime").value = d.sleepStartTime || "";
     $("#sleepEndTime").value = d.sleepEndTime || "";
     $("#sleepComment").value = d.sleepComment || "";
@@ -13975,13 +13975,30 @@ function formatSleepDuration(hours) {
     $("#globalObservationDialog").close();
     render();
   };
+  function parseSleepDurationInput(value = "") {
+    const raw = String(value || "").trim().toLowerCase().replace(",", ".");
+    if (!raw) return null;
+
+    const hourMatch = raw.match(/(\d+(?:\.\d+)?)\s*h/);
+    const minuteMatch = raw.match(/(\d+)\s*(?:min|m)\b/);
+    if (hourMatch || minuteMatch) {
+      const hours = hourMatch ? Number(hourMatch[1]) : 0;
+      const minutes = minuteMatch ? Number(minuteMatch[1]) : 0;
+      if (!Number.isFinite(hours) || !Number.isFinite(minutes) || minutes >= 60)
+        return NaN;
+      return hours + minutes / 60;
+    }
+
+    return parseAppNumber(raw);
+  }
+
   $("#sleepForm").onsubmit = (e) => {
     if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     e.preventDefault();
     const d = ensureDay(db, selectedDate),
-      hours = parseAppNumber($("#sleepHours").value);
-    if (hours !== null && (hours < 0 || hours > 24))
-      return alert("Entre une durée de sommeil entre 0 et 24 heures.");
+      hours = parseSleepDurationInput($("#sleepHours").value);
+    if (hours !== null && (!Number.isFinite(hours) || hours < 0 || hours > 24))
+      return alert("Entre une durée de sommeil valide entre 0 et 24 heures.");
     d.sleepHours = hours;
     d.sleepStartTime = $("#sleepStartTime").value || "";
     d.sleepEndTime = $("#sleepEndTime").value || "";
