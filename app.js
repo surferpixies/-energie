@@ -638,6 +638,8 @@ function formatSleepDuration(hours) {
       store.days[key] = {
         date: key,
         sleepHours: null,
+        sleepStartTime: "",
+        sleepEndTime: "",
         sleepTags: [],
         sleepComment: "",
         water: 0,
