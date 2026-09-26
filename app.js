@@ -5988,6 +5988,51 @@ function formatSleepDuration(hours) {
     };
     $("#snackManagerDialog").showModal();
   }
+  function mealFeelingStatus(meal) {
+    if (!meal || !isFeelingEligible(meal)) return null;
+    const before = normalizeFeelingScores(feelingScoresFor(meal, "before"));
+    const after = normalizeFeelingScores(feelingScoresFor(meal, "after"));
+    const hasBefore = Object.keys(before).length > 0;
+    const hasAfter = !!meal.feeling && Object.keys(after).length > 0;
+
+    if (!hasBefore && !hasAfter) return { tone: "missing", icon: "○", label: "Ressentis à compléter" };
+    if (!hasBefore) return { tone: "missing", icon: "○", label: "Ressenti avant non consigné" };
+    if (!hasAfter) return { tone: "missing", icon: "○", label: "Ressenti après à compléter" };
+
+    const beforePositive = Object.entries(before).some(([id, score]) => POSITIVE_FEELING_IDS.has(id) && Number(score) > 0);
+    const afterPositive = Object.entries(after).some(([id, score]) => POSITIVE_FEELING_IDS.has(id) && Number(score) > 0);
+    const ids = new Set([...Object.keys(before), ...Object.keys(after)]);
+    let favorable = 0, unfavorable = 0, comparable = 0;
+
+    ids.forEach((id) => {
+      const tag = FEELING_TAGS.find((item) => item.id === id);
+      if (!tag) return;
+      const start = Object.prototype.hasOwnProperty.call(before, id)
+        ? before[id]
+        : beforePositive && tag.group === "symptom" ? 0 : null;
+      const end = Object.prototype.hasOwnProperty.call(after, id)
+        ? after[id]
+        : afterPositive && tag.group === "symptom" ? 0 : null;
+      if (start == null || end == null) return;
+      comparable += 1;
+      const delta = Number(end) - Number(start);
+      if (!delta) return;
+      if (tag.group === "positive") {
+        if (delta > 0) favorable += 1;
+        else unfavorable += 1;
+      } else if (tag.group === "symptom") {
+        if (delta < 0) favorable += 1;
+        else unfavorable += 1;
+      }
+    });
+
+    if (!comparable) return { tone: "stable", icon: "↔", label: "Ressentis consignés" };
+    if (favorable && unfavorable) return { tone: "mixed", icon: "↕", label: "Évolution mixte" };
+    if (favorable) return { tone: "favorable", icon: "↗", label: "Évolution favorable" };
+    if (unfavorable) return { tone: "unfavorable", icon: "↘", label: "Évolution moins favorable" };
+    return { tone: "stable", icon: "↔", label: "Ressentis stables" };
+  }
+
   function mealQuickCard(type, icon, meals) {
     const found = mealTypeSummary(meals, type),
       main = found[0],
