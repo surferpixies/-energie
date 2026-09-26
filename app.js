@@ -638,6 +638,8 @@ function formatSleepDuration(hours) {
       store.days[key] = {
         date: key,
         sleepHours: null,
+        sleepStartTime: "",
+        sleepEndTime: "",
         sleepTags: [],
         sleepComment: "",
         water: 0,
@@ -658,6 +660,8 @@ function formatSleepDuration(hours) {
     d.observations = (Array.isArray(d.observations) ? d.observations : []).map(
       (o) => normalObservation(o, key),
     );
+    d.sleepStartTime = typeof d.sleepStartTime === "string" ? d.sleepStartTime : "";
+    d.sleepEndTime = typeof d.sleepEndTime === "string" ? d.sleepEndTime : "";
     d.sleepTags = Array.isArray(d.sleepTags) ? d.sleepTags : [];
     d.sleepComment = typeof d.sleepComment === "string" ? d.sleepComment : "";
     d.formDrafts =
@@ -5988,6 +5992,51 @@ function formatSleepDuration(hours) {
     };
     $("#snackManagerDialog").showModal();
   }
+  function mealFeelingStatus(meal) {
+    if (!meal || !isFeelingEligible(meal)) return null;
+    const before = normalizeFeelingScores(feelingScoresFor(meal, "before"));
+    const after = normalizeFeelingScores(feelingScoresFor(meal, "after"));
+    const hasBefore = Object.keys(before).length > 0;
+    const hasAfter = !!meal.feeling && Object.keys(after).length > 0;
+
+    if (!hasBefore && !hasAfter) return { tone: "missing", icon: "○", label: "Ressentis à compléter" };
+    if (!hasBefore) return { tone: "missing", icon: "○", label: "Ressenti avant non consigné" };
+    if (!hasAfter) return { tone: "missing", icon: "○", label: "Ressenti après à compléter" };
+
+    const beforePositive = Object.entries(before).some(([id, score]) => POSITIVE_FEELING_IDS.has(id) && Number(score) > 0);
+    const afterPositive = Object.entries(after).some(([id, score]) => POSITIVE_FEELING_IDS.has(id) && Number(score) > 0);
+    const ids = new Set([...Object.keys(before), ...Object.keys(after)]);
+    let favorable = 0, unfavorable = 0, comparable = 0;
+
+    ids.forEach((id) => {
+      const tag = FEELING_TAGS.find((item) => item.id === id);
+      if (!tag) return;
+      const start = Object.prototype.hasOwnProperty.call(before, id)
+        ? before[id]
+        : beforePositive && tag.group === "symptom" ? 0 : null;
+      const end = Object.prototype.hasOwnProperty.call(after, id)
+        ? after[id]
+        : afterPositive && tag.group === "symptom" ? 0 : null;
+      if (start == null || end == null) return;
+      comparable += 1;
+      const delta = Number(end) - Number(start);
+      if (!delta) return;
+      if (tag.group === "positive") {
+        if (delta > 0) favorable += 1;
+        else unfavorable += 1;
+      } else if (tag.group === "symptom") {
+        if (delta < 0) favorable += 1;
+        else unfavorable += 1;
+      }
+    });
+
+    if (!comparable) return { tone: "stable", icon: "↔", label: "Ressentis consignés" };
+    if (favorable && unfavorable) return { tone: "mixed", icon: "↕", label: "Évolution mixte" };
+    if (favorable) return { tone: "favorable", icon: "↗", label: "Évolution favorable" };
+    if (unfavorable) return { tone: "unfavorable", icon: "↘", label: "Évolution moins favorable" };
+    return { tone: "stable", icon: "↔", label: "Ressentis stables" };
+  }
+
   function mealQuickCard(type, icon, meals) {
     const found = mealTypeSummary(meals, type),
       main = found[0],
@@ -6007,10 +6056,8 @@ function formatSleepDuration(hours) {
         : "+";
     const actionLabel =
       main && type !== "Collation" ? `Modifier ${type}` : `Ajouter ${type}`;
-    const visibleChanges = main
-      ? feelingChangesHtml(feelingScoresFor(main, "before"), feelingScoresFor(main, "after"), !!main.feeling, true)
-      : "";
-    return `<button class="meal-quick-card ${done ? "is-complete" : ""} ${visibleChanges ? "has-feeling-changes" : ""}" data-quick-meal="${esc(type)}" ${main && type !== "Collation" ? `data-edit-meal="${main.id}"` : ""} aria-label="${esc(actionLabel)}"><span class="meal-quick-icon">${done && type !== "Collation" ? "✓" : icon}</span><span><strong>${mealTypeHtml(type)}</strong><small${main && type !== "Collation" ? ' translate="no"' : ""}>${subtitle}</small></span><span class="meal-quick-action">${actionIcon}</span>${visibleChanges ? `<span class="meal-quick-feeling-changes">${visibleChanges}</span>` : ""}</button>`;
+    const feelingStatus = main ? mealFeelingStatus(main) : null;
+    return `<button class="meal-quick-card ${done ? "is-complete" : ""} ${feelingStatus ? "has-feeling-status" : ""}" data-quick-meal="${esc(type)}" ${main && type !== "Collation" ? `data-edit-meal="${main.id}"` : ""} aria-label="${esc(actionLabel)}"><span class="meal-quick-icon">${done && type !== "Collation" ? "✓" : icon}</span><span><strong>${mealTypeHtml(type)}</strong><small${main && type !== "Collation" ? ' translate="no"' : ""}>${subtitle}</small></span><span class="meal-quick-action">${actionIcon}</span>${feelingStatus ? `<span class="meal-quick-feeling-status is-${feelingStatus.tone}"><i aria-hidden="true">${feelingStatus.icon}</i><span>${esc(feelingStatus.label)}</span></span>` : ""}</button>`;
   }
   function journalMaxDate() {
     if (db.settings?.demoMode) {
@@ -8031,7 +8078,7 @@ function formatSleepDuration(hours) {
         Object.keys(feelingScoresFor(meal, "before")).length || meal.feeling,
       ).length,
       sleepRecorded = day.sleepHours != null || (day.sleepTags || []).length > 0 || String(day.sleepComment || "").trim(),
-      sleepPrompt = sleepRecorded ? "" : `<button type="button" class="journal-summary-action journal-summary-sleep needs-brain-action sleep-needs-brain-action" id="journalSummarySleep"><span class="energy-action-brain sleep-energy-action-brain" aria-hidden="true">🧠</span><span class="sleep-summary-copy"><span>À noter une fois aujourd’hui</span><strong>Sommeil</strong><small>Durée, qualité ou commentaire</small></span><span class="summary-action-watermark" aria-hidden="true">🛌</span><span class="summary-action-plus" aria-hidden="true">+</span></button>`,
+      sleepPrompt = sleepRecorded ? "" : `<button type="button" class="journal-summary-action journal-summary-sleep needs-brain-action sleep-needs-brain-action" id="journalSummarySleep"><span class="energy-action-brain sleep-energy-action-brain" aria-hidden="true">🧠</span><span class="sleep-summary-copy"><span>À noter une fois aujourd’hui</span><strong>Sommeil</strong><small>Durée, qualité ou commentaire</small></span><span class="summary-sleep-visual" aria-hidden="true"><svg viewBox="0 0 84 68" role="presentation"><circle class="sleep-moon" cx="45" cy="34" r="22"/><circle class="sleep-moon-cut" cx="56" cy="24" r="22"/><circle class="sleep-star sleep-star-a" cx="18" cy="19" r="2.2"/><circle class="sleep-star sleep-star-b" cx="24" cy="42" r="1.6"/><path class="sleep-star sleep-star-c" d="M72 17l1.8 3.7 4 .6-2.9 2.8.7 4-3.6-1.9-3.6 1.9.7-4-2.9-2.8 4-.6z"/></svg></span><span class="summary-action-plus" aria-hidden="true">+</span></button>`,
       dueFeeling = pendingFeelings().some((meal) => meal.date === selectedDate),
       feelingBrain = dueFeeling ? `<span class="energy-action-brain summary-energy-action-brain" aria-hidden="true">🧠</span>` : "";
     return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}<button type="button" class="journal-summary-action journal-summary-action--meal" id="journalSummaryMeal"><span>Ajouter un</span><strong>Repas</strong><span class="summary-action-watermark" aria-hidden="true">🍲</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${meals.length} repas ou collation${meals.length !== 1 ? "s" : ""} cette journée</small></button><button type="button" class="journal-summary-action journal-summary-action--feeling ${dueFeeling ? "needs-brain-action feeling-needs-brain-action" : ""}" id="journalSummaryFeeling">${feelingBrain}<span class="feeling-summary-copy"><span>${dueFeeling ? "À compléter" : "Ajouter un"}</span><strong>Ressenti</strong><small>${dueFeeling ? "Un ressenti après est maintenant attendu" : feelingCount ? `${feelingCount} repas documenté${feelingCount > 1 ? "s" : ""}` : "Avant, après ou hors repas"}</small></span><span class="summary-action-watermark" aria-hidden="true">😬</span><span class="summary-action-plus" aria-hidden="true">+</span></button>${summaryActivityHtml(day)}${summaryHydrationHtml(day)}${stepsProgressHtml(day, true)}</div></section>`;
@@ -8132,7 +8179,7 @@ function formatSleepDuration(hours) {
       (d.sleepTags || []).filter((x) => x !== "none").length - 2,
     );
     $("#app").innerHTML =
-      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${isFuture ? '<aside class="future-meal-planning-note"><span aria-hidden="true">📅</span><div><strong>Planification de repas</strong><small>Tu peux préparer tes repas jusqu’à 2 jours d’avance. Ils ne seront pris en compte dans les Observations qu’une fois la date arrivée.</small></div></aside>' : ""}${clientProfessionalNoteJournalHtml()}${dailyMacroSummaryHtml(meals)}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<section class="wellbeing-detail-grid"><button class="card sleep-card edit-sleep"><div class="wellness-head"><span class="wellness-icon">😴</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? formatSleepDuration(d.sleepHours) : "À noter"}</strong></div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><div class="card activity-card-with-steps"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div></section>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
+      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${isFuture ? '<aside class="future-meal-planning-note"><span aria-hidden="true">📅</span><div><strong>Planification de repas</strong><small>Tu peux préparer tes repas jusqu’à 2 jours d’avance. Ils ne seront pris en compte dans les Observations qu’une fois la date arrivée.</small></div></aside>' : ""}${clientProfessionalNoteJournalHtml()}${dailyMacroSummaryHtml(meals)}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<button class="card sleep-card sleep-card-wide edit-sleep"><div class="wellness-head"><span class="wellness-icon">🌙</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? formatSleepDuration(d.sleepHours) : "À noter"}</strong>${d.sleepStartTime || d.sleepEndTime ? `<span class="sleep-time-summary">${d.sleepStartTime ? `Coucher ${esc(d.sleepStartTime)}` : ""}${d.sleepStartTime && d.sleepEndTime ? " · " : ""}${d.sleepEndTime ? `Réveil ${esc(d.sleepEndTime)}` : ""}</span>` : ""}</div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<div class="card activity-card-with-steps activity-card-wide"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
     $("#previousDay").onclick = () => changeJournalDay(-1);
     if (!$("#nextDay").disabled)
       $("#nextDay").onclick = () => changeJournalDay(1);
@@ -12818,9 +12865,12 @@ function formatSleepDuration(hours) {
     });
     if (!rows.length) return "";
     const groupedRows = feelingGroupsHtml(rows, (row) => row.html);
-    return compact
-      ? `<span class="feeling-change-pills"><strong>Évolution</strong><span>${groupedRows}</span></span>`
-      : `<span class="feeling-changes"><strong>Évolution après le repas</strong>${groupedRows}<small class="feeling-change-caution">Ces changements décrivent une évolution autour du repas, sans établir qu’il en est la cause.</small></span>`;
+    if (compact) {
+      const visibleRows = rows.slice(0, 4),
+        hiddenCount = Math.max(0, rows.length - visibleRows.length);
+      return `<span class="feeling-change-pills meal-card-feeling-compact"><strong>Évolution</strong><span class="meal-card-feeling-chip-list">${visibleRows.map((row) => row.html).join("")}${hiddenCount ? `<span class="feeling-change-pill feeling-change-more" title="${hiddenCount} autre${hiddenCount > 1 ? "s" : ""} ressenti${hiddenCount > 1 ? "s" : ""}">+${hiddenCount}</span>` : ""}</span></span>`;
+    }
+    return `<span class="feeling-changes"><strong>Évolution après le repas</strong>${groupedRows}<small class="feeling-change-caution">Ces changements décrivent une évolution autour du repas, sans établir qu’il en est la cause.</small></span>`;
   }
   function updateMealFeelingsOverview(meal = null) {
     const collapsed = $("#mealFeelingsCollapsedPreview"),
@@ -13160,10 +13210,38 @@ function formatSleepDuration(hours) {
     );
     updateActivityEstimate();
   }
+  function updateSleepHoursFromTimes() {
+    const start = $("#sleepStartTime")?.value || "";
+    const end = $("#sleepEndTime")?.value || "";
+    if (!start || !end) return;
+
+    const [startHour, startMinute] = start.split(":").map(Number);
+    const [endHour, endMinute] = end.split(":").map(Number);
+    if (
+      !Number.isFinite(startHour) ||
+      !Number.isFinite(startMinute) ||
+      !Number.isFinite(endHour) ||
+      !Number.isFinite(endMinute)
+    )
+      return;
+
+    const startMinutes = startHour * 60 + startMinute;
+    let endMinutes = endHour * 60 + endMinute;
+    if (endMinutes < startMinutes) endMinutes += 24 * 60;
+
+    const duration = (endMinutes - startMinutes) / 60;
+    $("#sleepHours").value = formatSleepDuration(duration);
+  }
+
+  $("#sleepStartTime")?.addEventListener("input", updateSleepHoursFromTimes);
+  $("#sleepEndTime")?.addEventListener("input", updateSleepHoursFromTimes);
+
   function openSleep() {
     const readOnly = professionalClientReadOnly(),
       d = ensureDay(db, selectedDate);
-    $("#sleepHours").value = d.sleepHours ?? "";
+    $("#sleepHours").value = d.sleepHours != null ? formatSleepDuration(d.sleepHours) : "";
+    $("#sleepStartTime").value = d.sleepStartTime || "";
+    $("#sleepEndTime").value = d.sleepEndTime || "";
     $("#sleepComment").value = d.sleepComment || "";
     $$("[data-sleep-tag]").forEach((input) => {
       input.checked = (d.sleepTags || []).includes(input.value);
@@ -13897,15 +13975,34 @@ function formatSleepDuration(hours) {
     $("#globalObservationDialog").close();
     render();
   };
+  function parseSleepDurationInput(value = "") {
+    const raw = String(value || "").trim().toLowerCase().replace(",", ".");
+    if (!raw) return null;
+
+    const hourMatch = raw.match(/(\d+(?:\.\d+)?)\s*h/);
+    const minuteMatch = raw.match(/(\d+)\s*(?:min|m)\b/);
+    if (hourMatch || minuteMatch) {
+      const hours = hourMatch ? Number(hourMatch[1]) : 0;
+      const minutes = minuteMatch ? Number(minuteMatch[1]) : 0;
+      if (!Number.isFinite(hours) || !Number.isFinite(minutes) || minutes >= 60)
+        return NaN;
+      return hours + minutes / 60;
+    }
+
+    return parseAppNumber(raw);
+  }
+
   $("#sleepForm").onsubmit = (e) => {
     if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     e.preventDefault();
     const d = ensureDay(db, selectedDate),
-      hours = parseAppNumber($("#sleepHours").value);
-    if (hours !== null && (hours < 0 || hours > 24))
-      return alert("Entre une durée de sommeil entre 0 et 24 heures.");
+      hours = parseSleepDurationInput($("#sleepHours").value);
+    if (hours !== null && (!Number.isFinite(hours) || hours < 0 || hours > 24))
+      return alert("Entre une durée de sommeil valide entre 0 et 24 heures.");
     d.sleepHours = hours;
-    d.sleepTags = $$("[data-sleep-tag]:checked").map((input) => input.value);
+    d.sleepStartTime = $("#sleepStartTime").value || "";
+    d.sleepEndTime = $("#sleepEndTime").value || "";
+    d.sleepTags = [...document.querySelectorAll("[data-sleep-tag]:checked")].map((input) => input.value);
     d.sleepComment = $("#sleepComment").value.trim();
     setDayChanged(selectedDate);
     $("#sleepDialog").close();

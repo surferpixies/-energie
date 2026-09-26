@@ -1552,3 +1552,135 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .pilot-feedback-link{position:fixed;z-index:9999;top:max(10px,calc(env(safe-area-inset-top) + 6px));left:50%;transform:translateX(-50%);border:1px solid color-mix(in srgb,var(--accent) 24%,var(--border));background:color-mix(in srgb,var(--surface) 94%,transparent);color:var(--text);box-shadow:0 6px 18px rgba(30,50,38,.12);backdrop-filter:blur(14px);border-radius:999px;padding:7px 11px;display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:850;cursor:pointer;max-width:calc(100vw - 150px);white-space:nowrap}.pilot-feedback-link span:last-child{overflow:hidden;text-overflow:ellipsis}
 .pilot-feedback-dialog{width:min(92vw,520px);max-height:min(88dvh,680px)}.pilot-feedback-card{gap:9px;padding:16px}.pilot-feedback-card h2{margin:0;font-size:1.15rem}.pilot-feedback-card>p{margin:0}.pilot-feedback-card textarea{min-height:72px;max-height:110px}.pilot-feedback-types{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.pilot-feedback-types button{border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:12px;padding:8px 6px;display:flex;gap:5px;align-items:center;justify-content:center;text-align:center;cursor:pointer;min-height:44px}.pilot-feedback-types button span{font-size:1rem}.pilot-feedback-types button strong{font-size:.68rem;line-height:1.12}.pilot-feedback-types button.is-selected{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 12%,transparent)}.pilot-feedback-attachment{margin:0}.pilot-feedback-context{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px 8px;padding:8px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)}.pilot-feedback-context>strong{grid-column:1/-1;font-size:.68rem}.pilot-feedback-context span{display:flex;align-items:flex-start;gap:4px;color:var(--muted);font-size:.64rem;min-width:0}.pilot-feedback-context b{color:var(--text);font-weight:750;overflow:hidden;text-overflow:ellipsis}.pilot-mode-profile-card{border-color:color-mix(in srgb,var(--accent) 20%,var(--border))}
 @media(max-width:520px){.pilot-feedback-dialog{width:min(94vw,480px);max-height:90dvh}.pilot-feedback-card{gap:7px;padding:13px}.pilot-feedback-types{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.pilot-feedback-types button{padding:7px 4px;min-height:40px;flex-direction:column;gap:2px}.pilot-feedback-types button span{font-size:.95rem}.pilot-feedback-types button strong{font-size:.61rem}.pilot-feedback-card textarea{min-height:64px;max-height:84px}.pilot-feedback-context{grid-template-columns:1fr;gap:3px;padding:7px 9px}.pilot-feedback-context>strong{grid-column:auto}.pilot-feedback-context span{font-size:.62rem}.pilot-feedback-link{max-width:calc(100vw - 170px);font-size:.66rem}}
+
+
+/* V3.56.128 — cartes de repas détaillées : ressentis compacts et stables */
+.meal-card-feeling-changes{
+  margin-top:4px;
+  min-width:0;
+}
+.meal-card-feeling-changes .meal-card-feeling-compact{
+  display:grid;
+  gap:5px;
+  padding-top:7px;
+  border-top:1px solid var(--border);
+}
+.meal-card-feeling-changes .meal-card-feeling-compact>strong{
+  font-size:.58rem;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.045em;
+}
+.meal-card-feeling-chip-list{
+  display:flex;
+  flex-wrap:wrap;
+  align-content:flex-start;
+  gap:5px;
+  max-height:57px;
+  overflow:hidden;
+}
+.meal-card-feeling-chip-list .feeling-change-pill{
+  flex:0 1 auto;
+  min-width:0;
+  max-width:min(100%,210px);
+  height:26px;
+  box-sizing:border-box;
+  padding:4px 7px;
+}
+.meal-card-feeling-chip-list .feeling-change-pill>span{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.meal-card-feeling-chip-list .feeling-change-more{
+  flex:0 0 auto;
+  min-width:34px;
+  justify-content:center;
+  color:var(--accent-strong);
+  background:color-mix(in srgb,var(--accent) 10%,var(--surface2));
+  border-color:color-mix(in srgb,var(--accent) 18%,var(--border));
+}
+@media(max-width:520px){
+  .meal-card-feeling-chip-list{
+    max-height:57px;
+  }
+  .meal-card-feeling-chip-list .feeling-change-pill{
+    max-width:165px;
+  }
+}
+
+
+/* V3.56.129 feeling status */
+.meal-quick-card.has-feeling-status{align-content:center;min-height:98px}
+.meal-quick-feeling-status{grid-column:1/-1;display:flex;align-items:center;gap:7px;min-width:0;padding-top:7px;border-top:1px solid var(--border);color:var(--muted);font-size:.62rem;font-weight:800;line-height:1.2}
+.meal-quick-feeling-status i{flex:0 0 auto;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;font-style:normal;font-size:.72rem;font-weight:950;background:var(--surface2)}
+.meal-quick-feeling-status span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meal-quick-feeling-status.is-favorable{color:#067647}.meal-quick-feeling-status.is-favorable i{background:#dcfae6}
+.meal-quick-feeling-status.is-unfavorable{color:#9f1d14}.meal-quick-feeling-status.is-unfavorable i{background:#fee4e2}
+.meal-quick-feeling-status.is-mixed{color:#8a5b13}.meal-quick-feeling-status.is-mixed i{background:#fef0c7}
+.meal-quick-feeling-status.is-missing i{background:transparent;border:1px solid var(--border)}
+
+
+/* V3.56.130 — hiérarchie détaillée : sommeil en haut, activité en bas */
+.sleep-card-wide{
+  width:100%;
+  margin-bottom:10px;
+  padding:10px 13px;
+  gap:7px;
+}
+.sleep-card-wide .wellness-head{
+  grid-template-columns:34px minmax(0,1fr) auto;
+  gap:9px;
+}
+.sleep-card-wide .wellness-icon{
+  font-size:1.25rem;
+}
+.sleep-card-wide .wellness-head>div{
+  min-width:0;
+}
+.sleep-card-wide .wellness-head small{
+  font-size:.62rem;
+}
+.sleep-card-wide .wellness-head strong{
+  font-size:.9rem;
+}
+.sleep-time-summary{
+  display:block;
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.6rem;
+  font-weight:700;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.sleep-card-wide .sleep-bar{
+  height:5px;
+}
+.sleep-card-wide .sleep-chip-row{
+  gap:4px;
+}
+.sleep-card-wide .sleep-chip{
+  padding:3px 6px;
+  font-size:.58rem;
+}
+.activity-card-wide{
+  width:100%;
+  margin-bottom:10px;
+  display:grid;
+  gap:8px;
+}
+.activity-card-wide .activity-card{
+  padding:0;
+  border:0;
+  box-shadow:none;
+  background:transparent;
+}
+.sleep-time-fields{
+  align-items:end;
+}
+@media(max-width:520px){
+  .sleep-card-wide{padding:9px 11px}
+  .sleep-card-wide .wellness-head{grid-template-columns:30px minmax(0,1fr) auto}
+  .sleep-card-wide .wellness-icon{font-size:1.15rem}
+}
