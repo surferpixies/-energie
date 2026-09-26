@@ -79,6 +79,132 @@
   pointer-events: none;
 }
 
+/* v3.56.126 — visuels Sommeil et Ressenti du sommaire */
+.summary-sleep-visual,
+.summary-feeling-visual {
+  position: absolute !important;
+  z-index: 0 !important;
+  right: .68rem;
+  top: .58rem;
+  display: block;
+  pointer-events: none;
+}
+
+.summary-sleep-visual {
+  width: 5rem;
+  height: 4rem;
+  opacity: .72;
+}
+
+.summary-sleep-visual svg,
+.summary-feeling-visual svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.summary-sleep-visual .sleep-moon {
+  fill: color-mix(in srgb, var(--accent) 66%, #dbe7c7);
+}
+
+.summary-sleep-visual .sleep-moon-cut {
+  fill: color-mix(in srgb, var(--surface) 92%, transparent);
+}
+
+.summary-sleep-visual .sleep-star {
+  fill: color-mix(in srgb, var(--accent) 78%, #f2d58b);
+  opacity: .78;
+}
+
+.summary-feeling-visual {
+  width: 6.4rem;
+  height: 4.55rem;
+  opacity: .82;
+  transform: rotate(-2deg);
+}
+
+.summary-feeling-visual .feeling-face {
+  opacity: .9;
+}
+
+.summary-feeling-visual .feeling-face-sad {
+  opacity: .72;
+}
+
+.summary-feeling-visual .feeling-line {
+  fill: none;
+  stroke: rgba(70, 66, 72, .8);
+  stroke-width: 2.15;
+  stroke-linecap: round;
+}
+
+.summary-feeling-visual .sad-brow {
+  opacity: .78;
+}
+
+.summary-feeling-visual .good-brow {
+  opacity: .7;
+}
+
+.summary-feeling-visual .good-smile {
+  stroke-width: 2.35;
+}
+
+.summary-feeling-visual .feeling-blush {
+  fill: rgba(224, 108, 103, .24);
+}
+
+.journal-summary-action--feeling {
+  padding-right: 6.25rem;
+}
+
+.journal-summary-action--feeling.feeling-needs-brain-action {
+  padding-right: 6.25rem !important;
+}
+
+.journal-summary-sleep {
+  padding-right: 6.6rem;
+}
+
+.journal-summary-sleep.sleep-needs-brain-action {
+  padding-right: 6.6rem !important;
+}
+
+html[data-theme="dark"] .summary-sleep-visual {
+  opacity: .78;
+}
+
+html[data-theme="dark"] .summary-sleep-visual .sleep-moon-cut {
+  fill: color-mix(in srgb, #20332b 92%, transparent);
+}
+
+html[data-theme="dark"] .summary-feeling-visual {
+  opacity: .86;
+}
+
+@media (max-width: 420px) {
+  .summary-feeling-visual {
+    width: 5.7rem;
+    height: 4.1rem;
+    right: .45rem;
+  }
+
+  .summary-sleep-visual {
+    width: 4.6rem;
+    height: 3.7rem;
+    right: .5rem;
+  }
+
+  .journal-summary-action--feeling {
+    padding-right: 5.5rem;
+  }
+
+  .journal-summary-sleep {
+    padding-right: 5.8rem;
+  }
+}
+
 .summary-water-glass {
   position: absolute;
   z-index: 0;
