@@ -13210,6 +13210,32 @@ function formatSleepDuration(hours) {
     );
     updateActivityEstimate();
   }
+  function updateSleepHoursFromTimes() {
+    const start = $("#sleepStartTime")?.value || "";
+    const end = $("#sleepEndTime")?.value || "";
+    if (!start || !end) return;
+
+    const [startHour, startMinute] = start.split(":").map(Number);
+    const [endHour, endMinute] = end.split(":").map(Number);
+    if (
+      !Number.isFinite(startHour) ||
+      !Number.isFinite(startMinute) ||
+      !Number.isFinite(endHour) ||
+      !Number.isFinite(endMinute)
+    )
+      return;
+
+    const startMinutes = startHour * 60 + startMinute;
+    let endMinutes = endHour * 60 + endMinute;
+    if (endMinutes < startMinutes) endMinutes += 24 * 60;
+
+    const duration = (endMinutes - startMinutes) / 60;
+    $("#sleepHours").value = Number(duration.toFixed(1));
+  }
+
+  $("#sleepStartTime")?.addEventListener("input", updateSleepHoursFromTimes);
+  $("#sleepEndTime")?.addEventListener("input", updateSleepHoursFromTimes);
+
   function openSleep() {
     const readOnly = professionalClientReadOnly(),
       d = ensureDay(db, selectedDate);
