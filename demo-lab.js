@@ -38,7 +38,12 @@
     return window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(description) || [];
   }
   function recognizedAs(description,target){
-    return !target || categoriesFor(description).includes(target);
+    if(!target) return true;
+    if(categoriesFor(description).includes(target)) return true;
+    if(target==="allium"){
+      return (window.ENERGIE_FOOD_CATEGORIES?.foodsForText?.(description)||[]).some(food=>food.id==="allium");
+    }
+    return false;
   }
 
   const commonMeals=[...new Set(Object.values(foods).flat())];
