@@ -3061,7 +3061,7 @@ function formatSleepDuration(hours) {
     if (review && !$("#cnfGuidedMealDialog")) {
       review.insertAdjacentHTML(
         "beforebegin",
-        '<dialog id="cnfGuidedMealDialog" class="cnf-guided-dialog"><section class="dialog-card cnf-guided-card"><div class="dialog-header"><div><p class="eyebrow">Saisie plus précise</p><h2>🇨🇦 Saisie guidée avec le FCÉN</h2></div><button type="button" class="icon-button close-dialog" id="closeCnfGuidedMeal" aria-label="Fermer">✕</button></div><p class="cnf-guided-intro">Recherche un aliment dans le Fichier canadien sur les éléments nutritifs de Santé Canada, choisis une quantité, puis ajoute les autres aliments du repas.</p><label class="cnf-guided-search"><span>Rechercher un aliment</span><div><span aria-hidden="true">🔎</span><input id="cnfGuidedSearch" type="search" autocomplete="off" placeholder="Ex. aubergine, œuf, fromage cottage…"></div></label><div id="cnfGuidedSearchResults" class="cnf-guided-results" aria-live="polite"></div><section id="cnfGuidedFoodEditor" class="cnf-guided-food-editor" hidden><div class="cnf-guided-selected-food"><span aria-hidden="true">🍽️</span><div><small>Aliment sélectionné</small><strong id="cnfGuidedFoodName"></strong><em id="cnfGuidedFoodEnglish"></em></div></div><div class="cnf-guided-quantity-row"><label>Quantité<input id="cnfGuidedQuantity" type="number" min="0.01" step="0.01" inputmode="decimal" value="1"></label><label>Unité<select id="cnfGuidedUnit"></select></label></div><p id="cnfGuidedGramHint" class="cnf-guided-gram-hint"></p><button type="button" class="primary" id="cnfGuidedAddFood">Ajouter cet aliment</button></section><section class="cnf-guided-basket"><div class="cnf-guided-basket-head"><div><strong>Aliments du repas</strong><small id="cnfGuidedItemCount">0 aliment</small></div><button type="button" class="text-button" id="cnfGuidedAddAnother">＋ Ajouter un autre aliment</button></div><div id="cnfGuidedItems" class="cnf-guided-items"><p class="cnf-guided-empty">Aucun aliment ajouté pour l’instant.</p></div></section><p class="muted tiny cnf-guided-note">Les valeurs sont calculées directement à partir des fiches FCÉN choisies et des quantités saisies. Pour un plat maison ou un produit de marque, la composition réelle peut tout de même varier.</p><div class="cnf-guided-actions"><button type="button" class="secondary" id="cancelCnfGuidedMeal">Annuler</button><button type="button" class="primary" id="finishCnfGuidedMeal" disabled>Terminer la saisie</button></div></section></dialog>',
+        '<dialog id="cnfGuidedMealDialog" class="cnf-guided-dialog"><section class="dialog-card cnf-guided-card"><div class="dialog-header"><div><p class="eyebrow">Saisie plus précise</p><h2>🇨🇦 Saisie guidée avec le FCÉN</h2></div><button type="button" class="icon-button close-dialog" id="closeCnfGuidedMeal" aria-label="Fermer">✕</button></div><p class="cnf-guided-intro">Recherche un aliment dans le Fichier canadien sur les éléments nutritifs de Santé Canada, choisis une quantité, puis ajoute les autres aliments du repas.</p><label class="cnf-guided-search"><span>Rechercher un aliment</span><div><span aria-hidden="true">🔎</span><input id="cnfGuidedSearch" type="search" autocomplete="off" placeholder="Ex. aubergine, œuf, fromage cottage…"></div></label><div id="cnfGuidedSearchResults" class="cnf-guided-results" aria-live="polite"></div><section id="cnfGuidedFoodEditor" class="cnf-guided-food-editor" hidden><div class="cnf-guided-selected-food"><span aria-hidden="true">🍽️</span><div><small>Aliment sélectionné</small><strong id="cnfGuidedFoodName"></strong><em id="cnfGuidedFoodEnglish"></em></div></div><div class="cnf-guided-quantity-row"><label>Quantité<input id="cnfGuidedQuantity" type="number" min="0.25" step="0.25" inputmode="decimal" value="1"></label><label>Unité<select id="cnfGuidedUnit"></select></label></div><p id="cnfGuidedGramHint" class="cnf-guided-gram-hint"></p><button type="button" class="primary" id="cnfGuidedAddFood">Ajouter cet aliment</button></section><section class="cnf-guided-basket"><div class="cnf-guided-basket-head"><div><strong>Aliments du repas</strong><small id="cnfGuidedItemCount">0 aliment</small></div><button type="button" class="text-button" id="cnfGuidedAddAnother">＋ Ajouter un autre aliment</button></div><div id="cnfGuidedItems" class="cnf-guided-items"><p class="cnf-guided-empty">Aucun aliment ajouté pour l’instant.</p></div></section><p class="muted tiny cnf-guided-note">Les valeurs sont calculées directement à partir des fiches FCÉN choisies et des quantités saisies. Pour un plat maison ou un produit de marque, la composition réelle peut tout de même varier.</p><div class="cnf-guided-actions"><button type="button" class="secondary" id="cancelCnfGuidedMeal">Annuler</button><button type="button" class="primary" id="finishCnfGuidedMeal" disabled>Terminer la saisie</button></div></section></dialog>',
       );
     }
   }
@@ -3196,21 +3196,20 @@ function formatSleepDuration(hours) {
   function renderCnfGuidedBasket() {
     const list = $("#cnfGuidedItems"),
       count = $("#cnfGuidedItemCount"),
-      finish = $("#finishCnfGuidedMeal");
+      finish = $("#finishCnfGuidedMeal"),
+      totalNutrition = guidedCnfNutrition(mealCnfGuidedDraft),
+      totalCalories = Number(totalNutrition?.calories);
     if (!list || !count || !finish) return;
-    count.textContent = `${mealCnfGuidedDraft.length} aliment${mealCnfGuidedDraft.length !== 1 ? "s" : ""}`;
+    count.textContent = `${mealCnfGuidedDraft.length} aliment${mealCnfGuidedDraft.length !== 1 ? "s" : ""}${Number.isFinite(totalCalories) ? ` · ${Math.round(totalCalories)} kcal` : ""}`;
     finish.disabled = !mealCnfGuidedDraft.length;
     list.innerHTML = mealCnfGuidedDraft.length
-      ? mealCnfGuidedDraft
-          .map(
-            (item) =>
-              `<article class="cnf-guided-item"><div><strong>${esc(item.nameFr || "Aliment FCÉN")}</strong><small>${esc(
-                item.unitKind === "g"
-                  ? `${guidedCnfNumber(item.grams)} g`
-                  : `${Number(item.quantity) === 1 ? item.unitLabel : `${guidedCnfNumber(item.quantity)} × ${item.unitLabel}`} · ${guidedCnfNumber(item.grams)} g`,
-              )}</small></div><button type="button" data-remove-cnf-guided="${esc(item.entryId)}" aria-label="Retirer ${esc(item.nameFr || "cet aliment")}">×</button></article>`,
-          )
-          .join("")
+      ? mealCnfGuidedDraft.map((item) => {
+          const calories = guidedCnfItemCalories(item);
+          const qty = item.unitKind === "g"
+            ? `${Math.round(Number(item.grams) || 0)} g`
+            : `${Number(item.quantity) === 1 ? item.unitLabel : `${guidedCnfNumber(item.quantity)} × ${item.unitLabel}`} · ≈ ${Math.round(Number(item.grams) || 0)} g`;
+          return `<article class="cnf-guided-item"><div><strong>${esc(item.nameFr || "Aliment FCÉN")}</strong><small>${esc(qty)}</small></div>${calories != null ? `<span class="cnf-guided-item-kcal">${calories} kcal</span>` : ""}<button type="button" data-remove-cnf-guided="${esc(item.entryId)}" aria-label="Retirer ${esc(item.nameFr || "cet aliment")}">×</button></article>`;
+        }).join("")
       : '<p class="cnf-guided-empty">Aucun aliment ajouté pour l’instant.</p>';
     $$("[data-remove-cnf-guided]").forEach((button) => {
       button.onclick = () => {
@@ -3231,17 +3230,31 @@ function formatSleepDuration(hours) {
     if (editor) editor.hidden = true;
     if (focus) setTimeout(() => search?.focus(), 30);
   }
+  function updateCnfGuidedQuantityRules() {
+    const quantity = $("#cnfGuidedQuantity"),
+      unit = $("#cnfGuidedUnit");
+    if (!quantity || !unit) return;
+    const grams = unit.value === "g";
+    quantity.min = grams ? "1" : "0.25";
+    quantity.step = grams ? "1" : "0.25";
+    quantity.inputMode = grams ? "numeric" : "decimal";
+  }
   function updateCnfGuidedGramHint() {
     const quantity = Number($("#cnfGuidedQuantity")?.value),
       option = $("#cnfGuidedUnit")?.selectedOptions?.[0],
       gramsPerUnit = Number(option?.dataset.grams || 1),
-      grams = quantity * gramsPerUnit,
+      rawGrams = quantity * gramsPerUnit,
+      grams = Number.isFinite(rawGrams) && rawGrams > 0
+        ? Math.max(1, Math.round(rawGrams))
+        : null,
+      calories = grams != null && mealCnfGuidedSelected
+        ? guidedCnfItemCalories({ cnfFoodId: mealCnfGuidedSelected.id, grams })
+        : null,
       hint = $("#cnfGuidedGramHint");
     if (!hint) return;
-    hint.textContent =
-      Number.isFinite(grams) && grams > 0
-        ? `Équivalent utilisé pour le calcul : ${guidedCnfNumber(grams)} g`
-        : "Entre une quantité valide.";
+    hint.textContent = grams != null
+      ? `Équivalent utilisé pour le calcul : ${grams} g${calories != null ? ` · ${calories} kcal` : ""}`
+      : "Entre une quantité valide.";
   }
   function selectCnfGuidedFood(id) {
     const api = window.ENERGIE_CNF_SEARCH,
@@ -3271,6 +3284,7 @@ function formatSleepDuration(hours) {
     ].join("");
     $("#cnfGuidedQuantity").value = portions.length ? "1" : "100";
     if (!portions.length) unit.value = "g";
+    updateCnfGuidedQuantityRules();
     $("#cnfGuidedFoodEditor").hidden = false;
     updateCnfGuidedGramHint();
   }
@@ -14413,6 +14427,7 @@ function formatSleepDuration(hours) {
   $("#cnfGuidedUnit").addEventListener("change", () => {
     $("#cnfGuidedQuantity").value =
       $("#cnfGuidedUnit").value === "g" ? "100" : "1";
+    updateCnfGuidedQuantityRules();
     updateCnfGuidedGramHint();
   });
   $("#cnfGuidedQuantity").addEventListener("input", updateCnfGuidedGramHint);
