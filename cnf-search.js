@@ -122,7 +122,7 @@
     // Le FCÉN nomme souvent les aliments comme « Poisson, tilapia, ... ».
     // Permettre un nom simple (« tilapia ») s'il apparaît comme mot entier,
     // tout en laissant l'étape d'ambiguïté refuser les correspondances serrées.
-    const queryWords = query.split(" ").filter((word) => word.length >= 4);
+    const queryWords = query.split(" ").filter((word) => word.length >= 3);
     const candidateText = meta.candidateText;
     if (queryWords.length && queryWords.every((word) => candidateText.includes(` ${word} `))) {
       score = Math.max(score, 690 + queryWords.length * 35);
