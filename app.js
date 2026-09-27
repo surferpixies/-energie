@@ -359,6 +359,9 @@
     mealAiSuggestionText = "",
     mealNutritionPreviewTimer = null,
     mealNutritionManuallyEdited = false,
+    mealCnfGuidedDraft = [],
+    mealCnfGuidedSelected = null,
+    mealCnfGuidedSearchTimer = null,
     mealFoodReview = null,
     authMode = "login",
     pendingSignupEmail = "",
@@ -814,6 +817,25 @@ function formatSleepDuration(hours) {
       eatingReasonOther: eatingReasonState.other,
       notes: m.notes || "",
       nutrition: normalNutrition(m.nutrition || m.macros),
+      cnfItems: (Array.isArray(m.cnfItems) ? m.cnfItems : [])
+        .map((item) => {
+          const grams = Number(item?.grams);
+          if (!item?.cnfFoodId || !Number.isFinite(grams) || grams <= 0)
+            return null;
+          return {
+            entryId: item.entryId || uid(),
+            cnfFoodId: String(item.cnfFoodId),
+            nameFr: String(item.nameFr || ""),
+            nameEn: String(item.nameEn || ""),
+            grams: Math.round(grams * 10) / 10,
+            quantity: Number(item.quantity) > 0 ? Number(item.quantity) : null,
+            unitKind: String(item.unitKind || "g"),
+            unitLabel: String(item.unitLabel || "g"),
+            gramsPerUnit:
+              Number(item.gramsPerUnit) > 0 ? Number(item.gramsPerUnit) : 1,
+          };
+        })
+        .filter(Boolean),
       foodReview:
         m.foodReview || m.food_review || rawFeeling?.foodReview || null,
       photos: (() => {
@@ -1210,6 +1232,7 @@ function formatSleepDuration(hours) {
       updateEatingReasonUi();
       updateMealFeelingsOverview();
       updateMealCompositionReview();
+      updateMealCnfLinkedStatus();
     }
     if (form.id === "activityForm") updateActivityEstimate();
     if (["feelingForm", "missingBeforeForm"].includes(form.id))
@@ -2967,6 +2990,263 @@ function formatSleepDuration(hours) {
       estimated: a.estimated || b.estimated,
     });
   }
+  function mealCnfItemsFromField() {
+    try {
+      const raw = JSON.parse($("#mealCnfItems")?.value || "[]");
+      return Array.isArray(raw)
+        ? raw
+            .map((item) => {
+              const grams = Number(item?.grams);
+              if (!item?.cnfFoodId || !Number.isFinite(grams) || grams <= 0)
+                return null;
+              return {
+                entryId: item.entryId || uid(),
+                cnfFoodId: String(item.cnfFoodId),
+                nameFr: String(item.nameFr || ""),
+                nameEn: String(item.nameEn || ""),
+                grams: Math.round(grams * 10) / 10,
+                quantity: Number(item.quantity) > 0 ? Number(item.quantity) : null,
+                unitKind: String(item.unitKind || "g"),
+                unitLabel: String(item.unitLabel || "g"),
+                gramsPerUnit:
+                  Number(item.gramsPerUnit) > 0 ? Number(item.gramsPerUnit) : 1,
+              };
+            })
+            .filter(Boolean)
+        : [];
+    } catch (_) {
+      return [];
+    }
+  }
+  function setMealCnfItemsField(items = []) {
+    const field = $("#mealCnfItems");
+    if (field) field.value = JSON.stringify(Array.isArray(items) ? items : []);
+    updateMealCnfLinkedStatus();
+  }
+  function guidedCnfNumber(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "";
+    return String(Math.round(n * 10) / 10).replace(".", ",");
+  }
+  function guidedCnfFoodText(item) {
+    const name = String(item?.nameFr || "aliment")
+      .replace(/\s*,\s*/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLocaleLowerCase("fr-CA");
+    return `${guidedCnfNumber(item?.grams)} g ${name}`;
+  }
+  function guidedCnfDescription(items = mealCnfItemsFromField()) {
+    return (items || []).map(guidedCnfFoodText).filter(Boolean).join(", ");
+  }
+  function guidedCnfNutrition(items = mealCnfItemsFromField()) {
+    const api = window.ENERGIE_CNF_SEARCH;
+    if (!api?.nutritionForGrams || !items?.length) return null;
+    const nutrientKeys = [
+      "calories",
+      "protein",
+      "carbs",
+      "fat",
+      "fiber",
+      "sugars",
+      "sodium",
+    ];
+    const total = Object.fromEntries(nutrientKeys.map((key) => [key, 0]));
+    let matched = 0;
+    for (const item of items) {
+      const nutrition = api.nutritionForGrams(item.cnfFoodId, item.grams);
+      if (!nutrition) continue;
+      matched += 1;
+      nutrientKeys.forEach((key) => {
+        const value = Number(nutrition[key]);
+        if (Number.isFinite(value)) total[key] += value;
+      });
+    }
+    if (!matched) return null;
+    nutrientKeys.forEach((key) => {
+      total[key] = Math.round(total[key] * 10) / 10;
+    });
+    return {
+      ...total,
+      source: "cnf",
+      confidence: "high",
+      basis: `${matched} aliment${matched !== 1 ? "s" : ""} lié${matched !== 1 ? "s" : ""} au FCÉN · quantités saisies`,
+      estimated: true,
+    };
+  }
+  function currentGuidedCnfNutrition() {
+    const items = mealCnfItemsFromField();
+    if (!items.length) return null;
+    const current = $("#mealDescription")?.value.trim() || "";
+    if (current !== guidedCnfDescription(items)) return null;
+    return guidedCnfNutrition(items);
+  }
+  function updateMealCnfLinkedStatus() {
+    const status = $("#mealCnfLinkedStatus"),
+      items = mealCnfItemsFromField();
+    if (!status) return;
+    status.hidden = !items.length;
+    const strong = status.querySelector("strong");
+    if (strong)
+      strong.textContent = items.length
+        ? `${items.length} aliment${items.length > 1 ? "s" : ""} lié${items.length > 1 ? "s" : ""} au FCÉN`
+        : "";
+  }
+  function renderCnfGuidedBasket() {
+    const list = $("#cnfGuidedItems"),
+      count = $("#cnfGuidedItemCount"),
+      finish = $("#finishCnfGuidedMeal");
+    if (!list || !count || !finish) return;
+    count.textContent = `${mealCnfGuidedDraft.length} aliment${mealCnfGuidedDraft.length !== 1 ? "s" : ""}`;
+    finish.disabled = !mealCnfGuidedDraft.length;
+    list.innerHTML = mealCnfGuidedDraft.length
+      ? mealCnfGuidedDraft
+          .map(
+            (item) =>
+              `<article class="cnf-guided-item"><div><strong>${esc(item.nameFr || "Aliment FCÉN")}</strong><small>${esc(
+                item.unitKind === "g"
+                  ? `${guidedCnfNumber(item.grams)} g`
+                  : `${guidedCnfNumber(item.quantity)} × ${item.unitLabel} · ${guidedCnfNumber(item.grams)} g`,
+              )}</small></div><button type="button" data-remove-cnf-guided="${esc(item.entryId)}" aria-label="Retirer ${esc(item.nameFr || "cet aliment")}">×</button></article>`,
+          )
+          .join("")
+      : '<p class="cnf-guided-empty">Aucun aliment ajouté pour l’instant.</p>';
+    $("[data-remove-cnf-guided]").forEach((button) => {
+      button.onclick = () => {
+        mealCnfGuidedDraft = mealCnfGuidedDraft.filter(
+          (item) => item.entryId !== button.dataset.removeCnfGuided,
+        );
+        renderCnfGuidedBasket();
+      };
+    });
+  }
+  function resetCnfGuidedFoodEditor({ focus = true } = {}) {
+    mealCnfGuidedSelected = null;
+    const search = $("#cnfGuidedSearch"),
+      results = $("#cnfGuidedSearchResults"),
+      editor = $("#cnfGuidedFoodEditor");
+    if (search) search.value = "";
+    if (results) results.innerHTML = "";
+    if (editor) editor.hidden = true;
+    if (focus) setTimeout(() => search?.focus(), 30);
+  }
+  function updateCnfGuidedGramHint() {
+    const quantity = Number($("#cnfGuidedQuantity")?.value),
+      option = $("#cnfGuidedUnit")?.selectedOptions?.[0],
+      gramsPerUnit = Number(option?.dataset.grams || 1),
+      grams = quantity * gramsPerUnit,
+      hint = $("#cnfGuidedGramHint");
+    if (!hint) return;
+    hint.textContent =
+      Number.isFinite(grams) && grams > 0
+        ? `Équivalent utilisé pour le calcul : ${guidedCnfNumber(grams)} g`
+        : "Entre une quantité valide.";
+  }
+  function selectCnfGuidedFood(id) {
+    const api = window.ENERGIE_CNF_SEARCH,
+      food = api?.getById?.(id);
+    if (!food) return;
+    mealCnfGuidedSelected = food;
+    $("#cnfGuidedFoodName").textContent = food.nameFr || "Aliment FCÉN";
+    $("#cnfGuidedFoodEnglish").textContent = food.nameEn || "";
+    const portions = (food.portions || [])
+      .filter(
+        (portion, index, list) =>
+          portion?.grams > 0 &&
+          list.findIndex(
+            (candidate) =>
+              candidate.labelFr === portion.labelFr &&
+              Number(candidate.grams) === Number(portion.grams),
+          ) === index,
+      )
+      .slice(0, 8);
+    const unit = $("#cnfGuidedUnit");
+    unit.innerHTML = [
+      ...portions.map(
+        (portion) =>
+          `<option value="${esc(portion.id)}" data-grams="${portion.grams}" data-label="${esc(portion.labelFr)}">${esc(portion.labelFr)} · ${guidedCnfNumber(portion.grams)} g</option>`,
+      ),
+      '<option value="g" data-grams="1" data-label="g">Grammes (g)</option>',
+    ].join("");
+    $("#cnfGuidedQuantity").value = portions.length ? "1" : "100";
+    if (!portions.length) unit.value = "g";
+    $("#cnfGuidedFoodEditor").hidden = false;
+    updateCnfGuidedGramHint();
+  }
+  function renderCnfGuidedSearchResults(query) {
+    const results = $("#cnfGuidedSearchResults"),
+      api = window.ENERGIE_CNF_SEARCH;
+    if (!results) return;
+    const text = String(query || "").trim();
+    if (text.length < 2) {
+      results.innerHTML = "";
+      return;
+    }
+    const matches = api?.search?.(text, 10) || [];
+    results.innerHTML = matches.length
+      ? matches
+          .map(
+            (food) =>
+              `<button type="button" class="cnf-guided-result" data-cnf-guided-food="${esc(food.id)}"><span>🍽️</span><span><strong>${esc(food.nameFr)}</strong>${food.nameEn ? `<small>${esc(food.nameEn)}</small>` : ""}</span><b aria-hidden="true">›</b></button>`,
+          )
+          .join("")
+      : '<p class="cnf-guided-empty">Aucun aliment FCÉN trouvé. Essaie un terme plus simple ou précise la préparation.</p>';
+    $("[data-cnf-guided-food]").forEach((button) => {
+      button.onclick = () => selectCnfGuidedFood(button.dataset.cnfGuidedFood);
+    });
+  }
+  function openCnfGuidedMealEntry() {
+    if (!window.ENERGIE_CNF_SEARCH?.search) {
+      alert("La recherche FCÉN n’est pas disponible pour le moment.");
+      return;
+    }
+    mealCnfGuidedDraft = mealCnfItemsFromField().map((item) => ({ ...item }));
+    renderCnfGuidedBasket();
+    resetCnfGuidedFoodEditor({ focus: false });
+    $("#cnfGuidedMealDialog")?.showModal();
+    setTimeout(() => $("#cnfGuidedSearch")?.focus(), 60);
+  }
+  function addSelectedCnfGuidedFood() {
+    if (!mealCnfGuidedSelected) return;
+    const quantity = Number($("#cnfGuidedQuantity")?.value),
+      option = $("#cnfGuidedUnit")?.selectedOptions?.[0],
+      gramsPerUnit = Number(option?.dataset.grams || 1),
+      grams = quantity * gramsPerUnit;
+    if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(grams) || grams <= 0) {
+      $("#cnfGuidedQuantity")?.focus();
+      return;
+    }
+    mealCnfGuidedDraft.push({
+      entryId: uid(),
+      cnfFoodId: String(mealCnfGuidedSelected.id),
+      nameFr: String(mealCnfGuidedSelected.nameFr || ""),
+      nameEn: String(mealCnfGuidedSelected.nameEn || ""),
+      grams: Math.round(grams * 10) / 10,
+      quantity: Math.round(quantity * 100) / 100,
+      unitKind: $("#cnfGuidedUnit")?.value || "g",
+      unitLabel: String(option?.dataset.label || "g"),
+      gramsPerUnit,
+    });
+    renderCnfGuidedBasket();
+    resetCnfGuidedFoodEditor();
+  }
+  function finishCnfGuidedMealEntry() {
+    if (!mealCnfGuidedDraft.length) return;
+    const items = mealCnfGuidedDraft.map((item) => ({ ...item })),
+      description = guidedCnfDescription(items),
+      nutrition = guidedCnfNutrition(items);
+    setMealCnfItemsField(items);
+    $("#mealDescription").value = description;
+    mealFoodReview = { description, acknowledgedGaps: true };
+    $("#mealCalorieMode").value = "auto";
+    mealNutritionManuallyEdited = false;
+    if (nutrition) fillNutritionInputs(nutrition);
+    updateMealCompositionReview();
+    updateMealCnfLinkedStatus();
+    scheduleFormAutosave($("#mealForm"));
+    $("#cnfGuidedMealDialog")?.close();
+  }
+
   function nutritionFromInputs() {
     const get = (id) => {
       const value = $(id)?.value;
@@ -3073,13 +3353,18 @@ function formatSleepDuration(hours) {
   function resetMealCalories() {
     clearTimeout(mealNutritionPreviewTimer);
     $("#mealCalorieMode").value = "auto";
-    const estimate = estimateNutritionFromText($("#mealDescription").value.trim());
-    $("#nutritionCalories").value = estimate?.calories ?? "";
+    const estimate =
+      currentGuidedCnfNutrition() ||
+      estimateNutritionFromText($("#mealDescription").value.trim());
+    if (estimate) fillNutritionInputs(estimate);
+    else $("#nutritionCalories").value = "";
     updateMealCalorieEditor();
     scheduleFormAutosave($("#mealForm"));
   }
   function estimateCurrentMealNutrition() {
-    const n = estimateNutritionFromText($("#mealDescription").value);
+    const n =
+      currentGuidedCnfNutrition() ||
+      estimateNutritionFromText($("#mealDescription").value);
     if (!n) {
       fillNutritionInputs(
         null,
@@ -3095,6 +3380,12 @@ function formatSleepDuration(hours) {
   function scheduleAutomaticNutritionPreview() {
     clearTimeout(mealNutritionPreviewTimer);
     updateMealCompositionReview();
+    const guidedNutrition = currentGuidedCnfNutrition();
+    if (guidedNutrition) {
+      fillNutritionInputs(guidedNutrition);
+      mealNutritionManuallyEdited = false;
+      return;
+    }
     if (
       db.settings.autoNutritionEstimates === false
     )
@@ -13391,6 +13682,7 @@ function formatSleepDuration(hours) {
     updateMealDialogType(type);
     $("#mealTime").value = m?.time || new Date().toTimeString().slice(0, 5);
     $("#mealDescription").value = m?.description || "";
+    setMealCnfItemsField(m?.cnfItems || []);
     if (!$("#mealDescription").dataset.brainGuideBound) {
       $("#mealDescription").dataset.brainGuideBound = "true";
       $("#mealDescription").addEventListener("input", updateMealEntryBrainGuide);
@@ -14001,10 +14293,36 @@ function formatSleepDuration(hours) {
     input.addEventListener("change", updateEatingReasonUi),
   );
   $("#estimateMealNutrition").onclick = estimateCurrentMealNutrition;
-  $("#mealDescription").addEventListener(
-    "input",
-    scheduleAutomaticNutritionPreview,
-  );
+  $("#openCnfGuidedEntry").onclick = openCnfGuidedMealEntry;
+  $("#cnfGuidedSearch").addEventListener("input", (event) => {
+    clearTimeout(mealCnfGuidedSearchTimer);
+    const value = event.target.value;
+    mealCnfGuidedSearchTimer = setTimeout(
+      () => renderCnfGuidedSearchResults(value),
+      120,
+    );
+  });
+  $("#cnfGuidedUnit").addEventListener("change", () => {
+    $("#cnfGuidedQuantity").value =
+      $("#cnfGuidedUnit").value === "g" ? "100" : "1";
+    updateCnfGuidedGramHint();
+  });
+  $("#cnfGuidedQuantity").addEventListener("input", updateCnfGuidedGramHint);
+  $("#cnfGuidedAddFood").onclick = addSelectedCnfGuidedFood;
+  $("#cnfGuidedAddAnother").onclick = () => resetCnfGuidedFoodEditor();
+  $("#finishCnfGuidedMeal").onclick = finishCnfGuidedMealEntry;
+  $("#cancelCnfGuidedMeal").onclick = () => $("#cnfGuidedMealDialog")?.close();
+  $("#closeCnfGuidedMeal").onclick = () => $("#cnfGuidedMealDialog")?.close();
+  $("#mealDescription").addEventListener("input", () => {
+    const linked = mealCnfItemsFromField();
+    if (
+      linked.length &&
+      $("#mealDescription").value.trim() !== guidedCnfDescription(linked)
+    ) {
+      setMealCnfItemsField([]);
+    }
+    scheduleAutomaticNutritionPreview();
+  });
   $("#completeMealDescription").onclick = () => {
     $("#mealDescription")?.focus();
     const field = $("#mealDescription");
@@ -14088,6 +14406,11 @@ function formatSleepDuration(hours) {
         type: $("#mealType").value,
         time: $("#mealTime").value,
         description: $("#mealDescription").value.trim(),
+        cnfItems:
+          $("#mealDescription").value.trim() ===
+          guidedCnfDescription(mealCnfItemsFromField())
+            ? mealCnfItemsFromField()
+            : [],
         nutrition: nutritionFromInputs() ||
           (db.settings.autoNutritionEstimates !== false && !mealNutritionManuallyEdited
             ? estimateNutritionFromText($("#mealDescription").value.trim())
