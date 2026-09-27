@@ -3324,11 +3324,15 @@ function formatSleepDuration(hours) {
   }
   function addSelectedCnfGuidedFood() {
     if (!mealCnfGuidedSelected) return;
-    const quantity = Number($("#cnfGuidedQuantity")?.value),
+    const rawQuantity = Number($("#cnfGuidedQuantity")?.value),
       option = $("#cnfGuidedUnit")?.selectedOptions?.[0],
+      unitKind = $("#cnfGuidedUnit")?.value || "g",
+      quantity = unitKind === "g"
+        ? Math.max(1, Math.round(rawQuantity))
+        : Math.max(0.25, Math.round(rawQuantity * 4) / 4),
       gramsPerUnit = Number(option?.dataset.grams || 1),
       grams = quantity * gramsPerUnit;
-    if (!Number.isFinite(quantity) || quantity <= 0 || !Number.isFinite(grams) || grams <= 0) {
+    if (!Number.isFinite(rawQuantity) || rawQuantity <= 0 || !Number.isFinite(grams) || grams <= 0) {
       $("#cnfGuidedQuantity")?.focus();
       return;
     }
@@ -3339,7 +3343,7 @@ function formatSleepDuration(hours) {
       nameEn: String(mealCnfGuidedSelected.nameEn || ""),
       grams: Math.max(1, Math.round(grams)),
       quantity: Math.round(quantity * 100) / 100,
-      unitKind: $("#cnfGuidedUnit")?.value || "g",
+      unitKind,
       unitLabel: String(option?.dataset.label || "g"),
       gramsPerUnit,
     });
@@ -14503,6 +14507,11 @@ function formatSleepDuration(hours) {
   $("#mealForm").onsubmit = (e) => {
     if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     e.preventDefault();
+    if (guidedCnfEntryRequired() && !currentGuidedCnfNutrition()) {
+      alert("La saisie guidée FCÉN est obligatoire dans tes préférences. Ajoute les aliments avec le lien FCÉN avant d’enregistrer.");
+      openCnfGuidedMealEntry();
+      return;
+    }
     updateMealCalorieEditor();
     if (!$("#mealCalories").reportValidity()) return;
     if (hasUnscoredFeelings($("#beforeFeelingTags"), "before"))
