@@ -1886,7 +1886,7 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .cnf-guided-items{display:grid;gap:6px}
 .cnf-guided-item{
   display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-columns:minmax(0,1fr) auto auto;
   align-items:center;
   gap:10px;
   padding:9px 10px;
@@ -1921,3 +1921,11 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   .cnf-guided-actions{grid-template-columns:1fr}
   .cnf-guided-actions .secondary{order:2}
 }
+
+
+/* FCÉN guidé — calories et mode obligatoire */
+.cnf-guided-item-kcal{font-size:.68rem;font-weight:850;color:var(--accent-strong,var(--accent));white-space:nowrap}
+.meal-guided-entry-requirement{margin:6px 0 0;color:var(--accent-strong,var(--accent));font-size:.62rem;font-weight:800}
+#mealDescription.is-guided-only{background:var(--surface2);color:var(--muted);cursor:not-allowed}
+.meal-cnf-guided-entry.is-required{border-top-color:color-mix(in srgb,var(--accent) 42%,var(--border));border-bottom-color:color-mix(in srgb,var(--accent) 42%,var(--border));background:color-mix(in srgb,var(--accent) 14%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 12%,transparent)}
+.meal-cnf-guided-entry.is-required strong::after{content:" · obligatoire";font-weight:900}
