@@ -10492,6 +10492,100 @@ function formatSleepDuration(hours) {
       basis: `${exposed.length} journées suivant une nuit de moins de 6,3 h ont été comparées à ${comparison.length} autres journées. La fatigue utilisée ici provient des ressentis hors repas du scénario fictif.`,
     };
   }
+  function labFiberHydrationObservation() {
+    if (db.settings?.demoLab?.scenarioId !== "fiber-improvement") return null;
+    const positiveIds = new Set([
+      "positive_energy",
+      "positive_wellbeing",
+      "energy",
+      "feeling_good",
+      "stable_energy",
+      "good_mood",
+      "focus",
+      "calm",
+    ]);
+    const rows = Object.entries(db.days || {})
+      .filter(([date, day]) => date <= selectedDate && day)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-180)
+      .map(([date, day]) => {
+        const meals = day.meals || [];
+        const fiber = meals.some((meal) =>
+          (
+            window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(
+              String(meal.description || ""),
+            ) || []
+          ).includes("high_fiber"),
+        );
+        const values = meals
+          .map((meal) => {
+            const tags = meal.feeling?.tags || [];
+            if (!tags.some((tag) => positiveIds.has(tag))) return null;
+            const score = Number(meal.feeling?.rating);
+            return Number.isFinite(score)
+              ? Math.max(0, Math.min(5, score))
+              : null;
+          })
+          .filter(Number.isFinite);
+        return {
+          date,
+          fiber,
+          water: Number(day.water) || 0,
+          positive: values.length
+            ? values.reduce((sum, value) => sum + value, 0) / values.length
+            : null,
+        };
+      })
+      .filter((row) => Number.isFinite(row.positive));
+    const low = rows.filter((row) => !row.fiber && row.water <= 5),
+      supported = rows.filter((row) => row.fiber && row.water >= 7),
+      average = (items) =>
+        items.length
+          ? items.reduce((sum, row) => sum + row.positive, 0) / items.length
+          : 0,
+      lowAverage = average(low),
+      supportedAverage = average(supported),
+      improvement = supportedAverage - lowAverage;
+    if (low.length < 5 || supported.length < 5 || improvement < 0.45)
+      return null;
+    const strength =
+      low.length >= 10 && supported.length >= 10 && improvement >= 0.8
+        ? "strong"
+        : low.length >= 7 && supported.length >= 7 && improvement >= 0.6
+          ? "moderate"
+          : "preliminary";
+    const confidence =
+      strength === "strong"
+        ? { icon: "🌳", label: "Très forte tendance", cls: "high" }
+        : strength === "moderate"
+          ? { icon: "🌿", label: "Bonne tendance", cls: "medium" }
+          : { icon: "🌱", label: "Peu de données", cls: "low" };
+    return {
+      id: "lab-fiber-hydration-positive",
+      kind: "day-context-feeling-change",
+      valence: "negative",
+      icon: "🌾",
+      title: "Moins de fibres et d’hydratation : ressenti moins favorable",
+      text:
+        "Dans ce scénario, le ressenti est moins favorable les journées où les aliments riches en fibres sont peu présents et où l’hydratation est plus basse.",
+      statistic: lowAverage.toFixed(1),
+      comparisonStatistic: supportedAverage.toFixed(1),
+      comparisonLabels: [
+        "Peu de fibres + hydratation basse",
+        "Fibres + hydratation régulière",
+      ],
+      samples: {
+        exposed: low.length,
+        comparison: supported.length,
+        total: low.length + supported.length,
+      },
+      metrics: { difference: lowAverage - supportedAverage, strength },
+      confidence,
+      evidence: {},
+      basis: `${low.length} journées avec peu de fibres et une hydratation de 5 verres ou moins ont été comparées à ${supported.length} journées avec des aliments riches en fibres et au moins 7 verres. Les journées intermédiaires sont exclues de cette comparaison pour ne pas diluer le signal.`,
+    };
+  }
+
   function canonicalObservationReport(meals) {
     const base =
       db.settings.insightsEnabled && window.EnergieObservationEngine
@@ -10510,14 +10604,18 @@ function formatSleepDuration(hours) {
               analyzableDays: 0,
             },
           };
-    const shortSleep = labShortSleepObservation();
-    if (!shortSleep) return base;
+    const scenarioObservations = [
+      labFiberHydrationObservation(),
+      labShortSleepObservation(),
+    ].filter(Boolean);
+    if (!scenarioObservations.length) return base;
+    const injectedIds = new Set(scenarioObservations.map((item) => item.id));
     return {
       ...base,
       observations: [
-        shortSleep,
+        ...scenarioObservations,
         ...(base.observations || []).filter(
-          (item) => item.id !== shortSleep.id,
+          (item) => !injectedIds.has(item.id),
         ),
       ].slice(0, 3),
     };
@@ -10895,9 +10993,10 @@ function formatSleepDuration(hours) {
     return `<section class="positive-observations" aria-labelledby="positiveObservationsTitle"><div class="section-title"><h2 id="positiveObservationsTitle">🌿 Observations positives</h2></div><p class="muted small">Les ressentis agréables peuvent aussi évoluer après un repas. Ces associations issues de ton journal ne prouvent pas qu’un aliment en est la cause.</p>${enabled && items.length ? `<p class="muted small">Les valeurs comparent l’évolution moyenne après − avant, avec et sans la catégorie.</p><div class="insight-grid">${cards}</div>` : `<div class="card"><p>${enabled ? "Pas encore d’association positive suffisamment étayée. Les cinq ressentis positifs sont toujours disponibles. Indique leur intensité avant et après les repas et les collations. Un ressenti stable reste enregistré sans créer de tendance." : "Les observations sont désactivées dans les paramètres."}</p></div>`}</section>`;
   }
   function openDiscoveryWhy(x) {
+    const dayContext = x?.kind === "day-context-feeling-change";
     $("#sourceTitle").textContent = "Pourquoi cette tendance apparaît-elle?";
     $("#sourceContent").innerHTML =
-      `<p>${esc(x.basis || "Cette tendance utilise uniquement les données disponibles dans ton journal.")}</p>${discoveryComparisonHtml(x)}<div class="notice"><strong>À interpréter avec prudence</strong><p>Une association ne signifie pas que cet aliment ou cette catégorie est la cause du changement observé. Le sommeil, l’hydratation, les portions, le moment des repas et d’autres facteurs peuvent varier.</p></div><h3>Comment cette observation est calculée</h3><p class="muted small">Énergie classe les descriptions de repas par catégories et compare, pour chaque ressenti, son intensité après le repas à son intensité avant. Seuls les écarts répétés avec assez de repas comparables sont conservés.</p><p class="muted small">Le moteur préfère ne rien afficher lorsque les données sont insuffisantes ou que la différence est trop faible.</p>`;
+      `<p>${esc(x.basis || "Cette tendance utilise uniquement les données disponibles dans ton journal.")}</p>${discoveryComparisonHtml(x)}<div class="notice"><strong>À interpréter avec prudence</strong><p>${dayContext ? "Une association entre un contexte de journée et un ressenti ne signifie pas que ce contexte en est la cause. D’autres facteurs peuvent varier en même temps." : "Une association ne signifie pas que cet aliment ou cette catégorie est la cause du changement observé. Le sommeil, l’hydratation, les portions, le moment des repas et d’autres facteurs peuvent varier."}</p></div><h3>Comment cette observation est calculée</h3><p class="muted small">${dayContext ? "Énergie compare des groupes de journées suffisamment documentées selon le contexte défini par le scénario, puis compare leur ressenti moyen. Les journées ambiguës peuvent être exclues afin de ne pas diluer artificiellement la différence." : "Énergie classe les descriptions de repas par catégories et compare, pour chaque ressenti, son intensité après le repas à son intensité avant. Seuls les écarts répétés avec assez de repas comparables sont conservés."}</p><p class="muted small">Le moteur préfère ne rien afficher lorsque les données sont insuffisantes ou que la différence est trop faible.</p>`;
     $("#sourceDialog").showModal();
   }
   function observationCategoryMatch(description, categoryId) {
