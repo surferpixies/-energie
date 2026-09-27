@@ -101,7 +101,7 @@
     {id:"soy-digestion",group:"Alimentation",icon:"🌿",title:"Soya → inconfort digestif",target:"soy",signal:"digestive",strength:.76,pattern:"exposure"},
     {id:"seafood-digestion",group:"Alimentation",icon:"🦐",title:"Fruits de mer → inconfort digestif",target:"seafood",signal:"digestive",strength:.80,pattern:"exposure"},
     {id:"gluten-digestion",group:"Alimentation",icon:"🌾",title:"Aliments avec gluten → inconfort",target:"gluten",signal:"digestive",strength:.68,pattern:"exposure"},
-    {id:"legumes-digestion",group:"Alimentation",icon:"🫘",title:"Légumineuses → ballonnements",target:"legumes",signal:"digestive",strength:.64,pattern:"dose"},
+    {id:"legumes-digestion",group:"Alimentation",icon:"🫘",title:"Légumineuses → ballonnements",target:"legumes",signal:"digestive",strength:.70,pattern:"exposure"},
     {id:"allium-digestion",group:"Alimentation",icon:"🧄",title:"Ail/oignon/alliums → inconfort",target:"allium",signal:"digestive",strength:.74,pattern:"exposure"},
     {id:"fried-digestion",group:"Alimentation",icon:"🍟",title:"Aliments frits → lourdeur digestive",target:"fried_foods",signal:"digestive",strength:.70,pattern:"exposure"},
     {id:"spicy-digestion",group:"Alimentation",icon:"🌶️",title:"Aliments épicés → inconfort",target:"spicy_foods",signal:"digestive",strength:.70,pattern:"exposure"},
