@@ -60,6 +60,16 @@
     return pick(pool,random);
   }
 
+  const foodScenarioTargets=new Set(["dairy","soy","seafood","gluten","legumes","allium","fried","spicy","processed","high_fiber"]);
+  function foodStoryExposure(sc,i,activeStart,activeEnd,rechallengeDay,random){
+    if(!foodScenarioTargets.has(sc.target)) return null;
+    if(sc.pattern==="sparse") return i===activeStart+2||i===Math.min(activeEnd,activeStart+7);
+    if(sc.pattern==="ramp") return i<activeStart?random()<.10:i<=activeEnd?random()<(.20+((i-activeStart)/Math.max(1,activeEnd-activeStart))*.50):random()<.72;
+    if(sc.pattern==="rechallenge") return exposureChance(i,activeStart,activeEnd,random,.08,.64,.04)||(i===rechallengeDay);
+    const base=exposureChance(i,activeStart,activeEnd,random,.08,.62,.07);
+    return base||(i===rechallengeDay&&["exposure","withdrawal","dose","confounder"].includes(sc.pattern));
+  }
+
   const scenarios = [
     {id:"dairy-digestion",group:"Alimentation",icon:"🥛",title:"Produits laitiers → inconfort digestif",target:"dairy",signal:"digestive",strength:.78,pattern:"exposure"},
     {id:"soy-digestion",group:"Alimentation",icon:"🌿",title:"Soya → inconfort digestif",target:"soy",signal:"digestive",strength:.76,pattern:"exposure"},
@@ -133,7 +143,8 @@
       const date=dateKey(start,i), progress=i/Math.max(1,days-1), inActiveWindow=i>=activeStart&&i<=activeEnd, activeProgress=inActiveWindow?((i-activeStart)/Math.max(1,activeDays-1)):0;
       const weekday=new Date(`${date}T12:00:00`).getDay();
       const beforeWindow=false, afterWindow=i>activeEnd;
-      let exposure=exposureChance(i,activeStart,activeEnd,random,.08,.62,.08);
+      const foodExposure=foodStoryExposure(sc,i,activeStart,activeEnd,rechallengeDay,random);
+      let exposure=foodExposure===null?exposureChance(i,activeStart,activeEnd,random,.08,.62,.08):foodExposure;
       if(afterWindow && i===rechallengeDay) exposure=true;
       if(sc.pattern==="withdrawal") exposure=exposureChance(i,activeStart,activeEnd,random,.08,.64,.04);
       if(sc.pattern==="rechallenge") exposure=exposureChance(i,activeStart,activeEnd,random,.08,.64,.04) || (afterWindow&&i===rechallengeDay);
