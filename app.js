@@ -2999,8 +2999,8 @@ function formatSleepDuration(hours) {
     const hint = form.querySelector(".meal-precision-hint");
     if (hint && !$("#openCnfGuidedEntry")) {
       hint.insertAdjacentHTML(
-        "afterend",
-        '<button type="button" id="openCnfGuidedEntry" class="meal-cnf-guided-entry"><span class="meal-cnf-guided-icon" aria-hidden="true">🇨🇦</span><span><strong>Saisie guidée avec le FCÉN</strong><small>Choisir les aliments et les quantités directement dans le Fichier canadien sur les éléments nutritifs</small></span><b aria-hidden="true">›</b></button><div id="mealCnfLinkedStatus" class="meal-cnf-linked-status" hidden><span aria-hidden="true">✓</span><strong></strong><small>Quantités reliées directement aux fiches FCÉN</small></div>',
+        "beforebegin",
+        '<button type="button" id="openCnfGuidedEntry" class="meal-cnf-guided-entry"><span class="meal-cnf-guided-icon" aria-hidden="true">🇨🇦</span><span><strong>Saisie guidée FCÉN</strong><small>Rechercher dans le fichier de Santé Canada</small></span><b aria-hidden="true">›</b></button><div id="mealCnfLinkedStatus" class="meal-cnf-linked-status" hidden><span aria-hidden="true">✓</span><strong></strong><small>Quantités reliées directement aux fiches FCÉN</small></div>',
       );
     }
     const review = $("#mealCompositionReview");
