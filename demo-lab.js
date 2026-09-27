@@ -116,7 +116,8 @@
     for(let i=0;i<days;i++){
       const date=dateKey(start,i), progress=i/Math.max(1,days-1), inActiveWindow=i>=activeStart&&i<=activeEnd, activeProgress=inActiveWindow?((i-activeStart)/Math.max(1,activeDays-1)):0;
       const weekday=new Date(`${date}T12:00:00`).getDay();
-      let exposure=inActiveWindow ? random()<.62 : random()<.07;
+      const beforeWindow=i<activeStart, afterWindow=i>activeEnd;
+      let exposure=inActiveWindow ? random()<.62 : (beforeWindow?random()<.16:random()<.06);
       if(sc.pattern==="withdrawal") exposure=inActiveWindow && activeProgress<.5 ? random()<.62 : random()<.05;
       if(sc.pattern==="rechallenge") exposure=inActiveWindow?(activeProgress<.34?random()<.62:activeProgress<.70?random()<.04:random()<.58):random()<.05;
       if(sc.pattern==="ramp") exposure=inActiveWindow ? random()<(0.18+activeProgress*.70) : random()<.08;
@@ -150,7 +151,7 @@
       if(!missing){
         const neutralBreakfasts=["Gruau, banane et noix","Omelette, rôties et fruit","Rôties au beurre d’arachide et banane","Œufs, rôties et fruit"];
         const dairyBreakfasts=["Yogourt grec, bleuets et avoine","Fromage cottage, framboises et granola"];
-        const breakfastHasTarget=sc.target==="dairy" && inActiveWindow && random()<.42;
+        const breakfastHasTarget=sc.target==="dairy" && (inActiveWindow?random()<.34:(afterWindow?random()<.03:random()<.08));
         const recognizedDairyBreakfasts=dairyBreakfasts.filter(description=>recognizedAs(description,"dairy"));
         const breakfastPool=breakfastHasTarget?recognizedDairyBreakfasts:neutralBreakfasts;
         const breakfast=lateCoffee?`Café filtre, ${breakfastPool[Math.floor(random()*breakfastPool.length)]}`:breakfastPool[Math.floor(random()*breakfastPool.length)];
@@ -164,14 +165,13 @@
           if(down && random()<.58) day.activities.push({id:`lab-aw-${date}`,type:"Marche",minutes:25+Math.floor(random()*35),intensity:"moderate",at:`${date}T16:45:00`});
           if(!down && random()<.45) day.water=Math.max(3,day.water-1);
         }
-        const pool=exposure?(foods[sc.target]||foods.neutral):foods.neutral;
-        let description=pool[Math.floor(random()*pool.length)];
+        let description=exposure?targetMeal(sc.target,random):foods.neutral[Math.floor(random()*foods.neutral.length)];
         if(sc.pattern==="confounder" && exposure) description=random()<.70?"Pâtes tomate, ail, oignon et parmesan":"Poulet sauté avec ail, oignon, riz et légumes";
         const isTransient=sc.pattern==="transient";
-        let symptomProbability=exposure?sc.strength:.08;
+        let symptomProbability=exposure?sc.strength:(inActiveWindow?.07:.04);
         if(isTransient && progress>.25) symptomProbability=.10;
         if(sc.pattern==="control") symptomProbability=.10;
-        else if(!inActiveWindow && !["weight_down","weight_up"].includes(sc.pattern)) symptomProbability=.05;
+        else if(afterWindow && !["weight_down","weight_up"].includes(sc.pattern)) symptomProbability=.035;
         if(sc.pattern==="dose") symptomProbability=exposure?(random()<.5?.38:.82):.07;
         if(sc.pattern==="delayed") symptomProbability=.08;
         const symptom=random()<symptomProbability;
