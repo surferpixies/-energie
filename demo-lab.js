@@ -70,6 +70,20 @@
     return base||(i===rechallengeDay&&["exposure","withdrawal","dose","confounder"].includes(sc.pattern));
   }
 
+
+  function standardFoodStory(sc){
+    return foodScenarioTargets.has(sc.target) && ["exposure","withdrawal"].includes(sc.pattern);
+  }
+  function outcomeForFoodExposure(sc,exposed,inActiveWindow,afterWindow,random){
+    if(!standardFoodStory(sc)) return null;
+    const noise=inActiveWindow?.055:.035;
+    const probability=exposed?(inActiveWindow?sc.strength:Math.max(.48,sc.strength-.16)):noise;
+    const hit=random()<probability;
+    if(sc.signal==="digestive") return hit?{tags:["bloating",random()<.55?"gas":"cramps"],rating:2,note:"Inconfort digestif noté après le repas."}:{tags:["positive_wellbeing"],rating:4,note:""};
+    if(sc.signal==="energy") return hit?{tags:["fatigue"],rating:2,note:"Énergie plus basse après le repas."}:{tags:["positive_wellbeing"],rating:4,note:""};
+    return hit?{tags:["energy","feeling_good"],rating:4,note:""}:{tags:["positive_wellbeing"],rating:4,note:""};
+  }
+
   const scenarios = [
     {id:"dairy-digestion",group:"Alimentation",icon:"🥛",title:"Produits laitiers → inconfort digestif",target:"dairy",signal:"digestive",strength:.78,pattern:"exposure"},
     {id:"soy-digestion",group:"Alimentation",icon:"🌿",title:"Soya → inconfort digestif",target:"soy",signal:"digestive",strength:.76,pattern:"exposure"},
@@ -193,12 +207,10 @@
         const breakfastPool=breakfastHasTarget&&targetBreakfasts.length?targetBreakfasts:neutralBreakfasts;
         const breakfast=lateCoffee?`Café filtre, ${breakfastPool[Math.floor(random()*breakfastPool.length)]}`:breakfastPool[Math.floor(random()*breakfastPool.length)];
         const breakfastExposure=breakfastHasTarget && recognizedAs(breakfast,sc.target);
-        const breakfastSymptom=breakfastExposure && sc.signal==="digestive" && random()<sc.strength;
-        const breakfastTags=breakfastSymptom?["bloating",random()<.55?"gas":"cramps"]:
-          sc.signal==="energy"&&breakfastExposure&&random()<sc.strength?["fatigue"]:
-          sc.signal==="positive"&&breakfastExposure&&random()<sc.strength?["energy","feeling_good"]:
-          ["positive_wellbeing"];
-        day.meals.push(meal(`lab-${date}-b`,date,"07:30","Déjeuner",breakfast,breakfastTags,breakfastSymptom?2:4,breakfastSymptom?"Inconfort digestif noté après le repas.":""));
+        const breakfastOutcome=outcomeForFoodExposure(sc,breakfastExposure,inActiveWindow,afterWindow,random);
+        const breakfastSymptom=breakfastOutcome?breakfastOutcome.rating<4:(breakfastExposure && sc.signal==="digestive" && random()<sc.strength);
+        const breakfastTags=breakfastOutcome?breakfastOutcome.tags:(breakfastSymptom?["bloating",random()<.55?"gas":"cramps"]:["positive_wellbeing"]);
+        day.meals.push(meal(`lab-${date}-b`,date,"07:30","Déjeuner",breakfast,breakfastTags,breakfastOutcome?.rating??(breakfastSymptom?2:4),breakfastOutcome?.note??(breakfastSymptom?"Inconfort digestif noté après le repas.":"")));
         if(weightScenario){
           const down=sc.pattern==="weight_down";
           day.calories=Math.round((down?1850:2650)+(random()-.5)*260);
