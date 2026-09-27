@@ -102,15 +102,15 @@
 
     let previousExposure=false;
     for(let i=0;i<days;i++){
-      const date=dateKey(start,i), progress=i/Math.max(1,days-1), active=i>=activeStart&&i<=activeEnd, activeProgress=active?((i-activeStart)/Math.max(1,activeDays-1)):0;
+      const date=dateKey(start,i), progress=i/Math.max(1,days-1), inActiveWindow=i>=activeStart&&i<=activeEnd, activeProgress=inActiveWindow?((i-activeStart)/Math.max(1,activeDays-1)):0;
       const weekday=new Date(`${date}T12:00:00`).getDay();
-      let exposure=active ? random()<.48 : random()<.16;
-      if(sc.pattern==="withdrawal") exposure=active && activeProgress<.5 ? random()<.62 : random()<.05;
-      if(sc.pattern==="rechallenge") exposure=active?(activeProgress<.34?random()<.62:activeProgress<.70?random()<.04:random()<.58):random()<.05;
-      if(sc.pattern==="ramp") exposure=active ? random()<(0.18+activeProgress*.70) : random()<.08;
+      let exposure=inActiveWindow ? random()<.48 : random()<.16;
+      if(sc.pattern==="withdrawal") exposure=inActiveWindow && activeProgress<.5 ? random()<.62 : random()<.05;
+      if(sc.pattern==="rechallenge") exposure=inActiveWindow?(activeProgress<.34?random()<.62:activeProgress<.70?random()<.04:random()<.58):random()<.05;
+      if(sc.pattern==="ramp") exposure=inActiveWindow ? random()<(0.18+activeProgress*.70) : random()<.08;
       if(sc.pattern==="sparse") exposure=i===activeStart+2||i===Math.min(activeEnd,activeStart+7);
-      if(sc.pattern==="transient") exposure=active?random()<.48:random()<.14;
-      if(sc.pattern==="confounder") exposure=active?random()<.52:random()<.12;
+      if(sc.pattern==="transient") exposure=inActiveWindow?random()<.48:random()<.14;
+      if(sc.pattern==="confounder") exposure=inActiveWindow?random()<.52:random()<.12;
       const missing=sc.pattern==="missing" && random()<.20;
       const chaotic=sc.pattern==="chaotic";
       const lateCoffee=(sc.pattern==="timing" && exposure && random()<.62);
@@ -150,13 +150,13 @@
         let symptomProbability=exposure?sc.strength:.08;
         if(isTransient && progress>.25) symptomProbability=.10;
         if(sc.pattern==="control") symptomProbability=.10;
-        else if(!active && !["weight_down","weight_up"].includes(sc.pattern)) symptomProbability=.08;
+        else if(!inActiveWindow && !["weight_down","weight_up"].includes(sc.pattern)) symptomProbability=.08;
         if(sc.pattern==="dose") symptomProbability=exposure?(random()<.5?.38:.82):.07;
         if(sc.pattern==="delayed") symptomProbability=.08;
         const symptom=random()<symptomProbability;
         const tags=sc.signal==="digestive"&&symptom?["bloating",random()<.55?"gas":"cramps"]:
           sc.signal==="energy"&&((exposure&&random()<sc.strength)||(sc.pattern==="sleep"&&sleep<6.3))?["fatigue"]:
-          sc.signal==="positive"&&((exposure||active||water>=7)&&random()<sc.strength)?["energy","feeling_good"]:
+          sc.signal==="positive"&&((exposure||inActiveWindow||water>=7)&&random()<sc.strength)?["energy","feeling_good"]:
           ["feeling_good"];
         const rating=tags.includes("bloating")?2:tags.includes("fatigue")?2:4;
         day.meals.push(meal(`lab-${date}-l`,date,"12:20","Dîner",description,tags,rating,tags.includes("bloating")?"Inconfort digestif noté après le repas.":""));
