@@ -49,6 +49,8 @@
     {id:"short-sleep-fatigue",group:"Sommeil",icon:"😴",title:"Nuit courte → fatigue le lendemain",target:"sleep",signal:"energy",strength:.78,pattern:"sleep"},
     {id:"activity-positive",group:"Activité",icon:"🏃",title:"Journées actives → meilleur ressenti",target:"activity",signal:"positive",strength:.66,pattern:"activity"},
     {id:"hydration-positive",group:"Hydratation",icon:"💧",title:"Hydratation régulière → meilleur ressenti",target:"water",signal:"positive",strength:.64,pattern:"water"},
+    {id:"weight-loss",group:"Poids",icon:"⚖️",title:"Période de perte de poids",target:"weight",signal:"weight_down",strength:.78,pattern:"weight_down"},
+    {id:"weight-gain",group:"Poids",icon:"⚖️",title:"Période de prise de poids",target:"weight",signal:"weight_up",strength:.78,pattern:"weight_up"},
     {id:"withdrawal-rechallenge",group:"Évolution",icon:"🔄",title:"Retrait puis réintroduction",target:"dairy",signal:"digestive",strength:.82,pattern:"rechallenge"},
     {id:"dose-response",group:"Cas complexes",icon:"📈",title:"Effet de quantité",target:"legumes",signal:"digestive",strength:.72,pattern:"dose"},
     {id:"delayed-reaction",group:"Cas complexes",icon:"⏱️",title:"Réaction retardée 12–24 h",target:"soy",signal:"digestive",strength:.72,pattern:"delayed"},
@@ -85,6 +87,16 @@
         demoLab:{scenarioId:sc.id,variant,days,hiddenTruth:{target:sc.target,signal:sc.signal,pattern:sc.pattern}}},
       favorites:[],days:{}};
 
+    const weightScenario=sc.pattern==="weight_down"||sc.pattern==="weight_up";
+    if(weightScenario){
+      store.settings.trackWeight=true;
+      store.settings.weightTracking=true;
+      store.settings.weightUnit="kg";
+      store.settings.profile={...(store.settings.profile||{}),weight:{mode:"provided",unit:"kg"}};
+    }
+    const baseWeight=82+(random()-.5)*5;
+    const totalWeightChange=sc.pattern==="weight_down"?-(3.2+random()*1.8):sc.pattern==="weight_up"?(3.0+random()*1.8):0;
+
     let previousExposure=false;
     for(let i=0;i<days;i++){
       const date=dateKey(start,i), progress=i/Math.max(1,days-1);
@@ -113,9 +125,21 @@
         sleepTags:sleep<6.3?["frequent-wakings"]:[],sleepComment:"",water,
         activities:active?[{id:`lab-a-${date}`,type:weekday===6?"Vélo":"Marche",minutes:30+Math.floor(random()*35),intensity:"moderate",at:`${date}T17:30:00`}]:[],
         meals:[],observations:[],supplementsTaken:[],updatedAt:`${date}T21:00:00`};
+      if(weightScenario && (i===0 || i===days-1 || i%7===0)){
+        const trend=totalWeightChange*progress;
+        const noise=(random()-.5)*.55;
+        day.weight=Number((baseWeight+trend+noise).toFixed(1));
+        day.weightKg=day.weight;
+      }
 
       if(!missing){
         day.meals.push(meal(`lab-${date}-b`,date,"07:30","Déjeuner",lateCoffee?"Café filtre, œufs, rôties et fruit":"Œufs, rôties et fruit",[],4));
+        if(weightScenario){
+          const down=sc.pattern==="weight_down";
+          day.calories=Math.round((down?1850:2650)+(random()-.5)*260);
+          if(down && random()<.58) day.activities.push({id:`lab-aw-${date}`,type:"Marche",minutes:25+Math.floor(random()*35),intensity:"moderate",at:`${date}T16:45:00`});
+          if(!down && random()<.45) day.water=Math.max(3,day.water-1);
+        }
         const pool=exposure?(foods[sc.target]||foods.neutral):foods.neutral;
         let description=pool[Math.floor(random()*pool.length)];
         if(sc.pattern==="confounder" && exposure) description=random()<.70?"Pâtes tomate, ail, oignon et parmesan":"Poulet sauté avec ail, oignon, riz et légumes";
