@@ -5590,11 +5590,26 @@ function formatSleepDuration(hours) {
       }),
     );
   }
-  function labScenarioCardsHtml() { const lab=window.EnergieDemoLab;if(!lab)return `<section class="card lab-selector-panel"><h3>🧪 Laboratoire Énergie</h3><p class="muted small">Le générateur de scénarios n’a pas été chargé. Recharge la page.</p></section>`;const active=db.settings?.demoLab?.scenarioId||"";return `<details class="card demo-selector-card lab-selector-panel"><summary><span><small class="eyebrow"><span class="lab-flask" aria-hidden="true">🧪</span> Laboratoire Énergie</small><strong>Scénarios dynamiques</strong><small>60 jours fictifs pour explorer les Observations</small></span><span class="demo-selector-meta"><b>${lab.scenarios.length} scénarios</b><i aria-hidden="true">›</i></span></summary><div class="demo-selector-content"><div class="lab-actions"><button class="primary" type="button" id="labRandomScenario">🎲 Scénario surprise</button>${active?`<button class="secondary" type="button" id="labNewVariant">🎲 Nouvelle variante</button><button class="secondary" type="button" id="leaveLab">Revenir à mon journal</button>`:""}</div><div class="demo-profile-grid">${lab.scenarios.map(sc=>`<article class="demo-person-card ${active===sc.id?"is-active":""}"><div class="demo-person-head"><span class="demo-person-avatar">${sc.icon}</span><div><h4>${esc(sc.title)}</h4><small>${esc(sc.group)}</small></div></div><button class="${active===sc.id?"secondary":"primary"} small" type="button" data-open-lab-scenario="${sc.id}">${active===sc.id?"Scénario ouvert":"Tester"}</button></article>`).join("")}</div></div></details>`; }
+  function labScenarioCardsHtml() {
+    const lab = window.EnergieDemoLab;
+    if (!lab)
+      return `<section class="card lab-selector-panel"><h3>🧪 Laboratoire Énergie</h3><p class="muted small">Le générateur de scénarios n’a pas été chargé. Recharge la page.</p></section>`;
+    const active = db.settings?.demoLab?.scenarioId || "",
+      activeVariant = Math.max(
+        1,
+        Number(db.settings?.demoLab?.variant) || Number(labVariant) || 1,
+      );
+    return `<details class="card demo-selector-card lab-selector-panel"><summary><span><small class="eyebrow"><span class="lab-flask" aria-hidden="true">🧪</span> Laboratoire Énergie</small><strong>Scénarios dynamiques</strong><small>60 jours fictifs pour explorer les Observations${active ? ` · Variante ${activeVariant}` : ""}</small></span><span class="demo-selector-meta"><b>${lab.scenarios.length} scénarios</b><i aria-hidden="true">›</i></span></summary><div class="demo-selector-content"><div class="lab-actions"><button class="primary" type="button" id="labRandomScenario">🎲 Scénario surprise</button>${active ? `<button class="secondary" type="button" id="labNewVariant">🎲 Nouvelle variante <span aria-hidden="true">(${activeVariant + 1})</span></button><button class="secondary" type="button" id="leaveLab">Revenir à mon journal</button>` : ""}</div><div class="demo-profile-grid">${lab.scenarios.map((sc) => `<article class="demo-person-card ${active === sc.id ? "is-active" : ""}"><div class="demo-person-head"><span class="demo-person-avatar">${sc.icon}</span><div><h4>${esc(sc.title)}</h4><small>${esc(sc.group)}${active === sc.id ? ` · Variante ${activeVariant}` : ""}</small></div></div><button class="${active === sc.id ? "secondary" : "primary"} small" type="button" data-open-lab-scenario="${sc.id}">${active === sc.id ? "Scénario ouvert" : "Tester"}</button></article>`).join("")}</div></div></details>`;
+  }
   function enterLabScenario(id,variant=1){const lab=window.EnergieDemoLab;if(!lab)return alert("Le Laboratoire n’est pas chargé.");if(!labRealDb){labRealDb=db;try{labRealBrainMemory=brainMemoryState()?JSON.parse(JSON.stringify(brainMemoryState())):null;}catch(_){labRealBrainMemory=null;}}labVariant=variant;db=migrate(lab.generate(id,{variant}));db.settings.demoMode=true;db.settings.demoReadOnly=true;insightsComputationCache=null;observationExplorerResultsCache.clear();buildDemoBrainMemory(db);selectedDate=Object.keys(db.days||{}).sort().at(-1)||todayKey();currentView="insights";render();}
   function leaveLab(){if(!labRealDb)return;db=labRealDb;labRealDb=null;if(labRealBrainMemory&&window.Brain?.replaceMemoryState)window.Brain.replaceMemoryState(labRealBrainMemory);labRealBrainMemory=null;labVariant=1;selectedDate=todayKey();currentView="profile";render();}
   function randomLabScenario(){const sc=window.EnergieDemoLab?.randomScenario?.({variant:Date.now()});if(sc)enterLabScenario(sc.id,1);}
-  function newLabVariant(){const id=db.settings?.demoLab?.scenarioId;if(id)enterLabScenario(id,labVariant+1);}
+  function newLabVariant(){
+    const id=db.settings?.demoLab?.scenarioId;
+    if(!id) return;
+    const current=Math.max(1,Number(db.settings?.demoLab?.variant)||Number(labVariant)||1);
+    enterLabScenario(id,current+1);
+  }
   function demoLandingDate(profileId) {
     const dates = Object.keys(db.days || {}).sort();
     if (profileId === "elodie")
@@ -10494,16 +10509,6 @@ function formatSleepDuration(hours) {
   }
   function labFiberHydrationObservation() {
     if (db.settings?.demoLab?.scenarioId !== "fiber-improvement") return null;
-    const positiveIds = new Set([
-      "positive_energy",
-      "positive_wellbeing",
-      "energy",
-      "feeling_good",
-      "stable_energy",
-      "good_mood",
-      "focus",
-      "calm",
-    ]);
     const rows = Object.entries(db.days || {})
       .filter(([date, day]) => date <= selectedDate && day)
       .sort(([a], [b]) => a.localeCompare(b))
@@ -10517,41 +10522,62 @@ function formatSleepDuration(hours) {
             ) || []
           ).includes("high_fiber"),
         );
-        const values = meals
-          .map((meal) => {
-            const tags = meal.feeling?.tags || [];
-            if (!tags.some((tag) => positiveIds.has(tag))) return null;
-            const score = Number(meal.feeling?.rating);
-            return Number.isFinite(score)
-              ? Math.max(0, Math.min(5, score))
-              : null;
-          })
-          .filter(Number.isFinite);
+        const symptomObservations = (day.observations || []).filter((item) =>
+          (item.tags || []).some((tag) =>
+            ["constipation", "headache"].includes(tag),
+          ),
+        );
+        const symptomIntensity = symptomObservations.length
+          ? symptomObservations.reduce(
+              (sum, item) =>
+                sum + Math.max(0, Math.min(5, Number(item.intensity) || 0)),
+              0,
+            ) / symptomObservations.length
+          : 0;
         return {
           date,
           fiber,
           water: Number(day.water) || 0,
-          positive: values.length
-            ? values.reduce((sum, value) => sum + value, 0) / values.length
-            : null,
+          symptomIntensity,
+          hasConstipation: symptomObservations.some((item) =>
+            (item.tags || []).includes("constipation"),
+          ),
+          hasHeadache: symptomObservations.some((item) =>
+            (item.tags || []).includes("headache"),
+          ),
         };
-      })
-      .filter((row) => Number.isFinite(row.positive));
-    const low = rows.filter((row) => !row.fiber && row.water <= 5),
+      });
+    const low = rows.filter((row) => !row.fiber && row.water <= 6),
       supported = rows.filter((row) => row.fiber && row.water >= 7),
       average = (items) =>
         items.length
-          ? items.reduce((sum, row) => sum + row.positive, 0) / items.length
+          ? items.reduce((sum, row) => sum + row.symptomIntensity, 0) /
+            items.length
+          : 0,
+      symptomRate = (items) =>
+        items.length
+          ? items.filter((row) => row.symptomIntensity > 0).length /
+            items.length
           : 0,
       lowAverage = average(low),
       supportedAverage = average(supported),
-      improvement = supportedAverage - lowAverage;
-    if (low.length < 5 || supported.length < 5 || improvement < 0.45)
+      lowRate = symptomRate(low),
+      supportedRate = symptomRate(supported),
+      difference = lowAverage - supportedAverage;
+    if (
+      low.length < 4 ||
+      supported.length < 4 ||
+      (difference < 0.35 && lowRate - supportedRate < 0.18)
+    )
       return null;
     const strength =
-      low.length >= 10 && supported.length >= 10 && improvement >= 0.8
+      low.length >= 8 &&
+      supported.length >= 12 &&
+      (difference >= 0.9 || lowRate - supportedRate >= 0.35)
         ? "strong"
-        : low.length >= 7 && supported.length >= 7 && improvement >= 0.6
+        : low.length >= 6 &&
+            supported.length >= 8 &&
+            (difference >= 0.55 || lowRate - supportedRate >= 0.25)
           ? "moderate"
           : "preliminary";
     const confidence =
@@ -10560,14 +10586,19 @@ function formatSleepDuration(hours) {
         : strength === "moderate"
           ? { icon: "🌿", label: "Bonne tendance", cls: "medium" }
           : { icon: "🌱", label: "Peu de données", cls: "low" };
+    const lowSymptomDays = low.filter((row) => row.symptomIntensity > 0).length,
+      supportedSymptomDays = supported.filter(
+        (row) => row.symptomIntensity > 0,
+      ).length,
+      headacheDays = rows.filter((row) => row.hasHeadache).length;
     return {
-      id: "lab-fiber-hydration-positive",
+      id: "lab-fiber-hydration-symptoms",
       kind: "day-context-feeling-change",
       valence: "negative",
       icon: "🌾",
-      title: "Moins de fibres et d’hydratation : ressenti moins favorable",
+      title: "Les inconforts diminuent avec la nouvelle routine",
       text:
-        "Dans ce scénario, le ressenti est moins favorable les journées où les aliments riches en fibres sont peu présents et où l’hydratation est plus basse.",
+        "Dans ce scénario fictif, la constipation et quelques maux de tête sont davantage consignés lorsque les fibres sont peu présentes et que l’hydratation est plus basse. Ces inconforts deviennent moins fréquents avec la nouvelle routine.",
       statistic: lowAverage.toFixed(1),
       comparisonStatistic: supportedAverage.toFixed(1),
       comparisonLabels: [
@@ -10579,10 +10610,13 @@ function formatSleepDuration(hours) {
         comparison: supported.length,
         total: low.length + supported.length,
       },
-      metrics: { difference: lowAverage - supportedAverage, strength },
+      metrics: { difference, strength },
       confidence,
-      evidence: {},
-      basis: `${low.length} journées avec peu de fibres et une hydratation de 5 verres ou moins ont été comparées à ${supported.length} journées avec des aliments riches en fibres et au moins 7 verres. Les journées intermédiaires sont exclues de cette comparaison pour ne pas diluer le signal.`,
+      evidence: {
+        exposedRate: lowRate,
+        comparisonRate: supportedRate,
+      },
+      basis: `${lowSymptomDays} journée${lowSymptomDays !== 1 ? "s" : ""} avec constipation ou mal de tête sur ${low.length} journées moins riches en fibres et moins hydratées ont été comparées à ${supportedSymptomDays} sur ${supported.length} journées avec fibres et hydratation plus régulières. ${headacheDays ? `${headacheDays} maux de tête ont aussi été consignés dans l’ensemble du scénario.` : ""} Les journées intermédiaires ne sont pas utilisées pour cette comparaison.`,
     };
   }
 
