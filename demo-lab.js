@@ -91,7 +91,7 @@
     const end=options.endDate?new Date(`${options.endDate}T12:00:00`):new Date();
     end.setHours(12,0,0,0);
     const start=new Date(end.getTime()-(days-1)*DAY);
-    const activeDays=10+Math.floor(random()*31);
+    const activeDays=10+Math.floor(random()*41);
     const activeStart=Math.floor(random()*(days-activeDays+1));
     const activeEnd=activeStart+activeDays-1;
     const store={version:24,createdAt:start.toISOString(),updatedAt:new Date().toISOString(),
@@ -116,8 +116,9 @@
     for(let i=0;i<days;i++){
       const date=dateKey(start,i), progress=i/Math.max(1,days-1), inActiveWindow=i>=activeStart&&i<=activeEnd, activeProgress=inActiveWindow?((i-activeStart)/Math.max(1,activeDays-1)):0;
       const weekday=new Date(`${date}T12:00:00`).getDay();
-      const beforeWindow=i<activeStart, afterWindow=i>activeEnd;
-      let exposure=inActiveWindow ? random()<.62 : (beforeWindow?random()<.16:random()<.06);
+      const beforeWindow=false, afterWindow=i>activeEnd;
+      let exposure=inActiveWindow ? random()<.62 : random()<.12;
+      if(afterWindow && i===Math.min(days-1,activeEnd+18)) exposure=true;
       if(sc.pattern==="withdrawal") exposure=inActiveWindow && activeProgress<.5 ? random()<.62 : random()<.05;
       if(sc.pattern==="rechallenge") exposure=inActiveWindow?(activeProgress<.34?random()<.62:activeProgress<.70?random()<.04:random()<.58):random()<.05;
       if(sc.pattern==="ramp") exposure=inActiveWindow ? random()<(0.18+activeProgress*.70) : random()<.08;
@@ -149,9 +150,9 @@
       }
 
       if(!missing){
-        const neutralBreakfasts=["Gruau, banane et noix","Omelette, rôties et fruit","Rôties au beurre d’arachide et banane","Œufs, rôties et fruit"];
+        const neutralBreakfasts=["Gruau, banane et noix","Omelette aux épinards, rôties et orange","Rôties au beurre d’arachide et banane","Œufs brouillés, pommes de terre et fruit","Bol d’avoine, pomme et noix","Pain doré, fraises et noix","Smoothie banane, avoine et beurre d’arachide","Bagel, œuf et avocat"];
         const dairyBreakfasts=["Yogourt grec, bleuets et avoine","Fromage cottage, framboises et granola"];
-        const breakfastHasTarget=sc.target==="dairy" && (inActiveWindow?random()<.34:(afterWindow?random()<.03:random()<.08));
+        const breakfastHasTarget=sc.target==="dairy" && (inActiveWindow?random()<.28:random()<.06);
         const recognizedDairyBreakfasts=dairyBreakfasts.filter(description=>recognizedAs(description,"dairy"));
         const breakfastPool=breakfastHasTarget?recognizedDairyBreakfasts:neutralBreakfasts;
         const breakfast=lateCoffee?`Café filtre, ${breakfastPool[Math.floor(random()*breakfastPool.length)]}`:breakfastPool[Math.floor(random()*breakfastPool.length)];
