@@ -119,12 +119,12 @@
     const totalWeightChange=sc.pattern==="weight_down"?-(3.2+random()*1.8):sc.pattern==="weight_up"?(3.0+random()*1.8):0;
 
     let previousExposure=false;
+    const rechallengeDay=Math.min(days-1,activeEnd+10+Math.floor(random()*9));
     for(let i=0;i<days;i++){
       const date=dateKey(start,i), progress=i/Math.max(1,days-1), inActiveWindow=i>=activeStart&&i<=activeEnd, activeProgress=inActiveWindow?((i-activeStart)/Math.max(1,activeDays-1)):0;
       const weekday=new Date(`${date}T12:00:00`).getDay();
       const beforeWindow=false, afterWindow=i>activeEnd;
       let exposure=inActiveWindow ? random()<.62 : random()<.12;
-      const rechallengeDay=Math.min(days-1,activeEnd+10+Math.floor(random()*9));
       if(afterWindow && i===rechallengeDay) exposure=true;
       if(sc.pattern==="withdrawal") exposure=inActiveWindow && activeProgress<.5 ? random()<.62 : random()<.05;
       if(sc.pattern==="rechallenge") exposure=inActiveWindow?(activeProgress<.34?random()<.62:activeProgress<.70?random()<.04:random()<.58):random()<.05;
