@@ -50,6 +50,10 @@
   function mealsWithCategory(target){ return commonMeals.filter(description=>recognizedAs(description,target)); }
   function mealsWithoutCategory(target){ return commonMeals.filter(description=>!recognizedAs(description,target)); }
   function pick(pool,random){ return pool[Math.floor(random()*pool.length)]; }
+  function pickDistinct(pool,used,random){
+    const available=pool.filter(item=>!used.has(item));
+    return pick(available.length?available:pool,random);
+  }
 
   const foodTargets=new Set(["dairy","soy","seafood","fish","gluten","legumes","fruits","vegetables","allium","processed_foods","high_fiber","fried_foods","spicy_foods"]);
   function isFoodTarget(target){ return foodTargets.has(target); }
@@ -59,11 +63,11 @@
     return random()<after;
   }
 
-  function targetMeal(target,random){
+  function targetMeal(target,random,used=new Set()){
     const poolKey=({processed_foods:"processed",fried_foods:"fried",spicy_foods:"spicy"})[target]||target;
     const pool=(foods[poolKey]||commonMeals).filter(description=>recognizedAs(description,target));
     if(!pool.length) throw new Error(`Laboratoire: aucun repas reconnu pour la catégorie ${target}.`);
-    return pick(pool,random);
+    return pickDistinct(pool,used,random);
   }
 
   const foodScenarioTargets=new Set(["dairy","soy","seafood","gluten","legumes","allium","fried_foods","spicy_foods","processed_foods","high_fiber"]);
