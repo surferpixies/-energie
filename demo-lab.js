@@ -308,9 +308,11 @@
         if(sc.pattern==="dose") { const highDose=random()<.45; symptomProbability=exposure?(highDose?.84:.34):.06; }
         if(sc.pattern==="delayed") symptomProbability=.05;
         const symptom=lunchOutcome?lunchOutcome.rating<4:random()<symptomProbability;
+        const contextualSignal=["sleep","activity","water"].includes(sc.pattern);
+        const positiveTrigger=sc.pattern==="activity"?active:sc.pattern==="water"?water>=7:(exposure||inActiveWindow);
         const tags=lunchOutcome?lunchOutcome.tags:sc.signal==="digestive"&&symptom?["bloating",random()<.55?"gas":"cramps"]:
-          sc.signal==="energy"&&((exposure&&random()<sc.strength)||(sc.pattern==="sleep"&&sleep<6.3))?["fatigue"]:
-          sc.signal==="positive"&&((exposure||inActiveWindow||water>=7)&&random()<sc.strength)?["energy","feeling_good"]:
+          sc.signal==="energy"&&!contextualSignal&&exposure&&random()<sc.strength?["fatigue"]:
+          sc.signal==="positive"&&!contextualSignal&&positiveTrigger&&random()<sc.strength?["energy","feeling_good"]:
           ["positive_wellbeing"];
         const rating=lunchOutcome?.rating??(tags.includes("bloating")?2:tags.includes("fatigue")?2:4);
         day.meals.push(meal(`lab-${date}-l`,date,"12:20","Dîner",description,tags,rating,lunchOutcome?.note??(tags.includes("bloating")?"Inconfort digestif noté après le repas.":"")));
@@ -329,6 +331,19 @@
           sc.signal==="positive"&&dinnerExposure&&random()<sc.strength?["energy","feeling_good"]:
           ["positive_wellbeing"]);
         day.meals.push(meal(`lab-${date}-d`,date,"18:45","Souper",dinnerDescription,dinnerTags,dinnerOutcome?.rating??(dinnerSymptom?2:4),dinnerOutcome?.note??(dinnerSymptom?"Inconfort digestif léger.":"")));
+
+        // Sommeil, activité et hydratation sont des contextes de journée.
+        // On les consigne hors repas pour éviter que le moteur attribue par
+        // hasard la fatigue ou le mieux-être au poisson, aux fritures, etc.
+        if(sc.pattern==="sleep" && sleep<6.3){
+          day.observations.push({id:`lab-sleep-${date}`,date,time:"14:30",intensity:4,duration:"few_hours",tags:["fatigue"],contexts:["sleep"],mealIds:[],notes:"Fatigue marquée pendant la journée après une nuit courte.",createdAt:`${date}T14:30:00`,updatedAt:`${date}T14:30:00`});
+        }
+        if(sc.pattern==="activity" && active && random()<sc.strength){
+          day.observations.push({id:`lab-activity-${date}`,date,time:"20:15",intensity:4,duration:"few_hours",tags:["positive_wellbeing"],contexts:["activity"],mealIds:[],notes:"Meilleur ressenti général pendant une journée active.",createdAt:`${date}T20:15:00`,updatedAt:`${date}T20:15:00`});
+        }
+        if(sc.pattern==="water" && water>=7 && random()<sc.strength){
+          day.observations.push({id:`lab-water-${date}`,date,time:"20:15",intensity:4,duration:"few_hours",tags:["positive_wellbeing"],contexts:["hydration"],mealIds:[],notes:"Meilleur ressenti général pendant une journée bien hydratée.",createdAt:`${date}T20:15:00`,updatedAt:`${date}T20:15:00`});
+        }
 
         if(sc.pattern==="delayed" && previousExposure && random()<sc.strength){
           day.observations.push({id:`lab-ob-${date}`,date,time:"09:15",intensity:3,duration:"few_hours",tags:["bloating","cramps"],contexts:["food"],mealIds:[],notes:"Inconfort apparu ce matin, sans l’attribuer automatiquement au dernier repas.",createdAt:`${date}T09:15:00`,updatedAt:`${date}T09:15:00`});
@@ -362,5 +377,5 @@
     return pool[Math.floor(random()*pool.length)];
   }
 
-  window.EnergieDemoLab=Object.freeze({version:3,scenarios:Object.freeze(scenarios),list,groups,generate,randomScenario});
+  window.EnergieDemoLab=Object.freeze({version:4,scenarios:Object.freeze(scenarios),list,groups,generate,randomScenario});
 })();
