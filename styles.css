@@ -1702,3 +1702,22 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .weight-observation-fold-body{border-top:1px solid var(--border)}
 .weight-observation-fold-body>.observation-explorer-panel-body{padding:15px}
 @media(max-width:420px){.weight-observation-fold>summary{padding:13px}.weight-observation-heading{padding-inline:2px}}
+
+
+/* Observations — cartes principales pleine largeur et hiérarchie plus légère */
+.attention-observations-fold .discovery-grid{grid-template-columns:1fr!important}
+.attention-observations-fold .discovery-card{width:100%;padding:17px 18px;gap:10px}
+.attention-observations-fold .discovery-card-top{align-items:center}
+.attention-observations-fold .observation-badges{justify-content:flex-end;gap:5px}
+.attention-observations-fold .observation-new-badge{padding:4px 8px;font-size:.61rem;font-weight:850}
+.attention-observations-fold .observation-strength,
+.attention-observations-fold .discovery-level{padding:4px 7px;font-size:.61rem}
+.attention-observations-fold .discovery-icon{width:40px;height:40px;border-radius:13px;font-size:1.25rem}
+.attention-observations-fold .discovery-card h3{font-size:1.05rem;line-height:1.3}
+.attention-observations-fold .observation-plain-summary{max-width:66ch;margin-top:0}
+.attention-observations-fold .observation-evidence{margin-top:3px}
+@media(max-width:520px){
+  .attention-observations-fold .discovery-card{padding:15px}
+  .attention-observations-fold .discovery-card-top{align-items:flex-start}
+  .attention-observations-fold .observation-badges{justify-content:flex-start}
+}
