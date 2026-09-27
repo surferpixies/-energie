@@ -1684,3 +1684,21 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   .sleep-card-wide .wellness-head{grid-template-columns:30px minmax(0,1fr) auto}
   .sleep-card-wide .wellness-icon{font-size:1.15rem}
 }
+
+
+/* Observations — lecture simple au premier plan, détails au second plan */
+.observation-plain-summary{font-size:.91rem;line-height:1.55;color:var(--text)!important}
+.observation-evidence-intro{margin:0!important;color:var(--muted);font-size:.72rem!important;line-height:1.5!important}
+.weight-observation-card{display:grid;gap:12px;margin:0 0 18px}
+.weight-observation-heading{padding:0 4px}
+.weight-observation-heading h2{margin:3px 0 6px;font-size:1.2rem}
+.weight-observation-heading p:last-child{margin:0;font-size:.78rem;line-height:1.45}
+.weight-observation-folds{display:grid;gap:10px}
+.weight-observation-fold{margin:0;padding:0;overflow:hidden}
+.weight-observation-fold>summary{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px;min-height:72px;padding:14px 16px;cursor:pointer;list-style:none}
+.weight-observation-fold>summary::-webkit-details-marker{display:none}
+.weight-observation-fold>summary>em{color:var(--muted);font-size:1.25rem;font-style:normal;transition:transform .2s ease}
+.weight-observation-fold[open]>summary>em{transform:rotate(180deg)}
+.weight-observation-fold-body{border-top:1px solid var(--border)}
+.weight-observation-fold-body>.observation-explorer-panel-body{padding:15px}
+@media(max-width:420px){.weight-observation-fold>summary{padding:13px}.weight-observation-heading{padding-inline:2px}}
