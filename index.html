@@ -15,7 +15,7 @@
     html,body{margin:0;background:#eef8e7;}
     #splashScreen{position:fixed;inset:0;background:#eef8e7;}
   </style>
-  <link rel="stylesheet" href="styles.css?v=3.56.133">
+  <link rel="stylesheet" href="styles.css?v=3.56.134">
   <link rel="stylesheet" href="portrait.css?v=3.56.21">
   <link rel="stylesheet" href="observation-detail.css?v=3.56.21">
   <link rel="stylesheet" href="personal-metrics.css?v=3.56.21">
@@ -162,6 +162,7 @@
         <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div>
         <div class="meal-description-composer">
           <textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli" required></textarea>
+          <button type="button" id="openCnfGuidedEntry" class="meal-cnf-guided-entry"><span class="meal-cnf-guided-icon" aria-hidden="true">🇨🇦</span><span><strong>Saisie guidée FCÉN</strong><small>Santé Canada</small></span><b aria-hidden="true">›</b></button>
           <div class="meal-description-toolbar">
             <div class="meal-composer-actions">
               <label class="meal-composer-action meal-photo-action"><input id="mealPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><strong>Photo <small id="mealPhotoCount">0/3</small></strong></label>
@@ -170,7 +171,6 @@
             <small id="mealAiPhotoStatus" class="meal-ai-photo-status" role="status" aria-live="polite">La photo est ajoutée sans analyse. Utilise ✨ Analyser avec l’IA seulement si tu le souhaites.</small>
           </div>
         </div>
-        <button type="button" id="openCnfGuidedEntry" class="meal-cnf-guided-entry"><span class="meal-cnf-guided-icon" aria-hidden="true">🇨🇦</span><span><strong>Saisie guidée FCÉN</strong><small>Rechercher dans le fichier de Santé Canada</small></span><b aria-hidden="true">›</b></button>
         <div id="mealCnfLinkedStatus" class="meal-cnf-linked-status" hidden><span aria-hidden="true">✓</span><strong></strong><small>Quantités reliées directement aux fiches FCÉN</small></div>
         <p class="meal-precision-hint"><span aria-hidden="true">💡</span><span id="mealPrecisionHintText">Pour améliorer l’estimation des calories, ajoute les quantités quand tu les connais : 150 g de poulet, 1 tasse de riz, 1 tasse de brocoli. C’est facultatif.</span></p>
         <small id="mealFavoriteFeedback" class="meal-favorite-feedback" role="status" aria-live="polite" hidden></small>
@@ -722,6 +722,6 @@
   <script src="demo-lab.js?v=4"></script>
   <script src="personal-metrics.js?v=3.56.99"></script>
   <script src="onboarding-images.js?v=3.56.52"></script>
-  <script src="app.js?v=3.56.139"></script>
+  <script src="app.js?v=3.56.140"></script>
 </body>
 </html>
