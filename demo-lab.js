@@ -240,17 +240,17 @@
       store.days[date]=day;
       previousExposure=exposure;
     }
-    const labStats={target:sc.target,activeStart,activeEnd,activeDays,exposures:0,activeExposures:0,postExposures:0,negativeMeals:0};
+    const labStats={target:sc.target,activeStart,activeEnd,activeDays,rechallengeDay,exposures:0,activeExposures:0,postExposures:0,negativeMeals:0,activeNegativeMeals:0,postNegativeMeals:0};
     Object.values(store.days).forEach((day,idx)=>{
       (day.meals||[]).forEach(m=>{
         const hit=isFoodTarget(sc.target)&&recognizedAs(m.description,sc.target);
         if(hit){labStats.exposures++;if(idx>=activeStart&&idx<=activeEnd)labStats.activeExposures++;if(idx>activeEnd)labStats.postExposures++;}
         const tags=m.feeling?.tags||[];
-        if(tags.some(t=>["bloating","gas","cramps","fatigue"].includes(t))) labStats.negativeMeals++;
+        if(tags.some(t=>["bloating","gas","cramps","fatigue"].includes(t))){labStats.negativeMeals++;if(idx>=activeStart&&idx<=activeEnd)labStats.activeNegativeMeals++;if(idx>activeEnd)labStats.postNegativeMeals++;}
       });
     });
     Object.defineProperty(store,"__labStats",{value:Object.freeze(labStats),enumerable:false,writable:false});
-    Object.defineProperty(store,"__labTruth",{value:Object.freeze({target:sc.target,signal:sc.signal,pattern:sc.pattern,activeStart,activeEnd,activeDays}),enumerable:false,writable:false});
+    Object.defineProperty(store,"__labTruth",{value:Object.freeze({target:sc.target,signal:sc.signal,pattern:sc.pattern,activeStart,activeEnd,activeDays,rechallengeDay}),enumerable:false,writable:false});
     return store;
   }
 
