@@ -72,8 +72,10 @@
     if(sc.pattern==="sparse") return i===activeStart+2||i===Math.min(activeEnd,activeStart+7);
     if(sc.pattern==="ramp") return i<activeStart?random()<.10:i<=activeEnd?random()<(.20+((i-activeStart)/Math.max(1,activeEnd-activeStart))*.50):random()<.72;
     if(sc.pattern==="rechallenge") return exposureChance(i,activeStart,activeEnd,random,.08,.64,.04)||(i===rechallengeDay);
+    if(sc.pattern==="transient") return exposureChance(i,activeStart,activeEnd,random,.10,.50,.12);
+    if(sc.pattern==="confounder") return exposureChance(i,activeStart,activeEnd,random,.08,.56,.08)||(i===rechallengeDay);
     const base=exposureChance(i,activeStart,activeEnd,random,.08,.62,.07);
-    return base||(i===rechallengeDay&&["exposure","withdrawal","dose","confounder"].includes(sc.pattern));
+    return base||(i===rechallengeDay&&["exposure","withdrawal","dose"].includes(sc.pattern));
   }
 
 
@@ -164,14 +166,7 @@
       const weekday=new Date(`${date}T12:00:00`).getDay();
       const beforeWindow=false, afterWindow=i>activeEnd;
       const foodExposure=foodStoryExposure(sc,i,activeStart,activeEnd,rechallengeDay,random);
-      let exposure=foodExposure===null?exposureChance(i,activeStart,activeEnd,random,.08,.62,.08):foodExposure;
-      if(afterWindow && i===rechallengeDay) exposure=true;
-      if(sc.pattern==="withdrawal") exposure=exposureChance(i,activeStart,activeEnd,random,.08,.64,.04);
-      if(sc.pattern==="rechallenge") exposure=exposureChance(i,activeStart,activeEnd,random,.08,.64,.04) || (afterWindow&&i===rechallengeDay);
-      if(sc.pattern==="ramp") exposure=i<activeStart?random()<.12:inActiveWindow?random()<(0.18+activeProgress*.55):random()<.72;
-      if(sc.pattern==="sparse") exposure=i===activeStart+2||i===Math.min(activeEnd,activeStart+7); // volontairement insuffisant
-      if(sc.pattern==="transient") exposure=exposureChance(i,activeStart,activeEnd,random,.10,.50,.12);
-      if(sc.pattern==="confounder") exposure=exposureChance(i,activeStart,activeEnd,random,.08,.56,.08);
+      const exposure=foodExposure===null?exposureChance(i,activeStart,activeEnd,random,.08,.62,.08):foodExposure;
       const missing=sc.pattern==="missing" && random()<.28;
       const chaotic=sc.pattern==="chaotic";
       const lateCoffee=(sc.pattern==="timing" && exposure && random()<(inActiveWindow?.72:.18));
