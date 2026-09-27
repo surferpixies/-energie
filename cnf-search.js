@@ -5,6 +5,8 @@
 
   const normalize = (value) => String(value || "")
     .toLocaleLowerCase("fr-CA")
+    .replace(/œ/g, "oe")
+    .replace(/æ/g, "ae")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[’']/g, " ")
@@ -122,7 +124,7 @@
     // Le FCÉN nomme souvent les aliments comme « Poisson, tilapia, ... ».
     // Permettre un nom simple (« tilapia ») s'il apparaît comme mot entier,
     // tout en laissant l'étape d'ambiguïté refuser les correspondances serrées.
-    const queryWords = query.split(" ").filter((word) => word.length >= 4);
+    const queryWords = query.split(" ").filter((word) => word.length >= 3);
     const candidateText = meta.candidateText;
     if (queryWords.length && queryWords.every((word) => candidateText.includes(` ${word} `))) {
       score = Math.max(score, 690 + queryWords.length * 35);
@@ -383,7 +385,108 @@
     return remember(foodFromRow(first.row, text));
   }
 
-  const api = Object.freeze({ version: 1, find, scoreRow, stripQuantity, quantityKind });
+  function publicRow(row) {
+    if (!row) return null;
+    const portions = (Array.isArray(row?.[4]) ? row[4] : [])
+      .map((portion, index) => {
+        const grams = Number(portion?.[0]);
+        if (!Number.isFinite(grams) || grams <= 0) return null;
+        return {
+          id: `portion-${index}`,
+          grams,
+          labelFr: String(portion?.[1] || portion?.[2] || "1 portion"),
+          labelEn: String(portion?.[2] || portion?.[1] || "1 serving"),
+        };
+      })
+      .filter(Boolean);
+    return {
+      id: String(row?.[0] ?? ""),
+      nameFr: String(row?.[1] || ""),
+      nameEn: String(row?.[2] || ""),
+      portions,
+    };
+  }
+
+  function preferredGuidedIds(query) {
+    const q = normalize(query);
+    if (["oeuf","oeufs","egg","eggs"].includes(q))
+      return ["125","130","133","129","132"];
+    if (["riz","rice"].includes(q))
+      return ["4475","4473"];
+    return [];
+  }
+
+  function search(text, limit = 12) {
+    const query = stripQuantity(text);
+    const max = Math.max(1, Math.min(30, Number(limit) || 12));
+    if (!query || query.length < 2) return [];
+    const preferred = preferredGuidedIds(query);
+    const ranked = [];
+    for (const row of catalog) {
+      let score = scoreRow(row, text);
+      if (!Number.isFinite(score)) continue;
+      if (hasUnrequestedQualifier(row, text)) score -= 140;
+      if (score >= 420) ranked.push({ row, score });
+    }
+    ranked.sort((a, b) => {
+      const ai = preferred.indexOf(String(a.row?.[0] ?? ""));
+      const bi = preferred.indexOf(String(b.row?.[0] ?? ""));
+      if (ai >= 0 || bi >= 0) {
+        if (ai < 0) return 1;
+        if (bi < 0) return -1;
+        if (ai !== bi) return ai - bi;
+      }
+      return b.score - a.score;
+    });
+    const seen = new Set();
+    return ranked
+      .filter(({ row }) => {
+        const id = String(row?.[0] ?? "");
+        if (!id || seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      })
+      .slice(0, max)
+      .map(({ row }) => publicRow(row));
+  }
+
+  function getById(id) {
+    return publicRow(catalogById.get(String(id)) || null);
+  }
+
+  function nutritionForGrams(id, grams) {
+    const row = catalogById.get(String(id));
+    const amount = Number(grams);
+    if (!row || !Number.isFinite(amount) || amount <= 0) return null;
+    const nutrition = scaledNutrition(row?.[3] || {}, amount);
+    return {
+      calories: nutrition.calories,
+      protein: nutrition.protein,
+      carbs: nutrition.carbs,
+      fat: nutrition.fat,
+      fiber: nutrition.fiber,
+      sugars: nutrition.sugars,
+      sodium: nutrition.sodium,
+      source: "cnf",
+      confidence: "high",
+      basis: `${Math.round(amount * 10) / 10} g · ${String(row?.[1] || "aliment FCÉN")}`,
+      estimated: true,
+      cnfFoodId: String(row?.[0] ?? ""),
+      cnfNameFr: String(row?.[1] || ""),
+      cnfNameEn: String(row?.[2] || ""),
+    };
+  }
+
+  const api = Object.freeze({
+    version: 2,
+    find,
+    search,
+    getById,
+    nutritionForGrams,
+    scoreRow,
+    stripQuantity,
+    quantityKind,
+  });
   root.ENERGIE_CNF_SEARCH = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
