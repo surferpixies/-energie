@@ -17,15 +17,15 @@
   };
 
   const foods = {
-    dairy:["Yogourt grec, bleuets et granola","Pâtes au poulet, crème 15 %, parmesan et brocoli","Sandwich au cheddar, tomate et laitue","Fromage cottage, framboises et noix","Omelette au cheddar, rôties et fruit","Bol de yogourt grec, banane, noix et avoine","Poulet, pommes de terre, beurre et haricots verts","Pâtes aux légumes, crème 15 % et parmesan","Salade de quinoa, feta, concombre et tomates","Bagel, fromage à la crème et fruit","Gruau au lait, banane et cannelle","Lasagne au bœuf, mozzarella et légumes"],
+    dairy:["Gruau au lait, banane et cannelle","Smoothie au lait, banane et fraises","Poulet, pommes de terre, brocoli et verre de lait","Riz, poulet, carottes et lait"],
     soy:["Bol de tofu, riz brun et brocoli","Edamames, quinoa et légumes","Soupe miso, tofu et nouilles","Smoothie au lait de soya, banane et avoine"],
     seafood:["Crevettes, riz et légumes","Moules, pommes de terre et salade","Pâtes aux crevettes et tomates","Bol de quinoa, crevettes et légumes"],
     fish:["Saumon, pommes de terre et haricots verts","Tilapia, riz et légumes","Truite, quinoa et salade"],
-    gluten:["Rôties de blé entier, œufs et fruit","Pâtes au poulet et légumes","Sandwich à la dinde et crudités","Couscous, pois chiches et légumes"],
+    gluten:["Pâtes, poulet et brocoli","Pain de blé entier, œufs et tomate","Orge, poulet et carottes","Seitan, riz et courgettes"],
     legumes:["Chili aux haricots rouges et légumes","Lentilles, riz et légumes","Salade de pois chiches, tomates et concombre","Soupe aux lentilles et pain"],
     fruits:["Yogourt, fraises et bleuets","Pomme, amandes et fromage","Gruau, banane et framboises","Salade de fruits et yogourt"],
     vegetables:["Poulet, riz, brocoli et poivrons","Omelette aux légumes et rôties","Soupe de légumes et sandwich à la dinde"],
-    allium:["Poulet sauté avec ail, oignon, riz et légumes","Pâtes tomate, ail, oignon et parmesan","Soupe aux poireaux, pain et salade"],
+    allium:["Poulet, riz, brocoli, ail et oignon","Saumon, pommes de terre, salade et ail","Quinoa, poulet, tomates et oignon"],
     caffeine:["Café filtre et déjeuner habituel","Latte et rôties au beurre d’arachide","Thé noir, yogourt et fruit"],
     processed:["Pizza, salade et boisson gazeuse","Repas surgelé et crudités","Burger, frites et salade"],
     high_fiber:["Gruau, chia, framboises et amandes","Lentilles, quinoa et légumes","Pois chiches, avocat et légumes"],
@@ -33,6 +33,57 @@
     spicy:["Chili épicé aux haricots","Curry épicé au poulet et légumes","Tacos épicés, salsa et salade"],
     neutral:["Poulet, riz et légumes","Saumon, pommes de terre et salade","Soupe aux légumes, sandwich à la dinde et fruit","Quinoa, légumes et poulet","Bœuf sauté, riz et légumes","Salade de poulet, avocat, tomates et pain","Tilapia, couscous et haricots verts","Bol de riz, œuf, edamames et légumes","Dinde, patate douce et brocoli","Pâtes tomate, poulet et courgettes","Omelette aux légumes, pommes de terre et fruit","Soupe de lentilles, pain et salade"]
   };
+
+  // Standard food scenarios use matched meal pairs: the exposed and control
+  // meals stay as similar as possible so the Observation engine does not learn
+  // a side ingredient merely because it travels with the intended test food.
+  const matchedFoodPairs = Object.freeze({
+    dairy:[
+      ["Gruau au lait, banane et cannelle","Gruau à l'eau, banane et cannelle"],
+      ["Poulet, pommes de terre, brocoli et verre de lait","Poulet, pommes de terre, brocoli et eau"],
+      ["Riz, poulet, carottes et lait","Riz, poulet et carottes"]
+    ],
+    soy:[
+      ["Tofu, riz et brocoli","Poulet, riz et brocoli"],
+      ["Edamames, quinoa et tomates","Poulet, quinoa et tomates"],
+      ["Lait de soya, gruau et banane","Gruau à l'eau et banane"]
+    ],
+    seafood:[
+      ["Crevettes, riz et brocoli","Poulet, riz et brocoli"],
+      ["Moules, pommes de terre et salade","Poulet, pommes de terre et salade"],
+      ["Pétoncles, quinoa et tomates","Poulet, quinoa et tomates"]
+    ],
+    gluten:[
+      ["Pâtes, poulet et brocoli","Riz, poulet et brocoli"],
+      ["Pain de blé entier, œufs et tomate","Gruau, œufs et tomate"],
+      ["Orge, poulet et carottes","Quinoa, poulet et carottes"]
+    ],
+    legumes:[
+      ["Lentilles, riz et brocoli","Poulet, riz et brocoli"],
+      ["Pois chiches, quinoa et tomates","Poulet, quinoa et tomates"],
+      ["Haricots rouges, pommes de terre et salade","Poulet, pommes de terre et salade"]
+    ],
+    allium:[
+      ["Poulet, riz, brocoli, ail et oignon","Poulet, riz et brocoli"],
+      ["Saumon, pommes de terre, salade et ail","Saumon, pommes de terre et salade"],
+      ["Quinoa, poulet, tomates et oignon","Quinoa, poulet et tomates"]
+    ],
+    fried_foods:[
+      ["Poulet frit, pommes de terre et salade","Poulet, pommes de terre et salade"],
+      ["Poisson frit, riz et brocoli","Tilapia, riz et brocoli"],
+      ["Frites, poulet et crudités","Pommes de terre, poulet et crudités"]
+    ],
+    spicy_foods:[
+      ["Poulet épicé, riz et brocoli","Poulet, riz et brocoli"],
+      ["Curry épicé au poulet et légumes","Poulet, riz et légumes"],
+      ["Tacos épicés, salsa et salade","Tacos, salade et tomates"]
+    ],
+    processed_foods:[
+      ["Pizza, poulet et salade","Poulet, pommes de terre et salade"],
+      ["Frites, poulet et salade","Pommes de terre, poulet et salade"],
+      ["Barre protéinée, banane et amandes","Banane et amandes"]
+    ]
+  });
 
   function categoriesFor(description){
     return window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(description) || [];
@@ -68,6 +119,19 @@
     const pool=(foods[poolKey]||commonMeals).filter(description=>recognizedAs(description,target));
     if(!pool.length) throw new Error(`Laboratoire: aucun repas reconnu pour la catégorie ${target}.`);
     return pickDistinct(pool,used,random);
+  }
+
+  function matchedScenarioMeal(target,exposed,random,used=new Set()){
+    const pairs=matchedFoodPairs[target]||[];
+    if(!pairs.length) return null;
+    const valid=pairs.filter(pair=>{
+      const description=exposed?pair[0]:pair[1];
+      return !used.has(description) && (exposed ? recognizedAs(description,target) : !recognizedAs(description,target));
+    });
+    const pool=valid.length?valid:pairs.filter(pair=>exposed?recognizedAs(pair[0],target):!recognizedAs(pair[1],target));
+    if(!pool.length) return null;
+    const pair=pick(pool,random);
+    return exposed?pair[0]:pair[1];
   }
 
   const foodScenarioTargets=new Set(["dairy","soy","seafood","gluten","legumes","allium","fried_foods","spicy_foods","processed_foods","high_fiber"]);
@@ -206,7 +270,8 @@
 
       if(!missing){
         const neutralBreakfasts=["Gruau, banane et noix","Omelette aux épinards, rôties et orange","Rôties au beurre d’arachide et banane","Œufs brouillés, pommes de terre et fruit","Bol d’avoine, pomme et noix","Pain doré, fraises et noix","Smoothie banane, avoine et beurre d’arachide","Bagel, œuf et avocat"];
-        const breakfastHasTarget=standardFoodStory(sc) && (inActiveWindow?random()<.22:random()<.05);
+        const hasMatchedFoodPairs=standardFoodStory(sc) && (matchedFoodPairs[sc.target]?.length||0)>0;
+        const breakfastHasTarget=standardFoodStory(sc) && !hasMatchedFoodPairs && (inActiveWindow?random()<.22:random()<.05);
         const targetBreakfasts=breakfastHasTarget?mealsWithCategory(sc.target).filter(description=>/yogourt|gruau|omelette|bagel|rôties|smoothie|fromage cottage|œuf|fruit|avoine/i.test(description)):[];
         const safeBreakfasts=isFoodTarget(sc.target)?neutralBreakfasts.filter(description=>!recognizedAs(description,sc.target)):neutralBreakfasts;
         const breakfastPool=breakfastHasTarget&&targetBreakfasts.length?targetBreakfasts:(safeBreakfasts.length?safeBreakfasts:neutralBreakfasts);
@@ -225,7 +290,12 @@
           if(!down && random()<.45) day.water=Math.max(3,day.water-1);
         }
         const nonTargetPool=isFoodTarget(sc.target)?mealsWithoutCategory(sc.target).filter(description=>!recognizedAs(description,"caffeine")):commonMeals.filter(description=>!recognizedAs(description,"caffeine"));
-        let description=(exposure&&isFoodTarget(sc.target))?targetMeal(sc.target,random,usedMeals):pickDistinct(nonTargetPool.length?nonTargetPool:foods.neutral,usedMeals,random);
+        let description=hasMatchedFoodPairs
+          ? matchedScenarioMeal(sc.target,Boolean(exposure),random,usedMeals)
+          : (exposure&&isFoodTarget(sc.target))
+            ? targetMeal(sc.target,random,usedMeals)
+            : pickDistinct(nonTargetPool.length?nonTargetPool:foods.neutral,usedMeals,random);
+        if(!description) description=(exposure&&isFoodTarget(sc.target))?targetMeal(sc.target,random,usedMeals):pickDistinct(nonTargetPool.length?nonTargetPool:foods.neutral,usedMeals,random);
         usedMeals.add(description);
         if(sc.pattern==="confounder" && exposure) description=random()<.70?"Pâtes tomate, ail, oignon et parmesan":"Poulet sauté avec ail, oignon, riz et légumes";
         const isTransient=sc.pattern==="transient";
@@ -246,7 +316,12 @@
         day.meals.push(meal(`lab-${date}-l`,date,"12:20","Dîner",description,tags,rating,lunchOutcome?.note??(tags.includes("bloating")?"Inconfort digestif noté après le repas.":"")));
         const dinnerExposure=standardFoodStory(sc) && (inActiveWindow?random()<.20:random()<.05);
         const dinnerNonTarget=isFoodTarget(sc.target)?mealsWithoutCategory(sc.target).filter(description=>!recognizedAs(description,"caffeine")):commonMeals.filter(description=>!recognizedAs(description,"caffeine"));
-        const dinnerDescription=dinnerExposure?targetMeal(sc.target,random,usedMeals):pickDistinct(dinnerNonTarget.length?dinnerNonTarget:foods.neutral,usedMeals,random);
+        let dinnerDescription=hasMatchedFoodPairs
+          ? matchedScenarioMeal(sc.target,Boolean(dinnerExposure),random,usedMeals)
+          : dinnerExposure
+            ? targetMeal(sc.target,random,usedMeals)
+            : pickDistinct(dinnerNonTarget.length?dinnerNonTarget:foods.neutral,usedMeals,random);
+        if(!dinnerDescription) dinnerDescription=dinnerExposure?targetMeal(sc.target,random,usedMeals):pickDistinct(dinnerNonTarget.length?dinnerNonTarget:foods.neutral,usedMeals,random);
         const dinnerOutcome=outcomeForFoodExposure(sc,dinnerExposure,inActiveWindow,afterWindow,random);
         const dinnerSymptom=dinnerOutcome?dinnerOutcome.rating<4:(dinnerExposure&&sc.signal==="digestive"?random()<sc.strength:(sc.signal==="digestive"&&random()<.035));
         const dinnerTags=dinnerOutcome?dinnerOutcome.tags:(dinnerSymptom?["bloating",random()<.5?"gas":"cramps"]:
@@ -287,5 +362,5 @@
     return pool[Math.floor(random()*pool.length)];
   }
 
-  window.EnergieDemoLab=Object.freeze({version:2,scenarios:Object.freeze(scenarios),list,groups,generate,randomScenario});
+  window.EnergieDemoLab=Object.freeze({version:3,scenarios:Object.freeze(scenarios),list,groups,generate,randomScenario});
 })();
