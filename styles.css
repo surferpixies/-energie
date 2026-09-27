@@ -1721,3 +1721,21 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   .attention-observations-fold .discovery-card-top{align-items:flex-start}
   .attention-observations-fold .observation-badges{justify-content:flex-start}
 }
+
+
+/* Toutes les observations — résumé compact, détail toujours pleine largeur */
+.all-observations-fold .history-feelings-list{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important;gap:8px}
+.all-observations-fold .history-feeling-detail{min-width:0}
+.all-observations-fold .history-feeling-detail[open]{grid-column:1/-1}
+.all-observations-fold .history-feeling-detail>summary{min-height:58px}
+.all-observations-fold .history-feeling-detail[open]>summary{border-bottom:1px solid var(--border)}
+.all-observations-fold .history-feeling-detail-body{width:100%;padding:12px;box-sizing:border-box}
+.all-observations-fold .feeling-observation-occurrence{width:100%;max-width:none}
+.all-observations-fold .feeling-context-tiles{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+@media(max-width:520px){
+  .all-observations-fold .history-feelings-list{grid-template-columns:1fr 1fr!important}
+  .all-observations-fold .history-feeling-detail[open]{grid-column:1/-1}
+}
+@media(max-width:360px){
+  .all-observations-fold .history-feelings-list{grid-template-columns:1fr!important}
+}
