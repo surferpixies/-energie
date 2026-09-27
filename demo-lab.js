@@ -97,9 +97,10 @@
     const end=options.endDate?new Date(`${options.endDate}T12:00:00`):new Date();
     end.setHours(12,0,0,0);
     const start=new Date(end.getTime()-(days-1)*DAY);
-    const activeDays=10+Math.floor(random()*41);
-    const activeStart=0;
-    const activeEnd=activeStart+activeDays-1;
+    const activeStart=Math.floor(random()*5); // le phénomène commence naturellement dans les premiers jours (J1 à J5)
+    const changeDay=10+Math.floor(random()*41); // amélioration/changement entre J10 et J50
+    const activeEnd=Math.max(activeStart,changeDay-1);
+    const activeDays=activeEnd-activeStart+1;
     const store={version:24,createdAt:start.toISOString(),updatedAt:new Date().toISOString(),
       settings:{waterGoal:8,theme:"system",showWelcome:false,insightsEnabled:true,nutritionObservations:true,macroTracking:true,
         generalRecommendations:true,showSources:true,professionalSupport:false,feelingReminders:false,supplements:[],
