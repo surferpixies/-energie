@@ -5606,7 +5606,7 @@ function formatSleepDuration(hours) {
       }),
     );
   }
-  function labScenarioCardsHtml() { const lab=window.EnergieDemoLab;if(!lab)return `<section class="card lab-selector-panel"><h3>🧪 Laboratoire Énergie</h3><p class="muted small">Le générateur de scénarios n’a pas été chargé. Recharge la page.</p></section>`;const active=db.settings?.demoLab?.scenarioId||"";return `<details class="card demo-selector-card lab-selector-panel" open><summary><span><small class="eyebrow"><span class="lab-flask" aria-hidden="true">🧪</span> Laboratoire Énergie</small><strong>Scénarios dynamiques</strong><small>60 jours fictifs pour explorer les Observations</small></span><span class="demo-selector-meta"><b>${lab.scenarios.length} scénarios</b><i aria-hidden="true">›</i></span></summary><div class="demo-selector-content"><div class="lab-actions"><button class="primary" type="button" id="labRandomScenario">🎲 Scénario surprise</button>${active?`<button class="secondary" type="button" id="labNewVariant">🎲 Nouvelle variante</button><button class="secondary" type="button" id="leaveLab">Revenir à mon journal</button>`:""}</div><div class="demo-profile-grid">${lab.scenarios.map(sc=>`<article class="demo-person-card ${active===sc.id?"is-active":""}"><div class="demo-person-head"><span class="demo-person-avatar">${sc.icon}</span><div><h4>${esc(sc.title)}</h4><small>${esc(sc.group)}</small></div></div><button class="${active===sc.id?"secondary":"primary"} small" type="button" data-open-lab-scenario="${sc.id}">${active===sc.id?"Scénario ouvert":"Tester"}</button></article>`).join("")}</div></div></details>`; }
+  function labScenarioCardsHtml() { const lab=window.EnergieDemoLab;if(!lab)return `<section class="card lab-selector-panel"><h3>🧪 Laboratoire Énergie</h3><p class="muted small">Le générateur de scénarios n’a pas été chargé. Recharge la page.</p></section>`;const active=db.settings?.demoLab?.scenarioId||"";return `<details class="card demo-selector-card lab-selector-panel"><summary><span><small class="eyebrow"><span class="lab-flask" aria-hidden="true">🧪</span> Laboratoire Énergie</small><strong>Scénarios dynamiques</strong><small>60 jours fictifs pour explorer les Observations</small></span><span class="demo-selector-meta"><b>${lab.scenarios.length} scénarios</b><i aria-hidden="true">›</i></span></summary><div class="demo-selector-content"><div class="lab-actions"><button class="primary" type="button" id="labRandomScenario">🎲 Scénario surprise</button>${active?`<button class="secondary" type="button" id="labNewVariant">🎲 Nouvelle variante</button><button class="secondary" type="button" id="leaveLab">Revenir à mon journal</button>`:""}</div><div class="demo-profile-grid">${lab.scenarios.map(sc=>`<article class="demo-person-card ${active===sc.id?"is-active":""}"><div class="demo-person-head"><span class="demo-person-avatar">${sc.icon}</span><div><h4>${esc(sc.title)}</h4><small>${esc(sc.group)}</small></div></div><button class="${active===sc.id?"secondary":"primary"} small" type="button" data-open-lab-scenario="${sc.id}">${active===sc.id?"Scénario ouvert":"Tester"}</button></article>`).join("")}</div></div></details>`; }
   function enterLabScenario(id,variant=1){const lab=window.EnergieDemoLab;if(!lab)return alert("Le Laboratoire n’est pas chargé.");if(!labRealDb){labRealDb=db;try{labRealBrainMemory=brainMemoryState()?JSON.parse(JSON.stringify(brainMemoryState())):null;}catch(_){labRealBrainMemory=null;}}labVariant=variant;db=migrate(lab.generate(id,{variant}));db.settings.demoMode=true;db.settings.demoReadOnly=true;insightsComputationCache=null;observationExplorerResultsCache.clear();buildDemoBrainMemory(db);selectedDate=Object.keys(db.days||{}).sort().at(-1)||todayKey();currentView="insights";render();}
   function leaveLab(){if(!labRealDb)return;db=labRealDb;labRealDb=null;if(labRealBrainMemory&&window.Brain?.replaceMemoryState)window.Brain.replaceMemoryState(labRealBrainMemory);labRealBrainMemory=null;labVariant=1;selectedDate=todayKey();currentView="profile";render();}
   function randomLabScenario(){const sc=window.EnergieDemoLab?.randomScenario?.({variant:Date.now()});if(sc)enterLabScenario(sc.id,1);}
@@ -12447,6 +12447,8 @@ function formatSleepDuration(hours) {
           "lier mon suivi",
           "profils de demonstration",
           "mode demo",
+          "laboratoire energie",
+          "scenarios dynamiques",
         ],
       },
       {
@@ -12471,6 +12473,8 @@ function formatSleepDuration(hours) {
           "qu'est-ce qui t'a amene a manger",
           "planification des repas",
           "jauge de cible calorique",
+          "saisie des repas",
+          "forcer la saisie guidee fcen",
         ],
       },
     ];
@@ -12614,7 +12618,6 @@ function formatSleepDuration(hours) {
     photoSettingsAnchor?.insertAdjacentHTML("afterend", `<section class="card meal-photo-settings-card"><h3>📷 Photos des repas</h3><p class="muted small">Jusqu’à 3 photos peuvent être ajoutées à un repas. Une photo ajoutée est conservée automatiquement; tu peux la retirer manuellement du repas si tu ne souhaites plus la garder.</p><label class="toggle-row"><span><strong>Partager mes photos avec mon professionnel</strong><small>Autorisation distincte, utilisée lorsqu’un professionnel sera lié à ton compte.</small></span><input id="settingShareMealPhotos" type="checkbox" ${db.settings.shareMealPhotosWithProfessional === true ? "checked" : ""}></label><p class="muted tiny">L’analyse par l’IA reste facultative et n’est lancée que lorsque tu choisis « Analyser avec l’IA ».</p></section>`);
     const welcomeInfoSection = $("#showWelcomeAgain")?.closest("section.card");
     welcomeInfoSection?.insertAdjacentHTML("afterend", `<section class="card energy-guide-profile-card"><div class="settings-row"><div><span class="energy-guide-profile-icon" aria-hidden="true">🌱</span><span><h3>Découvrir Énergie</h3><p class="muted small">Un petit tour des principales fonctions de l’application.</p></span></div><button class="secondary" id="openEnergyGuide" type="button">Voir le guide</button></div></section>`);
-    $(".energy-guide-profile-card")?.insertAdjacentHTML("afterend", `<section class="card pilot-mode-profile-card"><h3>🧪 Mode pilote</h3><p class="muted small">Active un lien discret dans Énergie pour transmettre rapidement une suggestion, un bogue ou un autre commentaire pendant le projet pilote.</p><label class="toggle-row"><span><strong>Activer le mode pilote</strong><small>Le contexte technique est ajouté automatiquement, jamais le contenu de ton journal.</small></span><input id="settingPilotMode" type="checkbox" ${db.settings.pilotMode === true ? "checked" : ""}></label></section>`);
     const energyGuideButton = $("#openEnergyGuide");
     if (energyGuideButton) energyGuideButton.onclick = openEnergyGuide;
     const nutritionAnchor = $("#settingNutrition")?.closest("label");
@@ -12684,6 +12687,8 @@ function formatSleepDuration(hours) {
     if (!nutritionVisibleToViewer()) $("#settingAutoNutrition")?.closest("label")?.remove();
     $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", physiologicalContextHtml());
     $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", personalProfileHtml());
+    const accountProfileCard = ($("#syncNow") || $("#signIn"))?.closest("section.card");
+    accountProfileCard?.insertAdjacentHTML("afterend", `<section class="card pilot-mode-profile-card"><h3>🧪 Mode pilote</h3><p class="muted small">Active un lien discret dans Énergie pour transmettre rapidement une suggestion, un bogue ou un autre commentaire pendant le projet pilote.</p><label class="toggle-row"><span><strong>Activer le mode pilote</strong><small>Le contexte technique est ajouté automatiquement, jamais le contenu de ton journal.</small></span><input id="settingPilotMode" type="checkbox" ${db.settings.pilotMode === true ? "checked" : ""}></label></section>`);
 
     // Build the visual Profile groups NOW, before any later binding can interrupt renderProfile().
     enhanceProfileWithAccordions();
