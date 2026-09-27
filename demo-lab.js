@@ -194,7 +194,10 @@
         const breakfast=lateCoffee?`Café filtre, ${breakfastPool[Math.floor(random()*breakfastPool.length)]}`:breakfastPool[Math.floor(random()*breakfastPool.length)];
         const breakfastExposure=breakfastHasTarget && recognizedAs(breakfast,sc.target);
         const breakfastSymptom=breakfastExposure && sc.signal==="digestive" && random()<sc.strength;
-        const breakfastTags=breakfastSymptom?["bloating",random()<.55?"gas":"cramps"]:["positive_wellbeing"];
+        const breakfastTags=breakfastSymptom?["bloating",random()<.55?"gas":"cramps"]:
+          sc.signal==="energy"&&breakfastExposure&&random()<sc.strength?["fatigue"]:
+          sc.signal==="positive"&&breakfastExposure&&random()<sc.strength?["energy","feeling_good"]:
+          ["positive_wellbeing"];
         day.meals.push(meal(`lab-${date}-b`,date,"07:30","Déjeuner",breakfast,breakfastTags,breakfastSymptom?2:4,breakfastSymptom?"Inconfort digestif noté après le repas.":""));
         if(weightScenario){
           const down=sc.pattern==="weight_down";
@@ -224,7 +227,10 @@
         const dinnerNonTarget=isFoodTarget(sc.target)?mealsWithoutCategory(sc.target).filter(description=>!recognizedAs(description,"caffeine")):commonMeals.filter(description=>!recognizedAs(description,"caffeine"));
         const dinnerDescription=dinnerExposure?targetMeal(sc.target,random):pick(dinnerNonTarget.length?dinnerNonTarget:foods.neutral,random);
         const dinnerSymptom=dinnerExposure&&sc.signal==="digestive"?random()<sc.strength:(sc.signal==="digestive"&&random()<.035);
-        const dinnerTags=dinnerSymptom?["bloating",random()<.5?"gas":"cramps"]:["positive_wellbeing"];
+        const dinnerTags=dinnerSymptom?["bloating",random()<.5?"gas":"cramps"]:
+          sc.signal==="energy"&&dinnerExposure&&random()<sc.strength?["fatigue"]:
+          sc.signal==="positive"&&dinnerExposure&&random()<sc.strength?["energy","feeling_good"]:
+          ["positive_wellbeing"];
         day.meals.push(meal(`lab-${date}-d`,date,"18:45","Souper",dinnerDescription,dinnerTags,dinnerSymptom?2:4,dinnerSymptom?"Inconfort digestif léger.":""));
 
         if(sc.pattern==="delayed" && previousExposure && random()<sc.strength){
