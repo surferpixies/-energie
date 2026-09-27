@@ -46,7 +46,7 @@
     soy:[
       ["Tofu, riz et brocoli","Poulet, riz et brocoli"],
       ["Edamames, quinoa et tomates","Poulet, quinoa et tomates"],
-      ["Lait de soya, gruau et banane","Gruau à l'eau et banane"]
+      ["Tofu, pommes de terre et salade","Poulet, pommes de terre et salade"]
     ],
     seafood:[
       ["Crevettes, riz et brocoli","Poulet, riz et brocoli"],
