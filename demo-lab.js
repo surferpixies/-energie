@@ -135,12 +135,12 @@
       const beforeWindow=false, afterWindow=i>activeEnd;
       let exposure=exposureChance(i,activeStart,activeEnd,random,.08,.62,.08);
       if(afterWindow && i===rechallengeDay) exposure=true;
-      if(sc.pattern==="withdrawal") exposure=inActiveWindow && activeProgress<.5 ? random()<.62 : random()<.05;
-      if(sc.pattern==="rechallenge") exposure=inActiveWindow?(activeProgress<.34?random()<.62:activeProgress<.70?random()<.04:random()<.58):random()<.05;
-      if(sc.pattern==="ramp") exposure=inActiveWindow ? random()<(0.18+activeProgress*.70) : random()<.08;
+      if(sc.pattern==="withdrawal") exposure=exposureChance(i,activeStart,activeEnd,random,.08,.64,.04);
+      if(sc.pattern==="rechallenge") exposure=exposureChance(i,activeStart,activeEnd,random,.08,.64,.04) || (afterWindow&&i===rechallengeDay);
+      if(sc.pattern==="ramp") exposure=i<activeStart?random()<.12:inActiveWindow?random()<(0.18+activeProgress*.55):random()<.72;
       if(sc.pattern==="sparse") exposure=i===activeStart+2||i===Math.min(activeEnd,activeStart+7);
-      if(sc.pattern==="transient") exposure=inActiveWindow?random()<.48:random()<.14;
-      if(sc.pattern==="confounder") exposure=inActiveWindow?random()<.52:random()<.12;
+      if(sc.pattern==="transient") exposure=exposureChance(i,activeStart,activeEnd,random,.10,.50,.12);
+      if(sc.pattern==="confounder") exposure=exposureChance(i,activeStart,activeEnd,random,.08,.56,.08);
       const missing=sc.pattern==="missing" && random()<.20;
       const chaotic=sc.pattern==="chaotic";
       const lateCoffee=(sc.pattern==="timing" && exposure && random()<(inActiveWindow?.72:.18));
@@ -198,6 +198,7 @@
         let symptomProbability=exposure?sc.strength:(inActiveWindow?.07:.04);
         if(isTransient && progress>.25) symptomProbability=.10;
         if(sc.pattern==="control") symptomProbability=.10;
+        if(sc.pattern==="confounder") symptomProbability=description.includes("ail")||description.includes("oignon")?.72:.06;
         else if(afterWindow && !["weight_down","weight_up"].includes(sc.pattern)) symptomProbability=.035;
         if(sc.pattern==="dose") symptomProbability=exposure?(random()<.5?.38:.82):.07;
         if(sc.pattern==="delayed") symptomProbability=.08;
