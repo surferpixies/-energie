@@ -221,6 +221,7 @@
         let description=(exposure&&isFoodTarget(sc.target))?targetMeal(sc.target,random):pick(nonTargetPool.length?nonTargetPool:foods.neutral,random);
         if(sc.pattern==="confounder" && exposure) description=random()<.70?"Pâtes tomate, ail, oignon et parmesan":"Poulet sauté avec ail, oignon, riz et légumes";
         const isTransient=sc.pattern==="transient";
+        const lunchOutcome=outcomeForFoodExposure(sc,exposure,inActiveWindow,afterWindow,random);
         let symptomProbability=exposure?sc.strength:(inActiveWindow?.07:.04);
         if(isTransient && i>Math.min(activeEnd,activeStart+8)) symptomProbability=.09;
         if(sc.pattern==="control") symptomProbability=.10;
@@ -228,22 +229,23 @@
         else if(afterWindow && !["weight_down","weight_up"].includes(sc.pattern)) symptomProbability=.035;
         if(sc.pattern==="dose") { const highDose=random()<.45; symptomProbability=exposure?(highDose?.84:.34):.06; }
         if(sc.pattern==="delayed") symptomProbability=.05;
-        const symptom=random()<symptomProbability;
-        const tags=sc.signal==="digestive"&&symptom?["bloating",random()<.55?"gas":"cramps"]:
+        const symptom=lunchOutcome?lunchOutcome.rating<4:random()<symptomProbability;
+        const tags=lunchOutcome?lunchOutcome.tags:sc.signal==="digestive"&&symptom?["bloating",random()<.55?"gas":"cramps"]:
           sc.signal==="energy"&&((exposure&&random()<sc.strength)||(sc.pattern==="sleep"&&sleep<6.3))?["fatigue"]:
           sc.signal==="positive"&&((exposure||inActiveWindow||water>=7)&&random()<sc.strength)?["energy","feeling_good"]:
           ["feeling_good"];
-        const rating=tags.includes("bloating")?2:tags.includes("fatigue")?2:4;
-        day.meals.push(meal(`lab-${date}-l`,date,"12:20","Dîner",description,tags,rating,tags.includes("bloating")?"Inconfort digestif noté après le repas.":""));
+        const rating=lunchOutcome?.rating??(tags.includes("bloating")?2:tags.includes("fatigue")?2:4);
+        day.meals.push(meal(`lab-${date}-l`,date,"12:20","Dîner",description,tags,rating,lunchOutcome?.note??(tags.includes("bloating")?"Inconfort digestif noté après le repas.":"")));
         const dinnerExposure=isFoodTarget(sc.target) && (inActiveWindow?random()<.20:random()<.05);
         const dinnerNonTarget=isFoodTarget(sc.target)?mealsWithoutCategory(sc.target).filter(description=>!recognizedAs(description,"caffeine")):commonMeals.filter(description=>!recognizedAs(description,"caffeine"));
         const dinnerDescription=dinnerExposure?targetMeal(sc.target,random):pick(dinnerNonTarget.length?dinnerNonTarget:foods.neutral,random);
-        const dinnerSymptom=dinnerExposure&&sc.signal==="digestive"?random()<sc.strength:(sc.signal==="digestive"&&random()<.035);
-        const dinnerTags=dinnerSymptom?["bloating",random()<.5?"gas":"cramps"]:
+        const dinnerOutcome=outcomeForFoodExposure(sc,dinnerExposure,inActiveWindow,afterWindow,random);
+        const dinnerSymptom=dinnerOutcome?dinnerOutcome.rating<4:(dinnerExposure&&sc.signal==="digestive"?random()<sc.strength:(sc.signal==="digestive"&&random()<.035));
+        const dinnerTags=dinnerOutcome?dinnerOutcome.tags:(dinnerSymptom?["bloating",random()<.5?"gas":"cramps"]:
           sc.signal==="energy"&&dinnerExposure&&random()<sc.strength?["fatigue"]:
           sc.signal==="positive"&&dinnerExposure&&random()<sc.strength?["energy","feeling_good"]:
-          ["positive_wellbeing"];
-        day.meals.push(meal(`lab-${date}-d`,date,"18:45","Souper",dinnerDescription,dinnerTags,dinnerSymptom?2:4,dinnerSymptom?"Inconfort digestif léger.":""));
+          ["positive_wellbeing"]);
+        day.meals.push(meal(`lab-${date}-d`,date,"18:45","Souper",dinnerDescription,dinnerTags,dinnerOutcome?.rating??(dinnerSymptom?2:4),dinnerOutcome?.note??(dinnerSymptom?"Inconfort digestif léger.":"")));
 
         if(sc.pattern==="delayed" && previousExposure && random()<sc.strength){
           day.observations.push({id:`lab-ob-${date}`,date,time:"09:15",intensity:3,duration:"few_hours",tags:["bloating","cramps"],contexts:["food"],mealIds:[],notes:"Inconfort apparu ce matin, sans l’attribuer automatiquement au dernier repas.",createdAt:`${date}T09:15:00`,updatedAt:`${date}T09:15:00`});
