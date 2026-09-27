@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const VERSION = 3;
+  const VERSION = 4;
 
   const normalize = value => String(value ?? "")
     .toLocaleLowerCase("fr-CA")
@@ -19,6 +19,7 @@
     { id:"gluten", icon:"🍞", labels:{"fr-CA":"Gluten","fr-FR":"Gluten",en:"Gluten"} },
     { id:"fruits", icon:"🍓", labels:{"fr-CA":"Fruits","fr-FR":"Fruits",en:"Fruits"} },
     { id:"vegetables", icon:"🥦", labels:{"fr-CA":"Légumes","fr-FR":"Légumes",en:"Vegetables"} },
+    { id:"allium", icon:"🧄", labels:{"fr-CA":"Ail, oignon et alliums","fr-FR":"Ail, oignon et alliacées",en:"Garlic, onion and alliums"} },
     { id:"legumes", icon:"🫘", labels:{"fr-CA":"Légumineuses","fr-FR":"Légumineuses",en:"Legumes"} },
     { id:"whole_grains", icon:"🌾", labels:{"fr-CA":"Grains entiers","fr-FR":"Céréales complètes",en:"Whole grains"} },
     { id:"refined_grains", icon:"🥖", labels:{"fr-CA":"Grains raffinés","fr-FR":"Céréales raffinées",en:"Refined grains"} },
@@ -97,7 +98,7 @@
     { id:"squash", synonyms:["courgette","zucchini","courge","squash","citrouille","pumpkin"], categories:["vegetables","high_fiber"] },
     { id:"cucumber", synonyms:["concombre","cucumber"], categories:["vegetables"] },
     { id:"mushroom", synonyms:["champignon","champignons","mushroom","mushrooms"], categories:["vegetables"] },
-    { id:"allium", synonyms:["oignon","oignons","onion","onions","ail","garlic","poireau","leek","echalote","shallot"], categories:["vegetables"] },
+    { id:"allium", synonyms:["oignon","oignons","onion","onions","ail","garlic","poireau","leek","echalote","shallot"], categories:["vegetables","allium"] },
     { id:"corn", synonyms:["mais","corn","baby corn","mini mais"], categories:["vegetables","whole_grains"] },
     { id:"potatoes", synonyms:["pomme de terre","pommes de terre","patate","patates","potato","potatoes","puree de pommes de terre","mashed potatoes","hachis brun","hash brown"], categories:["starches","vegetables","high_fiber"] },
     { id:"fries_starch", synonyms:["frite","frites","french fries"], categories:["starches","fried_foods","processed_foods"] },
