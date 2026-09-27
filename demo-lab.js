@@ -17,7 +17,7 @@
   };
 
   const foods = {
-    dairy:["Yogourt grec, bleuets et granola","Pâtes au poulet, sauce crémeuse et brocoli","Sandwich au cheddar, tomate et laitue","Fromage cottage, framboises et noix"],
+    dairy:["Yogourt grec, bleuets et granola","Pâtes au poulet, crème 15 %, parmesan et brocoli","Sandwich au cheddar, tomate et laitue","Fromage cottage, framboises et noix","Omelette au cheddar, rôties et fruit","Bol de yogourt grec, banane, noix et avoine","Poulet, pommes de terre, beurre et haricots verts","Pâtes aux légumes, crème 15 % et parmesan","Salade de quinoa, feta, concombre et tomates","Bagel, fromage à la crème et fruit","Gruau au lait, banane et cannelle","Lasagne au bœuf, mozzarella et légumes"],
     soy:["Bol de tofu, riz brun et brocoli","Edamames, quinoa et légumes","Soupe miso, tofu et nouilles","Smoothie au lait de soya, banane et avoine"],
     seafood:["Crevettes, riz et légumes","Moules, pommes de terre et salade","Pâtes aux crevettes et tomates","Bol de quinoa, crevettes et légumes"],
     fish:["Saumon, pommes de terre et haricots verts","Tilapia, riz et légumes","Truite, quinoa et salade"],
@@ -33,6 +33,18 @@
     spicy:["Chili épicé aux haricots","Curry épicé au poulet et légumes","Tacos épicés, salsa et salade"],
     neutral:["Œufs, rôties et fruit","Poulet, riz et légumes","Saumon, pommes de terre et salade","Soupe, sandwich à la dinde et fruit","Quinoa, légumes et poulet"]
   };
+
+  function categoriesFor(description){
+    return window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(description) || [];
+  }
+  function recognizedAs(description,target){
+    return !target || categoriesFor(description).includes(target);
+  }
+  function targetMeal(target,random){
+    const pool=(foods[target]||[]).filter(description=>recognizedAs(description,target));
+    if(!pool.length) throw new Error(`Laboratoire: aucun repas reconnu pour la catégorie ${target}.`);
+    return pool[Math.floor(random()*pool.length)];
+  }
 
   const scenarios = [
     {id:"dairy-digestion",group:"Alimentation",icon:"🥛",title:"Produits laitiers → inconfort digestif",target:"dairy",signal:"digestive",strength:.78,pattern:"exposure"},
