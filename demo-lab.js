@@ -73,18 +73,21 @@
   function generate(scenarioId,options={}){
     const sc=scenarios.find(s=>s.id===scenarioId);
     if(!sc) throw new Error(`Scénario inconnu: ${scenarioId}`);
-    const days=clamp(Number(options.days)||60,30,180);
+    const days=60;
     const variant=Number(options.variant)||1;
     const random=rng(hash(`${scenarioId}:${variant}`));
     const end=options.endDate?new Date(`${options.endDate}T12:00:00`):new Date();
     end.setHours(12,0,0,0);
     const start=new Date(end.getTime()-(days-1)*DAY);
+    const activeDays=10+Math.floor(random()*31);
+    const activeStart=Math.floor(random()*(days-activeDays+1));
+    const activeEnd=activeStart+activeDays-1;
     const store={version:24,createdAt:start.toISOString(),updatedAt:new Date().toISOString(),
       settings:{waterGoal:8,theme:"system",showWelcome:false,insightsEnabled:true,nutritionObservations:true,macroTracking:true,
         generalRecommendations:true,showSources:true,professionalSupport:false,feelingReminders:false,supplements:[],
         demoMode:true,demoTourSeen:true,demoName:`Laboratoire — ${sc.title}`,demoProfileId:`lab-${sc.id}`,
         demoReadOnly:true,demoDataVersion:`lab-v1-${sc.id}-${variant}`,
-        demoLab:{scenarioId:sc.id,variant,days,hiddenTruth:{target:sc.target,signal:sc.signal,pattern:sc.pattern}}},
+        demoLab:{scenarioId:sc.id,variant,days,activeStart,activeEnd,activeDays,hiddenTruth:{target:sc.target,signal:sc.signal,pattern:sc.pattern}}},
       favorites:[],days:{}};
 
     const weightScenario=sc.pattern==="weight_down"||sc.pattern==="weight_up";
@@ -99,15 +102,15 @@
 
     let previousExposure=false;
     for(let i=0;i<days;i++){
-      const date=dateKey(start,i), progress=i/Math.max(1,days-1);
+      const date=dateKey(start,i), progress=i/Math.max(1,days-1), active=i>=activeStart&&i<=activeEnd, activeProgress=active?((i-activeStart)/Math.max(1,activeDays-1)):0;
       const weekday=new Date(`${date}T12:00:00`).getDay();
-      let exposure=random()<.34;
-      if(sc.pattern==="withdrawal") exposure=progress<.5 ? random()<.52 : random()<.04;
-      if(sc.pattern==="rechallenge") exposure=progress<.34?random()<.50:progress<.70?random()<.03:random()<.48;
-      if(sc.pattern==="ramp") exposure=random()<(0.12+progress*.62);
-      if(sc.pattern==="sparse") exposure=i===Math.floor(days*.25)||i===Math.floor(days*.62);
-      if(sc.pattern==="transient") exposure=random()<.42;
-      if(sc.pattern==="confounder") exposure=random()<.38;
+      let exposure=active ? random()<.48 : random()<.16;
+      if(sc.pattern==="withdrawal") exposure=active && activeProgress<.5 ? random()<.62 : random()<.05;
+      if(sc.pattern==="rechallenge") exposure=active?(activeProgress<.34?random()<.62:activeProgress<.70?random()<.04:random()<.58):random()<.05;
+      if(sc.pattern==="ramp") exposure=active ? random()<(0.18+activeProgress*.70) : random()<.08;
+      if(sc.pattern==="sparse") exposure=i===activeStart+2||i===Math.min(activeEnd,activeStart+7);
+      if(sc.pattern==="transient") exposure=active?random()<.48:random()<.14;
+      if(sc.pattern==="confounder") exposure=active?random()<.52:random()<.12;
       const missing=sc.pattern==="missing" && random()<.20;
       const chaotic=sc.pattern==="chaotic";
       const lateCoffee=(sc.pattern==="timing" && exposure && random()<.62);
@@ -126,7 +129,7 @@
         activities:active?[{id:`lab-a-${date}`,type:weekday===6?"Vélo":"Marche",minutes:30+Math.floor(random()*35),intensity:"moderate",at:`${date}T17:30:00`}]:[],
         meals:[],observations:[],supplementsTaken:[],updatedAt:`${date}T21:00:00`};
       if(weightScenario && (i===0 || i===days-1 || i%7===0)){
-        const trend=totalWeightChange*progress;
+        const trend=totalWeightChange*(i<activeStart?0:i>activeEnd?1:activeProgress);
         const noise=(random()-.5)*.55;
         day.weight=Number((baseWeight+trend+noise).toFixed(1));
         day.weightKg=day.weight;
@@ -147,6 +150,7 @@
         let symptomProbability=exposure?sc.strength:.08;
         if(isTransient && progress>.25) symptomProbability=.10;
         if(sc.pattern==="control") symptomProbability=.10;
+        else if(!active && !["weight_down","weight_up"].includes(sc.pattern)) symptomProbability=.08;
         if(sc.pattern==="dose") symptomProbability=exposure?(random()<.5?.38:.82):.07;
         if(sc.pattern==="delayed") symptomProbability=.08;
         const symptom=random()<symptomProbability;
@@ -172,6 +176,12 @@
     return scenarios.filter(s=>!group||s.group===group).map(s=>({...s}));
   }
   function groups(){ return [...new Set(scenarios.map(s=>s.group))]; }
+  function randomScenario(options={}){
+    const pool=list(options.group||null);
+    if(!pool.length) throw new Error("Aucun scénario disponible.");
+    const random=rng(hash(`random:${options.variant||Date.now()}:${options.group||"all"}`));
+    return pool[Math.floor(random()*pool.length)];
+  }
 
-  window.EnergieDemoLab=Object.freeze({version:1,scenarios:Object.freeze(scenarios),list,groups,generate});
+  window.EnergieDemoLab=Object.freeze({version:2,scenarios:Object.freeze(scenarios),list,groups,generate,randomScenario});
 })();
