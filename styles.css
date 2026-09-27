@@ -1685,26 +1685,54 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   .sleep-card-wide .wellness-icon{font-size:1.15rem}
 }
 
+/* Laboratoire Energie */
+.lab-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.lab-selector-panel .demo-person-card{min-height:150px}.lab-selector-panel .demo-person-card.is-active{outline:2px solid currentColor;outline-offset:-2px}@media(max-width:600px){.lab-actions>*{flex:1 1 100%}}
+
+
+/* Energy Lab — cards aligned and presentation-focused */
+.lab-selector-panel .demo-profile-grid{align-items:stretch}
+.lab-selector-panel .demo-person-card{display:flex;flex-direction:column;height:100%;min-height:220px}
+.lab-selector-panel .demo-person-head{align-items:flex-start}
+.lab-selector-panel .demo-person-card>button{margin-top:auto;width:100%}
+
+
+/* Energy Lab — compact header and denser scenario grid */
+.lab-selector-panel>summary{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px;align-items:center}
+.lab-selector-panel>summary>span:first-child{display:grid;grid-template-columns:auto 1fr;column-gap:12px;row-gap:2px;align-items:baseline}
+.lab-selector-panel>summary .eyebrow{grid-column:1;white-space:nowrap}
+.lab-selector-panel>summary strong{grid-column:2}
+.lab-selector-panel>summary>span:first-child>small:last-child{grid-column:2;line-height:1.25}
+.lab-selector-panel .demo-selector-meta{align-self:center}
+.lab-selector-panel .demo-selector-content{padding-top:10px}
+.lab-selector-panel .lab-actions{margin-bottom:14px}
+.lab-selector-panel .demo-profile-grid{gap:16px}
+.lab-selector-panel .demo-person-card{min-height:170px;padding:18px 16px 16px}
+.lab-selector-panel .demo-person-head{gap:12px}
+.lab-selector-panel .demo-person-head h4{margin:0 0 2px;line-height:1.15}
+.lab-selector-panel .demo-person-card>button{min-height:46px;margin-top:14px}
+@media(max-width:700px){
+  .lab-selector-panel>summary{grid-template-columns:1fr auto}
+  .lab-selector-panel>summary>span:first-child{grid-template-columns:1fr}
+  .lab-selector-panel>summary .eyebrow,.lab-selector-panel>summary strong,.lab-selector-panel>summary>span:first-child>small:last-child{grid-column:1}
+  .lab-selector-panel .demo-person-card{min-height:160px}
+}
+
+
+/* Energy Lab — final card alignment */
+.lab-selector-panel .demo-profile-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:1fr;align-items:stretch}
+.lab-selector-panel .demo-person-card{display:grid!important;grid-template-rows:1fr auto;height:100%;min-height:0;padding:18px 16px 16px}
+.lab-selector-panel .demo-person-head{height:100%;align-items:flex-start}
+.lab-selector-panel .demo-person-card>button{align-self:end;margin-top:14px}
+.lab-selector-panel .lab-flask{font-size:1.05em;filter:saturate(.8)}
+@media(max-width:900px){.lab-selector-panel .demo-profile-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.lab-selector-panel .demo-profile-grid{grid-template-columns:1fr}}
+
 
 /* Observations — lecture simple au premier plan, détails au second plan */
 .observation-plain-summary{font-size:.91rem;line-height:1.55;color:var(--text)!important}
 .observation-evidence-intro{margin:0!important;color:var(--muted);font-size:.72rem!important;line-height:1.5!important}
-.weight-observation-card{display:grid;gap:12px;margin:0 0 18px}
-.weight-observation-heading{padding:0 4px}
-.weight-observation-heading h2{margin:3px 0 6px;font-size:1.2rem}
-.weight-observation-heading p:last-child{margin:0;font-size:.78rem;line-height:1.45}
-.weight-observation-folds{display:grid;gap:10px}
-.weight-observation-fold{margin:0;padding:0;overflow:hidden}
-.weight-observation-fold>summary{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px;min-height:72px;padding:14px 16px;cursor:pointer;list-style:none}
-.weight-observation-fold>summary::-webkit-details-marker{display:none}
-.weight-observation-fold>summary>em{color:var(--muted);font-size:1.25rem;font-style:normal;transition:transform .2s ease}
-.weight-observation-fold[open]>summary>em{transform:rotate(180deg)}
-.weight-observation-fold-body{border-top:1px solid var(--border)}
-.weight-observation-fold-body>.observation-explorer-panel-body{padding:15px}
-@media(max-width:420px){.weight-observation-fold>summary{padding:13px}.weight-observation-heading{padding-inline:2px}}
 
-
-/* Observations — cartes principales pleine largeur et hiérarchie plus légère */
+/* Observations auxquelles porter une attention — une carte par rangée */
 .attention-observations-fold .discovery-grid{grid-template-columns:1fr!important}
 .attention-observations-fold .discovery-card{width:100%;padding:17px 18px;gap:10px}
 .attention-observations-fold .discovery-card-top{align-items:center}
@@ -1722,7 +1750,6 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   .attention-observations-fold .observation-badges{justify-content:flex-start}
 }
 
-
 /* Toutes les observations — résumé compact, détail toujours pleine largeur */
 .all-observations-fold .history-feelings-list{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))!important;gap:8px}
 .all-observations-fold .history-feeling-detail{min-width:0}
@@ -1739,3 +1766,182 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 @media(max-width:360px){
   .all-observations-fold .history-feelings-list{grid-template-columns:1fr!important}
 }
+
+
+/* Energy Lab — prevent long scenario names from widening cards */
+.lab-selector-panel .demo-person-card,
+.lab-selector-panel .demo-person-head,
+.lab-selector-panel .demo-person-head>div{min-width:0}
+.lab-selector-panel .demo-person-head h4{overflow-wrap:anywhere;word-break:normal}
+.lab-selector-panel .demo-person-card>button{box-sizing:border-box;max-width:100%;min-width:0}
+
+
+/* Saisie guidée FCÉN */
+.meal-cnf-guided-entry{
+  width:100%;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  margin:0;
+  padding:7px 10px;
+  border:0;
+  border-top:1px solid color-mix(in srgb,var(--accent) 18%,var(--border));
+  border-bottom:1px solid color-mix(in srgb,var(--accent) 18%,var(--border));
+  border-radius:0;
+  background:color-mix(in srgb,var(--accent) 8%,var(--surface));
+  color:var(--accent-strong,var(--accent));
+  text-align:left;
+  cursor:pointer;
+}
+.meal-cnf-guided-entry:hover{background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+.meal-cnf-guided-entry>span:nth-child(2){min-width:0;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+.meal-cnf-guided-entry strong{font-size:.72rem;line-height:1.2}
+.meal-cnf-guided-entry small{color:var(--muted);font-size:.56rem;line-height:1.2}
+.meal-cnf-guided-entry>b{color:var(--accent);font-size:1.05rem}
+.meal-cnf-guided-icon{font-size:.95rem}
+.meal-cnf-linked-status{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  column-gap:7px;
+  row-gap:1px;
+  align-items:center;
+  margin-top:7px;
+  padding:8px 10px;
+  border-radius:11px;
+  background:color-mix(in srgb,var(--accent) 8%,var(--surface2));
+  color:var(--text);
+}
+.meal-cnf-linked-status>span{grid-row:1/3;color:var(--accent);font-weight:900}
+.meal-cnf-linked-status strong{font-size:.68rem}
+.meal-cnf-linked-status small{color:var(--muted);font-size:.58rem}
+
+.cnf-guided-dialog{width:min(720px,calc(100vw - 24px));max-width:720px}
+.cnf-guided-card{width:100%;max-width:720px;max-height:min(88vh,820px);overflow:auto}
+.cnf-guided-intro{margin:0;color:var(--muted);font-size:.78rem;line-height:1.5}
+.cnf-guided-search{display:grid;gap:6px}
+.cnf-guided-search>span{font-size:.72rem;font-weight:800}
+.cnf-guided-search>div{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:center;
+  gap:8px;
+  padding:0 11px;
+  border:1px solid var(--border);
+  border-radius:13px;
+  background:var(--surface2);
+}
+.cnf-guided-search input{
+  width:100%;
+  min-width:0;
+  min-height:44px;
+  padding:0;
+  border:0!important;
+  outline:0;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.cnf-guided-results{display:grid;gap:6px;max-height:230px;overflow:auto}
+.cnf-guided-result{
+  width:100%;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:9px;
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface);
+  color:var(--text);
+  text-align:left;
+}
+.cnf-guided-result>span:nth-child(2){min-width:0;display:grid;gap:2px}
+.cnf-guided-result strong{font-size:.74rem;line-height:1.3}
+.cnf-guided-result small{color:var(--muted);font-size:.58rem;line-height:1.25}
+.cnf-guided-result>b{color:var(--muted);font-size:1.15rem}
+.cnf-guided-food-editor{
+  display:grid;
+  gap:11px;
+  padding:13px;
+  border:1px solid color-mix(in srgb,var(--accent) 22%,var(--border));
+  border-radius:15px;
+  background:color-mix(in srgb,var(--accent) 4%,var(--surface2));
+}
+.cnf-guided-food-editor[hidden]{display:none}
+.cnf-guided-selected-food{display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px;align-items:start}
+.cnf-guided-selected-food>span{font-size:1.35rem}
+.cnf-guided-selected-food>div{min-width:0;display:grid;gap:2px}
+.cnf-guided-selected-food small{color:var(--muted);font-size:.58rem;text-transform:uppercase;letter-spacing:.04em}
+.cnf-guided-selected-food strong{font-size:.82rem;line-height:1.3}
+.cnf-guided-selected-food em{color:var(--muted);font-size:.6rem;font-style:normal}
+.cnf-guided-quantity-row{display:grid;grid-template-columns:minmax(100px,.7fr) minmax(180px,1.3fr);gap:9px}
+.cnf-guided-quantity-row label{display:grid;gap:5px;font-size:.66rem;font-weight:800}
+.cnf-guided-quantity-row input,.cnf-guided-quantity-row select{width:100%;min-width:0}
+.cnf-guided-gram-hint{margin:0;color:var(--muted);font-size:.62rem}
+.cnf-guided-basket{display:grid;gap:8px;padding-top:3px}
+.cnf-guided-basket-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.cnf-guided-basket-head>div{display:grid;gap:1px}
+.cnf-guided-basket-head strong{font-size:.78rem}
+.cnf-guided-basket-head small{color:var(--muted);font-size:.6rem}
+.cnf-guided-items{display:grid;gap:6px}
+.cnf-guided-item{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  align-items:center;
+  gap:10px;
+  padding:9px 10px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface2);
+}
+.cnf-guided-item>div{min-width:0;display:grid;gap:2px}
+.cnf-guided-item strong{font-size:.72rem;line-height:1.3}
+.cnf-guided-item small{color:var(--muted);font-size:.6rem}
+.cnf-guided-item>button{
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  border:0;
+  border-radius:50%;
+  background:color-mix(in srgb,var(--danger,#b94747) 9%,var(--surface));
+  color:var(--danger,#a33);
+  font-size:1.05rem;
+  cursor:pointer;
+}
+.cnf-guided-empty{margin:0;padding:12px;border:1px dashed var(--border);border-radius:12px;color:var(--muted);font-size:.68rem;text-align:center}
+.cnf-guided-note{margin:0}
+.cnf-guided-actions{display:grid;grid-template-columns:auto minmax(180px,1fr);gap:8px}
+.cnf-guided-actions .primary{width:100%}
+@media(max-width:560px){
+  .cnf-guided-dialog{width:calc(100vw - 12px)}
+  .cnf-guided-card{max-height:92vh}
+  .cnf-guided-quantity-row{grid-template-columns:1fr}
+  .cnf-guided-basket-head{align-items:flex-start;flex-direction:column}
+  .cnf-guided-actions{grid-template-columns:1fr}
+  .cnf-guided-actions .secondary{order:2}
+}
+
+
+/* FCÉN guidé — calories et mode obligatoire */
+.cnf-guided-item-kcal{font-size:.68rem;font-weight:850;color:var(--accent-strong,var(--accent));white-space:nowrap}
+.meal-guided-entry-requirement{margin:6px 0 0;color:var(--accent-strong,var(--accent));font-size:.62rem;font-weight:800}
+#mealDescription.is-guided-only{background:var(--surface2);color:var(--muted);cursor:not-allowed}
+.meal-cnf-guided-entry.is-required{border-top-color:color-mix(in srgb,var(--accent) 42%,var(--border));border-bottom-color:color-mix(in srgb,var(--accent) 42%,var(--border));background:color-mix(in srgb,var(--accent) 14%,var(--surface));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 12%,transparent)}
+.meal-cnf-guided-entry.is-required strong::after{content:" · obligatoire";font-weight:900}
+
+/* Observations — exploration du poids repliable */
+.weight-observation-card{display:grid;gap:12px;margin:0 0 18px}
+.weight-observation-heading{padding:0 4px}
+.weight-observation-heading h2{margin:3px 0 6px;font-size:1.2rem}
+.weight-observation-heading p:last-child{margin:0;font-size:.78rem;line-height:1.45}
+.weight-observation-folds{display:grid;gap:10px}
+.weight-observation-fold{margin:0;padding:0;overflow:hidden}
+.weight-observation-fold>summary{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:11px;min-height:72px;padding:14px 16px;cursor:pointer;list-style:none}
+.weight-observation-fold>summary::-webkit-details-marker{display:none}
+.weight-observation-fold>summary>em{color:var(--muted);font-size:1.25rem;font-style:normal;transition:transform .2s ease}
+.weight-observation-fold[open]>summary>em{transform:rotate(180deg)}
+.weight-observation-fold-body{border-top:1px solid var(--border)}
+.weight-observation-fold-body>.observation-explorer-panel-body{padding:15px}
+@media(max-width:420px){.weight-observation-fold>summary{padding:13px}.weight-observation-heading{padding-inline:2px}}
+

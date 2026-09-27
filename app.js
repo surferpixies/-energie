@@ -359,6 +359,9 @@
     mealAiSuggestionText = "",
     mealNutritionPreviewTimer = null,
     mealNutritionManuallyEdited = false,
+    mealCnfGuidedDraft = [],
+    mealCnfGuidedSelected = null,
+    mealCnfGuidedSearchTimer = null,
     mealFoodReview = null,
     authMode = "login",
     pendingSignupEmail = "",
@@ -604,6 +607,7 @@
         demoReadOnly: true,
         seasonalIcons: true,
         showRecognizedElements: true,
+        forceGuidedCnfMealEntry: false,
         showEatingReasons: true,
         futureMealPlanning: false,
         pilotMode: false,
@@ -814,6 +818,31 @@ function formatSleepDuration(hours) {
       eatingReasonOther: eatingReasonState.other,
       notes: m.notes || "",
       nutrition: normalNutrition(m.nutrition || m.macros),
+      cnfItems: (
+        Array.isArray(m.cnfItems)
+          ? m.cnfItems
+          : Array.isArray(rawFeeling?.cnfItems)
+            ? rawFeeling.cnfItems
+            : []
+      )
+        .map((item) => {
+          const grams = Number(item?.grams);
+          if (!item?.cnfFoodId || !Number.isFinite(grams) || grams <= 0)
+            return null;
+          return {
+            entryId: item.entryId || uid(),
+            cnfFoodId: String(item.cnfFoodId),
+            nameFr: String(item.nameFr || ""),
+            nameEn: String(item.nameEn || ""),
+            grams: Math.max(1, Math.round(grams)),
+            quantity: Number(item.quantity) > 0 ? Number(item.quantity) : null,
+            unitKind: String(item.unitKind || "g"),
+            unitLabel: String(item.unitLabel || "g"),
+            gramsPerUnit:
+              Number(item.gramsPerUnit) > 0 ? Number(item.gramsPerUnit) : 1,
+          };
+        })
+        .filter(Boolean),
       foodReview:
         m.foodReview || m.food_review || rawFeeling?.foodReview || null,
       photos: (() => {
@@ -965,13 +994,47 @@ function formatSleepDuration(hours) {
     out.settings.trackedFeelingsConfigured = raw.settings?.trackedFeelingsConfigured === true;
     return out;
   }
-  function backup(payload, reason) {
+  function compactBackupPayload(payload) {
+    if (!payload || typeof payload !== "object") return payload;
     try {
-      const b = JSON.parse(localStorage.getItem(BACKUP_KEY) || "[]");
-      b.unshift({ at: new Date().toISOString(), reason, payload });
-      localStorage.setItem(BACKUP_KEY, JSON.stringify(b.slice(0, 20)));
-    } catch (e) {
-      console.warn(e);
+      const clone = JSON.parse(JSON.stringify(payload));
+      Object.values(clone.days || {}).forEach((day) => {
+        (day.meals || []).forEach((meal) => {
+          if (Array.isArray(meal.photos))
+            meal.photos = meal.photos.map((photo) => ({
+              ...photo,
+              local: null,
+            }));
+          if ("photoLocal" in meal) meal.photoLocal = null;
+          if ("photo" in meal && typeof meal.photo === "string" && meal.photo.startsWith("data:"))
+            meal.photo = null;
+        });
+      });
+      return clone;
+    } catch (_) {
+      return null;
+    }
+  }
+  function backup(payload, reason) {
+    const compact = compactBackupPayload(payload);
+    if (compact == null) return;
+    const entry = {
+      at: new Date().toISOString(),
+      reason,
+      payload: compact,
+    };
+    try {
+      // Une seule copie compacte suffit ici. Les anciennes sauvegardes contenant
+      // parfois plusieurs photos en base64 pouvaient remplir localStorage.
+      localStorage.setItem(BACKUP_KEY, JSON.stringify([entry]));
+    } catch (error) {
+      if (isStorageQuotaError(error)) {
+        try {
+          localStorage.removeItem(BACKUP_KEY);
+        } catch (_) {}
+        return;
+      }
+      console.warn("Sauvegarde locale de secours ignorée", error);
     }
   }
   function load() {
@@ -1002,6 +1065,7 @@ function formatSleepDuration(hours) {
     } catch (_) {}
   }
   function saveLocal(reason = "local") {
+    if (db.settings?.demoLab?.scenarioId) return false;
     // En espace professionnel réel, les données du client sont chargées en mémoire
     // seulement. Elles ne doivent jamais remplacer le journal local du professionnel.
     if (professionalBetaMode) return;
@@ -1209,6 +1273,7 @@ function formatSleepDuration(hours) {
       updateEatingReasonUi();
       updateMealFeelingsOverview();
       updateMealCompositionReview();
+      updateMealCnfLinkedStatus();
     }
     if (form.id === "activityForm") updateActivityEstimate();
     if (["feelingForm", "missingBeforeForm"].includes(form.id))
@@ -1532,6 +1597,7 @@ function formatSleepDuration(hours) {
     };
   }
   async function syncMemoryCloud() {
+    if (db.settings?.demoLab?.scenarioId) return true;
     if (!localJournalMatchesSession()) return false;
     if (
       memorySyncBusy ||
@@ -1574,6 +1640,7 @@ function formatSleepDuration(hours) {
     return brainMemoryState();
   }
   async function replaceMemoryCloudFromJournal() {
+    if (db.settings?.demoLab?.scenarioId) return true;
     if (!localJournalMatchesSession()) return false;
     if (!client || !session || !navigator.onLine || !window.Brain?.memory)
       return true;
@@ -1598,6 +1665,7 @@ function formatSleepDuration(hours) {
     }
   }
   async function pullMemoryCloud() {
+    if (db.settings?.demoLab?.scenarioId) return true;
     if (!client || !session || !navigator.onLine || !window.Brain?.memory)
       return true;
     // La mémoire est une donnée dérivée : le journal du compte est la seule source de vérité.
@@ -1606,6 +1674,7 @@ function formatSleepDuration(hours) {
   }
   function scheduleMemoryCloudSync() {
     clearTimeout(memorySyncTimer);
+    if (db.settings?.demoLab?.scenarioId) return;
     memorySyncTimer = setTimeout(() => {
       if (session && navigator.onLine) syncMemoryCloud();
     }, 700);
@@ -1620,6 +1689,7 @@ function formatSleepDuration(hours) {
     }
   }
   function setOutbox(items) {
+    if (db.settings?.demoLab?.scenarioId) return false;
     try {
       localStorage.setItem(OUTBOX_KEY, JSON.stringify(items));
     } catch (error) {
@@ -1716,6 +1786,7 @@ function formatSleepDuration(hours) {
   }
 
   async function uploadPhoto(meal) {
+    if (db.settings?.demoLab?.scenarioId) throw new Error("Laboratoire: écriture Storage bloquée.");
     if (!client || !session) return meal;
     const photos = (Array.isArray(meal.photos) ? meal.photos : []).slice(0, 3);
     for (let index = 0; index < photos.length; index += 1) {
@@ -1756,6 +1827,7 @@ function formatSleepDuration(hours) {
     return op?._queuedAt || "legacy";
   }
   async function syncNow() {
+    if (db.settings?.demoLab?.scenarioId) return;
     if (professionalBetaMode || db.settings.demoMode || !client || !session || !navigator.onLine)
       return;
     if (!localJournalMatchesSession()) {
@@ -1829,6 +1901,7 @@ function formatSleepDuration(hours) {
                 feelingMealTypes: Array.isArray(db.settings.feelingMealTypes) ? db.settings.feelingMealTypes : ["Déjeuner", "Dîner", "Souper"],
                 seasonalIcons: db.settings.seasonalIcons !== false,
                 showRecognizedElements: db.settings.showRecognizedElements !== false,
+                forceGuidedCnfMealEntry: db.settings.forceGuidedCnfMealEntry === true,
                 showEatingReasons: db.settings.showEatingReasons !== false,
                 futureMealPlanning: db.settings.futureMealPlanning === true,
                 pilotMode: db.settings.pilotMode === true,
@@ -1905,12 +1978,13 @@ function formatSleepDuration(hours) {
             photo_paths: (meal.photos || []).map((photo) => photo.path).filter(Boolean).slice(0, 3),
             feeling:
               Object.keys(normalizeFeelingScores(meal.feelingsBefore)).length ||
-              meal.feeling || meal.foodReview || meal.eatingReasons?.length || meal.eatingReasonOther
+              meal.feeling || meal.foodReview || meal.eatingReasons?.length || meal.eatingReasonOther || (meal.cnfItems || []).length
                 ? {
                     ...(meal.feeling || {}),
                     beforeScores: normalizeFeelingScores(meal.feelingsBefore),
                     beforeQuality: meal.feelingsBeforeQuality || null,
                     foodReview: meal.foodReview || null,
+                    cnfItems: Array.isArray(meal.cnfItems) ? meal.cnfItems : [],
                     eatingReasons: normalizeEatingReasons(meal.eatingReasons),
                     eatingReasonOther: meal.eatingReasonOther || "",
                   }
@@ -2010,6 +2084,7 @@ function formatSleepDuration(hours) {
     if (!failed.length && !pending) await pullCloud(false);
   }
   async function pullCloud(show = true) {
+    if (db.settings?.demoLab?.scenarioId) return;
     if (professionalBetaMode || db.settings.demoMode || !client || !session || !navigator.onLine)
       return;
     if (show) {
@@ -2118,7 +2193,7 @@ function formatSleepDuration(hours) {
       const pref = remoteProfilePreferences;
       if (Number(pref.waterGoal) > 0) db.settings.waterGoal = Math.round(Number(pref.waterGoal));
       if (["detailed", "summary"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
-      ["insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","showEatingReasons","futureMealPlanning","pilotMode"].forEach((key) => {
+      ["insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
       });
       if (Number(pref.feelingDelayHours) > 0) db.settings.feelingDelayHours = Number(pref.feelingDelayHours);
@@ -2958,6 +3033,341 @@ function formatSleepDuration(hours) {
       estimated: a.estimated || b.estimated,
     });
   }
+  function ensureGuidedCnfMealUi() {
+    const form = $("#mealForm");
+    if (!form) return;
+    if (!$("#mealCnfItems")) {
+      form.insertAdjacentHTML("afterbegin", '<input type="hidden" id="mealCnfItems" value="">');
+    }
+    const hint = form.querySelector(".meal-precision-hint"),
+      composer = form.querySelector(".meal-description-composer"),
+      toolbar = form.querySelector(".meal-description-toolbar");
+    if (composer && toolbar && !$("#openCnfGuidedEntry")) {
+      toolbar.insertAdjacentHTML(
+        "beforebegin",
+        '<button type="button" id="openCnfGuidedEntry" class="meal-cnf-guided-entry"><span class="meal-cnf-guided-icon" aria-hidden="true">🇨🇦</span><span><strong>Saisie guidée FCÉN</strong><small>Santé Canada</small></span><b aria-hidden="true">›</b></button>',
+      );
+    }
+    const guidedButton = $("#openCnfGuidedEntry");
+    if (composer && toolbar && guidedButton?.parentElement !== composer)
+      toolbar.before(guidedButton);
+    if (hint && !$("#mealCnfLinkedStatus")) {
+      hint.insertAdjacentHTML(
+        "beforebegin",
+        '<div id="mealCnfLinkedStatus" class="meal-cnf-linked-status" hidden><span aria-hidden="true">✓</span><strong></strong><small>Quantités reliées directement aux fiches FCÉN</small></div>',
+      );
+    }
+    const review = $("#mealCompositionReview");
+    if (review && !$("#cnfGuidedMealDialog")) {
+      review.insertAdjacentHTML(
+        "beforebegin",
+        '<dialog id="cnfGuidedMealDialog" class="cnf-guided-dialog"><section class="dialog-card cnf-guided-card"><div class="dialog-header"><div><p class="eyebrow">Saisie plus précise</p><h2>🇨🇦 Saisie guidée avec le FCÉN</h2></div><button type="button" class="icon-button close-dialog" id="closeCnfGuidedMeal" aria-label="Fermer">✕</button></div><p class="cnf-guided-intro">Recherche un aliment dans le Fichier canadien sur les éléments nutritifs de Santé Canada, choisis une quantité, puis ajoute les autres aliments du repas.</p><label class="cnf-guided-search"><span>Rechercher un aliment</span><div><span aria-hidden="true">🔎</span><input id="cnfGuidedSearch" type="search" autocomplete="off" placeholder="Ex. aubergine, œuf, fromage cottage…"></div></label><div id="cnfGuidedSearchResults" class="cnf-guided-results" aria-live="polite"></div><section id="cnfGuidedFoodEditor" class="cnf-guided-food-editor" hidden><div class="cnf-guided-selected-food"><span aria-hidden="true">🍽️</span><div><small>Aliment sélectionné</small><strong id="cnfGuidedFoodName"></strong><em id="cnfGuidedFoodEnglish"></em></div></div><div class="cnf-guided-quantity-row"><label>Quantité<input id="cnfGuidedQuantity" type="number" min="0.25" step="0.25" inputmode="decimal" value="1"></label><label>Unité<select id="cnfGuidedUnit"></select></label></div><p id="cnfGuidedGramHint" class="cnf-guided-gram-hint"></p><button type="button" class="primary" id="cnfGuidedAddFood">Ajouter cet aliment</button></section><section class="cnf-guided-basket"><div class="cnf-guided-basket-head"><div><strong>Aliments du repas</strong><small id="cnfGuidedItemCount">0 aliment</small></div><button type="button" class="text-button" id="cnfGuidedAddAnother">＋ Ajouter un autre aliment</button></div><div id="cnfGuidedItems" class="cnf-guided-items"><p class="cnf-guided-empty">Aucun aliment ajouté pour l’instant.</p></div></section><p class="muted tiny cnf-guided-note">Les valeurs sont calculées directement à partir des fiches FCÉN choisies et des quantités saisies. Pour un plat maison ou un produit de marque, la composition réelle peut tout de même varier.</p><div class="cnf-guided-actions"><button type="button" class="secondary" id="cancelCnfGuidedMeal">Annuler</button><button type="button" class="primary" id="finishCnfGuidedMeal" disabled>Terminer la saisie</button></div></section></dialog>',
+      );
+    }
+  }
+
+  function mealCnfItemsFromField() {
+    try {
+      const raw = JSON.parse($("#mealCnfItems")?.value || "[]");
+      return Array.isArray(raw)
+        ? raw
+            .map((item) => {
+              const grams = Number(item?.grams);
+              if (!item?.cnfFoodId || !Number.isFinite(grams) || grams <= 0)
+                return null;
+              return {
+                entryId: item.entryId || uid(),
+                cnfFoodId: String(item.cnfFoodId),
+                nameFr: String(item.nameFr || ""),
+                nameEn: String(item.nameEn || ""),
+                grams: Math.max(1, Math.round(grams)),
+                quantity: Number(item.quantity) > 0 ? Number(item.quantity) : null,
+                unitKind: String(item.unitKind || "g"),
+                unitLabel: String(item.unitLabel || "g"),
+                gramsPerUnit:
+                  Number(item.gramsPerUnit) > 0 ? Number(item.gramsPerUnit) : 1,
+              };
+            })
+            .filter(Boolean)
+        : [];
+    } catch (_) {
+      return [];
+    }
+  }
+  function setMealCnfItemsField(items = []) {
+    const field = $("#mealCnfItems");
+    if (field) field.value = JSON.stringify(Array.isArray(items) ? items : []);
+    updateMealCnfLinkedStatus();
+  }
+  function guidedCnfNumber(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "";
+    return String(Math.round(n * 10) / 10).replace(".", ",");
+  }
+  function guidedCnfItemCalories(item) {
+    const nutrition = window.ENERGIE_CNF_SEARCH?.nutritionForGrams?.(
+      item?.cnfFoodId,
+      item?.grams,
+    );
+    const calories = Number(nutrition?.calories);
+    return Number.isFinite(calories) ? Math.max(0, Math.round(calories)) : null;
+  }
+  function guidedCnfEntryRequired() {
+    return db.settings?.forceGuidedCnfMealEntry === true;
+  }
+  function applyGuidedCnfMealEntryPreference(formReadOnly = false) {
+    const field = $("#mealDescription"),
+      button = $("#openCnfGuidedEntry"),
+      note = $("#mealGuidedEntryRequirement");
+    if (!field) return;
+    const required = guidedCnfEntryRequired() && !formReadOnly;
+    field.readOnly = required;
+    field.classList.toggle("is-guided-only", required);
+    field.placeholder = required
+      ? "Utilise la saisie guidée FCÉN ci-dessous pour ajouter les aliments."
+      : "Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli";
+    if (button) button.classList.toggle("is-required", required);
+    if (note) note.hidden = !required;
+  }
+  function guidedCnfFoodText(item) {
+    const name = String(item?.nameFr || "aliment")
+      .replace(/\s*,\s*/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLocaleLowerCase("fr-CA");
+    return `${guidedCnfNumber(item?.grams)} g ${name}`;
+  }
+  function guidedCnfDescription(items = mealCnfItemsFromField()) {
+    return (items || []).map(guidedCnfFoodText).filter(Boolean).join(", ");
+  }
+  function guidedCnfNutrition(items = mealCnfItemsFromField()) {
+    const api = window.ENERGIE_CNF_SEARCH;
+    if (!api?.nutritionForGrams || !items?.length) return null;
+    const nutrientKeys = [
+      "calories",
+      "protein",
+      "carbs",
+      "fat",
+      "fiber",
+      "sugars",
+      "sodium",
+    ];
+    const total = Object.fromEntries(nutrientKeys.map((key) => [key, 0]));
+    let matched = 0;
+    for (const item of items) {
+      const nutrition = api.nutritionForGrams(item.cnfFoodId, item.grams);
+      if (!nutrition) continue;
+      matched += 1;
+      nutrientKeys.forEach((key) => {
+        const value = Number(nutrition[key]);
+        if (Number.isFinite(value)) total[key] += value;
+      });
+    }
+    if (!matched) return null;
+    nutrientKeys.forEach((key) => {
+      total[key] = Math.round(total[key] * 10) / 10;
+    });
+    return {
+      ...total,
+      source: "cnf",
+      confidence: "high",
+      basis: `${matched} aliment${matched !== 1 ? "s" : ""} lié${matched !== 1 ? "s" : ""} au FCÉN · quantités saisies`,
+      estimated: true,
+    };
+  }
+  function currentGuidedCnfNutrition() {
+    const items = mealCnfItemsFromField();
+    if (!items.length) return null;
+    const current = $("#mealDescription")?.value.trim() || "";
+    if (current !== guidedCnfDescription(items)) return null;
+    return guidedCnfNutrition(items);
+  }
+  function updateMealCnfLinkedStatus() {
+    const status = $("#mealCnfLinkedStatus"),
+      items = mealCnfItemsFromField(),
+      calories = Number(guidedCnfNutrition(items)?.calories);
+    if (!status) return;
+    status.hidden = !items.length;
+    const strong = status.querySelector("strong");
+    if (strong)
+      strong.textContent = items.length
+        ? `${items.length} aliment${items.length > 1 ? "s" : ""} lié${items.length > 1 ? "s" : ""} au FCÉN${Number.isFinite(calories) ? ` · ${Math.round(calories)} kcal` : ""}`
+        : "";
+  }
+  function renderCnfGuidedBasket() {
+    const list = $("#cnfGuidedItems"),
+      count = $("#cnfGuidedItemCount"),
+      finish = $("#finishCnfGuidedMeal"),
+      totalNutrition = guidedCnfNutrition(mealCnfGuidedDraft),
+      totalCalories = Number(totalNutrition?.calories);
+    if (!list || !count || !finish) return;
+    count.textContent = `${mealCnfGuidedDraft.length} aliment${mealCnfGuidedDraft.length !== 1 ? "s" : ""}${Number.isFinite(totalCalories) ? ` · ${Math.round(totalCalories)} kcal` : ""}`;
+    finish.disabled = !mealCnfGuidedDraft.length;
+    list.innerHTML = mealCnfGuidedDraft.length
+      ? mealCnfGuidedDraft.map((item) => {
+          const calories = guidedCnfItemCalories(item);
+          const qty = item.unitKind === "g"
+            ? `${Math.round(Number(item.grams) || 0)} g`
+            : `${Number(item.quantity) === 1 ? item.unitLabel : `${guidedCnfNumber(item.quantity)} × ${item.unitLabel}`} · ≈ ${Math.round(Number(item.grams) || 0)} g`;
+          return `<article class="cnf-guided-item"><div><strong>${esc(item.nameFr || "Aliment FCÉN")}</strong><small>${esc(qty)}</small></div>${calories != null ? `<span class="cnf-guided-item-kcal">${calories} kcal</span>` : ""}<button type="button" data-remove-cnf-guided="${esc(item.entryId)}" aria-label="Retirer ${esc(item.nameFr || "cet aliment")}">×</button></article>`;
+        }).join("")
+      : '<p class="cnf-guided-empty">Aucun aliment ajouté pour l’instant.</p>';
+    $$("[data-remove-cnf-guided]").forEach((button) => {
+      button.onclick = () => {
+        mealCnfGuidedDraft = mealCnfGuidedDraft.filter(
+          (item) => item.entryId !== button.dataset.removeCnfGuided,
+        );
+        renderCnfGuidedBasket();
+      };
+    });
+  }
+  function resetCnfGuidedFoodEditor({ focus = true } = {}) {
+    mealCnfGuidedSelected = null;
+    const search = $("#cnfGuidedSearch"),
+      results = $("#cnfGuidedSearchResults"),
+      editor = $("#cnfGuidedFoodEditor");
+    if (search) search.value = "";
+    if (results) results.innerHTML = "";
+    if (editor) editor.hidden = true;
+    if (focus) setTimeout(() => search?.focus(), 30);
+  }
+  function updateCnfGuidedQuantityRules() {
+    const quantity = $("#cnfGuidedQuantity"),
+      unit = $("#cnfGuidedUnit");
+    if (!quantity || !unit) return;
+    const grams = unit.value === "g";
+    quantity.min = grams ? "1" : "0.25";
+    quantity.step = grams ? "1" : "0.25";
+    quantity.inputMode = grams ? "numeric" : "decimal";
+  }
+  function updateCnfGuidedGramHint() {
+    const quantity = Number($("#cnfGuidedQuantity")?.value),
+      option = $("#cnfGuidedUnit")?.selectedOptions?.[0],
+      gramsPerUnit = Number(option?.dataset.grams || 1),
+      rawGrams = quantity * gramsPerUnit,
+      grams = Number.isFinite(rawGrams) && rawGrams > 0
+        ? Math.max(1, Math.round(rawGrams))
+        : null,
+      calories = grams != null && mealCnfGuidedSelected
+        ? guidedCnfItemCalories({ cnfFoodId: mealCnfGuidedSelected.id, grams })
+        : null,
+      hint = $("#cnfGuidedGramHint");
+    if (!hint) return;
+    hint.textContent = grams != null
+      ? `Équivalent utilisé pour le calcul : ${grams} g${calories != null ? ` · ${calories} kcal` : ""}`
+      : "Entre une quantité valide.";
+  }
+  function selectCnfGuidedFood(id) {
+    const api = window.ENERGIE_CNF_SEARCH,
+      food = api?.getById?.(id);
+    if (!food) return;
+    mealCnfGuidedSelected = food;
+    $("#cnfGuidedFoodName").textContent = food.nameFr || "Aliment FCÉN";
+    $("#cnfGuidedFoodEnglish").textContent = food.nameEn || "";
+    const portions = (food.portions || [])
+      .filter(
+        (portion, index, list) =>
+          portion?.grams > 0 &&
+          list.findIndex(
+            (candidate) =>
+              candidate.labelFr === portion.labelFr &&
+              Number(candidate.grams) === Number(portion.grams),
+          ) === index,
+      )
+      .slice(0, 8);
+    const unit = $("#cnfGuidedUnit");
+    unit.innerHTML = [
+      ...portions.map(
+        (portion) =>
+          `<option value="${esc(portion.id)}" data-grams="${portion.grams}" data-label="${esc(portion.labelFr)}">${esc(portion.labelFr)} · ${guidedCnfNumber(portion.grams)} g</option>`,
+      ),
+      '<option value="g" data-grams="1" data-label="g">Grammes (g)</option>',
+    ].join("");
+    $("#cnfGuidedQuantity").value = portions.length ? "1" : "100";
+    if (!portions.length) unit.value = "g";
+    updateCnfGuidedQuantityRules();
+    $("#cnfGuidedFoodEditor").hidden = false;
+    updateCnfGuidedGramHint();
+  }
+  function renderCnfGuidedSearchResults(query) {
+    const results = $("#cnfGuidedSearchResults"),
+      api = window.ENERGIE_CNF_SEARCH;
+    if (!results) return;
+    const text = String(query || "").trim();
+    if (text.length < 2) {
+      results.innerHTML = "";
+      return;
+    }
+    const matches = api?.search?.(text, 10) || [];
+    results.innerHTML = matches.length
+      ? matches
+          .map(
+            (food) =>
+              `<button type="button" class="cnf-guided-result" data-cnf-guided-food="${esc(food.id)}"><span>🍽️</span><span><strong>${esc(food.nameFr)}</strong>${food.nameEn ? `<small>${esc(food.nameEn)}</small>` : ""}</span><b aria-hidden="true">›</b></button>`,
+          )
+          .join("")
+      : '<p class="cnf-guided-empty">Aucun aliment FCÉN trouvé. Essaie un terme plus simple ou précise la préparation.</p>';
+    $$("[data-cnf-guided-food]").forEach((button) => {
+      button.onclick = () => selectCnfGuidedFood(button.dataset.cnfGuidedFood);
+    });
+  }
+  function openCnfGuidedMealEntry() {
+    if (!window.ENERGIE_CNF_SEARCH?.search) {
+      alert("La recherche FCÉN n’est pas disponible pour le moment.");
+      return;
+    }
+    mealCnfGuidedDraft = mealCnfItemsFromField().map((item) => ({ ...item }));
+    renderCnfGuidedBasket();
+    resetCnfGuidedFoodEditor({ focus: false });
+    $("#cnfGuidedMealDialog")?.showModal();
+    setTimeout(() => $("#cnfGuidedSearch")?.focus(), 60);
+  }
+  function addSelectedCnfGuidedFood() {
+    if (!mealCnfGuidedSelected) return;
+    const rawQuantity = Number($("#cnfGuidedQuantity")?.value),
+      option = $("#cnfGuidedUnit")?.selectedOptions?.[0],
+      unitKind = $("#cnfGuidedUnit")?.value || "g",
+      quantity = unitKind === "g"
+        ? Math.max(1, Math.round(rawQuantity))
+        : Math.max(0.25, Math.round(rawQuantity * 4) / 4),
+      gramsPerUnit = Number(option?.dataset.grams || 1),
+      grams = quantity * gramsPerUnit;
+    if (!Number.isFinite(rawQuantity) || rawQuantity <= 0 || !Number.isFinite(grams) || grams <= 0) {
+      $("#cnfGuidedQuantity")?.focus();
+      return;
+    }
+    mealCnfGuidedDraft.push({
+      entryId: uid(),
+      cnfFoodId: String(mealCnfGuidedSelected.id),
+      nameFr: String(mealCnfGuidedSelected.nameFr || ""),
+      nameEn: String(mealCnfGuidedSelected.nameEn || ""),
+      grams: Math.max(1, Math.round(grams)),
+      quantity: Math.round(quantity * 100) / 100,
+      unitKind,
+      unitLabel: String(option?.dataset.label || "g"),
+      gramsPerUnit,
+    });
+    renderCnfGuidedBasket();
+    resetCnfGuidedFoodEditor();
+  }
+  function finishCnfGuidedMealEntry() {
+    if (!mealCnfGuidedDraft.length) return;
+    const items = mealCnfGuidedDraft.map((item) => ({ ...item })),
+      description = guidedCnfDescription(items),
+      nutrition = guidedCnfNutrition(items);
+    setMealCnfItemsField(items);
+    $("#mealDescription").value = description;
+    $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
+    mealFoodReview = { description, acknowledgedGaps: true };
+    $("#mealCalorieMode").value = "auto";
+    mealNutritionManuallyEdited = false;
+    if (nutrition) fillNutritionInputs(nutrition);
+    updateMealCompositionReview();
+    updateMealCnfLinkedStatus();
+    scheduleFormAutosave($("#mealForm"));
+    $("#cnfGuidedMealDialog")?.close();
+  }
+
   function nutritionFromInputs() {
     const get = (id) => {
       const value = $(id)?.value;
@@ -3022,6 +3432,11 @@ function formatSleepDuration(hours) {
       list = $("#mealCalorieUnrecognizedList"),
       mode = $("#mealCalorieMode")?.value || "auto";
     if (!notice || !list) return;
+    if (currentGuidedCnfNutrition()) {
+      notice.hidden = true;
+      list.innerHTML = "";
+      return;
+    }
     const recognition = mealNutritionRecognition($("#mealDescription")?.value || ""),
       items = recognition.unrecognized;
     notice.hidden = mode === "manual" || !items.length;
@@ -3064,13 +3479,18 @@ function formatSleepDuration(hours) {
   function resetMealCalories() {
     clearTimeout(mealNutritionPreviewTimer);
     $("#mealCalorieMode").value = "auto";
-    const estimate = estimateNutritionFromText($("#mealDescription").value.trim());
-    $("#nutritionCalories").value = estimate?.calories ?? "";
+    const estimate =
+      currentGuidedCnfNutrition() ||
+      estimateNutritionFromText($("#mealDescription").value.trim());
+    if (estimate) fillNutritionInputs(estimate);
+    else $("#nutritionCalories").value = "";
     updateMealCalorieEditor();
     scheduleFormAutosave($("#mealForm"));
   }
   function estimateCurrentMealNutrition() {
-    const n = estimateNutritionFromText($("#mealDescription").value);
+    const n =
+      currentGuidedCnfNutrition() ||
+      estimateNutritionFromText($("#mealDescription").value);
     if (!n) {
       fillNutritionInputs(
         null,
@@ -3086,6 +3506,12 @@ function formatSleepDuration(hours) {
   function scheduleAutomaticNutritionPreview() {
     clearTimeout(mealNutritionPreviewTimer);
     updateMealCompositionReview();
+    const guidedNutrition = currentGuidedCnfNutrition();
+    if (guidedNutrition) {
+      fillNutritionInputs(guidedNutrition);
+      mealNutritionManuallyEdited = false;
+      return;
+    }
     if (
       db.settings.autoNutritionEstimates === false
     )
@@ -3701,6 +4127,9 @@ function formatSleepDuration(hours) {
   const DEMO_BACKUP_KEY = "energieBeforeDemoV250";
   const DEMO_MEMORY_BACKUP_KEY = "energieBeforeDemoMemoryV1";
   let demoTourIndex = 0;
+  let labRealDb = null;
+  let labRealBrainMemory = null;
+  let labVariant = 1;
 
   function demoDateKey(offset) {
     const d = new Date();
@@ -3786,6 +4215,19 @@ function formatSleepDuration(hours) {
   }
   function activeDemoProfile() {
     const id = db.settings?.demoProfileId || "marie";
+    const labScenarioId = db.settings?.demoLab?.scenarioId;
+    if (labScenarioId) {
+      const scenario = window.EnergieDemoLab?.scenarios?.find(
+        (item) => item.id === labScenarioId,
+      );
+      return {
+        id,
+        name: scenario?.profileName || db.settings?.demoName || "Profil Lab",
+        icon: scenario?.icon || "🧪",
+        scenario: scenario?.title || "Scénario dynamique",
+        summary: "Profil fictif généré par le Laboratoire Énergie",
+      };
+    }
     return (
       window.EnergieDemoProfiles?.profiles?.[id] ||
       window.EnergieDemoProfiles?.profiles?.marie || {
@@ -3902,7 +4344,7 @@ function formatSleepDuration(hours) {
     return (stories[profileId] || [base, base, base, base])[stage] || base;
   }
   function activeReferenceBrain() {
-    if (!db.settings?.demoMode) return null;
+    if (!db.settings?.demoMode || db.settings?.demoLab?.scenarioId) return null;
     const base =
         activeDemoProfile()?.brain ||
         window.EnergieDemoProfiles?.referenceBrains?.[
@@ -4135,19 +4577,17 @@ function formatSleepDuration(hours) {
     const tags = (plan.feelingIds || []).map((id) => FEELING_TAGS.find((tag) => tag.id === id)).filter((tag) => tag?.group === "symptom");
     return `<section class="card client-tracking-summary"><p class="eyebrow">Plan convenu avec le professionnel</p><h3>🎯 Mes ressentis à observer</h3>${fixedPositiveFeelingsHtml()}${feelingGroupsHtml(tags, (tag) => `<span>${tag.emoji} ${esc(t(tag.label))}</span>`)}<p class="muted tiny">Cette sélection simplifie la saisie. Tes anciennes observations demeurent dans ton historique.</p></section>`;
   }
-  function professionalDemoEntryHtml() {
-    if (!hasDemoAccess || db.settings.demoMode) return "";
-    return `<section class="card professional-demo-entry"><div><p class="eyebrow">Prototype local</p><h3>👩‍⚕️ Mode professionnel — Démo</h3><p class="muted small">Consulte les quatre dossiers fictifs en lecture seule et expérimente le suivi professionnel.</p></div><button type="button" class="primary" id="openProfessionalDemo">Ouvrir l’espace professionnel</button></section>`;
-  }
   function professionalClientPickerHtml() {
-    if (professionalBetaMode) {
-      const links = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
-      if (!links.length) return `<div class="empty"><span>👥</span><p>Aucun client lié pour le moment.</p></div>`;
-      return links.map((link) => `<button type="button" class="professional-client-option ${professionalActiveClient?.linkId === link.id ? "is-active" : ""}" data-professional-beta-client="${esc(link.client_user_id)}"><span>👤</span><span><strong>${esc(link.client_label || "Client Énergie")}</strong><small>Partage actif</small></span><b>›</b></button>`).join("");
-    }
-    const profiles = Object.values(window.EnergieDemoProfiles?.profiles || {});
-    return profiles
-      .map((profile) => `<button type="button" class="professional-client-option ${db.settings.demoProfileId === profile.id ? "is-active" : ""}" data-professional-client="${profile.id}"><span>${profile.icon}</span><span><strong>${esc(profile.name)}</strong><small>${esc(profile.scenario)}</small></span><b>›</b></button>`)
+    const links = professionalClientLinks.filter(
+      (link) => link.status === "active" && link.client_user_id,
+    );
+    if (!links.length)
+      return `<div class="empty"><span>👥</span><p>Aucun client lié pour le moment.</p></div>`;
+    return links
+      .map(
+        (link) =>
+          `<button type="button" class="professional-client-option ${professionalActiveClient?.linkId === link.id ? "is-active" : ""}" data-professional-beta-client="${esc(link.client_user_id)}"><span>👤</span><span><strong>${esc(link.client_label || "Client Énergie")}</strong><small>Partage actif</small></span><b>›</b></button>`,
+      )
       .join("");
   }
   function openProfessionalClientPicker() {
@@ -4158,31 +4598,17 @@ function formatSleepDuration(hours) {
       return;
     }
     list.innerHTML = professionalClientPickerHtml();
-    if (professionalBetaMode) {
-      $$('[data-professional-beta-client]').forEach((button) =>
-        button.addEventListener("click", async () => {
-          dialog.close();
-          await loadProfessionalClientWorkspace(button.dataset.professionalBetaClient);
-        }),
-      );
-    } else {
-      $$('[data-professional-client]').forEach((button) =>
-        button.addEventListener("click", () => {
-          professionalDemoMode = true;
-          dialog.close();
-          switchDemoProfile(button.dataset.professionalClient);
-        }),
-      );
-    }
+    $$('[data-professional-beta-client]').forEach((button) =>
+      button.addEventListener("click", async () => {
+        dialog.close();
+        await loadProfessionalClientWorkspace(button.dataset.professionalBetaClient);
+      }),
+    );
     try {
       if (!dialog.open) dialog.showModal();
     } catch (_) {
       dialog.setAttribute("open", "");
     }
-  }
-  function startProfessionalDemo() {
-    professionalDemoMode = true;
-    openProfessionalClientPicker();
   }
 
   function professionalProfileLabel() {
@@ -4314,7 +4740,7 @@ function formatSleepDuration(hours) {
     if (hasProfessionalBetaAccess) {
       const active = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
       const pending = professionalClientLinks.filter((link) => link.status === "pending");
-      return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-overview"><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""} en attente</small></span></div><div class="professional-invite-primary-action"><button type="button" class="primary" id="createProfessionalInvite">✉️ Envoyer une nouvelle invitation par courriel</button></div></div><div class="professional-mode-action"><button type="button" class="secondary" id="openProfessionalBeta">Passer en mode professionnel</button></div><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
+      return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-overview"><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""} en attente</small></span></div><div class="professional-invite-primary-action"><button type="button" class="primary" id="createProfessionalInvite">✉️ Envoyer une nouvelle invitation par courriel</button></div></div><div class="professional-mode-action"><button type="button" class="primary" id="openProfessionalBeta">Ouvrir l’espace professionnel</button></div><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
     }
     if (clientProfessionalLink) {
       return `<section class="card professional-client-link-card"><p class="eyebrow">Suivi professionnel</p><h3>👩‍⚕️ Suivi lié à ${esc(clientProfessionalLink.professional_label || "ton professionnel")}</h3><p class="muted small">Ton journal est partagé avec ce professionnel pour ton suivi.</p><div class="dialog-actions"><button type="button" class="secondary" id="openClientFollowup">Ouvrir mon suivi</button><button type="button" class="text-button" id="revokeProfessionalAccess">Retirer l’accès</button></div></section>`;
@@ -4512,13 +4938,252 @@ function formatSleepDuration(hours) {
         },
       },
     };
-    const config = configs[profile.id];
+    const labScenarioId = db.settings?.demoLab?.scenarioId || "";
+    const labScenario = labScenarioId
+      ? window.EnergieDemoLab?.scenarios?.find((item) => item.id === labScenarioId)
+      : null;
+    const labFoodMeta = {
+      dairy: { icon: "🥛", label: "produits laitiers" },
+      soy: { icon: "🌿", label: "soya" },
+      seafood: { icon: "🦐", label: "fruits de mer" },
+      gluten: { icon: "🌾", label: "aliments avec gluten" },
+      legumes: { icon: "🫘", label: "légumineuses" },
+      allium: { icon: "🧄", label: "ail, oignon et alliums" },
+      fried_foods: { icon: "🍟", label: "aliments frits" },
+      spicy_foods: { icon: "🌶️", label: "aliments épicés" },
+      processed_foods: { icon: "🍕", label: "aliments transformés" },
+      high_fiber: { icon: "🌾", label: "aliments riches en fibres" },
+      caffeine: { icon: "☕", label: "caféine" },
+    };
+    const labMeta = labScenario ? labFoodMeta[labScenario.target] : null;
+    const labMatchMeal = (meal) => {
+      if (!labScenario || !labMeta) return false;
+      const description = String(meal?.description || "");
+      const categoryIds =
+        window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(description) || [];
+      if (categoryIds.includes(labScenario.target)) return true;
+      if (labScenario.target === "allium")
+        return (
+          window.ENERGIE_FOOD_CATEGORIES?.foodsForText?.(description) || []
+        ).some((food) => food.id === "allium");
+      return false;
+    };
+    const labDigestiveIds = new Set([
+      "bloating",
+      "gas",
+      "cramps",
+      "diarrhea",
+      "nausea",
+      "stomachache",
+    ]);
+    const labEnergyIds = new Set(["fatigue", "brain_fog"]);
+    const labPositiveIds = new Set([
+      "positive_energy",
+      "positive_wellbeing",
+      "energy",
+      "feeling_good",
+      "stable_energy",
+      "good_mood",
+      "focus",
+      "calm",
+    ]);
+    const labFeelingIntensity = (day, ids, invert = false) => {
+      const mealValues = (day.meals || []).flatMap((meal) =>
+        (meal.feeling?.tags || [])
+          .filter((tag) => ids.has(tag))
+          .map((tag) => {
+            const score = Number(
+              meal.feeling?.scores?.[tag] ?? meal.feeling?.rating ?? 3,
+            );
+            const bounded = Math.max(0, Math.min(5, score));
+            return invert ? Math.max(0, Math.min(5, 6 - bounded)) : bounded;
+          }),
+      );
+      const observationValues = (day.observations || []).flatMap((observation) =>
+        (observation.tags || [])
+          .filter((tag) => ids.has(tag))
+          .map(() =>
+            Math.max(0, Math.min(5, Number(observation.intensity) || 3)),
+          ),
+      );
+      const values = [...mealValues, ...observationValues];
+      return values.length
+        ? values.reduce((sum, value) => sum + value, 0) / values.length
+        : 0;
+    };
+    const labFoodConfig =
+      labScenario &&
+      labMeta &&
+      ["digestive", "energy", "positive", "sleep"].includes(labScenario.signal)
+        ? (() => {
+            const isDigestive = labScenario.signal === "digestive";
+            const isEnergy = labScenario.signal === "energy";
+            const isPositive = labScenario.signal === "positive";
+            const isSleep = labScenario.signal === "sleep";
+            const labelTitle =
+              labMeta.label.charAt(0).toUpperCase() + labMeta.label.slice(1);
+            const measureLabel = isDigestive
+              ? "Inconfort"
+              : isEnergy
+                ? "Fatigue"
+                : isPositive
+                  ? "Ressenti"
+                  : "Sommeil";
+            const measureText = isDigestive
+              ? "inconfort moyen"
+              : isEnergy
+                ? "fatigue moyenne"
+                : isPositive
+                  ? "ressenti positif moyen"
+                  : "perturbation du sommeil";
+            const symptomIds = isDigestive
+              ? [...labDigestiveIds]
+              : isEnergy
+                ? [...labEnergyIds]
+                : isPositive
+                  ? [...labPositiveIds]
+                  : [];
+            const titleSuffix = isDigestive
+              ? "inconfort digestif"
+              : isEnergy
+                ? "fatigue après les repas"
+                : isPositive
+                  ? "meilleur ressenti"
+                  : "sommeil moins favorable";
+            return {
+              matchesMeal: labMatchMeal,
+              delayed: labScenario.pattern === "delayed",
+              title: `${labMeta.icon} ${labelTitle} et ${titleSuffix}`,
+              description: `Évolution hebdomadaire de ${measureText} selon la présence de ${labMeta.label} repérée dans le journal fictif.`,
+              primaryLabel: `Avec ${labMeta.label}`,
+              primaryHelp: `${measureText.charAt(0).toUpperCase() + measureText.slice(1)} les journées où ${labMeta.label} sont repérés.`,
+              comparisonLabel: `Sans ${labMeta.label}`,
+              comparisonHelp: `${measureText.charAt(0).toUpperCase() + measureText.slice(1)} les journées sans ${labMeta.label} repérés.`,
+              metricLabel: `jours avec ${labMeta.label}`,
+              metricHelp: `Nombre total de journées comprenant ${labMeta.label} pendant la période.`,
+              disclaimer:
+                "Association calculée à partir des données brutes du scénario. Elle illustre une piste de suivi et ne constitue pas un diagnostic.",
+              milestoneWeek: Math.max(
+                0,
+                Math.floor(Number(db.settings?.demoLab?.activeEnd ?? 28) / 7),
+              ),
+              milestoneLines: ["Changement du scénario", "nouvelle période"],
+              summarySubject: `${measureText} associé à ${labMeta.label}`,
+              summaryAction:
+                "le changement de fréquence de cet élément dans le journal",
+              symptomIds,
+              measureLabel,
+              measureText,
+              intensity: (day) => {
+                if (isDigestive)
+                  return labFeelingIntensity(day, labDigestiveIds, true);
+                if (isEnergy)
+                  return labFeelingIntensity(day, labEnergyIds, true);
+                if (isPositive)
+                  return labFeelingIntensity(day, labPositiveIds, false);
+                const sleep = Number(day.sleepHours);
+                return Number.isFinite(sleep)
+                  ? Math.max(0, Math.min(5, 8.5 - sleep))
+                  : 0;
+              },
+            };
+          })()
+        : null;
+    const labContextConfig =
+      labScenario && !labFoodConfig
+        ? (() => {
+            const common = {
+              delayed: false,
+              disclaimer:
+                "Association calculée à partir des données brutes du scénario. Elle illustre une piste de suivi et ne constitue pas un diagnostic.",
+              milestoneWeek: Math.max(
+                0,
+                Math.floor(Number(db.settings?.demoLab?.activeEnd ?? 28) / 7),
+              ),
+              milestoneLines: ["Changement du scénario", "nouvelle période"],
+            };
+            if (labScenario.target === "sleep" && labScenario.signal === "energy")
+              return {
+                ...common,
+                matchesDay: (day) => Number(day.sleepHours) > 0 && Number(day.sleepHours) < 6.3,
+                title: "😴 Nuit courte et fatigue le lendemain",
+                description:
+                  "Évolution hebdomadaire de la fatigue durant les journées qui suivent une nuit courte.",
+                primaryLabel: "Après une nuit courte",
+                primaryHelp: "Fatigue moyenne après une nuit de moins de 6,3 h.",
+                comparisonLabel: "Après une nuit plus longue",
+                comparisonHelp: "Fatigue moyenne durant les autres journées.",
+                metricLabel: "jours après une nuit courte",
+                metricHelp: "Nombre de journées précédées d’un sommeil de moins de 6,3 h.",
+                summarySubject: "la fatigue après les nuits courtes",
+                summaryAction: "les changements de durée de sommeil",
+                symptomIds: [...labEnergyIds],
+                measureLabel: "Fatigue",
+                measureText: "fatigue moyenne",
+                intensity: (day) => labFeelingIntensity(day, labEnergyIds, true),
+              };
+            if (labScenario.target === "activity" && labScenario.signal === "positive")
+              return {
+                ...common,
+                matchesDay: (day) => (day.activities || []).length > 0,
+                title: "🏃 Activité et meilleur ressenti",
+                description:
+                  "Évolution hebdomadaire du ressenti positif selon la présence d’une activité consignée.",
+                primaryLabel: "Journées actives",
+                primaryHelp: "Ressenti positif moyen les journées avec une activité.",
+                comparisonLabel: "Journées sans activité",
+                comparisonHelp: "Ressenti positif moyen durant les autres journées.",
+                metricLabel: "jours actifs",
+                metricHelp: "Nombre de journées comprenant une activité.",
+                summarySubject: "le ressenti positif les journées actives",
+                summaryAction: "les changements d’activité",
+                symptomIds: [...labPositiveIds],
+                measureLabel: "Ressenti",
+                measureText: "ressenti positif moyen",
+                intensity: (day) => labFeelingIntensity(day, labPositiveIds, false),
+              };
+            if (labScenario.target === "water" && labScenario.signal === "positive")
+              return {
+                ...common,
+                matchesDay: (day) => Number(day.water) >= 7,
+                title: "💧 Hydratation et meilleur ressenti",
+                description:
+                  "Évolution hebdomadaire du ressenti positif selon les journées où l’hydratation est plus régulière.",
+                primaryLabel: "Hydratation plus régulière",
+                primaryHelp: "Ressenti positif moyen les journées avec au moins sept verres consignés.",
+                comparisonLabel: "Hydratation plus basse",
+                comparisonHelp: "Ressenti positif moyen durant les autres journées.",
+                metricLabel: "jours à 7 verres ou plus",
+                metricHelp: "Nombre de journées atteignant ce repère dans le scénario.",
+                summarySubject: "le ressenti positif avec une hydratation plus régulière",
+                summaryAction: "les changements d’hydratation",
+                symptomIds: [...labPositiveIds],
+                measureLabel: "Ressenti",
+                measureText: "ressenti positif moyen",
+                intensity: (day) => labFeelingIntensity(day, labPositiveIds, false),
+              };
+            return null;
+          })()
+        : null;
+    const labConfig = labFoodConfig || labContextConfig;
+    const config = configs[profile.id] || labConfig;
     if (!config) return "";
+    const measureLabel = config.measureLabel || "Inconfort";
+    const measureText = config.measureText || "inconfort moyen";
     const dates = Object.keys(db.days || {}).sort();
     if (!dates.length) return "";
-    const primaryDates = new Set(dates.filter((date) =>
-      (db.days[date]?.meals || []).some((meal) => config.pattern.test(meal.description || "")),
-    ));
+    const primaryDates = new Set(
+      dates.filter((date) => {
+        const day = db.days[date] || {};
+        if (typeof config.matchesDay === "function")
+          return Boolean(config.matchesDay(day, date));
+        return (day.meals || []).some((meal) =>
+          typeof config.matchesMeal === "function"
+            ? config.matchesMeal(meal)
+            : config.pattern?.test(meal.description || ""),
+        );
+      }),
+    );
     const previousDate = (date) => {
       const value = new Date(`${date}T12:00:00`);
       value.setDate(value.getDate() - 1);
@@ -4573,7 +5238,7 @@ function formatSleepDuration(hours) {
     const x = (index) => left + index * (width - left - right) / Math.max(1, points.length - 1);
     const y = (value) => top + (height - top - bottom) * (1 - Math.max(0, Math.min(5, value)) / 5);
     const linePath = points.map((point, index) => `${index ? "L" : "M"}${x(index).toFixed(1)},${y(point.discomfort || 0).toFixed(1)}`).join(" ");
-    const dots = points.map((point, index) => `<circle class="discomfort" cx="${x(index)}" cy="${y(point.discomfort || 0)}" r="5"><title>${esc(point.label)} · Inconfort moyen : ${(point.discomfort || 0).toFixed(1)}/5 · ${point.exposures} jour(s) repéré(s)</title></circle>`).join("");
+    const dots = points.map((point, index) => `<circle class="discomfort" cx="${x(index)}" cy="${y(point.discomfort || 0)}" r="5"><title>${esc(point.label)} · ${esc(measureText)} : ${(point.discomfort || 0).toFixed(1)}/5 · ${point.exposures} jour(s) repéré(s)</title></circle>`).join("");
     const pointValues = points.map((point, index) => {
       const value = point.discomfort || 0;
       return `<text x="${x(index)}" y="${Math.max(top + 9, y(value) - 9)}" text-anchor="middle">${value.toFixed(1)}</text>`;
@@ -4585,9 +5250,12 @@ function formatSleepDuration(hours) {
       return `<g class="trend-exposure"><rect x="${x(index)-5}" y="${height-bottom+10-barHeight}" width="10" height="${barHeight}" rx="3"/><text x="${x(index)}" y="${height-bottom+22}" text-anchor="middle">${point.exposures}</text></g>`;
     }).join("");
     const milestoneIndex = Math.min(points.length - 1, Number(config.milestoneWeek ?? -1));
-    const milestone = milestoneIndex >= 0 ? `<g class="trend-milestone"><line x1="${x(milestoneIndex)}" y1="${top}" x2="${x(milestoneIndex)}" y2="${height-bottom}"/><text x="${x(milestoneIndex)+7}" y="${top+12}">${esc(config.milestoneLines[0])}</text><text x="${x(milestoneIndex)+7}" y="${top+24}">${esc(config.milestoneLines[1])}</text></g>` : "";
+    const milestoneOnRight = milestoneIndex >= Math.max(0, points.length - 3);
+    const milestoneTextX = milestoneIndex >= 0 ? x(milestoneIndex) + (milestoneOnRight ? -7 : 7) : 0;
+    const milestoneAnchor = milestoneOnRight ? "end" : "start";
+    const milestone = milestoneIndex >= 0 ? `<g class="trend-milestone"><line x1="${x(milestoneIndex)}" y1="${top}" x2="${x(milestoneIndex)}" y2="${height-bottom}"/><text x="${milestoneTextX}" y="${top+12}" text-anchor="${milestoneAnchor}">${esc(config.milestoneLines[0])}</text><text x="${milestoneTextX}" y="${top+24}" text-anchor="${milestoneAnchor}">${esc(config.milestoneLines[1])}</text></g>` : "";
     const hitAreas = points.map((point, index) => `<g class="trend-week-hit" data-trend-week-detail="${index}" role="button" tabindex="0" aria-label="Voir le détail de ${esc(point.label)}"><rect x="${Math.max(left, x(index)-28)}" y="${top}" width="56" height="${height-top-10}" rx="8"/></g>`).join("");
-    const chart = `<div class="professional-trend-legend"><span class="discomfort">Valeur au-dessus : inconfort moyen /5</span><span class="exposure-count">Nombre en dessous : journées repérées</span></div><div class="professional-trend-scroll chart-scroll"><svg style="--trend-width:${width}px" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><text class="trend-y-title" x="14" y="${top + (height-top-bottom)/2}" text-anchor="middle" transform="rotate(-90 14 ${top + (height-top-bottom)/2})">Inconfort /5</text><g class="trend-grid">${grid}</g>${milestone}<path class="trend-path discomfort" d="${linePath}"/><g class="trend-dots">${dots}</g><g class="trend-point-values">${pointValues}</g><g class="trend-exposures">${exposureBars}</g><g class="trend-labels">${labels}</g><g class="trend-week-hits">${hitAreas}</g></svg></div>`;
+    const chart = `<div class="professional-trend-legend"><span class="discomfort">Valeur au-dessus : ${esc(measureText)} /5</span><span class="exposure-count">Nombre en dessous : journées repérées</span></div><div class="professional-trend-scroll chart-scroll"><svg style="--trend-width:${width}px" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><text class="trend-y-title" x="14" y="${top + (height-top-bottom)/2}" text-anchor="middle" transform="rotate(-90 14 ${top + (height-top-bottom)/2})">${esc(measureLabel)} /5</text><g class="trend-grid">${grid}</g>${milestone}<path class="trend-path discomfort" d="${linePath}"/><g class="trend-dots">${dots}</g><g class="trend-point-values">${pointValues}</g><g class="trend-exposures">${exposureBars}</g><g class="trend-labels">${labels}</g><g class="trend-week-hits">${hitAreas}</g></svg></div>`;
     const endOfWeek = (start) => { const date = new Date(`${start}T12:00:00`); date.setDate(date.getDate() + 6); return date; };
     professionalTrendWeekDetails = points.map((point) => ({
       period: `${new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "long" }).format(new Date(`${point.start}T12:00:00`))} au ${new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "long" }).format(endOfWeek(point.start))}`,
@@ -4603,9 +5271,9 @@ function formatSleepDuration(hours) {
     const confidenceHigh = points.length >= 10 && Math.abs(improvement) >= .7;
     const confidenceLabel = confidenceHigh ? "Élevée" : "Modérée";
     const directionText = improvement >= .35 ? `diminuent de ${Math.abs(improvement).toFixed(1)} point en moyenne` : improvement <= -.35 ? `augmentent de ${Math.abs(improvement).toFixed(1)} point en moyenne` : "demeurent relativement stables";
-    const summary = `<section class="card professional-case-summary"><div class="professional-case-summary-head"><span>🧠</span><div><p class="eyebrow">Résumé professionnel du dossier</p><h2>Tendance principale détectée</h2></div><span class="confidence-pill ${confidenceHigh ? "high" : "medium"}">Confiance ${confidenceLabel.toLowerCase()}</span></div><p class="professional-case-summary-text">Sur la période observée, ${esc(config.summarySubject)} ${directionText} depuis ${esc(config.summaryAction)}. Cette évolution constitue une piste à explorer avec ${esc(profile.name)}, sans établir de lien de cause à effet.</p><div class="professional-case-summary-metrics"><div><small>Au début</small><strong>${baseline.toFixed(1)}/5</strong><span>inconfort moyen</span></div><div><small>Dernières semaines</small><strong>${recent.toFixed(1)}/5</strong><span>inconfort moyen</span></div><div><small>Qualité de lecture</small><strong>${confidenceLabel}</strong><span>${points.length} semaines analysées</span></div></div><p class="professional-case-summary-caution">⚕️ Résumé d’aide à la consultation — il ne constitue pas un diagnostic.</p></section>`;
-    const weekDialog = `<dialog class="professional-week-dialog" id="professionalTrendWeekDialog"><div class="professional-week-dialog-card"><div class="professional-week-dialog-head"><div><p class="eyebrow">Détail de la semaine</p><h3 id="professionalWeekPeriod"></h3></div><button type="button" class="icon-button" data-close-trend-week aria-label="Fermer">✕</button></div><div class="professional-week-detail-grid"><div><span>📈</span><small>Inconfort moyen</small><strong id="professionalWeekDiscomfort">—</strong></div><div><span>🔎</span><small id="professionalWeekExposureLabel">Journées repérées</small><strong id="professionalWeekExposures">—</strong></div><div><span>🍽️</span><small>Repas et collations</small><strong id="professionalWeekMeals">—</strong></div></div><div class="professional-week-symptoms"><small>Symptômes dominants consignés</small><div id="professionalWeekSymptoms"></div></div><p class="muted tiny">Touchez une autre semaine du graphique pour comparer son portrait.</p></div></dialog>`;
-    return `${summary}<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Évolution dans le temps</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-week-note"><strong>Touchez une semaine pour voir son détail.</strong><span>Chaque semaine commence le dimanche. La valeur au-dessus de chaque point indique l’inconfort moyen sur 5; le nombre sous la courbe indique combien de journées contenaient l’élément suivi.</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small><p>${esc(config.primaryHelp)}</p></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small><p>${esc(config.comparisonHelp)}</p></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small><p>${esc(config.metricHelp)}</p></div></div>${chart}<button type="button" class="secondary professional-trend-expand" data-open-trend-fullscreen><span>↗ Agrandir le graphique</span><small>Tournez votre téléphone horizontalement pour une meilleure vue</small></button><p class="muted tiny">${config.disclaimer}</p></section><dialog class="professional-trend-dialog" id="professionalTrendDialog"><div class="professional-trend-dialog-head"><div><small>Graphique agrandi · Touchez une semaine pour l’explorer</small><strong>${config.title}</strong></div><button type="button" class="secondary" data-close-trend-fullscreen>Revenir au suivi ✕</button></div><div class="professional-trend-fullscreen-frame">${chart}</div><p class="muted tiny">Axe vertical : inconfort moyen sur 5 · Axe horizontal : semaines du dimanche au samedi.</p></dialog>${weekDialog}`;
+    const summary = `<section class="card professional-case-summary"><div class="professional-case-summary-head"><span>🧠</span><div><p class="eyebrow">Résumé professionnel du dossier</p><h2>Tendance principale détectée</h2></div><span class="confidence-pill ${confidenceHigh ? "high" : "medium"}">Confiance ${confidenceLabel.toLowerCase()}</span></div><p class="professional-case-summary-text">Sur la période observée, ${esc(config.summarySubject)} ${directionText} depuis ${esc(config.summaryAction)}. Cette évolution constitue une piste à explorer avec ${esc(profile.name)}, sans établir de lien de cause à effet.</p><div class="professional-case-summary-metrics"><div><small>Au début</small><strong>${baseline.toFixed(1)}/5</strong><span>${esc(measureText)}</span></div><div><small>Dernières semaines</small><strong>${recent.toFixed(1)}/5</strong><span>${esc(measureText)}</span></div><div><small>Qualité de lecture</small><strong>${confidenceLabel}</strong><span>${points.length} semaines analysées</span></div></div><p class="professional-case-summary-caution">⚕️ Résumé d’aide à la consultation — il ne constitue pas un diagnostic.</p></section>`;
+    const weekDialog = `<dialog class="professional-week-dialog" id="professionalTrendWeekDialog"><div class="professional-week-dialog-card"><div class="professional-week-dialog-head"><div><p class="eyebrow">Détail de la semaine</p><h3 id="professionalWeekPeriod"></h3></div><button type="button" class="icon-button" data-close-trend-week aria-label="Fermer">✕</button></div><div class="professional-week-detail-grid"><div><span>📈</span><small>${esc(measureText.charAt(0).toUpperCase() + measureText.slice(1))}</small><strong id="professionalWeekDiscomfort">—</strong></div><div><span>🔎</span><small id="professionalWeekExposureLabel">Journées repérées</small><strong id="professionalWeekExposures">—</strong></div><div><span>🍽️</span><small>Repas et collations</small><strong id="professionalWeekMeals">—</strong></div></div><div class="professional-week-symptoms"><small>Symptômes dominants consignés</small><div id="professionalWeekSymptoms"></div></div><p class="muted tiny">Touchez une autre semaine du graphique pour comparer son portrait.</p></div></dialog>`;
+    return `${summary}<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Évolution dans le temps</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-week-note"><strong>Touchez une semaine pour voir son détail.</strong><span>Chaque semaine commence le dimanche. La valeur au-dessus de chaque point indique ${esc(measureText)} sur 5; le nombre sous la courbe indique combien de journées contenaient l’élément suivi.</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small><p>${esc(config.primaryHelp)}</p></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small><p>${esc(config.comparisonHelp)}</p></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small><p>${esc(config.metricHelp)}</p></div></div>${chart}<button type="button" class="secondary professional-trend-expand" data-open-trend-fullscreen><span>↗ Agrandir le graphique</span><small>Tournez votre téléphone horizontalement pour une meilleure vue</small></button><p class="muted tiny">${config.disclaimer}</p></section><dialog class="professional-trend-dialog" id="professionalTrendDialog"><div class="professional-trend-dialog-head"><div><small>Graphique agrandi · Touchez une semaine pour l’explorer</small><strong>${config.title}</strong></div><button type="button" class="secondary" data-close-trend-fullscreen>Revenir au suivi ✕</button></div><div class="professional-trend-fullscreen-frame">${chart}</div><p class="muted tiny">Axe vertical : ${esc(measureText)} sur 5 · Axe horizontal : semaines du dimanche au samedi.</p></dialog>${weekDialog}`;
   }
 
   function professionalConsultationAnalysis(profile) {
@@ -4922,9 +5590,25 @@ function formatSleepDuration(hours) {
       }),
     );
   }
-  function demoProfileCardsHtml() {
-    const profiles = Object.values(window.EnergieDemoProfiles?.profiles || {});
-    return `<details class="card demo-selector-card demo-selector-panel"><summary><span><small class="eyebrow">Accès privé</small><strong>Profils de démonstration</strong><small>Quatre parcours fictifs, toujours en lecture seule</small></span><span class="demo-selector-meta"><b>${profiles.length} profils</b><i aria-hidden="true">›</i></span></summary><div class="demo-selector-content"><div class="demo-profile-grid">${profiles.map((profile) => `<article class="demo-person-card ${db.settings.demoMode && db.settings.demoProfileId === profile.id ? "is-active" : ""}"><div class="demo-person-head"><span class="demo-person-avatar">${profile.icon}</span><div><h4>${esc(profile.name)}</h4><small>${esc(profile.scenario)}</small></div></div><p>${esc(profile.summary)}</p><button class="${db.settings.demoMode && db.settings.demoProfileId === profile.id ? "secondary" : "primary"} small" type="button" data-open-demo-profile="${profile.id}">${db.settings.demoMode && db.settings.demoProfileId === profile.id ? "Profil ouvert" : "Explorer"}</button></article>`).join("")}</div></div></details>`;
+  function labScenarioCardsHtml() {
+    const lab = window.EnergieDemoLab;
+    if (!lab)
+      return `<section class="card lab-selector-panel"><h3>🧪 Laboratoire Énergie</h3><p class="muted small">Le générateur de scénarios n’a pas été chargé. Recharge la page.</p></section>`;
+    const active = db.settings?.demoLab?.scenarioId || "",
+      activeVariant = Math.max(
+        1,
+        Number(db.settings?.demoLab?.variant) || Number(labVariant) || 1,
+      );
+    return `<details class="card demo-selector-card lab-selector-panel"><summary><span><small class="eyebrow"><span class="lab-flask" aria-hidden="true">🧪</span> Laboratoire Énergie</small><strong>Scénarios dynamiques</strong><small>60 jours fictifs pour explorer les Observations${active ? ` · Variante ${activeVariant}` : ""}</small></span><span class="demo-selector-meta"><b>${lab.scenarios.length} scénarios</b><i aria-hidden="true">›</i></span></summary><div class="demo-selector-content"><div class="lab-actions"><button class="primary" type="button" id="labRandomScenario">🎲 Scénario surprise</button>${active ? `<button class="secondary" type="button" id="labNewVariant">🎲 Nouvelle variante <span aria-hidden="true">(${activeVariant + 1})</span></button><button class="secondary" type="button" id="leaveLab">Revenir à mon journal</button>` : ""}</div><div class="demo-profile-grid">${lab.scenarios.map((sc) => `<article class="demo-person-card ${active === sc.id ? "is-active" : ""}"><div class="demo-person-head"><span class="demo-person-avatar">${sc.icon}</span><div><h4>${esc(sc.title)}</h4><small>${esc(sc.group)}${active === sc.id ? ` · Variante ${activeVariant}` : ""}</small></div></div><button class="${active === sc.id ? "secondary" : "primary"} small" type="button" data-open-lab-scenario="${sc.id}">${active === sc.id ? "Scénario ouvert" : "Tester"}</button></article>`).join("")}</div></div></details>`;
+  }
+  function enterLabScenario(id,variant=1){const lab=window.EnergieDemoLab;if(!lab)return alert("Le Laboratoire n’est pas chargé.");if(!labRealDb){labRealDb=db;try{labRealBrainMemory=brainMemoryState()?JSON.parse(JSON.stringify(brainMemoryState())):null;}catch(_){labRealBrainMemory=null;}}labVariant=variant;db=migrate(lab.generate(id,{variant}));db.settings.demoMode=true;db.settings.demoReadOnly=true;insightsComputationCache=null;observationExplorerResultsCache.clear();buildDemoBrainMemory(db);selectedDate=Object.keys(db.days||{}).sort().at(-1)||todayKey();currentView="insights";render();}
+  function leaveLab(){if(!labRealDb)return;db=labRealDb;labRealDb=null;if(labRealBrainMemory&&window.Brain?.replaceMemoryState)window.Brain.replaceMemoryState(labRealBrainMemory);labRealBrainMemory=null;labVariant=1;selectedDate=todayKey();currentView="profile";render();}
+  function randomLabScenario(){const sc=window.EnergieDemoLab?.randomScenario?.({variant:Date.now()});if(sc)enterLabScenario(sc.id,1);}
+  function newLabVariant(){
+    const id=db.settings?.demoLab?.scenarioId;
+    if(!id) return;
+    const current=Math.max(1,Number(db.settings?.demoLab?.variant)||Number(labVariant)||1);
+    enterLabScenario(id,current+1);
   }
   function demoLandingDate(profileId) {
     const dates = Object.keys(db.days || {}).sort();
@@ -5104,12 +5788,13 @@ function formatSleepDuration(hours) {
         if (!control || !control.closest("#app")) return;
         if (
           control.closest(
-            "[data-open-demo-profile],#leaveDemoProfile,#leaveDemoQuick,#switchProfessionalClientBanner,#replayDemoTour,.nav-item,.brain-proof,.why-demo-insight,#previousDay,#nextDay,#goToday,#analysisPreviousDay,#analysisNextDay,#analysisGoLatest,[data-global-observation],[data-quick-meal][data-edit-meal],.professional-followup,[data-open-trend-fullscreen],[data-close-trend-fullscreen],[data-trend-week-detail],[data-close-trend-week]",
+            "[data-open-demo-profile],[data-open-lab-scenario],#labRandomScenario,#labNewVariant,#leaveLab,#leaveDemoProfile,#leaveDemoQuick,#switchProfessionalClientBanner,#replayDemoTour,.nav-item,.brain-proof,.why-demo-insight,#previousDay,#nextDay,#goToday,#analysisPreviousDay,#analysisNextDay,#analysisGoLatest,[data-global-observation],[data-quick-meal][data-edit-meal],.professional-followup,[data-open-trend-fullscreen],[data-close-trend-fullscreen],[data-trend-week-detail],[data-close-trend-week]",
           )
         )
           return;
         if (control.matches("details,summary") || control.closest("details"))
           return;
+        if (db.settings?.demoLab?.scenarioId && control.closest(".observation-wellbeing-card,.observation-explorer-card,[data-observation-explorer],[data-observation-drilldown]")) return;
         event.preventDefault();
         event.stopImmediatePropagation();
         alert("Ce profil de démonstration est en lecture seule.");
@@ -5146,7 +5831,7 @@ function formatSleepDuration(hours) {
   }
   const EXPERIENCE_KEY = "energieExperienceV260";
   // Temporairement désactivé pendant les essais avec la nutritionniste.
-  // Les profils fictifs demeurent accessibles manuellement dans Profil.
+  // Les scénarios demeurent accessibles manuellement dans Profil.
   const FIRST_LAUNCH_DEMO_ENABLED = false;
   // Accès temporairement ouvert à tous les comptes connectés pour les essais
   // avec les professionnels. Remettre à false pour réactiver has_demo_access.
@@ -5276,6 +5961,7 @@ function formatSleepDuration(hours) {
     requestAnimationFrame(() => requestAnimationFrame(startDemoTour));
   }
   function leaveDemoMode() {
+    if (db.settings?.demoLab?.scenarioId) { leaveLab(); return; }
     if (
       !confirm(
         "Quitter la démo et revenir à ton journal? Les données fictives seront retirées.",
@@ -9592,7 +10278,7 @@ function formatSleepDuration(hours) {
   function observationPlainSummary(x) {
     const title = String(x?.title || "").trim();
     const text = String(x?.text || "").trim();
-    if (text && !/[0-9]%|\\bvs\\b|\\bcontre\\b/i.test(text)) return text;
+    if (text && !/[0-9]%|\bvs\b|\bcontre\b/i.test(text)) return text;
     if (x?.valence === "positive") return `${title || "Cette habitude"} revient plus souvent lorsque tu te sens mieux après tes repas. Énergie la garde comme piste à observer dans le temps.`;
     return `${title || "Cette tendance"} revient assez souvent dans ton journal pour mériter ton attention. Énergie la garde comme piste à suivre, sans conclure qu’elle en est la cause.`;
   }
@@ -9601,8 +10287,11 @@ function formatSleepDuration(hours) {
     const feelingChange = x.kind === "food-category-feeling-change",
       evidence = x.evidence || {},
       difference = Number(x.metrics?.difference),
-      differenceText = Number.isFinite(difference) ? `${difference > 0 ? "+" : ""}${difference.toFixed(1).replace(".", ",")} point${Math.abs(difference) === 1 ? "" : "s"}` : "Comparaison disponible",
-      exposedRate = Number(evidence.exposedRate), comparisonRate = Number(evidence.comparisonRate),
+      differenceText = Number.isFinite(difference)
+        ? `${difference > 0 ? "+" : ""}${difference.toFixed(1).replace(".", ",")} point${Math.abs(difference) === 1 ? "" : "s"}`
+        : "Comparaison disponible",
+      exposedRate = Number(evidence.exposedRate),
+      comparisonRate = Number(evidence.comparisonRate),
       hasRates = Number.isFinite(exposedRate) && Number.isFinite(comparisonRate),
       relatedCount = Array.isArray(x.relatedMeals) ? x.relatedMeals.length : 0;
     return `<details class="observation-evidence"><summary><span>Voir les détails de l’analyse</span><span aria-hidden="true">⌄</span></summary><div class="observation-evidence-body"><p class="observation-evidence-intro">Voici les chiffres derrière cette observation. Ils sont conservés pour que tu puisses comprendre précisément ce qu’Énergie a comparé.</p>${discoveryComparisonHtml(x)}<div class="observation-proof-grid"><div><small>Comparés</small><strong>${x.samples?.total || 0}</strong><span>${feelingChange ? "repas avec avant + après" : "journées analysées"}</span></div><div><small>Écart observé</small><strong>${esc(differenceText)}</strong><span>dans ton propre journal</span></div><div><small>Confiance</small><strong>${esc(observationStrengthLabel(x.metrics?.strength))}</strong><span>selon la répétition</span></div></div>${hasRates ? `<div class="observation-rate-proof"><strong>${x.valence === "positive" ? "Renforcements observés" : "Aggravations observées"}</strong><div><span>Avec la catégorie <b>${Math.round(exposedRate * 100)} %</b></span><span>Autres repas <b>${Math.round(comparisonRate * 100)} %</b></span></div></div>` : ""}<p class="observation-basis">${esc(x.basis || "Cette observation utilise uniquement les données disponibles dans ton journal.")}</p><div class="observation-proof-actions">${relatedCount ? `<button class="secondary small ${x.valence === "positive" ? "related-positive-meals" : "related-discovery-meals"}" data-discovery="${index}">Voir les repas concernés (${relatedCount})</button>` : ""}<button class="text-button ${x.valence === "positive" ? "why-positive-observation" : "why-discovery"}" data-discovery="${index}">Comment c’est calculé</button></div></div></details>`;
@@ -9754,23 +10443,216 @@ function formatSleepDuration(hours) {
         .sort((a, b) => b.count - a.count),
     };
   }
-  function canonicalObservationReport(meals) {
-    return db.settings.insightsEnabled && window.EnergieObservationEngine
-      ? window.EnergieObservationEngine.analyze(db, {
-          meals,
-          limit: 3,
-          lookbackDays: 180,
-          locale: window.ENERGIE_LOCALE || "fr-CA",
-        })
-      : {
-          observations: [],
-          maturity: {
-            icon: "🌱",
-            label: "Ton journal apprend encore",
-            days: 0,
-            analyzableDays: 0,
-          },
+  function labShortSleepObservation() {
+    const scenarioId = db.settings?.demoLab?.scenarioId;
+    if (scenarioId !== "short-sleep-fatigue") return null;
+    const rows = Object.entries(db.days || {})
+      .filter(([date, day]) => date <= selectedDate && day)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-180)
+      .map(([date, day]) => {
+        const fatigue = (day.observations || [])
+          .filter((item) => (item.tags || []).includes("fatigue"))
+          .map((item) => Math.max(0, Math.min(5, Number(item.intensity) || 0)));
+        return {
+          date,
+          short: Number(day.sleepHours) > 0 && Number(day.sleepHours) < 6.3,
+          fatigue: fatigue.length
+            ? fatigue.reduce((sum, value) => sum + value, 0) / fatigue.length
+            : 0,
         };
+      });
+    const exposed = rows.filter((row) => row.short),
+      comparison = rows.filter((row) => !row.short),
+      average = (items) =>
+        items.length
+          ? items.reduce((sum, row) => sum + row.fatigue, 0) / items.length
+          : 0,
+      exposedAverage = average(exposed),
+      comparisonAverage = average(comparison),
+      difference = exposedAverage - comparisonAverage;
+    if (exposed.length < 4 || comparison.length < 4 || difference < 0.5)
+      return null;
+    const strength =
+      exposed.length >= 12 && difference >= 1.5
+        ? "strong"
+        : exposed.length >= 7
+          ? "moderate"
+          : "preliminary";
+    const confidence =
+      strength === "strong"
+        ? { icon: "🌳", label: "Très forte tendance", cls: "high" }
+        : strength === "moderate"
+          ? { icon: "🌿", label: "Bonne tendance", cls: "medium" }
+          : { icon: "🌱", label: "Peu de données", cls: "low" };
+    return {
+      id: "lab-short-sleep-fatigue",
+      kind: "day-context-feeling-change",
+      valence: "negative",
+      icon: "😴",
+      title: "Nuit courte et fatigue le lendemain",
+      text:
+        "La fatigue revient nettement plus souvent les journées qui suivent une nuit courte que durant les autres journées comparables.",
+      statistic: exposedAverage.toFixed(1),
+      comparisonStatistic: comparisonAverage.toFixed(1),
+      comparisonLabels: ["Après une nuit courte", "Après une nuit plus longue"],
+      samples: {
+        exposed: exposed.length,
+        comparison: comparison.length,
+        total: rows.length,
+      },
+      metrics: { difference, strength },
+      confidence,
+      evidence: {},
+      basis: `${exposed.length} journées suivant une nuit de moins de 6,3 h ont été comparées à ${comparison.length} autres journées. La fatigue utilisée ici provient des ressentis hors repas du scénario fictif.`,
+    };
+  }
+  function labFiberHydrationObservation() {
+    if (db.settings?.demoLab?.scenarioId !== "fiber-improvement") return null;
+    const rows = Object.entries(db.days || {})
+      .filter(([date, day]) => date <= selectedDate && day)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-180)
+      .map(([date, day]) => {
+        const meals = day.meals || [];
+        const fiber = meals.some((meal) =>
+          (
+            window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(
+              String(meal.description || ""),
+            ) || []
+          ).includes("high_fiber"),
+        );
+        const symptomObservations = (day.observations || []).filter((item) =>
+          (item.tags || []).some((tag) =>
+            ["constipation", "headache"].includes(tag),
+          ),
+        );
+        const symptomIntensity = symptomObservations.length
+          ? symptomObservations.reduce(
+              (sum, item) =>
+                sum + Math.max(0, Math.min(5, Number(item.intensity) || 0)),
+              0,
+            ) / symptomObservations.length
+          : 0;
+        return {
+          date,
+          fiber,
+          water: Number(day.water) || 0,
+          symptomIntensity,
+          hasConstipation: symptomObservations.some((item) =>
+            (item.tags || []).includes("constipation"),
+          ),
+          hasHeadache: symptomObservations.some((item) =>
+            (item.tags || []).includes("headache"),
+          ),
+        };
+      });
+    const low = rows.filter((row) => !row.fiber && row.water <= 6),
+      supported = rows.filter((row) => row.fiber && row.water >= 7),
+      average = (items) =>
+        items.length
+          ? items.reduce((sum, row) => sum + row.symptomIntensity, 0) /
+            items.length
+          : 0,
+      symptomRate = (items) =>
+        items.length
+          ? items.filter((row) => row.symptomIntensity > 0).length /
+            items.length
+          : 0,
+      lowAverage = average(low),
+      supportedAverage = average(supported),
+      lowRate = symptomRate(low),
+      supportedRate = symptomRate(supported),
+      difference = lowAverage - supportedAverage;
+    if (
+      low.length < 4 ||
+      supported.length < 4 ||
+      (difference < 0.35 && lowRate - supportedRate < 0.18)
+    )
+      return null;
+    const strength =
+      low.length >= 8 &&
+      supported.length >= 12 &&
+      (difference >= 0.9 || lowRate - supportedRate >= 0.35)
+        ? "strong"
+        : low.length >= 6 &&
+            supported.length >= 8 &&
+            (difference >= 0.55 || lowRate - supportedRate >= 0.25)
+          ? "moderate"
+          : "preliminary";
+    const confidence =
+      strength === "strong"
+        ? { icon: "🌳", label: "Très forte tendance", cls: "high" }
+        : strength === "moderate"
+          ? { icon: "🌿", label: "Bonne tendance", cls: "medium" }
+          : { icon: "🌱", label: "Peu de données", cls: "low" };
+    const lowSymptomDays = low.filter((row) => row.symptomIntensity > 0).length,
+      supportedSymptomDays = supported.filter(
+        (row) => row.symptomIntensity > 0,
+      ).length,
+      headacheDays = rows.filter((row) => row.hasHeadache).length;
+    return {
+      id: "lab-fiber-hydration-symptoms",
+      kind: "day-context-feeling-change",
+      valence: "negative",
+      icon: "🌾",
+      title: "Les inconforts diminuent avec la nouvelle routine",
+      text:
+        "Dans ce scénario fictif, la constipation et quelques maux de tête sont davantage consignés lorsque les fibres sont peu présentes et que l’hydratation est plus basse. Ces inconforts deviennent moins fréquents avec la nouvelle routine.",
+      statistic: lowAverage.toFixed(1),
+      comparisonStatistic: supportedAverage.toFixed(1),
+      comparisonLabels: [
+        "Peu de fibres + hydratation basse",
+        "Fibres + hydratation régulière",
+      ],
+      samples: {
+        exposed: low.length,
+        comparison: supported.length,
+        total: low.length + supported.length,
+      },
+      metrics: { difference, strength },
+      confidence,
+      evidence: {
+        exposedRate: lowRate,
+        comparisonRate: supportedRate,
+      },
+      basis: `${lowSymptomDays} journée${lowSymptomDays !== 1 ? "s" : ""} avec constipation ou mal de tête sur ${low.length} journées moins riches en fibres et moins hydratées ont été comparées à ${supportedSymptomDays} sur ${supported.length} journées avec fibres et hydratation plus régulières. ${headacheDays ? `${headacheDays} maux de tête ont aussi été consignés dans l’ensemble du scénario.` : ""} Les journées intermédiaires ne sont pas utilisées pour cette comparaison.`,
+    };
+  }
+
+  function canonicalObservationReport(meals) {
+    const base =
+      db.settings.insightsEnabled && window.EnergieObservationEngine
+        ? window.EnergieObservationEngine.analyze(db, {
+            meals,
+            limit: 3,
+            lookbackDays: 180,
+            locale: window.ENERGIE_LOCALE || "fr-CA",
+          })
+        : {
+            observations: [],
+            maturity: {
+              icon: "🌱",
+              label: "Ton journal apprend encore",
+              days: 0,
+              analyzableDays: 0,
+            },
+          };
+    const scenarioObservations = [
+      labFiberHydrationObservation(),
+      labShortSleepObservation(),
+    ].filter(Boolean);
+    if (!scenarioObservations.length) return base;
+    const injectedIds = new Set(scenarioObservations.map((item) => item.id));
+    return {
+      ...base,
+      observations: [
+        ...scenarioObservations,
+        ...(base.observations || []).filter(
+          (item) => !injectedIds.has(item.id),
+        ),
+      ].slice(0, 3),
+    };
   }
   function portraitReportData(days = portraitPeriodDays) {
     const windowData = portraitWindow(days),
@@ -10145,9 +11027,10 @@ function formatSleepDuration(hours) {
     return `<section class="positive-observations" aria-labelledby="positiveObservationsTitle"><div class="section-title"><h2 id="positiveObservationsTitle">🌿 Observations positives</h2></div><p class="muted small">Les ressentis agréables peuvent aussi évoluer après un repas. Ces associations issues de ton journal ne prouvent pas qu’un aliment en est la cause.</p>${enabled && items.length ? `<p class="muted small">Les valeurs comparent l’évolution moyenne après − avant, avec et sans la catégorie.</p><div class="insight-grid">${cards}</div>` : `<div class="card"><p>${enabled ? "Pas encore d’association positive suffisamment étayée. Les cinq ressentis positifs sont toujours disponibles. Indique leur intensité avant et après les repas et les collations. Un ressenti stable reste enregistré sans créer de tendance." : "Les observations sont désactivées dans les paramètres."}</p></div>`}</section>`;
   }
   function openDiscoveryWhy(x) {
+    const dayContext = x?.kind === "day-context-feeling-change";
     $("#sourceTitle").textContent = "Pourquoi cette tendance apparaît-elle?";
     $("#sourceContent").innerHTML =
-      `<p>${esc(x.basis || "Cette tendance utilise uniquement les données disponibles dans ton journal.")}</p>${discoveryComparisonHtml(x)}<div class="notice"><strong>À interpréter avec prudence</strong><p>Une association ne signifie pas que cet aliment ou cette catégorie est la cause du changement observé. Le sommeil, l’hydratation, les portions, le moment des repas et d’autres facteurs peuvent varier.</p></div><h3>Comment cette observation est calculée</h3><p class="muted small">Énergie classe les descriptions de repas par catégories et compare, pour chaque ressenti, son intensité après le repas à son intensité avant. Seuls les écarts répétés avec assez de repas comparables sont conservés.</p><p class="muted small">Le moteur préfère ne rien afficher lorsque les données sont insuffisantes ou que la différence est trop faible.</p>`;
+      `<p>${esc(x.basis || "Cette tendance utilise uniquement les données disponibles dans ton journal.")}</p>${discoveryComparisonHtml(x)}<div class="notice"><strong>À interpréter avec prudence</strong><p>${dayContext ? "Une association entre un contexte de journée et un ressenti ne signifie pas que ce contexte en est la cause. D’autres facteurs peuvent varier en même temps." : "Une association ne signifie pas que cet aliment ou cette catégorie est la cause du changement observé. Le sommeil, l’hydratation, les portions, le moment des repas et d’autres facteurs peuvent varier."}</p></div><h3>Comment cette observation est calculée</h3><p class="muted small">${dayContext ? "Énergie compare des groupes de journées suffisamment documentées selon le contexte défini par le scénario, puis compare leur ressenti moyen. Les journées ambiguës peuvent être exclues afin de ne pas diluer artificiellement la différence." : "Énergie classe les descriptions de repas par catégories et compare, pour chaque ressenti, son intensité après le repas à son intensité avant. Seuls les écarts répétés avec assez de repas comparables sont conservés."}</p><p class="muted small">Le moteur préfère ne rien afficher lorsque les données sont insuffisantes ou que la différence est trop faible.</p>`;
     $("#sourceDialog").showModal();
   }
   function observationCategoryMatch(description, categoryId) {
@@ -11681,8 +12564,9 @@ function formatSleepDuration(hours) {
           "mode professionnel",
           "suivi professionnel",
           "lier mon suivi",
-          "profils de demonstration",
           "mode demo",
+          "laboratoire energie",
+          "scenarios dynamiques",
         ],
       },
       {
@@ -11707,6 +12591,8 @@ function formatSleepDuration(hours) {
           "qu'est-ce qui t'a amene a manger",
           "planification des repas",
           "jauge de cible calorique",
+          "saisie des repas",
+          "forcer la saisie guidee fcen",
         ],
       },
     ];
@@ -11776,9 +12662,6 @@ function formatSleepDuration(hours) {
           .forEach((other) => {
             if (other !== details) other.open = false;
           });
-        try {
-          sessionStorage.setItem("energieProfileAccordion", bucket.key);
-        } catch (_) {}
       });
     });
 
@@ -11790,22 +12673,7 @@ function formatSleepDuration(hours) {
     if (helpGroup) profile.insertBefore(helpGroup, creator || null);
     if (prefsGroup) profile.insertBefore(prefsGroup, creator || null);
 
-    const saved = (() => {
-      try {
-        return sessionStorage.getItem("energieProfileAccordion");
-      } catch (_) {
-        return null;
-      }
-    })();
-
-    // Aucun groupe n'est ouvert automatiquement. Si l'utilisateur en avait
-    // explicitement ouvert un pendant cette session, on conserve ce choix.
-    const first = saved
-      ? profile.querySelector(
-          `.profile-accordion[data-profile-accordion="${saved}"] .profile-accordion-details`,
-        )
-      : null;
-    if (first) first.open = true;
+    // Tous les groupes du Profil commencent fermés à chaque ouverture.
   }
 
   function openEnergyGuide() {
@@ -11842,7 +12710,7 @@ function formatSleepDuration(hours) {
         ? `<div class="notice info-notice"><strong>Estimations nutritionnelles professionnelles</strong><p>Le Journal affiche uniquement le total calorique. Les détails des nutriments restent réservés à cette vue professionnelle.</p></div>`
         : `<div class="notice info-notice"><strong>Calories estimées, sans objectif</strong><p>Seul le total calorique est affiché en haut du Journal, avec sa tendance dans Observations. Les autres chiffres nutritionnels restent masqués.</p></div>`;
     $("#app").innerHTML =
-      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><div class="apple-link-card"><div><strong>Connexion Apple</strong><p class="muted small">${hasAppleIdentity() ? "✓ Ton identifiant Apple est associé à ce compte Énergie." : "Associe Apple à ce compte avant d’utiliser « Se connecter avec Apple »."}</p></div>${hasAppleIdentity() ? "" : `<button type="button" class="apple-auth-button" id="linkAppleIdentity"><b aria-hidden="true"></b> Associer mon compte Apple</button><p id="appleIdentityMessage" class="muted tiny" aria-live="polite"></p>`}</div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card recognized-elements-setting-card"><h3>🔎 Éléments reconnus</h3><p class="muted small">Cette petite carte résume ce qu’Énergie reconnaît dans la description du repas. Tu peux la masquer pour alléger la saisie sans désactiver l’analyse du repas ni les estimations nutritionnelles.</p><label class="toggle-row"><span><strong>Afficher « Éléments reconnus »</strong><small>Affiche la carte sous la description du repas</small></span><input id="settingRecognizedElements" type="checkbox" ${db.settings.showRecognizedElements !== false ? "checked" : ""}></label></section><section class="card eating-reasons-setting-card"><h3>💭 Raisons de manger</h3><p class="muted small">La question « Qu’est-ce qui t’a amené à manger? » est facultative. Tu peux la masquer pour alléger la saisie des repas.</p><label class="toggle-row"><span><strong>Afficher « Qu’est-ce qui t’a amené à manger? »</strong><small>Si elle est masquée, la carte correspondante n’apparaît pas non plus dans Observations</small></span><input id="settingEatingReasons" type="checkbox" ${db.settings.showEatingReasons !== false ? "checked" : ""}></label></section><section class="card future-meal-planning-setting-card"><h3>📅 Planification des repas</h3><p class="muted small">Optionnel · utile si tu souhaites préparer ton journal à l’avance.</p><label class="toggle-row"><span><strong>Permettre la saisie de repas à l’avance</strong><small>Autorise la navigation et la saisie jusqu’à 2 jours dans le futur. Cette limite est fixe à 2 jours.</small></span><input id="settingFutureMealPlanning" type="checkbox" ${db.settings.futureMealPlanning === true ? "checked" : ""}></label><p class="muted tiny">Les repas planifiés restent enregistrés, mais ne participent pas aux Observations ni à l’apprentissage d’Énergie avant la date prévue.</p></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="one-time-code"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button>${nativeLocalNotifications() ? `<p class="muted tiny">Sur iPhone, les rappels peuvent apparaître même lorsque Énergie n’est pas ouverte, si les notifications sont autorisées.</p>` : `<p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p>`}</div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${professionalDemoEntryHtml()}${hasDemoAccess ? demoProfileCardsHtml() : ``}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<details class="card profile-backup-panel"><summary><span><strong>Données et sauvegarde</strong><small>Options avancées · ${backups} copie(s) locale(s)</small></span><span aria-hidden="true">›</span></summary><div class="profile-backup-content"><p class="muted small">Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></div></details></div>`;
+      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><div class="apple-link-card"><div><strong>Connexion Apple</strong><p class="muted small">${hasAppleIdentity() ? "✓ Ton identifiant Apple est associé à ce compte Énergie." : "Associe Apple à ce compte avant d’utiliser « Se connecter avec Apple »."}</p></div>${hasAppleIdentity() ? "" : `<button type="button" class="apple-auth-button" id="linkAppleIdentity"><b aria-hidden="true"></b> Associer mon compte Apple</button><p id="appleIdentityMessage" class="muted tiny" aria-live="polite"></p>`}</div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card recognized-elements-setting-card"><h3>🔎 Éléments reconnus</h3><p class="muted small">Cette petite carte résume ce qu’Énergie reconnaît dans la description du repas. Tu peux la masquer pour alléger la saisie sans désactiver l’analyse du repas ni les estimations nutritionnelles.</p><label class="toggle-row"><span><strong>Afficher « Éléments reconnus »</strong><small>Affiche la carte sous la description du repas</small></span><input id="settingRecognizedElements" type="checkbox" ${db.settings.showRecognizedElements !== false ? "checked" : ""}></label></section><section class="card guided-cnf-setting-card"><h3>🇨🇦 Saisie des repas</h3><p class="muted small">Tu peux imposer la saisie guidée FCÉN pour éviter les descriptions libres et rendre les estimations plus reproductibles.</p><label class="toggle-row"><span><strong>Forcer la saisie guidée FCÉN</strong><small>Quand activé, la description du repas ne peut plus être tapée directement; les aliments doivent être ajoutés avec le lien FCÉN.</small></span><input id="settingForceGuidedCnf" type="checkbox" ${db.settings.forceGuidedCnfMealEntry === true ? "checked" : ""}></label><p class="muted tiny">Désactivé par défaut.</p></section><section class="card eating-reasons-setting-card"><h3>💭 Raisons de manger</h3><p class="muted small">La question « Qu’est-ce qui t’a amené à manger? » est facultative. Tu peux la masquer pour alléger la saisie des repas.</p><label class="toggle-row"><span><strong>Afficher « Qu’est-ce qui t’a amené à manger? »</strong><small>Si elle est masquée, la carte correspondante n’apparaît pas non plus dans Observations</small></span><input id="settingEatingReasons" type="checkbox" ${db.settings.showEatingReasons !== false ? "checked" : ""}></label></section><section class="card future-meal-planning-setting-card"><h3>📅 Planification des repas</h3><p class="muted small">Optionnel · utile si tu souhaites préparer ton journal à l’avance.</p><label class="toggle-row"><span><strong>Permettre la saisie de repas à l’avance</strong><small>Autorise la navigation et la saisie jusqu’à 2 jours dans le futur. Cette limite est fixe à 2 jours.</small></span><input id="settingFutureMealPlanning" type="checkbox" ${db.settings.futureMealPlanning === true ? "checked" : ""}></label><p class="muted tiny">Les repas planifiés restent enregistrés, mais ne participent pas aux Observations ni à l’apprentissage d’Énergie avant la date prévue.</p></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="one-time-code"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button>${nativeLocalNotifications() ? `<p class="muted tiny">Sur iPhone, les rappels peuvent apparaître même lorsque Énergie n’est pas ouverte, si les notifications sont autorisées.</p>` : `<p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p>`}</div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${labScenarioCardsHtml()}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<details class="card profile-backup-panel"><summary><span><strong>Données et sauvegarde</strong><small>Options avancées · ${backups} copie(s) locale(s)</small></span><span aria-hidden="true">›</span></summary><div class="profile-backup-content"><p class="muted small">Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></div></details></div>`;
     const professionalSettingsSection = $("#settingProfessionalSupport")?.closest("section.card");
     const professionalBetaHtml = professionalBetaProfileHtml();
     professionalSettingsSection?.insertAdjacentHTML("afterend", professionalBetaHtml);
@@ -11850,7 +12718,6 @@ function formatSleepDuration(hours) {
     photoSettingsAnchor?.insertAdjacentHTML("afterend", `<section class="card meal-photo-settings-card"><h3>📷 Photos des repas</h3><p class="muted small">Jusqu’à 3 photos peuvent être ajoutées à un repas. Une photo ajoutée est conservée automatiquement; tu peux la retirer manuellement du repas si tu ne souhaites plus la garder.</p><label class="toggle-row"><span><strong>Partager mes photos avec mon professionnel</strong><small>Autorisation distincte, utilisée lorsqu’un professionnel sera lié à ton compte.</small></span><input id="settingShareMealPhotos" type="checkbox" ${db.settings.shareMealPhotosWithProfessional === true ? "checked" : ""}></label><p class="muted tiny">L’analyse par l’IA reste facultative et n’est lancée que lorsque tu choisis « Analyser avec l’IA ».</p></section>`);
     const welcomeInfoSection = $("#showWelcomeAgain")?.closest("section.card");
     welcomeInfoSection?.insertAdjacentHTML("afterend", `<section class="card energy-guide-profile-card"><div class="settings-row"><div><span class="energy-guide-profile-icon" aria-hidden="true">🌱</span><span><h3>Découvrir Énergie</h3><p class="muted small">Un petit tour des principales fonctions de l’application.</p></span></div><button class="secondary" id="openEnergyGuide" type="button">Voir le guide</button></div></section>`);
-    $(".energy-guide-profile-card")?.insertAdjacentHTML("afterend", `<section class="card pilot-mode-profile-card"><h3>🧪 Mode pilote</h3><p class="muted small">Active un lien discret dans Énergie pour transmettre rapidement une suggestion, un bogue ou un autre commentaire pendant le projet pilote.</p><label class="toggle-row"><span><strong>Activer le mode pilote</strong><small>Le contexte technique est ajouté automatiquement, jamais le contenu de ton journal.</small></span><input id="settingPilotMode" type="checkbox" ${db.settings.pilotMode === true ? "checked" : ""}></label></section>`);
     const energyGuideButton = $("#openEnergyGuide");
     if (energyGuideButton) energyGuideButton.onclick = openEnergyGuide;
     const nutritionAnchor = $("#settingNutrition")?.closest("label");
@@ -11920,6 +12787,8 @@ function formatSleepDuration(hours) {
     if (!nutritionVisibleToViewer()) $("#settingAutoNutrition")?.closest("label")?.remove();
     $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", physiologicalContextHtml());
     $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", personalProfileHtml());
+    const accountProfileCard = ($("#syncNow") || $("#signIn"))?.closest("section.card");
+    accountProfileCard?.insertAdjacentHTML("afterend", `<section class="card pilot-mode-profile-card"><h3>🧪 Mode pilote</h3><p class="muted small">Active un lien discret dans Énergie pour transmettre rapidement une suggestion, un bogue ou un autre commentaire pendant le projet pilote.</p><label class="toggle-row"><span><strong>Activer le mode pilote</strong><small>Le contexte technique est ajouté automatiquement, jamais le contenu de ton journal.</small></span><input id="settingPilotMode" type="checkbox" ${db.settings.pilotMode === true ? "checked" : ""}></label></section>`);
 
     // Build the visual Profile groups NOW, before any later binding can interrupt renderProfile().
     enhanceProfileWithAccordions();
@@ -12091,6 +12960,7 @@ function formatSleepDuration(hours) {
     );
     toggleSetting("#settingSeasonalIcons", "seasonalIcons");
     toggleSetting("#settingRecognizedElements", "showRecognizedElements");
+    toggleSetting("#settingForceGuidedCnf", "forceGuidedCnfMealEntry");
     toggleSetting("#settingEatingReasons", "showEatingReasons");
     toggleSetting("#settingFutureMealPlanning", "futureMealPlanning");
     toggleSetting("#settingPilotMode", "pilotMode");
@@ -12159,6 +13029,10 @@ function formatSleepDuration(hours) {
         switchDemoProfile(button.dataset.openDemoProfile),
       ),
     );
+    document.querySelectorAll("[data-open-lab-scenario]").forEach((button)=>button.addEventListener("click",()=>enterLabScenario(button.dataset.openLabScenario,1)));
+    $("#labRandomScenario")?.addEventListener("click",randomLabScenario);
+    $("#labNewVariant")?.addEventListener("click",newLabVariant);
+    $("#leaveLab")?.addEventListener("click",leaveLab);
     $("#replayDemoTour")?.addEventListener("click", startDemoTour);
     $("#leaveDemoProfile")?.addEventListener("click", leaveDemoMode);
     $("#openClientFollowup")?.addEventListener("click", async () => { await loadClientProfessionalFollowup(); currentView = "followup"; render(); });
@@ -13040,6 +13914,7 @@ function formatSleepDuration(hours) {
     updateMealDialogType(type);
     $("#mealTime").value = m?.time || new Date().toTimeString().slice(0, 5);
     $("#mealDescription").value = m?.description || "";
+    setMealCnfItemsField(m?.cnfItems || []);
     if (!$("#mealDescription").dataset.brainGuideBound) {
       $("#mealDescription").dataset.brainGuideBound = "true";
       $("#mealDescription").addEventListener("input", updateMealEntryBrainGuide);
@@ -13119,6 +13994,7 @@ function formatSleepDuration(hours) {
     setMealAiPhotoStatus("Photo seulement par défaut · ✨ analyse IA sur demande.");
     $("#mealPhoto").value = "";
     showPhotoPreview();
+    applyGuidedCnfMealEntryPreference(readOnly);
     setDemoDetailReadOnly("#mealForm", readOnly);
     if (!m && d.formDrafts?.["mealForm:nouveau"]) {
       delete d.formDrafts["mealForm:nouveau"];
@@ -13649,11 +14525,39 @@ function formatSleepDuration(hours) {
   $$('#mealForm input[name="eatingReason"]').forEach((input) =>
     input.addEventListener("change", updateEatingReasonUi),
   );
+  ensureGuidedCnfMealUi();
   $("#estimateMealNutrition").onclick = estimateCurrentMealNutrition;
-  $("#mealDescription").addEventListener(
-    "input",
-    scheduleAutomaticNutritionPreview,
-  );
+  $("#openCnfGuidedEntry").onclick = openCnfGuidedMealEntry;
+  $("#cnfGuidedSearch").addEventListener("input", (event) => {
+    clearTimeout(mealCnfGuidedSearchTimer);
+    const value = event.target.value;
+    mealCnfGuidedSearchTimer = setTimeout(
+      () => renderCnfGuidedSearchResults(value),
+      120,
+    );
+  });
+  $("#cnfGuidedUnit").addEventListener("change", () => {
+    $("#cnfGuidedQuantity").value =
+      $("#cnfGuidedUnit").value === "g" ? "100" : "1";
+    updateCnfGuidedQuantityRules();
+    updateCnfGuidedGramHint();
+  });
+  $("#cnfGuidedQuantity").addEventListener("input", updateCnfGuidedGramHint);
+  $("#cnfGuidedAddFood").onclick = addSelectedCnfGuidedFood;
+  $("#cnfGuidedAddAnother").onclick = () => resetCnfGuidedFoodEditor();
+  $("#finishCnfGuidedMeal").onclick = finishCnfGuidedMealEntry;
+  $("#cancelCnfGuidedMeal").onclick = () => $("#cnfGuidedMealDialog")?.close();
+  $("#closeCnfGuidedMeal").onclick = () => $("#cnfGuidedMealDialog")?.close();
+  $("#mealDescription").addEventListener("input", () => {
+    const linked = mealCnfItemsFromField();
+    if (
+      linked.length &&
+      $("#mealDescription").value.trim() !== guidedCnfDescription(linked)
+    ) {
+      setMealCnfItemsField([]);
+    }
+    scheduleAutomaticNutritionPreview();
+  });
   $("#completeMealDescription").onclick = () => {
     $("#mealDescription")?.focus();
     const field = $("#mealDescription");
@@ -13708,6 +14612,11 @@ function formatSleepDuration(hours) {
   $("#mealForm").onsubmit = (e) => {
     if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     e.preventDefault();
+    if (guidedCnfEntryRequired() && !currentGuidedCnfNutrition()) {
+      alert("La saisie guidée FCÉN est obligatoire dans tes préférences. Ajoute les aliments avec le lien FCÉN avant d’enregistrer.");
+      openCnfGuidedMealEntry();
+      return;
+    }
     updateMealCalorieEditor();
     if (!$("#mealCalories").reportValidity()) return;
     if (hasUnscoredFeelings($("#beforeFeelingTags"), "before"))
@@ -13737,6 +14646,11 @@ function formatSleepDuration(hours) {
         type: $("#mealType").value,
         time: $("#mealTime").value,
         description: $("#mealDescription").value.trim(),
+        cnfItems:
+          $("#mealDescription").value.trim() ===
+          guidedCnfDescription(mealCnfItemsFromField())
+            ? mealCnfItemsFromField()
+            : [],
         nutrition: nutritionFromInputs() ||
           (db.settings.autoNutritionEstimates !== false && !mealNutritionManuallyEdited
             ? estimateNutritionFromText($("#mealDescription").value.trim())
@@ -15206,9 +16120,7 @@ function formatSleepDuration(hours) {
       startProfessionalBeta();
       return;
     }
-    if (!event.target.closest("#openProfessionalDemo")) return;
-    event.preventDefault();
-    startProfessionalDemo();
+    return;
   });
 
   installFormAutosave();
