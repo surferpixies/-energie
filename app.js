@@ -9589,18 +9589,23 @@ function formatSleepDuration(hours) {
         : "Début de piste";
   }
 
+  function observationPlainSummary(x) {
+    const title = String(x?.title || "").trim();
+    const text = String(x?.text || "").trim();
+    if (text && !/[0-9]%|\\bvs\\b|\\bcontre\\b/i.test(text)) return text;
+    if (x?.valence === "positive") return `${title || "Cette habitude"} revient plus souvent lorsque tu te sens mieux après tes repas. Énergie la garde comme piste à observer dans le temps.`;
+    return `${title || "Cette tendance"} revient assez souvent dans ton journal pour mériter ton attention. Énergie la garde comme piste à suivre, sans conclure qu’elle en est la cause.`;
+  }
+
   function observationEvidenceHtml(x, index) {
     const feelingChange = x.kind === "food-category-feeling-change",
       evidence = x.evidence || {},
       difference = Number(x.metrics?.difference),
-      differenceText = Number.isFinite(difference)
-        ? `${difference > 0 ? "+" : ""}${difference.toFixed(1).replace(".", ",")} point${Math.abs(difference) === 1 ? "" : "s"}`
-        : "Comparaison disponible",
-      exposedRate = Number(evidence.exposedRate),
-      comparisonRate = Number(evidence.comparisonRate),
+      differenceText = Number.isFinite(difference) ? `${difference > 0 ? "+" : ""}${difference.toFixed(1).replace(".", ",")} point${Math.abs(difference) === 1 ? "" : "s"}` : "Comparaison disponible",
+      exposedRate = Number(evidence.exposedRate), comparisonRate = Number(evidence.comparisonRate),
       hasRates = Number.isFinite(exposedRate) && Number.isFinite(comparisonRate),
       relatedCount = Array.isArray(x.relatedMeals) ? x.relatedMeals.length : 0;
-    return `<details class="observation-evidence"><summary><span>Voir les preuves</span><span aria-hidden="true">⌄</span></summary><div class="observation-evidence-body"><div class="observation-proof-grid"><div><small>Comparés</small><strong>${x.samples?.total || 0}</strong><span>${feelingChange ? "repas avec avant + après" : "journées analysées"}</span></div><div><small>Écart observé</small><strong>${esc(differenceText)}</strong><span>dans ton propre journal</span></div><div><small>Confiance</small><strong>${esc(observationStrengthLabel(x.metrics?.strength))}</strong><span>selon la répétition</span></div></div>${hasRates ? `<div class="observation-rate-proof"><strong>${x.valence === "positive" ? "Renforcements observés" : "Aggravations observées"}</strong><div><span>Avec la catégorie <b>${Math.round(exposedRate * 100)} %</b></span><span>Autres repas <b>${Math.round(comparisonRate * 100)} %</b></span></div></div>` : ""}<p class="observation-basis">${esc(x.basis || "Cette observation utilise uniquement les données disponibles dans ton journal.")}</p><div class="observation-proof-actions">${relatedCount ? `<button class="secondary small ${x.valence === "positive" ? "related-positive-meals" : "related-discovery-meals"}" data-discovery="${index}">Voir les repas concernés (${relatedCount})</button>` : ""}<button class="text-button ${x.valence === "positive" ? "why-positive-observation" : "why-discovery"}" data-discovery="${index}">Comment c’est calculé</button></div></div></details>`;
+    return `<details class="observation-evidence"><summary><span>Voir les détails de l’analyse</span><span aria-hidden="true">⌄</span></summary><div class="observation-evidence-body"><p class="observation-evidence-intro">Voici les chiffres derrière cette observation. Ils sont conservés pour que tu puisses comprendre précisément ce qu’Énergie a comparé.</p>${discoveryComparisonHtml(x)}<div class="observation-proof-grid"><div><small>Comparés</small><strong>${x.samples?.total || 0}</strong><span>${feelingChange ? "repas avec avant + après" : "journées analysées"}</span></div><div><small>Écart observé</small><strong>${esc(differenceText)}</strong><span>dans ton propre journal</span></div><div><small>Confiance</small><strong>${esc(observationStrengthLabel(x.metrics?.strength))}</strong><span>selon la répétition</span></div></div>${hasRates ? `<div class="observation-rate-proof"><strong>${x.valence === "positive" ? "Renforcements observés" : "Aggravations observées"}</strong><div><span>Avec la catégorie <b>${Math.round(exposedRate * 100)} %</b></span><span>Autres repas <b>${Math.round(comparisonRate * 100)} %</b></span></div></div>` : ""}<p class="observation-basis">${esc(x.basis || "Cette observation utilise uniquement les données disponibles dans ton journal.")}</p><div class="observation-proof-actions">${relatedCount ? `<button class="secondary small ${x.valence === "positive" ? "related-positive-meals" : "related-discovery-meals"}" data-discovery="${index}">Voir les repas concernés (${relatedCount})</button>` : ""}<button class="text-button ${x.valence === "positive" ? "why-positive-observation" : "why-discovery"}" data-discovery="${index}">Comment c’est calculé</button></div></div></details>`;
   }
   function brainGrowthState(maturity) {
     const days = Math.max(0, Number(maturity?.analyzableDays) || 0);
@@ -10108,7 +10113,7 @@ function formatSleepDuration(hours) {
       ? observations
           .map(
             (x, i) =>
-              `<article class="card observation-card discovery-card observation-${x.confidence.cls}">${x.isNew ? `<div class="observation-new-badge">✨ Nouvelle tendance détectée</div>` : ""}<div class="discovery-card-top"><div class="discovery-icon">${x.icon}</div><div class="observation-badges"><span class="observation-strength">${observationStrengthLabel(x.metrics?.strength)}</span><span class="discovery-level ${x.confidence.cls}">${x.confidence.icon} ${esc(x.confidence.label)}</span></div></div><h3>${esc(x.title)}</h3><p class="observation-text">${esc(x.text)}</p>${discoveryComparisonHtml(x)}${observationEvidenceHtml(x, i)}</article>`,
+              `<article class="card observation-card discovery-card observation-${x.confidence.cls}">${x.isNew ? `<div class="observation-new-badge">✨ Nouvelle tendance détectée</div>` : ""}<div class="discovery-card-top"><div class="discovery-icon">${x.icon}</div><div class="observation-badges"><span class="observation-strength">${observationStrengthLabel(x.metrics?.strength)}</span><span class="discovery-level ${x.confidence.cls}">${x.confidence.icon} ${esc(x.confidence.label)}</span></div></div><h3>${esc(x.title)}</h3><p class="observation-text observation-plain-summary">${esc(observationPlainSummary(x))}</p>${observationEvidenceHtml(x, i)}</article>`,
           )
           .join("")
       : `<section class="card discovery-empty observation-empty"><div class="food-art">${mature ? "🔎" : "🌱"}</div><h3>${mature ? "Aucune association assez nette pour le moment" : "Les premières tendances se préparent"}</h3><p>${mature ? "Le journal contient beaucoup de données, mais aucune différence suffisamment claire et répétée ne ressort actuellement. Le Cerveau préfère ne pas créer une tendance artificielle." : "Continue simplement à remplir ton journal. Le cerveau d’Énergie compare déjà tes journées, mais préfère attendre avant de montrer une observation trop fragile."}</p></section>`;
@@ -10594,10 +10599,11 @@ function formatSleepDuration(hours) {
   }
   function weightObservationHtml() {
     if (personalProfile().weight?.mode !== "provided") return "";
-    return `<section class="card weight-observation-card"><p class="eyebrow">Explorer mon historique</p><h2>⚖️ Explorer les changements de mon poids</h2><p class="muted">Énergie peut rechercher ce qui était différent pendant une période où ton poids a changé. Ces associations ne prouvent pas une cause.</p><div class="quick-actions"><button type="button" class="secondary" data-weight-direction="down">↘ Mon poids a diminué</button><button type="button" class="secondary" data-weight-direction="up">↗ Mon poids a augmenté</button></div><div data-weight-observation-result></div></section>`;
+    const panel = (direction, icon, title, subtitle) => `<details class="card wide weight-observation-fold" data-weight-fold="${direction}"><summary><span class="observation-fold-icon" aria-hidden="true">${icon}</span><span class="observation-fold-copy"><strong>${title}</strong><small>${subtitle}</small></span><em aria-hidden="true">⌄</em></summary><div class="weight-observation-fold-body" data-weight-observation-result="${direction}"></div></details>`;
+    return `<section class="weight-observation-card"><div class="weight-observation-heading"><p class="eyebrow">Explorer mon historique</p><h2>⚖️ Explorer les changements de mon poids</h2><p class="muted">Choisis le changement que tu veux explorer. Énergie décrit ce qui accompagnait cette période, sans attribuer de cause.</p></div><div class="weight-observation-folds">${panel("down","↘","Mon poids a diminué","Voir ce qui accompagnait une période de diminution")}${panel("up","↗","Mon poids a augmenté","Voir ce qui accompagnait une période d’augmentation")}</div></section>`;
   }
   function renderWeightObservationResult(direction) {
-    const host=$("[data-weight-observation-result]"); if(!host) return;
+    const host=$(`[data-weight-observation-result="${direction}"]`); if(!host) return;
     const a=weightObservationAnalysis(direction);
     if(!a.period){host.innerHTML=`<div class="observation-explorer-empty"><span>🌱</span><strong>Pas encore de période assez nette</strong><p>Il faut au moins deux mesures espacées de quelques jours et une variation d’au moins 0,3 kg.</p></div>`;return;}
     const p=a.period, s=a.stats, display=n=>Metrics.displayWeight(n,a.unit).toLocaleString("fr-CA");
@@ -10606,8 +10612,13 @@ function formatSleepDuration(hours) {
     host.innerHTML=`<div class="observation-explorer-panel-body"><h3>${esc(formatCalendarDate(p.start.date))} → ${esc(formatCalendarDate(p.end.date))}</h3><p><strong>${direction==="down"?"Diminution":"Augmentation"} de ${display(Math.abs(p.delta))} ${a.unit}</strong> sur ${p.days} jours.</p><div class="grid">${stat("🍽️","Calories estimées moyennes",s.calories!=null?Math.round(s.calories)+" kcal/j":"")}${stat("👟","Pas moyens",s.steps!=null?Math.round(s.steps).toLocaleString("fr-CA")+"/j":"")}${stat("😴","Sommeil moyen",s.sleep!=null?s.sleep.toLocaleString("fr-CA")+" h":"")}${stat("🚶","Activité moyenne",s.active!=null?Math.round(s.active)+" min/j":"")}</div><details><summary>Voir les mesures de poids de cette période</summary><ul>${series}</ul></details><p class="muted tiny">Énergie décrit ce qui accompagne la variation observée dans ton journal. Le poids peut varier pour plusieurs raisons; ces données ne permettent pas d’attribuer une cause.</p></div>`;
   }
   function bindWeightObservation() {
-    const card=$(".weight-observation-card"); if(!card) return;
-    card.onclick=(event)=>{const b=event.target.closest("[data-weight-direction]");if(b) renderWeightObservationResult(b.dataset.weightDirection);};
+    $$(".weight-observation-fold").forEach((fold) => {
+      fold.addEventListener("toggle", () => {
+        if (!fold.open) return;
+        const direction=fold.dataset.weightFold, host=fold.querySelector("[data-weight-observation-result]");
+        if (host && host.dataset.loaded !== "true") { host.dataset.loaded="true"; renderWeightObservationResult(direction); }
+      });
+    });
   }
 
   function refreshObservationExplorerPanel(mode) {
