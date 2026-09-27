@@ -5127,6 +5127,7 @@ function formatSleepDuration(hours) {
           return;
         if (control.matches("details,summary") || control.closest("details"))
           return;
+        if (db.settings?.demoLab?.scenarioId && control.closest(".observation-wellbeing-card,.observation-explorer-card,[data-observation-explorer],[data-observation-drilldown]")) return;
         event.preventDefault();
         event.stopImmediatePropagation();
         alert("Ce profil de démonstration est en lecture seule.");
