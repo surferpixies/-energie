@@ -19,6 +19,7 @@ const runtimeFiles = [
   "dish-knowledge.js",
   "observation-engine.js",
   "demo-profiles.js",
+  "demo-lab.js",
   "personal-metrics.js",
   "onboarding-images.js",
   "styles.css",
@@ -81,4 +82,4 @@ for (const file of runtimeFiles) await copyFile(file);
 for (const file of brainFiles) await copyFile(path.join("brain", file));
 await copyActiveAssets();
 
-console.log("Énergie v3.56.125 préparée dans www pour Capacitor Android.");
+console.log("Énergie v3.56.153 préparée dans www pour Capacitor Android.");
