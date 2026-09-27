@@ -12544,9 +12544,6 @@ function formatSleepDuration(hours) {
           .forEach((other) => {
             if (other !== details) other.open = false;
           });
-        try {
-          sessionStorage.setItem("energieProfileAccordion", bucket.key);
-        } catch (_) {}
       });
     });
 
@@ -12558,22 +12555,7 @@ function formatSleepDuration(hours) {
     if (helpGroup) profile.insertBefore(helpGroup, creator || null);
     if (prefsGroup) profile.insertBefore(prefsGroup, creator || null);
 
-    const saved = (() => {
-      try {
-        return sessionStorage.getItem("energieProfileAccordion");
-      } catch (_) {
-        return null;
-      }
-    })();
-
-    // Aucun groupe n'est ouvert automatiquement. Si l'utilisateur en avait
-    // explicitement ouvert un pendant cette session, on conserve ce choix.
-    const first = saved
-      ? profile.querySelector(
-          `.profile-accordion[data-profile-accordion="${saved}"] .profile-accordion-details`,
-        )
-      : null;
-    if (first) first.open = true;
+    // Tous les groupes du Profil commencent fermés à chaque ouverture.
   }
 
   function openEnergyGuide() {
