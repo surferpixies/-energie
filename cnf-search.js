@@ -407,10 +407,20 @@
     };
   }
 
+  function preferredGuidedIds(query) {
+    const q = normalize(query);
+    if (["oeuf","oeufs","egg","eggs"].includes(q))
+      return ["125","130","133","129","132"];
+    if (["riz","rice"].includes(q))
+      return ["4475","4473"];
+    return [];
+  }
+
   function search(text, limit = 12) {
     const query = stripQuantity(text);
     const max = Math.max(1, Math.min(30, Number(limit) || 12));
     if (!query || query.length < 2) return [];
+    const preferred = preferredGuidedIds(query);
     const ranked = [];
     for (const row of catalog) {
       let score = scoreRow(row, text);
@@ -418,7 +428,16 @@
       if (hasUnrequestedQualifier(row, text)) score -= 140;
       if (score >= 420) ranked.push({ row, score });
     }
-    ranked.sort((a, b) => b.score - a.score);
+    ranked.sort((a, b) => {
+      const ai = preferred.indexOf(String(a.row?.[0] ?? ""));
+      const bi = preferred.indexOf(String(b.row?.[0] ?? ""));
+      if (ai >= 0 || bi >= 0) {
+        if (ai < 0) return 1;
+        if (bi < 0) return -1;
+        if (ai !== bi) return ai - bi;
+      }
+      return b.score - a.score;
+    });
     const seen = new Set();
     return ranked
       .filter(({ row }) => {
