@@ -46,6 +46,14 @@
   function mealsWithoutCategory(target){ return commonMeals.filter(description=>!recognizedAs(description,target)); }
   function pick(pool,random){ return pool[Math.floor(random()*pool.length)]; }
 
+  const foodTargets=new Set(["dairy","soy","seafood","fish","gluten","legumes","fruits","vegetables","allium","processed","high_fiber","fried","spicy"]);
+  function isFoodTarget(target){ return foodTargets.has(target); }
+  function exposureChance(i,activeStart,activeEnd,random,before=.10,during=.60,after=.08){
+    if(i<activeStart) return random()<before;
+    if(i<=activeEnd) return random()<during;
+    return random()<after;
+  }
+
   function targetMeal(target,random){
     const pool=mealsWithCategory(target);
     if(!pool.length) throw new Error(`Laboratoire: aucun repas reconnu pour la catégorie ${target}.`);
@@ -125,7 +133,7 @@
       const date=dateKey(start,i), progress=i/Math.max(1,days-1), inActiveWindow=i>=activeStart&&i<=activeEnd, activeProgress=inActiveWindow?((i-activeStart)/Math.max(1,activeDays-1)):0;
       const weekday=new Date(`${date}T12:00:00`).getDay();
       const beforeWindow=false, afterWindow=i>activeEnd;
-      let exposure=inActiveWindow ? random()<.62 : random()<.12;
+      let exposure=exposureChance(i,activeStart,activeEnd,random,.08,.62,.08);
       if(afterWindow && i===rechallengeDay) exposure=true;
       if(sc.pattern==="withdrawal") exposure=inActiveWindow && activeProgress<.5 ? random()<.62 : random()<.05;
       if(sc.pattern==="rechallenge") exposure=inActiveWindow?(activeProgress<.34?random()<.62:activeProgress<.70?random()<.04:random()<.58):random()<.05;
@@ -174,8 +182,8 @@
           if(down && random()<.58) day.activities.push({id:`lab-aw-${date}`,type:"Marche",minutes:25+Math.floor(random()*35),intensity:"moderate",at:`${date}T16:45:00`});
           if(!down && random()<.45) day.water=Math.max(3,day.water-1);
         }
-        const nonTargetPool=mealsWithoutCategory(sc.target).filter(description=>!recognizedAs(description,"caffeine"));
-        let description=exposure?targetMeal(sc.target,random):pick(nonTargetPool.length?nonTargetPool:foods.neutral,random);
+        const nonTargetPool=isFoodTarget(sc.target)?mealsWithoutCategory(sc.target).filter(description=>!recognizedAs(description,"caffeine")):commonMeals.filter(description=>!recognizedAs(description,"caffeine"));
+        let description=(exposure&&isFoodTarget(sc.target))?targetMeal(sc.target,random):pick(nonTargetPool.length?nonTargetPool:foods.neutral,random);
         if(sc.pattern==="confounder" && exposure) description=random()<.70?"Pâtes tomate, ail, oignon et parmesan":"Poulet sauté avec ail, oignon, riz et légumes";
         const isTransient=sc.pattern==="transient";
         let symptomProbability=exposure?sc.strength:(inActiveWindow?.07:.04);
@@ -192,7 +200,7 @@
         const rating=tags.includes("bloating")?2:tags.includes("fatigue")?2:4;
         day.meals.push(meal(`lab-${date}-l`,date,"12:20","Dîner",description,tags,rating,tags.includes("bloating")?"Inconfort digestif noté après le repas.":""));
         const dinnerExposure=sc.target==="dairy" && (inActiveWindow?random()<.22:random()<.05);
-        const dinnerNonTarget=mealsWithoutCategory(sc.target).filter(description=>!recognizedAs(description,"caffeine"));
+        const dinnerNonTarget=isFoodTarget(sc.target)?mealsWithoutCategory(sc.target).filter(description=>!recognizedAs(description,"caffeine")):commonMeals.filter(description=>!recognizedAs(description,"caffeine"));
         const dinnerDescription=dinnerExposure?targetMeal("dairy",random):pick(dinnerNonTarget.length?dinnerNonTarget:foods.neutral,random);
         const dinnerSymptom=dinnerExposure&&sc.signal==="digestive"?random()<sc.strength:(sc.signal==="digestive"&&random()<.035);
         const dinnerTags=dinnerSymptom?["bloating",random()<.5?"gas":"cramps"]:["positive_wellbeing"];
@@ -208,7 +216,7 @@
     const labStats={target:sc.target,activeStart,activeEnd,activeDays,exposures:0,activeExposures:0,postExposures:0,negativeMeals:0};
     Object.values(store.days).forEach((day,idx)=>{
       (day.meals||[]).forEach(m=>{
-        const hit=recognizedAs(m.description,sc.target);
+        const hit=isFoodTarget(sc.target)&&recognizedAs(m.description,sc.target);
         if(hit){labStats.exposures++;if(idx>=activeStart&&idx<=activeEnd)labStats.activeExposures++;if(idx>activeEnd)labStats.postExposures++;}
         const tags=m.feeling?.tags||[];
         if(tags.some(t=>["bloating","gas","cramps","fatigue"].includes(t))) labStats.negativeMeals++;
