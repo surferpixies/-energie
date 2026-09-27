@@ -55,7 +55,8 @@
   }
 
   function targetMeal(target,random){
-    const pool=mealsWithCategory(target);
+    const poolKey=({processed_foods:"processed",fried_foods:"fried",spicy_foods:"spicy"})[target]||target;
+    const pool=(foods[poolKey]||commonMeals).filter(description=>recognizedAs(description,target));
     if(!pool.length) throw new Error(`Laboratoire: aucun repas reconnu pour la catégorie ${target}.`);
     return pick(pool,random);
   }
