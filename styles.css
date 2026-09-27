@@ -1694,3 +1694,25 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .lab-selector-panel .demo-person-card{display:flex;flex-direction:column;height:100%;min-height:220px}
 .lab-selector-panel .demo-person-head{align-items:flex-start}
 .lab-selector-panel .demo-person-card>button{margin-top:auto;width:100%}
+
+
+/* Energy Lab — compact header and denser scenario grid */
+.lab-selector-panel>summary{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px;align-items:center}
+.lab-selector-panel>summary>span:first-child{display:grid;grid-template-columns:auto 1fr;column-gap:12px;row-gap:2px;align-items:baseline}
+.lab-selector-panel>summary .eyebrow{grid-column:1;white-space:nowrap}
+.lab-selector-panel>summary strong{grid-column:2}
+.lab-selector-panel>summary>span:first-child>small:last-child{grid-column:2;line-height:1.25}
+.lab-selector-panel .demo-selector-meta{align-self:center}
+.lab-selector-panel .demo-selector-content{padding-top:10px}
+.lab-selector-panel .lab-actions{margin-bottom:14px}
+.lab-selector-panel .demo-profile-grid{gap:16px}
+.lab-selector-panel .demo-person-card{min-height:170px;padding:18px 16px 16px}
+.lab-selector-panel .demo-person-head{gap:12px}
+.lab-selector-panel .demo-person-head h4{margin:0 0 2px;line-height:1.15}
+.lab-selector-panel .demo-person-card>button{min-height:46px;margin-top:14px}
+@media(max-width:700px){
+  .lab-selector-panel>summary{grid-template-columns:1fr auto}
+  .lab-selector-panel>summary>span:first-child{grid-template-columns:1fr}
+  .lab-selector-panel>summary .eyebrow,.lab-selector-panel>summary strong,.lab-selector-panel>summary>span:first-child>small:last-child{grid-column:1}
+  .lab-selector-panel .demo-person-card{min-height:160px}
+}
