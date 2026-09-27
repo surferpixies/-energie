@@ -31,7 +31,7 @@
     high_fiber:["Gruau, chia, framboises et amandes","Lentilles, quinoa et légumes","Pois chiches, avocat et légumes"],
     fried:["Poulet frit, pommes de terre et salade","Poisson frit, riz et légumes","Frites, burger et crudités"],
     spicy:["Chili épicé aux haricots","Curry épicé au poulet et légumes","Tacos épicés, salsa et salade"],
-    neutral:["Œufs, rôties et fruit","Poulet, riz et légumes","Saumon, pommes de terre et salade","Soupe, sandwich à la dinde et fruit","Quinoa, légumes et poulet"]
+    neutral:["Poulet, riz et légumes","Saumon, pommes de terre et salade","Soupe aux légumes, sandwich à la dinde et fruit","Quinoa, légumes et poulet","Bœuf sauté, riz et légumes","Salade de poulet, avocat, tomates et pain","Tilapia, couscous et haricots verts","Bol de riz, œuf, edamames et légumes","Dinde, patate douce et brocoli","Pâtes tomate, poulet et courgettes","Omelette aux légumes, pommes de terre et fruit","Soupe de lentilles, pain et salade"]
   };
 
   function categoriesFor(description){
@@ -182,9 +182,11 @@
           ["feeling_good"];
         const rating=tags.includes("bloating")?2:tags.includes("fatigue")?2:4;
         day.meals.push(meal(`lab-${date}-l`,date,"12:20","Dîner",description,tags,rating,tags.includes("bloating")?"Inconfort digestif noté après le repas.":""));
-        const dinnerNoise=sc.signal==="digestive" && random()<(inActiveWindow?.06:.04);
-        const dinnerTags=dinnerNoise?["bloating"]:["positive_wellbeing"];
-        day.meals.push(meal(`lab-${date}-d`,date,"18:45","Souper",foods.neutral[Math.floor(random()*foods.neutral.length)],dinnerTags,dinnerNoise?2:4,dinnerNoise?"Inconfort digestif léger.":""));
+        const dinnerExposure=sc.target==="dairy" && (inActiveWindow?random()<.22:random()<.05);
+        const dinnerDescription=dinnerExposure?targetMeal("dairy",random):foods.neutral[Math.floor(random()*foods.neutral.length)];
+        const dinnerSymptom=dinnerExposure&&sc.signal==="digestive"?random()<sc.strength:(sc.signal==="digestive"&&random()<.035);
+        const dinnerTags=dinnerSymptom?["bloating",random()<.5?"gas":"cramps"]:["positive_wellbeing"];
+        day.meals.push(meal(`lab-${date}-d`,date,"18:45","Souper",dinnerDescription,dinnerTags,dinnerSymptom?2:4,dinnerSymptom?"Inconfort digestif léger.":""));
 
         if(sc.pattern==="delayed" && previousExposure && random()<sc.strength){
           day.observations.push({id:`lab-ob-${date}`,date,time:"09:15",intensity:3,duration:"few_hours",tags:["bloating","cramps"],contexts:["food"],mealIds:[],notes:"Inconfort apparu ce matin, sans l’attribuer automatiquement au dernier repas.",createdAt:`${date}T09:15:00`,updatedAt:`${date}T09:15:00`});
