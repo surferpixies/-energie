@@ -165,10 +165,10 @@
   function rampPositiveOutcome(sc,exposed,rampProgress,water,random){
     if(sc.pattern!=="ramp" || sc.signal!=="positive") return null;
     const progress=clamp(Number(rampProgress)||0,0,1);
-    const hydrationBonus=water>=7?.16:water<=4?-.10:0;
-    const exposureBonus=exposed?.58+progress*.22:0;
+    const hydrationBonus=water>=7?.24:water<=5?-.18:0;
+    const exposureBonus=exposed?.78+progress*.18:0;
     const noise=(random()-.5)*.34;
-    const rating=Number(clamp(3.42+progress*.28+hydrationBonus+exposureBonus+noise,3.0,5).toFixed(1));
+    const rating=Number(clamp(3.22+progress*.24+hydrationBonus+exposureBonus+noise,2.9,5).toFixed(1));
     return {
       tags:exposed?["positive_energy","positive_wellbeing"]:["positive_wellbeing"],
       rating,
