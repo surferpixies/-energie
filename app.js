@@ -4587,7 +4587,7 @@ function formatSleepDuration(hours) {
       "calm",
     ]);
     const labFeelingIntensity = (day, ids, invert = false) => {
-      const values = (day.meals || []).flatMap((meal) =>
+      const mealValues = (day.meals || []).flatMap((meal) =>
         (meal.feeling?.tags || [])
           .filter((tag) => ids.has(tag))
           .map((tag) => {
@@ -4598,6 +4598,14 @@ function formatSleepDuration(hours) {
             return invert ? Math.max(0, Math.min(5, 6 - bounded)) : bounded;
           }),
       );
+      const observationValues = (day.observations || []).flatMap((observation) =>
+        (observation.tags || [])
+          .filter((tag) => ids.has(tag))
+          .map(() =>
+            Math.max(0, Math.min(5, Number(observation.intensity) || 3)),
+          ),
+      );
+      const values = [...mealValues, ...observationValues];
       return values.length
         ? values.reduce((sum, value) => sum + value, 0) / values.length
         : 0;
@@ -4841,7 +4849,10 @@ function formatSleepDuration(hours) {
       return `<g class="trend-exposure"><rect x="${x(index)-5}" y="${height-bottom+10-barHeight}" width="10" height="${barHeight}" rx="3"/><text x="${x(index)}" y="${height-bottom+22}" text-anchor="middle">${point.exposures}</text></g>`;
     }).join("");
     const milestoneIndex = Math.min(points.length - 1, Number(config.milestoneWeek ?? -1));
-    const milestone = milestoneIndex >= 0 ? `<g class="trend-milestone"><line x1="${x(milestoneIndex)}" y1="${top}" x2="${x(milestoneIndex)}" y2="${height-bottom}"/><text x="${x(milestoneIndex)+7}" y="${top+12}">${esc(config.milestoneLines[0])}</text><text x="${x(milestoneIndex)+7}" y="${top+24}">${esc(config.milestoneLines[1])}</text></g>` : "";
+    const milestoneOnRight = milestoneIndex >= Math.max(0, points.length - 3);
+    const milestoneTextX = milestoneIndex >= 0 ? x(milestoneIndex) + (milestoneOnRight ? -7 : 7) : 0;
+    const milestoneAnchor = milestoneOnRight ? "end" : "start";
+    const milestone = milestoneIndex >= 0 ? `<g class="trend-milestone"><line x1="${x(milestoneIndex)}" y1="${top}" x2="${x(milestoneIndex)}" y2="${height-bottom}"/><text x="${milestoneTextX}" y="${top+12}" text-anchor="${milestoneAnchor}">${esc(config.milestoneLines[0])}</text><text x="${milestoneTextX}" y="${top+24}" text-anchor="${milestoneAnchor}">${esc(config.milestoneLines[1])}</text></g>` : "";
     const hitAreas = points.map((point, index) => `<g class="trend-week-hit" data-trend-week-detail="${index}" role="button" tabindex="0" aria-label="Voir le détail de ${esc(point.label)}"><rect x="${Math.max(left, x(index)-28)}" y="${top}" width="56" height="${height-top-10}" rx="8"/></g>`).join("");
     const chart = `<div class="professional-trend-legend"><span class="discomfort">Valeur au-dessus : ${esc(measureText)} /5</span><span class="exposure-count">Nombre en dessous : journées repérées</span></div><div class="professional-trend-scroll chart-scroll"><svg style="--trend-width:${width}px" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><text class="trend-y-title" x="14" y="${top + (height-top-bottom)/2}" text-anchor="middle" transform="rotate(-90 14 ${top + (height-top-bottom)/2})">${esc(measureLabel)} /5</text><g class="trend-grid">${grid}</g>${milestone}<path class="trend-path discomfort" d="${linePath}"/><g class="trend-dots">${dots}</g><g class="trend-point-values">${pointValues}</g><g class="trend-exposures">${exposureBars}</g><g class="trend-labels">${labels}</g><g class="trend-week-hits">${hitAreas}</g></svg></div>`;
     const endOfWeek = (start) => { const date = new Date(`${start}T12:00:00`); date.setDate(date.getDate() + 6); return date; };
@@ -10020,23 +10031,99 @@ function formatSleepDuration(hours) {
         .sort((a, b) => b.count - a.count),
     };
   }
-  function canonicalObservationReport(meals) {
-    return db.settings.insightsEnabled && window.EnergieObservationEngine
-      ? window.EnergieObservationEngine.analyze(db, {
-          meals,
-          limit: 3,
-          lookbackDays: 180,
-          locale: window.ENERGIE_LOCALE || "fr-CA",
-        })
-      : {
-          observations: [],
-          maturity: {
-            icon: "🌱",
-            label: "Ton journal apprend encore",
-            days: 0,
-            analyzableDays: 0,
-          },
+  function labShortSleepObservation() {
+    const scenarioId = db.settings?.demoLab?.scenarioId;
+    if (scenarioId !== "short-sleep-fatigue") return null;
+    const rows = Object.entries(db.days || {})
+      .filter(([date, day]) => date <= selectedDate && day)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-180)
+      .map(([date, day]) => {
+        const fatigue = (day.observations || [])
+          .filter((item) => (item.tags || []).includes("fatigue"))
+          .map((item) => Math.max(0, Math.min(5, Number(item.intensity) || 0)));
+        return {
+          date,
+          short: Number(day.sleepHours) > 0 && Number(day.sleepHours) < 6.3,
+          fatigue: fatigue.length
+            ? fatigue.reduce((sum, value) => sum + value, 0) / fatigue.length
+            : 0,
         };
+      });
+    const exposed = rows.filter((row) => row.short),
+      comparison = rows.filter((row) => !row.short),
+      average = (items) =>
+        items.length
+          ? items.reduce((sum, row) => sum + row.fatigue, 0) / items.length
+          : 0,
+      exposedAverage = average(exposed),
+      comparisonAverage = average(comparison),
+      difference = exposedAverage - comparisonAverage;
+    if (exposed.length < 4 || comparison.length < 4 || difference < 0.5)
+      return null;
+    const strength =
+      exposed.length >= 12 && difference >= 1.5
+        ? "strong"
+        : exposed.length >= 7
+          ? "moderate"
+          : "preliminary";
+    const confidence =
+      strength === "strong"
+        ? { icon: "🌳", label: "Très forte tendance", cls: "high" }
+        : strength === "moderate"
+          ? { icon: "🌿", label: "Bonne tendance", cls: "medium" }
+          : { icon: "🌱", label: "Peu de données", cls: "low" };
+    return {
+      id: "lab-short-sleep-fatigue",
+      kind: "day-context-feeling-change",
+      valence: "negative",
+      icon: "😴",
+      title: "Nuit courte et fatigue le lendemain",
+      text:
+        "La fatigue revient nettement plus souvent les journées qui suivent une nuit courte que durant les autres journées comparables.",
+      statistic: exposedAverage.toFixed(1),
+      comparisonStatistic: comparisonAverage.toFixed(1),
+      comparisonLabels: ["Après une nuit courte", "Après une nuit plus longue"],
+      samples: {
+        exposed: exposed.length,
+        comparison: comparison.length,
+        total: rows.length,
+      },
+      metrics: { difference, strength },
+      confidence,
+      evidence: {},
+      basis: `${exposed.length} journées suivant une nuit de moins de 6,3 h ont été comparées à ${comparison.length} autres journées. La fatigue utilisée ici provient des ressentis hors repas du scénario fictif.`,
+    };
+  }
+  function canonicalObservationReport(meals) {
+    const base =
+      db.settings.insightsEnabled && window.EnergieObservationEngine
+        ? window.EnergieObservationEngine.analyze(db, {
+            meals,
+            limit: 3,
+            lookbackDays: 180,
+            locale: window.ENERGIE_LOCALE || "fr-CA",
+          })
+        : {
+            observations: [],
+            maturity: {
+              icon: "🌱",
+              label: "Ton journal apprend encore",
+              days: 0,
+              analyzableDays: 0,
+            },
+          };
+    const shortSleep = labShortSleepObservation();
+    if (!shortSleep) return base;
+    return {
+      ...base,
+      observations: [
+        shortSleep,
+        ...(base.observations || []).filter(
+          (item) => item.id !== shortSleep.id,
+        ),
+      ].slice(0, 3),
+    };
   }
   function portraitReportData(days = portraitPeriodDays) {
     const windowData = portraitWindow(days),
