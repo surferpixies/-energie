@@ -46,7 +46,7 @@
   function mealsWithoutCategory(target){ return commonMeals.filter(description=>!recognizedAs(description,target)); }
   function pick(pool,random){ return pool[Math.floor(random()*pool.length)]; }
 
-  const foodTargets=new Set(["dairy","soy","seafood","fish","gluten","legumes","fruits","vegetables","allium","processed","high_fiber","fried","spicy"]);
+  const foodTargets=new Set(["dairy","soy","seafood","fish","gluten","legumes","fruits","vegetables","allium","processed_foods","high_fiber","fried_foods","spicy_foods"]);
   function isFoodTarget(target){ return foodTargets.has(target); }
   function exposureChance(i,activeStart,activeEnd,random,before=.10,during=.60,after=.08){
     if(i<activeStart) return random()<before;
