@@ -3798,6 +3798,19 @@ function formatSleepDuration(hours) {
   }
   function activeDemoProfile() {
     const id = db.settings?.demoProfileId || "marie";
+    const labScenarioId = db.settings?.demoLab?.scenarioId;
+    if (labScenarioId) {
+      const scenario = window.EnergieDemoLab?.scenarios?.find(
+        (item) => item.id === labScenarioId,
+      );
+      return {
+        id,
+        name: scenario?.profileName || db.settings?.demoName || "Profil Lab",
+        icon: scenario?.icon || "🧪",
+        scenario: scenario?.title || "Scénario dynamique",
+        summary: "Profil fictif généré par le Laboratoire Énergie",
+      };
+    }
     return (
       window.EnergieDemoProfiles?.profiles?.[id] ||
       window.EnergieDemoProfiles?.profiles?.marie || {
@@ -3914,7 +3927,7 @@ function formatSleepDuration(hours) {
     return (stories[profileId] || [base, base, base, base])[stage] || base;
   }
   function activeReferenceBrain() {
-    if (!db.settings?.demoMode) return null;
+    if (!db.settings?.demoMode || db.settings?.demoLab?.scenarioId) return null;
     const base =
         activeDemoProfile()?.brain ||
         window.EnergieDemoProfiles?.referenceBrains?.[
@@ -4935,7 +4948,7 @@ function formatSleepDuration(hours) {
     );
   }
   function labScenarioCardsHtml() { const lab=window.EnergieDemoLab;if(!lab)return `<section class="card lab-selector-panel"><h3>🧪 Laboratoire Énergie</h3><p class="muted small">Le générateur de scénarios n’a pas été chargé. Recharge la page.</p></section>`;const active=db.settings?.demoLab?.scenarioId||"";return `<details class="card demo-selector-card lab-selector-panel" open><summary><span><small class="eyebrow"><span class="lab-flask" aria-hidden="true">🧪</span> Laboratoire Énergie</small><strong>Scénarios dynamiques</strong><small>60 jours fictifs pour explorer les Observations</small></span><span class="demo-selector-meta"><b>${lab.scenarios.length} scénarios</b><i aria-hidden="true">›</i></span></summary><div class="demo-selector-content"><div class="lab-actions"><button class="primary" type="button" id="labRandomScenario">🎲 Scénario surprise</button>${active?`<button class="secondary" type="button" id="labNewVariant">🎲 Nouvelle variante</button><button class="secondary" type="button" id="leaveLab">Revenir à mon journal</button>`:""}</div><div class="demo-profile-grid">${lab.scenarios.map(sc=>`<article class="demo-person-card ${active===sc.id?"is-active":""}"><div class="demo-person-head"><span class="demo-person-avatar">${sc.icon}</span><div><h4>${esc(sc.title)}</h4><small>${esc(sc.group)}</small></div></div><button class="${active===sc.id?"secondary":"primary"} small" type="button" data-open-lab-scenario="${sc.id}">${active===sc.id?"Scénario ouvert":"Tester"}</button></article>`).join("")}</div></div></details>`; }
-  function enterLabScenario(id,variant=1){const lab=window.EnergieDemoLab;if(!lab)return alert("Le Laboratoire n’est pas chargé.");if(!labRealDb){labRealDb=db;try{labRealBrainMemory=brainMemoryState()?JSON.parse(JSON.stringify(brainMemoryState())):null;}catch(_){labRealBrainMemory=null;}}labVariant=variant;db=migrate(lab.generate(id,{variant}));db.settings.demoMode=true;db.settings.demoReadOnly=true;buildDemoBrainMemory(db);selectedDate=Object.keys(db.days||{}).sort().at(-1)||todayKey();currentView="insights";render();}
+  function enterLabScenario(id,variant=1){const lab=window.EnergieDemoLab;if(!lab)return alert("Le Laboratoire n’est pas chargé.");if(!labRealDb){labRealDb=db;try{labRealBrainMemory=brainMemoryState()?JSON.parse(JSON.stringify(brainMemoryState())):null;}catch(_){labRealBrainMemory=null;}}labVariant=variant;db=migrate(lab.generate(id,{variant}));db.settings.demoMode=true;db.settings.demoReadOnly=true;insightsComputationCache=null;observationExplorerResultsCache.clear();buildDemoBrainMemory(db);selectedDate=Object.keys(db.days||{}).sort().at(-1)||todayKey();currentView="insights";render();}
   function leaveLab(){if(!labRealDb)return;db=labRealDb;labRealDb=null;if(labRealBrainMemory&&window.Brain?.replaceMemoryState)window.Brain.replaceMemoryState(labRealBrainMemory);labRealBrainMemory=null;labVariant=1;selectedDate=todayKey();currentView="profile";render();}
   function randomLabScenario(){const sc=window.EnergieDemoLab?.randomScenario?.({variant:Date.now()});if(sc)enterLabScenario(sc.id,1);}
   function newLabVariant(){const id=db.settings?.demoLab?.scenarioId;if(id)enterLabScenario(id,labVariant+1);}
