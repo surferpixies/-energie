@@ -1684,3 +1684,6 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   .sleep-card-wide .wellness-head{grid-template-columns:30px minmax(0,1fr) auto}
   .sleep-card-wide .wellness-icon{font-size:1.15rem}
 }
+
+/* Laboratoire Energie */
+.lab-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.lab-selector-panel .demo-person-card{min-height:150px}.lab-selector-panel .demo-person-card.is-active{outline:2px solid currentColor;outline-offset:-2px}@media(max-width:600px){.lab-actions>*{flex:1 1 100%}}
