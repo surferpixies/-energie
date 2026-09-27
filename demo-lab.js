@@ -206,7 +206,7 @@
 
       if(!missing){
         const neutralBreakfasts=["Gruau, banane et noix","Omelette aux épinards, rôties et orange","Rôties au beurre d’arachide et banane","Œufs brouillés, pommes de terre et fruit","Bol d’avoine, pomme et noix","Pain doré, fraises et noix","Smoothie banane, avoine et beurre d’arachide","Bagel, œuf et avocat"];
-        const breakfastHasTarget=isFoodTarget(sc.target) && (inActiveWindow?random()<.22:random()<.05);
+        const breakfastHasTarget=standardFoodStory(sc) && (inActiveWindow?random()<.22:random()<.05);
         const targetBreakfasts=breakfastHasTarget?mealsWithCategory(sc.target).filter(description=>/yogourt|gruau|omelette|bagel|rôties|smoothie|fromage cottage|œuf|fruit|avoine/i.test(description)):[];
         const safeBreakfasts=isFoodTarget(sc.target)?neutralBreakfasts.filter(description=>!recognizedAs(description,sc.target)):neutralBreakfasts;
         const breakfastPool=breakfastHasTarget&&targetBreakfasts.length?targetBreakfasts:(safeBreakfasts.length?safeBreakfasts:neutralBreakfasts);
@@ -244,7 +244,7 @@
           ["positive_wellbeing"];
         const rating=lunchOutcome?.rating??(tags.includes("bloating")?2:tags.includes("fatigue")?2:4);
         day.meals.push(meal(`lab-${date}-l`,date,"12:20","Dîner",description,tags,rating,lunchOutcome?.note??(tags.includes("bloating")?"Inconfort digestif noté après le repas.":"")));
-        const dinnerExposure=isFoodTarget(sc.target) && (inActiveWindow?random()<.20:random()<.05);
+        const dinnerExposure=standardFoodStory(sc) && (inActiveWindow?random()<.20:random()<.05);
         const dinnerNonTarget=isFoodTarget(sc.target)?mealsWithoutCategory(sc.target).filter(description=>!recognizedAs(description,"caffeine")):commonMeals.filter(description=>!recognizedAs(description,"caffeine"));
         const dinnerDescription=dinnerExposure?targetMeal(sc.target,random,usedMeals):pickDistinct(dinnerNonTarget.length?dinnerNonTarget:foods.neutral,usedMeals,random);
         const dinnerOutcome=outcomeForFoodExposure(sc,dinnerExposure,inActiveWindow,afterWindow,random);
