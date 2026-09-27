@@ -98,7 +98,7 @@
     end.setHours(12,0,0,0);
     const start=new Date(end.getTime()-(days-1)*DAY);
     const activeDays=10+Math.floor(random()*41);
-    const activeStart=Math.floor(random()*(days-activeDays+1));
+    const activeStart=0;
     const activeEnd=activeStart+activeDays-1;
     const store={version:24,createdAt:start.toISOString(),updatedAt:new Date().toISOString(),
       settings:{waterGoal:8,theme:"system",showWelcome:false,insightsEnabled:true,nutritionObservations:true,macroTracking:true,
@@ -124,7 +124,8 @@
       const weekday=new Date(`${date}T12:00:00`).getDay();
       const beforeWindow=false, afterWindow=i>activeEnd;
       let exposure=inActiveWindow ? random()<.62 : random()<.12;
-      if(afterWindow && i===Math.min(days-1,activeEnd+18)) exposure=true;
+      const rechallengeDay=Math.min(days-1,activeEnd+10+Math.floor(random()*9));
+      if(afterWindow && i===rechallengeDay) exposure=true;
       if(sc.pattern==="withdrawal") exposure=inActiveWindow && activeProgress<.5 ? random()<.62 : random()<.05;
       if(sc.pattern==="rechallenge") exposure=inActiveWindow?(activeProgress<.34?random()<.62:activeProgress<.70?random()<.04:random()<.58):random()<.05;
       if(sc.pattern==="ramp") exposure=inActiveWindow ? random()<(0.18+activeProgress*.70) : random()<.08;
