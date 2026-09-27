@@ -1,6 +1,6 @@
 {
   "name": "energie-ios",
-  "version": "3.56.125",
+  "version": "3.56.153",
   "private": true,
   "description": "Conteneur Capacitor pour Énergie (iOS et Android)",
   "scripts": {
