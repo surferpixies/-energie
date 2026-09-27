@@ -91,9 +91,9 @@
     const noise=inActiveWindow?.055:.035;
     const probability=exposed?(inActiveWindow?sc.strength:Math.max(.48,sc.strength-.16)):noise;
     const hit=random()<probability;
-    if(sc.signal==="digestive") return hit?{tags:["bloating",random()<.55?"gas":"cramps"],rating:2,note:"Inconfort digestif noté après le repas."}:{tags:["positive_wellbeing"],rating:4,note:""};
-    if(sc.signal==="energy") return hit?{tags:["fatigue"],rating:2,note:"Énergie plus basse après le repas."}:{tags:["positive_wellbeing"],rating:4,note:""};
-    return hit?{tags:["energy","feeling_good"],rating:4,note:""}:{tags:["positive_wellbeing"],rating:4,note:""};
+    if(sc.signal==="digestive") return hit?{tags:["bloating",random()<.55?"gas":"stomachache"],rating:random()<.35?4:3,note:"Inconfort digestif noté après le repas."}:{tags:["positive_wellbeing"],rating:3,note:""};
+    if(sc.signal==="energy") return hit?{tags:["fatigue"],rating:random()<.35?4:3,note:"Énergie plus basse après le repas."}:{tags:["positive_wellbeing"],rating:3,note:""};
+    return hit?{tags:["positive_energy","positive_wellbeing"],rating:4,note:""}:{tags:["positive_wellbeing"],rating:3,note:""};
   }
 
   const scenarios = [
@@ -241,7 +241,7 @@
         const tags=lunchOutcome?lunchOutcome.tags:sc.signal==="digestive"&&symptom?["bloating",random()<.55?"gas":"cramps"]:
           sc.signal==="energy"&&((exposure&&random()<sc.strength)||(sc.pattern==="sleep"&&sleep<6.3))?["fatigue"]:
           sc.signal==="positive"&&((exposure||inActiveWindow||water>=7)&&random()<sc.strength)?["energy","feeling_good"]:
-          ["feeling_good"];
+          ["positive_wellbeing"];
         const rating=lunchOutcome?.rating??(tags.includes("bloating")?2:tags.includes("fatigue")?2:4);
         day.meals.push(meal(`lab-${date}-l`,date,"12:20","Dîner",description,tags,rating,lunchOutcome?.note??(tags.includes("bloating")?"Inconfort digestif noté après le repas.":"")));
         const dinnerExposure=isFoodTarget(sc.target) && (inActiveWindow?random()<.20:random()<.05);
