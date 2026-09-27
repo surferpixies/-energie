@@ -151,9 +151,11 @@
         const neutralBreakfasts=["Gruau, banane et noix","Omelette, rôties et fruit","Rôties au beurre d’arachide et banane","Œufs, rôties et fruit"];
         const dairyBreakfasts=["Yogourt grec, bleuets et avoine","Fromage cottage, framboises et granola"];
         const breakfastHasTarget=sc.target==="dairy" && inActiveWindow && random()<.42;
-        const breakfastPool=breakfastHasTarget?dairyBreakfasts:neutralBreakfasts;
+        const recognizedDairyBreakfasts=dairyBreakfasts.filter(description=>recognizedAs(description,"dairy"));
+        const breakfastPool=breakfastHasTarget?recognizedDairyBreakfasts:neutralBreakfasts;
         const breakfast=lateCoffee?`Café filtre, ${breakfastPool[Math.floor(random()*breakfastPool.length)]}`:breakfastPool[Math.floor(random()*breakfastPool.length)];
-        const breakfastSymptom=breakfastHasTarget && sc.signal==="digestive" && random()<sc.strength;
+        const breakfastExposure=breakfastHasTarget && recognizedAs(breakfast,"dairy");
+        const breakfastSymptom=breakfastExposure && sc.signal==="digestive" && random()<sc.strength;
         const breakfastTags=breakfastSymptom?["bloating",random()<.55?"gas":"cramps"]:["positive_wellbeing"];
         day.meals.push(meal(`lab-${date}-b`,date,"07:30","Déjeuner",breakfast,breakfastTags,breakfastSymptom?2:4,breakfastSymptom?"Inconfort digestif noté après le repas.":""));
         if(weightScenario){
