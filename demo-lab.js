@@ -40,10 +40,16 @@
   function recognizedAs(description,target){
     return !target || categoriesFor(description).includes(target);
   }
+
+  const commonMeals=[...new Set(Object.values(foods).flat())];
+  function mealsWithCategory(target){ return commonMeals.filter(description=>recognizedAs(description,target)); }
+  function mealsWithoutCategory(target){ return commonMeals.filter(description=>!recognizedAs(description,target)); }
+  function pick(pool,random){ return pool[Math.floor(random()*pool.length)]; }
+
   function targetMeal(target,random){
-    const pool=(foods[target]||[]).filter(description=>recognizedAs(description,target));
+    const pool=mealsWithCategory(target);
     if(!pool.length) throw new Error(`Laboratoire: aucun repas reconnu pour la catégorie ${target}.`);
-    return pool[Math.floor(random()*pool.length)];
+    return pick(pool,random);
   }
 
   const scenarios = [
@@ -166,7 +172,8 @@
           if(down && random()<.58) day.activities.push({id:`lab-aw-${date}`,type:"Marche",minutes:25+Math.floor(random()*35),intensity:"moderate",at:`${date}T16:45:00`});
           if(!down && random()<.45) day.water=Math.max(3,day.water-1);
         }
-        let description=exposure?targetMeal(sc.target,random):foods.neutral[Math.floor(random()*foods.neutral.length)];
+        const nonTargetPool=mealsWithoutCategory(sc.target).filter(description=>!recognizedAs(description,"caffeine"));
+        let description=exposure?targetMeal(sc.target,random):pick(nonTargetPool.length?nonTargetPool:foods.neutral,random);
         if(sc.pattern==="confounder" && exposure) description=random()<.70?"Pâtes tomate, ail, oignon et parmesan":"Poulet sauté avec ail, oignon, riz et légumes";
         const isTransient=sc.pattern==="transient";
         let symptomProbability=exposure?sc.strength:(inActiveWindow?.07:.04);
@@ -183,7 +190,8 @@
         const rating=tags.includes("bloating")?2:tags.includes("fatigue")?2:4;
         day.meals.push(meal(`lab-${date}-l`,date,"12:20","Dîner",description,tags,rating,tags.includes("bloating")?"Inconfort digestif noté après le repas.":""));
         const dinnerExposure=sc.target==="dairy" && (inActiveWindow?random()<.22:random()<.05);
-        const dinnerDescription=dinnerExposure?targetMeal("dairy",random):foods.neutral[Math.floor(random()*foods.neutral.length)];
+        const dinnerNonTarget=mealsWithoutCategory(sc.target).filter(description=>!recognizedAs(description,"caffeine"));
+        const dinnerDescription=dinnerExposure?targetMeal("dairy",random):pick(dinnerNonTarget.length?dinnerNonTarget:foods.neutral,random);
         const dinnerSymptom=dinnerExposure&&sc.signal==="digestive"?random()<sc.strength:(sc.signal==="digestive"&&random()<.035);
         const dinnerTags=dinnerSymptom?["bloating",random()<.5?"gas":"cramps"]:["positive_wellbeing"];
         day.meals.push(meal(`lab-${date}-d`,date,"18:45","Souper",dinnerDescription,dinnerTags,dinnerSymptom?2:4,dinnerSymptom?"Inconfort digestif léger.":""));
