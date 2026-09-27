@@ -160,6 +160,22 @@
     return hit?{tags:["positive_energy","positive_wellbeing"],rating:4,note:""}:{tags:["positive_wellbeing"],rating:3,note:""};
   }
 
+  // Le scénario "Fibres + hydratation" doit montrer une amélioration mesurable,
+  // pas seulement une hausse du nombre de repas riches en fibres.
+  function rampPositiveOutcome(sc,exposed,rampProgress,water,random){
+    if(sc.pattern!=="ramp" || sc.signal!=="positive") return null;
+    const progress=clamp(Number(rampProgress)||0,0,1);
+    const hydrationBonus=water>=7?.16:water<=4?-.10:0;
+    const exposureBonus=exposed?.58+progress*.22:0;
+    const noise=(random()-.5)*.34;
+    const rating=Number(clamp(3.42+progress*.28+hydrationBonus+exposureBonus+noise,3.0,5).toFixed(1));
+    return {
+      tags:exposed?["positive_energy","positive_wellbeing"]:["positive_wellbeing"],
+      rating,
+      note:exposed&&rating>=4.2?"Ressenti général un peu meilleur dans cette période.":""
+    };
+  }
+
   const scenarios = [
     {id:"dairy-digestion",profileName:"Marie",group:"Alimentation",icon:"🥛",title:"Produits laitiers → inconfort digestif",target:"dairy",signal:"digestive",strength:.78,pattern:"exposure"},
     {id:"soy-digestion",profileName:"Camille",group:"Alimentation",icon:"🌿",title:"Soya → inconfort digestif",target:"soy",signal:"digestive",strength:.76,pattern:"exposure"},
@@ -243,6 +259,9 @@
       let water;
       if(sc.pattern==="water"){
         water=clamp(Math.round((i<activeStart?4:inActiveWindow?4.5:7.5)+random()*2),2,10);
+      }else if(sc.pattern==="ramp"){
+        const hydrationProgress=i<activeStart?0:i<=activeEnd?activeProgress:1;
+        water=clamp(Math.round(4.2+hydrationProgress*2.8+random()*2),3,10);
       }else{
         water=clamp(Math.round((chaotic?3:5)+random()*4),2,10);
       }
@@ -279,7 +298,9 @@
         const breakfast=lateCoffee?`Café filtre, ${breakfastBase}`:breakfastBase;
         const usedMeals=new Set([breakfastBase]);
         const breakfastExposure=breakfastHasTarget && recognizedAs(breakfast,sc.target);
-        const breakfastOutcome=outcomeForFoodExposure(sc,breakfastExposure,inActiveWindow,afterWindow,random);
+        const rampProgress=i<activeStart?0:i<=activeEnd?activeProgress:1;
+        const breakfastOutcome=outcomeForFoodExposure(sc,breakfastExposure,inActiveWindow,afterWindow,random)
+          || rampPositiveOutcome(sc,breakfastExposure,rampProgress,water,random);
         const breakfastSymptom=breakfastOutcome?breakfastOutcome.rating<4:(breakfastExposure && sc.signal==="digestive" && random()<sc.strength);
         const breakfastTags=breakfastOutcome?breakfastOutcome.tags:(breakfastSymptom?["bloating",random()<.55?"gas":"cramps"]:["positive_wellbeing"]);
         day.meals.push(meal(`lab-${date}-b`,date,"07:30","Déjeuner",breakfast,breakfastTags,breakfastOutcome?.rating??(breakfastSymptom?2:4),breakfastOutcome?.note??(breakfastSymptom?"Inconfort digestif noté après le repas.":"")));
@@ -299,7 +320,8 @@
         usedMeals.add(description);
         if(sc.pattern==="confounder" && exposure) description=random()<.70?"Pâtes tomate, ail, oignon et parmesan":"Poulet sauté avec ail, oignon, riz et légumes";
         const isTransient=sc.pattern==="transient";
-        const lunchOutcome=outcomeForFoodExposure(sc,exposure,inActiveWindow,afterWindow,random);
+        const lunchOutcome=outcomeForFoodExposure(sc,exposure,inActiveWindow,afterWindow,random)
+          || rampPositiveOutcome(sc,exposure,rampProgress,water,random);
         let symptomProbability=exposure?sc.strength:(inActiveWindow?.07:.04);
         if(isTransient && i>Math.min(activeEnd,activeStart+8)) symptomProbability=.09;
         if(sc.pattern==="control") symptomProbability=.10;
@@ -324,7 +346,8 @@
             ? targetMeal(sc.target,random,usedMeals)
             : pickDistinct(dinnerNonTarget.length?dinnerNonTarget:foods.neutral,usedMeals,random);
         if(!dinnerDescription) dinnerDescription=dinnerExposure?targetMeal(sc.target,random,usedMeals):pickDistinct(dinnerNonTarget.length?dinnerNonTarget:foods.neutral,usedMeals,random);
-        const dinnerOutcome=outcomeForFoodExposure(sc,dinnerExposure,inActiveWindow,afterWindow,random);
+        const dinnerOutcome=outcomeForFoodExposure(sc,dinnerExposure,inActiveWindow,afterWindow,random)
+          || rampPositiveOutcome(sc,dinnerExposure,rampProgress,water,random);
         const dinnerSymptom=dinnerOutcome?dinnerOutcome.rating<4:(dinnerExposure&&sc.signal==="digestive"?random()<sc.strength:(sc.signal==="digestive"&&random()<.035));
         const dinnerTags=dinnerOutcome?dinnerOutcome.tags:(dinnerSymptom?["bloating",random()<.5?"gas":"cramps"]:
           sc.signal==="energy"&&dinnerExposure&&random()<sc.strength?["fatigue"]:
