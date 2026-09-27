@@ -4552,6 +4552,7 @@ function formatSleepDuration(hours) {
       spicy_foods: { icon: "🌶️", label: "aliments épicés" },
       processed_foods: { icon: "🍕", label: "aliments transformés" },
       high_fiber: { icon: "🌾", label: "aliments riches en fibres" },
+      caffeine: { icon: "☕", label: "caféine" },
     };
     const labMeta = labScenario ? labFoodMeta[labScenario.target] : null;
     const labMatchMeal = (meal) => {
@@ -4566,93 +4567,196 @@ function formatSleepDuration(hours) {
         ).some((food) => food.id === "allium");
       return false;
     };
-    const labConfig =
+    const labDigestiveIds = new Set([
+      "bloating",
+      "gas",
+      "cramps",
+      "diarrhea",
+      "nausea",
+      "stomachache",
+    ]);
+    const labEnergyIds = new Set(["fatigue", "brain_fog"]);
+    const labPositiveIds = new Set([
+      "positive_energy",
+      "positive_wellbeing",
+      "energy",
+      "feeling_good",
+      "stable_energy",
+      "good_mood",
+      "focus",
+      "calm",
+    ]);
+    const labFeelingIntensity = (day, ids, invert = false) => {
+      const values = (day.meals || []).flatMap((meal) =>
+        (meal.feeling?.tags || [])
+          .filter((tag) => ids.has(tag))
+          .map((tag) => {
+            const score = Number(
+              meal.feeling?.scores?.[tag] ?? meal.feeling?.rating ?? 3,
+            );
+            const bounded = Math.max(0, Math.min(5, score));
+            return invert ? Math.max(0, Math.min(5, 6 - bounded)) : bounded;
+          }),
+      );
+      return values.length
+        ? values.reduce((sum, value) => sum + value, 0) / values.length
+        : 0;
+    };
+    const labFoodConfig =
       labScenario &&
       labMeta &&
-      ["digestive", "energy"].includes(labScenario.signal)
+      ["digestive", "energy", "positive", "sleep"].includes(labScenario.signal)
         ? (() => {
-            const digestiveIds = new Set([
-              "bloating",
-              "gas",
-              "cramps",
-              "diarrhea",
-              "nausea",
-              "stomachache",
-            ]);
-            const energyIds = new Set(["fatigue", "brain_fog"]);
-            const symptomIds =
-              labScenario.signal === "digestive"
-                ? [...digestiveIds]
-                : [...energyIds];
+            const isDigestive = labScenario.signal === "digestive";
+            const isEnergy = labScenario.signal === "energy";
+            const isPositive = labScenario.signal === "positive";
+            const isSleep = labScenario.signal === "sleep";
             const labelTitle =
               labMeta.label.charAt(0).toUpperCase() + labMeta.label.slice(1);
-            const isDigestive = labScenario.signal === "digestive";
-            const measureLabel = isDigestive ? "Inconfort" : "Fatigue";
+            const measureLabel = isDigestive
+              ? "Inconfort"
+              : isEnergy
+                ? "Fatigue"
+                : isPositive
+                  ? "Ressenti"
+                  : "Sommeil";
             const measureText = isDigestive
               ? "inconfort moyen"
-              : "fatigue moyenne";
+              : isEnergy
+                ? "fatigue moyenne"
+                : isPositive
+                  ? "ressenti positif moyen"
+                  : "perturbation du sommeil";
+            const symptomIds = isDigestive
+              ? [...labDigestiveIds]
+              : isEnergy
+                ? [...labEnergyIds]
+                : isPositive
+                  ? [...labPositiveIds]
+                  : [];
+            const titleSuffix = isDigestive
+              ? "inconfort digestif"
+              : isEnergy
+                ? "fatigue après les repas"
+                : isPositive
+                  ? "meilleur ressenti"
+                  : "sommeil moins favorable";
             return {
               matchesMeal: labMatchMeal,
               delayed: labScenario.pattern === "delayed",
-              title: `${labMeta.icon} ${labelTitle} et ${isDigestive ? "inconfort digestif" : "fatigue après les repas"}`,
-              description: `Évolution hebdomadaire ${isDigestive ? "de l’inconfort digestif" : "de la fatigue"} selon la présence de ${labMeta.label} repérée dans le journal fictif.`,
+              title: `${labMeta.icon} ${labelTitle} et ${titleSuffix}`,
+              description: `Évolution hebdomadaire de ${measureText} selon la présence de ${labMeta.label} repérée dans le journal fictif.`,
               primaryLabel: `Avec ${labMeta.label}`,
-              primaryHelp: `${measureLabel} ${isDigestive ? "digestif " : ""}moyen les journées où ${labMeta.label} ont été repérés.`,
+              primaryHelp: `${measureText.charAt(0).toUpperCase() + measureText.slice(1)} les journées où ${labMeta.label} sont repérés.`,
               comparisonLabel: `Sans ${labMeta.label}`,
-              comparisonHelp: `${measureLabel} ${isDigestive ? "digestif " : ""}moyen les journées sans ${labMeta.label} repérés.`,
+              comparisonHelp: `${measureText.charAt(0).toUpperCase() + measureText.slice(1)} les journées sans ${labMeta.label} repérés.`,
               metricLabel: `jours avec ${labMeta.label}`,
               metricHelp: `Nombre total de journées comprenant ${labMeta.label} pendant la période.`,
               disclaimer:
                 "Association calculée à partir des données brutes du scénario. Elle illustre une piste de suivi et ne constitue pas un diagnostic.",
               milestoneWeek: Math.max(
                 0,
-                Math.floor(
-                  Number(db.settings?.demoLab?.activeEnd ?? 28) / 7,
-                ),
+                Math.floor(Number(db.settings?.demoLab?.activeEnd ?? 28) / 7),
               ),
               milestoneLines: ["Changement du scénario", "nouvelle période"],
-              summarySubject: isDigestive
-                ? `les inconforts digestifs associés aux ${labMeta.label} repérés`
-                : `la fatigue associée aux ${labMeta.label} repérés`,
-              summaryAction: "le changement de fréquence de cet élément dans le journal",
+              summarySubject: `${measureText} associé à ${labMeta.label}`,
+              summaryAction:
+                "le changement de fréquence de cet élément dans le journal",
               symptomIds,
               measureLabel,
               measureText,
               intensity: (day) => {
-                const ids = isDigestive ? digestiveIds : energyIds;
-                const mealValues = (day.meals || []).flatMap((meal) =>
-                  (meal.feeling?.tags || [])
-                    .filter((tag) => ids.has(tag))
-                    .map((tag) => {
-                      const score = Number(
-                        meal.feeling?.scores?.[tag] ??
-                          meal.feeling?.rating ??
-                          3,
-                      );
-                      return Math.max(0, Math.min(5, 6 - score));
-                    }),
-                );
-                const observationValues = isDigestive
-                  ? (day.observations || []).flatMap((item) =>
-                      (item.tags || [])
-                        .filter((tag) => ids.has(tag))
-                        .map(() =>
-                          Math.max(
-                            0,
-                            Math.min(5, Number(item.intensity) || 3),
-                          ),
-                        ),
-                    )
-                  : [];
-                const values = [...mealValues, ...observationValues];
-                return values.length
-                  ? values.reduce((sum, value) => sum + value, 0) /
-                      values.length
+                if (isDigestive)
+                  return labFeelingIntensity(day, labDigestiveIds, true);
+                if (isEnergy)
+                  return labFeelingIntensity(day, labEnergyIds, true);
+                if (isPositive)
+                  return labFeelingIntensity(day, labPositiveIds, false);
+                const sleep = Number(day.sleepHours);
+                return Number.isFinite(sleep)
+                  ? Math.max(0, Math.min(5, 8.5 - sleep))
                   : 0;
               },
             };
           })()
         : null;
+    const labContextConfig =
+      labScenario && !labFoodConfig
+        ? (() => {
+            const common = {
+              delayed: false,
+              disclaimer:
+                "Association calculée à partir des données brutes du scénario. Elle illustre une piste de suivi et ne constitue pas un diagnostic.",
+              milestoneWeek: Math.max(
+                0,
+                Math.floor(Number(db.settings?.demoLab?.activeEnd ?? 28) / 7),
+              ),
+              milestoneLines: ["Changement du scénario", "nouvelle période"],
+            };
+            if (labScenario.target === "sleep" && labScenario.signal === "energy")
+              return {
+                ...common,
+                matchesDay: (day) => Number(day.sleepHours) > 0 && Number(day.sleepHours) < 6.3,
+                title: "😴 Nuit courte et fatigue le lendemain",
+                description:
+                  "Évolution hebdomadaire de la fatigue durant les journées qui suivent une nuit courte.",
+                primaryLabel: "Après une nuit courte",
+                primaryHelp: "Fatigue moyenne après une nuit de moins de 6,3 h.",
+                comparisonLabel: "Après une nuit plus longue",
+                comparisonHelp: "Fatigue moyenne durant les autres journées.",
+                metricLabel: "jours après une nuit courte",
+                metricHelp: "Nombre de journées précédées d’un sommeil de moins de 6,3 h.",
+                summarySubject: "la fatigue après les nuits courtes",
+                summaryAction: "les changements de durée de sommeil",
+                symptomIds: [...labEnergyIds],
+                measureLabel: "Fatigue",
+                measureText: "fatigue moyenne",
+                intensity: (day) => labFeelingIntensity(day, labEnergyIds, true),
+              };
+            if (labScenario.target === "activity" && labScenario.signal === "positive")
+              return {
+                ...common,
+                matchesDay: (day) => (day.activities || []).length > 0,
+                title: "🏃 Activité et meilleur ressenti",
+                description:
+                  "Évolution hebdomadaire du ressenti positif selon la présence d’une activité consignée.",
+                primaryLabel: "Journées actives",
+                primaryHelp: "Ressenti positif moyen les journées avec une activité.",
+                comparisonLabel: "Journées sans activité",
+                comparisonHelp: "Ressenti positif moyen durant les autres journées.",
+                metricLabel: "jours actifs",
+                metricHelp: "Nombre de journées comprenant une activité.",
+                summarySubject: "le ressenti positif les journées actives",
+                summaryAction: "les changements d’activité",
+                symptomIds: [...labPositiveIds],
+                measureLabel: "Ressenti",
+                measureText: "ressenti positif moyen",
+                intensity: (day) => labFeelingIntensity(day, labPositiveIds, false),
+              };
+            if (labScenario.target === "water" && labScenario.signal === "positive")
+              return {
+                ...common,
+                matchesDay: (day) => Number(day.water) >= 7,
+                title: "💧 Hydratation et meilleur ressenti",
+                description:
+                  "Évolution hebdomadaire du ressenti positif selon les journées où l’hydratation est plus régulière.",
+                primaryLabel: "Hydratation plus régulière",
+                primaryHelp: "Ressenti positif moyen les journées avec au moins sept verres consignés.",
+                comparisonLabel: "Hydratation plus basse",
+                comparisonHelp: "Ressenti positif moyen durant les autres journées.",
+                metricLabel: "jours à 7 verres ou plus",
+                metricHelp: "Nombre de journées atteignant ce repère dans le scénario.",
+                summarySubject: "le ressenti positif avec une hydratation plus régulière",
+                summaryAction: "les changements d’hydratation",
+                symptomIds: [...labPositiveIds],
+                measureLabel: "Ressenti",
+                measureText: "ressenti positif moyen",
+                intensity: (day) => labFeelingIntensity(day, labPositiveIds, false),
+              };
+            return null;
+          })()
+        : null;
+    const labConfig = labFoodConfig || labContextConfig;
     const config = configs[profile.id] || labConfig;
     if (!config) return "";
     const measureLabel = config.measureLabel || "Inconfort";
@@ -4660,13 +4764,16 @@ function formatSleepDuration(hours) {
     const dates = Object.keys(db.days || {}).sort();
     if (!dates.length) return "";
     const primaryDates = new Set(
-      dates.filter((date) =>
-        (db.days[date]?.meals || []).some((meal) =>
+      dates.filter((date) => {
+        const day = db.days[date] || {};
+        if (typeof config.matchesDay === "function")
+          return Boolean(config.matchesDay(day, date));
+        return (day.meals || []).some((meal) =>
           typeof config.matchesMeal === "function"
             ? config.matchesMeal(meal)
             : config.pattern?.test(meal.description || ""),
-        ),
-      ),
+        );
+      }),
     );
     const previousDate = (date) => {
       const value = new Date(`${date}T12:00:00`);
