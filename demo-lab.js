@@ -104,7 +104,7 @@
     for(let i=0;i<days;i++){
       const date=dateKey(start,i), progress=i/Math.max(1,days-1), inActiveWindow=i>=activeStart&&i<=activeEnd, activeProgress=inActiveWindow?((i-activeStart)/Math.max(1,activeDays-1)):0;
       const weekday=new Date(`${date}T12:00:00`).getDay();
-      let exposure=inActiveWindow ? random()<.48 : random()<.16;
+      let exposure=inActiveWindow ? random()<.62 : random()<.07;
       if(sc.pattern==="withdrawal") exposure=inActiveWindow && activeProgress<.5 ? random()<.62 : random()<.05;
       if(sc.pattern==="rechallenge") exposure=inActiveWindow?(activeProgress<.34?random()<.62:activeProgress<.70?random()<.04:random()<.58):random()<.05;
       if(sc.pattern==="ramp") exposure=inActiveWindow ? random()<(0.18+activeProgress*.70) : random()<.08;
@@ -136,9 +136,14 @@
       }
 
       if(!missing){
-        const breakfasts=["Yogourt grec, bleuets et avoine","Gruau, banane et noix","Omelette, rôties et fruit","Fromage cottage, framboises et granola","Rôties au beurre d’arachide et banane","Œufs, rôties et fruit"];
-        const breakfast=lateCoffee?`Café filtre, ${breakfasts[Math.floor(random()*breakfasts.length)]}`:breakfasts[Math.floor(random()*breakfasts.length)];
-        day.meals.push(meal(`lab-${date}-b`,date,"07:30","Déjeuner",breakfast,["positive_wellbeing"],4));
+        const neutralBreakfasts=["Gruau, banane et noix","Omelette, rôties et fruit","Rôties au beurre d’arachide et banane","Œufs, rôties et fruit"];
+        const dairyBreakfasts=["Yogourt grec, bleuets et avoine","Fromage cottage, framboises et granola"];
+        const breakfastHasTarget=sc.target==="dairy" && inActiveWindow && random()<.42;
+        const breakfastPool=breakfastHasTarget?dairyBreakfasts:neutralBreakfasts;
+        const breakfast=lateCoffee?`Café filtre, ${breakfastPool[Math.floor(random()*breakfastPool.length)]}`:breakfastPool[Math.floor(random()*breakfastPool.length)];
+        const breakfastSymptom=breakfastHasTarget && sc.signal==="digestive" && random()<sc.strength;
+        const breakfastTags=breakfastSymptom?["bloating",random()<.55?"gas":"cramps"]:["positive_wellbeing"];
+        day.meals.push(meal(`lab-${date}-b`,date,"07:30","Déjeuner",breakfast,breakfastTags,breakfastSymptom?2:4,breakfastSymptom?"Inconfort digestif noté après le repas.":""));
         if(weightScenario){
           const down=sc.pattern==="weight_down";
           day.calories=Math.round((down?1850:2650)+(random()-.5)*260);
@@ -152,7 +157,7 @@
         let symptomProbability=exposure?sc.strength:.08;
         if(isTransient && progress>.25) symptomProbability=.10;
         if(sc.pattern==="control") symptomProbability=.10;
-        else if(!inActiveWindow && !["weight_down","weight_up"].includes(sc.pattern)) symptomProbability=.08;
+        else if(!inActiveWindow && !["weight_down","weight_up"].includes(sc.pattern)) symptomProbability=.05;
         if(sc.pattern==="dose") symptomProbability=exposure?(random()<.5?.38:.82):.07;
         if(sc.pattern==="delayed") symptomProbability=.08;
         const symptom=random()<symptomProbability;
@@ -162,7 +167,9 @@
           ["feeling_good"];
         const rating=tags.includes("bloating")?2:tags.includes("fatigue")?2:4;
         day.meals.push(meal(`lab-${date}-l`,date,"12:20","Dîner",description,tags,rating,tags.includes("bloating")?"Inconfort digestif noté après le repas.":""));
-        day.meals.push(meal(`lab-${date}-d`,date,"18:45","Souper",foods.neutral[Math.floor(random()*foods.neutral.length)],["feeling_good"],4));
+        const dinnerNoise=sc.signal==="digestive" && random()<(inActiveWindow?.06:.04);
+        const dinnerTags=dinnerNoise?["bloating"]:["positive_wellbeing"];
+        day.meals.push(meal(`lab-${date}-d`,date,"18:45","Souper",foods.neutral[Math.floor(random()*foods.neutral.length)],dinnerTags,dinnerNoise?2:4,dinnerNoise?"Inconfort digestif léger.":""));
 
         if(sc.pattern==="delayed" && previousExposure && random()<sc.strength){
           day.observations.push({id:`lab-ob-${date}`,date,time:"09:15",intensity:3,duration:"few_hours",tags:["bloating","cramps"],contexts:["food"],mealIds:[],notes:"Inconfort apparu ce matin, sans l’attribuer automatiquement au dernier repas.",createdAt:`${date}T09:15:00`,updatedAt:`${date}T09:15:00`});
