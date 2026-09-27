@@ -143,11 +143,20 @@
       if(sc.pattern==="confounder") exposure=inActiveWindow?random()<.52:random()<.12;
       const missing=sc.pattern==="missing" && random()<.20;
       const chaotic=sc.pattern==="chaotic";
-      const lateCoffee=(sc.pattern==="timing" && exposure && random()<.62);
-      const active=random()<(chaotic?.42:.36);
-      const water=clamp(Math.round((chaotic?3:5)+random()*4+(sc.pattern==="water"&&progress>.3?2:0)),2,10);
+      const lateCoffee=(sc.pattern==="timing" && exposure && random()<(inActiveWindow?.72:.18));
+      const activityChance=sc.pattern==="activity"?(i<activeStart?.25:inActiveWindow?.30:.68):(chaotic?.42:.36);
+      const active=random()<activityChance;
+      let water;
+      if(sc.pattern==="water"){
+        water=clamp(Math.round((i<activeStart?4:inActiveWindow?4.5:7.5)+random()*2),2,10);
+      }else{
+        water=clamp(Math.round((chaotic?3:5)+random()*4),2,10);
+      }
       let sleep=6.6+random()*1.5;
-      if(sc.pattern==="sleep" && random()<.38) sleep=5.1+random()*1.1;
+      if(sc.pattern==="sleep"){
+        const shortNightChance=i<activeStart?.22:inActiveWindow?.55:.12;
+        if(random()<shortNightChance) sleep=5.1+random()*1.1;
+      }
       if(lateCoffee && random()<sc.strength) sleep-=1.25+random()*.55;
       if(chaotic && exposure) sleep-=.6;
       sleep=Number(clamp(sleep,4.5,9).toFixed(1));
