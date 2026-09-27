@@ -3106,7 +3106,7 @@ function formatSleepDuration(hours) {
               `<article class="cnf-guided-item"><div><strong>${esc(item.nameFr || "Aliment FCÉN")}</strong><small>${esc(
                 item.unitKind === "g"
                   ? `${guidedCnfNumber(item.grams)} g`
-                  : `${guidedCnfNumber(item.quantity)} × ${item.unitLabel} · ${guidedCnfNumber(item.grams)} g`,
+                  : `${Number(item.quantity) === 1 ? item.unitLabel : `${guidedCnfNumber(item.quantity)} × ${item.unitLabel}`} · ${guidedCnfNumber(item.grams)} g`,
               )}</small></div><button type="button" data-remove-cnf-guided="${esc(item.entryId)}" aria-label="Retirer ${esc(item.nameFr || "cet aliment")}">×</button></article>`,
           )
           .join("")
@@ -3237,6 +3237,7 @@ function formatSleepDuration(hours) {
       nutrition = guidedCnfNutrition(items);
     setMealCnfItemsField(items);
     $("#mealDescription").value = description;
+    $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
     mealFoodReview = { description, acknowledgedGaps: true };
     $("#mealCalorieMode").value = "auto";
     mealNutritionManuallyEdited = false;
@@ -3311,6 +3312,11 @@ function formatSleepDuration(hours) {
       list = $("#mealCalorieUnrecognizedList"),
       mode = $("#mealCalorieMode")?.value || "auto";
     if (!notice || !list) return;
+    if (currentGuidedCnfNutrition()) {
+      notice.hidden = true;
+      list.innerHTML = "";
+      return;
+    }
     const recognition = mealNutritionRecognition($("#mealDescription")?.value || ""),
       items = recognition.unrecognized;
     notice.hidden = mode === "manual" || !items.length;
