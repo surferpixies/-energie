@@ -11482,10 +11482,11 @@ function formatSleepDuration(hours) {
   }
   function weightObservationHtml() {
     if (personalProfile().weight?.mode !== "provided") return "";
-    return `<section class="card weight-observation-card"><p class="eyebrow">Explorer mon historique</p><h2>⚖️ Explorer les changements de mon poids</h2><p class="muted">Énergie peut rechercher ce qui était différent pendant une période où ton poids a changé. Ces associations ne prouvent pas une cause.</p><div class="quick-actions"><button type="button" class="secondary" data-weight-direction="down">↘ Mon poids a diminué</button><button type="button" class="secondary" data-weight-direction="up">↗ Mon poids a augmenté</button></div><div data-weight-observation-result></div></section>`;
+    const panel = (direction, icon, title, subtitle) => `<details class="card wide weight-observation-fold" data-weight-fold="${direction}"><summary><span class="observation-fold-icon" aria-hidden="true">${icon}</span><span class="observation-fold-copy"><strong>${title}</strong><small>${subtitle}</small></span><em aria-hidden="true">⌄</em></summary><div class="weight-observation-fold-body" data-weight-observation-result="${direction}"></div></details>`;
+    return `<section class="weight-observation-card"><div class="weight-observation-heading"><p class="eyebrow">Explorer mon historique</p><h2>⚖️ Explorer les changements de mon poids</h2><p class="muted">Choisis le changement que tu veux explorer. Énergie décrit ce qui accompagnait cette période, sans attribuer de cause.</p></div><div class="weight-observation-folds">${panel("down","↘","Mon poids a diminué","Voir ce qui accompagnait une période de diminution")}${panel("up","↗","Mon poids a augmenté","Voir ce qui accompagnait une période d’augmentation")}</div></section>`;
   }
   function renderWeightObservationResult(direction) {
-    const host=$("[data-weight-observation-result]"); if(!host) return;
+    const host=$(`[data-weight-observation-result="${direction}"]`); if(!host) return;
     const a=weightObservationAnalysis(direction);
     if(!a.period){host.innerHTML=`<div class="observation-explorer-empty"><span>🌱</span><strong>Pas encore de période assez nette</strong><p>Il faut au moins deux mesures espacées de quelques jours et une variation d’au moins 0,3 kg.</p></div>`;return;}
     const p=a.period, s=a.stats, display=n=>Metrics.displayWeight(n,a.unit).toLocaleString("fr-CA");
@@ -11494,8 +11495,13 @@ function formatSleepDuration(hours) {
     host.innerHTML=`<div class="observation-explorer-panel-body"><h3>${esc(formatCalendarDate(p.start.date))} → ${esc(formatCalendarDate(p.end.date))}</h3><p><strong>${direction==="down"?"Diminution":"Augmentation"} de ${display(Math.abs(p.delta))} ${a.unit}</strong> sur ${p.days} jours.</p><div class="grid">${stat("🍽️","Calories estimées moyennes",s.calories!=null?Math.round(s.calories)+" kcal/j":"")}${stat("👟","Pas moyens",s.steps!=null?Math.round(s.steps).toLocaleString("fr-CA")+"/j":"")}${stat("😴","Sommeil moyen",s.sleep!=null?s.sleep.toLocaleString("fr-CA")+" h":"")}${stat("🚶","Activité moyenne",s.active!=null?Math.round(s.active)+" min/j":"")}</div><details><summary>Voir les mesures de poids de cette période</summary><ul>${series}</ul></details><p class="muted tiny">Énergie décrit ce qui accompagne la variation observée dans ton journal. Le poids peut varier pour plusieurs raisons; ces données ne permettent pas d’attribuer une cause.</p></div>`;
   }
   function bindWeightObservation() {
-    const card=$(".weight-observation-card"); if(!card) return;
-    card.onclick=(event)=>{const b=event.target.closest("[data-weight-direction]");if(b) renderWeightObservationResult(b.dataset.weightDirection);};
+    $$(".weight-observation-fold").forEach((fold) => {
+      fold.addEventListener("toggle", () => {
+        if (!fold.open) return;
+        const direction=fold.dataset.weightFold, host=fold.querySelector("[data-weight-observation-result]");
+        if (host && host.dataset.loaded !== "true") { host.dataset.loaded="true"; renderWeightObservationResult(direction); }
+      });
+    });
   }
 
   function refreshObservationExplorerPanel(mode) {
