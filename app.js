@@ -2990,6 +2990,28 @@ function formatSleepDuration(hours) {
       estimated: a.estimated || b.estimated,
     });
   }
+  function ensureGuidedCnfMealUi() {
+    const form = $("#mealForm");
+    if (!form) return;
+    if (!$("#mealCnfItems")) {
+      form.insertAdjacentHTML("afterbegin", '<input type="hidden" id="mealCnfItems" value="">');
+    }
+    const hint = form.querySelector(".meal-precision-hint");
+    if (hint && !$("#openCnfGuidedEntry")) {
+      hint.insertAdjacentHTML(
+        "afterend",
+        '<button type="button" id="openCnfGuidedEntry" class="meal-cnf-guided-entry"><span class="meal-cnf-guided-icon" aria-hidden="true">🇨🇦</span><span><strong>Saisie guidée avec le FCÉN</strong><small>Choisir les aliments et les quantités directement dans le Fichier canadien sur les éléments nutritifs</small></span><b aria-hidden="true">›</b></button><div id="mealCnfLinkedStatus" class="meal-cnf-linked-status" hidden><span aria-hidden="true">✓</span><strong></strong><small>Quantités reliées directement aux fiches FCÉN</small></div>',
+      );
+    }
+    const review = $("#mealCompositionReview");
+    if (review && !$("#cnfGuidedMealDialog")) {
+      review.insertAdjacentHTML(
+        "beforebegin",
+        '<dialog id="cnfGuidedMealDialog" class="cnf-guided-dialog"><section class="dialog-card cnf-guided-card"><div class="dialog-header"><div><p class="eyebrow">Saisie plus précise</p><h2>🇨🇦 Saisie guidée avec le FCÉN</h2></div><button type="button" class="icon-button close-dialog" id="closeCnfGuidedMeal" aria-label="Fermer">✕</button></div><p class="cnf-guided-intro">Recherche un aliment dans le Fichier canadien sur les éléments nutritifs de Santé Canada, choisis une quantité, puis ajoute les autres aliments du repas.</p><label class="cnf-guided-search"><span>Rechercher un aliment</span><div><span aria-hidden="true">🔎</span><input id="cnfGuidedSearch" type="search" autocomplete="off" placeholder="Ex. aubergine, œuf, fromage cottage…"></div></label><div id="cnfGuidedSearchResults" class="cnf-guided-results" aria-live="polite"></div><section id="cnfGuidedFoodEditor" class="cnf-guided-food-editor" hidden><div class="cnf-guided-selected-food"><span aria-hidden="true">🍽️</span><div><small>Aliment sélectionné</small><strong id="cnfGuidedFoodName"></strong><em id="cnfGuidedFoodEnglish"></em></div></div><div class="cnf-guided-quantity-row"><label>Quantité<input id="cnfGuidedQuantity" type="number" min="0.01" step="0.01" inputmode="decimal" value="1"></label><label>Unité<select id="cnfGuidedUnit"></select></label></div><p id="cnfGuidedGramHint" class="cnf-guided-gram-hint"></p><button type="button" class="primary" id="cnfGuidedAddFood">Ajouter cet aliment</button></section><section class="cnf-guided-basket"><div class="cnf-guided-basket-head"><div><strong>Aliments du repas</strong><small id="cnfGuidedItemCount">0 aliment</small></div><button type="button" class="text-button" id="cnfGuidedAddAnother">＋ Ajouter un autre aliment</button></div><div id="cnfGuidedItems" class="cnf-guided-items"><p class="cnf-guided-empty">Aucun aliment ajouté pour l’instant.</p></div></section><p class="muted tiny cnf-guided-note">Les valeurs sont calculées directement à partir des fiches FCÉN choisies et des quantités saisies. Pour un plat maison ou un produit de marque, la composition réelle peut tout de même varier.</p><div class="cnf-guided-actions"><button type="button" class="secondary" id="cancelCnfGuidedMeal">Annuler</button><button type="button" class="primary" id="finishCnfGuidedMeal" disabled>Terminer la saisie</button></div></section></dialog>',
+      );
+    }
+  }
+
   function mealCnfItemsFromField() {
     try {
       const raw = JSON.parse($("#mealCnfItems")?.value || "[]");
@@ -14298,6 +14320,7 @@ function formatSleepDuration(hours) {
   $$('#mealForm input[name="eatingReason"]').forEach((input) =>
     input.addEventListener("change", updateEatingReasonUi),
   );
+  ensureGuidedCnfMealUi();
   $("#estimateMealNutrition").onclick = estimateCurrentMealNutrition;
   $("#openCnfGuidedEntry").onclick = openCnfGuidedMealEntry;
   $("#cnfGuidedSearch").addEventListener("input", (event) => {
