@@ -375,9 +375,17 @@
         if(sc.pattern==="ramp"){
           const support=(exposure?.52:0)+(water>=7?.34:water<=5?-.14:0)+rampProgress*.18;
           const symptomRisk=clamp(.58-support*.52, .06, .62);
-          if(random()<symptomRisk){
-            const tags=["constipation"];
-            if(water<=5 && random()<.34) tags.push("headache");
+          const constipationToday=random()<symptomRisk;
+          const headacheRisk=water<=5
+            ? clamp(.34-rampProgress*.18, .12, .34)
+            : water===6
+              ? .06
+              : .015;
+          const headacheToday=random()<headacheRisk;
+          if(constipationToday||headacheToday){
+            const tags=[];
+            if(constipationToday) tags.push("constipation");
+            if(headacheToday) tags.push("headache");
             const intensity=water<=5?3:2;
             day.observations.push({
               id:`lab-fiber-context-${date}`,
@@ -388,9 +396,11 @@
               tags,
               contexts:["food","hydration"],
               mealIds:[],
-              notes:tags.includes("headache")
+              notes:tags.length===2
                 ?"Constipation et léger mal de tête consignés cette journée."
-                :"Constipation consignée cette journée.",
+                :tags.includes("headache")
+                  ?"Léger mal de tête consigné cette journée."
+                  :"Constipation consignée cette journée.",
               createdAt:`${date}T16:10:00`,
               updatedAt:`${date}T16:10:00`
             });
