@@ -4537,13 +4537,137 @@ function formatSleepDuration(hours) {
         },
       },
     };
-    const config = configs[profile.id];
+    const labScenarioId = db.settings?.demoLab?.scenarioId || "";
+    const labScenario = labScenarioId
+      ? window.EnergieDemoLab?.scenarios?.find((item) => item.id === labScenarioId)
+      : null;
+    const labFoodMeta = {
+      dairy: { icon: "🥛", label: "produits laitiers" },
+      soy: { icon: "🌿", label: "soya" },
+      seafood: { icon: "🦐", label: "fruits de mer" },
+      gluten: { icon: "🌾", label: "aliments avec gluten" },
+      legumes: { icon: "🫘", label: "légumineuses" },
+      allium: { icon: "🧄", label: "ail, oignon et alliums" },
+      fried_foods: { icon: "🍟", label: "aliments frits" },
+      spicy_foods: { icon: "🌶️", label: "aliments épicés" },
+      processed_foods: { icon: "🍕", label: "aliments transformés" },
+      high_fiber: { icon: "🌾", label: "aliments riches en fibres" },
+    };
+    const labMeta = labScenario ? labFoodMeta[labScenario.target] : null;
+    const labMatchMeal = (meal) => {
+      if (!labScenario || !labMeta) return false;
+      const description = String(meal?.description || "");
+      const categoryIds =
+        window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(description) || [];
+      if (categoryIds.includes(labScenario.target)) return true;
+      if (labScenario.target === "allium")
+        return (
+          window.ENERGIE_FOOD_CATEGORIES?.foodsForText?.(description) || []
+        ).some((food) => food.id === "allium");
+      return false;
+    };
+    const labConfig =
+      labScenario &&
+      labMeta &&
+      ["digestive", "energy"].includes(labScenario.signal)
+        ? (() => {
+            const digestiveIds = new Set([
+              "bloating",
+              "gas",
+              "cramps",
+              "diarrhea",
+              "nausea",
+              "stomachache",
+            ]);
+            const energyIds = new Set(["fatigue", "brain_fog"]);
+            const symptomIds =
+              labScenario.signal === "digestive"
+                ? [...digestiveIds]
+                : [...energyIds];
+            const labelTitle =
+              labMeta.label.charAt(0).toUpperCase() + labMeta.label.slice(1);
+            const isDigestive = labScenario.signal === "digestive";
+            const measureLabel = isDigestive ? "Inconfort" : "Fatigue";
+            const measureText = isDigestive
+              ? "inconfort moyen"
+              : "fatigue moyenne";
+            return {
+              matchesMeal: labMatchMeal,
+              delayed: labScenario.pattern === "delayed",
+              title: `${labMeta.icon} ${labelTitle} et ${isDigestive ? "inconfort digestif" : "fatigue après les repas"}`,
+              description: `Évolution hebdomadaire ${isDigestive ? "de l’inconfort digestif" : "de la fatigue"} selon la présence de ${labMeta.label} repérée dans le journal fictif.`,
+              primaryLabel: `Avec ${labMeta.label}`,
+              primaryHelp: `${measureLabel} ${isDigestive ? "digestif " : ""}moyen les journées où ${labMeta.label} ont été repérés.`,
+              comparisonLabel: `Sans ${labMeta.label}`,
+              comparisonHelp: `${measureLabel} ${isDigestive ? "digestif " : ""}moyen les journées sans ${labMeta.label} repérés.`,
+              metricLabel: `jours avec ${labMeta.label}`,
+              metricHelp: `Nombre total de journées comprenant ${labMeta.label} pendant la période.`,
+              disclaimer:
+                "Association calculée à partir des données brutes du scénario. Elle illustre une piste de suivi et ne constitue pas un diagnostic.",
+              milestoneWeek: Math.max(
+                0,
+                Math.floor(
+                  Number(db.settings?.demoLab?.activeEnd ?? 28) / 7,
+                ),
+              ),
+              milestoneLines: ["Changement du scénario", "nouvelle période"],
+              summarySubject: isDigestive
+                ? `les inconforts digestifs associés aux ${labMeta.label} repérés`
+                : `la fatigue associée aux ${labMeta.label} repérés`,
+              summaryAction: "le changement de fréquence de cet élément dans le journal",
+              symptomIds,
+              measureLabel,
+              measureText,
+              intensity: (day) => {
+                const ids = isDigestive ? digestiveIds : energyIds;
+                const mealValues = (day.meals || []).flatMap((meal) =>
+                  (meal.feeling?.tags || [])
+                    .filter((tag) => ids.has(tag))
+                    .map((tag) => {
+                      const score = Number(
+                        meal.feeling?.scores?.[tag] ??
+                          meal.feeling?.rating ??
+                          3,
+                      );
+                      return Math.max(0, Math.min(5, 6 - score));
+                    }),
+                );
+                const observationValues = isDigestive
+                  ? (day.observations || []).flatMap((item) =>
+                      (item.tags || [])
+                        .filter((tag) => ids.has(tag))
+                        .map(() =>
+                          Math.max(
+                            0,
+                            Math.min(5, Number(item.intensity) || 3),
+                          ),
+                        ),
+                    )
+                  : [];
+                const values = [...mealValues, ...observationValues];
+                return values.length
+                  ? values.reduce((sum, value) => sum + value, 0) /
+                      values.length
+                  : 0;
+              },
+            };
+          })()
+        : null;
+    const config = configs[profile.id] || labConfig;
     if (!config) return "";
+    const measureLabel = config.measureLabel || "Inconfort";
+    const measureText = config.measureText || "inconfort moyen";
     const dates = Object.keys(db.days || {}).sort();
     if (!dates.length) return "";
-    const primaryDates = new Set(dates.filter((date) =>
-      (db.days[date]?.meals || []).some((meal) => config.pattern.test(meal.description || "")),
-    ));
+    const primaryDates = new Set(
+      dates.filter((date) =>
+        (db.days[date]?.meals || []).some((meal) =>
+          typeof config.matchesMeal === "function"
+            ? config.matchesMeal(meal)
+            : config.pattern?.test(meal.description || ""),
+        ),
+      ),
+    );
     const previousDate = (date) => {
       const value = new Date(`${date}T12:00:00`);
       value.setDate(value.getDate() - 1);
@@ -4598,7 +4722,7 @@ function formatSleepDuration(hours) {
     const x = (index) => left + index * (width - left - right) / Math.max(1, points.length - 1);
     const y = (value) => top + (height - top - bottom) * (1 - Math.max(0, Math.min(5, value)) / 5);
     const linePath = points.map((point, index) => `${index ? "L" : "M"}${x(index).toFixed(1)},${y(point.discomfort || 0).toFixed(1)}`).join(" ");
-    const dots = points.map((point, index) => `<circle class="discomfort" cx="${x(index)}" cy="${y(point.discomfort || 0)}" r="5"><title>${esc(point.label)} · Inconfort moyen : ${(point.discomfort || 0).toFixed(1)}/5 · ${point.exposures} jour(s) repéré(s)</title></circle>`).join("");
+    const dots = points.map((point, index) => `<circle class="discomfort" cx="${x(index)}" cy="${y(point.discomfort || 0)}" r="5"><title>${esc(point.label)} · ${esc(measureText)} : ${(point.discomfort || 0).toFixed(1)}/5 · ${point.exposures} jour(s) repéré(s)</title></circle>`).join("");
     const pointValues = points.map((point, index) => {
       const value = point.discomfort || 0;
       return `<text x="${x(index)}" y="${Math.max(top + 9, y(value) - 9)}" text-anchor="middle">${value.toFixed(1)}</text>`;
@@ -4612,7 +4736,7 @@ function formatSleepDuration(hours) {
     const milestoneIndex = Math.min(points.length - 1, Number(config.milestoneWeek ?? -1));
     const milestone = milestoneIndex >= 0 ? `<g class="trend-milestone"><line x1="${x(milestoneIndex)}" y1="${top}" x2="${x(milestoneIndex)}" y2="${height-bottom}"/><text x="${x(milestoneIndex)+7}" y="${top+12}">${esc(config.milestoneLines[0])}</text><text x="${x(milestoneIndex)+7}" y="${top+24}">${esc(config.milestoneLines[1])}</text></g>` : "";
     const hitAreas = points.map((point, index) => `<g class="trend-week-hit" data-trend-week-detail="${index}" role="button" tabindex="0" aria-label="Voir le détail de ${esc(point.label)}"><rect x="${Math.max(left, x(index)-28)}" y="${top}" width="56" height="${height-top-10}" rx="8"/></g>`).join("");
-    const chart = `<div class="professional-trend-legend"><span class="discomfort">Valeur au-dessus : inconfort moyen /5</span><span class="exposure-count">Nombre en dessous : journées repérées</span></div><div class="professional-trend-scroll chart-scroll"><svg style="--trend-width:${width}px" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><text class="trend-y-title" x="14" y="${top + (height-top-bottom)/2}" text-anchor="middle" transform="rotate(-90 14 ${top + (height-top-bottom)/2})">Inconfort /5</text><g class="trend-grid">${grid}</g>${milestone}<path class="trend-path discomfort" d="${linePath}"/><g class="trend-dots">${dots}</g><g class="trend-point-values">${pointValues}</g><g class="trend-exposures">${exposureBars}</g><g class="trend-labels">${labels}</g><g class="trend-week-hits">${hitAreas}</g></svg></div>`;
+    const chart = `<div class="professional-trend-legend"><span class="discomfort">Valeur au-dessus : ${esc(measureText)} /5</span><span class="exposure-count">Nombre en dessous : journées repérées</span></div><div class="professional-trend-scroll chart-scroll"><svg style="--trend-width:${width}px" viewBox="0 0 ${width} ${height}" role="img" aria-label="${esc(config.title.replace(/^[^ ]+ /, ""))}"><text class="trend-y-title" x="14" y="${top + (height-top-bottom)/2}" text-anchor="middle" transform="rotate(-90 14 ${top + (height-top-bottom)/2})">${esc(measureLabel)} /5</text><g class="trend-grid">${grid}</g>${milestone}<path class="trend-path discomfort" d="${linePath}"/><g class="trend-dots">${dots}</g><g class="trend-point-values">${pointValues}</g><g class="trend-exposures">${exposureBars}</g><g class="trend-labels">${labels}</g><g class="trend-week-hits">${hitAreas}</g></svg></div>`;
     const endOfWeek = (start) => { const date = new Date(`${start}T12:00:00`); date.setDate(date.getDate() + 6); return date; };
     professionalTrendWeekDetails = points.map((point) => ({
       period: `${new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "long" }).format(new Date(`${point.start}T12:00:00`))} au ${new Intl.DateTimeFormat("fr-CA", { day: "numeric", month: "long" }).format(endOfWeek(point.start))}`,
@@ -4628,9 +4752,9 @@ function formatSleepDuration(hours) {
     const confidenceHigh = points.length >= 10 && Math.abs(improvement) >= .7;
     const confidenceLabel = confidenceHigh ? "Élevée" : "Modérée";
     const directionText = improvement >= .35 ? `diminuent de ${Math.abs(improvement).toFixed(1)} point en moyenne` : improvement <= -.35 ? `augmentent de ${Math.abs(improvement).toFixed(1)} point en moyenne` : "demeurent relativement stables";
-    const summary = `<section class="card professional-case-summary"><div class="professional-case-summary-head"><span>🧠</span><div><p class="eyebrow">Résumé professionnel du dossier</p><h2>Tendance principale détectée</h2></div><span class="confidence-pill ${confidenceHigh ? "high" : "medium"}">Confiance ${confidenceLabel.toLowerCase()}</span></div><p class="professional-case-summary-text">Sur la période observée, ${esc(config.summarySubject)} ${directionText} depuis ${esc(config.summaryAction)}. Cette évolution constitue une piste à explorer avec ${esc(profile.name)}, sans établir de lien de cause à effet.</p><div class="professional-case-summary-metrics"><div><small>Au début</small><strong>${baseline.toFixed(1)}/5</strong><span>inconfort moyen</span></div><div><small>Dernières semaines</small><strong>${recent.toFixed(1)}/5</strong><span>inconfort moyen</span></div><div><small>Qualité de lecture</small><strong>${confidenceLabel}</strong><span>${points.length} semaines analysées</span></div></div><p class="professional-case-summary-caution">⚕️ Résumé d’aide à la consultation — il ne constitue pas un diagnostic.</p></section>`;
-    const weekDialog = `<dialog class="professional-week-dialog" id="professionalTrendWeekDialog"><div class="professional-week-dialog-card"><div class="professional-week-dialog-head"><div><p class="eyebrow">Détail de la semaine</p><h3 id="professionalWeekPeriod"></h3></div><button type="button" class="icon-button" data-close-trend-week aria-label="Fermer">✕</button></div><div class="professional-week-detail-grid"><div><span>📈</span><small>Inconfort moyen</small><strong id="professionalWeekDiscomfort">—</strong></div><div><span>🔎</span><small id="professionalWeekExposureLabel">Journées repérées</small><strong id="professionalWeekExposures">—</strong></div><div><span>🍽️</span><small>Repas et collations</small><strong id="professionalWeekMeals">—</strong></div></div><div class="professional-week-symptoms"><small>Symptômes dominants consignés</small><div id="professionalWeekSymptoms"></div></div><p class="muted tiny">Touchez une autre semaine du graphique pour comparer son portrait.</p></div></dialog>`;
-    return `${summary}<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Évolution dans le temps</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-week-note"><strong>Touchez une semaine pour voir son détail.</strong><span>Chaque semaine commence le dimanche. La valeur au-dessus de chaque point indique l’inconfort moyen sur 5; le nombre sous la courbe indique combien de journées contenaient l’élément suivi.</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small><p>${esc(config.primaryHelp)}</p></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small><p>${esc(config.comparisonHelp)}</p></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small><p>${esc(config.metricHelp)}</p></div></div>${chart}<button type="button" class="secondary professional-trend-expand" data-open-trend-fullscreen><span>↗ Agrandir le graphique</span><small>Tournez votre téléphone horizontalement pour une meilleure vue</small></button><p class="muted tiny">${config.disclaimer}</p></section><dialog class="professional-trend-dialog" id="professionalTrendDialog"><div class="professional-trend-dialog-head"><div><small>Graphique agrandi · Touchez une semaine pour l’explorer</small><strong>${config.title}</strong></div><button type="button" class="secondary" data-close-trend-fullscreen>Revenir au suivi ✕</button></div><div class="professional-trend-fullscreen-frame">${chart}</div><p class="muted tiny">Axe vertical : inconfort moyen sur 5 · Axe horizontal : semaines du dimanche au samedi.</p></dialog>${weekDialog}`;
+    const summary = `<section class="card professional-case-summary"><div class="professional-case-summary-head"><span>🧠</span><div><p class="eyebrow">Résumé professionnel du dossier</p><h2>Tendance principale détectée</h2></div><span class="confidence-pill ${confidenceHigh ? "high" : "medium"}">Confiance ${confidenceLabel.toLowerCase()}</span></div><p class="professional-case-summary-text">Sur la période observée, ${esc(config.summarySubject)} ${directionText} depuis ${esc(config.summaryAction)}. Cette évolution constitue une piste à explorer avec ${esc(profile.name)}, sans établir de lien de cause à effet.</p><div class="professional-case-summary-metrics"><div><small>Au début</small><strong>${baseline.toFixed(1)}/5</strong><span>${esc(measureText)}</span></div><div><small>Dernières semaines</small><strong>${recent.toFixed(1)}/5</strong><span>${esc(measureText)}</span></div><div><small>Qualité de lecture</small><strong>${confidenceLabel}</strong><span>${points.length} semaines analysées</span></div></div><p class="professional-case-summary-caution">⚕️ Résumé d’aide à la consultation — il ne constitue pas un diagnostic.</p></section>`;
+    const weekDialog = `<dialog class="professional-week-dialog" id="professionalTrendWeekDialog"><div class="professional-week-dialog-card"><div class="professional-week-dialog-head"><div><p class="eyebrow">Détail de la semaine</p><h3 id="professionalWeekPeriod"></h3></div><button type="button" class="icon-button" data-close-trend-week aria-label="Fermer">✕</button></div><div class="professional-week-detail-grid"><div><span>📈</span><small>${esc(measureText.charAt(0).toUpperCase() + measureText.slice(1))}</small><strong id="professionalWeekDiscomfort">—</strong></div><div><span>🔎</span><small id="professionalWeekExposureLabel">Journées repérées</small><strong id="professionalWeekExposures">—</strong></div><div><span>🍽️</span><small>Repas et collations</small><strong id="professionalWeekMeals">—</strong></div></div><div class="professional-week-symptoms"><small>Symptômes dominants consignés</small><div id="professionalWeekSymptoms"></div></div><p class="muted tiny">Touchez une autre semaine du graphique pour comparer son portrait.</p></div></dialog>`;
+    return `${summary}<section class="card professional-client-trend"><div class="professional-trend-heading"><div><p class="eyebrow">Évolution dans le temps</p><h2>${config.title}</h2><p>${config.description}</p></div><span class="confidence-pill high">Tendance observée</span></div><div class="professional-trend-week-note"><strong>Touchez une semaine pour voir son détail.</strong><span>Chaque semaine commence le dimanche. La valeur au-dessus de chaque point indique ${esc(measureText)} sur 5; le nombre sous la courbe indique combien de journées contenaient l’élément suivi.</span></div><div class="professional-trend-metrics"><div><strong>${(avg(allExposed) || 0).toFixed(1)}/5</strong><small>${esc(config.primaryLabel)}</small><p>${esc(config.primaryHelp)}</p></div><div><strong>${(avg(allClear) || 0).toFixed(1)}/5</strong><small>${esc(config.comparisonLabel)}</small><p>${esc(config.comparisonHelp)}</p></div><div><strong>${primaryDates.size}</strong><small>${esc(config.metricLabel)}</small><p>${esc(config.metricHelp)}</p></div></div>${chart}<button type="button" class="secondary professional-trend-expand" data-open-trend-fullscreen><span>↗ Agrandir le graphique</span><small>Tournez votre téléphone horizontalement pour une meilleure vue</small></button><p class="muted tiny">${config.disclaimer}</p></section><dialog class="professional-trend-dialog" id="professionalTrendDialog"><div class="professional-trend-dialog-head"><div><small>Graphique agrandi · Touchez une semaine pour l’explorer</small><strong>${config.title}</strong></div><button type="button" class="secondary" data-close-trend-fullscreen>Revenir au suivi ✕</button></div><div class="professional-trend-fullscreen-frame">${chart}</div><p class="muted tiny">Axe vertical : ${esc(measureText)} sur 5 · Axe horizontal : semaines du dimanche au samedi.</p></dialog>${weekDialog}`;
   }
 
   function professionalConsultationAnalysis(profile) {
@@ -9621,6 +9745,14 @@ function formatSleepDuration(hours) {
         : "Début de piste";
   }
 
+  function observationPlainSummary(x) {
+    const title = String(x?.title || "").trim();
+    const text = String(x?.text || "").trim();
+    if (text && !/[0-9]%|\bvs\b|\bcontre\b/i.test(text)) return text;
+    if (x?.valence === "positive") return `${title || "Cette habitude"} revient plus souvent lorsque tu te sens mieux après tes repas. Énergie la garde comme piste à observer dans le temps.`;
+    return `${title || "Cette tendance"} revient assez souvent dans ton journal pour mériter ton attention. Énergie la garde comme piste à suivre, sans conclure qu’elle en est la cause.`;
+  }
+
   function observationEvidenceHtml(x, index) {
     const feelingChange = x.kind === "food-category-feeling-change",
       evidence = x.evidence || {},
@@ -9632,7 +9764,7 @@ function formatSleepDuration(hours) {
       comparisonRate = Number(evidence.comparisonRate),
       hasRates = Number.isFinite(exposedRate) && Number.isFinite(comparisonRate),
       relatedCount = Array.isArray(x.relatedMeals) ? x.relatedMeals.length : 0;
-    return `<details class="observation-evidence"><summary><span>Voir les preuves</span><span aria-hidden="true">⌄</span></summary><div class="observation-evidence-body"><div class="observation-proof-grid"><div><small>Comparés</small><strong>${x.samples?.total || 0}</strong><span>${feelingChange ? "repas avec avant + après" : "journées analysées"}</span></div><div><small>Écart observé</small><strong>${esc(differenceText)}</strong><span>dans ton propre journal</span></div><div><small>Confiance</small><strong>${esc(observationStrengthLabel(x.metrics?.strength))}</strong><span>selon la répétition</span></div></div>${hasRates ? `<div class="observation-rate-proof"><strong>${x.valence === "positive" ? "Renforcements observés" : "Aggravations observées"}</strong><div><span>Avec la catégorie <b>${Math.round(exposedRate * 100)} %</b></span><span>Autres repas <b>${Math.round(comparisonRate * 100)} %</b></span></div></div>` : ""}<p class="observation-basis">${esc(x.basis || "Cette observation utilise uniquement les données disponibles dans ton journal.")}</p><div class="observation-proof-actions">${relatedCount ? `<button class="secondary small ${x.valence === "positive" ? "related-positive-meals" : "related-discovery-meals"}" data-discovery="${index}">Voir les repas concernés (${relatedCount})</button>` : ""}<button class="text-button ${x.valence === "positive" ? "why-positive-observation" : "why-discovery"}" data-discovery="${index}">Comment c’est calculé</button></div></div></details>`;
+    return `<details class="observation-evidence"><summary><span>Voir les détails de l’analyse</span><span aria-hidden="true">⌄</span></summary><div class="observation-evidence-body"><p class="observation-evidence-intro">Voici les chiffres derrière cette observation. Ils sont conservés pour que tu puisses comprendre précisément ce qu’Énergie a comparé.</p>${discoveryComparisonHtml(x)}<div class="observation-proof-grid"><div><small>Comparés</small><strong>${x.samples?.total || 0}</strong><span>${feelingChange ? "repas avec avant + après" : "journées analysées"}</span></div><div><small>Écart observé</small><strong>${esc(differenceText)}</strong><span>dans ton propre journal</span></div><div><small>Confiance</small><strong>${esc(observationStrengthLabel(x.metrics?.strength))}</strong><span>selon la répétition</span></div></div>${hasRates ? `<div class="observation-rate-proof"><strong>${x.valence === "positive" ? "Renforcements observés" : "Aggravations observées"}</strong><div><span>Avec la catégorie <b>${Math.round(exposedRate * 100)} %</b></span><span>Autres repas <b>${Math.round(comparisonRate * 100)} %</b></span></div></div>` : ""}<p class="observation-basis">${esc(x.basis || "Cette observation utilise uniquement les données disponibles dans ton journal.")}</p><div class="observation-proof-actions">${relatedCount ? `<button class="secondary small ${x.valence === "positive" ? "related-positive-meals" : "related-discovery-meals"}" data-discovery="${index}">Voir les repas concernés (${relatedCount})</button>` : ""}<button class="text-button ${x.valence === "positive" ? "why-positive-observation" : "why-discovery"}" data-discovery="${index}">Comment c’est calculé</button></div></div></details>`;
   }
   function brainGrowthState(maturity) {
     const days = Math.max(0, Number(maturity?.analyzableDays) || 0);
@@ -10140,7 +10272,7 @@ function formatSleepDuration(hours) {
       ? observations
           .map(
             (x, i) =>
-              `<article class="card observation-card discovery-card observation-${x.confidence.cls}">${x.isNew ? `<div class="observation-new-badge">✨ Nouvelle tendance détectée</div>` : ""}<div class="discovery-card-top"><div class="discovery-icon">${x.icon}</div><div class="observation-badges"><span class="observation-strength">${observationStrengthLabel(x.metrics?.strength)}</span><span class="discovery-level ${x.confidence.cls}">${x.confidence.icon} ${esc(x.confidence.label)}</span></div></div><h3>${esc(x.title)}</h3><p class="observation-text">${esc(x.text)}</p>${discoveryComparisonHtml(x)}${observationEvidenceHtml(x, i)}</article>`,
+              `<article class="card observation-card discovery-card observation-${x.confidence.cls}">${x.isNew ? `<div class="observation-new-badge">✨ Nouvelle tendance détectée</div>` : ""}<div class="discovery-card-top"><div class="discovery-icon">${x.icon}</div><div class="observation-badges"><span class="observation-strength">${observationStrengthLabel(x.metrics?.strength)}</span><span class="discovery-level ${x.confidence.cls}">${x.confidence.icon} ${esc(x.confidence.label)}</span></div></div><h3>${esc(x.title)}</h3><p class="observation-text observation-plain-summary">${esc(observationPlainSummary(x))}</p>${observationEvidenceHtml(x, i)}</article>`,
           )
           .join("")
       : `<section class="card discovery-empty observation-empty"><div class="food-art">${mature ? "🔎" : "🌱"}</div><h3>${mature ? "Aucune association assez nette pour le moment" : "Les premières tendances se préparent"}</h3><p>${mature ? "Le journal contient beaucoup de données, mais aucune différence suffisamment claire et répétée ne ressort actuellement. Le Cerveau préfère ne pas créer une tendance artificielle." : "Continue simplement à remplir ton journal. Le cerveau d’Énergie compare déjà tes journées, mais préfère attendre avant de montrer une observation trop fragile."}</p></section>`;
