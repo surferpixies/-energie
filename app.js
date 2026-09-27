@@ -607,6 +607,7 @@
         demoReadOnly: true,
         seasonalIcons: true,
         showRecognizedElements: true,
+        forceGuidedCnfMealEntry: false,
         showEatingReasons: true,
         futureMealPlanning: false,
         pilotMode: false,
@@ -817,7 +818,13 @@ function formatSleepDuration(hours) {
       eatingReasonOther: eatingReasonState.other,
       notes: m.notes || "",
       nutrition: normalNutrition(m.nutrition || m.macros),
-      cnfItems: (Array.isArray(m.cnfItems) ? m.cnfItems : [])
+      cnfItems: (
+        Array.isArray(m.cnfItems)
+          ? m.cnfItems
+          : Array.isArray(rawFeeling?.cnfItems)
+            ? rawFeeling.cnfItems
+            : []
+      )
         .map((item) => {
           const grams = Number(item?.grams);
           if (!item?.cnfFoodId || !Number.isFinite(grams) || grams <= 0)
@@ -827,7 +834,7 @@ function formatSleepDuration(hours) {
             cnfFoodId: String(item.cnfFoodId),
             nameFr: String(item.nameFr || ""),
             nameEn: String(item.nameEn || ""),
-            grams: Math.round(grams * 10) / 10,
+            grams: Math.max(1, Math.round(grams)),
             quantity: Number(item.quantity) > 0 ? Number(item.quantity) : null,
             unitKind: String(item.unitKind || "g"),
             unitLabel: String(item.unitLabel || "g"),
@@ -1894,6 +1901,7 @@ function formatSleepDuration(hours) {
                 feelingMealTypes: Array.isArray(db.settings.feelingMealTypes) ? db.settings.feelingMealTypes : ["Déjeuner", "Dîner", "Souper"],
                 seasonalIcons: db.settings.seasonalIcons !== false,
                 showRecognizedElements: db.settings.showRecognizedElements !== false,
+                forceGuidedCnfMealEntry: db.settings.forceGuidedCnfMealEntry === true,
                 showEatingReasons: db.settings.showEatingReasons !== false,
                 futureMealPlanning: db.settings.futureMealPlanning === true,
                 pilotMode: db.settings.pilotMode === true,
@@ -1970,12 +1978,13 @@ function formatSleepDuration(hours) {
             photo_paths: (meal.photos || []).map((photo) => photo.path).filter(Boolean).slice(0, 3),
             feeling:
               Object.keys(normalizeFeelingScores(meal.feelingsBefore)).length ||
-              meal.feeling || meal.foodReview || meal.eatingReasons?.length || meal.eatingReasonOther
+              meal.feeling || meal.foodReview || meal.eatingReasons?.length || meal.eatingReasonOther || (meal.cnfItems || []).length
                 ? {
                     ...(meal.feeling || {}),
                     beforeScores: normalizeFeelingScores(meal.feelingsBefore),
                     beforeQuality: meal.feelingsBeforeQuality || null,
                     foodReview: meal.foodReview || null,
+                    cnfItems: Array.isArray(meal.cnfItems) ? meal.cnfItems : [],
                     eatingReasons: normalizeEatingReasons(meal.eatingReasons),
                     eatingReasonOther: meal.eatingReasonOther || "",
                   }
@@ -2184,7 +2193,7 @@ function formatSleepDuration(hours) {
       const pref = remoteProfilePreferences;
       if (Number(pref.waterGoal) > 0) db.settings.waterGoal = Math.round(Number(pref.waterGoal));
       if (["detailed", "summary"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
-      ["insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","showEatingReasons","futureMealPlanning","pilotMode"].forEach((key) => {
+      ["insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
       });
       if (Number(pref.feelingDelayHours) > 0) db.settings.feelingDelayHours = Number(pref.feelingDelayHours);
@@ -3071,7 +3080,7 @@ function formatSleepDuration(hours) {
                 cnfFoodId: String(item.cnfFoodId),
                 nameFr: String(item.nameFr || ""),
                 nameEn: String(item.nameEn || ""),
-                grams: Math.round(grams * 10) / 10,
+                grams: Math.max(1, Math.round(grams)),
                 quantity: Number(item.quantity) > 0 ? Number(item.quantity) : null,
                 unitKind: String(item.unitKind || "g"),
                 unitLabel: String(item.unitLabel || "g"),
@@ -3094,6 +3103,31 @@ function formatSleepDuration(hours) {
     const n = Number(value);
     if (!Number.isFinite(n)) return "";
     return String(Math.round(n * 10) / 10).replace(".", ",");
+  }
+  function guidedCnfItemCalories(item) {
+    const nutrition = window.ENERGIE_CNF_SEARCH?.nutritionForGrams?.(
+      item?.cnfFoodId,
+      item?.grams,
+    );
+    const calories = Number(nutrition?.calories);
+    return Number.isFinite(calories) ? Math.max(0, Math.round(calories)) : null;
+  }
+  function guidedCnfEntryRequired() {
+    return db.settings?.forceGuidedCnfMealEntry === true;
+  }
+  function applyGuidedCnfMealEntryPreference(formReadOnly = false) {
+    const field = $("#mealDescription"),
+      button = $("#openCnfGuidedEntry"),
+      note = $("#mealGuidedEntryRequirement");
+    if (!field) return;
+    const required = guidedCnfEntryRequired() && !formReadOnly;
+    field.readOnly = required;
+    field.classList.toggle("is-guided-only", required);
+    field.placeholder = required
+      ? "Utilise la saisie guidée FCÉN ci-dessous pour ajouter les aliments."
+      : "Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli";
+    if (button) button.classList.toggle("is-required", required);
+    if (note) note.hidden = !required;
   }
   function guidedCnfFoodText(item) {
     const name = String(item?.nameFr || "aliment")
@@ -3288,7 +3322,7 @@ function formatSleepDuration(hours) {
       cnfFoodId: String(mealCnfGuidedSelected.id),
       nameFr: String(mealCnfGuidedSelected.nameFr || ""),
       nameEn: String(mealCnfGuidedSelected.nameEn || ""),
-      grams: Math.round(grams * 10) / 10,
+      grams: Math.max(1, Math.round(grams)),
       quantity: Math.round(quantity * 100) / 100,
       unitKind: $("#cnfGuidedUnit")?.value || "g",
       unitLabel: String(option?.dataset.label || "g"),
