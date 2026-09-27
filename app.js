@@ -3178,7 +3178,7 @@ function formatSleepDuration(hours) {
           )
           .join("")
       : '<p class="cnf-guided-empty">Aucun aliment ajouté pour l’instant.</p>';
-    $("[data-remove-cnf-guided]").forEach((button) => {
+    $$("[data-remove-cnf-guided]").forEach((button) => {
       button.onclick = () => {
         mealCnfGuidedDraft = mealCnfGuidedDraft.filter(
           (item) => item.entryId !== button.dataset.removeCnfGuided,
@@ -3258,7 +3258,7 @@ function formatSleepDuration(hours) {
           )
           .join("")
       : '<p class="cnf-guided-empty">Aucun aliment FCÉN trouvé. Essaie un terme plus simple ou précise la préparation.</p>';
-    $("[data-cnf-guided-food]").forEach((button) => {
+    $$("[data-cnf-guided-food]").forEach((button) => {
       button.onclick = () => selectCnfGuidedFood(button.dataset.cnfGuidedFood);
     });
   }
