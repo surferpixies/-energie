@@ -2996,11 +2996,22 @@ function formatSleepDuration(hours) {
     if (!$("#mealCnfItems")) {
       form.insertAdjacentHTML("afterbegin", '<input type="hidden" id="mealCnfItems" value="">');
     }
-    const hint = form.querySelector(".meal-precision-hint");
-    if (hint && !$("#openCnfGuidedEntry")) {
+    const hint = form.querySelector(".meal-precision-hint"),
+      composer = form.querySelector(".meal-description-composer"),
+      toolbar = form.querySelector(".meal-description-toolbar");
+    if (composer && toolbar && !$("#openCnfGuidedEntry")) {
+      toolbar.insertAdjacentHTML(
+        "beforebegin",
+        '<button type="button" id="openCnfGuidedEntry" class="meal-cnf-guided-entry"><span class="meal-cnf-guided-icon" aria-hidden="true">🇨🇦</span><span><strong>Saisie guidée FCÉN</strong><small>Santé Canada</small></span><b aria-hidden="true">›</b></button>',
+      );
+    }
+    const guidedButton = $("#openCnfGuidedEntry");
+    if (composer && toolbar && guidedButton?.parentElement !== composer)
+      toolbar.before(guidedButton);
+    if (hint && !$("#mealCnfLinkedStatus")) {
       hint.insertAdjacentHTML(
         "beforebegin",
-        '<button type="button" id="openCnfGuidedEntry" class="meal-cnf-guided-entry"><span class="meal-cnf-guided-icon" aria-hidden="true">🇨🇦</span><span><strong>Saisie guidée FCÉN</strong><small>Rechercher dans le fichier de Santé Canada</small></span><b aria-hidden="true">›</b></button><div id="mealCnfLinkedStatus" class="meal-cnf-linked-status" hidden><span aria-hidden="true">✓</span><strong></strong><small>Quantités reliées directement aux fiches FCÉN</small></div>',
+        '<div id="mealCnfLinkedStatus" class="meal-cnf-linked-status" hidden><span aria-hidden="true">✓</span><strong></strong><small>Quantités reliées directement aux fiches FCÉN</small></div>',
       );
     }
     const review = $("#mealCompositionReview");
