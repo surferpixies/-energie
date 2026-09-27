@@ -1766,3 +1766,11 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 @media(max-width:360px){
   .all-observations-fold .history-feelings-list{grid-template-columns:1fr!important}
 }
+
+
+/* Energy Lab — prevent long scenario names from widening cards */
+.lab-selector-panel .demo-person-card,
+.lab-selector-panel .demo-person-head,
+.lab-selector-panel .demo-person-head>div{min-width:0}
+.lab-selector-panel .demo-person-head h4{overflow-wrap:anywhere;word-break:normal}
+.lab-selector-panel .demo-person-card>button{box-sizing:border-box;max-width:100%;min-width:0}
