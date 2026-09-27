@@ -188,11 +188,11 @@
       if(!missing){
         const neutralBreakfasts=["Gruau, banane et noix","Omelette aux épinards, rôties et orange","Rôties au beurre d’arachide et banane","Œufs brouillés, pommes de terre et fruit","Bol d’avoine, pomme et noix","Pain doré, fraises et noix","Smoothie banane, avoine et beurre d’arachide","Bagel, œuf et avocat"];
         const dairyBreakfasts=["Yogourt grec, bleuets et avoine","Fromage cottage, framboises et granola"];
-        const breakfastHasTarget=sc.target==="dairy" && (inActiveWindow?random()<.28:random()<.06);
-        const recognizedDairyBreakfasts=dairyBreakfasts.filter(description=>recognizedAs(description,"dairy"));
-        const breakfastPool=breakfastHasTarget?recognizedDairyBreakfasts:neutralBreakfasts;
+        const breakfastHasTarget=isFoodTarget(sc.target) && (inActiveWindow?random()<.22:random()<.05);
+        const targetBreakfasts=breakfastHasTarget?mealsWithCategory(sc.target).filter(description=>/yogourt|gruau|omelette|bagel|rôties|smoothie|fromage cottage/i.test(description)):[];
+        const breakfastPool=breakfastHasTarget&&targetBreakfasts.length?targetBreakfasts:neutralBreakfasts;
         const breakfast=lateCoffee?`Café filtre, ${breakfastPool[Math.floor(random()*breakfastPool.length)]}`:breakfastPool[Math.floor(random()*breakfastPool.length)];
-        const breakfastExposure=breakfastHasTarget && recognizedAs(breakfast,"dairy");
+        const breakfastExposure=breakfastHasTarget && recognizedAs(breakfast,sc.target);
         const breakfastSymptom=breakfastExposure && sc.signal==="digestive" && random()<sc.strength;
         const breakfastTags=breakfastSymptom?["bloating",random()<.55?"gas":"cramps"]:["positive_wellbeing"];
         day.meals.push(meal(`lab-${date}-b`,date,"07:30","Déjeuner",breakfast,breakfastTags,breakfastSymptom?2:4,breakfastSymptom?"Inconfort digestif noté après le repas.":""));
@@ -220,9 +220,9 @@
           ["feeling_good"];
         const rating=tags.includes("bloating")?2:tags.includes("fatigue")?2:4;
         day.meals.push(meal(`lab-${date}-l`,date,"12:20","Dîner",description,tags,rating,tags.includes("bloating")?"Inconfort digestif noté après le repas.":""));
-        const dinnerExposure=sc.target==="dairy" && (inActiveWindow?random()<.22:random()<.05);
+        const dinnerExposure=isFoodTarget(sc.target) && (inActiveWindow?random()<.20:random()<.05);
         const dinnerNonTarget=isFoodTarget(sc.target)?mealsWithoutCategory(sc.target).filter(description=>!recognizedAs(description,"caffeine")):commonMeals.filter(description=>!recognizedAs(description,"caffeine"));
-        const dinnerDescription=dinnerExposure?targetMeal("dairy",random):pick(dinnerNonTarget.length?dinnerNonTarget:foods.neutral,random);
+        const dinnerDescription=dinnerExposure?targetMeal(sc.target,random):pick(dinnerNonTarget.length?dinnerNonTarget:foods.neutral,random);
         const dinnerSymptom=dinnerExposure&&sc.signal==="digestive"?random()<sc.strength:(sc.signal==="digestive"&&random()<.035);
         const dinnerTags=dinnerSymptom?["bloating",random()<.5?"gas":"cramps"]:["positive_wellbeing"];
         day.meals.push(meal(`lab-${date}-d`,date,"18:45","Souper",dinnerDescription,dinnerTags,dinnerSymptom?2:4,dinnerSymptom?"Inconfort digestif léger.":""));
