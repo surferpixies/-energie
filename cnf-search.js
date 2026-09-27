@@ -383,7 +383,89 @@
     return remember(foodFromRow(first.row, text));
   }
 
-  const api = Object.freeze({ version: 1, find, scoreRow, stripQuantity, quantityKind });
+  function publicRow(row) {
+    if (!row) return null;
+    const portions = (Array.isArray(row?.[4]) ? row[4] : [])
+      .map((portion, index) => {
+        const grams = Number(portion?.[0]);
+        if (!Number.isFinite(grams) || grams <= 0) return null;
+        return {
+          id: `portion-${index}`,
+          grams,
+          labelFr: String(portion?.[1] || portion?.[2] || "1 portion"),
+          labelEn: String(portion?.[2] || portion?.[1] || "1 serving"),
+        };
+      })
+      .filter(Boolean);
+    return {
+      id: String(row?.[0] ?? ""),
+      nameFr: String(row?.[1] || ""),
+      nameEn: String(row?.[2] || ""),
+      portions,
+    };
+  }
+
+  function search(text, limit = 12) {
+    const query = stripQuantity(text);
+    const max = Math.max(1, Math.min(30, Number(limit) || 12));
+    if (!query || query.length < 2) return [];
+    const ranked = [];
+    for (const row of catalog) {
+      let score = scoreRow(row, text);
+      if (!Number.isFinite(score)) continue;
+      if (hasUnrequestedQualifier(row, text)) score -= 140;
+      if (score >= 420) ranked.push({ row, score });
+    }
+    ranked.sort((a, b) => b.score - a.score);
+    const seen = new Set();
+    return ranked
+      .filter(({ row }) => {
+        const id = String(row?.[0] ?? "");
+        if (!id || seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      })
+      .slice(0, max)
+      .map(({ row }) => publicRow(row));
+  }
+
+  function getById(id) {
+    return publicRow(catalogById.get(String(id)) || null);
+  }
+
+  function nutritionForGrams(id, grams) {
+    const row = catalogById.get(String(id));
+    const amount = Number(grams);
+    if (!row || !Number.isFinite(amount) || amount <= 0) return null;
+    const nutrition = scaledNutrition(row?.[3] || {}, amount);
+    return {
+      calories: nutrition.calories,
+      protein: nutrition.protein,
+      carbs: nutrition.carbs,
+      fat: nutrition.fat,
+      fiber: nutrition.fiber,
+      sugars: nutrition.sugars,
+      sodium: nutrition.sodium,
+      source: "cnf",
+      confidence: "high",
+      basis: `${Math.round(amount * 10) / 10} g · ${String(row?.[1] || "aliment FCÉN")}`,
+      estimated: true,
+      cnfFoodId: String(row?.[0] ?? ""),
+      cnfNameFr: String(row?.[1] || ""),
+      cnfNameEn: String(row?.[2] || ""),
+    };
+  }
+
+  const api = Object.freeze({
+    version: 2,
+    find,
+    search,
+    getById,
+    nutritionForGrams,
+    scoreRow,
+    stripQuantity,
+    quantityKind,
+  });
   root.ENERGIE_CNF_SEARCH = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
