@@ -368,6 +368,35 @@
           day.observations.push({id:`lab-water-${date}`,date,time:"20:15",intensity:4,duration:"few_hours",tags:["positive_wellbeing"],contexts:["hydration"],mealIds:[],notes:"Meilleur ressenti général pendant une journée bien hydratée.",createdAt:`${date}T20:15:00`,updatedAt:`${date}T20:15:00`});
         }
 
+        // Dans le scénario fibres + hydratation, les premières semaines
+        // comportent davantage d'inconforts consignés hors repas. Leur fréquence
+        // diminue graduellement à mesure que fibres et hydratation deviennent
+        // plus régulières. C'est une histoire fictive destinée à tester le moteur.
+        if(sc.pattern==="ramp"){
+          const support=(exposure?.52:0)+(water>=7?.34:water<=5?-.14:0)+rampProgress*.18;
+          const symptomRisk=clamp(.58-support*.52, .06, .62);
+          if(random()<symptomRisk){
+            const tags=["constipation"];
+            if(water<=5 && random()<.34) tags.push("headache");
+            const intensity=water<=5?3:2;
+            day.observations.push({
+              id:`lab-fiber-context-${date}`,
+              date,
+              time:"16:10",
+              intensity,
+              duration:"few_hours",
+              tags,
+              contexts:["food","hydration"],
+              mealIds:[],
+              notes:tags.includes("headache")
+                ?"Constipation et léger mal de tête consignés cette journée."
+                :"Constipation consignée cette journée.",
+              createdAt:`${date}T16:10:00`,
+              updatedAt:`${date}T16:10:00`
+            });
+          }
+        }
+
         if(sc.pattern==="delayed" && previousExposure && random()<sc.strength){
           day.observations.push({id:`lab-ob-${date}`,date,time:"09:15",intensity:3,duration:"few_hours",tags:["bloating","cramps"],contexts:["food"],mealIds:[],notes:"Inconfort apparu ce matin, sans l’attribuer automatiquement au dernier repas.",createdAt:`${date}T09:15:00`,updatedAt:`${date}T09:15:00`});
         }
