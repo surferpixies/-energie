@@ -60,7 +60,7 @@
     return pick(pool,random);
   }
 
-  const foodScenarioTargets=new Set(["dairy","soy","seafood","gluten","legumes","allium","fried","spicy","processed","high_fiber"]);
+  const foodScenarioTargets=new Set(["dairy","soy","seafood","gluten","legumes","allium","fried_foods","spicy_foods","processed_foods","high_fiber"]);
   function foodStoryExposure(sc,i,activeStart,activeEnd,rechallengeDay,random){
     if(!foodScenarioTargets.has(sc.target)) return null;
     if(sc.pattern==="sparse") return i===activeStart+2||i===Math.min(activeEnd,activeStart+7);
@@ -91,9 +91,9 @@
     {id:"gluten-digestion",group:"Alimentation",icon:"🌾",title:"Aliments avec gluten → inconfort",target:"gluten",signal:"digestive",strength:.68,pattern:"exposure"},
     {id:"legumes-digestion",group:"Alimentation",icon:"🫘",title:"Légumineuses → ballonnements",target:"legumes",signal:"digestive",strength:.64,pattern:"dose"},
     {id:"allium-digestion",group:"Alimentation",icon:"🧄",title:"Ail/oignon/alliums → inconfort",target:"allium",signal:"digestive",strength:.74,pattern:"exposure"},
-    {id:"fried-digestion",group:"Alimentation",icon:"🍟",title:"Aliments frits → lourdeur digestive",target:"fried",signal:"digestive",strength:.70,pattern:"exposure"},
-    {id:"spicy-digestion",group:"Alimentation",icon:"🌶️",title:"Aliments épicés → inconfort",target:"spicy",signal:"digestive",strength:.70,pattern:"exposure"},
-    {id:"processed-energy",group:"Alimentation",icon:"🍕",title:"Repas transformés → énergie plus basse",target:"processed",signal:"energy",strength:.65,pattern:"exposure"},
+    {id:"fried-digestion",group:"Alimentation",icon:"🍟",title:"Aliments frits → lourdeur digestive",target:"fried_foods",signal:"digestive",strength:.70,pattern:"exposure"},
+    {id:"spicy-digestion",group:"Alimentation",icon:"🌶️",title:"Aliments épicés → inconfort",target:"spicy_foods",signal:"digestive",strength:.70,pattern:"exposure"},
+    {id:"processed-energy",group:"Alimentation",icon:"🍕",title:"Repas transformés → énergie plus basse",target:"processed_foods",signal:"energy",strength:.65,pattern:"exposure"},
     {id:"fiber-improvement",group:"Évolution",icon:"🌾",title:"Fibres + hydratation → amélioration progressive",target:"high_fiber",signal:"positive",strength:.72,pattern:"ramp"},
     {id:"caffeine-sleep",group:"Sommeil",icon:"☕",title:"Caféine tardive → sommeil moins favorable",target:"caffeine",signal:"sleep",strength:.80,pattern:"timing"},
     {id:"short-sleep-fatigue",group:"Sommeil",icon:"😴",title:"Nuit courte → fatigue le lendemain",target:"sleep",signal:"energy",strength:.78,pattern:"sleep"},
