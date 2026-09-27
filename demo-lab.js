@@ -210,7 +210,9 @@
         const breakfastHasTarget=isFoodTarget(sc.target) && (inActiveWindow?random()<.22:random()<.05);
         const targetBreakfasts=breakfastHasTarget?mealsWithCategory(sc.target).filter(description=>/yogourt|gruau|omelette|bagel|rôties|smoothie|fromage cottage/i.test(description)):[];
         const breakfastPool=breakfastHasTarget&&targetBreakfasts.length?targetBreakfasts:neutralBreakfasts;
-        const breakfast=lateCoffee?`Café filtre, ${breakfastPool[Math.floor(random()*breakfastPool.length)]}`:breakfastPool[Math.floor(random()*breakfastPool.length)];
+        const breakfastBase=pick(breakfastPool,random);
+        const breakfast=lateCoffee?`Café filtre, ${breakfastBase}`:breakfastBase;
+        const usedMeals=new Set([breakfastBase]);
         const breakfastExposure=breakfastHasTarget && recognizedAs(breakfast,sc.target);
         const breakfastOutcome=outcomeForFoodExposure(sc,breakfastExposure,inActiveWindow,afterWindow,random);
         const breakfastSymptom=breakfastOutcome?breakfastOutcome.rating<4:(breakfastExposure && sc.signal==="digestive" && random()<sc.strength);
@@ -223,7 +225,8 @@
           if(!down && random()<.45) day.water=Math.max(3,day.water-1);
         }
         const nonTargetPool=isFoodTarget(sc.target)?mealsWithoutCategory(sc.target).filter(description=>!recognizedAs(description,"caffeine")):commonMeals.filter(description=>!recognizedAs(description,"caffeine"));
-        let description=(exposure&&isFoodTarget(sc.target))?targetMeal(sc.target,random):pick(nonTargetPool.length?nonTargetPool:foods.neutral,random);
+        let description=(exposure&&isFoodTarget(sc.target))?targetMeal(sc.target,random,usedMeals):pickDistinct(nonTargetPool.length?nonTargetPool:foods.neutral,usedMeals,random);
+        usedMeals.add(description);
         if(sc.pattern==="confounder" && exposure) description=random()<.70?"Pâtes tomate, ail, oignon et parmesan":"Poulet sauté avec ail, oignon, riz et légumes";
         const isTransient=sc.pattern==="transient";
         const lunchOutcome=outcomeForFoodExposure(sc,exposure,inActiveWindow,afterWindow,random);
@@ -243,7 +246,7 @@
         day.meals.push(meal(`lab-${date}-l`,date,"12:20","Dîner",description,tags,rating,lunchOutcome?.note??(tags.includes("bloating")?"Inconfort digestif noté après le repas.":"")));
         const dinnerExposure=isFoodTarget(sc.target) && (inActiveWindow?random()<.20:random()<.05);
         const dinnerNonTarget=isFoodTarget(sc.target)?mealsWithoutCategory(sc.target).filter(description=>!recognizedAs(description,"caffeine")):commonMeals.filter(description=>!recognizedAs(description,"caffeine"));
-        const dinnerDescription=dinnerExposure?targetMeal(sc.target,random):pick(dinnerNonTarget.length?dinnerNonTarget:foods.neutral,random);
+        const dinnerDescription=dinnerExposure?targetMeal(sc.target,random,usedMeals):pickDistinct(dinnerNonTarget.length?dinnerNonTarget:foods.neutral,usedMeals,random);
         const dinnerOutcome=outcomeForFoodExposure(sc,dinnerExposure,inActiveWindow,afterWindow,random);
         const dinnerSymptom=dinnerOutcome?dinnerOutcome.rating<4:(dinnerExposure&&sc.signal==="digestive"?random()<sc.strength:(sc.signal==="digestive"&&random()<.035));
         const dinnerTags=dinnerOutcome?dinnerOutcome.tags:(dinnerSymptom?["bloating",random()<.5?"gas":"cramps"]:
