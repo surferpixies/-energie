@@ -1533,6 +1533,7 @@ function formatSleepDuration(hours) {
     };
   }
   async function syncMemoryCloud() {
+    if (db.settings?.demoLab?.scenarioId) return true;
     if (!localJournalMatchesSession()) return false;
     if (
       memorySyncBusy ||
@@ -1575,6 +1576,7 @@ function formatSleepDuration(hours) {
     return brainMemoryState();
   }
   async function replaceMemoryCloudFromJournal() {
+    if (db.settings?.demoLab?.scenarioId) return true;
     if (!localJournalMatchesSession()) return false;
     if (!client || !session || !navigator.onLine || !window.Brain?.memory)
       return true;
@@ -1599,6 +1601,7 @@ function formatSleepDuration(hours) {
     }
   }
   async function pullMemoryCloud() {
+    if (db.settings?.demoLab?.scenarioId) return true;
     if (!client || !session || !navigator.onLine || !window.Brain?.memory)
       return true;
     // La mémoire est une donnée dérivée : le journal du compte est la seule source de vérité.
@@ -1607,6 +1610,7 @@ function formatSleepDuration(hours) {
   }
   function scheduleMemoryCloudSync() {
     clearTimeout(memorySyncTimer);
+    if (db.settings?.demoLab?.scenarioId) return;
     memorySyncTimer = setTimeout(() => {
       if (session && navigator.onLine) syncMemoryCloud();
     }, 700);
@@ -1621,6 +1625,7 @@ function formatSleepDuration(hours) {
     }
   }
   function setOutbox(items) {
+    if (db.settings?.demoLab?.scenarioId) return false;
     try {
       localStorage.setItem(OUTBOX_KEY, JSON.stringify(items));
     } catch (error) {
@@ -1717,6 +1722,7 @@ function formatSleepDuration(hours) {
   }
 
   async function uploadPhoto(meal) {
+    if (db.settings?.demoLab?.scenarioId) throw new Error("Laboratoire: écriture Storage bloquée.");
     if (!client || !session) return meal;
     const photos = (Array.isArray(meal.photos) ? meal.photos : []).slice(0, 3);
     for (let index = 0; index < photos.length; index += 1) {
@@ -2012,6 +2018,7 @@ function formatSleepDuration(hours) {
     if (!failed.length && !pending) await pullCloud(false);
   }
   async function pullCloud(show = true) {
+    if (db.settings?.demoLab?.scenarioId) return;
     if (professionalBetaMode || db.settings.demoMode || !client || !session || !navigator.onLine)
       return;
     if (show) {
@@ -5286,6 +5293,7 @@ function formatSleepDuration(hours) {
     requestAnimationFrame(() => requestAnimationFrame(startDemoTour));
   }
   function leaveDemoMode() {
+    if (db.settings?.demoLab?.scenarioId) { leaveLab(); return; }
     if (
       !confirm(
         "Quitter la démo et revenir à ton journal? Les données fictives seront retirées.",
