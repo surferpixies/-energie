@@ -65,8 +65,8 @@
 
   function meal(id,date,time,type,description,tags=[],rating=4,notes=""){
     const scores=Object.fromEntries(tags.map(t=>[t,rating]));
-    return {id,date,time,type,description,fatigueBefore:rating,fatigueAfter:0,feelingsBefore:{},notes,
-      feeling:{rating,tags,scores,beforeScores:{},notes,recordedAt:`${date}T${time}:00`},
+    return {id,date,time,type,description,fatigueBefore:rating,fatigueAfter:0,feelingsBefore:{positive_wellbeing:3},notes,
+      feeling:{rating,tags,scores,beforeScores:{positive_wellbeing:3},notes,recordedAt:`${date}T${time}:00`},
       createdAt:`${date}T${time}:00`,updatedAt:`${date}T${time}:00`};
   }
 
@@ -136,7 +136,9 @@
       }
 
       if(!missing){
-        day.meals.push(meal(`lab-${date}-b`,date,"07:30","Déjeuner",lateCoffee?"Café filtre, œufs, rôties et fruit":"Œufs, rôties et fruit",[],4));
+        const breakfasts=["Yogourt grec, bleuets et avoine","Gruau, banane et noix","Omelette, rôties et fruit","Fromage cottage, framboises et granola","Rôties au beurre d’arachide et banane","Œufs, rôties et fruit"];
+        const breakfast=lateCoffee?`Café filtre, ${breakfasts[Math.floor(random()*breakfasts.length)]}`:breakfasts[Math.floor(random()*breakfasts.length)];
+        day.meals.push(meal(`lab-${date}-b`,date,"07:30","Déjeuner",breakfast,["positive_wellbeing"],4));
         if(weightScenario){
           const down=sc.pattern==="weight_down";
           day.calories=Math.round((down?1850:2650)+(random()-.5)*260);
