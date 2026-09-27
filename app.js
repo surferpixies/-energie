@@ -987,13 +987,47 @@ function formatSleepDuration(hours) {
     out.settings.trackedFeelingsConfigured = raw.settings?.trackedFeelingsConfigured === true;
     return out;
   }
-  function backup(payload, reason) {
+  function compactBackupPayload(payload) {
+    if (!payload || typeof payload !== "object") return payload;
     try {
-      const b = JSON.parse(localStorage.getItem(BACKUP_KEY) || "[]");
-      b.unshift({ at: new Date().toISOString(), reason, payload });
-      localStorage.setItem(BACKUP_KEY, JSON.stringify(b.slice(0, 20)));
-    } catch (e) {
-      console.warn(e);
+      const clone = JSON.parse(JSON.stringify(payload));
+      Object.values(clone.days || {}).forEach((day) => {
+        (day.meals || []).forEach((meal) => {
+          if (Array.isArray(meal.photos))
+            meal.photos = meal.photos.map((photo) => ({
+              ...photo,
+              local: null,
+            }));
+          if ("photoLocal" in meal) meal.photoLocal = null;
+          if ("photo" in meal && typeof meal.photo === "string" && meal.photo.startsWith("data:"))
+            meal.photo = null;
+        });
+      });
+      return clone;
+    } catch (_) {
+      return null;
+    }
+  }
+  function backup(payload, reason) {
+    const compact = compactBackupPayload(payload);
+    if (compact == null) return;
+    const entry = {
+      at: new Date().toISOString(),
+      reason,
+      payload: compact,
+    };
+    try {
+      // Une seule copie compacte suffit ici. Les anciennes sauvegardes contenant
+      // parfois plusieurs photos en base64 pouvaient remplir localStorage.
+      localStorage.setItem(BACKUP_KEY, JSON.stringify([entry]));
+    } catch (error) {
+      if (isStorageQuotaError(error)) {
+        try {
+          localStorage.removeItem(BACKUP_KEY);
+        } catch (_) {}
+        return;
+      }
+      console.warn("Sauvegarde locale de secours ignorée", error);
     }
   }
   function load() {
