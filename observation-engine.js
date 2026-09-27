@@ -2,20 +2,26 @@
   "use strict";
 
   const FOOD = window.ENERGIE_FOOD_CATEGORIES;
-  const VERSION = 4;
+  const VERSION = 5;
   const DEFAULT_LOCALE = "fr-CA";
   const DAY_MS = 86400000;
   const CATEGORY_PRIORITY = Object.freeze({
     dairy: 100,
     soy: 95,
     gluten: 90,
+    allium: 88,
     eggs: 85,
     nuts: 85,
     seafood: 85,
+    legumes: 82,
     fish: 80,
     caffeine: 75,
     alcohol: 75,
+    refined_grains: 40,
+    vegetables: 35,
+    plant_protein: 30,
     fermented: 25,
+    high_fiber: 25,
     processed_foods: 15,
     ultra_processed: 10
   });
@@ -465,11 +471,15 @@
 
     function selectObservations(group) {
       const candidates = scoredFeelingObservations(recentDays, locale, settings, group)
-        .sort((a, b) =>
-          b.score - a.score ||
-          (CATEGORY_PRIORITY[b.categoryId] || 50) -
-            (CATEGORY_PRIORITY[a.categoryId] || 50)
-        );
+        .sort((a, b) => {
+          const scoreGap = b.score - a.score;
+          if (Math.abs(scoreGap) >= 0.35) return scoreGap;
+          return (
+            (CATEGORY_PRIORITY[b.categoryId] || 50) -
+              (CATEGORY_PRIORITY[a.categoryId] || 50) ||
+            scoreGap
+          );
+        });
 
       const observations = [];
       const secondaryObservations = [];
@@ -477,12 +487,24 @@
       const limit = Number(settings.limit) || DEFAULT_OPTIONS.limit;
 
       function exposureOverlap(firstId, secondId) {
-        const eligible = recentDays.filter(day => day.hasUsableFeelings && day.meals.length > 0);
+        // Feeling observations are calculated meal by meal, so overlap must use
+        // the same unit. Day-level overlap made categories that occur in the
+        // same symptomatic meal look artificially independent when another meal
+        // that day contained only one of them.
+        const eligibleMeals = recentDays
+          .flatMap(day => day.meals || [])
+          .filter(
+            meal =>
+              meal?.feeling &&
+              !meal.feeling?.qualityReview?.excludedFromAnalysis &&
+              !meal.feelingsBeforeQuality?.excludedFromAnalysis
+          );
         let intersection = 0;
         let union = 0;
-        eligible.forEach(day => {
-          const first = day.categoryIds.has(firstId);
-          const second = day.categoryIds.has(secondId);
+        eligibleMeals.forEach(meal => {
+          const ids = new Set(FOOD?.categoryIdsForText?.(mealText(meal)) || []);
+          const first = ids.has(firstId);
+          const second = ids.has(secondId);
           if (first || second) union += 1;
           if (first && second) intersection += 1;
         });
