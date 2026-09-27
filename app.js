@@ -12166,7 +12166,7 @@ function formatSleepDuration(hours) {
         switchDemoProfile(button.dataset.openDemoProfile),
       ),
     );
-    $("[data-open-lab-scenario]").forEach((button)=>button.addEventListener("click",()=>enterLabScenario(button.dataset.openLabScenario,1)));
+    document.querySelectorAll("[data-open-lab-scenario]").forEach((button)=>button.addEventListener("click",()=>enterLabScenario(button.dataset.openLabScenario,1)));
     $("#labRandomScenario")?.addEventListener("click",randomLabScenario);
     $("#labNewVariant")?.addEventListener("click",newLabVariant);
     $("#leaveLab")?.addEventListener("click",leaveLab);
