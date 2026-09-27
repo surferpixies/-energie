@@ -206,10 +206,10 @@
 
       if(!missing){
         const neutralBreakfasts=["Gruau, banane et noix","Omelette aux épinards, rôties et orange","Rôties au beurre d’arachide et banane","Œufs brouillés, pommes de terre et fruit","Bol d’avoine, pomme et noix","Pain doré, fraises et noix","Smoothie banane, avoine et beurre d’arachide","Bagel, œuf et avocat"];
-        const dairyBreakfasts=["Yogourt grec, bleuets et avoine","Fromage cottage, framboises et granola"];
         const breakfastHasTarget=isFoodTarget(sc.target) && (inActiveWindow?random()<.22:random()<.05);
-        const targetBreakfasts=breakfastHasTarget?mealsWithCategory(sc.target).filter(description=>/yogourt|gruau|omelette|bagel|rôties|smoothie|fromage cottage/i.test(description)):[];
-        const breakfastPool=breakfastHasTarget&&targetBreakfasts.length?targetBreakfasts:neutralBreakfasts;
+        const targetBreakfasts=breakfastHasTarget?mealsWithCategory(sc.target).filter(description=>/yogourt|gruau|omelette|bagel|rôties|smoothie|fromage cottage|œuf|fruit|avoine/i.test(description)):[];
+        const safeBreakfasts=isFoodTarget(sc.target)?neutralBreakfasts.filter(description=>!recognizedAs(description,sc.target)):neutralBreakfasts;
+        const breakfastPool=breakfastHasTarget&&targetBreakfasts.length?targetBreakfasts:(safeBreakfasts.length?safeBreakfasts:neutralBreakfasts);
         const breakfastBase=pick(breakfastPool,random);
         const breakfast=lateCoffee?`Café filtre, ${breakfastBase}`:breakfastBase;
         const usedMeals=new Set([breakfastBase]);
