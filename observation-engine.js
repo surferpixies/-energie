@@ -500,15 +500,22 @@
               !meal.feelingsBeforeQuality?.excludedFromAnalysis
           );
         let intersection = 0;
-        let union = 0;
+        let firstCount = 0;
+        let secondCount = 0;
         eligibleMeals.forEach(meal => {
           const ids = new Set(FOOD?.categoryIdsForText?.(mealText(meal)) || []);
           const first = ids.has(firstId);
           const second = ids.has(secondId);
-          if (first || second) union += 1;
+          if (first) firstCount += 1;
+          if (second) secondCount += 1;
           if (first && second) intersection += 1;
         });
-        return union ? intersection / union : 0;
+        // Use an overlap coefficient rather than Jaccard. Food categories are
+        // often nested (e.g. fried foods are also processed foods). If nearly
+        // every occurrence of the smaller category is contained in the larger
+        // one, presenting both as independent primary trends is misleading.
+        const smaller = Math.min(firstCount, secondCount);
+        return smaller ? intersection / smaller : 0;
       }
 
       for (const candidate of candidates) {
