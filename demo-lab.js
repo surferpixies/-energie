@@ -110,7 +110,7 @@
     {id:"too-few-exposures",group:"Contrôles",icon:"🔬",title:"Trop peu de données pour conclure",target:"seafood",signal:"digestive",strength:.80,pattern:"sparse"},
     {id:"coincidence-fades",group:"Contrôles",icon:"🫥",title:"Coïncidence temporaire qui disparaît",target:"dairy",signal:"digestive",strength:.75,pattern:"transient"},
     {id:"missing-data",group:"Robustesse",icon:"🧩",title:"Données manquantes et signal réel",target:"seafood",signal:"digestive",strength:.74,pattern:"missing"},
-    {id:"chaotic-multifactor",group:"Cas complexes",icon:"🌪️",title:"Sommeil, repas et activité changent ensemble",target:"processed",signal:"energy",strength:.48,pattern:"chaotic"}
+    {id:"chaotic-multifactor",group:"Cas complexes",icon:"🌪️",title:"Sommeil, repas et activité changent ensemble",target:"processed_foods",signal:"energy",strength:.48,pattern:"chaotic"}
   ];
 
   function meal(id,date,time,type,description,tags=[],rating=4,notes=""){
