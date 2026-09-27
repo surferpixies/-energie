@@ -87,7 +87,7 @@
         generalRecommendations:true,showSources:true,professionalSupport:false,feelingReminders:false,supplements:[],
         demoMode:true,demoTourSeen:true,demoName:`Laboratoire — ${sc.title}`,demoProfileId:`lab-${sc.id}`,
         demoReadOnly:true,demoDataVersion:`lab-v1-${sc.id}-${variant}`,
-        demoLab:{scenarioId:sc.id,variant,days,activeStart,activeEnd,activeDays,hiddenTruth:{target:sc.target,signal:sc.signal,pattern:sc.pattern}}},
+        demoLab:{scenarioId:sc.id,variant,days,activeStart,activeEnd,activeDays}},
       favorites:[],days:{}};
 
     const weightScenario=sc.pattern==="weight_down"||sc.pattern==="weight_up";
@@ -169,6 +169,7 @@
       store.days[date]=day;
       previousExposure=exposure;
     }
+    Object.defineProperty(store,"__labTruth",{value:Object.freeze({target:sc.target,signal:sc.signal,pattern:sc.pattern,activeStart,activeEnd,activeDays}),enumerable:false,writable:false});
     return store;
   }
 
