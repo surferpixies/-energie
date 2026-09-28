@@ -15655,26 +15655,10 @@ function formatSleepDuration(hours) {
   $(".nav-item").forEach(
     (b) =>
       (b.onclick = () => {
-        const was = currentView,
-          nextView = b.dataset.view;
-        if (nextView === was) return;
-        currentView = nextView;
+        const was = currentView;
+        currentView = b.dataset.view;
         if (currentView === "today" && was !== "today")
           selectedDate = todayKey();
-        // Observations is the heaviest view. Paint its lightweight shell first,
-        // then run the analysis on the next frame so the tab responds immediately.
-        if (currentView === "insights") {
-          $(".nav-item").forEach((item) =>
-            item.classList.toggle("active", item.dataset.view === currentView),
-          );
-          const app = $("#app");
-          app.innerHTML = `<section class="hero observations-loading-hero"><p class="eyebrow">Cerveau et observations</p><h2>J’ouvre tes observations…</h2><p>Les informations déjà calculées apparaîtront dans un instant.</p></section><section class="card observations-loading-card" aria-live="polite"><span class="observations-loading-brain" aria-hidden="true">🧠</span><div><strong>Analyse de ton journal</strong><small>Énergie rassemble tes ressentis et tes tendances.</small></div><i aria-hidden="true"></i></section>`;
-          requestAnimationFrame(() => {
-            if (currentView !== "insights") return;
-            render();
-          });
-          return;
-        }
         render();
       }),
   );
