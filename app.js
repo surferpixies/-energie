@@ -11574,42 +11574,86 @@ function formatSleepDuration(hours) {
   function weightObservationAnalysis(direction) {
     const state = observationExplorerState(), profile = personalProfile(), unit = profile.weight?.unit || "kg";
     const end = state.toDate && state.toDate < selectedDate ? state.toDate : selectedDate;
+    const thresholdKg = 3 * 0.45359237;
     const weights = Object.entries(db.days || {}).filter(([date, day]) =>
       date <= end && (!state.fromDate || date >= state.fromDate) && Metrics.weightRecord(day?.weightMeasurement)?.kg != null
     ).sort(([a],[b]) => a.localeCompare(b)).map(([date, day]) => ({date, kg: Metrics.weightRecord(day.weightMeasurement).kg}));
-    if (weights.length < 2) return {weights, period:null, unit};
+    if (weights.length < 2) return {weights, period:null, unit, thresholdKg};
     let best = null;
     for (let i=0;i<weights.length-1;i++) for(let j=i+1;j<weights.length;j++) {
       const days = Math.max(1, Math.round((Metrics.dateTime(weights[j].date)-Metrics.dateTime(weights[i].date))/86400000));
       if (days < 3) continue;
       const delta = weights[j].kg-weights[i].kg;
-      if ((direction==="down" && delta >= -0.3) || (direction==="up" && delta <= 0.3)) continue;
+      if ((direction==="down" && delta > -thresholdKg) || (direction==="up" && delta < thresholdKg)) continue;
       const score = Math.abs(delta) * Math.log2(days+2);
       if (!best || score > best.score) best={start:weights[i],end:weights[j],delta,days,score};
     }
-    if (!best) return {weights, period:null, unit};
-    const rows = Object.entries(db.days || {}).filter(([date])=>date>=best.start.date && date<=best.end.date);
-    const vals = (fn)=>rows.map(([,d])=>fn(d)).filter(Number.isFinite);
-    const calories=vals(d=>(d.meals||[]).reduce((s,m)=>s+(Number(m?.nutrition?.calories ?? m?.nutrition?.estimatedCalories)||0),0)).filter(n=>n>0);
-    const steps=vals(d=>d.steps==null?NaN:Number(d.steps));
-    const sleep=vals(d=>d.sleepHours==null?NaN:Number(d.sleepHours));
-    const active=vals(d=>(d.activities||[]).reduce((s,a)=>s+(Number(a.minutes)||0),0));
-    const avg=a=>a.length?Math.round(a.reduce((s,n)=>s+n,0)/a.length*10)/10:null;
-    return {weights,period:best,unit,stats:{calories:avg(calories),steps:avg(steps),sleep:avg(sleep),active:avg(active),days:rows.length}};
+    if (!best) return {weights, period:null, unit, thresholdKg};
+
+    const dayRows = (startDate,endDate) => Object.entries(db.days || {}).filter(([date])=>date>=startDate && date<=endDate);
+    const average = values => values.length ? Math.round(values.reduce((sum,n)=>sum+n,0)/values.length*10)/10 : null;
+    const statsFor = rows => {
+      const vals = fn => rows.map(([,d])=>fn(d)).filter(Number.isFinite);
+      const calories = vals(d => {
+        const meals=(d.meals||[]);
+        if (!meals.length) return NaN;
+        const values=meals.map(m=>Number(m?.nutrition?.calories ?? m?.nutrition?.estimatedCalories)).filter(Number.isFinite);
+        return values.length ? values.reduce((sum,n)=>sum+n,0) : NaN;
+      }).filter(n=>n>0);
+      const steps=vals(d=>d.steps==null?NaN:Number(d.steps));
+      const sleep=vals(d=>d.sleepHours==null?NaN:Number(d.sleepHours));
+      const active=vals(d=>(d.activities||[]).reduce((sum,a)=>sum+(Number(a.minutes)||0),0));
+      const water=vals(d=>Number(d.water)>0?Number(d.water):NaN);
+      return {calories:average(calories),steps:average(steps),sleep:average(sleep),active:average(active),water:average(water),days:rows.length,
+        coverage:{calories:calories.length,steps:steps.length,sleep:sleep.length,active:active.length,water:water.length}};
+    };
+    const rows=dayRows(best.start.date,best.end.date), stats=statsFor(rows);
+    const previousEndDate=new Date(Metrics.dateTime(best.start.date)-86400000).toLocaleDateString("en-CA");
+    const previousStartDate=new Date(Metrics.dateTime(previousEndDate)-Math.max(1,best.days-1)*86400000).toLocaleDateString("en-CA");
+    const previousRows=dayRows(previousStartDate,previousEndDate), previous=statsFor(previousRows);
+    const signals=[];
+    const addSignal=(id,icon,label,current,prior,betterDirection,minChange,unitLabel)=>{
+      if (current==null || prior==null || prior===0) return;
+      const delta=current-prior, pct=delta/prior*100;
+      if (Math.abs(pct)<minChange) return;
+      signals.push({id,icon,label,current,prior,delta,pct,direction:delta>0?"up":"down",aligned:betterDirection===null?null:(delta>0?1:-1)===betterDirection,unitLabel});
+    };
+    const expected = direction==="down" ? -1 : 1;
+    addSignal("calories","🍽️","Apports énergétiques estimés",stats.calories,previous.calories,expected,8,"kcal/j");
+    addSignal("steps","👟","Pas",stats.steps,previous.steps,-expected,12,"/j");
+    addSignal("active","🚶","Activité",stats.active,previous.active,-expected,12,"min/j");
+    addSignal("water","💧","Hydratation",stats.water,previous.water,null,15,"");
+    addSignal("sleep","😴","Sommeil",stats.sleep,previous.sleep,null,8,"h/nuit");
+    signals.sort((a,b)=>Math.abs(b.pct)-Math.abs(a.pct));
+    return {weights,period:best,unit,thresholdKg,stats,previous,signals,previousPeriod:{start:previousStartDate,end:previousEndDate}};
   }
   function weightObservationHtml() {
     if (personalProfile().weight?.mode !== "provided") return "";
-    const panel = (direction, icon, title, subtitle) => `<details class="card wide weight-observation-fold" data-weight-fold="${direction}"><summary><span class="observation-fold-icon" aria-hidden="true">${icon}</span><span class="observation-fold-copy"><strong>${title}</strong><small>${subtitle}</small></span><em aria-hidden="true">⌄</em></summary><div class="weight-observation-fold-body" data-weight-observation-result="${direction}"></div></details>`;
-    return `<section class="weight-observation-card"><div class="weight-observation-heading"><p class="eyebrow">Explorer mon historique</p><h2>⚖️ Explorer les changements de mon poids</h2><p class="muted">Choisis le changement que tu veux explorer. Énergie décrit ce qui accompagnait cette période, sans attribuer de cause.</p></div><div class="weight-observation-folds">${panel("down","↘","Mon poids a diminué","Voir ce qui accompagnait une période de diminution")}${panel("up","↗","Mon poids a augmenté","Voir ce qui accompagnait une période d’augmentation")}</div></section>`;
+    const summary = direction => weightObservationAnalysis(direction);
+    const panel = (direction, icon, title) => {
+      const a=summary(direction);
+      if(!a.period) return `<details class="card wide weight-observation-fold" data-weight-fold="${direction}"><summary><span class="observation-fold-icon" aria-hidden="true">${icon}</span><span class="observation-fold-copy"><strong>${title}</strong><small>Aucune variation d’au moins 3 lb détectée</small></span><em aria-hidden="true">⌄</em></summary><div class="weight-observation-fold-body" data-weight-observation-result="${direction}"></div></details>`;
+      const aligned=a.signals.filter(s=>s.aligned===true).slice(0,3);
+      const text=aligned.length
+        ? `Pendant cette période : ${aligned.map(s=>`${s.label.toLowerCase()} ${s.direction==="up"?"↑":"↓"}`).join(" · ")}`
+        : "Variation nette détectée · voir les changements observés pendant cette période";
+      return `<details class="card wide weight-observation-fold" data-weight-fold="${direction}"><summary><span class="observation-fold-icon" aria-hidden="true">${icon}</span><span class="observation-fold-copy"><strong>${title}</strong><small>${esc(text)}</small></span><em aria-hidden="true">⌄</em></summary><div class="weight-observation-fold-body" data-weight-observation-result="${direction}"></div></details>`;
+    };
+    return `<section class="weight-observation-card"><div class="weight-observation-heading"><p class="eyebrow">Explorer mon historique</p><h2>⚖️ Explorer les changements de mon poids</h2><p class="muted">Énergie affiche une analyse lorsqu’une tendance atteint environ 3 lb et compare ce qui était enregistré pendant cette période avec la période précédente. Ce sont des associations observées, pas des causes.</p></div><div class="weight-observation-folds">${panel("down","↘","Mon poids a diminué")}${panel("up","↗","Mon poids a augmenté")}</div></section>`;
   }
   function renderWeightObservationResult(direction) {
     const host=$(`[data-weight-observation-result="${direction}"]`); if(!host) return;
     const a=weightObservationAnalysis(direction);
-    if(!a.period){host.innerHTML=`<div class="observation-explorer-empty"><span>🌱</span><strong>Pas encore de période assez nette</strong><p>Il faut au moins deux mesures espacées de quelques jours et une variation d’au moins 0,3 kg.</p></div>`;return;}
+    if(!a.period){host.innerHTML=`<div class="observation-explorer-empty"><span>🌱</span><strong>Pas encore de période assez nette</strong><p>Énergie attend une variation d’au moins 3 lb entre deux mesures espacées de quelques jours avant de proposer une explication.</p></div>`;return;}
     const p=a.period, s=a.stats, display=n=>Metrics.displayWeight(n,a.unit).toLocaleString("fr-CA");
     const stat=(icon,label,value)=>value==null?"":`<div class="stat-card compact-stat-card"><span>${icon}</span><strong>${label}</strong><div class="metric metric-small">${value}</div></div>`;
     const series=a.weights.filter(w=>w.date>=p.start.date&&w.date<=p.end.date).map(w=>`<li><strong>${esc(formatCalendarDate(w.date))}</strong> — ${display(w.kg)} ${a.unit}</li>`).join("");
-    host.innerHTML=`<div class="observation-explorer-panel-body"><h3>${esc(formatCalendarDate(p.start.date))} → ${esc(formatCalendarDate(p.end.date))}</h3><p><strong>${direction==="down"?"Diminution":"Augmentation"} de ${display(Math.abs(p.delta))} ${a.unit}</strong> sur ${p.days} jours.</p><div class="grid">${stat("🍽️","Calories estimées moyennes",s.calories!=null?Math.round(s.calories)+" kcal/j":"")}${stat("👟","Pas moyens",s.steps!=null?Math.round(s.steps).toLocaleString("fr-CA")+"/j":"")}${stat("😴","Sommeil moyen",s.sleep!=null?s.sleep.toLocaleString("fr-CA")+" h":"")}${stat("🚶","Activité moyenne",s.active!=null?Math.round(s.active)+" min/j":"")}</div><details><summary>Voir les mesures de poids de cette période</summary><ul>${series}</ul></details><p class="muted tiny">Énergie décrit ce qui accompagne la variation observée dans ton journal. Le poids peut varier pour plusieurs raisons; ces données ne permettent pas d’attribuer une cause.</p></div>`;
+    const signalHtml=a.signals.length ? a.signals.slice(0,5).map(signal=>`<li><span>${signal.icon}</span><div><strong>${esc(signal.label)} ${signal.direction==="up"?"↑":"↓"} ${Math.abs(signal.pct).toFixed(0)} %</strong><small>Comparativement à la période précédente</small></div></li>`).join("") : "";
+    const headline=a.signals.filter(signal=>signal.aligned===true).slice(0,3);
+    const summary=headline.length
+      ? `Parmi les données enregistrées, ${headline.map(signal=>`${signal.label.toLowerCase()} ${signal.direction==="up"?"plus élevés":"plus faibles"}`).join(", ")} ont changé pendant la même période.`
+      : "Aucun changement suffisamment net ne ressort des données enregistrées pour cette période.";
+    host.innerHTML=`<div class="observation-explorer-panel-body"><h3>${esc(formatCalendarDate(p.start.date))} → ${esc(formatCalendarDate(p.end.date))}</h3><p><strong>${direction==="down"?"Diminution":"Augmentation"} de ${display(Math.abs(p.delta))} ${a.unit}</strong> sur ${p.days} jours.</p><div class="weight-observation-summary"><strong>Ce qui a changé autour de cette période</strong><p>${esc(summary)}</p></div>${signalHtml?`<ul class="weight-observation-signals">${signalHtml}</ul>`:""}<details><summary>Voir l’explication détaillée</summary><div class="grid">${stat("🍽️","Calories estimées moyennes",s.calories!=null?Math.round(s.calories)+" kcal/j":"")}${stat("👟","Pas moyens",s.steps!=null?Math.round(s.steps).toLocaleString("fr-CA")+"/j":"")}${stat("💧","Hydratation moyenne",s.water!=null?s.water.toLocaleString("fr-CA")+" verre(s)/j":"")}${stat("😴","Sommeil moyen",s.sleep!=null?s.sleep.toLocaleString("fr-CA")+" h":"")}${stat("🚶","Activité moyenne",s.active!=null?Math.round(s.active)+" min/j":"")}</div><p class="muted tiny">Comparaison avec ${esc(formatCalendarDate(a.previousPeriod.start))} → ${esc(formatCalendarDate(a.previousPeriod.end))}. Les calories sont des estimations et dépendent de la qualité du journal.</p></details><details><summary>Voir les mesures de poids de cette période</summary><ul>${series}</ul></details><p class="muted tiny">Une variation de poids peut aussi refléter l’hydratation, le contenu digestif et d’autres fluctuations à court terme. Énergie montre des changements observés au même moment; elle ne peut pas déterminer leur cause.</p></div>`;
   }
   function bindWeightObservation() {
     $$(".weight-observation-fold").forEach((fold) => {
