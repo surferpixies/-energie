@@ -3431,6 +3431,38 @@ function formatSleepDuration(hours) {
     $("#cnfGuidedMealDialog")?.close();
   }
 
+  let currentMealNutritionTrace = null;
+  function nutritionTraceSourceLabel(source) {
+    return source === "cnf" ? "FCÉN · Santé Canada"
+      : source === "mixed" ? "FCÉN + repli Énergie"
+      : source === "energie-foods" ? "Référence Énergie"
+      : "Estimation automatique";
+  }
+  function ensureMealNutritionTraceUi() {
+    const status = $("#mealCalorieStatus");
+    if (!status || $("#mealNutritionTraceLink")) return;
+    status.insertAdjacentHTML("afterend", '<button type="button" id="mealNutritionTraceLink" class="meal-nutrition-trace-link" hidden>Comment cette estimation a-t-elle été calculée ?</button>');
+    document.body.insertAdjacentHTML("beforeend", '<dialog id="mealNutritionTraceDialog" class="meal-nutrition-trace-dialog"><form method="dialog"><div class="meal-nutrition-trace-head"><div><small>Estimation nutritionnelle</small><h3>Détail du calcul</h3></div><button type="submit" class="icon-button" aria-label="Fermer">×</button></div><div id="mealNutritionTraceBody"></div><p class="muted small">Les valeurs demeurent des estimations et peuvent varier selon le produit, la portion et la préparation.</p></form></dialog>');
+    $("#mealNutritionTraceLink").onclick = openMealNutritionTrace;
+  }
+  function openMealNutritionTrace() {
+    const trace = currentMealNutritionTrace;
+    const dialog = $("#mealNutritionTraceDialog"), body = $("#mealNutritionTraceBody");
+    if (!dialog || !body || !trace?.items?.length) return;
+    const rows = trace.items.map((item) => {
+      const quantity = item.enteredQuantity
+        ? item.enteredQuantity.unit === "count"
+          ? `${item.enteredQuantity.value} portion${item.enteredQuantity.value > 1 ? "s" : ""}`
+          : `${item.enteredQuantity.value} ${item.enteredQuantity.unit}`
+        : "portion courante";
+      const match = item.matchedName || item.input || "Aliment";
+      const kcal = item.calories != null ? `${item.calories} kcal` : "—";
+      return `<div class="meal-nutrition-trace-item"><strong>${esc(item.input || match)}</strong><span>Correspondance : ${esc(match)}</span><span>Quantité interprétée : <b>${esc(quantity)}</b></span><span>Source : ${esc(nutritionTraceSourceLabel(item.source))}</span><em>${esc(kcal)}</em></div>`;
+    }).join("");
+    body.innerHTML = `<div class="meal-nutrition-trace-source">Source du calcul : <strong>${esc(nutritionTraceSourceLabel(trace.source))}</strong></div>${rows}`;
+    dialog.showModal();
+  }
+
   function nutritionFromInputs() {
     const get = (id) => {
       const value = $(id)?.value;
@@ -3455,6 +3487,8 @@ function formatSleepDuration(hours) {
   }
   function fillNutritionInputs(n, note = "") {
     n = normalNutrition(n);
+    currentMealNutritionTrace = n?.trace || null;
+    ensureMealNutritionTraceUi();
     // Updating an estimate, a barcode or a photo must not replace a manual value.
     if ($("#mealCalorieMode")?.value === "manual") {
       n = { ...(n || {}), calories: Metrics.number($("#mealCalories").value), caloriesManual: true };
@@ -3537,6 +3571,8 @@ function formatSleepDuration(hours) {
     $("#mealCalorieStatus").textContent = manual ? t("Ajustées par vous")
       : input.value !== "" ? t(automaticStatus) : t("Aucune estimation disponible · saisie facultative");
     $("#resetMealCalories").hidden = !manual;
+    const traceLink = $("#mealNutritionTraceLink");
+    if (traceLink) traceLink.hidden = manual || !currentMealNutritionTrace?.items?.length;
     updateMealCalorieTargetGauge();
   }
   function resetMealCalories() {
