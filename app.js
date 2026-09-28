@@ -2838,6 +2838,8 @@ function formatSleepDuration(hours) {
         categoryIds.add("nuts");
       if (tags.some((tag) => ["produit laitier", "dairy"].includes(tag)) && !isPlantMilk)
         categoryIds.add("dairy");
+      if ((Number(nutrients?.fat) || 0) >= 1)
+        categoryIds.add("direct_fat");
       if ((Number(nutrients?.fiber) || 0) >= 1)
         categoryIds.add("direct_fiber");
       if ((Number(nutrients?.carbs) || 0) >= 10)
@@ -2852,17 +2854,17 @@ function formatSleepDuration(hours) {
   function mealCompositionUi() {
     const packs = {
       "fr-CA": {
-        labels: { protein: "Protéines", fiber: "Fibres", carbs: "Glucides", carbs_low: "Peu de glucides", dairy: "Laitiers", soy: "Soya", gluten: "Gluten", eggs: "Œufs", nuts: "Noix" },
+        labels: { protein: "Protéines", fat: "Lipides", fiber: "Fibres", carbs: "Glucides", carbs_low: "Peu de glucides", dairy: "Laitiers", soy: "Soya", gluten: "Gluten", eggs: "Œufs", nuts: "Noix" },
         status: { confirmed: "confirmé", probable: "probable", possible: "possible", missing: "à préciser" },
         hint: "Pour améliorer l’estimation des calories, ajoute les quantités quand tu les connais : 150 g de poulet, 1 tasse de riz, 1 tasse de brocoli. C’est facultatif.", recognized: "Éléments reconnus", written: "Selon les ingrédients écrits", usual: "Composition habituelle — la recette peut varier", recognizedSuffix: "reconnu", usually: "Habituellement", kept: "Description conservée telle quelle", complete: "Préciser le repas", continue: "Continuer ainsi",
       },
       "fr-FR": {
-        labels: { protein: "Protéines", fiber: "Fibres", carbs: "Glucides", carbs_low: "Peu de glucides", dairy: "Laitiers", soy: "Soja", gluten: "Gluten", eggs: "Œufs", nuts: "Noix" },
+        labels: { protein: "Protéines", fat: "Lipides", fiber: "Fibres", carbs: "Glucides", carbs_low: "Peu de glucides", dairy: "Laitiers", soy: "Soja", gluten: "Gluten", eggs: "Œufs", nuts: "Noix" },
         status: { confirmed: "confirmé", probable: "probable", possible: "possible", missing: "à préciser" },
         hint: "Pour améliorer l’estimation des calories, ajoute les quantités quand tu les connais : 150 g de poulet, 1 tasse de riz, 1 tasse de brocoli. C’est facultatif.", recognized: "Éléments reconnus", written: "Selon les ingrédients indiqués", usual: "Composition habituelle — la recette peut varier", recognizedSuffix: "reconnu", usually: "Habituellement", kept: "Description conservée telle quelle", complete: "Préciser le repas", continue: "Continuer ainsi",
       },
       en: {
-        labels: { protein: "Protein", fiber: "Fiber", carbs: "Carbs", carbs_low: "Low carbs", dairy: "Dairy", soy: "Soy", gluten: "Gluten", eggs: "Eggs", nuts: "Nuts" },
+        labels: { protein: "Protein", fat: "Fat", fiber: "Fiber", carbs: "Carbs", carbs_low: "Low carbs", dairy: "Dairy", soy: "Soy", gluten: "Gluten", eggs: "Eggs", nuts: "Nuts" },
         status: { confirmed: "confirmed", probable: "probable", possible: "possible", missing: "needs details" },
         hint: "For a better calorie estimate, add quantities when you know them: 150 g chicken, 1 cup rice, 1 cup broccoli. This is optional.", recognized: "Recognized elements", written: "Based on the ingredients entered", usual: "Typical composition — recipes may vary", recognizedSuffix: "recognized", usually: "Usually", kept: "Description kept as entered", complete: "Add meal details", continue: "Continue as is",
       },
@@ -2881,6 +2883,7 @@ function formatSleepDuration(hours) {
       label = ui.labels[trait] || fallbackLabels[trait] || trait.replaceAll("_", " "),
       icons = {
         protein: "🥩",
+        fat: "🫒",
         fiber: "🌿",
         carbs: "🍞",
         carbs_low: "🍞",
@@ -2916,19 +2919,14 @@ function formatSleepDuration(hours) {
       section.hidden = true;
       return;
     }
-    const lowCarbs = analysis.status("carbs") === "unknown" && analysis.status("carbs_low") !== "unknown"
-      ? compositionTraitChip("carbs_low", analysis.status("carbs_low"))
-      : "";
-    const missing = ["protein", "fiber", "carbs"].filter(
+    const missing = ["protein", "fat", "carbs", "fiber"].filter(
       (trait) => analysis.status(trait) === "unknown",
-    ).filter((trait) => trait !== "carbs" || !lowCarbs);
-    const coreTraits = new Set(["protein", "fiber", "carbs"]),
-      visibleTraits = ["protein", "fiber", "carbs"],
+    );
+    const coreTraits = new Set(["protein", "fat", "carbs", "fiber"]),
+      visibleTraits = ["protein", "fat", "carbs", "fiber"],
       chips = visibleTraits
         .map((trait) => {
           const certainty = analysis.status(trait);
-          if (trait === "carbs" && certainty === "unknown" && lowCarbs)
-            return lowCarbs;
           if (certainty === "unknown")
             return coreTraits.has(trait)
               ? compositionTraitChip(trait, "missing")
