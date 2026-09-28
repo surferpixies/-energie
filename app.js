@@ -1599,6 +1599,23 @@ function formatSleepDuration(hours) {
       updatedAt: new Date().toISOString(),
     };
   }
+  function cloudMemoryRows(state) {
+    const merged = new Map();
+
+    (state?.memories || []).forEach((memory) => {
+      const normalized = String(memory?.normalizedLabel || "").trim();
+      if (!normalized) return;
+
+      const existing = merged.get(normalized);
+      merged.set(
+        normalized,
+        existing ? mergeMemoryRecord(existing, memory) : memory,
+      );
+    });
+
+    return [...merged.values()].map(memoryToCloudRow);
+  }
+
   async function syncMemoryCloud() {
     if (db.settings?.demoLab?.scenarioId) return true;
     if (!localJournalMatchesSession()) return false;
@@ -1613,11 +1630,11 @@ function formatSleepDuration(hours) {
     memorySyncBusy = true;
     try {
       const state = brainMemoryState();
-      const rows = (state?.memories || []).map(memoryToCloudRow);
+      const rows = cloudMemoryRows(state);
       if (!rows.length) return true;
       const { error } = await client
         .from(MEMORY_CLOUD_TABLE)
-        .upsert(rows, { onConflict: "id" });
+        .upsert(rows, { onConflict: "user_id,normalized_label" });
       if (error) throw error;
       return true;
     } catch (error) {
@@ -1654,11 +1671,11 @@ function formatSleepDuration(hours) {
         .delete()
         .eq("user_id", session.user.id);
       if (deleteError) throw deleteError;
-      const rows = (state?.memories || []).map(memoryToCloudRow);
+      const rows = cloudMemoryRows(state);
       if (rows.length) {
         const { error: upsertError } = await client
           .from(MEMORY_CLOUD_TABLE)
-          .upsert(rows, { onConflict: "id" });
+          .upsert(rows, { onConflict: "user_id,normalized_label" });
         if (upsertError) throw upsertError;
       }
       return true;
@@ -9756,19 +9773,48 @@ function formatSleepDuration(hours) {
       m = Math.round(n % 60);
     return `${h} h ${String(m).padStart(2, "0")}`;
   }
+  const foodTagNormalizationCache = new WeakMap(),
+    foodTagsTextCache = new Map();
+
   function foodTagsInText(value) {
-    const text = ` ${normalizeFoodText(value)} `,
+    const normalizedText = normalizeFoodText(value);
+    if (!normalizedText.trim()) return new Set();
+
+    const cached = foodTagsTextCache.get(normalizedText);
+    if (cached) return new Set(cached);
+
+    const text = ` ${normalizedText} `,
       tags = new Set();
-    if (!text.trim()) return tags;
+
     FOOD_MACROS.forEach((food) => {
-      const found = (food.keys || []).some((key) => {
-        const normalized = normalizeFoodText(key);
-        return normalized && text.includes(` ${normalized} `);
-      });
-      if (found)
-        (food.tags || []).forEach((tag) => tags.add(normalizeFoodText(tag)));
+      let normalized = foodTagNormalizationCache.get(food);
+
+      if (!normalized) {
+        normalized = {
+          keys: (food.keys || [])
+            .map((key) => normalizeFoodText(key))
+            .filter(Boolean),
+          tags: (food.tags || [])
+            .map((tag) => normalizeFoodText(tag))
+            .filter(Boolean),
+        };
+        foodTagNormalizationCache.set(food, normalized);
+      }
+
+      const found = normalized.keys.some((key) =>
+        text.includes(` ${key} `),
+      );
+
+      if (found) normalized.tags.forEach((tag) => tags.add(tag));
     });
-    return tags;
+
+    const result = [...tags];
+
+    // Éviter que le cache grossisse indéfiniment.
+    if (foodTagsTextCache.size >= 300) foodTagsTextCache.clear();
+
+    foodTagsTextCache.set(normalizedText, result);
+    return new Set(result);
   }
   function learnedHabitInsight(meals) {
     const cutoff = new Date();
@@ -10194,17 +10240,35 @@ function formatSleepDuration(hours) {
       const categoryIds = new Set(
         window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(rawText) || [],
       );
-      const nutrition = normalNutrition(meal.nutrition) ||
-        estimateNutritionFromText(rawText);
+      const savedNutrition = normalNutrition(meal.nutrition);
+      let estimatedNutrition = null,
+        nutritionEstimated = false;
+
       groups.forEach((group) => {
         const categoryMatch = (group.categories || []).some((id) =>
           categoryIds.has(id),
         );
-        const nutrientMatch =
-          group.nutrient &&
-          Number.isFinite(Number(nutrition?.[group.nutrient])) &&
-          Number(nutrition[group.nutrient]) >= group.nutrientMinimum;
         const wordMatch = group.words.some((word) => text.includes(word));
+
+        // L'estimation nutritionnelle à partir du texte est relativement
+        // coûteuse. Ne la lancer que si ni la catégorie ni les mots-clés
+        // n'ont déjà permis de reconnaître ce groupe.
+        let nutrientMatch = false;
+        if (!categoryMatch && !wordMatch && group.nutrient) {
+          let nutrition = savedNutrition;
+
+          if (!nutrition && !nutritionEstimated) {
+            nutritionEstimated = true;
+            estimatedNutrition = estimateNutritionFromText(rawText);
+          }
+
+          nutrition = nutrition || estimatedNutrition;
+
+          nutrientMatch =
+            Number.isFinite(Number(nutrition?.[group.nutrient])) &&
+            Number(nutrition[group.nutrient]) >= group.nutrientMinimum;
+        }
+
         if (categoryMatch || nutrientMatch || wordMatch) counts[group.key]++;
       });
     });
@@ -10737,24 +10801,64 @@ function formatSleepDuration(hours) {
     };
   }
 
+  let observationAnalysisCache = {
+    key: "",
+    report: null,
+  };
+
+  function observationAnalysisCacheKey(meals) {
+    const lastMeal = meals?.length ? meals[meals.length - 1] : null;
+
+    return [
+      db.updatedAt || "initial",
+      selectedDate || "",
+      meals?.length || 0,
+      lastMeal?.id || "",
+      lastMeal?.date || "",
+      db.settings?.demoMode ? db.settings?.demoProfileId || "demo" : "user",
+      db.settings?.insightsEnabled === false ? "off" : "on",
+      window.ENERGIE_LOCALE || "fr-CA",
+    ].join("|");
+  }
+
+  function cachedObservationAnalysis(meals) {
+    if (!db.settings?.insightsEnabled || !window.EnergieObservationEngine)
+      return null;
+
+    const key = observationAnalysisCacheKey(meals);
+
+    if (
+      observationAnalysisCache.key === key &&
+      observationAnalysisCache.report
+    ) {
+      return observationAnalysisCache.report;
+    }
+
+    const report = window.EnergieObservationEngine.analyze(db, {
+      meals,
+      limit: 3,
+      lookbackDays: 180,
+      locale: window.ENERGIE_LOCALE || "fr-CA",
+    });
+
+    observationAnalysisCache = {
+      key,
+      report,
+    };
+
+    return report;
+  }
+
   function canonicalObservationReport(meals) {
-    const base =
-      db.settings.insightsEnabled && window.EnergieObservationEngine
-        ? window.EnergieObservationEngine.analyze(db, {
-            meals,
-            limit: 3,
-            lookbackDays: 180,
-            locale: window.ENERGIE_LOCALE || "fr-CA",
-          })
-        : {
-            observations: [],
-            maturity: {
-              icon: "🌱",
-              label: "Ton journal apprend encore",
-              days: 0,
-              analyzableDays: 0,
-            },
-          };
+    const base = cachedObservationAnalysis(meals) || {
+      observations: [],
+      maturity: {
+        icon: "🌱",
+        label: "Ton journal apprend encore",
+        days: 0,
+        analyzableDays: 0,
+      },
+    };
     const scenarioObservations = [
       labFiberHydrationObservation(),
       labShortSleepObservation(),
@@ -11794,6 +11898,18 @@ function formatSleepDuration(hours) {
     insightsRenderedDataKey = insightsDataKey();
   }
   function renderInsightsContent() {
+    const __obsTotalStart = performance.now();
+    const perf = (label, fn) => {
+      const startedAt = performance.now();
+      const result = fn();
+      console.log(
+        "[Obs perf]",
+        label + ":",
+        Math.round(performance.now() - startedAt),
+        "ms",
+      );
+      return result;
+    };
     observationExplorerResultsCache.clear();
     const realMeals = mealsThroughSelectedDate(),
       referenceBrain = activeReferenceBrain(),
@@ -11883,7 +11999,7 @@ function formatSleepDuration(hours) {
         window.ENERGIE_LOCALE || "fr-CA",
       ].join("|");
     if (insightsComputationCache?.key !== computationKey) {
-      const computedStory = dashboardStory(meals),
+      const computedStory = perf("dashboardStory", () => dashboardStory(meals)),
         story = referenceBrain
           ? { ...computedStory, ...referenceBrain.story }
           : computedStory,
@@ -11904,13 +12020,13 @@ function formatSleepDuration(hours) {
                 ).length,
               },
             }
-          : canonicalObservationReport(meals),
+          : perf("canonicalObservationReport", () => canonicalObservationReport(meals)),
         feelingMeals = referenceBrain ? meals : realMeals,
         negativeFeelings =
           referenceFeelingStats(referenceBrain) ||
-          historyNegativeFeelingStats(feelingMeals, null),
+          perf("historyNegativeFeelingStats", () => historyNegativeFeelingStats(feelingMeals, null)),
         insights = db.settings.insightsEnabled
-          ? referenceBrain?.insights || buildPersonalInsights(meals)
+          ? referenceBrain?.insights || perf("buildPersonalInsights", () => buildPersonalInsights(meals))
           : [];
       insightsComputationCache = {
         key: computationKey,
@@ -11926,13 +12042,20 @@ function formatSleepDuration(hours) {
       realMeals.length < 8
         ? `<section class="preview-banner"><div><strong>${usePreview ? "👀 Mode aperçu activé" : "📊 Tes vraies données"}</strong><p>${usePreview ? "Des données exemples montrent la présentation. Elles ne sont jamais sauvegardées." : "Les observations utilisent seulement tes repas enregistrés."}</p></div><button class="secondary small" id="togglePreview">${usePreview ? "Voir mes données" : "Voir l’aperçu"}</button></section>`
         : "";
+    const __obsBaseDomStart = performance.now();
     $("#app").innerHTML =
-      `${analysisDateNavigatorHtml()}<section class="hero"><p class="eyebrow">Tableau intelligent</p><h2>Ce qu’Énergie apprend sur toi</h2><p>Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer leurs causes.</p></section>${previewBanner}${discoverySectionHtml(discoveryReport, negativeFeelings)}<div class="grid dashboard-overview"><section class="card stat-card compact-stat-card compact-row-card dashboard-hero-card"><div class="stat-card-heading"><span>🍎</span><div><h3>Tu utilises Énergie depuis</h3><p class="muted small">Date de départ du journal</p></div></div><div class="metric metric-small">${esc(story.since)}</div></section><section class="card stat-card dashboard-mini-card"><span>⭐</span><h3>Point fort</h3><p>${esc(story.strength)}</p></section><section class="card stat-card dashboard-mini-card"><span>💡</span><h3>Habitude observée</h3><p>${esc(story.habit)}</p></section><section class="card stat-card dashboard-mini-card"><span>🎯</span><h3>Suggestion principale</h3><p>${esc(story.suggestion)}</p></section></div>${professionalDiscussionHtml(meals)}<div class="section-title"><h2>🧠 Autres observations</h2><span class="muted small">${insights.length} carte${insights.length > 1 ? "s" : ""}</span></div><div class="insight-grid">${insights.length ? insights.map(insightHtml).join("") : `<section class="card empty wide"><div class="food-art">🧠</div><p>${db.settings.insightsEnabled ? "Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles." : "Les observations sont désactivées dans les paramètres."}</p></section>`}</div>${demoDiscoveryHtml()}${usePreview && !db.settings.demoMode ? '<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>' : ""}`;
-    $("#app .hero")?.insertAdjacentHTML("afterend", personalTrendsHtml());
-    $("#app .hero")?.insertAdjacentHTML("afterend", observationExplorerHtml());
-    $(".observation-explorer-card")?.insertAdjacentHTML("afterend", weightObservationHtml());
+      `${perf("analysisDateNavigatorHtml", () => analysisDateNavigatorHtml())}<section class="hero"><p class="eyebrow">Tableau intelligent</p><h2>Ce qu’Énergie apprend sur toi</h2><p>Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer leurs causes.</p></section>${previewBanner}${perf("discoverySectionHtml", () => discoverySectionHtml(discoveryReport, negativeFeelings))}<div class="grid dashboard-overview"><section class="card stat-card compact-stat-card compact-row-card dashboard-hero-card"><div class="stat-card-heading"><span>🍎</span><div><h3>Tu utilises Énergie depuis</h3><p class="muted small">Date de départ du journal</p></div></div><div class="metric metric-small">${esc(story.since)}</div></section><section class="card stat-card dashboard-mini-card"><span>⭐</span><h3>Point fort</h3><p>${esc(story.strength)}</p></section><section class="card stat-card dashboard-mini-card"><span>💡</span><h3>Habitude observée</h3><p>${esc(story.habit)}</p></section><section class="card stat-card dashboard-mini-card"><span>🎯</span><h3>Suggestion principale</h3><p>${esc(story.suggestion)}</p></section></div>${perf("professionalDiscussionHtml", () => professionalDiscussionHtml(meals))}<div class="section-title"><h2>🧠 Autres observations</h2><span class="muted small">${insights.length} carte${insights.length > 1 ? "s" : ""}</span></div><div class="insight-grid">${insights.length ? perf("insightHtml cards", () => insights.map(insightHtml).join("")) : `<section class="card empty wide"><div class="food-art">🧠</div><p>${db.settings.insightsEnabled ? "Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles." : "Les observations sont désactivées dans les paramètres."}</p></section>`}</div>${perf("demoDiscoveryHtml", () => demoDiscoveryHtml())}${usePreview && !db.settings.demoMode ? '<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>' : ""}`;
+    console.log(
+      "[Obs perf]",
+      "base DOM insertion:",
+      Math.round(performance.now() - __obsBaseDomStart),
+      "ms",
+    );
+    $("#app .hero")?.insertAdjacentHTML("afterend", perf("personalTrendsHtml", () => personalTrendsHtml()));
+    $("#app .hero")?.insertAdjacentHTML("afterend", perf("observationExplorerHtml", () => observationExplorerHtml()));
+    $(".observation-explorer-card")?.insertAdjacentHTML("afterend", perf("weightObservationHtml", () => weightObservationHtml()));
     const personalTrends = $("#app .personal-trends");
-    (personalTrends || $("#app .hero"))?.insertAdjacentHTML("afterend", stepsObservationHtml());
+    (personalTrends || $("#app .hero"))?.insertAdjacentHTML("afterend", perf("stepsObservationHtml", () => stepsObservationHtml()));
     const explorerCard = $(".observation-explorer-card"),
       observationCollections = $(".observation-collections-stack");
     if (explorerCard && observationCollections) explorerCard.insertAdjacentElement("afterend", observationCollections);
@@ -11942,8 +12065,8 @@ function formatSleepDuration(hours) {
     const positiveReport = !usePreview && !referenceBrain
       ? discoveryReport
       : canonicalObservationReport(realMeals);
-    const positiveItems = positiveObservationItems(positiveReport);
-    $(".dashboard-overview")?.insertAdjacentHTML("beforebegin", positiveObservationSectionHtml(positiveReport));
+    const positiveItems = perf("positiveObservationItems", () => positiveObservationItems(positiveReport));
+    $(".dashboard-overview")?.insertAdjacentHTML("beforebegin", perf("positiveObservationSectionHtml", () => positiveObservationSectionHtml(positiveReport)));
     $$(".why-positive-observation").forEach((button) => {
       button.onclick = () => openDiscoveryWhy(positiveItems[Number(button.dataset.discovery)]);
     });
@@ -11951,12 +12074,19 @@ function formatSleepDuration(hours) {
       button.onclick = () => openDiscoveryMeals(positiveItems[Number(button.dataset.discovery)]);
     });
     const primaryObservationFold = $(".attention-observations-fold"),
-      secondaryObservationHtml = secondaryObservationSectionHtml(discoveryReport);
+      secondaryObservationHtml = perf("secondaryObservationSectionHtml", () => secondaryObservationSectionHtml(discoveryReport));
     if (primaryObservationFold && secondaryObservationHtml)
       primaryObservationFold.insertAdjacentHTML(
         "afterend",
         secondaryObservationHtml,
       );
+    console.log(
+      "[Obs perf]",
+      "TOTAL avant bindings:",
+      Math.round(performance.now() - __obsTotalStart),
+      "ms",
+    );
+
     $("#togglePreview")?.addEventListener("click", () => {
       sessionStorage.setItem("dashboardPreview", usePreview ? "off" : "on");
       insightsRenderedDataKey = "";
@@ -12162,6 +12292,99 @@ function formatSleepDuration(hours) {
       return `<section class="card"><div class="brain-section-head"><div><h2>🔎 Observations personnalisées</h2><p class="muted small">Le moteur compare ton propre historique avec prudence.</p></div></div><div class="brain-insight-empty"><span>🌱</span><h3>Le Cerveau rassemble encore des preuves</h3><p class="muted">Il faut plusieurs journées comparables dans chaque groupe avant qu’une association apparaisse. Aucune conclusion ne sera forcée.</p></div></section>`;
     return `<section><div class="brain-section-head"><div><h2>🔎 Observations personnalisées</h2><p class="muted small">Associations détectées dans ${report.analyzedDays} journées récentes.</p></div><span class="muted small">${report.insights.length}</span></div><div class="brain-insight-grid">${report.insights.map(brainInsightCard).join("")}</div><p class="discovery-disclaimer">Ces observations décrivent des associations dans ton propre journal. Elles ne prouvent aucune cause et ne remplacent jamais un avis médical.</p></section>`;
   }
+  const BRAIN_COVERAGE_FOOD_CACHE_KEY =
+    "energie-brain-coverage-food-facts-v1";
+
+  let brainCoverageFoodFactsCache = null,
+    brainCoverageFoodCacheSaveTimer = null;
+
+  function loadBrainCoverageFoodFactsCache() {
+    if (brainCoverageFoodFactsCache) return brainCoverageFoodFactsCache;
+
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(BRAIN_COVERAGE_FOOD_CACHE_KEY) || "{}",
+      );
+
+      brainCoverageFoodFactsCache =
+        saved && typeof saved === "object" ? saved : {};
+    } catch (_) {
+      brainCoverageFoodFactsCache = {};
+    }
+
+    return brainCoverageFoodFactsCache;
+  }
+
+  function scheduleBrainCoverageFoodCacheSave() {
+    clearTimeout(brainCoverageFoodCacheSaveTimer);
+
+    brainCoverageFoodCacheSaveTimer = setTimeout(() => {
+      try {
+        const cache = loadBrainCoverageFoodFactsCache();
+        const entries = Object.entries(cache);
+
+        // Limite prudente pour éviter de faire grossir localStorage indéfiniment.
+        if (entries.length > 500) {
+          brainCoverageFoodFactsCache = Object.fromEntries(
+            entries.slice(-500),
+          );
+        }
+
+        localStorage.setItem(
+          BRAIN_COVERAGE_FOOD_CACHE_KEY,
+          JSON.stringify(brainCoverageFoodFactsCache),
+        );
+      } catch (error) {
+        console.warn("Cache couverture alimentaire non sauvegardé", error);
+      }
+    }, 250);
+  }
+
+  function brainCoverageFoodFacts(description = "") {
+    const key = String(description || "").trim(),
+      cache = loadBrainCoverageFoodFactsCache();
+
+    if (cache[key]) return cache[key];
+
+    const composition = mealCompositionAnalysis(key),
+      recognized = (trait) =>
+        ["confirmed", "probable"].includes(
+          composition?.status?.(trait),
+        ),
+      parsedFoods =
+        window.EnergieBrainModules?.parser?.parseMeal?.(
+          key,
+          { memory: false },
+        )?.foods || [];
+
+    const facts = {
+      protein: recognized("protein"),
+      fiber: recognized("fiber"),
+      carbs: recognized("carbs"),
+      carbsLow: recognized("carbs_low"),
+      precise:
+        Boolean(composition) &&
+        ["protein", "fiber", "carbs"].some(recognized),
+      names: [
+        ...new Set(
+          parsedFoods
+            .map(
+              (item) =>
+                item.food?.names?.["fr-CA"] ||
+                item.matchedAlias ||
+                item.id,
+            )
+            .filter(Boolean),
+        ),
+      ],
+    };
+
+    cache[key] = facts;
+    scheduleBrainCoverageFoodCacheSave();
+
+    return facts;
+  }
+
   function brainCoverageData(windowDays = 60) {
     const anchorKey = db.settings?.demoMode ? selectedDate : todayKey(),
       anchor = new Date(`${anchorKey}T12:00:00`),
@@ -12195,19 +12418,19 @@ function formatSleepDuration(hours) {
         EATING_REASON_META.map((reason) => [reason.id, 0]),
       );
     meals.forEach((meal) => {
-      const composition = mealCompositionAnalysis(meal.description || ""),
-        recognized = (trait) => ["confirmed", "probable"].includes(composition?.status?.(trait));
-      if (composition && ["protein", "fiber", "carbs"].some(recognized)) counts.precise += 1;
-      if (recognized("protein")) counts.protein += 1;
-      if (recognized("fiber")) counts.fiber += 1;
-      if (recognized("carbs") || recognized("carbs_low")) counts.carbs += 1;
+      const facts = brainCoverageFoodFacts(meal.description || "");
+
+      if (facts.precise) counts.precise += 1;
+      if (facts.protein) counts.protein += 1;
+      if (facts.fiber) counts.fiber += 1;
+      if (facts.carbs || facts.carbsLow) counts.carbs += 1;
       if (meal.nutrition?.sugars != null) counts.sugars += 1;
       if (meal.nutrition?.sodium != null) counts.sodium += 1;
-      const parsedFoods = window.EnergieBrainModules?.parser?.parseMeal?.(meal.description || "", { memory: false })?.foods || [];
-      const names = new Set(parsedFoods.map((item) =>
-        item.food?.names?.["fr-CA"] || item.matchedAlias || item.id,
-      ).filter(Boolean));
-      names.forEach((name) => { foodCounts[name] = (foodCounts[name] || 0) + 1; });
+
+      (facts.names || []).forEach((name) => {
+        foodCounts[name] = (foodCounts[name] || 0) + 1;
+      });
+
       normalizeEatingReasons(meal.eatingReasons).forEach((reason) => {
         if (Object.prototype.hasOwnProperty.call(reasonCounts, reason))
           reasonCounts[reason] += 1;
@@ -12262,7 +12485,16 @@ function formatSleepDuration(hours) {
     return `<section class="card brain-eating-reasons-card"><div class="brain-section-head"><div><h2>💭 Ce qui t’amène à manger</h2><p class="muted small">Répartition des raisons consignées durant les ${data.windowDays} derniers jours.</p></div><span class="brain-reasons-coverage">${reasons.coverage}% documenté</span></div><div class="brain-reasons-summary"><strong>${documented}/${mealTotal}</strong><span>repas et collations avec au moins une raison</span></div><div class="brain-reasons-list">${reasons.items.map((reason) => `<div class="brain-reason-row"><span class="brain-reason-icon">${reason.icon}</span><div><strong>${esc(reason.label)}</strong><i><em style="width:${reason.percent}%"></em></i></div><b>${reason.count}<small>${reason.percent}%</small></b></div>`).join("")}</div><p class="muted tiny brain-reasons-note">Plusieurs raisons peuvent être sélectionnées pour un même repas; les pourcentages peuvent donc dépasser 100 % au total. Cette répartition décrit seulement ce que tu as consigné.</p></section>`;
   }
   function renderBrain() {
+    const __brainTotalStart = performance.now();
+    const __brainCoverageStart = performance.now();
     const data = brainCoverageData(60), dayTotal = data.dayTotal, mealTotal = data.mealTotal;
+
+    console.log(
+      "[Brain perf]",
+      "brainCoverageData:",
+      Math.round(performance.now() - __brainCoverageStart),
+      "ms",
+    );
     const message = data.quality >= 75
       ? "Ton journal contient une base solide pour produire des observations prudentes."
       : data.quality >= 40
@@ -12284,6 +12516,12 @@ function formatSleepDuration(hours) {
     const learningParagraph = $("#app .stack > section.card:last-child > p:first-of-type");
     if (learningParagraph && mealTotal)
       learningParagraph.textContent = `Énergie dispose de ${mealTotal} repas et collations sur cette période. Continue surtout à préciser les ingrédients et à noter les ressentis après les entrées alimentaires : ce sont les données les plus utiles pour produire des observations fiables.`;
+    console.log(
+      "[Brain perf]",
+      "TOTAL renderBrain:",
+      Math.round(performance.now() - __brainTotalStart),
+      "ms",
+    );
     bindAnalysisDateNavigator();
   }
 
@@ -15952,12 +16190,7 @@ function formatSleepDuration(hours) {
       return null;
     let report;
     try {
-      report = window.EnergieObservationEngine.analyze(db, {
-        meals,
-        limit: 3,
-        lookbackDays: 180,
-        locale: window.ENERGIE_LOCALE || "fr-CA",
-      });
+      report = cachedObservationAnalysis(meals);
     } catch (_) {
       return null;
     }
