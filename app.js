@@ -11778,19 +11778,15 @@ function formatSleepDuration(hours) {
     ) {
       return;
     }
-    // The loading state is useful on the first visit only. Subsequent refreshes
-    // update the content directly so opening cards/navigation never feels like
-    // a full page reload.
+    // Do not deliberately add an extra animation-frame + timer before doing the
+    // analysis. On slower phones that made a real computation feel even longer.
+    // Keep the existing Observations DOM visible during later recomputations.
     if (!insightsHasRendered) {
-      app.innerHTML = `<section class="hero observations-loading-hero"><p class="eyebrow">Cerveau et observations</p><h2>J’ouvre tes observations…</h2><p>Les informations déjà calculées apparaîtront dans un instant.</p></section><section class="card observations-loading-card" aria-live="polite"><span class="observations-loading-brain" aria-hidden="true">🧠</span><div><strong>Analyse</strong><small>Je rassemble tes tendances.</small></div><i aria-hidden="true"></i></section>`;
-      requestAnimationFrame(() =>
-        setTimeout(() => {
-          if (request !== insightsRenderRequest || currentView !== "insights") return;
-          renderInsightsContent();
-          insightsHasRendered = true;
-          insightsRenderedDataKey = insightsDataKey();
-        }, 0),
-      );
+      app.innerHTML = `<section class="hero observations-loading-hero"><p class="eyebrow">Cerveau et observations</p><h2>J’ouvre tes observations…</h2><p>Les informations déjà calculées apparaîtront dans un instant.</p></section><section class="card observations-loading-card" aria-live="polite"><span class="observations-loading-brain" aria-hidden="true">🧠</span><div><strong>Analyse de ton journal</strong><small>Énergie rassemble tes ressentis et tes tendances.</small></div><i aria-hidden="true"></i></section>`;
+      if (request !== insightsRenderRequest || currentView !== "insights") return;
+      renderInsightsContent();
+      insightsHasRendered = true;
+      insightsRenderedDataKey = insightsDataKey();
       return;
     }
     renderInsightsContent();
@@ -11940,8 +11936,12 @@ function formatSleepDuration(hours) {
     const explorerCard = $(".observation-explorer-card"),
       observationCollections = $(".observation-collections-stack");
     if (explorerCard && observationCollections) explorerCard.insertAdjacentElement("afterend", observationCollections);
-    // Never manufacture positive observations from the dashboard's preview meals.
-    const positiveReport = canonicalObservationReport(realMeals);
+    // Reuse the canonical analysis already computed above when it was based on
+    // the user's real meals. Running the observation engine twice here is costly,
+    // especially in WKWebView on iPhone.
+    const positiveReport = !usePreview && !referenceBrain
+      ? discoveryReport
+      : canonicalObservationReport(realMeals);
     const positiveItems = positiveObservationItems(positiveReport);
     $(".dashboard-overview")?.insertAdjacentHTML("beforebegin", positiveObservationSectionHtml(positiveReport));
     $$(".why-positive-observation").forEach((button) => {
