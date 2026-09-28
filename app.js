@@ -1833,11 +1833,11 @@ function formatSleepDuration(hours) {
     meal.photoLocal = first?.local || null;
     return meal;
   }
-  async function signedPhoto(path) {
+  async function signedPhoto(path, expiresIn = 3600) {
     if (!path || !client) return null;
     const { data, error } = await client.storage
       .from("meal-photos")
-      .createSignedUrl(path, 3600);
+      .createSignedUrl(path, expiresIn);
     return error ? null : data.signedUrl;
   }
   function syncOperationKey(op) {
@@ -4768,7 +4768,11 @@ function formatSleepDuration(hours) {
       if (error) throw error;
       professionalClientLinks = data || [];
       clientProfessionalLink = professionalClientLinks.find((link) => link.status === "active" && link.client_user_id === session.user.id) || null;
-      if (clientProfessionalLink) await loadClientProfessionalFollowup();
+      if (clientProfessionalLink) {
+        db.settings.shareMealPhotosWithProfessional =
+          clientProfessionalLink.share_photos === true;
+        await loadClientProfessionalFollowup();
+      }
     } catch (error) {
       // La bêta reste invisible tant que la migration Supabase n'est pas installée.
       console.info("Suivi professionnel bêta non configuré:", error?.message || error);
@@ -4844,17 +4848,55 @@ function formatSleepDuration(hours) {
     }
     alert("Impossible de générer un code unique. Réessaie.");
   }
+  async function setProfessionalPhotoSharing(enabled) {
+    if (!client || !session || !clientProfessionalLink?.id) return;
+
+    const { error } = await client.rpc(
+      "set_professional_photo_sharing",
+      {
+        p_link_id: clientProfessionalLink.id,
+        p_enabled: enabled === true,
+      },
+    );
+
+    if (error) throw error;
+
+    clientProfessionalLink.share_photos = enabled === true;
+    professionalClientLinks = professionalClientLinks.map((link) =>
+      link.id === clientProfessionalLink.id
+        ? { ...link, share_photos: enabled === true }
+        : link
+    );
+  }
+
   async function acceptProfessionalInvite(code) {
     if (!client || !session || !code) return;
+
+    const sharePhotos =
+      db.settings.shareMealPhotosWithProfessional === true;
+
     const { error } = await client.rpc("accept_professional_invite", {
       p_invite_code: String(code).trim().toUpperCase(),
       p_client_label: clientProfileLabel(),
     });
+
     if (error) {
       alert(`Invitation non reconnue : ${error.message}`);
       return;
     }
+
     await loadProfessionalBetaState();
+
+    try {
+      await setProfessionalPhotoSharing(sharePhotos);
+      await loadProfessionalBetaState();
+    } catch (photoError) {
+      console.warn(
+        "Partage des photos non appliqué:",
+        photoError?.message || photoError,
+      );
+    }
+
     renderProfile();
     alert("Le suivi professionnel est maintenant lié à ton compte. Tu peux retirer cet accès en tout temps.");
   }
@@ -4877,11 +4919,11 @@ function formatSleepDuration(hours) {
       return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-overview"><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""} en attente</small></span></div><div class="professional-invite-primary-action"><button type="button" class="primary" id="createProfessionalInvite">✉️ Envoyer une nouvelle invitation par courriel</button></div></div><div class="professional-mode-action"><button type="button" class="primary" id="openProfessionalBeta">Ouvrir l’espace professionnel</button></div><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
     }
     if (clientProfessionalLink) {
-      return `<section class="card professional-client-link-card"><p class="eyebrow">Suivi professionnel</p><h3>👩‍⚕️ Suivi lié à ${esc(clientProfessionalLink.professional_label || "ton professionnel")}</h3><p class="muted small">Ton journal est partagé avec ce professionnel pour ton suivi.</p><div class="dialog-actions"><button type="button" class="secondary" id="openClientFollowup">Ouvrir mon suivi</button><button type="button" class="text-button" id="revokeProfessionalAccess">Retirer l’accès</button></div></section>`;
+      return `<section class="card professional-client-link-card"><p class="eyebrow">Suivi professionnel</p><h3>👩‍⚕️ Suivi lié à ${esc(clientProfessionalLink.professional_label || "ton professionnel")}</h3><p class="muted small">Ton journal est partagé avec ce professionnel pour ton suivi. ${clientProfessionalLink.share_photos === true ? "Les photos de repas sont également partagées." : "Les photos de repas ne sont pas partagées."}</p><div class="dialog-actions"><button type="button" class="secondary" id="openClientFollowup">Ouvrir mon suivi</button><button type="button" class="text-button" id="revokeProfessionalAccess">Retirer l’accès</button></div></section>`;
     }
-    return `<section class="card professional-client-link-card"><p class="eyebrow">Bêta</p><h3>👩‍⚕️ Lier mon suivi à un professionnel</h3><p class="muted small">Entre le code reçu. En acceptant, tu autorises ce professionnel à consulter ton journal Énergie, incluant repas, ressentis, poids, sommeil, hydratation et activité. Les photos restent exclues pour cette première bêta.</p><div class="professional-invite-accept"><input id="professionalInviteCode" type="text" maxlength="8" autocomplete="one-time-code" autocapitalize="characters" placeholder="CODE"><button type="button" class="primary" id="acceptProfessionalInvite">Accepter</button></div></section>`;
+    return `<section class="card professional-client-link-card"><p class="eyebrow">Bêta</p><h3>👩‍⚕️ Lier mon suivi à un professionnel</h3><p class="muted small">Entre le code reçu. En acceptant, tu autorises ce professionnel à consulter ton journal Énergie, incluant repas, ressentis, poids, sommeil, hydratation et activité. Les photos de repas sont partagées seulement si tu actives l’autorisation « Partager mes photos avec mon professionnel ».</p><div class="professional-invite-accept"><input id="professionalInviteCode" type="text" maxlength="8" autocomplete="one-time-code" autocapitalize="characters" placeholder="CODE"><button type="button" class="primary" id="acceptProfessionalInvite">Accepter</button></div></section>`;
   }
-  function professionalDbFromCloud(dayRows, mealRows) {
+  function professionalDbFromCloud(dayRows, mealRows, sharePhotos = false) {
     const out = freshDB();
     out.settings.showWelcome = false;
     for (const r of dayRows || []) {
@@ -4904,13 +4946,56 @@ function formatSleepDuration(hours) {
       d.meals.push(normalMeal({
         id: r.id, date: r.meal_date, time: (r.meal_time || "").slice(0,5), type: r.meal_type,
         description: r.description, fatigueBefore: r.fatigue_before, fatigueAfter: r.fatigue_after,
-        notes: r.notes, feeling: r.feeling || null, feelingNotifiedAt: r.feeling_notified_at || null,
-        nutrition: r.nutrition || null, recommendation: r.recommendation || null,
-        createdAt: r.created_at, updatedAt: r.updated_at,
+        notes: r.notes,
+        photoPath: sharePhotos ? (r.photo_path || null) : null,
+        photos: sharePhotos
+          ? (
+              Array.isArray(r.photo_paths) && r.photo_paths.length
+                ? r.photo_paths.slice(0, 3).map((path) => ({
+                    path,
+                    url: null,
+                    local: null,
+                  }))
+                : r.photo_path
+                  ? [{ path: r.photo_path, url: null, local: null }]
+                  : []
+            )
+          : [],
+        feeling: r.feeling || null,
+        feelingNotifiedAt: r.feeling_notified_at || null,
+        nutrition: r.nutrition || null,
+        recommendation: r.recommendation || null,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
       }, r.meal_date));
     }
     return out;
   }
+
+  async function hydrateProfessionalPhotoUrls() {
+    if (!professionalActiveClient?.link?.share_photos) return;
+
+    for (const meal of allMeals()) {
+      const photos = Array.isArray(meal.photos)
+        ? meal.photos
+        : [];
+
+      for (const photo of photos) {
+        if (!photo?.path || photo.url) continue;
+
+        // URL courte pour le mode professionnel.
+        const url = await signedPhoto(photo.path, 300);
+        if (url) photo.url = url;
+      }
+
+      const first = photos[0] || null;
+
+      meal.photoPath = first?.path || null;
+      meal.photoUrl = first?.url || null;
+      meal.photoLocal = null;
+    }
+  }
+
   async function loadProfessionalClientWorkspace(clientId) {
     const link = professionalClientLinks.find((item) => item.status === "active" && item.client_user_id === clientId);
     if (!link || !client || !session) return;
@@ -4926,7 +5011,11 @@ function formatSleepDuration(hours) {
       return;
     }
     if (!professionalPersonalDb) professionalPersonalDb = db;
-    db = professionalDbFromCloud(daysResult.data || [], mealsResult.data || []);
+    db = professionalDbFromCloud(
+      daysResult.data || [],
+      mealsResult.data || [],
+      link.share_photos === true,
+    );
     professionalActiveClient = { id: clientId, name: link.client_label || "Client Énergie", linkId: link.id, link };
     professionalNotesCache = (notesResult.data || []).map((note) => ({
       id: note.id, clientId, visibility: note.visibility, contextType: note.context_type,
@@ -4937,6 +5026,10 @@ function formatSleepDuration(hours) {
       clientId, feelingIds: normalizeFeelingIds(planResult.data.feeling_ids || []), updatedAt: planResult.data.updated_at,
     } : { clientId, feelingIds: [], updatedAt: new Date().toISOString() };
     professionalBetaMode = true;
+
+    if (link.share_photos === true)
+      await hydrateProfessionalPhotoUrls();
+
     currentView = "followup";
     render();
   }
@@ -13419,9 +13512,32 @@ function formatSleepDuration(hours) {
     toggleSetting("#settingRecommendations", "generalRecommendations");
     toggleSetting("#settingSources", "showSources");
     toggleSetting("#settingProfessionalSupport", "professionalSupport");
-    $("#settingShareMealPhotos")?.addEventListener("change", (event) => {
-      db.settings.shareMealPhotosWithProfessional = event.target.checked;
+    $("#settingShareMealPhotos")?.addEventListener("change", async (event) => {
+      const previous =
+        db.settings.shareMealPhotosWithProfessional === true;
+      const enabled = event.target.checked === true;
+
+      db.settings.shareMealPhotosWithProfessional = enabled;
       persistProfilePreference("partage-photos-professionnel");
+
+      if (!clientProfessionalLink?.id) return;
+
+      try {
+        await setProfessionalPhotoSharing(enabled);
+      } catch (error) {
+        console.error("Partage photos professionnel", error);
+
+        db.settings.shareMealPhotosWithProfessional = previous;
+        event.target.checked = previous;
+
+        persistProfilePreference(
+          "partage-photos-professionnel-restauration",
+        );
+
+        alert(
+          "Le réglage des photos n’a pas pu être modifié. Réessaie.",
+        );
+      }
     });
     const feelingToggle = $("#settingFeelingReminders");
     if (feelingToggle)
