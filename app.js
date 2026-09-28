@@ -2692,6 +2692,13 @@ function formatSleepDuration(hours) {
       unit = "(kg|kilogrammes?|g|grammes?|grams?|ml|millilitres?|l|litres?|tasses?|cups?|c\\.?\\s*a\\s*soupe|cuilleres?\\s*a\\s*soupe|tbsp|c\\.?\\s*a\\s*the|cuilleres?\\s*a\\s*the|tsp)";
     return new RegExp(`^${number}\\s*${unit}$`, "i").test(raw);
   }
+  function mealNaturalCountFromText(text) {
+    const raw = normalizeFoodText(text);
+    const match = raw.match(/^(\d+(?:[.,]\d+)?)\s+/);
+    if (!match) return null;
+    const value = mealQuantityNumber(match[1]);
+    return value != null ? value : null;
+  }
   function nutritionScaleForSegment(segment, food) {
     const entered = mealQuantityFromText(segment),
       explicitReference = mealReferenceQuantity(food?.portion),
@@ -2703,12 +2710,23 @@ function formatSleepDuration(hours) {
         : entered && gramsReference?.unit === entered.unit
           ? gramsReference
           : explicitReference || gramsReference;
-    if (!entered || !reference || entered.unit !== reference.unit || reference.value <= 0)
-      return { scale: 1, quantityUsed: false };
-    const scale = entered.value / reference.value;
-    return Number.isFinite(scale) && scale > 0 && scale <= 20
-      ? { scale, quantityUsed: true }
-      : { scale: 1, quantityUsed: false };
+    if (entered && reference && entered.unit === reference.unit && reference.value > 0) {
+      const scale = entered.value / reference.value;
+      return Number.isFinite(scale) && scale > 0 && scale <= 20
+        ? { scale, quantityUsed: true, quantityKind: "measured", enteredQuantity: entered }
+        : { scale: 1, quantityUsed: false };
+    }
+    const naturalCount = mealNaturalCountFromText(segment);
+    if (naturalCount != null && naturalCount <= 20) {
+      // FCÉN rows with a portion such as "1 egg" / "1 slice" are already
+      // expressed per natural portion. A bare leading count therefore scales
+      // that portion directly instead of being ignored.
+      const portionText = normalizeFoodText(food?.portion || "");
+      const countablePortion = /\b(oeuf|egg|tranche|slice|piece|morceau|fruit|pomme|apple|banane|banana)\b/.test(portionText);
+      if (countablePortion)
+        return { scale: naturalCount, quantityUsed: true, quantityKind: "count", enteredCount: naturalCount };
+    }
+    return { scale: 1, quantityUsed: false };
   }
   function mealNutritionRecognition(text) {
     const value = String(text || "").trim(),
@@ -3024,7 +3042,7 @@ function formatSleepDuration(hours) {
             source: x.food?.nutritionSource === "cnf" ? "cnf" : "energie-foods",
             cnfFoodId: x.food?.cnfFoodId || null,
             matchedName: x.food?.cnfNameFr || x.food?.keys?.[0] || "",
-            enteredQuantity: entered ? { ...entered } : null,
+            enteredQuantity: entered ? { ...entered } : (x.enteredCount != null ? { value: x.enteredCount, unit: "count" } : null),
             referencePortion: x.food?.portion || null,
             gramsPerPortion: Number(x.food?.gramsPerPortion) || null,
             scale: Math.round((Number(x.scale) || 1) * 1000) / 1000,
