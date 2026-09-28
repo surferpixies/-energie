@@ -2694,10 +2694,11 @@ function formatSleepDuration(hours) {
   }
   function mealNaturalCountFromText(text) {
     const raw = normalizeFoodText(text);
-    const match = raw.match(/^(\d+(?:[.,]\d+)?)\s+/);
+    const words = { un: 1, une: 1, one: 1, deux: 2, two: 2, trois: 3, three: 3, quatre: 4, four: 4, cinq: 5, five: 5, six: 6, sept: 7, seven: 7, huit: 8, eight: 8, neuf: 9, nine: 9, dix: 10, ten: 10 };
+    const match = raw.match(/^(\d+(?:[.,]\d+)?|un|une|one|deux|two|trois|three|quatre|four|cinq|five|six|sept|seven|huit|eight|neuf|nine|dix|ten)\s+/);
     if (!match) return null;
-    const value = mealQuantityNumber(match[1]);
-    return value != null ? value : null;
+    const value = words[match[1]] ?? mealQuantityNumber(match[1]);
+    return value != null && value > 0 ? value : null;
   }
   function nutritionScaleForSegment(segment, food) {
     const entered = mealQuantityFromText(segment),
@@ -2725,8 +2726,23 @@ function formatSleepDuration(hours) {
       const segmentText = normalizeFoodText(segment);
       const countablePortion = /\b(oeuf|egg|tranche|slice|piece|morceau|fruit|pomme|apple|banane|banana)\b/.test(portionText);
       const countableFood = /\b(oeuf|oeufs|egg|eggs)\b/.test(segmentText);
-      if (countablePortion || countableFood)
+      const sliceCount = /\b(tranche|tranches|slice|slices)\b/.test(segmentText);
+      if (countablePortion || countableFood || sliceCount) {
+        if (sliceCount && !countablePortion && Number(food?.gramsPerPortion) === 100) {
+          // The FCÉN full-catalog fallback is per 100 g. A bread slice needs an
+          // explicit portion conversion; 30 g is used only for an explicit
+          // "tranche/slice" count, never for generic bread text.
+          const gramsPerSlice = 30;
+          return {
+            scale: (naturalCount * gramsPerSlice) / 100,
+            quantityUsed: true,
+            quantityKind: "count",
+            enteredCount: naturalCount,
+            interpretedGrams: naturalCount * gramsPerSlice,
+          };
+        }
         return { scale: naturalCount, quantityUsed: true, quantityKind: "count", enteredCount: naturalCount };
+      }
     }
     return { scale: 1, quantityUsed: false };
   }
