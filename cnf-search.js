@@ -219,13 +219,16 @@
     return null;
   }
 
-  function foodFromRow(row, text) {
+  function foodFromRow(row, text, { defaultGrams = null } = {}) {
     const [id, fr, en, nutrition, portions] = row;
-    const kind = quantityKind(text);
-    let grams = 100;
-    let portion = "100 g";
+    const kind = quantityKind(text),
+      requestedDefaultGrams =
+        Number(defaultGrams) > 0 ? Number(defaultGrams) : null;
 
-    if (kind !== "g") {
+    let grams = requestedDefaultGrams || 100;
+    let portion = `${grams} g`;
+
+    if (kind !== "g" && !(kind == null && requestedDefaultGrams != null)) {
       const selected = findPortion(row, kind);
       if (selected && Number(selected[0]) > 0) {
         grams = Number(selected[0]);
@@ -328,7 +331,18 @@
     // défaut plutôt que de retomber sur l'ancienne base faute de pouvoir
     // départager des dizaines de fiches équivalentes.
     const preferred = preferredCommonFood(text);
-    if (preferred) return remember(foodFromRow(preferred, text));
+    if (preferred) {
+      const normalizedText = normalize(text),
+        chickenWithoutQuantity =
+          /\b(poulet|chicken)\b/.test(normalizedText) &&
+          quantityKind(text) == null;
+
+      return remember(
+        foodFromRow(preferred, text, {
+          defaultGrams: chickenWithoutQuantity ? 100 : null,
+        }),
+      );
+    }
 
     const ranked = [];
     for (const row of catalog) {

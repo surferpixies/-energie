@@ -2787,8 +2787,12 @@ function formatSleepDuration(hours) {
     const recognized = [], unrecognized = [];
     const cleanIngredientPhrase = (segment) => String(segment || "")
       .trim()
+      .replace(
+        /^(?:(?:un|une|le|la|a|an|the)\s+)?(?:bol|bowl|assiette|plate|plat|dish|portion)\s+(?:(?:comprenant|contenant|incluant|avec|with|containing|including|compos[eé]e?\s+de)\s+)?(?:de|des|du|d[’'])?\s*/i,
+        "",
+      )
       .replace(/^(?:de|des|du|d[’']|avec|et|and|with)\s+/i, "")
-      .replace(/^(?:un|une|le|la|les|quelques)\s+/i, "")
+      .replace(/^(?:un|une|le|la|les|quelques|a|an|the)\s+/i, "")
       .trim();
     const classify = (segment) => {
       const cleaned = cleanIngredientPhrase(segment);
@@ -2833,8 +2837,12 @@ function formatSleepDuration(hours) {
     const connectorPattern = /\s+(?:et|and|avec|with|accompagn[eé]e?s?(?:\s+de)?|servi(?:e|s|es)?\s+avec|enrob[eé]e?s?(?:\s+d[’']?une?|\s+de)?|napp[eé]e?s?(?:\s+d[’']?une?|\s+de)?|garni(?:e|s|es)?(?:\s+de)?)\s+/i;
     const cleanIngredientPhrase = (segment) => String(segment || "")
       .trim()
+      .replace(
+        /^(?:(?:un|une|le|la|a|an|the)\s+)?(?:bol|bowl|assiette|plate|plat|dish|portion)\s+(?:(?:comprenant|contenant|incluant|avec|with|containing|including|compos[eé]e?\s+de)\s+)?(?:de|des|du|d[’'])?\s*/i,
+        "",
+      )
       .replace(/^(?:de|des|du|d[’']|avec|et|and|with)\s+/i, "")
-      .replace(/^(?:un|une|le|la|les|quelques)\s+/i, "")
+      .replace(/^(?:un|une|le|la|les|quelques|a|an|the)\s+/i, "")
       .trim();
     for (const segment of initial) {
       const connectorParts = segment
@@ -3470,7 +3478,7 @@ function formatSleepDuration(hours) {
   let currentMealNutritionTrace = null;
   function nutritionTraceSourceLabel(source) {
     return source === "cnf" ? "FCÉN · Santé Canada"
-      : source === "mixed" ? "FCÉN + repli Énergie"
+      : source === "mixed" ? "FCÉN + Énergie"
       : source === "energie-foods" ? "Référence Énergie"
       : "Estimation automatique";
   }
@@ -3490,7 +3498,7 @@ function formatSleepDuration(hours) {
         ? item.enteredQuantity.unit === "count"
           ? `${item.enteredQuantity.value} portion${item.enteredQuantity.value > 1 ? "s" : ""}`
           : `${item.enteredQuantity.value} ${item.enteredQuantity.unit}`
-        : "portion courante";
+        : item.referencePortion || "portion courante";
       const match = item.matchedName || item.input || "Aliment";
       const kcal = item.calories != null ? `${item.calories} kcal` : "—";
       return `<div class="meal-nutrition-trace-item"><strong>${esc(item.input || match)}</strong><span>Correspondance : ${esc(match)}</span><span>Quantité interprétée : <b>${esc(quantity)}</b></span><span>Source : ${esc(nutritionTraceSourceLabel(item.source))}</span><em>${esc(kcal)}</em></div>`;
@@ -3519,6 +3527,10 @@ function formatSleepDuration(hours) {
       confidence: $("#mealNutritionSection")?.dataset.confidence || "low",
       basis: $("#mealNutritionSection")?.dataset.basis || "portion courante",
       estimated: $("#mealNutritionSection")?.dataset.estimated !== "false",
+      trace:
+        $("#mealCalorieMode")?.value === "manual"
+          ? null
+          : currentMealNutritionTrace,
     });
   }
   function fillNutritionInputs(n, note = "") {
@@ -3554,7 +3566,7 @@ function formatSleepDuration(hours) {
         : n?.source === "cnf"
           ? `Valeurs de référence du Fichier canadien sur les éléments nutritifs (FCÉN) 2026 de Santé Canada, ajustées selon les quantités reconnues (${n.basis || "portion courante"}). Les recettes, marques et préparations peuvent varier.`
           : n?.source === "mixed"
-            ? `Estimation combinant des valeurs FCÉN de Santé Canada et des valeurs de repli Énergie (${n.basis || "portion courante"}). Les recettes et portions réelles peuvent varier.`
+            ? `Estimation combinant des valeurs FCÉN de Santé Canada et des références Énergie (${n.basis || "portion courante"}). Les recettes et portions réelles peuvent varier.`
             : n?.source === "energie-foods" && /quantité/.test(n?.basis || "")
               ? `Estimation ajustée selon les quantités reconnues (${n.basis}). Les recettes et valeurs de référence peuvent varier.`
               : "Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.");
@@ -3602,13 +3614,35 @@ function formatSleepDuration(hours) {
       : nutritionSource === "cnf"
         ? "Estimation FCÉN · modifiable"
         : nutritionSource === "mixed"
-          ? "Estimation FCÉN + repli · modifiable"
+          ? "Estimation FCÉN + Énergie · modifiable"
           : "Estimation automatique · modifiable";
     $("#mealCalorieStatus").textContent = manual ? t("Ajustées par vous")
       : input.value !== "" ? t(automaticStatus) : t("Aucune estimation disponible · saisie facultative");
     $("#resetMealCalories").hidden = !manual;
+
+    // Une ancienne sauvegarde ou une restauration de formulaire peut contenir
+    // les valeurs nutritionnelles sans la trace détaillée. La reconstruire
+    // depuis la description afin que l'explication reste toujours disponible.
+    if (!manual && !currentMealNutritionTrace?.items?.length) {
+      const description = $("#mealDescription")?.value.trim() || "",
+        rebuiltNutrition =
+          currentGuidedCnfNutrition() ||
+          (description ? estimateNutritionFromText(description) : null);
+
+      if (rebuiltNutrition?.trace?.items?.length)
+        currentMealNutritionTrace = {
+          ...rebuiltNutrition.trace,
+          items: rebuiltNutrition.trace.items.map((item) => ({ ...item })),
+        };
+    }
+
+    ensureMealNutritionTraceUi();
+
     const traceLink = $("#mealNutritionTraceLink");
-    if (traceLink) traceLink.hidden = manual || !currentMealNutritionTrace?.items?.length;
+    if (traceLink)
+      traceLink.hidden =
+        manual || !currentMealNutritionTrace?.items?.length;
+
     updateMealCalorieTargetGauge();
   }
   function resetMealCalories() {
