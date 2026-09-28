@@ -1967,3 +1967,72 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .meal-nutrition-trace-item{position:relative;display:grid;gap:2px;padding:9px 58px 9px 10px;border:1px solid var(--border);border-radius:11px;background:color-mix(in srgb,var(--accent) 3%,var(--surface))}
 .meal-nutrition-trace-item strong{font-size:.7rem}.meal-nutrition-trace-item span{color:var(--muted);font-size:.59rem;line-height:1.3}.meal-nutrition-trace-item span b{color:var(--text)}
 .meal-nutrition-trace-item em{position:absolute;right:10px;top:10px;color:var(--text);font-size:.68rem;font-style:normal;font-weight:850}
+
+
+/* Agrandissement des photos de repas */
+.meal-thumb img,
+#photoPreviewList img {
+  cursor: zoom-in;
+}
+
+.meal-photo-viewer-dialog {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+}
+
+.meal-photo-viewer-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.88);
+}
+
+.meal-photo-viewer-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 96vw;
+  max-height: 94vh;
+}
+
+.meal-photo-viewer-image {
+  display: block;
+  max-width: 94vw;
+  max-height: 88vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 14px;
+}
+
+.meal-photo-viewer-close {
+  position: absolute;
+  z-index: 2;
+  top: -14px;
+  right: -14px;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  background: white;
+  color: #222;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 600px) {
+  .meal-photo-viewer-image {
+    max-width: 96vw;
+    max-height: 82vh;
+  }
+
+  .meal-photo-viewer-close {
+    top: 8px;
+    right: 8px;
+  }
+}

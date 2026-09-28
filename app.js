@@ -355,6 +355,7 @@
     photoData = null,
     photoRemoved = false,
     mealPhotoDrafts = [],
+    mealPhotoReadOnly = false,
     removedMealPhotoPaths = new Set(),
     mealAiSuggestionText = "",
     mealNutritionPreviewTimer = null,
@@ -6570,6 +6571,87 @@ function formatSleepDuration(hours) {
     $("#professionalBetaReturnPersonal")?.addEventListener("click", leaveProfessionalBeta);
   }
 
+  function ensureMealPhotoViewer() {
+    let dialog = $("#mealPhotoViewerDialog");
+    if (dialog) return dialog;
+
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      `<dialog id="mealPhotoViewerDialog" class="meal-photo-viewer-dialog">
+        <div class="meal-photo-viewer-shell">
+          <button type="button"
+                  id="closeMealPhotoViewer"
+                  class="meal-photo-viewer-close"
+                  aria-label="Fermer la photo">×</button>
+          <img id="mealPhotoViewerImage"
+               class="meal-photo-viewer-image"
+               alt="Photo du repas">
+        </div>
+      </dialog>`,
+    );
+
+    dialog = $("#mealPhotoViewerDialog");
+
+    $("#closeMealPhotoViewer")?.addEventListener("click", () => {
+      dialog.close();
+    });
+
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+
+    dialog.addEventListener("close", () => {
+      const image = $("#mealPhotoViewerImage");
+      if (image) image.removeAttribute("src");
+    });
+
+    return dialog;
+  }
+
+  function openMealPhotoViewer(src, alt = "Photo du repas") {
+    if (!src) return;
+
+    const dialog = ensureMealPhotoViewer(),
+      image = $("#mealPhotoViewerImage");
+
+    if (!dialog || !image) return;
+
+    image.src = src;
+    image.alt = alt || "Photo du repas";
+
+    if (!dialog.open) dialog.showModal();
+  }
+
+  function bindMealPhotoViewers(scope = document) {
+    scope
+      .querySelectorAll(".meal-thumb img, #photoPreviewList img")
+      .forEach((image) => {
+        if (image.dataset.photoViewerBound === "true") return;
+
+        image.dataset.photoViewerBound = "true";
+        image.setAttribute("role", "button");
+        image.setAttribute("tabindex", "0");
+        image.setAttribute("aria-label", "Agrandir la photo");
+
+        const open = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+
+          openMealPhotoViewer(
+            image.currentSrc || image.src,
+            image.alt || "Photo du repas",
+          );
+        };
+
+        image.addEventListener("click", open);
+
+        image.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          open(event);
+        });
+      });
+  }
+
   function mealCard(m, opts = {}) {
     const readOnly = professionalClientReadOnly(),
       feeling = m.feeling;
@@ -6637,6 +6719,7 @@ function formatSleepDuration(hours) {
           openFeeling(b.dataset.feeling);
         }),
     );
+    bindMealPhotoViewers($("#app") || document);
     hydratePhotoUrls();
   }
   function mealTypeSummary(meals, type) {
@@ -14451,6 +14534,7 @@ function formatSleepDuration(hours) {
           professionalClientReadOnly() ||
           (db.settings?.demoMode && db.settings?.demoReadOnly))
       );
+    mealPhotoReadOnly = readOnly;
     setDemoDetailReadOnly("#mealForm", false);
     $("#mealDialogTitle").textContent = readOnly
       ? "Détails du repas"
@@ -14580,38 +14664,96 @@ function formatSleepDuration(hours) {
   }
 
   function showPhotoPreview() {
-    const wrap = $("#photoPreviewWrap"), list = $("#photoPreviewList"), count = $("#mealPhotoCount");
+    const wrap = $("#photoPreviewWrap"),
+      list = $("#photoPreviewList"),
+      count = $("#mealPhotoCount");
+
     if (!wrap || !list) return;
+
     wrap.hidden = !mealPhotoDrafts.length;
+
     list.innerHTML = mealPhotoDrafts.map((photo, index) => {
       const src = photo.local || photo.url || "";
       const analyzed = photo.aiAnalyzed === true;
-      return `<div class="meal-photo-preview-item">${src ? `<img src="${esc(src)}" alt="Photo ${index + 1} du repas">` : '<span class="meal-photo-placeholder">📷</span>'}<button type="button" class="secondary small" data-analyze-meal-photo="${index}" ${photo.local && !analyzed ? "" : "disabled"}>${analyzed ? "✓ Photo analysée" : "✨ Analyser avec l’IA"}</button><button type="button" class="text-button small" data-remove-meal-photo="${index}">Retirer</button></div>`;
+
+      return `<div class="meal-photo-preview-item">
+        ${
+          src
+            ? `<img src="${esc(src)}"
+                    alt="Photo ${index + 1} du repas">`
+            : '<span class="meal-photo-placeholder">📷</span>'
+        }
+        ${
+          mealPhotoReadOnly
+            ? ""
+            : `<button type="button"
+                       class="secondary small"
+                       data-analyze-meal-photo="${index}"
+                       ${photo.local && !analyzed ? "" : "disabled"}>
+                 ${analyzed ? "✓ Photo analysée" : "✨ Analyser avec l’IA"}
+               </button>
+               <button type="button"
+                       class="text-button small"
+                       data-remove-meal-photo="${index}">
+                 Retirer
+               </button>`
+        }
+      </div>`;
     }).join("");
-    if (count) count.textContent = `${mealPhotoDrafts.length}/3`;
+
+    if (count)
+      count.textContent = `${mealPhotoDrafts.length}/3`;
+
     const input = $("#mealPhoto");
-    if (input) input.disabled = mealPhotoDrafts.length >= 3;
+    if (input)
+      input.disabled =
+        mealPhotoReadOnly || mealPhotoDrafts.length >= 3;
+
+    bindMealPhotoViewers(list);
+
+    if (mealPhotoReadOnly) return;
+
     $$('[data-analyze-meal-photo]').forEach((button) => {
       button.onclick = async () => {
-        const photo = mealPhotoDrafts[Number(button.dataset.analyzeMealPhoto)];
+        const photo =
+          mealPhotoDrafts[Number(button.dataset.analyzeMealPhoto)];
+
         if (!photo?.local || photo.aiAnalyzed === true) return;
-        const success = await analyzeMealPhotoWithAI(photo.local);
-        if (success) { photo.aiAnalyzed = true; showPhotoPreview(); }
+
+        const success =
+          await analyzeMealPhotoWithAI(photo.local);
+
+        if (success) {
+          photo.aiAnalyzed = true;
+          showPhotoPreview();
+        }
       };
     });
+
     $$('[data-remove-meal-photo]').forEach((button) => {
       button.onclick = () => {
-        const index = Number(button.dataset.removeMealPhoto);
-        const removed = mealPhotoDrafts.splice(index, 1)[0];
-        if (removed?.path) removedMealPhotoPaths.add(removed.path);
+        const index =
+          Number(button.dataset.removeMealPhoto);
+
+        const removed =
+          mealPhotoDrafts.splice(index, 1)[0];
+
+        if (removed?.path)
+          removedMealPhotoPaths.add(removed.path);
+
         photoRemoved = true;
-        photoData = mealPhotoDrafts[0]?.local || mealPhotoDrafts[0]?.url || null;
+        photoData =
+          mealPhotoDrafts[0]?.local ||
+          mealPhotoDrafts[0]?.url ||
+          null;
+
         hideMealAiSuggestion();
         showPhotoPreview();
         scheduleFormAutosave($("#mealForm"));
       };
     });
   }
+
   function renderDayActivities() {
     const d = ensureDay(db, selectedDate),
       list = $("#dayActivitiesList");
