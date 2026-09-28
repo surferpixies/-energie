@@ -16082,7 +16082,12 @@ function formatSleepDuration(hours) {
     // observation spéciale est volontairement différée afin qu'elle ne puisse
     // jamais retarder le premier rendu (notamment après une saisie la veille).
     wrap.hidden = false;
+    // Do not run the full observation engine while the splash is visible.
+    // That synchronous analysis can block the main thread and make the splash
+    // look frozen on both WebKit and desktop browsers. Wait until it is gone.
     setTimeout(() => {
+      const splashAtStart = $("#splashScreen");
+      if (splashAtStart && !splashAtStart.classList.contains("is-hidden")) return;
       const observation = splashObservationCandidate();
       if (!observation) return;
       observationLabelEl.textContent = observation.label;
