@@ -2891,7 +2891,7 @@ function formatSleepDuration(hours) {
         nuts: "🥜",
       },
       certaintyLabel = ui.status[certainty],
-      statusIcon = certainty === "confirmed" ? "✓" : certainty === "missing" ? "…" : "?",
+      statusIcon = certainty === "confirmed" ? "✓" : certainty === "missing" ? "○" : "?",
       compactLabel = label;
     return `<span class="composition-trait composition-${certainty}" title="${esc(label)} · ${esc(certaintyLabel)}" aria-label="${esc(label)}, ${esc(certaintyLabel)}"><span class="composition-trait-top" aria-hidden="true"><strong>${icons[trait] || "•"}</strong><small>${statusIcon}</small></span><em aria-hidden="true">${esc(compactLabel)}</em></span>`;
   }
@@ -2944,7 +2944,7 @@ function formatSleepDuration(hours) {
       ? `<p class="composition-basis">${esc(ui.usually)} : ${analysis.dish.ingredients.map(esc).join(", ")}.</p>`
       : "";
     const acknowledged = mealFoodReview?.acknowledgedGaps && missing.length;
-    summary.innerHTML = `<div class="composition-heading">${title}</div>${chips ? `<div class="composition-traits">${chips}</div><div class="composition-legend"><span class="is-confirmed"><b>✓</b> ${esc(ui.status.confirmed)}</span><span class="is-probable"><b>?</b> ${esc(ui.status.probable)}</span><span class="is-missing"><b>…</b> ${esc(ui.status.missing)}</span></div>` : ""}${ingredients}${acknowledged ? `<p class="composition-kept">✓ ${esc(ui.kept)}</p>` : ""}`;
+    summary.innerHTML = `<div class="composition-heading">${title}</div>${chips ? `<div class="composition-traits">${chips}</div><div class="composition-legend"><span class="is-confirmed"><b>✓</b> ${esc(ui.status.confirmed)}</span><span class="is-probable"><b>?</b> ${esc(ui.status.probable)}</span><span class="is-missing"><b>○</b> ${esc(ui.status.missing)}</span></div>` : ""}${ingredients}${acknowledged ? `<p class="composition-kept">✓ ${esc(ui.kept)}</p>` : ""}`;
     actions.hidden = !missing.length || !!acknowledged;
     section.hidden = false;
   }
