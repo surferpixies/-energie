@@ -2923,7 +2923,7 @@ function formatSleepDuration(hours) {
       (trait) => analysis.status(trait) === "unknown",
     ).filter((trait) => trait !== "carbs" || !lowCarbs);
     const coreTraits = new Set(["protein", "fiber", "carbs"]),
-      visibleTraits = ["protein", "fiber", "carbs", "dairy", "soy", "gluten", "eggs", "nuts"],
+      visibleTraits = ["protein", "fiber", "carbs"],
       chips = visibleTraits
         .map((trait) => {
           const certainty = analysis.status(trait);
