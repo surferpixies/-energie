@@ -12558,6 +12558,8 @@ function formatSleepDuration(hours) {
     $("#energyGuideBody").scrollTop = 0;
   }
 
+  let profileAccordionOpenKey = null;
+
   function enhanceProfileWithAccordions() {
     const profile = $("#app .stack");
     if (!profile) return;
@@ -12685,6 +12687,7 @@ function formatSleepDuration(hours) {
 
       wrap.appendChild(details);
       matched[0].before(wrap);
+      details.open = profileAccordionOpenKey === bucket.key;
 
       const body = details.querySelector(".profile-accordion-body");
       matched.forEach((card) => body.appendChild(card));
@@ -12703,12 +12706,16 @@ function formatSleepDuration(hours) {
           : summaryBits.join(" · ");
 
       details.addEventListener("toggle", () => {
-        if (!details.open) return;
-        profile
-          .querySelectorAll(".profile-accordion-details[open]")
-          .forEach((other) => {
-            if (other !== details) other.open = false;
-          });
+        if (details.open) {
+          profileAccordionOpenKey = bucket.key;
+          profile
+            .querySelectorAll(".profile-accordion-details[open]")
+            .forEach((other) => {
+              if (other !== details) other.open = false;
+            });
+        } else if (profileAccordionOpenKey === bucket.key) {
+          profileAccordionOpenKey = null;
+        }
       });
     });
 
