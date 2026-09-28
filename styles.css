@@ -1945,3 +1945,18 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .weight-observation-fold-body>.observation-explorer-panel-body{padding:15px}
 @media(max-width:420px){.weight-observation-fold>summary{padding:13px}.weight-observation-heading{padding-inline:2px}}
 
+
+
+/* Nutrition estimate trace */
+.meal-nutrition-trace-link{display:block;margin:3px 0 0;padding:0;border:0;background:none;color:var(--accent-strong);font:inherit;font-size:.56rem;font-weight:750;text-align:left;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;cursor:pointer}
+.meal-nutrition-trace-link[hidden]{display:none!important}
+.meal-nutrition-trace-dialog{width:min(92vw,480px);max-height:82vh;padding:0;border:1px solid var(--border);border-radius:18px;background:var(--surface);color:var(--text);box-shadow:0 18px 55px rgba(0,0,0,.18)}
+.meal-nutrition-trace-dialog::backdrop{background:rgba(20,35,25,.28)}
+.meal-nutrition-trace-dialog form{display:grid;gap:10px;padding:16px}
+.meal-nutrition-trace-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.meal-nutrition-trace-head small{color:var(--muted);font-size:.6rem}.meal-nutrition-trace-head h3{margin:2px 0 0;font-size:1rem}
+.meal-nutrition-trace-source{padding:8px 10px;border-radius:10px;background:var(--surface2);font-size:.64rem}
+#mealNutritionTraceBody{display:grid;gap:7px;overflow:auto}
+.meal-nutrition-trace-item{position:relative;display:grid;gap:2px;padding:9px 58px 9px 10px;border:1px solid var(--border);border-radius:11px;background:color-mix(in srgb,var(--accent) 3%,var(--surface))}
+.meal-nutrition-trace-item strong{font-size:.7rem}.meal-nutrition-trace-item span{color:var(--muted);font-size:.59rem;line-height:1.3}.meal-nutrition-trace-item span b{color:var(--text)}
+.meal-nutrition-trace-item em{position:absolute;right:10px;top:10px;color:var(--text);font-size:.68rem;font-style:normal;font-weight:850}
