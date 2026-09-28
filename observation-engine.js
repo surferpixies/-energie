@@ -204,13 +204,32 @@
       .map(day => enrichDay(day, settings));
   }
 
+  const observationMealCategoryCache = new Map();
+
+  function categoryIdsForMeal(meal) {
+    const value = mealText(meal),
+      key = `${FOOD?.version || "0"}|${value}`;
+
+    if (observationMealCategoryCache.has(key))
+      return observationMealCategoryCache.get(key);
+
+    const ids = FOOD?.categoryIdsForText?.(value) || [],
+      stableIds = Array.isArray(ids) ? ids.slice() : [...ids];
+
+    if (observationMealCategoryCache.size >= 1000)
+      observationMealCategoryCache.clear();
+
+    observationMealCategoryCache.set(key, stableIds);
+    return stableIds;
+  }
+
   function enrichDay(day, options) {
     const categoryIds = new Set();
     const categoryCounts = new Map();
     const meals = Array.isArray(day.meals) ? day.meals : [];
 
     meals.forEach(meal => {
-      const ids = FOOD?.categoryIdsForText?.(mealText(meal)) || [];
+      const ids = categoryIdsForMeal(meal);
       ids.forEach(id => {
         categoryIds.add(id);
         categoryCounts.set(id, (categoryCounts.get(id) || 0) + 1);
@@ -392,8 +411,8 @@
     if (!tags.length || !meals.length || !FOOD?.definitions) return [];
     const results = [];
     for (const category of FOOD.definitions) {
-      const exposed = meals.filter(meal => (FOOD.categoryIdsForText?.(mealText(meal)) || []).includes(category.id));
-      const comparison = meals.filter(meal => !(FOOD.categoryIdsForText?.(mealText(meal)) || []).includes(category.id));
+      const exposed = meals.filter(meal => categoryIdsForMeal(meal).includes(category.id));
+      const comparison = meals.filter(meal => !categoryIdsForMeal(meal).includes(category.id));
       if (exposed.length < options.minimumExposedDays || comparison.length < options.minimumComparisonDays) continue;
       for (const tag of tags) {
         const exposedChanges = exposed.map(meal => mealFeelingChange(meal, tag.id)).filter(Number.isFinite);
@@ -486,30 +505,42 @@
       const selectedCategoryIds = [];
       const limit = Number(settings.limit) || DEFAULT_OPTIONS.limit;
 
+      // Pré-calculer une seule fois les catégories alimentaires des repas
+      // admissibles. exposureOverlap() peut être appelée plusieurs fois pendant
+      // la sélection et categoryIdsForText() est relativement coûteuse.
+      const overlapMealCategorySets = recentDays
+        .flatMap(day => day.meals || [])
+        .filter(
+          meal =>
+            meal?.feeling &&
+            !meal.feeling?.qualityReview?.excludedFromAnalysis &&
+            !meal.feelingsBeforeQuality?.excludedFromAnalysis
+        )
+        .map(
+          meal =>
+            new Set(
+              categoryIdsForMeal(meal)
+            )
+        );
+
       function exposureOverlap(firstId, secondId) {
         // Feeling observations are calculated meal by meal, so overlap must use
         // the same unit. Day-level overlap made categories that occur in the
         // same symptomatic meal look artificially independent when another meal
         // that day contained only one of them.
-        const eligibleMeals = recentDays
-          .flatMap(day => day.meals || [])
-          .filter(
-            meal =>
-              meal?.feeling &&
-              !meal.feeling?.qualityReview?.excludedFromAnalysis &&
-              !meal.feelingsBeforeQuality?.excludedFromAnalysis
-          );
         let intersection = 0;
         let firstCount = 0;
         let secondCount = 0;
-        eligibleMeals.forEach(meal => {
-          const ids = new Set(FOOD?.categoryIdsForText?.(mealText(meal)) || []);
+
+        overlapMealCategorySets.forEach(ids => {
           const first = ids.has(firstId);
           const second = ids.has(secondId);
+
           if (first) firstCount += 1;
           if (second) secondCount += 1;
           if (first && second) intersection += 1;
         });
+
         // Use an overlap coefficient rather than Jaccard. Food categories are
         // often nested (e.g. fried foods are also processed foods). If nearly
         // every occurrence of the smaller category is contained in the larger
