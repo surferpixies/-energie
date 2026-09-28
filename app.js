@@ -739,6 +739,9 @@ function formatSleepDuration(hours) {
       caloriesManual: typeof n.caloriesManual === "boolean"
         ? n.caloriesManual
         : n.estimated === false && val("calories") != null,
+      trace: n.trace && typeof n.trace === "object"
+        ? { ...n.trace, items: Array.isArray(n.trace.items) ? n.trace.items.map((item) => ({ ...item })) : [] }
+        : null,
     };
     return [
       out.calories,
@@ -3012,6 +3015,28 @@ function formatSleepDuration(hours) {
       confidence: quantityUsedCount ? "medium" : matched.length >= 2 ? "medium" : "low",
       basis,
       estimated: true,
+      trace: {
+        kind: "text",
+        source: nutritionSource,
+        input: String(text || "").trim(),
+        items: enriched.map((x) => {
+          const entered = mealQuantityFromText(x.segment);
+          return {
+            input: x.segment,
+            source: x.food?.nutritionSource === "cnf" ? "cnf" : "energie-foods",
+            cnfFoodId: x.food?.cnfFoodId || null,
+            matchedName: x.food?.cnfNameFr || x.food?.keys?.[0] || "",
+            enteredQuantity: entered ? { ...entered } : null,
+            referencePortion: x.food?.portion || null,
+            gramsPerPortion: Number(x.food?.gramsPerPortion) || null,
+            scale: Math.round((Number(x.scale) || 1) * 1000) / 1000,
+            quantityUsed: !!x.quantityUsed,
+            calories: x.food?.calories != null
+              ? Math.round((Number(x.food.calories) || 0) * (Number(x.scale) || 1) * 10) / 10
+              : null,
+          };
+        }),
+      },
     });
   }
   function mergeNutrition(a, b) {
@@ -3176,6 +3201,25 @@ function formatSleepDuration(hours) {
       confidence: "high",
       basis: `${matched} aliment${matched !== 1 ? "s" : ""} lié${matched !== 1 ? "s" : ""} au FCÉN · quantités saisies`,
       estimated: true,
+      trace: {
+        kind: "guided-cnf",
+        source: "cnf",
+        items: items.map((item) => {
+          const nutrition = api.nutritionForGrams(item.cnfFoodId, item.grams);
+          const reference = api.nutritionForGrams(item.cnfFoodId, 100);
+          return {
+            source: "cnf",
+            cnfFoodId: String(item.cnfFoodId),
+            matchedName: item.nameFr || nutrition?.cnfNameFr || "",
+            grams: Number(item.grams) || null,
+            quantity: Number(item.quantity) || null,
+            unitLabel: item.unitLabel || "g",
+            gramsPerUnit: Number(item.gramsPerUnit) || null,
+            caloriesPer100g: reference?.calories ?? null,
+            calories: nutrition?.calories ?? null,
+          };
+        }),
+      },
     };
   }
   function currentGuidedCnfNutrition() {
