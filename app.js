@@ -6416,7 +6416,7 @@ function formatSleepDuration(hours) {
     }
     $(".bottom-nav")?.classList.toggle("has-followup", showFollowup);
     if (!showFollowup && currentView === "followup") currentView = "today";
-    $$$(".nav-item").forEach((b) =>
+    $(".nav-item").forEach((b) =>
       b.classList.toggle("active", b.dataset.view === currentView),
     );
     updateSyncBadge();
@@ -15652,7 +15652,7 @@ function formatSleepDuration(hours) {
     $("#professionalClientDialog")?.close();
     if (!db.settings.demoMode) professionalDemoMode = false;
   };
-  $$(".nav-item").forEach(
+  $(".nav-item").forEach(
     (b) =>
       (b.onclick = () => {
         const was = currentView;
