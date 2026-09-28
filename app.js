@@ -11750,17 +11750,52 @@ function formatSleepDuration(hours) {
   }
 
   let insightsRenderRequest = 0,
-    insightsComputationCache = null;
+    insightsComputationCache = null,
+    insightsHasRendered = false,
+    insightsRenderedDataKey = "";
+  function insightsDataKey() {
+    const state = observationExplorerState();
+    return [
+      db.updatedAt || "initial",
+      selectedDate,
+      state.fromDate || "",
+      state.toDate || "",
+      db.settings?.demoMode ? db.settings?.demoProfileId || "demo" : "user",
+      db.settings?.insightsEnabled === false ? "off" : "on",
+      window.ENERGIE_LOCALE || "fr-CA",
+    ].join("|");
+  }
   function renderInsights() {
-    const request = ++insightsRenderRequest;
-    $("#app").innerHTML = `<section class="hero observations-loading-hero"><p class="eyebrow">Cerveau et observations</p><h2>J’ouvre tes observations…</h2><p>Les informations déjà calculées apparaîtront dans un instant.</p></section><section class="card observations-loading-card" aria-live="polite"><span class="observations-loading-brain" aria-hidden="true">🧠</span><div><strong>Analyse de ton journal</strong><small>Énergie rassemble tes ressentis et tes tendances.</small></div><i aria-hidden="true"></i></section>`;
-    requestAnimationFrame(() =>
-      setTimeout(() => {
-        if (request !== insightsRenderRequest || currentView !== "insights")
-          return;
-        renderInsightsContent();
-      }, 0),
-    );
+    const request = ++insightsRenderRequest,
+      nextKey = insightsDataKey(),
+      app = $("#app");
+    // Re-entering Observations without a journal/filter change should not flash
+    // the loading skeleton or rebuild an already-current page.
+    if (
+      insightsHasRendered &&
+      insightsRenderedDataKey === nextKey &&
+      app?.querySelector(".observation-explorer-card")
+    ) {
+      return;
+    }
+    // The loading state is useful on the first visit only. Subsequent refreshes
+    // update the content directly so opening cards/navigation never feels like
+    // a full page reload.
+    if (!insightsHasRendered) {
+      app.innerHTML = `<section class="hero observations-loading-hero"><p class="eyebrow">Cerveau et observations</p><h2>J’ouvre tes observations…</h2><p>Les informations déjà calculées apparaîtront dans un instant.</p></section><section class="card observations-loading-card" aria-live="polite"><span class="observations-loading-brain" aria-hidden="true">🧠</span><div><strong>Analyse de ton journal</strong><small>Énergie rassemble tes ressentis et tes tendances.</small></div><i aria-hidden="true"></i></section>`;
+      requestAnimationFrame(() =>
+        setTimeout(() => {
+          if (request !== insightsRenderRequest || currentView !== "insights") return;
+          renderInsightsContent();
+          insightsHasRendered = true;
+          insightsRenderedDataKey = insightsDataKey();
+        }, 0),
+      );
+      return;
+    }
+    renderInsightsContent();
+    insightsHasRendered = true;
+    insightsRenderedDataKey = insightsDataKey();
   }
   function renderInsightsContent() {
     observationExplorerResultsCache.clear();
@@ -11924,6 +11959,7 @@ function formatSleepDuration(hours) {
       );
     $("#togglePreview")?.addEventListener("click", () => {
       sessionStorage.setItem("dashboardPreview", usePreview ? "off" : "on");
+      insightsRenderedDataKey = "";
       renderInsights();
     });
     $(".dashboard-hero-card")?.remove();
