@@ -2722,8 +2722,10 @@ function formatSleepDuration(hours) {
       // expressed per natural portion. A bare leading count therefore scales
       // that portion directly instead of being ignored.
       const portionText = normalizeFoodText(food?.portion || "");
+      const segmentText = normalizeFoodText(segment);
       const countablePortion = /\b(oeuf|egg|tranche|slice|piece|morceau|fruit|pomme|apple|banane|banana)\b/.test(portionText);
-      if (countablePortion)
+      const countableFood = /\b(oeuf|oeufs|egg|eggs)\b/.test(segmentText);
+      if (countablePortion || countableFood)
         return { scale: naturalCount, quantityUsed: true, quantityKind: "count", enteredCount: naturalCount };
     }
     return { scale: 1, quantityUsed: false };
