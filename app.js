@@ -2821,7 +2821,10 @@ function formatSleepDuration(hours) {
         categoryIds.add("fruits");
         categoryIds.add("direct_fiber");
       }
-      if (tags.some((tag) => ["proteine", "protein"].includes(tag)))
+      if (
+        tags.some((tag) => ["proteine", "protein"].includes(tag)) ||
+        (Number(nutrients?.protein) || 0) >= 3
+      )
         categoryIds.add("direct_protein");
       const isPlantMilk = /\b(lait de soya|soy milk|lait de soja|lait d amande|almond milk|lait d avoine|oat milk|lait de coco|coconut milk)\b/.test(foodText);
       if (/\b(lait de soya|lait de soja|soy milk)\b/.test(foodText)) {
