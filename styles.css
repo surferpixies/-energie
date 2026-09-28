@@ -1943,6 +1943,13 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .weight-observation-fold[open]>summary>em{transform:rotate(180deg)}
 .weight-observation-fold-body{border-top:1px solid var(--border)}
 .weight-observation-fold-body>.observation-explorer-panel-body{padding:15px}
+.weight-observation-signals{display:grid;gap:6px;margin:10px 0;padding:0;list-style:none}
+.weight-observation-signals li{display:flex;align-items:center;gap:8px;min-width:0;padding:6px 8px;border-radius:9px;background:var(--surface2)}
+.weight-observation-signals li>span{flex:0 0 auto;font-size:.9rem;line-height:1}
+.weight-observation-signals li>div{display:flex;align-items:baseline;gap:6px;min-width:0;white-space:nowrap}
+.weight-observation-signals li strong{font-size:.68rem}
+.weight-observation-signals li small{color:var(--muted);font-size:.57rem;white-space:nowrap}
+@media(max-width:390px){.weight-observation-signals li>div{white-space:normal;flex-wrap:wrap;row-gap:1px}}
 @media(max-width:420px){.weight-observation-fold>summary{padding:13px}.weight-observation-heading{padding-inline:2px}}
 
 
