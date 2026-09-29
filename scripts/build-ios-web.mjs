@@ -19,6 +19,7 @@ const runtimeFiles = [
   "dish-knowledge.js",
   "observation-engine.js",
   "demo-profiles.js",
+  "demo-lab.js",
   "personal-metrics.js",
   "onboarding-images.js",
   "styles.css",

@@ -2,20 +2,26 @@
   "use strict";
 
   const FOOD = window.ENERGIE_FOOD_CATEGORIES;
-  const VERSION = 4;
+  const VERSION = 5;
   const DEFAULT_LOCALE = "fr-CA";
   const DAY_MS = 86400000;
   const CATEGORY_PRIORITY = Object.freeze({
     dairy: 100,
     soy: 95,
     gluten: 90,
+    allium: 88,
     eggs: 85,
     nuts: 85,
     seafood: 85,
+    legumes: 82,
     fish: 80,
     caffeine: 75,
     alcohol: 75,
+    refined_grains: 40,
+    vegetables: 35,
+    plant_protein: 30,
     fermented: 25,
+    high_fiber: 25,
     processed_foods: 15,
     ultra_processed: 10
   });
@@ -198,13 +204,32 @@
       .map(day => enrichDay(day, settings));
   }
 
+  const observationMealCategoryCache = new Map();
+
+  function categoryIdsForMeal(meal) {
+    const value = mealText(meal),
+      key = `${FOOD?.version || "0"}|${value}`;
+
+    if (observationMealCategoryCache.has(key))
+      return observationMealCategoryCache.get(key);
+
+    const ids = FOOD?.categoryIdsForText?.(value) || [],
+      stableIds = Array.isArray(ids) ? ids.slice() : [...ids];
+
+    if (observationMealCategoryCache.size >= 1000)
+      observationMealCategoryCache.clear();
+
+    observationMealCategoryCache.set(key, stableIds);
+    return stableIds;
+  }
+
   function enrichDay(day, options) {
     const categoryIds = new Set();
     const categoryCounts = new Map();
     const meals = Array.isArray(day.meals) ? day.meals : [];
 
     meals.forEach(meal => {
-      const ids = FOOD?.categoryIdsForText?.(mealText(meal)) || [];
+      const ids = categoryIdsForMeal(meal);
       ids.forEach(id => {
         categoryIds.add(id);
         categoryCounts.set(id, (categoryCounts.get(id) || 0) + 1);
@@ -386,8 +411,8 @@
     if (!tags.length || !meals.length || !FOOD?.definitions) return [];
     const results = [];
     for (const category of FOOD.definitions) {
-      const exposed = meals.filter(meal => (FOOD.categoryIdsForText?.(mealText(meal)) || []).includes(category.id));
-      const comparison = meals.filter(meal => !(FOOD.categoryIdsForText?.(mealText(meal)) || []).includes(category.id));
+      const exposed = meals.filter(meal => categoryIdsForMeal(meal).includes(category.id));
+      const comparison = meals.filter(meal => !categoryIdsForMeal(meal).includes(category.id));
       if (exposed.length < options.minimumExposedDays || comparison.length < options.minimumComparisonDays) continue;
       for (const tag of tags) {
         const exposedChanges = exposed.map(meal => mealFeelingChange(meal, tag.id)).filter(Number.isFinite);
@@ -465,28 +490,63 @@
 
     function selectObservations(group) {
       const candidates = scoredFeelingObservations(recentDays, locale, settings, group)
-        .sort((a, b) =>
-          b.score - a.score ||
-          (CATEGORY_PRIORITY[b.categoryId] || 50) -
-            (CATEGORY_PRIORITY[a.categoryId] || 50)
-        );
+        .sort((a, b) => {
+          const scoreGap = b.score - a.score;
+          if (Math.abs(scoreGap) >= 0.35) return scoreGap;
+          return (
+            (CATEGORY_PRIORITY[b.categoryId] || 50) -
+              (CATEGORY_PRIORITY[a.categoryId] || 50) ||
+            scoreGap
+          );
+        });
 
       const observations = [];
       const secondaryObservations = [];
       const selectedCategoryIds = [];
       const limit = Number(settings.limit) || DEFAULT_OPTIONS.limit;
 
+      // Pré-calculer une seule fois les catégories alimentaires des repas
+      // admissibles. exposureOverlap() peut être appelée plusieurs fois pendant
+      // la sélection et categoryIdsForText() est relativement coûteuse.
+      const overlapMealCategorySets = recentDays
+        .flatMap(day => day.meals || [])
+        .filter(
+          meal =>
+            meal?.feeling &&
+            !meal.feeling?.qualityReview?.excludedFromAnalysis &&
+            !meal.feelingsBeforeQuality?.excludedFromAnalysis
+        )
+        .map(
+          meal =>
+            new Set(
+              categoryIdsForMeal(meal)
+            )
+        );
+
       function exposureOverlap(firstId, secondId) {
-        const eligible = recentDays.filter(day => day.hasUsableFeelings && day.meals.length > 0);
+        // Feeling observations are calculated meal by meal, so overlap must use
+        // the same unit. Day-level overlap made categories that occur in the
+        // same symptomatic meal look artificially independent when another meal
+        // that day contained only one of them.
         let intersection = 0;
-        let union = 0;
-        eligible.forEach(day => {
-          const first = day.categoryIds.has(firstId);
-          const second = day.categoryIds.has(secondId);
-          if (first || second) union += 1;
+        let firstCount = 0;
+        let secondCount = 0;
+
+        overlapMealCategorySets.forEach(ids => {
+          const first = ids.has(firstId);
+          const second = ids.has(secondId);
+
+          if (first) firstCount += 1;
+          if (second) secondCount += 1;
           if (first && second) intersection += 1;
         });
-        return union ? intersection / union : 0;
+
+        // Use an overlap coefficient rather than Jaccard. Food categories are
+        // often nested (e.g. fried foods are also processed foods). If nearly
+        // every occurrence of the smaller category is contained in the larger
+        // one, presenting both as independent primary trends is misleading.
+        const smaller = Math.min(firstCount, secondCount);
+        return smaller ? intersection / smaller : 0;
       }
 
       for (const candidate of candidates) {
