@@ -616,6 +616,16 @@
 
       <section class="auth-step" id="authCredentialsStep">
         <p id="authStepIntro" class="auth-step-intro">Entre les informations de ton compte pour te connecter.</p>
+        <div id="signupIdentityFields" hidden>
+          <label>Nom
+            <input id="authDisplayName" type="text" autocomplete="name" maxlength="100" placeholder="Ex. Marie Tremblay">
+          </label>
+          <fieldset class="auth-account-type">
+            <legend>Comment souhaites-tu utiliser Énergie?</legend>
+            <label><input type="radio" name="authAccountType" value="personal" checked> <span><strong>Pour mon suivi personnel</strong><small>Je souhaite suivre mon alimentation et mon bien-être.</small></span></label>
+            <label><input type="radio" name="authAccountType" value="professional"> <span><strong>Pour accompagner mes clients</strong><small>Je souhaite utiliser Énergie dans le cadre de mes suivis.</small></span></label>
+          </fieldset>
+        </div>
         <label>Adresse courriel
           <input id="authEmail" type="email" autocomplete="email" required placeholder="toi@exemple.com">
         </label>
