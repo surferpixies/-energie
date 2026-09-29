@@ -921,3 +921,15 @@ html[data-theme="dark"] .summary-meal-copy > small{
   .summary-meal-copy > small{font-size:.59rem!important}
   .summary-meal-action{width:1.7rem;height:1.7rem}
 }
+
+/* Journal sommaire — préférence visible avec les rappels de ressenti */
+.journal-summary-inline-setting{
+  margin-top:1.05rem;
+  padding-top:1rem;
+  border-top:1px solid var(--border);
+}
+.journal-summary-inline-setting h4{
+  margin:0 0 .55rem;
+  color:var(--text);
+  font-size:.95rem;
+}
