@@ -902,21 +902,55 @@ html[data-theme="dark"] .summary-meal-copy > small{
   background:rgba(255,255,255,.08);
 }
 @media(max-width:420px){
-  .journal-summary-meal-grid{gap:.65rem}
+  .journal-summary-meal-grid{gap:.55rem}
   .journal-summary-meal-card{
-    min-height:108px;
-    grid-template-columns:2.7rem minmax(0,1fr) 1.8rem!important;
-    column-gap:.5rem!important;
-    padding:.75rem!important;
+    min-height:104px;
+    grid-template-columns:2.35rem minmax(0,1fr) 1.55rem!important;
+    column-gap:.42rem!important;
+    padding:.68rem .62rem!important;
   }
-  .journal-summary-meal-card.needs-brain-action{padding:.75rem!important}
+  .journal-summary-meal-card.needs-brain-action{padding:.68rem .62rem!important}
   .journal-summary-meal-card > .summary-meal-visual{
-    width:2.32rem!important;
-    height:2.32rem!important;
+    width:2.08rem!important;
+    height:2.08rem!important;
+    border-radius:12px;
   }
-  .journal-summary-meal-card > .summary-meal-visual--food{font-size:1.28rem!important}
-  .journal-summary-meal-card > .summary-meal-visual--brain{font-size:1.16rem!important}
-  .summary-meal-copy > strong{font-size:1rem!important}
-  .summary-meal-copy > small{font-size:.59rem!important}
-  .summary-meal-action{width:1.7rem;height:1.7rem}
+  .journal-summary-meal-card > .summary-meal-visual--food{font-size:1.18rem!important}
+  .journal-summary-meal-card > .summary-meal-visual--brain{font-size:1.08rem!important}
+  .summary-meal-copy{gap:.2rem!important}
+  .summary-meal-copy > span{
+    font-size:.66rem!important;
+    line-height:1.05;
+  }
+  .summary-meal-copy > strong{
+    font-size:.92rem!important;
+    line-height:1.05;
+    letter-spacing:-.01em;
+  }
+  .summary-meal-copy > small{
+    max-width:100%;
+    padding:.16rem .34rem;
+    font-size:.54rem!important;
+    line-height:1.15;
+  }
+  .summary-meal-action{
+    width:1.5rem;
+    height:1.5rem;
+    border-radius:9px;
+  }
+  .summary-meal-action--add{font-size:1rem}
+  .summary-meal-action--complete{font-size:.86rem}
+  .summary-meal-action--edit svg{
+    width:.82rem;
+    height:.82rem;
+  }
+}
+
+@media(max-width:370px){
+  .journal-summary-meal-grid{grid-template-columns:1fr}
+  .journal-summary-meal-grid > .journal-summary-meal-card{grid-column:1!important}
+  .journal-summary-meal-card{
+    min-height:92px;
+    grid-template-columns:2.2rem minmax(0,1fr) 1.5rem!important;
+  }
 }
