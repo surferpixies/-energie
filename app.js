@@ -581,6 +581,7 @@
         fixedCalorieTarget: null,
         calorieDeficitTarget: 400,
         journalViewMode: "detailed",
+        summaryHideCompletedMeals: true,
         theme: "system",
         showWelcome: true,
         insightsEnabled: true,
@@ -1887,6 +1888,7 @@ function formatSleepDuration(hours) {
               profilePreferences: {
                 waterGoal: Number(db.settings.waterGoal) || 8,
                 journalViewMode: db.settings.journalViewMode || "detailed",
+                summaryHideCompletedMeals: db.settings.summaryHideCompletedMeals !== false,
                 insightsEnabled: db.settings.insightsEnabled !== false,
                 nutritionObservations: db.settings.nutritionObservations !== false,
                 macroTracking: db.settings.macroTracking !== false,
@@ -2193,7 +2195,7 @@ function formatSleepDuration(hours) {
       const pref = remoteProfilePreferences;
       if (Number(pref.waterGoal) > 0) db.settings.waterGoal = Math.round(Number(pref.waterGoal));
       if (["detailed", "summary"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
-      ["insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode"].forEach((key) => {
+      ["insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
       });
       if (Number(pref.feelingDelayHours) > 0) db.settings.feelingDelayHours = Number(pref.feelingDelayHours);
@@ -8758,16 +8760,133 @@ function formatSleepDuration(hours) {
     }
   }
 
+  function journalSummaryMealComplete(meal) {
+    if (!meal || !String(meal.description || "").trim()) return false;
+    const beforeDone = Object.keys(feelingScoresFor(meal, "before")).length > 0,
+      afterDone = !!meal.feeling;
+    return beforeDone && afterDone;
+  }
+
+  function journalSummaryMealVisual(type, meal = null) {
+    if (type === "Déjeuner") return "🍳";
+    if (type === "Dîner") return "🥪";
+    if (type === "Souper") return "🍝";
+    return mealIcon("Collation", meal?.description || "");
+  }
+
+  function journalSummaryMealCardState(type, meals) {
+    const entries = mealTypeSummary(meals, type),
+      first = entries[0] || null;
+
+    if (!entries.length) {
+      return {
+        complete: false,
+        needsBrain: false,
+        visual: journalSummaryMealVisual(type),
+        action: "+",
+        actionKind: "add",
+        label: "Ajouter",
+        detail: type === "Collation" ? "Aucune collation notée" : "Aucun repas noté",
+        mealId: null,
+        count: 0,
+      };
+    }
+
+    const reminderTypes = Array.isArray(db.settings.feelingMealTypes)
+        ? db.settings.feelingMealTypes
+        : ["Déjeuner", "Dîner", "Souper"],
+      tracksFeelings =
+        db.settings.feelingReminders !== false && reminderTypes.includes(type),
+      missingBefore =
+        tracksFeelings &&
+        entries.some(
+          (meal) => Object.keys(feelingScoresFor(meal, "before")).length === 0,
+        ),
+      missingAfterNotified =
+        tracksFeelings &&
+        entries.some(
+          (meal) => !meal.feeling && !!meal.feelingNotifiedAt,
+        ),
+      complete = entries.every(journalSummaryMealComplete),
+      needsBrain = missingBefore || missingAfterNotified;
+
+    let label = "Repas noté",
+      detail = tracksFeelings ? "Ressenti après à venir" : "Repas enregistré";
+
+    if (missingBefore) {
+      label = "À compléter";
+      detail = "Ressenti avant manquant";
+    } else if (missingAfterNotified) {
+      label = "À compléter";
+      detail = "Ressenti après attendu";
+    } else if (complete) {
+      label = "Complété";
+      detail = "Repas + avant + après";
+    }
+
+    if (type === "Collation" && entries.length > 1) {
+      const base = `${entries.length} collations`;
+      detail = complete
+        ? `${base} · complétées`
+        : missingBefore
+          ? `${base} · avant à compléter`
+          : missingAfterNotified
+            ? `${base} · après à compléter`
+            : tracksFeelings
+              ? `${base} · suivi en cours`
+              : `${base} · enregistrées`;
+    }
+
+    return {
+      complete,
+      needsBrain,
+      visual: needsBrain ? "🧠" : journalSummaryMealVisual(type, first),
+      action: complete ? "✓" : "edit",
+      actionKind: complete ? "complete" : "edit",
+      label,
+      detail,
+      mealId: first?.id || null,
+      count: entries.length,
+    };
+  }
+
+  function journalSummaryMealActionHtml(state) {
+    if (state.actionKind === "add")
+      return `<span class="summary-meal-action summary-meal-action--add" aria-hidden="true">+</span>`;
+    if (state.actionKind === "complete")
+      return `<span class="summary-meal-action summary-meal-action--complete" aria-hidden="true">✓</span>`;
+    return `<span class="summary-meal-action summary-meal-action--edit" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 20h4.2L19 9.2a2 2 0 0 0 0-2.8L17.6 5a2 2 0 0 0-2.8 0L4 15.8V20Zm2-3.4 10.2-10.2 1.4 1.4L7.4 18H6v-1.4Z"/></svg></span>`;
+  }
+
+  function journalSummaryMealCardHtml(type, meals) {
+    const state = journalSummaryMealCardState(type, meals),
+      visualClass = state.needsBrain ? "summary-meal-visual--brain energy-action-brain" : "summary-meal-visual--food",
+      aria = state.mealId
+        ? `${type} · ${state.detail}`
+        : `Ajouter ${type.toLowerCase()}`;
+
+    return `<button type="button" class="journal-summary-action journal-summary-meal-card ${state.needsBrain ? "needs-brain-action" : ""} ${state.complete ? "is-complete" : ""}" data-summary-meal-card="${esc(type)}" data-summary-meal-id="${esc(state.mealId || "")}" aria-label="${esc(aria)}"><span class="summary-meal-visual ${visualClass}" aria-hidden="true">${state.visual}</span><span class="summary-meal-copy"><span>${esc(state.label)}</span><strong>${mealTypeHtml(type)}</strong><small>${esc(state.detail)}</small></span>${journalSummaryMealActionHtml(state)}</button>`;
+  }
+
+  function journalSummaryMealsHtml(meals) {
+    const hideCompleted = db.settings.summaryHideCompletedMeals !== false,
+      types = ["Déjeuner", "Dîner", "Souper", "Collation"],
+      visibleTypes = types.filter((type) => {
+        if (type === "Collation" || !hideCompleted) return true;
+        return !journalSummaryMealCardState(type, meals).complete;
+      }),
+      cards = visibleTypes
+        .map((type) => journalSummaryMealCardHtml(type, meals))
+        .join("");
+
+    return `<div class="journal-summary-meal-grid meal-count-${visibleTypes.length}" aria-label="Repas de la journée">${cards}</div>`;
+  }
+
   function journalSummaryHtml(day, meals) {
     meals = journalCountedMeals(meals);
-    const feelingCount = meals.filter((meal) =>
-        Object.keys(feelingScoresFor(meal, "before")).length || meal.feeling,
-      ).length,
-      sleepRecorded = day.sleepHours != null || (day.sleepTags || []).length > 0 || String(day.sleepComment || "").trim(),
-      sleepPrompt = sleepRecorded ? "" : `<button type="button" class="journal-summary-action journal-summary-sleep needs-brain-action sleep-needs-brain-action" id="journalSummarySleep"><span class="energy-action-brain sleep-energy-action-brain" aria-hidden="true">🧠</span><span class="sleep-summary-copy"><span>À noter une fois aujourd’hui</span><strong>Sommeil</strong><small>Durée, qualité ou commentaire</small></span><span class="summary-sleep-visual" aria-hidden="true"><svg viewBox="0 0 84 68" role="presentation"><circle class="sleep-moon" cx="45" cy="34" r="22"/><circle class="sleep-moon-cut" cx="56" cy="24" r="22"/><circle class="sleep-star sleep-star-a" cx="18" cy="19" r="2.2"/><circle class="sleep-star sleep-star-b" cx="24" cy="42" r="1.6"/><path class="sleep-star sleep-star-c" d="M72 17l1.8 3.7 4 .6-2.9 2.8.7 4-3.6-1.9-3.6 1.9.7-4-2.9-2.8 4-.6z"/></svg></span><span class="summary-action-plus" aria-hidden="true">+</span></button>`,
-      dueFeeling = pendingFeelings().some((meal) => meal.date === selectedDate),
-      feelingBrain = dueFeeling ? `<span class="energy-action-brain summary-energy-action-brain" aria-hidden="true">🧠</span>` : "";
-    return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}<button type="button" class="journal-summary-action journal-summary-action--meal" id="journalSummaryMeal"><span>Ajouter un</span><strong>Repas</strong><span class="summary-action-watermark" aria-hidden="true">🍲</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${meals.length} repas ou collation${meals.length !== 1 ? "s" : ""} cette journée</small></button><button type="button" class="journal-summary-action journal-summary-action--feeling ${dueFeeling ? "needs-brain-action feeling-needs-brain-action" : ""}" id="journalSummaryFeeling">${feelingBrain}<span class="feeling-summary-copy"><span>${dueFeeling ? "À compléter" : "Ajouter un"}</span><strong>Ressenti</strong><small>${dueFeeling ? "Un ressenti après est maintenant attendu" : feelingCount ? `${feelingCount} repas documenté${feelingCount > 1 ? "s" : ""}` : "Avant, après ou hors repas"}</small></span><span class="summary-action-watermark" aria-hidden="true">😬</span><span class="summary-action-plus" aria-hidden="true">+</span></button>${summaryActivityHtml(day)}${summaryHydrationHtml(day)}${stepsProgressHtml(day, true)}</div></section>`;
+    const sleepRecorded = day.sleepHours != null || (day.sleepTags || []).length > 0 || String(day.sleepComment || "").trim(),
+      sleepPrompt = sleepRecorded ? "" : `<button type="button" class="journal-summary-action journal-summary-sleep needs-brain-action sleep-needs-brain-action" id="journalSummarySleep"><span class="energy-action-brain sleep-energy-action-brain" aria-hidden="true">🧠</span><span class="sleep-summary-copy"><span>À noter une fois aujourd’hui</span><strong>Sommeil</strong><small>Durée, qualité ou commentaire</small></span><span class="summary-sleep-visual" aria-hidden="true"><svg viewBox="0 0 84 68" role="presentation"><circle class="sleep-moon" cx="45" cy="34" r="22"/><circle class="sleep-moon-cut" cx="56" cy="24" r="22"/><circle class="sleep-star sleep-star-a" cx="18" cy="19" r="2.2"/><circle class="sleep-star sleep-star-b" cx="24" cy="42" r="1.6"/><path class="sleep-star sleep-star-c" d="M72 17l1.8 3.7 4 .6-2.9 2.8.7 4-3.6-1.9-3.6 1.9.7-4-2.9-2.8 4-.6z"/></svg></span><span class="summary-action-plus" aria-hidden="true">+</span></button>`;
+    return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}${journalSummaryMealsHtml(meals)}${summaryActivityHtml(day)}${summaryHydrationHtml(day)}${stepsProgressHtml(day, true)}</div></section>`;
   }
 
   function updateQuickMealTypeDialog(meals, now = new Date()) {
@@ -8890,9 +9009,16 @@ function formatSleepDuration(hours) {
         render();
       };
     });
-    $("#journalSummaryMeal")?.addEventListener("click", () => {
-      updateQuickMealTypeDialog(meals);
-      $("#quickMealTypeDialog").showModal();
+    $$("[data-summary-meal-card]").forEach((button) => {
+      button.onclick = () => {
+        const type = button.dataset.summaryMealCard,
+          mealId = button.dataset.summaryMealId || null;
+        if (type === "Collation") {
+          openSnackManager();
+          return;
+        }
+        openMeal(mealId, type);
+      };
     });
     $$('[data-summary-meal-type]').forEach((button) => {
       button.onclick = () => {
@@ -8915,9 +9041,6 @@ function formatSleepDuration(hours) {
         render();
       };
     });
-    $("#journalSummaryFeeling")?.addEventListener("click", () =>
-      openQuickFeelingChooser(meals),
-    );
     $("#quickGlobalFeeling").onclick = () => {
       $("#quickFeelingDialog").close();
       openGlobalObservation();
@@ -12587,6 +12710,8 @@ function formatSleepDuration(hours) {
           "donnees et sauvegarde",
           "photos des repas",
           "elements reconnus",
+          "journal sommaire",
+          "masquer les repas completes",
           "raisons de manger",
           "qu'est-ce qui t'a amene a manger",
           "planification des repas",
@@ -12710,7 +12835,7 @@ function formatSleepDuration(hours) {
         ? `<div class="notice info-notice"><strong>Estimations nutritionnelles professionnelles</strong><p>Le Journal affiche uniquement le total calorique. Les détails des nutriments restent réservés à cette vue professionnelle.</p></div>`
         : `<div class="notice info-notice"><strong>Calories estimées, sans objectif</strong><p>Seul le total calorique est affiché en haut du Journal, avec sa tendance dans Observations. Les autres chiffres nutritionnels restent masqués.</p></div>`;
     $("#app").innerHTML =
-      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div>${isNativeAndroidApp() ? "" : `<div class="apple-link-card"><div><strong>Connexion Apple</strong><p class="muted small">${hasAppleIdentity() ? "✓ Ton identifiant Apple est associé à ce compte Énergie." : "Associe Apple à ce compte avant d’utiliser « Se connecter avec Apple »."}</p></div>${hasAppleIdentity() ? "" : `<button type="button" class="apple-auth-button" id="linkAppleIdentity"><b aria-hidden="true"></b> Associer mon compte Apple</button><p id="appleIdentityMessage" class="muted tiny" aria-live="polite"></p>`}</div>`}<button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card recognized-elements-setting-card"><h3>🔎 Éléments reconnus</h3><p class="muted small">Cette petite carte résume ce qu’Énergie reconnaît dans la description du repas. Tu peux la masquer pour alléger la saisie sans désactiver l’analyse du repas ni les estimations nutritionnelles.</p><label class="toggle-row"><span><strong>Afficher « Éléments reconnus »</strong><small>Affiche la carte sous la description du repas</small></span><input id="settingRecognizedElements" type="checkbox" ${db.settings.showRecognizedElements !== false ? "checked" : ""}></label></section><section class="card guided-cnf-setting-card"><h3>🇨🇦 Saisie des repas</h3><p class="muted small">Tu peux imposer la saisie guidée FCÉN pour éviter les descriptions libres et rendre les estimations plus reproductibles.</p><label class="toggle-row"><span><strong>Forcer la saisie guidée FCÉN</strong><small>Quand activé, la description du repas ne peut plus être tapée directement; les aliments doivent être ajoutés avec le lien FCÉN.</small></span><input id="settingForceGuidedCnf" type="checkbox" ${db.settings.forceGuidedCnfMealEntry === true ? "checked" : ""}></label><p class="muted tiny">Désactivé par défaut.</p></section><section class="card eating-reasons-setting-card"><h3>💭 Raisons de manger</h3><p class="muted small">La question « Qu’est-ce qui t’a amené à manger? » est facultative. Tu peux la masquer pour alléger la saisie des repas.</p><label class="toggle-row"><span><strong>Afficher « Qu’est-ce qui t’a amené à manger? »</strong><small>Si elle est masquée, la carte correspondante n’apparaît pas non plus dans Observations</small></span><input id="settingEatingReasons" type="checkbox" ${db.settings.showEatingReasons !== false ? "checked" : ""}></label></section><section class="card future-meal-planning-setting-card"><h3>📅 Planification des repas</h3><p class="muted small">Optionnel · utile si tu souhaites préparer ton journal à l’avance.</p><label class="toggle-row"><span><strong>Permettre la saisie de repas à l’avance</strong><small>Autorise la navigation et la saisie jusqu’à 2 jours dans le futur. Cette limite est fixe à 2 jours.</small></span><input id="settingFutureMealPlanning" type="checkbox" ${db.settings.futureMealPlanning === true ? "checked" : ""}></label><p class="muted tiny">Les repas planifiés restent enregistrés, mais ne participent pas aux Observations ni à l’apprentissage d’Énergie avant la date prévue.</p></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="one-time-code"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button>${nativeLocalNotifications() ? `<p class="muted tiny">Sur iPhone, les rappels peuvent apparaître même lorsque Énergie n’est pas ouverte, si les notifications sont autorisées.</p>` : `<p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p>`}</div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${labScenarioCardsHtml()}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<details class="card profile-backup-panel"><summary><span><strong>Données et sauvegarde</strong><small>Options avancées · ${backups} copie(s) locale(s)</small></span><span aria-hidden="true">›</span></summary><div class="profile-backup-content"><p class="muted small">Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></div></details></div>`;
+      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div>${isNativeAndroidApp() ? "" : `<div class="apple-link-card"><div><strong>Connexion Apple</strong><p class="muted small">${hasAppleIdentity() ? "✓ Ton identifiant Apple est associé à ce compte Énergie." : "Associe Apple à ce compte avant d’utiliser « Se connecter avec Apple »."}</p></div>${hasAppleIdentity() ? "" : `<button type="button" class="apple-auth-button" id="linkAppleIdentity"><b aria-hidden="true"></b> Associer mon compte Apple</button><p id="appleIdentityMessage" class="muted tiny" aria-live="polite"></p>`}</div>`}<button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card recognized-elements-setting-card"><h3>🔎 Éléments reconnus</h3><p class="muted small">Cette petite carte résume ce qu’Énergie reconnaît dans la description du repas. Tu peux la masquer pour alléger la saisie sans désactiver l’analyse du repas ni les estimations nutritionnelles.</p><label class="toggle-row"><span><strong>Afficher « Éléments reconnus »</strong><small>Affiche la carte sous la description du repas</small></span><input id="settingRecognizedElements" type="checkbox" ${db.settings.showRecognizedElements !== false ? "checked" : ""}></label></section><section class="card journal-summary-setting-card"><h3>🗓️ Journal sommaire</h3><p class="muted small">Choisis comment les repas complétés s’affichent dans le Journal en mode sommaire.</p><label class="toggle-row"><span><strong>Masquer les repas complétés</strong><small>Un repas disparaît du sommaire lorsqu’il contient le repas, le ressenti avant et le ressenti après. La carte Collation reste toujours visible.</small></span><input id="settingSummaryHideCompletedMeals" type="checkbox" ${db.settings.summaryHideCompletedMeals !== false ? "checked" : ""}></label></section><section class="card guided-cnf-setting-card"><h3>🇨🇦 Saisie des repas</h3><p class="muted small">Tu peux imposer la saisie guidée FCÉN pour éviter les descriptions libres et rendre les estimations plus reproductibles.</p><label class="toggle-row"><span><strong>Forcer la saisie guidée FCÉN</strong><small>Quand activé, la description du repas ne peut plus être tapée directement; les aliments doivent être ajoutés avec le lien FCÉN.</small></span><input id="settingForceGuidedCnf" type="checkbox" ${db.settings.forceGuidedCnfMealEntry === true ? "checked" : ""}></label><p class="muted tiny">Désactivé par défaut.</p></section><section class="card eating-reasons-setting-card"><h3>💭 Raisons de manger</h3><p class="muted small">La question « Qu’est-ce qui t’a amené à manger? » est facultative. Tu peux la masquer pour alléger la saisie des repas.</p><label class="toggle-row"><span><strong>Afficher « Qu’est-ce qui t’a amené à manger? »</strong><small>Si elle est masquée, la carte correspondante n’apparaît pas non plus dans Observations</small></span><input id="settingEatingReasons" type="checkbox" ${db.settings.showEatingReasons !== false ? "checked" : ""}></label></section><section class="card future-meal-planning-setting-card"><h3>📅 Planification des repas</h3><p class="muted small">Optionnel · utile si tu souhaites préparer ton journal à l’avance.</p><label class="toggle-row"><span><strong>Permettre la saisie de repas à l’avance</strong><small>Autorise la navigation et la saisie jusqu’à 2 jours dans le futur. Cette limite est fixe à 2 jours.</small></span><input id="settingFutureMealPlanning" type="checkbox" ${db.settings.futureMealPlanning === true ? "checked" : ""}></label><p class="muted tiny">Les repas planifiés restent enregistrés, mais ne participent pas aux Observations ni à l’apprentissage d’Énergie avant la date prévue.</p></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="one-time-code"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button>${nativeLocalNotifications() ? `<p class="muted tiny">Sur iPhone, les rappels peuvent apparaître même lorsque Énergie n’est pas ouverte, si les notifications sont autorisées.</p>` : `<p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p>`}</div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${labScenarioCardsHtml()}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<details class="card profile-backup-panel"><summary><span><strong>Données et sauvegarde</strong><small>Options avancées · ${backups} copie(s) locale(s)</small></span><span aria-hidden="true">›</span></summary><div class="profile-backup-content"><p class="muted small">Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></div></details></div>`;
     const professionalSettingsSection = $("#settingProfessionalSupport")?.closest("section.card");
     const professionalBetaHtml = professionalBetaProfileHtml();
     professionalSettingsSection?.insertAdjacentHTML("afterend", professionalBetaHtml);
@@ -12960,6 +13085,7 @@ function formatSleepDuration(hours) {
     );
     toggleSetting("#settingSeasonalIcons", "seasonalIcons");
     toggleSetting("#settingRecognizedElements", "showRecognizedElements");
+    toggleSetting("#settingSummaryHideCompletedMeals", "summaryHideCompletedMeals");
     toggleSetting("#settingForceGuidedCnf", "forceGuidedCnfMealEntry");
     toggleSetting("#settingEatingReasons", "showEatingReasons");
     toggleSetting("#settingFutureMealPlanning", "futureMealPlanning");
