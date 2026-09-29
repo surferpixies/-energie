@@ -792,7 +792,7 @@ html[data-theme="dark"] .journal-summary-action--feeling .feeling-summary-copy >
 .journal-summary-meal-card{
   min-height:116px;
   display:grid!important;
-  grid-template-columns:3.05rem minmax(0,1fr)!important;
+  grid-template-columns:3.05rem minmax(0,1fr) 2rem!important;
   grid-template-rows:1fr!important;
   align-items:center!important;
   align-content:center!important;
@@ -802,7 +802,7 @@ html[data-theme="dark"] .journal-summary-action--feeling .feeling-summary-copy >
 .journal-summary-meal-card.needs-brain-action{
   padding:.85rem!important;
 }
-.journal-summary-meal-card > .summary-meal-state{
+.journal-summary-meal-card > .summary-meal-visual{
   position:relative!important;
   inset:auto!important;
   grid-column:1!important;
@@ -815,29 +815,18 @@ html[data-theme="dark"] .journal-summary-action--feeling .feeling-summary-copy >
   height:2.55rem!important;
   margin:0!important;
   border-radius:14px;
-  background:color-mix(in srgb,var(--accent) 11%,var(--surface));
-  box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 12%,transparent);
-  color:var(--accent-strong,#226c46)!important;
-  font-size:1.28rem!important;
-  font-weight:900!important;
   line-height:1!important;
   pointer-events:none;
 }
-.journal-summary-meal-card > .summary-meal-state--brain{
+.journal-summary-meal-card > .summary-meal-visual--food{
+  background:color-mix(in srgb,var(--accent) 8%,var(--surface));
+  box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 11%,transparent);
+  font-size:1.42rem!important;
+}
+.journal-summary-meal-card > .summary-meal-visual--brain{
   background:color-mix(in srgb,var(--accent) 14%,var(--surface));
   box-shadow:0 7px 18px color-mix(in srgb,var(--accent) 18%,transparent);
-}
-.journal-summary-meal-card > .summary-meal-state--complete{
-  color:#fff!important;
-  background:#2fa75d;
-}
-.journal-summary-meal-card > .summary-meal-state--empty{
-  color:#fff!important;
-  background:#2f8757;
-  font-size:1.5rem!important;
-}
-.journal-summary-meal-card > .summary-meal-state--recorded{
-  background:color-mix(in srgb,var(--accent) 8%,var(--surface));
+  font-size:1.28rem!important;
 }
 .summary-meal-copy{
   grid-column:2!important;
@@ -874,6 +863,39 @@ html[data-theme="dark"] .journal-summary-action--feeling .feeling-summary-copy >
   text-overflow:ellipsis;
   white-space:nowrap;
 }
+.summary-meal-action{
+  grid-column:3!important;
+  grid-row:1!important;
+  align-self:center!important;
+  justify-self:end!important;
+  display:grid;
+  place-items:center;
+  width:1.9rem;
+  height:1.9rem;
+  border-radius:10px;
+  pointer-events:none;
+}
+.summary-meal-action--add{
+  color:#fff;
+  background:#2f8757;
+  font-size:1.15rem;
+  font-weight:900;
+}
+.summary-meal-action--complete{
+  color:#fff;
+  background:#2fa75d;
+  font-size:1rem;
+  font-weight:900;
+}
+.summary-meal-action--edit{
+  color:var(--accent-strong,#226c46);
+  background:color-mix(in srgb,var(--accent) 9%,var(--surface));
+}
+.summary-meal-action--edit svg{
+  width:1rem;
+  height:1rem;
+  fill:currentColor;
+}
 html[data-theme="dark"] .summary-meal-copy > strong{
   color:var(--text,#f5f2e9);
 }
@@ -884,16 +906,18 @@ html[data-theme="dark"] .summary-meal-copy > small{
   .journal-summary-meal-grid{gap:.65rem}
   .journal-summary-meal-card{
     min-height:108px;
-    grid-template-columns:2.8rem minmax(0,1fr)!important;
-    column-gap:.58rem!important;
-    padding:.78rem!important;
+    grid-template-columns:2.7rem minmax(0,1fr) 1.8rem!important;
+    column-gap:.5rem!important;
+    padding:.75rem!important;
   }
-  .journal-summary-meal-card.needs-brain-action{padding:.78rem!important}
-  .journal-summary-meal-card > .summary-meal-state{
-    width:2.38rem!important;
-    height:2.38rem!important;
-    font-size:1.18rem!important;
+  .journal-summary-meal-card.needs-brain-action{padding:.75rem!important}
+  .journal-summary-meal-card > .summary-meal-visual{
+    width:2.32rem!important;
+    height:2.32rem!important;
   }
-  .summary-meal-copy > strong{font-size:1.02rem!important}
-  .summary-meal-copy > small{font-size:.6rem!important}
+  .journal-summary-meal-card > .summary-meal-visual--food{font-size:1.28rem!important}
+  .journal-summary-meal-card > .summary-meal-visual--brain{font-size:1.16rem!important}
+  .summary-meal-copy > strong{font-size:1rem!important}
+  .summary-meal-copy > small{font-size:.59rem!important}
+  .summary-meal-action{width:1.7rem;height:1.7rem}
 }
