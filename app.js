@@ -582,6 +582,7 @@
         fixedCalorieTarget: null,
         calorieDeficitTarget: 400,
         journalViewMode: "detailed",
+        summaryHideCompletedMeals: true,
         theme: "system",
         showWelcome: true,
         insightsEnabled: true,
@@ -1908,6 +1909,7 @@ function formatSleepDuration(hours) {
               profilePreferences: {
                 waterGoal: Number(db.settings.waterGoal) || 8,
                 journalViewMode: db.settings.journalViewMode || "detailed",
+                summaryHideCompletedMeals: db.settings.summaryHideCompletedMeals !== false,
                 insightsEnabled: db.settings.insightsEnabled !== false,
                 nutritionObservations: db.settings.nutritionObservations !== false,
                 macroTracking: db.settings.macroTracking !== false,
@@ -2214,7 +2216,7 @@ function formatSleepDuration(hours) {
       const pref = remoteProfilePreferences;
       if (Number(pref.waterGoal) > 0) db.settings.waterGoal = Math.round(Number(pref.waterGoal));
       if (["detailed", "summary"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
-      ["insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode"].forEach((key) => {
+      ["insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
       });
       if (Number(pref.feelingDelayHours) > 0) db.settings.feelingDelayHours = Number(pref.feelingDelayHours);
@@ -9102,16 +9104,112 @@ function formatSleepDuration(hours) {
     }
   }
 
+  function journalSummaryMealComplete(meal) {
+    if (!meal || !String(meal.description || "").trim()) return false;
+    const beforeDone = Object.keys(feelingScoresFor(meal, "before")).length > 0,
+      afterDone = !!meal.feeling;
+    return beforeDone && afterDone;
+  }
+
+  function journalSummaryMealCardState(type, meals) {
+    const entries = mealTypeSummary(meals, type),
+      first = entries[0] || null;
+
+    if (!entries.length) {
+      return {
+        complete: false,
+        needsBrain: false,
+        icon: "+",
+        label: "Ajouter",
+        detail: type === "Collation" ? "Aucune collation notée" : "Aucun repas noté",
+        mealId: null,
+        count: 0,
+      };
+    }
+
+    const missingBefore = entries.some(
+        (meal) => Object.keys(feelingScoresFor(meal, "before")).length === 0,
+      ),
+      missingAfterDue = entries.some(
+        (meal) =>
+          !meal.feeling &&
+          isFeelingEligible(meal) &&
+          feelingDueAt(meal) <= new Date(),
+      ),
+      complete = entries.every(journalSummaryMealComplete),
+      needsBrain = missingBefore || missingAfterDue;
+
+    let label = "Repas noté",
+      detail = "Ressenti après à venir";
+
+    if (missingBefore) {
+      label = "À compléter";
+      detail = "Ressenti avant manquant";
+    } else if (missingAfterDue) {
+      label = "À compléter";
+      detail = "Ressenti après attendu";
+    } else if (complete) {
+      label = "Complété";
+      detail = "Repas + avant + après";
+    }
+
+    if (type === "Collation" && entries.length > 1) {
+      const base = `${entries.length} collations`;
+      detail = complete
+        ? `${base} · complétées`
+        : missingBefore
+          ? `${base} · avant à compléter`
+          : missingAfterDue
+            ? `${base} · après à compléter`
+            : `${base} · suivi en cours`;
+    }
+
+    return {
+      complete,
+      needsBrain,
+      icon: needsBrain ? "🧠" : complete ? "✓" : mealIcon(type, first?.description || ""),
+      label,
+      detail,
+      mealId: first?.id || null,
+      count: entries.length,
+    };
+  }
+
+  function journalSummaryMealCardHtml(type, meals) {
+    const state = journalSummaryMealCardState(type, meals),
+      iconClass = state.needsBrain
+        ? "summary-meal-state--brain energy-action-brain"
+        : state.complete
+          ? "summary-meal-state--complete"
+          : state.mealId
+            ? "summary-meal-state--recorded"
+            : "summary-meal-state--empty",
+      aria = state.mealId
+        ? `${type} · ${state.detail}`
+        : `Ajouter ${type.toLowerCase()}`;
+
+    return `<button type="button" class="journal-summary-action journal-summary-meal-card ${state.needsBrain ? "needs-brain-action" : ""} ${state.complete ? "is-complete" : ""}" data-summary-meal-card="${esc(type)}" data-summary-meal-id="${esc(state.mealId || "")}" aria-label="${esc(aria)}"><span class="summary-meal-state ${iconClass}" aria-hidden="true">${state.icon}</span><span class="summary-meal-copy"><span>${esc(state.label)}</span><strong>${mealTypeHtml(type)}</strong><small>${esc(state.detail)}</small></span></button>`;
+  }
+
+  function journalSummaryMealsHtml(meals) {
+    const hideCompleted = db.settings.summaryHideCompletedMeals !== false,
+      types = ["Déjeuner", "Dîner", "Souper", "Collation"],
+      visibleTypes = types.filter((type) => {
+        if (type === "Collation" || !hideCompleted) return true;
+        return !journalSummaryMealCardState(type, meals).complete;
+      }),
+      cards = visibleTypes
+        .map((type) => journalSummaryMealCardHtml(type, meals))
+        .join("");
+
+    return `<div class="journal-summary-meal-grid meal-count-${visibleTypes.length}" aria-label="Repas de la journée">${cards}</div>`;
+  }
+
   function journalSummaryHtml(day, meals) {
     meals = journalCountedMeals(meals);
-    const feelingCount = meals.filter((meal) =>
-        Object.keys(feelingScoresFor(meal, "before")).length || meal.feeling,
-      ).length,
-      sleepRecorded = day.sleepHours != null || (day.sleepTags || []).length > 0 || String(day.sleepComment || "").trim(),
-      sleepPrompt = sleepRecorded ? "" : `<button type="button" class="journal-summary-action journal-summary-sleep needs-brain-action sleep-needs-brain-action" id="journalSummarySleep"><span class="energy-action-brain sleep-energy-action-brain" aria-hidden="true">🧠</span><span class="sleep-summary-copy"><span>À noter une fois aujourd’hui</span><strong>Sommeil</strong><small>Durée, qualité ou commentaire</small></span><span class="summary-sleep-visual" aria-hidden="true">🌙</span><span class="summary-action-plus" aria-hidden="true">+</span></button>`,
-      dueFeeling = pendingFeelings().some((meal) => meal.date === selectedDate),
-      feelingBrain = dueFeeling ? `<span class="energy-action-brain summary-energy-action-brain" aria-hidden="true">🧠</span>` : "";
-    return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}<button type="button" class="journal-summary-action journal-summary-action--meal" id="journalSummaryMeal"><span>Ajouter un</span><strong>Repas</strong><span class="summary-action-watermark" aria-hidden="true">🍲</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${meals.length} repas ou collation${meals.length !== 1 ? "s" : ""} cette journée</small></button><button type="button" class="journal-summary-action journal-summary-action--feeling ${dueFeeling ? "needs-brain-action feeling-needs-brain-action" : ""}" id="journalSummaryFeeling">${feelingBrain}<span class="feeling-summary-copy"><span>${dueFeeling ? "À compléter" : "Ajouter un"}</span><strong>Ressenti</strong><small>${dueFeeling ? "Un ressenti après est maintenant attendu" : feelingCount ? `${feelingCount} repas documenté${feelingCount > 1 ? "s" : ""}` : "Avant, après ou hors repas"}</small></span><span class="summary-action-watermark" aria-hidden="true">😬</span><span class="summary-action-plus" aria-hidden="true">+</span></button>${summaryActivityHtml(day)}${summaryHydrationHtml(day)}${stepsProgressHtml(day, true)}</div></section>`;
+    const sleepRecorded = day.sleepHours != null || (day.sleepTags || []).length > 0 || String(day.sleepComment || "").trim(),
+      sleepPrompt = sleepRecorded ? "" : `<button type="button" class="journal-summary-action journal-summary-sleep needs-brain-action sleep-needs-brain-action" id="journalSummarySleep"><span class="energy-action-brain sleep-energy-action-brain" aria-hidden="true">🧠</span><span class="sleep-summary-copy"><span>À noter une fois aujourd’hui</span><strong>Sommeil</strong><small>Durée, qualité ou commentaire</small></span><span class="summary-sleep-visual" aria-hidden="true">🌙</span><span class="summary-action-plus" aria-hidden="true">+</span></button>`;
+    return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}${journalSummaryMealsHtml(meals)}${summaryActivityHtml(day)}${summaryHydrationHtml(day)}${stepsProgressHtml(day, true)}</div></section>`;
   }
 
   function updateQuickMealTypeDialog(meals, now = new Date()) {
@@ -9234,9 +9332,16 @@ function formatSleepDuration(hours) {
         render();
       };
     });
-    $("#journalSummaryMeal")?.addEventListener("click", () => {
-      updateQuickMealTypeDialog(meals);
-      $("#quickMealTypeDialog").showModal();
+    $$("[data-summary-meal-card]").forEach((button) => {
+      button.onclick = () => {
+        const type = button.dataset.summaryMealCard,
+          mealId = button.dataset.summaryMealId || null;
+        if (type === "Collation") {
+          openSnackManager();
+          return;
+        }
+        openMeal(mealId, type);
+      };
     });
     $$('[data-summary-meal-type]').forEach((button) => {
       button.onclick = () => {
@@ -9259,9 +9364,6 @@ function formatSleepDuration(hours) {
         render();
       };
     });
-    $("#journalSummaryFeeling")?.addEventListener("click", () =>
-      openQuickFeelingChooser(meals),
-    );
     $("#quickGlobalFeeling").onclick = () => {
       $("#quickFeelingDialog").close();
       openGlobalObservation();
@@ -13240,6 +13342,8 @@ function formatSleepDuration(hours) {
           "jauge de cible calorique",
           "saisie des repas",
           "forcer la saisie guidee fcen",
+          "journal sommaire",
+          "repas completes",
         ],
       },
     ];
@@ -13372,6 +13476,7 @@ function formatSleepDuration(hours) {
     welcomeInfoSection?.insertAdjacentHTML("afterend", `<section class="card energy-guide-profile-card"><div class="settings-row"><div><span class="energy-guide-profile-icon" aria-hidden="true">🌱</span><span><h3>Découvrir Énergie</h3><p class="muted small">Un petit tour des principales fonctions de l’application.</p></span></div><button class="secondary" id="openEnergyGuide" type="button">Voir le guide</button></div></section>`);
     const energyGuideButton = $("#openEnergyGuide");
     if (energyGuideButton) energyGuideButton.onclick = openEnergyGuide;
+    $(".recognized-elements-setting-card")?.insertAdjacentHTML("afterend", `<section class="card journal-summary-setting-card"><h3>🗓️ Journal sommaire</h3><p class="muted small">Choisis si les repas déjà complètement documentés restent visibles dans l’ajout rapide.</p><label class="toggle-row"><span><strong>Masquer les repas complétés</strong><small>Un repas disparaît du sommaire seulement lorsque le repas, le ressenti avant et le ressenti après sont tous remplis. La carte Collation reste toujours disponible.</small></span><input id="settingSummaryHideCompletedMeals" type="checkbox" ${db.settings.summaryHideCompletedMeals !== false ? "checked" : ""}></label></section>`);
     const nutritionAnchor = $("#settingNutrition")?.closest("label");
     nutritionAnchor?.closest("section.card")?.insertAdjacentHTML("afterend", `<section class="card nutrition-source-profile-card"><h3>📚 Source des données nutritionnelles</h3><p class="muted small">Énergie s’appuie sur le <strong>Fichier canadien sur les éléments nutritifs (FCÉN) de Santé Canada</strong>, la base de référence officielle canadienne sur la composition des aliments. Les valeurs de référence sont ensuite adaptées aux aliments et aux quantités reconnus dans le repas.</p><p class="muted tiny">Pour les produits scannés, les données de l’étiquette peuvent provenir d’Open Food Facts lorsqu’elles sont disponibles. Les recettes, les marques et les méthodes de préparation peuvent faire varier les valeurs réelles.</p></section>`);
     if (session && profileSinceHtml)
@@ -13612,6 +13717,7 @@ function formatSleepDuration(hours) {
     );
     toggleSetting("#settingSeasonalIcons", "seasonalIcons");
     toggleSetting("#settingRecognizedElements", "showRecognizedElements");
+    toggleSetting("#settingSummaryHideCompletedMeals", "summaryHideCompletedMeals");
     toggleSetting("#settingForceGuidedCnf", "forceGuidedCnfMealEntry");
     toggleSetting("#settingEatingReasons", "showEatingReasons");
     toggleSetting("#settingFutureMealPlanning", "futureMealPlanning");
