@@ -2036,3 +2036,16 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
     right: 8px;
   }
 }
+
+
+/* Profile account identity + mode switch */
+.profile-account-card .profile-account-name{padding-bottom:16px;border-bottom:1px solid rgba(20,66,43,.12)}
+.profile-account-card .profile-account-name>label{display:block;font-weight:800;margin-bottom:8px}
+.profile-account-name-edit{display:flex;gap:10px;align-items:center}
+.profile-account-name-edit input{flex:1;min-width:0}
+.profile-account-email{margin-top:16px}
+.profile-account-card .profile-use-mode{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:1px solid rgba(20,66,43,.12)}
+.profile-mode-switch{display:inline-flex;padding:3px;border-radius:999px;background:rgba(20,66,43,.08);flex:0 0 auto}
+.profile-mode-switch button{border:0;background:transparent;color:inherit;padding:7px 12px;border-radius:999px;font:inherit;font-size:.82rem;font-weight:700;cursor:pointer;opacity:.62}
+.profile-mode-switch button.is-active{background:#fff;opacity:1;box-shadow:0 1px 5px rgba(0,0,0,.08)}
+@media(max-width:620px){.profile-account-name-edit{align-items:stretch}.profile-account-card .profile-use-mode{align-items:flex-start;flex-direction:column}}
