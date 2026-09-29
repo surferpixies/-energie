@@ -9174,13 +9174,13 @@ function formatSleepDuration(hours) {
         entries.some(
           (meal) => Object.keys(feelingScoresFor(meal, "before")).length === 0,
         ),
-      missingAfterNotified =
+      missingAfterDue =
         tracksFeelings &&
         entries.some(
-          (meal) => !meal.feeling && !!meal.feelingNotifiedAt,
+          (meal) => !meal.feeling && feelingDueAt(meal) <= new Date(),
         ),
       complete = entries.every(journalSummaryMealComplete),
-      needsBrain = missingBefore || missingAfterNotified;
+      needsBrain = missingBefore || missingAfterDue;
 
     let label = "Repas noté",
       detail = tracksFeelings ? "Ressenti après à venir" : "Repas enregistré";
@@ -9188,7 +9188,7 @@ function formatSleepDuration(hours) {
     if (missingBefore) {
       label = "À compléter";
       detail = "Ressenti avant manquant";
-    } else if (missingAfterNotified) {
+    } else if (missingAfterDue) {
       label = "À compléter";
       detail = "Ressenti après attendu";
     } else if (complete) {
@@ -9202,7 +9202,7 @@ function formatSleepDuration(hours) {
         ? `${base} · complétées`
         : missingBefore
           ? `${base} · avant à compléter`
-          : missingAfterNotified
+          : missingAfterDue
             ? `${base} · après à compléter`
             : tracksFeelings
               ? `${base} · suivi en cours`
