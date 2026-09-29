@@ -901,7 +901,7 @@ html[data-theme="dark"] .summary-meal-copy > strong{
 html[data-theme="dark"] .summary-meal-copy > small{
   background:rgba(255,255,255,.08);
 }
-@media(max-width:420px){
+@media(max-width:480px){
   .journal-summary-meal-grid{gap:.55rem}
   .journal-summary-meal-card{
     position:relative;
