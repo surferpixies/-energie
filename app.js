@@ -2651,6 +2651,15 @@ function formatSleepDuration(hours) {
       const score = exact + coverage + keyWords * 100 + key.length + positionBonus;
       if (!best || score > best.score) best = { ...candidate, score };
     }
+    // "filet(s) de X" doit être résolu par X dans le catalogue FCÉN avant
+    // tout ancien alias "filet" (qui peut sinon pointer vers un filet végétarien).
+    const normalizedSegment = normalizeFoodText(segment);
+    const explicitFiletFood = /^(?:\d+(?:[.,]\d+)?\s+)?(?:filet|filets|fillet|fillets)\s+(?:de|des|du|d|of)\s+/.test(normalizedSegment);
+    if (explicitFiletFood) {
+      const cnfSpecific = window.ENERGIE_CNF_SEARCH?.find?.(segment);
+      if (cnfSpecific) return cnfSpecific;
+    }
+
     // Un mapping vérifié FCÉN est prioritaire.
     if (best?.food?.nutritionSource === "cnf") return best.food;
 
