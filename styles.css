@@ -2090,3 +2090,45 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .profile-spaces-compact .profile-space-actions{flex-wrap:nowrap}
 .profile-spaces-compact .profile-space-button{padding:7px 10px!important;border-radius:12px!important;font-size:.73rem!important}
 @media(max-width:620px){.profile-account-card .profile-use-mode.profile-spaces-compact{flex-direction:row;align-items:center}.profile-spaces-compact .profile-space-actions{width:auto;flex:1;justify-content:flex-end}.profile-spaces-compact .profile-space-button{flex:0 1 auto}}
+
+/* Profil — adaptation mobile */
+@media (max-width: 600px) {
+  .profile-account-name-edit {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .6rem;
+  }
+
+  .profile-account-name-edit > button {
+    width: 100%;
+  }
+
+  .profile-account-email {
+    align-items: stretch;
+    flex-direction: column;
+    gap: .7rem;
+  }
+
+  .profile-account-email > button {
+    width: 100%;
+  }
+
+  .profile-spaces-compact {
+    align-items: stretch;
+    flex-direction: column;
+    gap: .6rem;
+  }
+
+  .profile-space-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    gap: .5rem;
+  }
+
+  .profile-space-button {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+  }
+}

@@ -902,23 +902,78 @@ html[data-theme="dark"] .summary-meal-copy > strong{
 html[data-theme="dark"] .summary-meal-copy > small{
   background:rgba(255,255,255,.08);
 }
-@media(max-width:420px){
-  .journal-summary-meal-grid{gap:.65rem}
+@media(max-width:480px){
+  .journal-summary-meal-grid{gap:.55rem}
   .journal-summary-meal-card{
-    min-height:108px;
-    grid-template-columns:2.7rem minmax(0,1fr) 1.8rem!important;
+    position:relative;
+    min-height:104px;
+    grid-template-columns:2.15rem minmax(0,1fr)!important;
+    grid-template-rows:1fr!important;
     column-gap:.5rem!important;
-    padding:.75rem!important;
+    padding:.68rem .58rem!important;
   }
-  .journal-summary-meal-card.needs-brain-action{padding:.75rem!important}
+  .journal-summary-meal-card.needs-brain-action{padding:.68rem .58rem!important}
   .journal-summary-meal-card > .summary-meal-visual{
-    width:2.32rem!important;
-    height:2.32rem!important;
+    width:1.95rem!important;
+    height:1.95rem!important;
+    border-radius:11px;
   }
-  .journal-summary-meal-card > .summary-meal-visual--food{font-size:1.28rem!important}
-  .journal-summary-meal-card > .summary-meal-visual--brain{font-size:1.16rem!important}
-  .summary-meal-copy > strong{font-size:1rem!important}
-  .summary-meal-copy > small{font-size:.59rem!important}
-  .summary-meal-action{width:1.7rem;height:1.7rem}
+  .journal-summary-meal-card > .summary-meal-visual--food{font-size:1.08rem!important}
+  .journal-summary-meal-card > .summary-meal-visual--brain{font-size:1.02rem!important}
+  .summary-meal-copy{
+    grid-column:2!important;
+    padding-right:1.72rem;
+    gap:.18rem!important;
+  }
+  .summary-meal-copy > span{
+    font-size:.61rem!important;
+    line-height:1.05;
+  }
+  .summary-meal-copy > strong{
+    overflow:visible;
+    font-size:.86rem!important;
+    line-height:1.06;
+    letter-spacing:-.015em;
+    text-overflow:clip;
+    white-space:nowrap;
+  }
+  .summary-meal-copy > small{
+    display:-webkit-box;
+    width:auto;
+    max-width:100%;
+    overflow:hidden;
+    padding:.14rem .3rem;
+    font-size:.50rem!important;
+    line-height:1.15;
+    text-overflow:ellipsis;
+    white-space:normal;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:2;
+  }
+  .summary-meal-action{
+    position:absolute;
+    top:.58rem;
+    right:.52rem;
+    grid-column:auto!important;
+    grid-row:auto!important;
+    width:1.38rem;
+    height:1.38rem;
+    border-radius:8px;
+  }
+  .summary-meal-action--add{font-size:.9rem}
+  .summary-meal-action--complete{font-size:.8rem}
+  .summary-meal-action--edit svg{
+    width:.76rem;
+    height:.76rem;
+  }
+}
+
+@media(max-width:370px){
+  .journal-summary-meal-grid{grid-template-columns:1fr}
+  .journal-summary-meal-grid > .journal-summary-meal-card{grid-column:1!important}
+  .journal-summary-meal-card{
+    min-height:92px;
+    grid-template-columns:2.2rem minmax(0,1fr) 1.5rem!important;
+  }
 }
 
