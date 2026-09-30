@@ -2740,16 +2740,19 @@ function formatSleepDuration(hours) {
         : { scale: 1, quantityUsed: false };
     }
     const naturalCount = mealNaturalCountFromText(segment);
-    if (naturalCount != null && naturalCount <= 20) {
+    const naturalSegmentText = normalizeFoodText(segment);
+    const explicitFiletCount = /\b(filet|filets|fillet|fillets)\b/.test(naturalSegmentText);
+    if (naturalCount != null && (naturalCount <= 20 || (explicitFiletCount && naturalCount <= 50))) {
       // FCÉN rows with a portion such as "1 egg" / "1 slice" are already
       // expressed per natural portion. A bare leading count therefore scales
       // that portion directly instead of being ignored.
       const portionText = normalizeFoodText(food?.portion || "");
       const segmentText = normalizeFoodText(segment);
-      const countablePortion = /\b(oeuf|egg|tranche|slice|piece|morceau|fruit|pomme|apple|banane|banana)\b/.test(portionText);
+      const countablePortion = /\b(oeuf|egg|tranche|slice|piece|morceau|fruit|pomme|apple|banane|banana|filet|fillet)\b/.test(portionText);
       const countableFood = /\b(oeuf|oeufs|egg|eggs)\b/.test(segmentText);
       const sliceCount = /\b(tranche|tranches|slice|slices)\b/.test(segmentText);
-      if (countablePortion || countableFood || sliceCount) {
+      const filetCount = /\b(filet|filets|fillet|fillets)\b/.test(segmentText);
+      if (countablePortion || countableFood || sliceCount || (filetCount && /\b(filet|fillet)\b/.test(portionText))) {
         if (sliceCount && !countablePortion && Number(food?.gramsPerPortion) === 100) {
           // The FCÉN full-catalog fallback is per 100 g. A bread slice needs an
           // explicit portion conversion; 30 g is used only for an explicit
