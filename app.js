@@ -3516,13 +3516,15 @@ function formatSleepDuration(hours) {
     const dialog = $("#mealNutritionTraceDialog"), body = $("#mealNutritionTraceBody");
     if (!dialog || !body || !trace?.items?.length) return;
     const rows = trace.items.map((item) => {
-      const quantity = item.enteredQuantity
-        ? item.enteredQuantity.unit === "count"
-          ? `${item.enteredQuantity.value} portion${item.enteredQuantity.value > 1 ? "s" : ""}`
-          : `${item.enteredQuantity.value} ${item.enteredQuantity.unit}`
-        : item.referencePortion || "portion courante";
+      const quantity = item.quantityKind === "unresolved-count"
+        ? `${item.enteredQuantity?.value || ""} filet${Number(item.enteredQuantity?.value) > 1 ? "s" : ""} — poids requis`
+        : item.enteredQuantity
+          ? item.enteredQuantity.unit === "count"
+            ? `${item.enteredQuantity.value} portion${item.enteredQuantity.value > 1 ? "s" : ""}`
+            : `${item.enteredQuantity.value} ${item.enteredQuantity.unit}`
+          : item.referencePortion || "portion courante";
       const match = item.matchedName || item.input || "Aliment";
-      const kcal = item.calories != null ? `${item.calories} kcal` : "—";
+      const kcal = item.quantityKind === "unresolved-count" ? "Poids à préciser" : item.calories != null ? `${item.calories} kcal` : "—";
       return `<div class="meal-nutrition-trace-item"><strong>${esc(item.input || match)}</strong><span>Correspondance : ${esc(match)}</span><span>Quantité interprétée : <b>${esc(quantity)}</b></span><span>Source : ${esc(nutritionTraceSourceLabel(item.source))}</span><em>${esc(kcal)}</em></div>`;
     }).join("");
     body.innerHTML = `<div class="meal-nutrition-trace-source">Source du calcul : <strong>${esc(nutritionTraceSourceLabel(trace.source))}</strong></div>${rows}`;
