@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="meal-quick-fill.css?v=3.56.28">
   <link rel="stylesheet" href="beverage-edit.css?v=3.56.29">
   <link rel="stylesheet" href="steps-tracking.css?v=3.56.39">
-  <link rel="stylesheet" href="journal-summary.css?v=3.56.157">
+  <link rel="stylesheet" href="journal-summary.css?v=3.56.161">
   <link rel="stylesheet" href="onboarding.css?v=3.56.52">
   <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.99">
 </head>
@@ -616,6 +616,26 @@
 
       <section class="auth-step" id="authCredentialsStep">
         <p id="authStepIntro" class="auth-step-intro">Entre les informations de ton compte pour te connecter.</p>
+        <div id="signupIdentityFields" hidden>
+          <label>Nom
+            <input id="authDisplayName" type="text" autocomplete="name" maxlength="100" placeholder="Ex. Marie Tremblay">
+          </label>
+          <div class="auth-account-type" role="radiogroup" aria-labelledby="authAccountTypeTitle">
+            <p id="authAccountTypeTitle">Comment souhaites-tu utiliser Énergie?</p>
+            <label class="auth-account-choice">
+              <input type="radio" name="authAccountType" value="personal" checked>
+              <span class="auth-choice-icon" aria-hidden="true">👤</span>
+              <span class="auth-choice-copy"><strong>Pour moi</strong><small>Suivre mon alimentation et mon bien-être.</small></span>
+              <span class="auth-choice-check" aria-hidden="true">✓</span>
+            </label>
+            <label class="auth-account-choice">
+              <input type="radio" name="authAccountType" value="professional">
+              <span class="auth-choice-icon" aria-hidden="true">🩺</span>
+              <span class="auth-choice-copy"><strong>Avec mes clients</strong><small>Utiliser Énergie dans mes suivis professionnels.</small></span>
+              <span class="auth-choice-check" aria-hidden="true">✓</span>
+            </label>
+          </div>
+        </div>
         <label>Adresse courriel
           <input id="authEmail" type="email" autocomplete="email" required placeholder="toi@exemple.com">
         </label>
@@ -693,10 +713,9 @@
   <input id="importFile" type="file" accept="application/json" hidden>
   <dialog id="professionalClientDialog" class="professional-client-dialog">
     <section class="dialog-card professional-client-picker">
-      <div class="dialog-header"><div><p class="eyebrow">Mode professionnel · Démo</p><h2>Choisir un client</h2></div><button type="button" class="icon-button" id="closeProfessionalPicker" aria-label="Quitter">✕</button></div>
-      <p class="muted">Sélectionne le dossier fictif à consulter en lecture seule.</p>
+      <div class="dialog-header"><div><p class="eyebrow">Espace professionnel</p><h2>Choisir un client</h2></div><button type="button" class="icon-button" id="closeProfessionalPicker" aria-label="Quitter">✕</button></div>
+      <p class="muted">Sélectionne le client à consulter.</p>
       <div id="professionalClientList" class="professional-client-list"></div>
-      <p class="muted tiny">Les données et les notes de cette simulation restent locales à cet appareil.</p>
     </section>
   </dialog>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -705,7 +724,7 @@
   <script src="foods.js?v=3.56.115"></script>
   <script src="cnf-runtime.js?v=3.56.126"></script>
   <script src="cnf-catalog.js?v=3.56.145"></script>
-  <script src="cnf-search.js?v=3.56.145"></script>
+  <script src="cnf-search.js?v=3.56.147"></script>
   <script src="nutrition-corrections.js?v=3.56.120"></script>
   <script src="food-categories.js?v=3.31.2"></script>
   <script src="dish-knowledge.js?v=3.31.2"></script>
@@ -723,6 +742,6 @@
   <script src="demo-lab.js?v=7"></script>
   <script src="personal-metrics.js?v=3.56.99"></script>
   <script src="onboarding-images.js?v=3.56.52"></script>
-  <script src="app.js?v=3.56.157"></script>
+  <script src="app.js?v=3.56.149"></script>
 </body>
 </html>

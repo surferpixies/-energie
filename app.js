@@ -373,6 +373,8 @@
     notificationTimer = null;
   let hasDemoAccess = false;
   let hasProfessionalBetaAccess = false;
+  let profileDisplayName = "";
+  let profileAccountType = "personal";
   let professionalDemoMode = false;
   let professionalBetaMode = false;
   let professionalPersonalDb = null;
@@ -2649,6 +2651,15 @@ function formatSleepDuration(hours) {
       const score = exact + coverage + keyWords * 100 + key.length + positionBonus;
       if (!best || score > best.score) best = { ...candidate, score };
     }
+    // "filet(s) de X" doit être résolu par X dans le catalogue FCÉN avant
+    // tout ancien alias "filet" (qui peut sinon pointer vers un filet végétarien).
+    const normalizedSegment = normalizeFoodText(segment);
+    const explicitFiletFood = /^(?:\d+(?:[.,]\d+)?\s+)?(?:filet|filets|fillet|fillets)\s+(?:de|des|du|d|of)\s+/.test(normalizedSegment);
+    if (explicitFiletFood) {
+      const cnfSpecific = window.ENERGIE_CNF_SEARCH?.find?.(segment);
+      if (cnfSpecific) return cnfSpecific;
+    }
+
     // Un mapping vérifié FCÉN est prioritaire.
     if (best?.food?.nutritionSource === "cnf") return best.food;
 
@@ -2738,16 +2749,23 @@ function formatSleepDuration(hours) {
         : { scale: 1, quantityUsed: false };
     }
     const naturalCount = mealNaturalCountFromText(segment);
-    if (naturalCount != null && naturalCount <= 20) {
+    const naturalSegmentText = normalizeFoodText(segment);
+    const explicitFiletCount = /\b(filet|filets|fillet|fillets)\b/.test(naturalSegmentText);
+    if (naturalCount != null && (naturalCount <= 20 || (explicitFiletCount && naturalCount <= 50))) {
       // FCÉN rows with a portion such as "1 egg" / "1 slice" are already
       // expressed per natural portion. A bare leading count therefore scales
       // that portion directly instead of being ignored.
       const portionText = normalizeFoodText(food?.portion || "");
       const segmentText = normalizeFoodText(segment);
-      const countablePortion = /\b(oeuf|egg|tranche|slice|piece|morceau|fruit|pomme|apple|banane|banana)\b/.test(portionText);
+      const countablePortion = /\b(oeuf|egg|tranche|slice|piece|morceau|fruit|pomme|apple|banane|banana|filet|fillet)\b/.test(portionText);
       const countableFood = /\b(oeuf|oeufs|egg|eggs)\b/.test(segmentText);
       const sliceCount = /\b(tranche|tranches|slice|slices)\b/.test(segmentText);
-      if (countablePortion || countableFood || sliceCount) {
+      const filetCount = /\b(filet|filets|fillet|fillets)\b/.test(segmentText);
+      // Never invent a filet weight when the FCÉN row is only per 100 g.
+      if (filetCount && !/\b(filet|fillet)\b/.test(portionText)) {
+        return { scale: 1, quantityUsed: false, quantityKind: "unresolved-count", enteredCount: naturalCount, unresolvedUnit: "filet" };
+      }
+      if (countablePortion || countableFood || sliceCount || (filetCount && /\b(filet|fillet)\b/.test(portionText))) {
         if (sliceCount && !countablePortion && Number(food?.gramsPerPortion) === 100) {
           // The FCÉN full-catalog fallback is per 100 g. A bread slice needs an
           // explicit portion conversion; 30 g is used only for an explicit
@@ -3089,6 +3107,8 @@ function formatSleepDuration(hours) {
             cnfFoodId: x.food?.cnfFoodId || null,
             matchedName: x.food?.cnfNameFr || x.food?.keys?.[0] || "",
             enteredQuantity: entered ? { ...entered } : (x.enteredCount != null ? { value: x.enteredCount, unit: "count" } : null),
+            quantityKind: x.quantityKind || null,
+            unresolvedUnit: x.unresolvedUnit || null,
             referencePortion: x.food?.portion || null,
             gramsPerPortion: Number(x.food?.gramsPerPortion) || null,
             scale: Math.round((Number(x.scale) || 1) * 1000) / 1000,
@@ -3496,13 +3516,15 @@ function formatSleepDuration(hours) {
     const dialog = $("#mealNutritionTraceDialog"), body = $("#mealNutritionTraceBody");
     if (!dialog || !body || !trace?.items?.length) return;
     const rows = trace.items.map((item) => {
-      const quantity = item.enteredQuantity
-        ? item.enteredQuantity.unit === "count"
-          ? `${item.enteredQuantity.value} portion${item.enteredQuantity.value > 1 ? "s" : ""}`
-          : `${item.enteredQuantity.value} ${item.enteredQuantity.unit}`
-        : item.referencePortion || "portion courante";
+      const quantity = item.quantityKind === "unresolved-count"
+        ? `${item.enteredQuantity?.value || ""} filet${Number(item.enteredQuantity?.value) > 1 ? "s" : ""} — poids requis`
+        : item.enteredQuantity
+          ? item.enteredQuantity.unit === "count"
+            ? `${item.enteredQuantity.value} portion${item.enteredQuantity.value > 1 ? "s" : ""}`
+            : `${item.enteredQuantity.value} ${item.enteredQuantity.unit}`
+          : item.referencePortion || "portion courante";
       const match = item.matchedName || item.input || "Aliment";
-      const kcal = item.calories != null ? `${item.calories} kcal` : "—";
+      const kcal = item.quantityKind === "unresolved-count" ? "Poids à préciser" : item.calories != null ? `${item.calories} kcal` : "—";
       return `<div class="meal-nutrition-trace-item"><strong>${esc(item.input || match)}</strong><span>Correspondance : ${esc(match)}</span><span>Quantité interprétée : <b>${esc(quantity)}</b></span><span>Source : ${esc(nutritionTraceSourceLabel(item.source))}</span><em>${esc(kcal)}</em></div>`;
     }).join("");
     body.innerHTML = `<div class="meal-nutrition-trace-source">Source du calcul : <strong>${esc(nutritionTraceSourceLabel(trace.source))}</strong></div>${rows}`;
@@ -4782,13 +4804,55 @@ function formatSleepDuration(hours) {
     }
   }
 
+  function metadataDisplayName(user = session?.user) {
+    const meta = user?.user_metadata || {};
+    const appleName = meta.name && typeof meta.name === "object"
+      ? [meta.name.firstName || meta.name.givenName, meta.name.lastName || meta.name.familyName].filter(Boolean).join(" ")
+      : "";
+    const parts = [
+      meta.display_name,
+      meta.full_name,
+      typeof meta.name === "string" ? meta.name : "",
+      appleName,
+      [meta.given_name || meta.first_name, meta.family_name || meta.last_name].filter(Boolean).join(" "),
+    ];
+    return String(parts.find((value) => String(value || "").trim()) || "").trim();
+  }
+  function accountDisplayName(fallback = "") {
+    return String(profileDisplayName || metadataDisplayName() || fallback || "").trim();
+  }
+  async function backfillDisplayNameFromIdentity() {
+    if (!session || profileDisplayName) return false;
+    const identityName = metadataDisplayName(session.user);
+    if (!identityName) return false;
+    try {
+      await saveAccountProfile(identityName, profileAccountType);
+      return true;
+    } catch (error) {
+      console.info("Nom du compte non recopié depuis l’identité:", error?.message || error);
+      return false;
+    }
+  }
   function professionalProfileLabel() {
-    const meta = session?.user?.user_metadata || {};
-    return String(meta.full_name || meta.name || session?.user?.email?.split("@")[0] || "Professionnel Énergie").trim();
+    return accountDisplayName(session?.user?.email?.split("@")[0] || "Professionnel Énergie");
   }
   function clientProfileLabel() {
-    const meta = session?.user?.user_metadata || {};
-    return String(meta.full_name || meta.name || session?.user?.email?.split("@")[0] || "Client Énergie").trim();
+    return accountDisplayName(session?.user?.email?.split("@")[0] || "Client Énergie");
+  }
+  async function saveAccountProfile(displayName, accountType = profileAccountType) {
+    if (!client || !session) return false;
+    const cleanName = String(displayName || "").trim().replace(/\s+/g, " ").slice(0, 100);
+    const cleanType = accountType === "professional" ? "professional" : "personal";
+    if (!cleanName) throw new Error("Entre ton nom.");
+    const { error } = await client.from("profiles").update({
+      display_name: cleanName,
+      account_type: cleanType,
+      updated_at: new Date().toISOString(),
+    }).eq("id", session.user.id);
+    if (error) throw error;
+    profileDisplayName = cleanName;
+    profileAccountType = cleanType;
+    return true;
   }
   async function loadProfessionalBetaState() {
     professionalClientLinks = [];
@@ -4838,9 +4902,10 @@ function formatSleepDuration(hours) {
     crypto.getRandomValues(values);
     return [...values].map((value) => alphabet[value % alphabet.length]).join("");
   }
-  function openProfessionalInviteEmail(code) {
+  async function openProfessionalInviteEmail(code) {
     const inviteCode = String(code || "").trim().toUpperCase();
-    if (!inviteCode) return;
+    if (!inviteCode) return false;
+
     const subject = "Invitation à mon suivi Énergie";
     const body = [
       "Bonjour,",
@@ -4853,7 +4918,34 @@ function formatSleepDuration(hours) {
       "",
       "Merci."
     ].join("\n");
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    const nativeApp =
+      window.Capacitor?.isNativePlatform?.() === true;
+
+    if (nativeApp && navigator.share) {
+      try {
+        await navigator.share({
+          title: subject,
+          text: body,
+        });
+        return true;
+      } catch (error) {
+        if (error?.name === "AbortError") return false;
+        console.warn("Partage de l’invitation impossible:", error);
+      }
+    }
+
+    if (!nativeApp) {
+      window.location.href =
+        `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      return true;
+    }
+
+    alert(
+      `Invitation créée.\n\nCode : ${inviteCode}\n\n` +
+      "Le partage automatique n’a pas pu être ouvert. Tu peux transmettre ce code au client."
+    );
+    return false;
   }
 
   async function createProfessionalInvite(options = {}) {
@@ -4872,7 +4964,7 @@ function formatSleepDuration(hours) {
         await loadProfessionalBetaState();
         renderProfile();
         if (options.openEmail === true) {
-          openProfessionalInviteEmail(data.invite_code);
+          await openProfessionalInviteEmail(data.invite_code);
         } else {
           alert(`Code d’invitation : ${data.invite_code}\n\nLe client peut l’entrer dans son Profil Énergie.`);
         }
@@ -5072,6 +5164,7 @@ function formatSleepDuration(hours) {
   }
   async function startProfessionalBeta() {
     if (!hasProfessionalBetaAccess || !session) return;
+    try { localStorage.setItem("energie_usage_mode", "professional"); } catch (_) {}
     await loadProfessionalBetaState();
     const active = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
     professionalBetaMode = true;
@@ -5083,8 +5176,12 @@ function formatSleepDuration(hours) {
     professionalActiveClient = null;
     currentView = "followup";
     render();
+    if (active.length > 1) {
+      requestAnimationFrame(() => openProfessionalClientPicker());
+    }
   }
   function leaveProfessionalBeta() {
+    try { localStorage.setItem("energie_usage_mode", "personal"); } catch (_) {}
     if (professionalPersonalDb) db = professionalPersonalDb;
     professionalPersonalDb = null;
     professionalBetaMode = false;
@@ -9146,13 +9243,13 @@ function formatSleepDuration(hours) {
         entries.some(
           (meal) => Object.keys(feelingScoresFor(meal, "before")).length === 0,
         ),
-      missingAfterNotified =
+      missingAfterDue =
         tracksFeelings &&
         entries.some(
-          (meal) => !meal.feeling && !!meal.feelingNotifiedAt,
+          (meal) => !meal.feeling && feelingDueAt(meal) <= new Date(),
         ),
       complete = entries.every(journalSummaryMealComplete),
-      needsBrain = missingBefore || missingAfterNotified;
+      needsBrain = missingBefore || missingAfterDue;
 
     let label = "Repas noté",
       detail = tracksFeelings ? "Ressenti après à venir" : "Repas enregistré";
@@ -9160,7 +9257,7 @@ function formatSleepDuration(hours) {
     if (missingBefore) {
       label = "À compléter";
       detail = "Ressenti avant manquant";
-    } else if (missingAfterNotified) {
+    } else if (missingAfterDue) {
       label = "À compléter";
       detail = "Ressenti après attendu";
     } else if (complete) {
@@ -9174,7 +9271,7 @@ function formatSleepDuration(hours) {
         ? `${base} · complétées`
         : missingBefore
           ? `${base} · avant à compléter`
-          : missingAfterNotified
+          : missingAfterDue
             ? `${base} · après à compléter`
             : tracksFeelings
               ? `${base} · suivi en cours`
@@ -13375,6 +13472,7 @@ function formatSleepDuration(hours) {
       const matched = cards.filter((card) => {
         if (assigned.has(card)) return false;
         if (card.classList.contains("profile-creator-card")) return false;
+        if (card.classList.contains("profile-account-card")) return false;
         // Le lien professionnel du client doit rester visible directement dans Profil.
         if (card.classList.contains("professional-client-link-card")) return false;
 
@@ -13487,7 +13585,7 @@ function formatSleepDuration(hours) {
         ? `<div class="notice info-notice"><strong>Estimations nutritionnelles professionnelles</strong><p>Le Journal affiche uniquement le total calorique. Les détails des nutriments restent réservés à cette vue professionnelle.</p></div>`
         : `<div class="notice info-notice"><strong>Calories estimées, sans objectif</strong><p>Seul le total calorique est affiché en haut du Journal, avec sa tendance dans Observations. Les autres chiffres nutritionnels restent masqués.</p></div>`;
     $("#app").innerHTML =
-      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(session.user.email) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card">${session ? `<div class="settings-row"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div><div class="apple-link-card"><div><strong>Connexion Apple</strong><p class="muted small">${hasAppleIdentity() ? "✓ Ton identifiant Apple est associé à ce compte Énergie." : "Associe Apple à ce compte avant d’utiliser « Se connecter avec Apple »."}</p></div>${hasAppleIdentity() ? "" : `<button type="button" class="apple-auth-button" id="linkAppleIdentity"><b aria-hidden="true"></b> Associer mon compte Apple</button><p id="appleIdentityMessage" class="muted tiny" aria-live="polite"></p>`}</div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card recognized-elements-setting-card"><h3>🔎 Éléments reconnus</h3><p class="muted small">Cette petite carte résume ce qu’Énergie reconnaît dans la description du repas. Tu peux la masquer pour alléger la saisie sans désactiver l’analyse du repas ni les estimations nutritionnelles.</p><label class="toggle-row"><span><strong>Afficher « Éléments reconnus »</strong><small>Affiche la carte sous la description du repas</small></span><input id="settingRecognizedElements" type="checkbox" ${db.settings.showRecognizedElements !== false ? "checked" : ""}></label></section><section class="card journal-summary-setting-card"><h3>🗓️ Journal sommaire</h3><p class="muted small">Choisis comment les repas complétés s’affichent dans le Journal en mode sommaire.</p><label class="toggle-row"><span><strong>Masquer les repas complétés</strong><small>Un repas disparaît du sommaire lorsqu’il contient le repas, le ressenti avant et le ressenti après. La carte Collation reste toujours visible.</small></span><input id="settingSummaryHideCompletedMeals" type="checkbox" ${db.settings.summaryHideCompletedMeals !== false ? "checked" : ""}></label></section><section class="card guided-cnf-setting-card"><h3>🇨🇦 Saisie des repas</h3><p class="muted small">Tu peux imposer la saisie guidée FCÉN pour éviter les descriptions libres et rendre les estimations plus reproductibles.</p><label class="toggle-row"><span><strong>Forcer la saisie guidée FCÉN</strong><small>Quand activé, la description du repas ne peut plus être tapée directement; les aliments doivent être ajoutés avec le lien FCÉN.</small></span><input id="settingForceGuidedCnf" type="checkbox" ${db.settings.forceGuidedCnfMealEntry === true ? "checked" : ""}></label><p class="muted tiny">Désactivé par défaut.</p></section><section class="card eating-reasons-setting-card"><h3>💭 Raisons de manger</h3><p class="muted small">La question « Qu’est-ce qui t’a amené à manger? » est facultative. Tu peux la masquer pour alléger la saisie des repas.</p><label class="toggle-row"><span><strong>Afficher « Qu’est-ce qui t’a amené à manger? »</strong><small>Si elle est masquée, la carte correspondante n’apparaît pas non plus dans Observations</small></span><input id="settingEatingReasons" type="checkbox" ${db.settings.showEatingReasons !== false ? "checked" : ""}></label></section><section class="card future-meal-planning-setting-card"><h3>📅 Planification des repas</h3><p class="muted small">Optionnel · utile si tu souhaites préparer ton journal à l’avance.</p><label class="toggle-row"><span><strong>Permettre la saisie de repas à l’avance</strong><small>Autorise la navigation et la saisie jusqu’à 2 jours dans le futur. Cette limite est fixe à 2 jours.</small></span><input id="settingFutureMealPlanning" type="checkbox" ${db.settings.futureMealPlanning === true ? "checked" : ""}></label><p class="muted tiny">Les repas planifiés restent enregistrés, mais ne participent pas aux Observations ni à l’apprentissage d’Énergie avant la date prévue.</p></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="one-time-code"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button>${nativeLocalNotifications() ? `<p class="muted tiny">Sur iPhone, les rappels peuvent apparaître même lorsque Énergie n’est pas ouverte, si les notifications sont autorisées.</p>` : `<p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p>`}</div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${labScenarioCardsHtml()}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<details class="card profile-backup-panel"><summary><span><strong>Données et sauvegarde</strong><small>Options avancées · ${backups} copie(s) locale(s)</small></span><span aria-hidden="true">›</span></summary><div class="profile-backup-content"><p class="muted small">Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></div></details></div>`;
+      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(accountDisplayName("Mon profil")) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître sur iPhone."}</p></section><div class="stack"><section class="card profile-account-card">${session ? `<div class="profile-account-name"><label for="profileDisplayNameInput">Nom</label><div class="profile-account-name-edit"><input id="profileDisplayNameInput" type="text" autocomplete="name" maxlength="100" value="${esc(profileDisplayName)}" placeholder="Ton nom"><button class="secondary small" id="saveDisplayName" type="button">Enregistrer</button></div><p id="profileDisplayNameStatus" class="muted tiny"></p></div><div class="settings-row profile-account-email"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div>${hasProfessionalBetaAccess ? `<div class="profile-use-mode profile-spaces-compact"><strong>Espaces</strong><div class="profile-space-actions"><button type="button" id="usePersonalMode" class="secondary profile-space-button ${professionalBetaMode ? "" : "is-active"}">👤 Mon espace personnel</button><button type="button" id="useProfessionalMode" class="secondary profile-space-button ${professionalBetaMode ? "is-active" : ""}">🩺 Espace professionnel</button></div></div>` : ""}<div class="apple-link-card"><div><strong>Connexion Apple</strong><p class="muted small">${hasAppleIdentity() ? "✓ Ton identifiant Apple est associé à ce compte Énergie." : "Associe Apple à ce compte avant d’utiliser « Se connecter avec Apple »."}</p></div>${hasAppleIdentity() ? "" : `<button type="button" class="apple-auth-button" id="linkAppleIdentity"><b aria-hidden="true"></b> Associer mon compte Apple</button><p id="appleIdentityMessage" class="muted tiny" aria-live="polite"></p>`}</div><button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card recognized-elements-setting-card"><h3>🔎 Éléments reconnus</h3><p class="muted small">Cette petite carte résume ce qu’Énergie reconnaît dans la description du repas. Tu peux la masquer pour alléger la saisie sans désactiver l’analyse du repas ni les estimations nutritionnelles.</p><label class="toggle-row"><span><strong>Afficher « Éléments reconnus »</strong><small>Affiche la carte sous la description du repas</small></span><input id="settingRecognizedElements" type="checkbox" ${db.settings.showRecognizedElements !== false ? "checked" : ""}></label></section><section class="card journal-summary-setting-card"><h3>🗓️ Journal sommaire</h3><p class="muted small">Choisis comment les repas complétés s’affichent dans le Journal en mode sommaire.</p><label class="toggle-row"><span><strong>Masquer les repas complétés</strong><small>Un repas disparaît du sommaire lorsqu’il contient le repas, le ressenti avant et le ressenti après. La carte Collation reste toujours visible.</small></span><input id="settingSummaryHideCompletedMeals" type="checkbox" ${db.settings.summaryHideCompletedMeals !== false ? "checked" : ""}></label></section><section class="card guided-cnf-setting-card"><h3>🇨🇦 Saisie des repas</h3><p class="muted small">Tu peux imposer la saisie guidée FCÉN pour éviter les descriptions libres et rendre les estimations plus reproductibles.</p><label class="toggle-row"><span><strong>Forcer la saisie guidée FCÉN</strong><small>Quand activé, la description du repas ne peut plus être tapée directement; les aliments doivent être ajoutés avec le lien FCÉN.</small></span><input id="settingForceGuidedCnf" type="checkbox" ${db.settings.forceGuidedCnfMealEntry === true ? "checked" : ""}></label><p class="muted tiny">Désactivé par défaut.</p></section><section class="card eating-reasons-setting-card"><h3>💭 Raisons de manger</h3><p class="muted small">La question « Qu’est-ce qui t’a amené à manger? » est facultative. Tu peux la masquer pour alléger la saisie des repas.</p><label class="toggle-row"><span><strong>Afficher « Qu’est-ce qui t’a amené à manger? »</strong><small>Si elle est masquée, la carte correspondante n’apparaît pas non plus dans Observations</small></span><input id="settingEatingReasons" type="checkbox" ${db.settings.showEatingReasons !== false ? "checked" : ""}></label></section><section class="card future-meal-planning-setting-card"><h3>📅 Planification des repas</h3><p class="muted small">Optionnel · utile si tu souhaites préparer ton journal à l’avance.</p><label class="toggle-row"><span><strong>Permettre la saisie de repas à l’avance</strong><small>Autorise la navigation et la saisie jusqu’à 2 jours dans le futur. Cette limite est fixe à 2 jours.</small></span><input id="settingFutureMealPlanning" type="checkbox" ${db.settings.futureMealPlanning === true ? "checked" : ""}></label><p class="muted tiny">Les repas planifiés restent enregistrés, mais ne participent pas aux Observations ni à l’apprentissage d’Énergie avant la date prévue.</p></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="one-time-code"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button>${nativeLocalNotifications() ? `<p class="muted tiny">Sur iPhone, les rappels peuvent apparaître même lorsque Énergie n’est pas ouverte, si les notifications sont autorisées.</p>` : `<p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p>`}</div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${labScenarioCardsHtml()}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<details class="card profile-backup-panel"><summary><span><strong>Données et sauvegarde</strong><small>Options avancées · ${backups} copie(s) locale(s)</small></span><span aria-hidden="true">›</span></summary><div class="profile-backup-content"><p class="muted small">Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></div></details></div>`;
     const professionalSettingsSection = $("#settingProfessionalSupport")?.closest("section.card");
     const professionalBetaHtml = professionalBetaProfileHtml();
     professionalSettingsSection?.insertAdjacentHTML("afterend", professionalBetaHtml);
@@ -13562,8 +13660,9 @@ function formatSleepDuration(hours) {
     if (nutritionAnchor) nutritionAnchor.insertAdjacentHTML("beforebegin", nutritionSettingsHtml);
     $("#settingMacros")?.closest("label")?.remove();
     if (!nutritionVisibleToViewer()) $("#settingAutoNutrition")?.closest("label")?.remove();
-    $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", physiologicalContextHtml());
-    $("#app .stack")?.firstElementChild?.insertAdjacentHTML("afterend", personalProfileHtml());
+    const accountCard = $(".profile-account-card");
+    accountCard?.insertAdjacentHTML("afterend", physiologicalContextHtml());
+    accountCard?.insertAdjacentHTML("afterend", personalProfileHtml());
     const accountProfileCard = ($("#syncNow") || $("#signIn"))?.closest("section.card");
     accountProfileCard?.insertAdjacentHTML("afterend", `<section class="card pilot-mode-profile-card"><h3>🧪 Mode pilote</h3><p class="muted small">Active un lien discret dans Énergie pour transmettre rapidement une suggestion, un bogue ou un autre commentaire pendant le projet pilote.</p><label class="toggle-row"><span><strong>Activer le mode pilote</strong><small>Le contexte technique est ajouté automatiquement, jamais le contenu de ton journal.</small></span><input id="settingPilotMode" type="checkbox" ${db.settings.pilotMode === true ? "checked" : ""}></label></section>`);
 
@@ -13577,6 +13676,36 @@ function formatSleepDuration(hours) {
     );
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
+    const saveDisplayNameFromProfile = async () => {
+      const input = $("#profileDisplayNameInput");
+      const status = $("#profileDisplayNameStatus");
+      if (!input) return;
+      try {
+        await saveAccountProfile(input.value);
+        if (status) status.textContent = "Nom enregistré.";
+        input.value = profileDisplayName;
+        const heroName = $("#app .hero h2");
+        if (heroName) heroName.textContent = accountDisplayName("Mon profil");
+      } catch (error) {
+        if (status) status.textContent = error?.message || "Impossible d’enregistrer le nom.";
+      }
+    };
+    $("#saveDisplayName")?.addEventListener("click", saveDisplayNameFromProfile);
+    $("#profileDisplayNameInput")?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        saveDisplayNameFromProfile();
+      }
+    });
+    $("#usePersonalMode")?.addEventListener("click", () => {
+      if (!hasProfessionalBetaAccess) return;
+      if (professionalBetaMode) leaveProfessionalBetaMode();
+      else { currentView = "today"; render(); }
+    });
+    $("#useProfessionalMode")?.addEventListener("click", async () => {
+      if (!hasProfessionalBetaAccess || professionalBetaMode) return;
+      await startProfessionalBeta();
+    });
     $("#signIn")?.addEventListener("click", () => {
       setAuthMode("login");
       $("#authMessage").textContent = "";
@@ -15985,6 +16114,8 @@ function formatSleepDuration(hours) {
     $("#authTitle").textContent = signup ? "Créer un compte" : "Connexion";
     $("#authSubmit").textContent = signup ? "Créer mon compte" : "Me connecter";
     $("#confirmPasswordLabel").hidden = !signup;
+    $("#signupIdentityFields").hidden = !signup;
+    $("#authDisplayName").required = signup;
     confirmInput.required = signup;
     if (!signup) confirmInput.value = "";
     $("#authPassword").autocomplete = signup
@@ -16059,6 +16190,16 @@ function formatSleepDuration(hours) {
       session = data.session;
       prepareLocalJournalForSession(data.session);
       $("#authDialog")?.close();
+      const appleProvidedName = (() => {
+        const name = credential?.fullName || credential?.user?.name || credential?.name;
+        if (!name) return "";
+        if (typeof name === "string") return name.trim();
+        return [name.givenName || name.firstName, name.familyName || name.lastName].filter(Boolean).join(" ").trim();
+      })();
+      if (appleProvidedName && !metadataDisplayName(session.user)) {
+        const updated = await client.auth.updateUser({ data: { display_name: appleProvidedName, full_name: appleProvidedName } });
+        if (!updated.error && updated.data?.user) session = { ...session, user: updated.data.user };
+      }
       await loadDemoAccess();
       await pullCloud(false);
       await syncNow();
@@ -16133,10 +16274,16 @@ function formatSleepDuration(hours) {
     const email = $("#authEmail").value.trim().toLowerCase(),
       password = $("#authPassword").value,
       confirm = $("#authPasswordConfirm").value,
+      signupName = $("#authDisplayName")?.value.trim() || "",
+      signupAccountType = document.querySelector('input[name="authAccountType"]:checked')?.value === "professional" ? "professional" : "personal",
       msg = $("#authMessage");
     msg.textContent = authMode === "signup" ? "Création du compte…" : "Connexion…";
     if (password.length < 8) {
       msg.textContent = "Le mot de passe doit contenir au moins 8 caractères.";
+      return;
+    }
+    if (authMode === "signup" && !signupName) {
+      msg.textContent = "Entre ton nom.";
       return;
     }
     if (authMode === "signup" && password !== confirm) {
@@ -16152,7 +16299,10 @@ function formatSleepDuration(hours) {
         const { data, error } = await client.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${location.origin}${location.pathname}` },
+          options: {
+            emailRedirectTo: `${location.origin}${location.pathname}`,
+            data: { display_name: signupName, account_type: signupAccountType },
+          },
         });
         if (error) {
           msg.textContent = friendlyAuthError(error);
@@ -16162,6 +16312,7 @@ function formatSleepDuration(hours) {
           const newUserId = data.session.user?.id || null;
           session = data.session;
           $("#authDialog").close();
+          try { await saveAccountProfile(signupName, signupAccountType); } catch (profileError) { console.warn("Profil de compte:", profileError?.message || profileError); }
           if (previousUserId && newUserId && previousUserId !== newUserId) {
             prepareLocalJournalForSession(data.session);
             await loadDemoAccess();
@@ -16195,6 +16346,7 @@ function formatSleepDuration(hours) {
         $("#authDialog").close();
         prepareLocalJournalForSession(data.session);
         await loadDemoAccess();
+        await backfillDisplayNameFromIdentity();
         await pullCloud(false);
         await syncNow();
         render();
@@ -16825,12 +16977,14 @@ function formatSleepDuration(hours) {
   async function loadDemoAccess() {
     hasDemoAccess = false;
     hasProfessionalBetaAccess = false;
+    profileDisplayName = "";
+    profileAccountType = "personal";
     if (!session) return false;
     if (!client) return false;
     try {
       const { data, error } = await client
         .from("profiles")
-        .select("has_demo_access,professional_beta_access")
+        .select("has_demo_access,professional_beta_access,display_name,account_type")
         .eq("id", session.user.id)
         .maybeSingle();
       if (error && /professional_beta_access|column|schema cache/i.test(error.message || "")) {
@@ -16841,9 +16995,18 @@ function formatSleepDuration(hours) {
       } else {
         hasDemoAccess = data?.has_demo_access === true;
         hasProfessionalBetaAccess = data?.professional_beta_access === true;
+        profileDisplayName = String(data?.display_name || "").trim();
+        profileAccountType = data?.account_type === "professional" ? "professional" : "personal";
       }
       if (DEMO_ACCESS_FOR_ALL_ACCOUNTS) hasDemoAccess = true;
       await loadProfessionalBetaState();
+      await backfillDisplayNameFromIdentity();
+      try {
+        const savedUsageMode = localStorage.getItem("energie_usage_mode");
+        if (!savedUsageMode && profileAccountType === "professional" && hasProfessionalBetaAccess) {
+          localStorage.setItem("energie_usage_mode", "professional");
+        }
+      } catch (_) {}
     } catch (error) {
       console.info("Accès privé indisponible:", error?.message || error);
     }
@@ -16965,7 +17128,16 @@ function formatSleepDuration(hours) {
     const createInviteButton = event.target.closest("#createProfessionalInvite");
     if (createInviteButton) {
       event.preventDefault();
-      createProfessionalInvite({ openEmail: true });
+      if (createInviteButton.disabled) return;
+      createInviteButton.disabled = true;
+      createProfessionalInvite({ openEmail: true })
+        .catch((error) => {
+          console.error("Invitation professionnelle:", error);
+        })
+        .finally(() => {
+          if (createInviteButton.isConnected)
+            createInviteButton.disabled = false;
+        });
       return;
     }
     const acceptInviteButton = event.target.closest("#acceptProfessionalInvite");

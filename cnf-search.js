@@ -36,6 +36,11 @@
   function stripQuantity(text) {
     return normalize(text)
       .replace(/\b\d+(?:[.,]\d+)?\s*(?:kg|g|gramme|grammes|grams|ml|millilitre|millilitres|l|litre|litres|tasse|tasses|cup|cups|tbsp|tsp)\b/g, " ")
+      // A natural count at the beginning is quantity, not part of the food name.
+      .replace(/^(?:\d+(?:[.,]\d+)?|un|une|one|deux|two|trois|three|quatre|four|cinq|five|six|sept|seven|huit|eight|neuf|nine|dix|ten)\s+/, "")
+      // "filet(s) de X" describes the cut/portion. X must drive the FCÉN match.
+      // Run this AFTER removing the leading count: "2 filets de sole" -> "sole".
+      .replace(/^(?:filet|filets|fillet|fillets)\s+(?:de|des|du|d|of)\s+/, "")
       .replace(/\b(?:de|des|du|d|un|une|le|la|les)\b/g, " ")
       .replace(/\s+/g, " ")
       .trim();
