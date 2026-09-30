@@ -2082,3 +2082,11 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   .profile-space-actions{width:100%;justify-content:stretch}
   .profile-space-button{flex:1 1 150px}
 }
+
+
+/* Profil — espaces compacts */
+.profile-account-card .profile-use-mode.profile-spaces-compact{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding-top:12px}
+.profile-spaces-compact>strong{font-size:.88rem;white-space:nowrap}
+.profile-spaces-compact .profile-space-actions{flex-wrap:nowrap}
+.profile-spaces-compact .profile-space-button{padding:7px 10px!important;border-radius:12px!important;font-size:.73rem!important}
+@media(max-width:620px){.profile-account-card .profile-use-mode.profile-spaces-compact{flex-direction:row;align-items:center}.profile-spaces-compact .profile-space-actions{width:auto;flex:1;justify-content:flex-end}.profile-spaces-compact .profile-space-button{flex:0 1 auto}}
