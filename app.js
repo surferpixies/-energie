@@ -4784,9 +4784,34 @@ function formatSleepDuration(hours) {
     }
   }
 
+  function metadataDisplayName(user = session?.user) {
+    const meta = user?.user_metadata || {};
+    const appleName = meta.name && typeof meta.name === "object"
+      ? [meta.name.firstName || meta.name.givenName, meta.name.lastName || meta.name.familyName].filter(Boolean).join(" ")
+      : "";
+    const parts = [
+      meta.display_name,
+      meta.full_name,
+      typeof meta.name === "string" ? meta.name : "",
+      appleName,
+      [meta.given_name || meta.first_name, meta.family_name || meta.last_name].filter(Boolean).join(" "),
+    ];
+    return String(parts.find((value) => String(value || "").trim()) || "").trim();
+  }
   function accountDisplayName(fallback = "") {
-    const meta = session?.user?.user_metadata || {};
-    return String(profileDisplayName || meta.display_name || meta.full_name || meta.name || fallback || "").trim();
+    return String(profileDisplayName || metadataDisplayName() || fallback || "").trim();
+  }
+  async function backfillDisplayNameFromIdentity() {
+    if (!session || profileDisplayName) return false;
+    const identityName = metadataDisplayName(session.user);
+    if (!identityName) return false;
+    try {
+      await saveAccountProfile(identityName, profileAccountType);
+      return true;
+    } catch (error) {
+      console.info("Nom du compte non recopié depuis l’identité:", error?.message || error);
+      return false;
+    }
   }
   function professionalProfileLabel() {
     return accountDisplayName(session?.user?.email?.split("@")[0] || "Professionnel Énergie");
@@ -5119,6 +5144,7 @@ function formatSleepDuration(hours) {
   }
   async function startProfessionalBeta() {
     if (!hasProfessionalBetaAccess || !session) return;
+    try { localStorage.setItem("energie_usage_mode", "professional"); } catch (_) {}
     await loadProfessionalBetaState();
     const active = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
     professionalBetaMode = true;
@@ -5132,6 +5158,7 @@ function formatSleepDuration(hours) {
     render();
   }
   function leaveProfessionalBeta() {
+    try { localStorage.setItem("energie_usage_mode", "personal"); } catch (_) {}
     if (professionalPersonalDb) db = professionalPersonalDb;
     professionalPersonalDb = null;
     professionalBetaMode = false;
@@ -13652,9 +13679,9 @@ function formatSleepDuration(hours) {
       if (professionalBetaMode) leaveProfessionalBetaMode();
       else { currentView = "today"; render(); }
     });
-    $("#useProfessionalMode")?.addEventListener("click", () => {
-      if (!hasProfessionalBetaAccess) return;
-      openProfessionalBetaMode();
+    $("#useProfessionalMode")?.addEventListener("click", async () => {
+      if (!hasProfessionalBetaAccess || professionalBetaMode) return;
+      await startProfessionalBeta();
     });
     $("#signIn")?.addEventListener("click", () => {
       setAuthMode("login");
@@ -16140,6 +16167,16 @@ function formatSleepDuration(hours) {
       session = data.session;
       prepareLocalJournalForSession(data.session);
       $("#authDialog")?.close();
+      const appleProvidedName = (() => {
+        const name = credential?.fullName || credential?.user?.name || credential?.name;
+        if (!name) return "";
+        if (typeof name === "string") return name.trim();
+        return [name.givenName || name.firstName, name.familyName || name.lastName].filter(Boolean).join(" ").trim();
+      })();
+      if (appleProvidedName && !metadataDisplayName(session.user)) {
+        const updated = await client.auth.updateUser({ data: { display_name: appleProvidedName, full_name: appleProvidedName } });
+        if (!updated.error && updated.data?.user) session = { ...session, user: updated.data.user };
+      }
       await loadDemoAccess();
       await pullCloud(false);
       await syncNow();
@@ -16286,14 +16323,7 @@ function formatSleepDuration(hours) {
         $("#authDialog").close();
         prepareLocalJournalForSession(data.session);
         await loadDemoAccess();
-        if (!profileDisplayName) {
-          const meta = session.user?.user_metadata || {};
-          const pendingName = String(meta.display_name || meta.full_name || meta.name || "").trim();
-          const pendingType = meta.account_type === "professional" ? "professional" : profileAccountType;
-          if (pendingName) {
-            try { await saveAccountProfile(pendingName, pendingType); } catch (profileError) { console.warn("Profil de compte:", profileError?.message || profileError); }
-          }
-        }
+        await backfillDisplayNameFromIdentity();
         await pullCloud(false);
         await syncNow();
         render();
@@ -16947,6 +16977,7 @@ function formatSleepDuration(hours) {
       }
       if (DEMO_ACCESS_FOR_ALL_ACCOUNTS) hasDemoAccess = true;
       await loadProfessionalBetaState();
+      await backfillDisplayNameFromIdentity();
     } catch (error) {
       console.info("Accès privé indisponible:", error?.message || error);
     }
