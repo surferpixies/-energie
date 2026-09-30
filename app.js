@@ -2761,6 +2761,10 @@ function formatSleepDuration(hours) {
       const countableFood = /\b(oeuf|oeufs|egg|eggs)\b/.test(segmentText);
       const sliceCount = /\b(tranche|tranches|slice|slices)\b/.test(segmentText);
       const filetCount = /\b(filet|filets|fillet|fillets)\b/.test(segmentText);
+      // Never invent a filet weight when the FCÉN row is only per 100 g.
+      if (filetCount && !/\b(filet|fillet)\b/.test(portionText)) {
+        return { scale: 1, quantityUsed: false, quantityKind: "unresolved-count", enteredCount: naturalCount, unresolvedUnit: "filet" };
+      }
       if (countablePortion || countableFood || sliceCount || (filetCount && /\b(filet|fillet)\b/.test(portionText))) {
         if (sliceCount && !countablePortion && Number(food?.gramsPerPortion) === 100) {
           // The FCÉN full-catalog fallback is per 100 g. A bread slice needs an
@@ -3103,6 +3107,8 @@ function formatSleepDuration(hours) {
             cnfFoodId: x.food?.cnfFoodId || null,
             matchedName: x.food?.cnfNameFr || x.food?.keys?.[0] || "",
             enteredQuantity: entered ? { ...entered } : (x.enteredCount != null ? { value: x.enteredCount, unit: "count" } : null),
+            quantityKind: x.quantityKind || null,
+            unresolvedUnit: x.unresolvedUnit || null,
             referencePortion: x.food?.portion || null,
             gramsPerPortion: Number(x.food?.gramsPerPortion) || null,
             scale: Math.round((Number(x.scale) || 1) * 1000) / 1000,
