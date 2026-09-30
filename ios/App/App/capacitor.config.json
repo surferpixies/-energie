@@ -1,0 +1,10 @@
+{
+	"appId": "ca.surferpixies.energie",
+	"appName": "Énergie",
+	"webDir": "www",
+	"loggingBehavior": "debug",
+	"backgroundColor": "#eef8e7",
+	"packageClassList": [
+		"LocalNotificationsPlugin"
+	]
+}

@@ -1,0 +1,47 @@
+# macOS
+.DS_Store
+
+# Dependencies
+node_modules/
+
+# Local backups
+*.bak
+*.before-*
+*.before-*
+
+# Xcode generated/user data
+DerivedData/
+ios/App/DerivedData/
+**/xcuserdata/
+*.xcuserstate
+
+# Android generated
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Android Studio local settings
+android/.idea/
+
+# Signing files — never commit
+*.jks
+*.keystore
+*.p12
+*.p8
+*.mobileprovision
+
+# Accidental numbered duplicate files in Android
+android/**/* [0-9].*
+
+# Capacitor generated web assets
+ios/App/App/public/
