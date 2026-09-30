@@ -620,11 +620,21 @@
           <label>Nom
             <input id="authDisplayName" type="text" autocomplete="name" maxlength="100" placeholder="Ex. Marie Tremblay">
           </label>
-          <fieldset class="auth-account-type">
-            <legend>Comment souhaites-tu utiliser Énergie?</legend>
-            <label><input type="radio" name="authAccountType" value="personal" checked> <span><strong>Pour mon suivi personnel</strong><small>Je souhaite suivre mon alimentation et mon bien-être.</small></span></label>
-            <label><input type="radio" name="authAccountType" value="professional"> <span><strong>Pour accompagner mes clients</strong><small>Je souhaite utiliser Énergie dans le cadre de mes suivis.</small></span></label>
-          </fieldset>
+          <div class="auth-account-type" role="radiogroup" aria-labelledby="authAccountTypeTitle">
+            <p id="authAccountTypeTitle">Comment souhaites-tu utiliser Énergie?</p>
+            <label class="auth-account-choice">
+              <input type="radio" name="authAccountType" value="personal" checked>
+              <span class="auth-choice-icon" aria-hidden="true">👤</span>
+              <span class="auth-choice-copy"><strong>Pour moi</strong><small>Suivre mon alimentation et mon bien-être.</small></span>
+              <span class="auth-choice-check" aria-hidden="true">✓</span>
+            </label>
+            <label class="auth-account-choice">
+              <input type="radio" name="authAccountType" value="professional">
+              <span class="auth-choice-icon" aria-hidden="true">🩺</span>
+              <span class="auth-choice-copy"><strong>Avec mes clients</strong><small>Utiliser Énergie dans mes suivis professionnels.</small></span>
+              <span class="auth-choice-check" aria-hidden="true">✓</span>
+            </label>
+          </div>
         </div>
         <label>Adresse courriel
           <input id="authEmail" type="email" autocomplete="email" required placeholder="toi@exemple.com">
