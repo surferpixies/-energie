@@ -7,9 +7,12 @@
     "build:ios-web": "node scripts/build-ios-web.mjs",
     "ios:add": "npm run build:ios-web && npx cap add ios",
     "ios:sync": "npm run build:ios-web && npx cap sync ios",
-    "ios:open": "npx cap open ios"
+    "ios:open": "npx cap open ios",
+    "android:sync": "npm run build:ios-web && npx cap sync android",
+    "android:open": "npx cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.2",
     "@capacitor/core": "^8.0.0",
     "@capacitor/ios": "^8.0.0",
     "@capacitor/local-notifications": "^8.3.1"
