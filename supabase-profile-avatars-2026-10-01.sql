@@ -69,7 +69,10 @@ create policy "profile_avatars_select"
 on storage.objects for select to authenticated
 using (
   bucket_id = 'profile-avatars'
-  and public.can_read_profile_avatar_path(name)
+  and (
+    (storage.foldername(name))[1] = (select auth.uid())::text
+    or public.can_read_profile_avatar_path(name)
+  )
 );
 
 drop policy if exists "profile_avatars_insert_own" on storage.objects;
