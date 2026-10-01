@@ -3,5 +3,15 @@
   "appName": "Énergie",
   "webDir": "www",
   "loggingBehavior": "debug",
-  "backgroundColor": "#eef8e7"
+  "backgroundColor": "#eef8e7",
+  "plugins": {
+    "SocialLogin": {
+      "providers": {
+        "google": true,
+        "facebook": false,
+        "apple": false,
+        "twitter": false
+      }
+    }
+  }
 }
