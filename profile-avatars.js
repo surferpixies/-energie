@@ -151,7 +151,7 @@
       if (uploadError) throw uploadError;
       const { error } = await getClient().from("profiles")
         .update({ avatar_path: path, updated_at: new Date().toISOString() })
-        .eq("id", userId);
+        .eq("id", userId).select("id").single();
       if (error || userId !== currentUserId()) {
         await storage.remove([path]).catch(() => {});
         throw error || new Error("Le compte connecté a changé.");
@@ -171,7 +171,7 @@
       if (!previous) return false;
       const { error } = await getClient().from("profiles")
         .update({ avatar_path: null, updated_at: new Date().toISOString() })
-        .eq("id", userId);
+        .eq("id", userId).select("id").single();
       if (error) throw error;
       avatarPath = null;
       avatarUrl = null;
@@ -187,7 +187,7 @@
       if (!userId || !getClient()) throw new Error("Compte non connecté.");
       const { error } = await getClient().from("profiles")
         .update({ [column]: enabled === true, updated_at: new Date().toISOString() })
-        .eq("id", userId);
+        .eq("id", userId).select("id").single();
       if (error) throw error;
       if (column === "show_avatar_self") showSelf = enabled === true;
       else shareWithProfessionals = enabled === true;
