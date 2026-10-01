@@ -4706,13 +4706,20 @@ function formatSleepDuration(hours) {
     const cleanName = String(displayName || "").trim().replace(/\s+/g, " ").slice(0, 100);
     const cleanType = accountType === "professional" ? "professional" : "personal";
     if (!cleanName) throw new Error("Entre ton nom.");
-    const { error } = await client.from("profiles").upsert({
-      id: session.user.id,
+    // Modifier une fiche existante sans risquer de réinitialiser les préférences photo.
+    const changes = {
       display_name: cleanName,
       account_type: cleanType,
       updated_at: new Date().toISOString(),
-    }, { onConflict: "id" });
-    if (error) throw error;
+    };
+    const { data: existing, error: updateError } = await client.from("profiles")
+      .update(changes).eq("id", session.user.id).select("id").maybeSingle();
+    if (updateError) throw updateError;
+    if (!existing) {
+      const { error: insertError } = await client.from("profiles")
+        .insert({ id: session.user.id, ...changes });
+      if (insertError) throw insertError;
+    }
     profileDisplayName = cleanName;
     profileAccountType = cleanType;
     return true;
