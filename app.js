@@ -17256,10 +17256,18 @@ function formatSleepDuration(hours) {
   initAuth();
   scheduleFeelingChecks();
 
-  setInterval(() => updateLivingHeader(), 30 * 60 * 1000);
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
-      updateLivingHeader();
+      avatarManager.loadOwn().catch((error) => console.info("Photo de profil au retour:", error?.message || error));
+      if (professionalBetaMode && professionalActiveClient) {
+        refreshProfessionalClientAvatars().then(() => {
+          if (!professionalActiveClient) return;
+          const link = professionalClientLinks.find((item) => item.id === professionalActiveClient.linkId);
+          professionalActiveClient.avatarUrl = link?.avatarUrl || null;
+          const displayed = $("#professionalBetaContextBar .professional-context-avatar");
+          if (displayed) displayed.outerHTML = avatarManager.avatarHtml(professionalActiveClient.name, professionalActiveClient.avatarUrl, "professional-context-avatar");
+        }).catch(() => {});
+      }
       syncAppleHealth().catch((error) =>
         console.warn("Apple Health au retour dans l’app", error),
       );
