@@ -26,6 +26,7 @@ as $$
     select 1
     from public.profiles p
     where p.avatar_path = p_path
+      and (storage.foldername(p_path))[1] = p.id::text
       and (
         p.id = (select auth.uid())
         or (
@@ -59,7 +60,8 @@ as $$
   where l.professional_user_id = (select auth.uid())
     and l.status = 'active'
     and p.share_avatar_with_professionals is true
-    and p.avatar_path is not null;
+    and p.avatar_path is not null
+    and (storage.foldername(p.avatar_path))[1] = p.id::text;
 $$;
 revoke all on function public.get_professional_client_avatar_paths() from public;
 grant execute on function public.get_professional_client_avatar_paths() to authenticated;
