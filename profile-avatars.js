@@ -72,9 +72,9 @@
     function renderHeader() {
       const target = document.getElementById("headerAccountAvatar");
       if (!target) return;
-      const name = currentUserId() ? getName() : "Mon compte";
+      const name = currentUserId() ? getName() : "";
       target.innerHTML = avatarHtml(name, currentUserId() && showSelf ? avatarUrl : null, "profile-avatar--header");
-      target.title = "Compte connecté : " + name;
+      target.title = currentUserId() ? "Compte connecté : " + name : "Compte non connecté";
     }
 
     async function loadOwn() {
@@ -93,11 +93,14 @@
         console.info("Préférences de photo de profil non configurées:", error.message);
         return;
       }
-      avatarPath = data?.avatar_path || null;
+      const path = data?.avatar_path || null;
+      const imageUrl = path ? await signedUrl(path) : null;
+      if (userId !== currentUserId()) return;
+      avatarPath = path;
+      avatarUrl = imageUrl;
       showSelf = data?.show_avatar_self === true;
       shareWithProfessionals = data?.share_avatar_with_professionals === true;
-      avatarUrl = avatarPath ? await signedUrl(avatarPath) : null;
-      if (userId === currentUserId()) renderHeader();
+      renderHeader();
     }
 
     function clear() {
