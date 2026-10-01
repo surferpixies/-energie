@@ -204,10 +204,28 @@
         return cleanLinks;
       }
       const byLink = new Map((data || []).map((item) => [String(item.link_id), item.avatar_path]));
+      const storage = getClient().storage.from(BUCKET);
+      const paths = [...new Set(cleanLinks
+        .filter((link) => link.status === "active" && link.client_user_id)
+        .map((link) => byLink.get(String(link.id)))
+        .filter(Boolean))];
+      const signedByPath = new Map();
+      // Une seule requête pour une longue liste de clients, si l'API le permet.
+      if (paths.length && typeof storage.createSignedUrls === "function") {
+        try {
+          const { data: urls, error: urlsError } = await storage.createSignedUrls(paths, 60);
+          if (!urlsError) (urls || []).forEach((item) => {
+            if (!item.error && item.path && item.signedUrl)
+              signedByPath.set(item.path, item.signedUrl);
+          });
+        } catch (error) {
+          console.info("Signature groupée indisponible:", error?.message || error);
+        }
+      }
       const result = await Promise.all(cleanLinks.map(async (link) => {
         const path = byLink.get(String(link.id));
         if (link.status !== "active" || !link.client_user_id || !path) return link;
-        return { ...link, avatarUrl: await signedUrl(path, 60) };
+        return { ...link, avatarUrl: signedByPath.get(path) || await signedUrl(path, 60) };
       }));
       if (professionalId !== currentUserId()) return cleanLinks;
       return result;
