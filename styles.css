@@ -45,20 +45,6 @@ dialog{border:0;border-radius:28px;background:transparent;padding:0;width:min(94
 .header-brand-block{display:flex;flex-direction:column;gap:2px}.header-date-line{display:flex;align-items:center;gap:8px}.brand-title{display:flex;align-items:center;gap:8px;position:relative;width:100%}.brand-icon{width:36px;height:36px;flex-shrink:0;display:block;object-fit:contain;margin-right:2px}.living-header-icon{display:inline-grid;place-items:center;line-height:1;font-size:1.12em;transform-origin:center;animation:livingIconArrival .35s ease both}.nav-item .journal-nav-icon{display:inline-grid;place-items:center;line-height:1;font-size:1.72rem;transition:transform .2s ease}.nav-item.active .journal-nav-icon{transform:translateY(-1px) scale(1.06)}@keyframes livingIconArrival{from{opacity:0;transform:translateY(3px) scale(.9)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.living-header-icon{animation:none}.nav-item .journal-nav-icon{transition:none}}
 
 
-/* V1.7.7 — icônes météo SVG uniques, stables et nuageuses */
-.weather-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;color:#f4b400;line-height:1}
-.weather-icon svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.weather-icon--header{width:1.15em;height:1.15em;margin-right:.12em;vertical-align:-.12em}
-.weather-icon--nav{width:1.45rem;height:1.45rem;margin-inline:auto}
-.weather-icon[data-weather-kind="rain"]{color:#4f83a8}
-.weather-icon[data-weather-kind="snow"]{color:#78a9c4}
-.weather-icon[data-weather-kind="night"]{color:#6558a6}
-.weather-icon[data-weather-kind="morning"]{color:#e3a400}
-.weather-icon[data-weather-kind="afternoon"]{color:#f4b400}
-
-.weather-icon[data-weather-kind="cloud"]{color:#7d8b92}
-
-
 /* V2.0 — Journal rapide et navigation quotidienne */
 .journal-date-nav{display:grid;grid-template-columns:48px minmax(0,1fr) 48px;gap:10px;align-items:center;margin-bottom:12px}.journal-arrow,.journal-date-main{border:1px solid var(--border);background:var(--surface);color:var(--text);box-shadow:var(--shadow)}.journal-arrow{height:48px;border-radius:16px;font-size:2rem;line-height:1}.journal-arrow:disabled,.journal-arrow.is-disabled{opacity:.32;cursor:default;box-shadow:none;pointer-events:none}.journal-date-main{min-height:58px;border-radius:20px;display:grid;place-items:center;padding:8px 12px;border:1px solid color-mix(in srgb,var(--accent) 18%,var(--border));background:linear-gradient(135deg,var(--surface),color-mix(in srgb,var(--surface2) 80%,var(--surface)));box-shadow:0 10px 24px rgba(20,26,22,.06)}.journal-date-main.is-today{border-color:color-mix(in srgb,var(--accent) 34%,var(--border));background:linear-gradient(135deg,rgba(52,168,83,.08),var(--surface));box-shadow:0 10px 22px rgba(52,168,83,.12)}.journal-date-main span{font-size:.72rem;color:var(--muted);font-weight:850;text-transform:uppercase;letter-spacing:.06em}.journal-date-main strong{font-size:.95rem}.journal-date-value{display:flex;align-items:center;justify-content:center;gap:12px;line-height:1.15}.seasonal-day-icon-wrap{display:inline-flex;align-items:center;justify-content:center;margin-right:0;flex:0 0 auto}.seasonal-day-icon{display:inline-flex;align-items:center;justify-content:center;transform:translateY(-1px);}.journal-progress{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;padding:12px 14px;background:linear-gradient(135deg,var(--surface),var(--surface2))}.journal-progress .eyebrow{margin:0;font-size:.64rem}.journal-progress h2{margin:1px 0 0;font-size:1.12rem;line-height:1.15}.journal-progress-meta{margin:3px 0 0;font-size:.66rem;line-height:1.2}.progress-ring{--progress:0deg;width:54px;height:54px;flex:0 0 54px;border-radius:50%;display:grid;place-items:center;position:relative;background:conic-gradient(var(--accent) var(--progress),var(--border) 0)}.progress-ring:before{content:"";position:absolute;inset:6px;border-radius:50%;background:var(--surface)}.progress-ring strong,.progress-ring small{position:relative;z-index:1;grid-area:1/1}.progress-ring strong{font-size:1rem;transform:translateY(-4px)}.progress-ring small{font-size:.57rem;color:var(--muted);transform:translateY(9px)}.meal-quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;max-width:100%;margin-bottom:12px}.meal-quick-card{width:100%;min-width:0;min-height:88px;border:1px solid var(--border);border-radius:18px;background:var(--surface);color:var(--text);padding:10px;text-align:left;display:grid;grid-template-columns:36px minmax(0,1fr) 18px;gap:8px;align-items:center;box-shadow:var(--shadow);overflow:hidden;touch-action:manipulation;transition:transform .16s ease,border-color .16s ease}.meal-quick-card:active{transform:scale(.98)}.meal-quick-card.is-complete{border-color:color-mix(in srgb,var(--accent) 55%,var(--border));background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 10%,var(--surface)),var(--surface))}.meal-quick-icon{width:36px;height:36px;border-radius:12px;background:var(--surface2);display:grid;place-items:center;font-size:1.72rem}.meal-quick-card.is-complete .meal-quick-icon{background:var(--accent);color:white;font-weight:950}.meal-quick-card>span:nth-child(2){min-width:0}.meal-quick-card strong,.meal-quick-card small{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis}.meal-quick-card strong{font-size:.88rem;margin-bottom:3px;white-space:nowrap}.meal-quick-card small{font-size:.64rem;color:var(--muted);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}.meal-quick-action{font-size:1rem;font-weight:950;color:var(--accent)}.wellbeing-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}.wellbeing-card{border:1px solid var(--border);width:100%;color:var(--text);text-align:left;display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:8px}.wellbeing-card>span{font-size:1.35rem}.wellbeing-card small,.wellbeing-card strong{display:block}.wellbeing-card small{color:var(--muted);font-size:.68rem}.wellbeing-card b{color:var(--muted);font-size:1.35rem}.fatigue-card{grid-column:1/-1}.hydration-card{margin-bottom:16px}.bottom-nav .nav-item small{white-space:nowrap}@media(max-width:340px){.meal-quick-grid{grid-template-columns:1fr}.meal-quick-card{min-height:78px}.wellbeing-grid{grid-template-columns:1fr}.fatigue-card{grid-column:auto}}@media(prefers-reduced-motion:reduce){.meal-quick-card{transition:none}}
 
@@ -620,60 +606,6 @@ body.demo-guide-open .bottom-nav{z-index:20}
 @keyframes journalBrainGrow{from{opacity:0;transform:translateX(-50%) translateY(4px) scale(.78)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
 @media(max-width:380px){.journal-brain-card{grid-template-columns:50px minmax(0,1fr);padding:11px}.journal-brain-visual{width:48px}.journal-brain-message{font-size:.68rem}.journal-brain-progress{grid-template-columns:1fr}.journal-brain-progress small{white-space:normal}}
 @media(prefers-reduced-motion:reduce){.journal-brain-plant{animation:none}.journal-brain-progress em{transition:none}}
-
-.topbar{position:relative}
-.brand-weather{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:.72rem;font-weight:850;white-space:nowrap;z-index:1}
-.brand-weather.weather-icon--header{width:auto;height:auto;margin:0;vertical-align:middle}
-.brand-weather svg{width:.86rem;height:.86rem;flex:0 0 .86rem}
-.brand-weather .weather-temp{display:inline-block;color:var(--text);line-height:1}
-.header-brand-block{gap:0;position:relative;z-index:2}
-.header-actions{position:relative;z-index:2}
-.header-date-line{display:none}
-@media(max-width:430px){.brand-weather{font-size:.68rem;gap:4px}.brand-weather svg{width:.8rem;height:.8rem;flex-basis:.8rem}}
-
-/* Correctif mobile : la météo occupe la zone libre entre la marque et les actions. */
-@media (max-width: 430px){
-  .topbar{
-    display:grid;
-    grid-template-columns:auto minmax(38px,1fr) auto;
-    align-items:center;
-    column-gap:6px;
-  }
-  .header-brand-block,
-  .header-actions{
-    min-width:0;
-    position:relative;
-    z-index:2;
-  }
-  .brand-weather{
-    position:static;
-    left:auto;
-    top:auto;
-    transform:none;
-    justify-self:center;
-    align-self:center;
-    max-width:100%;
-    overflow:hidden;
-    font-size:.64rem;
-    gap:3px;
-    z-index:1;
-  }
-  .brand-weather svg{
-    width:.74rem;
-    height:.74rem;
-    flex-basis:.74rem;
-  }
-  .brand-weather .weather-temp{
-    white-space:nowrap;
-  }
-}
-
-@media (max-width: 370px){
-  .topbar{column-gap:4px}
-  .brand-title{gap:5px}
-  .brand-weather{font-size:.6rem;gap:2px}
-  .sync-badge{padding-left:7px;padding-right:7px;font-size:.66rem}
-}
 
 /* Journal : hiérarchie et cartes compactes */
 .daily-macros-title{display:inline-flex;align-items:center;gap:7px;min-width:0}
@@ -2131,4 +2063,37 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
     min-width: 0;
     white-space: normal;
   }
+}
+
+/* Portrait de compte : l'en-tête affiche toujours la personne connectée. */
+.topbar{position:relative}
+.header-brand-block{gap:0;position:relative;z-index:2}
+.header-actions{position:relative;z-index:2}
+.header-date-line{display:none}
+.header-account-avatar{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:42px;height:42px;z-index:1}
+.profile-avatar{display:inline-grid;place-items:center;flex:0 0 auto;overflow:hidden;width:42px;height:42px;border-radius:50%;background:var(--surface2);color:var(--text);font-weight:850;font-size:.84rem;line-height:1;border:1px solid color-mix(in srgb,var(--accent) 12%,var(--border))}
+.profile-avatar img{display:block;width:100%;height:100%;object-fit:cover}
+.profile-avatar--header{width:42px;height:42px;box-shadow:0 4px 12px rgba(30,70,45,.1)}
+.profile-avatar--editor{width:62px;height:62px;font-size:1.18rem}
+.profile-account-avatar-editor{display:flex;align-items:center;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.profile-account-avatar-actions{display:grid;gap:5px;min-width:0}
+.profile-account-avatar-buttons{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.profile-account-avatar-actions>small{font-weight:500}
+.profile-account-avatar-actions>p{margin:0}
+.professional-client-option>.profile-avatar{width:42px;height:42px;border-radius:50%;font-size:.82rem}
+.professional-beta-context-identity{display:flex;align-items:center;gap:11px;min-width:0}
+.professional-context-avatar{width:43px;height:43px;font-size:.86rem}
+@media(max-width:430px){
+ .topbar{display:grid;grid-template-columns:minmax(0,1fr) 36px auto;align-items:center;column-gap:6px}
+ .header-account-avatar{position:static;left:auto;top:auto;transform:none;justify-self:center;width:36px;height:36px}
+ .profile-avatar--header{width:36px;height:36px}
+}
+@media(max-width:370px){
+ .topbar{column-gap:4px;grid-template-columns:minmax(0,1fr) 32px auto}
+ .brand-icon{width:30px;height:30px}
+ .brand-title{gap:5px}
+ .brand-title span{font-size:.92em}
+ .header-account-avatar,.profile-avatar--header{width:32px;height:32px}
+ .header-actions{gap:4px}
+ .sync-badge{padding:6px;font-size:.62rem}
 }

@@ -8,6 +8,7 @@ const output = path.join(root, "www");
 const runtimeFiles = [
   "index.html",
   "app.js",
+  "profile-avatars.js",
   "nutrition-corrections.js",
   "config.js",
   "i18n.js",
@@ -78,4 +79,4 @@ for (const file of runtimeFiles) await copyFile(file);
 for (const file of brainFiles) await copyFile(path.join("brain", file));
 await copyActiveAssets();
 
-console.log("Énergie v3.56.120 préparée dans www pour Capacitor iOS.");
+console.log("Énergie v3.56.126 préparée dans www pour Capacitor iOS.");

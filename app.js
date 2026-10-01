@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.125";
+  const APP_RELEASE = "3.56.126";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -383,6 +383,11 @@
   let professionalNotesCache = [];
   let professionalTrackingPlanCache = null;
   let clientProfessionalLink = null;
+  const avatarManager = window.EnergieProfileAvatars.create({
+    getClient: () => client,
+    getSession: () => session,
+    getName: () => accountDisplayName(session?.user?.email?.split("@")[0] || "Mon compte"),
+  });
   const EATING_REASON_IDS = new Set(["hunger", "routine", "boredom", "pleasure", "other"]);
   const EATING_REASON_META = [
     { id: "hunger", icon: "😋", label: "J’avais faim" },
@@ -4169,154 +4174,6 @@ function formatSleepDuration(hours) {
     recommendationTimer = setTimeout(close, 9000);
   }
 
-  const WEATHER_CACHE_KEY = "energieRepasWeatherV179";
-  const WEATHER_CACHE_MS = 30 * 60 * 1000;
-  let weatherRefreshPromise = null;
-
-  const WEATHER_SVGS = {
-    morning: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4v3M16 25v3M4 16h3M25 16h3M7.5 7.5l2.1 2.1M22.4 22.4l2.1 2.1M24.5 7.5l-2.1 2.1M9.6 22.4l-2.1 2.1"/><circle cx="16" cy="16" r="6"/></svg>`,
-    afternoon: `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="7"/><path d="M16 2.5v4M16 25.5v4M2.5 16h4M25.5 16h4M6.4 6.4l2.8 2.8M22.8 22.8l2.8 2.8M25.6 6.4l-2.8 2.8M9.2 22.8l-2.8 2.8"/></svg>`,
-    cloud: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8.5 23h15a5.5 5.5 0 0 0 .7-11A8.5 8.5 0 0 0 8 10.2 6.5 6.5 0 0 0 8.5 23Z"/></svg>`,
-    rain: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 21h14a5 5 0 0 0 .6-10A8 8 0 0 0 8.4 9.3 6 6 0 0 0 9 21Z"/><path d="M11 24l-1 3M17 24l-1 3M23 24l-1 3"/></svg>`,
-    snow: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 4v24M5.6 10l20.8 12M5.6 22l20.8-12M16 4l-3 3M16 4l3 3M16 28l-3-3M16 28l3-3M5.6 10l4.1.5M5.6 10l1.6 3.8M26.4 22l-4.1-.5M26.4 22l-1.6-3.8M5.6 22l4.1-.5M5.6 22l1.6-3.8M26.4 10l-4.1.5M26.4 10l-1.6 3.8"/></svg>`,
-    night: `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M24.5 21.4A10.5 10.5 0 0 1 10.6 7.5 10.5 10.5 0 1 0 24.5 21.4Z"/></svg>`,
-  };
-  function fallbackWeatherKind(date = new Date()) {
-    const h = date.getHours();
-    return h >= 20 || h < 6 ? "night" : h < 12 ? "morning" : "afternoon";
-  }
-  function weatherKindFromCode(code, date = new Date()) {
-    const h = date.getHours(),
-      isNight = h >= 20 || h < 6;
-    const snowCodes = [71, 73, 75, 77, 85, 86];
-    const rainCodes = [
-      51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99,
-    ];
-    const cloudCodes = [2, 3, 45, 48];
-    if (snowCodes.includes(Number(code))) return "snow";
-    if (isNight) return "night";
-    if (rainCodes.includes(Number(code))) return "rain";
-    if (cloudCodes.includes(Number(code))) return "cloud";
-    return h < 12 ? "morning" : "afternoon";
-  }
-  function weatherTitleFromKind(kind) {
-    return (
-      {
-        morning: "Beau temps ce matin",
-        afternoon: "Beau temps cet après-midi",
-        cloud: "Temps nuageux",
-        rain: "Pluie aujourd’hui",
-        snow: "Neige aujourd’hui",
-        night: "Soirée",
-      }[kind] || "Ambiance du jour"
-    );
-  }
-  function normalizeWeatherTemperature(rawValue) {
-    if (rawValue === null || rawValue === undefined || rawValue === "")
-      return null;
-    const value = typeof rawValue === "number" ? rawValue : Number(rawValue);
-    return Number.isFinite(value) ? value : null;
-  }
-  function setLivingHeaderIcon(kind, title = weatherTitleFromKind(kind)) {
-    const svg = WEATHER_SVGS[kind] || WEATHER_SVGS.afternoon;
-    const header = $("#livingHeaderIcon");
-    if (header) {
-      const temperature = normalizeWeatherTemperature(window.lastWeatherTemp);
-      const temp =
-        temperature === null
-          ? ""
-          : `<span class="weather-temp">${Math.round(temperature)}°C</span>`;
-      header.innerHTML = svg + temp;
-      header.dataset.weatherKind = kind;
-      header.title = title;
-      header.setAttribute(
-        "aria-label",
-        temperature === null
-          ? title
-          : `${title}, ${Math.round(temperature)} degrés Celsius`,
-      );
-    }
-  }
-  function readWeatherCache() {
-    try {
-      return JSON.parse(localStorage.getItem(WEATHER_CACHE_KEY) || "null");
-    } catch (_) {
-      return null;
-    }
-  }
-  function writeWeatherCache(value) {
-    try {
-      localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(value));
-    } catch (_) {}
-  }
-  function currentPosition() {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation)
-        return reject(new Error("Géolocalisation indisponible"));
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: false,
-        timeout: 8000,
-        maximumAge: 6 * 60 * 60 * 1000,
-      });
-    });
-  }
-  async function fetchCurrentWeather() {
-    const cached = readWeatherCache();
-    if (
-      cached &&
-      Date.now() - cached.savedAt < WEATHER_CACHE_MS &&
-      Number.isFinite(Number(cached.code))
-    )
-      return cached;
-    if (!navigator.onLine) throw new Error("Hors ligne");
-    const pos = await currentPosition();
-    const latitude = pos.coords.latitude.toFixed(4),
-      longitude = pos.coords.longitude.toFixed(4);
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&current=weather_code,temperature_2m&timezone=auto&forecast_days=1`;
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) throw new Error(`Météo ${response.status}`);
-    const data = await response.json();
-    const code = Number(data?.current?.weather_code);
-    const temperature = normalizeWeatherTemperature(
-      data?.current?.temperature_2m,
-    );
-    if (!Number.isFinite(code)) throw new Error("Code météo absent");
-    const value = { code, temperature, savedAt: Date.now() };
-    writeWeatherCache(value);
-    return value;
-  }
-  async function updateLivingHeader(force = false) {
-    if (force) localStorage.removeItem(WEATHER_CACHE_KEY);
-    const cached = readWeatherCache();
-    const cacheIsFresh =
-      cached &&
-      Date.now() - cached.savedAt < WEATHER_CACHE_MS &&
-      Number.isFinite(Number(cached.code));
-    const initialKind = cacheIsFresh
-      ? weatherKindFromCode(cached.code)
-      : fallbackWeatherKind();
-    window.lastWeatherTemp = cacheIsFresh
-      ? normalizeWeatherTemperature(cached.temperature)
-      : null;
-    setLivingHeaderIcon(initialKind);
-    if (weatherRefreshPromise && !force) return weatherRefreshPromise;
-    weatherRefreshPromise = (async () => {
-      try {
-        const weather = await fetchCurrentWeather();
-        const kind = weatherKindFromCode(weather.code);
-        window.lastWeatherTemp = normalizeWeatherTemperature(
-          weather.temperature,
-        );
-        setLivingHeaderIcon(kind);
-      } catch (error) {
-        console.info("Icône météo en mode horaire:", error?.message || error);
-      } finally {
-        weatherRefreshPromise = null;
-      }
-    })();
-    return weatherRefreshPromise;
-  }
-
   const DEMO_BACKUP_KEY = "energieBeforeDemoV250";
   const DEMO_MEMORY_BACKUP_KEY = "energieBeforeDemoMemoryV1";
   let demoTourIndex = 0;
@@ -4770,6 +4627,10 @@ function formatSleepDuration(hours) {
     const tags = (plan.feelingIds || []).map((id) => FEELING_TAGS.find((tag) => tag.id === id)).filter((tag) => tag?.group === "symptom");
     return `<section class="card client-tracking-summary"><p class="eyebrow">Plan convenu avec le professionnel</p><h3>🎯 Mes ressentis à observer</h3>${fixedPositiveFeelingsHtml()}${feelingGroupsHtml(tags, (tag) => `<span>${tag.emoji} ${esc(t(tag.label))}</span>`)}<p class="muted tiny">Cette sélection simplifie la saisie. Tes anciennes observations demeurent dans ton historique.</p></section>`;
   }
+  async function refreshProfessionalClientAvatars() {
+    if (!hasProfessionalBetaAccess || !session) return;
+    professionalClientLinks = await avatarManager.withProfessionalPhotos(professionalClientLinks);
+  }
   function professionalClientPickerHtml() {
     const links = professionalClientLinks.filter(
       (link) => link.status === "active" && link.client_user_id,
@@ -4779,17 +4640,18 @@ function formatSleepDuration(hours) {
     return links
       .map(
         (link) =>
-          `<button type="button" class="professional-client-option ${professionalActiveClient?.linkId === link.id ? "is-active" : ""}" data-professional-beta-client="${esc(link.client_user_id)}"><span>👤</span><span><strong>${esc(link.client_label || "Client Énergie")}</strong><small>Partage actif</small></span><b>›</b></button>`,
+          `<button type="button" class="professional-client-option ${professionalActiveClient?.linkId === link.id ? "is-active" : ""}" data-professional-beta-client="${esc(link.client_user_id)}">${avatarManager.avatarHtml(link.client_label || "Client Énergie", link.avatarUrl, "professional-list-avatar")}<span><strong>${esc(link.client_label || "Client Énergie")}</strong><small>Partage actif</small></span><b>›</b></button>`,
       )
       .join("");
   }
-  function openProfessionalClientPicker() {
+  async function openProfessionalClientPicker() {
     const dialog = $("#professionalClientDialog"),
       list = $("#professionalClientList");
     if (!dialog || !list) {
       alert("La liste des clients n’a pas pu être ouverte. Recharge l’application puis réessaie.");
       return;
     }
+    await refreshProfessionalClientAvatars();
     list.innerHTML = professionalClientPickerHtml();
     $$('[data-professional-beta-client]').forEach((button) =>
       button.addEventListener("click", async () => {
@@ -4844,13 +4706,20 @@ function formatSleepDuration(hours) {
     const cleanName = String(displayName || "").trim().replace(/\s+/g, " ").slice(0, 100);
     const cleanType = accountType === "professional" ? "professional" : "personal";
     if (!cleanName) throw new Error("Entre ton nom.");
-    const { error } = await client.from("profiles").upsert({
-      id: session.user.id,
+    // Modifier une fiche existante sans risquer de réinitialiser les préférences photo.
+    const changes = {
       display_name: cleanName,
       account_type: cleanType,
       updated_at: new Date().toISOString(),
-    }, { onConflict: "id" });
-    if (error) throw error;
+    };
+    const { data: existing, error: updateError } = await client.from("profiles")
+      .update(changes).eq("id", session.user.id).select("id").maybeSingle();
+    if (updateError) throw updateError;
+    if (!existing) {
+      const { error: insertError } = await client.from("profiles")
+        .insert({ id: session.user.id, ...changes });
+      if (insertError) throw insertError;
+    }
     profileDisplayName = cleanName;
     profileAccountType = cleanType;
     return true;
@@ -5148,6 +5017,7 @@ function formatSleepDuration(hours) {
   }
 
   async function loadProfessionalClientWorkspace(clientId) {
+    await refreshProfessionalClientAvatars();
     const link = professionalClientLinks.find((item) => item.status === "active" && item.client_user_id === clientId);
     if (!link || !client || !session) return;
     const [daysResult, mealsResult, notesResult, planResult] = await Promise.all([
@@ -5167,7 +5037,7 @@ function formatSleepDuration(hours) {
       mealsResult.data || [],
       link.share_photos === true,
     );
-    professionalActiveClient = { id: clientId, name: link.client_label || "Client Énergie", linkId: link.id, link };
+    professionalActiveClient = { id: clientId, name: link.client_label || "Client Énergie", linkId: link.id, link, avatarUrl: link.avatarUrl || null };
     professionalNotesCache = (notesResult.data || []).map((note) => ({
       id: note.id, clientId, visibility: note.visibility, contextType: note.context_type,
       contextId: note.context_id || "", contextDate: note.context_date || "", contextLabel: note.context_label || "Suivi général",
@@ -6669,7 +6539,7 @@ function formatSleepDuration(hours) {
     document.documentElement.dataset.theme =
       db.settings.theme === "dark" ? "dark" : "";
     document.body.classList.toggle("professional-beta-mode", !!professionalBetaMode);
-    updateLivingHeader();
+    avatarManager.renderHeader();
     $("#todayLabel").textContent =
       currentView === "today"
         ? formatDate(selectedDate)
@@ -6717,7 +6587,7 @@ function formatSleepDuration(hours) {
     if (!app || $("#professionalBetaContextBar")) return;
     app.insertAdjacentHTML(
       "afterbegin",
-      `<section class="professional-beta-context" id="professionalBetaContextBar"><div class="professional-beta-context-copy"><small>Mode professionnel</small><strong>👤 ${esc(professionalActiveClient.name || "Client Énergie")}</strong><span>Dossier en lecture seule · les modifications se font dans Suivi.</span></div><div class="professional-beta-context-actions"><button type="button" class="secondary small" id="professionalBetaOpenFollowup">Suivi</button><button type="button" class="text-button" id="professionalBetaReturnPersonal">Revenir à mon profil</button></div></section>`,
+      `<section class="professional-beta-context" id="professionalBetaContextBar"><div class="professional-beta-context-identity">${avatarManager.avatarHtml(professionalActiveClient.name || "Client Énergie", professionalActiveClient.avatarUrl, "professional-context-avatar")}<div class="professional-beta-context-copy"><small>Mode professionnel</small><strong>${esc(professionalActiveClient.name || "Client Énergie")}</strong><span>Dossier en lecture seule · les modifications se font dans Suivi.</span></div></div><div class="professional-beta-context-actions"><button type="button" class="secondary small" id="professionalBetaOpenFollowup">Suivi</button><button type="button" class="text-button" id="professionalBetaReturnPersonal">Revenir à mon profil</button></div></section>`,
     );
     $("#professionalBetaOpenFollowup")?.addEventListener("click", () => {
       currentView = "followup";
@@ -13607,7 +13477,7 @@ function formatSleepDuration(hours) {
         ? `<div class="notice info-notice"><strong>Estimations nutritionnelles professionnelles</strong><p>Le Journal affiche uniquement le total calorique. Les détails des nutriments restent réservés à cette vue professionnelle.</p></div>`
         : `<div class="notice info-notice"><strong>Calories estimées, sans objectif</strong><p>Seul le total calorique est affiché en haut du Journal, avec sa tendance dans Observations. Les autres chiffres nutritionnels restent masqués.</p></div>`;
     $("#app").innerHTML =
-      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(accountDisplayName("Mon profil")) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître si tu changes d’appareil ou désinstalles Énergie."}</p></section><div class="stack"><section class="card profile-account-card">${session ? `<div class="profile-account-name"><label for="profileDisplayNameInput">Nom</label><div class="profile-account-name-edit"><input id="profileDisplayNameInput" type="text" autocomplete="name" maxlength="100" value="${esc(profileDisplayName)}" placeholder="Inscris ton prénom et ton nom"><button class="secondary small" id="saveDisplayName" type="button">Enregistrer</button></div><p id="profileDisplayNameStatus" class="muted tiny"></p></div><div class="settings-row profile-account-email"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div>${hasProfessionalBetaAccess ? `<div class="profile-use-mode profile-spaces-compact"><strong>Espaces</strong><div class="profile-space-actions"><button type="button" id="usePersonalMode" class="secondary profile-space-button ${professionalBetaMode ? "" : "is-active"}">👤 Mon espace personnel</button><button type="button" id="useProfessionalMode" class="secondary profile-space-button ${professionalBetaMode ? "is-active" : ""}">🩺 Espace professionnel</button></div></div>` : ""}${window.Capacitor?.getPlatform?.() === "android" ? "" : `<div class="apple-link-card"><div><strong>Connexion Apple</strong><p class="muted small">${hasAppleIdentity() ? "✓ Ton identifiant Apple est associé à ce compte Énergie." : "Associe Apple à ce compte avant d’utiliser « Se connecter avec Apple »."}</p></div>${hasAppleIdentity() ? "" : `<button type="button" class="apple-auth-button" id="linkAppleIdentity"><b aria-hidden="true"></b> Associer mon compte Apple</button><p id="appleIdentityMessage" class="muted tiny" aria-live="polite"></p>`}</div>`}<button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card recognized-elements-setting-card"><h3>🔎 Éléments reconnus</h3><p class="muted small">Cette petite carte résume ce qu’Énergie reconnaît dans la description du repas. Tu peux la masquer pour alléger la saisie sans désactiver l’analyse du repas ni les estimations nutritionnelles.</p><label class="toggle-row"><span><strong>Afficher « Éléments reconnus »</strong><small>Affiche la carte sous la description du repas</small></span><input id="settingRecognizedElements" type="checkbox" ${db.settings.showRecognizedElements !== false ? "checked" : ""}></label></section><section class="card journal-summary-setting-card"><h3>🗓️ Journal sommaire</h3><p class="muted small">Choisis comment les repas complétés s’affichent dans le Journal en mode sommaire.</p><label class="toggle-row"><span><strong>Masquer les repas complétés</strong><small>Un repas disparaît du sommaire lorsqu’il contient le repas, le ressenti avant et le ressenti après. La carte Collation reste toujours visible.</small></span><input id="settingSummaryHideCompletedMeals" type="checkbox" ${db.settings.summaryHideCompletedMeals !== false ? "checked" : ""}></label></section><section class="card guided-cnf-setting-card"><h3>🇨🇦 Saisie des repas</h3><p class="muted small">Tu peux imposer la saisie guidée FCÉN pour éviter les descriptions libres et rendre les estimations plus reproductibles.</p><label class="toggle-row"><span><strong>Forcer la saisie guidée FCÉN</strong><small>Quand activé, la description du repas ne peut plus être tapée directement; les aliments doivent être ajoutés avec le lien FCÉN.</small></span><input id="settingForceGuidedCnf" type="checkbox" ${db.settings.forceGuidedCnfMealEntry === true ? "checked" : ""}></label><p class="muted tiny">Désactivé par défaut.</p></section><section class="card eating-reasons-setting-card"><h3>💭 Raisons de manger</h3><p class="muted small">La question « Qu’est-ce qui t’a amené à manger? » est facultative. Tu peux la masquer pour alléger la saisie des repas.</p><label class="toggle-row"><span><strong>Afficher « Qu’est-ce qui t’a amené à manger? »</strong><small>Si elle est masquée, la carte correspondante n’apparaît pas non plus dans Observations</small></span><input id="settingEatingReasons" type="checkbox" ${db.settings.showEatingReasons !== false ? "checked" : ""}></label></section><section class="card future-meal-planning-setting-card"><h3>📅 Planification des repas</h3><p class="muted small">Optionnel · utile si tu souhaites préparer ton journal à l’avance.</p><label class="toggle-row"><span><strong>Permettre la saisie de repas à l’avance</strong><small>Autorise la navigation et la saisie jusqu’à 2 jours dans le futur. Cette limite est fixe à 2 jours.</small></span><input id="settingFutureMealPlanning" type="checkbox" ${db.settings.futureMealPlanning === true ? "checked" : ""}></label><p class="muted tiny">Les repas planifiés restent enregistrés, mais ne participent pas aux Observations ni à l’apprentissage d’Énergie avant la date prévue.</p></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="one-time-code"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button>${nativeLocalNotifications() ? `<p class="muted tiny">Sur mobile, les rappels peuvent apparaître même lorsque Énergie n’est pas ouverte, si les notifications sont autorisées.</p>` : `<p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p>`}</div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${labScenarioCardsHtml()}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<details class="card profile-backup-panel"><summary><span><strong>Données et sauvegarde</strong><small>Options avancées · ${backups} copie(s) locale(s)</small></span><span aria-hidden="true">›</span></summary><div class="profile-backup-content"><p class="muted small">Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></div></details></div>`;
+      `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(accountDisplayName("Mon profil")) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître si tu changes d’appareil ou désinstalles Énergie."}</p></section><div class="stack"><section class="card profile-account-card">${session ? `<div class="profile-account-name"><label for="profileDisplayNameInput">Nom</label><div class="profile-account-name-edit"><input id="profileDisplayNameInput" type="text" autocomplete="name" maxlength="100" value="${esc(profileDisplayName)}" placeholder="Inscris ton prénom et ton nom"><button class="secondary small" id="saveDisplayName" type="button">Enregistrer</button></div><p id="profileDisplayNameStatus" class="muted tiny"></p>${avatarManager.editorHtml()}</div><div class="settings-row profile-account-email"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div>${hasProfessionalBetaAccess ? `<div class="profile-use-mode profile-spaces-compact"><strong>Espaces</strong><div class="profile-space-actions"><button type="button" id="usePersonalMode" class="secondary profile-space-button ${professionalBetaMode ? "" : "is-active"}">👤 Mon espace personnel</button><button type="button" id="useProfessionalMode" class="secondary profile-space-button ${professionalBetaMode ? "is-active" : ""}">🩺 Espace professionnel</button></div></div>` : ""}${window.Capacitor?.getPlatform?.() === "android" ? "" : `<div class="apple-link-card"><div><strong>Connexion Apple</strong><p class="muted small">${hasAppleIdentity() ? "✓ Ton identifiant Apple est associé à ce compte Énergie." : "Associe Apple à ce compte avant d’utiliser « Se connecter avec Apple »."}</p></div>${hasAppleIdentity() ? "" : `<button type="button" class="apple-auth-button" id="linkAppleIdentity"><b aria-hidden="true"></b> Associer mon compte Apple</button><p id="appleIdentityMessage" class="muted tiny" aria-live="polite"></p>`}</div>`}<button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card recognized-elements-setting-card"><h3>🔎 Éléments reconnus</h3><p class="muted small">Cette petite carte résume ce qu’Énergie reconnaît dans la description du repas. Tu peux la masquer pour alléger la saisie sans désactiver l’analyse du repas ni les estimations nutritionnelles.</p><label class="toggle-row"><span><strong>Afficher « Éléments reconnus »</strong><small>Affiche la carte sous la description du repas</small></span><input id="settingRecognizedElements" type="checkbox" ${db.settings.showRecognizedElements !== false ? "checked" : ""}></label></section><section class="card journal-summary-setting-card"><h3>🗓️ Journal sommaire</h3><p class="muted small">Choisis comment les repas complétés s’affichent dans le Journal en mode sommaire.</p><label class="toggle-row"><span><strong>Masquer les repas complétés</strong><small>Un repas disparaît du sommaire lorsqu’il contient le repas, le ressenti avant et le ressenti après. La carte Collation reste toujours visible.</small></span><input id="settingSummaryHideCompletedMeals" type="checkbox" ${db.settings.summaryHideCompletedMeals !== false ? "checked" : ""}></label></section><section class="card guided-cnf-setting-card"><h3>🇨🇦 Saisie des repas</h3><p class="muted small">Tu peux imposer la saisie guidée FCÉN pour éviter les descriptions libres et rendre les estimations plus reproductibles.</p><label class="toggle-row"><span><strong>Forcer la saisie guidée FCÉN</strong><small>Quand activé, la description du repas ne peut plus être tapée directement; les aliments doivent être ajoutés avec le lien FCÉN.</small></span><input id="settingForceGuidedCnf" type="checkbox" ${db.settings.forceGuidedCnfMealEntry === true ? "checked" : ""}></label><p class="muted tiny">Désactivé par défaut.</p></section><section class="card eating-reasons-setting-card"><h3>💭 Raisons de manger</h3><p class="muted small">La question « Qu’est-ce qui t’a amené à manger? » est facultative. Tu peux la masquer pour alléger la saisie des repas.</p><label class="toggle-row"><span><strong>Afficher « Qu’est-ce qui t’a amené à manger? »</strong><small>Si elle est masquée, la carte correspondante n’apparaît pas non plus dans Observations</small></span><input id="settingEatingReasons" type="checkbox" ${db.settings.showEatingReasons !== false ? "checked" : ""}></label></section><section class="card future-meal-planning-setting-card"><h3>📅 Planification des repas</h3><p class="muted small">Optionnel · utile si tu souhaites préparer ton journal à l’avance.</p><label class="toggle-row"><span><strong>Permettre la saisie de repas à l’avance</strong><small>Autorise la navigation et la saisie jusqu’à 2 jours dans le futur. Cette limite est fixe à 2 jours.</small></span><input id="settingFutureMealPlanning" type="checkbox" ${db.settings.futureMealPlanning === true ? "checked" : ""}></label><p class="muted tiny">Les repas planifiés restent enregistrés, mais ne participent pas aux Observations ni à l’apprentissage d’Énergie avant la date prévue.</p></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="one-time-code"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><label class="toggle-row"><span><strong>Rappels de ressenti</strong><small>Désactive ceci pour ne recevoir aucun rappel</small></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><div id="feelingReminderOptions" class="feeling-settings ${db.settings.feelingReminders === false ? "is-disabled" : ""}"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><p class="muted tiny feeling-importance-note">🧠 Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.</p><button class="secondary small" id="enableNotifications" type="button">Autoriser les notifications</button>${nativeLocalNotifications() ? `<p class="muted tiny">Sur mobile, les rappels peuvent apparaître même lorsque Énergie n’est pas ouverte, si les notifications sont autorisées.</p>` : `<p class="muted tiny">Sur le Web, les rappels système dépendent des permissions du navigateur et peuvent nécessiter que l’app soit ouverte. Les ressentis dus restent toujours visibles dans le Journal.</p>`}</div></section><section class="card"><div class="settings-row"><div><h3>Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section><details class="card profile-favorites-panel"><summary><span class="profile-favorites-title"><b aria-hidden="true">⭐</b><span><strong>${t("Mes favoris")}</strong><small>Repas enregistrés pour une saisie rapide</small></span></span><span class="profile-favorites-meta"><b>${db.favorites.length}</b><i aria-hidden="true">›</i></span></summary><div id="profileFavoritesList" class="stack profile-favorites-list">${renderFavoriteList(db.favorites)}</div></details>${labScenarioCardsHtml()}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<details class="card profile-backup-panel"><summary><span><strong>Données et sauvegarde</strong><small>Options avancées · ${backups} copie(s) locale(s)</small></span><span aria-hidden="true">›</span></summary><div class="profile-backup-content"><p class="muted small">Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></div></details></div>`;
     // Association Google visible uniquement dans le Profil Android.
     if (session && window.Capacitor?.getPlatform?.() === "android") {
       const accountCard = $(".profile-account-card");
@@ -13706,6 +13576,7 @@ function formatSleepDuration(hours) {
     const accountCard = $(".profile-account-card");
     accountCard?.insertAdjacentHTML("afterend", physiologicalContextHtml());
     accountCard?.insertAdjacentHTML("afterend", personalProfileHtml());
+    accountCard?.insertAdjacentHTML("afterend", avatarManager.settingsHtml());
     const accountProfileCard = ($("#syncNow") || $("#signIn"))?.closest("section.card");
     accountProfileCard?.insertAdjacentHTML("afterend", `<section class="card pilot-mode-profile-card"><h3>🧪 Mode pilote</h3><p class="muted small">Active un lien discret dans Énergie pour transmettre rapidement une suggestion, un bogue ou un autre commentaire pendant le projet pilote.</p><label class="toggle-row"><span><strong>Activer le mode pilote</strong><small>Le contexte technique est ajouté automatiquement, jamais le contenu de ton journal.</small></span><input id="settingPilotMode" type="checkbox" ${db.settings.pilotMode === true ? "checked" : ""}></label></section>`);
 
@@ -13729,10 +13600,50 @@ function formatSleepDuration(hours) {
         input.value = profileDisplayName;
         const heroName = $("#app .hero h2");
         if (heroName) heroName.textContent = accountDisplayName("Mon profil");
+        avatarManager.renderHeader();
       } catch (error) {
         if (status) status.textContent = error?.message || "Impossible d’enregistrer le nom.";
       }
     };
+    $("#changeProfileAvatar")?.addEventListener("click", () => $("#profileAvatarFile")?.click());
+    $("#profileAvatarFile")?.addEventListener("change", async (event) => {
+      const file = event.target.files?.[0];
+      const status = $("#profileAvatarStatus");
+      if (!file) return;
+      if (status) status.textContent = "Préparation de la photo…";
+      try {
+        await avatarManager.upload(file);
+        renderProfile();
+        avatarManager.renderHeader();
+      } catch (error) {
+        if (status) status.textContent = error?.message || "Impossible d’ajouter la photo.";
+      }
+    });
+    $("#removeProfileAvatar")?.addEventListener("click", async () => {
+      if (!confirm("Supprimer ta photo de profil?")) return;
+      const status = $("#profileAvatarStatus");
+      try {
+        await avatarManager.remove();
+        renderProfile();
+      } catch (error) {
+        if (status) status.textContent = error?.message || "Impossible de supprimer la photo.";
+      }
+    });
+    [["#settingShowProfileAvatar", "show_avatar_self"], ["#settingShareProfileAvatar", "share_avatar_with_professionals"]]
+      .forEach(([selector, column]) => {
+        $(selector)?.addEventListener("change", async (event) => {
+          const checked = event.target.checked;
+          event.target.disabled = true;
+          try {
+            await avatarManager.setVisibility(column, checked);
+          } catch (error) {
+            event.target.checked = !checked;
+            alert(error?.message || "Impossible d’enregistrer cette préférence.");
+          } finally {
+            event.target.disabled = false;
+          }
+        });
+      });
     $("#saveDisplayName")?.addEventListener("click", saveDisplayNameFromProfile);
     $("#profileDisplayNameInput")?.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
@@ -13774,6 +13685,7 @@ function formatSleepDuration(hours) {
         return;
       }
       session = null;
+      avatarManager.clear();
       clearLocalJournalAfterSignOut();
       render();
     });
@@ -17158,6 +17070,7 @@ function formatSleepDuration(hours) {
     hasProfessionalBetaAccess = false;
     profileDisplayName = "";
     profileAccountType = "personal";
+    avatarManager.clear();
     if (!session) return false;
     if (!client) return false;
     try {
@@ -17180,6 +17093,7 @@ function formatSleepDuration(hours) {
       if (DEMO_ACCESS_FOR_ALL_ACCOUNTS) hasDemoAccess = true;
       await loadProfessionalBetaState();
       await backfillDisplayNameFromIdentity();
+      await avatarManager.loadOwn();
       try {
         const savedUsageMode = localStorage.getItem("energie_usage_mode");
         if (!savedUsageMode && profileAccountType === "professional" && hasProfessionalBetaAccess) {
@@ -17278,7 +17192,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.116");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.154");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
@@ -17349,10 +17263,18 @@ function formatSleepDuration(hours) {
   initAuth();
   scheduleFeelingChecks();
 
-  setInterval(() => updateLivingHeader(), 30 * 60 * 1000);
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
-      updateLivingHeader();
+      avatarManager.loadOwn().catch((error) => console.info("Photo de profil au retour:", error?.message || error));
+      if (professionalBetaMode && professionalActiveClient) {
+        refreshProfessionalClientAvatars().then(() => {
+          if (!professionalActiveClient) return;
+          const link = professionalClientLinks.find((item) => item.id === professionalActiveClient.linkId);
+          professionalActiveClient.avatarUrl = link?.avatarUrl || null;
+          const displayed = $("#professionalBetaContextBar .professional-context-avatar");
+          if (displayed) displayed.outerHTML = avatarManager.avatarHtml(professionalActiveClient.name, professionalActiveClient.avatarUrl, "professional-context-avatar");
+        }).catch(() => {});
+      }
       syncAppleHealth().catch((error) =>
         console.warn("Apple Health au retour dans l’app", error),
       );
