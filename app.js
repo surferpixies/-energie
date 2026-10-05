@@ -358,6 +358,8 @@
     mealPhotoReadOnly = false,
     removedMealPhotoPaths = new Set(),
     mealAiSuggestionText = "",
+    // Uniquement les ingrédients réellement ajoutés par l’analyse photo en cours.
+    mealPhotoAiSegments = new Set(),
     mealNutritionPreviewTimer = null,
     mealNutritionManuallyEdited = false,
     mealCnfGuidedDraft = [],
@@ -2636,6 +2638,31 @@ function formatSleepDuration(hours) {
       }))
       .filter((item) => item.key),
   ).sort((a, b) => b.compareKey.length - a.compareKey.length);
+  // Les candidats du catalogue ne sont pas toujours sémantiquement équivalents :
+  // « frites » ne doit jamais être rapproché d'un mollusque simplement « frit ».
+  // Ces garde-fous s'appliquent au texte libre, sans toucher à la sélection guidée.
+  function legacyFoodWithAlias(...aliases) {
+    const allowed = new Set(aliases.map(normalizeFoodText));
+    return FOOD_MACROS_SOURCE.find((food) =>
+      (food?.keys || []).some((key) => allowed.has(normalizeFoodText(key)))
+    ) || null;
+  }
+  function checkedCatalogFood(food) {
+    if (!food) return null;
+    const grams = Number(food.gramsPerPortion);
+    const calories = Number(food.calories);
+    // > 9 kcal/g est impossible pour un aliment : refuser une portion corrompue.
+    if (food.calories != null && Number.isFinite(grams) && grams > 0 &&
+        Number.isFinite(calories) && calories >= 0 && calories / grams > 9.05) return null;
+    // Si l'intitulé et le poids du catalogue divergent, ne jamais afficher
+    // « 10 g » alors que le calcul a en réalité été fait pour 100 g.
+    const label = String(food.portion || '').trim();
+    const measured = label.match(/^(\d+(?:[.,]\d+)?)\s*g(?:rammes?)?$/i);
+    if (measured && Number.isFinite(grams) && grams > 0 &&
+        Math.abs(Number(measured[1].replace(',', '.')) - grams) > 0.1)
+      return { ...food, portion: `${grams} g` };
+    return food;
+  }
   function foodMatchForSegment(segment) {
     const clean = normalizeFoodText(segment),
       comparable = comparableFoodText(segment);
@@ -2650,31 +2677,49 @@ function formatSleepDuration(hours) {
         keyPosition = comparable.indexOf(key);
       const exact = comparable === key ? 10000 : 0;
       const coverage = (keyWords / Math.max(cleanWords, 1)) * 1000;
-      // À couverture égale, favorise l’aliment nommé le plus tôt dans le segment.
-      // Exemple : « 125 g poulet à la tomate » doit reconnaître le poulet, pas la tomate.
       const positionBonus = keyPosition >= 0 ? Math.max(0, 120 - keyPosition) : 0;
       const score = exact + coverage + keyWords * 100 + key.length + positionBonus;
       if (!best || score > best.score) best = { ...candidate, score };
     }
-    // "filet(s) de X" doit être résolu par X dans le catalogue FCÉN avant
-    // tout ancien alias "filet" (qui peut sinon pointer vers un filet végétarien).
-    const normalizedSegment = normalizeFoodText(segment);
-    const explicitFiletFood = /^(?:\d+(?:[.,]\d+)?\s+)?(?:filet|filets|fillet|fillets)\s+(?:de|des|du|d|of)\s+/.test(normalizedSegment);
-    if (explicitFiletFood) {
-      const cnfSpecific = window.ENERGIE_CNF_SEARCH?.find?.(segment);
-      if (cnfSpecific) return cnfSpecific;
+    // Les frites sont des pommes de terre, jamais un simple adjectif « frit ».
+    // Tant qu'une fiche officielle de pommes de terre frites n'est pas vérifiée,
+    // préférer la référence Énergie explicite à une correspondance dangereuse.
+    if (/\b(?:frites?|french fries)\b/.test(clean) &&
+        !/\b(?:mollusque|ormeau|abalone|poisson|poulet|beignet)\b/.test(clean)) {
+      const fries = legacyFoodWithAlias('frites', 'french fries');
+      if (fries) return fries;
     }
-
-    // Un mapping vérifié FCÉN est prioritaire.
-    if (best?.food?.nutritionSource === "cnf") return best.food;
-
-    // Sinon, chercher d'abord dans le catalogue FCÉN complet. Les anciennes
-    // valeurs Énergie ne servent qu'en repli lorsqu'aucune correspondance FCÉN
-    // suffisamment fiable n'est trouvée.
-    const cnfMatch = window.ENERGIE_CNF_SEARCH?.find?.(segment);
-    if (cnfMatch) return cnfMatch;
-
-    return best?.food || null;
+    const wantsPlainCottage = /\b(?:fromage cottage|cottage cheese|cottage)\b/.test(clean) &&
+      !/\b(?:legume|legumes|vegetable|vegetables|herbe|herbes|flavoured|aromatise)\b/.test(clean);
+    // « bœuf » devient « b uf » dans normalizeFoodText : accepter aussi cette graphie.
+    // Une demande de viande hachée ne doit pas aboutir à une coupe de bœuf générique.
+    const wantsGroundBeef = /\b(?:boeuf|b uf) hache\b|\bground beef\b/.test(clean);
+    const safeLegacy = wantsPlainCottage
+      ? legacyFoodWithAlias('fromage cottage', 'cottage cheese', 'cottage')
+      : wantsGroundBeef
+        ? legacyFoodWithAlias('boeuf haché', 'ground beef') : null;
+    function suitable(candidate) {
+      const checked = checkedCatalogFood(candidate);
+      if (!checked) return null;
+      const name = normalizeFoodText(checked.cnfNameFr || checked.ciqualNameFr || checked.keys?.[0] || '');
+      // Refuser « Bœuf, gras, cru » pour « bœuf haché ». Conserver une fiche
+      // FCÉN/Ciqual authentiquement hachée; à défaut, repli Énergie explicite.
+      if (wantsGroundBeef && !/\b(?:hache|hachee|ground|minced)\b/.test(name)) return null;
+      if (wantsPlainCottage && /\b(?:legume|legumes|vegetable|vegetables|herbe|herbes|aromatise)\b/.test(name)) return null;
+      return checked;
+    }
+    const explicitFiletFood = /^(?:\d+(?:[.,]\d+)?\s+)?(?:filet|filets|fillet|fillets)\s+(?:de|des|du|d|of)\s+/.test(clean);
+    if (explicitFiletFood) {
+      const specific = suitable(window.ENERGIE_CNF_SEARCH?.find?.(segment));
+      if (specific) return specific;
+    }
+    if (best?.food?.nutritionSource === 'cnf' && window.ENERGIE_LOCALE !== 'fr-FR') {
+      const verified = suitable(best.food);
+      if (verified) return verified;
+    }
+    const official = suitable(window.ENERGIE_CNF_SEARCH?.find?.(segment));
+    if (official) return official;
+    return safeLegacy || suitable(best?.food) || null;
   }
   function mealQuantityNumber(value) {
     const text = String(value || "").trim().replace(",", ".");
@@ -3033,7 +3078,57 @@ function formatSleepDuration(hours) {
     actions.hidden = !missing.length || !!acknowledged;
     section.hidden = false;
   }
-  function estimateNutritionFromText(text) {
+  function photoCupPortionAdjustment(segment, food, quantity, photoSegments, ingredientCount) {
+    if (!photoSegments?.has(normalizeFoodText(segment)) || quantity.quantityUsed || ingredientCount < 3)
+      return quantity;
+    // Une portion de catalogue « 1 tasse » n’est PAS une mesure de la photo.
+    // On limite l’hypothèse uniquement pour les accompagnements issus de l’IA.
+    if (!/\b(?:tasse|tasses|cup|cups)\b/i.test(normalizeFoodText(food?.portion))) return quantity;
+    const photoIngredientCount = Math.max(
+      Number(ingredientCount) || 0,
+      Number(photoSegments?.size) || 0,
+    );
+    // Une tasse complète est trop agressive dans une assiette composée.
+    // À partir de 3 aliments photo, utiliser une demi-portion comme
+    // hypothèse prudente, sans affecter les quantités explicitement saisies.
+    const scale = photoIngredientCount >= 3 ? 0.5 : 0.75;
+    return { ...quantity, scale, quantityKind: "photo-shared-plate", photoPortionEstimate: true };
+  }
+  function estimateMealEditorNutrition(text) {
+    return estimateNutritionFromText(text, { photoSegments: mealPhotoAiSegments });
+  }
+  function photoEstimatedDescription(text) {
+    const nutrition = estimateMealEditorNutrition(text);
+    const items = nutrition?.trace?.items || [];
+    if (!items.length) return text;
+
+    return items.map((item) => {
+      const name = String(item.input || "").trim();
+      if (!item.photoOrigin || item.quantityUsed) return name;
+
+      const scale = Number(item.scale) || 1;
+      const gramsPerPortion = Number(item.gramsPerPortion);
+      const portion = String(item.referencePortion || "");
+
+      if (Number.isFinite(gramsPerPortion) && gramsPerPortion > 0 &&
+          /\bg\b/i.test(portion)) {
+        return `${Math.round(gramsPerPortion * scale)} g ${name}`;
+      }
+
+      if (/\b(?:tasse|tasses|cup|cups)\b/i.test(portion)) {
+        const qty = scale <= 0.5 ? "1/2 tasse" : scale <= 0.75 ? "3/4 tasse" : "1 tasse";
+        return `${qty} ${name}`;
+      }
+
+      if (scale === 1 && portion) {
+        return `${portion} ${name}`;
+      }
+
+      return name;
+    }).join("\n");
+  }
+
+  function estimateNutritionFromText(text, { photoSegments = null } = {}) {
     const recognizedDish = mealCompositionAnalysis(text)?.dish;
     if (recognizedDish?.nutrition && !/[+,;\n\r|]|\s+\/\s+/.test(String(text || "")))
       return normalNutrition({
@@ -3054,15 +3149,44 @@ function formatSleepDuration(hours) {
         estimated: true,
       });
     }
-    const matched = segments
+    const matchedRaw = segments
       .map((segment) => ({ segment, food: foodMatchForSegment(segment) }))
       .filter((x) => x.food);
+
+    // Dernière protection pour les analyses photo :
+    // Gemini peut fournir le même aliment sous deux formulations différentes,
+    // par exemple « bœuf haché » et « repas composé de bœuf haché ».
+    // On déduplique ici, après le matching, afin que le même aliment ne soit
+    // jamais compté deux fois. Une quantité explicitement saisie reste intacte.
+    const matched = [];
+    const photoFoodSeen = new Set();
+
+    for (const item of matchedRaw) {
+      const explicitQuantity = mealQuantityFromText(item.segment);
+      const identity =
+        photoSegments
+          ? (
+              photoFoodIdentity(item.segment) ||
+              photoFoodIdentity(item.food?.cnfNameFr) ||
+              photoFoodIdentity(item.food?.keys?.[0])
+            )
+          : null;
+
+      if (identity && photoFoodSeen.has(identity) && !explicitQuantity) {
+        continue;
+      }
+
+      matched.push(item);
+      if (identity) photoFoodSeen.add(identity);
+    }
+
     if (!matched.length) return null;
     const enriched = matched.map((x) => {
       const food = foodNutrients(x.food),
         quantity = nutritionScaleForSegment(x.segment, food);
-      return { ...x, food, ...quantity };
+      return { ...x, food, ...photoCupPortionAdjustment(x.segment, food, quantity, photoSegments, matched.length) };
     });
+    const photoAdjustedCount = enriched.filter((x) => x.photoPortionEstimate).length;
     const sum = (k) =>
       enriched.every((x) => x.food[k] != null)
         ? Math.round(
@@ -3082,7 +3206,9 @@ function formatSleepDuration(hours) {
       ...new Set(enriched.map((x) => x.food.portion).filter(Boolean)),
     ];
     const quantityUsedCount = enriched.filter((x) => x.quantityUsed).length;
-    const basis = quantityUsedCount
+    const basis = photoAdjustedCount
+      ? `Portions photo prudentes · ${photoAdjustedCount} accompagnement${photoAdjustedCount > 1 ? "s" : ""} sans quantité · à confirmer`
+      : quantityUsedCount
       ? `${quantityUsedCount} quantité${quantityUsedCount > 1 ? "s" : ""} utilisée${quantityUsedCount > 1 ? "s" : ""} · ${matched.length} ingrédient${matched.length > 1 ? "s" : ""}`
       : matched.length === 1
         ? portions[0] || "portion courante"
@@ -3091,13 +3217,15 @@ function formatSleepDuration(hours) {
     const nutritionSource =
       sourceKinds.size === 1 && sourceKinds.has("cnf")
         ? "cnf"
-        : sourceKinds.has("cnf")
-          ? "mixed"
-          : "energie-foods";
+        : sourceKinds.size === 1 && sourceKinds.has("ciqual")
+          ? "ciqual"
+          : sourceKinds.has("cnf") || sourceKinds.has("ciqual")
+            ? "mixed"
+            : "energie-foods";
     return normalNutrition({
       ...total,
       source: nutritionSource,
-      confidence: quantityUsedCount ? "medium" : matched.length >= 2 ? "medium" : "low",
+      confidence: photoAdjustedCount ? "low" : quantityUsedCount ? "medium" : matched.length >= 2 ? "medium" : "low",
       basis,
       estimated: true,
       trace: {
@@ -3108,11 +3236,13 @@ function formatSleepDuration(hours) {
           const entered = mealQuantityFromText(x.segment);
           return {
             input: x.segment,
-            source: x.food?.nutritionSource === "cnf" ? "cnf" : "energie-foods",
+            source: ["cnf", "ciqual"].includes(x.food?.nutritionSource) ? x.food.nutritionSource : "energie-foods",
             cnfFoodId: x.food?.cnfFoodId || null,
             matchedName: x.food?.cnfNameFr || x.food?.keys?.[0] || "",
             enteredQuantity: entered ? { ...entered } : (x.enteredCount != null ? { value: x.enteredCount, unit: "count" } : null),
             quantityKind: x.quantityKind || null,
+            photoPortionEstimate: !!x.photoPortionEstimate,
+            photoOrigin: !!photoSegments?.has(normalizeFoodText(x.segment)),
             unresolvedUnit: x.unresolvedUnit || null,
             referencePortion: x.food?.portion || null,
             gramsPerPortion: Number(x.food?.gramsPerPortion) || null,
@@ -3169,7 +3299,7 @@ function formatSleepDuration(hours) {
     if (hint && !$("#mealCnfLinkedStatus")) {
       hint.insertAdjacentHTML(
         "beforebegin",
-        '<div id="mealCnfLinkedStatus" class="meal-cnf-linked-status" hidden><span aria-hidden="true">✓</span><strong></strong><small>Quantités reliées directement aux fiches FCÉN</small></div>',
+        '<div id="mealCnfLinkedStatus" class="meal-cnf-linked-status" hidden><span aria-hidden="true">✓</span><strong></strong><small>Quantités reliées directement aux fiches nutritionnelles officielles</small></div>',
       );
     }
     const review = $("#mealCompositionReview");
@@ -3268,34 +3398,36 @@ function formatSleepDuration(hours) {
       "sodium",
     ];
     const total = Object.fromEntries(nutrientKeys.map((key) => [key, 0]));
+    const missing = new Set();
     let matched = 0;
     for (const item of items) {
       const nutrition = api.nutritionForGrams(item.cnfFoodId, item.grams);
       if (!nutrition) continue;
       matched += 1;
       nutrientKeys.forEach((key) => {
-        const value = Number(nutrition[key]);
-        if (Number.isFinite(value)) total[key] += value;
+        const value = nutrition[key];
+        if (typeof value === "number" && Number.isFinite(value)) total[key] += value;
+        else missing.add(key);
       });
     }
     if (!matched) return null;
     nutrientKeys.forEach((key) => {
-      total[key] = Math.round(total[key] * 10) / 10;
+      total[key] = missing.has(key) ? null : Math.round(total[key] * 10) / 10;
     });
     return {
       ...total,
-      source: "cnf",
+      source: items.every(item => String(item.cnfFoodId).startsWith("CIQUAL:")) ? "ciqual" : "mixed",
       confidence: "high",
-      basis: `${matched} aliment${matched !== 1 ? "s" : ""} lié${matched !== 1 ? "s" : ""} au FCÉN · quantités saisies`,
+      basis: `${matched} aliment${matched !== 1 ? "s" : ""} lié${matched !== 1 ? "s" : ""} aux référentiels officiels · quantités saisies`,
       estimated: true,
       trace: {
         kind: "guided-cnf",
-        source: "cnf",
+        source: items.every(item => String(item.cnfFoodId).startsWith("CIQUAL:")) ? "ciqual" : "mixed",
         items: items.map((item) => {
           const nutrition = api.nutritionForGrams(item.cnfFoodId, item.grams);
           const reference = api.nutritionForGrams(item.cnfFoodId, 100);
           return {
-            source: "cnf",
+            source: String(item.cnfFoodId).startsWith("CIQUAL:") ? "ciqual" : "cnf",
             cnfFoodId: String(item.cnfFoodId),
             matchedName: item.nameFr || nutrition?.cnfNameFr || "",
             grams: Number(item.grams) || null,
@@ -3325,7 +3457,7 @@ function formatSleepDuration(hours) {
     const strong = status.querySelector("strong");
     if (strong)
       strong.textContent = items.length
-        ? `${items.length} aliment${items.length > 1 ? "s" : ""} lié${items.length > 1 ? "s" : ""} au FCÉN${Number.isFinite(calories) ? ` · ${Math.round(calories)} kcal` : ""}`
+        ? `${items.length} aliment${items.length > 1 ? "s" : ""} lié${items.length > 1 ? "s" : ""} aux références officielles${Number.isFinite(calories) ? ` · ${Math.round(calories)} kcal` : ""}`
         : "";
   }
   function renderCnfGuidedBasket() {
@@ -3343,7 +3475,7 @@ function formatSleepDuration(hours) {
           const qty = item.unitKind === "g"
             ? `${Math.round(Number(item.grams) || 0)} g`
             : `${Number(item.quantity) === 1 ? item.unitLabel : `${guidedCnfNumber(item.quantity)} × ${item.unitLabel}`} · ≈ ${Math.round(Number(item.grams) || 0)} g`;
-          return `<article class="cnf-guided-item"><div><strong>${esc(item.nameFr || "Aliment FCÉN")}</strong><small>${esc(qty)}</small></div>${calories != null ? `<span class="cnf-guided-item-kcal">${calories} kcal</span>` : ""}<button type="button" data-remove-cnf-guided="${esc(item.entryId)}" aria-label="Retirer ${esc(item.nameFr || "cet aliment")}">×</button></article>`;
+          return `<article class="cnf-guided-item"><div><strong>${esc(item.nameFr || "Aliment")}</strong><small>${esc(qty)}</small></div>${calories != null ? `<span class="cnf-guided-item-kcal">${calories} kcal</span>` : ""}<button type="button" data-remove-cnf-guided="${esc(item.entryId)}" aria-label="Retirer ${esc(item.nameFr || "cet aliment")}">×</button></article>`;
         }).join("")
       : '<p class="cnf-guided-empty">Aucun aliment ajouté pour l’instant.</p>';
     $$("[data-remove-cnf-guided]").forEach((button) => {
@@ -3396,7 +3528,7 @@ function formatSleepDuration(hours) {
       food = api?.getById?.(id);
     if (!food) return;
     mealCnfGuidedSelected = food;
-    $("#cnfGuidedFoodName").textContent = food.nameFr || "Aliment FCÉN";
+    $("#cnfGuidedFoodName").textContent = food.nameFr || "Aliment";
     $("#cnfGuidedFoodEnglish").textContent = food.nameEn || "";
     const portions = (food.portions || [])
       .filter(
@@ -3440,14 +3572,15 @@ function formatSleepDuration(hours) {
               `<button type="button" class="cnf-guided-result" data-cnf-guided-food="${esc(food.id)}"><span>🍽️</span><span><strong>${esc(food.nameFr)}</strong>${food.nameEn ? `<small>${esc(food.nameEn)}</small>` : ""}</span><b aria-hidden="true">›</b></button>`,
           )
           .join("")
-      : '<p class="cnf-guided-empty">Aucun aliment FCÉN trouvé. Essaie un terme plus simple ou précise la préparation.</p>';
+      : '<p class="cnf-guided-empty">Aucun aliment trouvé dans les référentiels. Essaie un terme plus simple ou précise la préparation.</p>';
     $$("[data-cnf-guided-food]").forEach((button) => {
       button.onclick = () => selectCnfGuidedFood(button.dataset.cnfGuidedFood);
     });
   }
   function openCnfGuidedMealEntry() {
+    window.ENERGIE_CIQUAL_REFRESH_LABELS?.();
     if (!window.ENERGIE_CNF_SEARCH?.search) {
-      alert("La recherche FCÉN n’est pas disponible pour le moment.");
+      alert("La recherche nutritionnelle n’est pas disponible pour le moment.");
       return;
     }
     mealCnfGuidedDraft = mealCnfItemsFromField().map((item) => ({ ...item }));
@@ -3505,7 +3638,8 @@ function formatSleepDuration(hours) {
   let currentMealNutritionTrace = null;
   function nutritionTraceSourceLabel(source) {
     return source === "cnf" ? "FCÉN · Santé Canada"
-      : source === "mixed" ? "FCÉN + Énergie"
+      : source === "ciqual" ? "Ciqual 2025 · Anses (France)"
+      : source === "mixed" ? "Sources combinées (voir le détail)"
       : source === "energie-foods" ? "Référence Énergie"
       : "Estimation automatique";
   }
@@ -3521,13 +3655,21 @@ function formatSleepDuration(hours) {
     const dialog = $("#mealNutritionTraceDialog"), body = $("#mealNutritionTraceBody");
     if (!dialog || !body || !trace?.items?.length) return;
     const rows = trace.items.map((item) => {
-      const quantity = item.quantityKind === "unresolved-count"
+      const quantity = item.quantityKind === "photo-shared-plate"
+        ? `${Math.round(Number(item.scale) * 100)} % de ${item.referencePortion || "la portion de référence"} · hypothèse photo à confirmer`
+        : item.quantityKind === "unresolved-count"
         ? `${item.enteredQuantity?.value || ""} filet${Number(item.enteredQuantity?.value) > 1 ? "s" : ""} — poids requis`
         : item.enteredQuantity
           ? item.enteredQuantity.unit === "count"
             ? `${item.enteredQuantity.value} portion${item.enteredQuantity.value > 1 ? "s" : ""}`
             : `${item.enteredQuantity.value} ${item.enteredQuantity.unit}`
-          : item.referencePortion || "portion courante";
+          : (() => {
+              // Arrondi d'affichage seulement : garder les grammes exacts pour le calcul.
+              const reference = String(item.referencePortion || "").trim();
+              const grams = reference.match(/^(\d+(?:[.,]\d+)?)\s*g$/i);
+              return grams ? `${Math.round(Number(grams[1].replace(',', '.')))} g`
+                : reference || "portion courante";
+            })();
       const match = item.matchedName || item.input || "Aliment";
       const kcal = item.quantityKind === "unresolved-count" ? "Poids à préciser" : item.calories != null ? `${item.calories} kcal` : "—";
       return `<div class="meal-nutrition-trace-item"><strong>${esc(item.input || match)}</strong><span>Correspondance : ${esc(match)}</span><span>Quantité interprétée : <b>${esc(quantity)}</b></span><span>Source : ${esc(nutritionTraceSourceLabel(item.source))}</span><em>${esc(kcal)}</em></div>`;
@@ -3594,8 +3736,10 @@ function formatSleepDuration(hours) {
         ? `Valeurs ${n.basis || "du produit"} provenant de l’étiquette Open Food Facts. Vérifie-les au besoin.`
         : n?.source === "cnf"
           ? `Valeurs de référence du Fichier canadien sur les éléments nutritifs (FCÉN) 2026 de Santé Canada, ajustées selon les quantités reconnues (${n.basis || "portion courante"}). Les recettes, marques et préparations peuvent varier.`
-          : n?.source === "mixed"
-            ? `Estimation combinant des valeurs FCÉN de Santé Canada et des références Énergie (${n.basis || "portion courante"}). Les recettes et portions réelles peuvent varier.`
+          : n?.source === "ciqual"
+            ? `Valeurs de référence Ciqual 2025 (Anses, France), ajustées selon les quantités reconnues (${n.basis || "100 g de référence"}). Les recettes, marques et préparations peuvent varier.`
+            : n?.source === "mixed"
+              ? `Estimation combinant plusieurs références nutritionnelles ; consulte le détail pour connaître la source de chaque aliment (${n.basis || "portion courante"}). Les portions réelles peuvent varier.`
             : n?.source === "energie-foods" && /quantité/.test(n?.basis || "")
               ? `Estimation ajustée selon les quantités reconnues (${n.basis}). Les recettes et valeurs de référence peuvent varier.`
               : "Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.");
@@ -3642,8 +3786,10 @@ function formatSleepDuration(hours) {
       ? "Estimation automatique partielle · modifiable"
       : nutritionSource === "cnf"
         ? "Estimation FCÉN · modifiable"
-        : nutritionSource === "mixed"
-          ? "Estimation FCÉN + Énergie · modifiable"
+        : nutritionSource === "ciqual"
+          ? "Estimation Ciqual · modifiable"
+          : nutritionSource === "mixed"
+            ? "Estimation multi-sources · modifiable"
           : "Estimation automatique · modifiable";
     $("#mealCalorieStatus").textContent = manual ? t("Ajustées par vous")
       : input.value !== "" ? t(automaticStatus) : t("Aucune estimation disponible · saisie facultative");
@@ -3656,7 +3802,7 @@ function formatSleepDuration(hours) {
       const description = $("#mealDescription")?.value.trim() || "",
         rebuiltNutrition =
           currentGuidedCnfNutrition() ||
-          (description ? estimateNutritionFromText(description) : null);
+          (description ? estimateMealEditorNutrition(description) : null);
 
       if (rebuiltNutrition?.trace?.items?.length)
         currentMealNutritionTrace = {
@@ -3679,7 +3825,7 @@ function formatSleepDuration(hours) {
     $("#mealCalorieMode").value = "auto";
     const estimate =
       currentGuidedCnfNutrition() ||
-      estimateNutritionFromText($("#mealDescription").value.trim());
+      estimateMealEditorNutrition($("#mealDescription").value.trim());
     if (estimate) fillNutritionInputs(estimate);
     else $("#nutritionCalories").value = "";
     updateMealCalorieEditor();
@@ -3688,7 +3834,7 @@ function formatSleepDuration(hours) {
   function estimateCurrentMealNutrition() {
     const n =
       currentGuidedCnfNutrition() ||
-      estimateNutritionFromText($("#mealDescription").value);
+      estimateMealEditorNutrition($("#mealDescription").value);
     if (!n) {
       fillNutritionInputs(
         null,
@@ -3718,7 +3864,7 @@ function formatSleepDuration(hours) {
       if ($("#mealCalorieMode")?.value !== "manual") {
         mealNutritionPreviewTimer = setTimeout(() => {
           if ($("#mealCalorieMode").value === "manual") return;
-          $("#nutritionCalories").value = estimateNutritionFromText($("#mealDescription").value)?.calories ?? "";
+          $("#nutritionCalories").value = estimateMealEditorNutrition($("#mealDescription").value)?.calories ?? "";
           updateMealCalorieEditor();
         }, 450);
       }
@@ -3730,7 +3876,7 @@ function formatSleepDuration(hours) {
         fillNutritionInputs(null, "Décris le repas pour obtenir une estimation modifiable.");
         return;
       }
-      const nutrition = estimateNutritionFromText(description);
+      const nutrition = estimateMealEditorNutrition(description);
       if (nutrition) {
         fillNutritionInputs(nutrition);
         const optionalDetails = $("#mealOptionalDetails");
@@ -13509,7 +13655,7 @@ function formatSleepDuration(hours) {
     const energyGuideButton = $("#openEnergyGuide");
     if (energyGuideButton) energyGuideButton.onclick = openEnergyGuide;
     const nutritionAnchor = $("#settingNutrition")?.closest("label");
-    nutritionAnchor?.closest("section.card")?.insertAdjacentHTML("afterend", `<section class="card nutrition-source-profile-card"><h3>📚 Source des données nutritionnelles</h3><p class="muted small">Énergie s’appuie sur le <strong>Fichier canadien sur les éléments nutritifs (FCÉN) de Santé Canada</strong>, la base de référence officielle canadienne sur la composition des aliments. Les valeurs de référence sont ensuite adaptées aux aliments et aux quantités reconnus dans le repas.</p><p class="muted tiny">Pour les produits scannés, les données de l’étiquette peuvent provenir d’Open Food Facts lorsqu’elles sont disponibles. Les recettes, les marques et les méthodes de préparation peuvent faire varier les valeurs réelles.</p></section>`);
+    nutritionAnchor?.closest("section.card")?.insertAdjacentHTML("afterend", `<section class="card nutrition-source-profile-card"><h3>📚 Source des données nutritionnelles</h3><p class="muted small">Énergie utilise deux bases officielles de composition des aliments, dans cet ordre selon la langue choisie :</p>${window.ENERGIE_LOCALE === "fr-FR" ? `<p class="muted small"><strong>1. Ciqual 2025 — Anses (France)</strong> · source prioritaire pour le français de France.</p><p class="muted small"><strong>2. FCÉN — Santé Canada</strong> · source de secours lorsqu’aucune correspondance suffisamment fiable n’est trouvée dans Ciqual.</p>` : `<p class="muted small"><strong>1. FCÉN — Santé Canada</strong> · source prioritaire pour le français du Canada.</p><p class="muted small"><strong>2. Ciqual 2025 — Anses (France)</strong> · source de secours lorsqu’aucune correspondance suffisamment fiable n’est trouvée dans le FCÉN.</p>`}<p class="muted small">Les valeurs de référence sont ensuite adaptées aux quantités réellement renseignées ou estimées dans le repas.</p><p class="muted tiny">Pour les produits scannés, les données de l’étiquette peuvent provenir d’Open Food Facts lorsqu’elles sont disponibles. Les recettes, les marques et les méthodes de préparation peuvent faire varier les valeurs réelles.</p></section>`);
     if (session && profileSinceHtml)
       $("#syncNow")
         ?.closest(".settings-row")
@@ -14767,9 +14913,16 @@ function formatSleepDuration(hours) {
   }
   function openMeal(id = null, presetType = null, forceReadOnly = false) {
     clearTimeout(mealNutritionPreviewTimer);
+    mealPhotoAiSegments.clear();
     applyMealCompositionLocale();
     const d = ensureDay(db, selectedDate),
       m = id ? d.meals.find((x) => x.id === id) : null;
+    // Réouvrir un repas ne doit pas effacer l'origine photo des ingrédients.
+    // Les anciennes traces (sans photoOrigin) restent parfaitement compatibles.
+    for (const item of m?.nutrition?.trace?.items || []) {
+      if (item?.photoOrigin === true && item?.input)
+        mealPhotoAiSegments.add(normalizeFoodText(item.input));
+    }
     if (professionalClientReadOnly() && !m) return preventProfessionalClientEdit();
     const type = m?.type || presetType || "Déjeuner",
       readOnly = !!(
@@ -15176,23 +15329,90 @@ function formatSleepDuration(hours) {
     mealAiSuggestionText = "";
     $("#mealAiSuggestion").hidden = true;
   }
-  function mergeMealDescription(existing, suggestion) {
+  // Uniquement pour les nouvelles suggestions issues d'une analyse photo.
+  // Ne dédupliquer ni réécrire les descriptions saisies manuellement.
+  function photoFoodIdentity(value) {
+    const normalized = normalizeFoodText(value);
+    if (/\b(?:betteraves?|beets?)\b/.test(normalized)) return "betterave";
+    if (/\b(?:pommes? de terre|patates?|potatoes?|frites?|french fries)\b/.test(normalized))
+      return "pomme-de-terre";
+    if (/\b(?:fromage cottage|cottage cheese|cottage)\b/.test(normalized))
+      return "cottage";
+    if (/\b(?:boeuf|bœuf) hache\b/.test(normalized) ||
+        /\b(?:ground beef|steak hache|viande hachee?)\b/.test(normalized))
+      return "boeuf-hache";
+    if (/\b(?:tomates?|tomatoes?|cherry tomatoes?)\b/.test(normalized))
+      return "tomate";
+    if (/\b(?:chou fleur|cauliflower)\b/.test(normalized))
+      return "chou-fleur";
+    return null;
+  }
+  function photoSuggestionNewParts(existing, suggestion) {
     const parts = (value) => String(value || "").split(/[,;\n]+/).map((part) => part.trim()).filter(Boolean);
-    const normalize = (value) => value.toLocaleLowerCase("fr-CA").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
-    const base = parts(existing), seen = new Set(base.map(normalize));
-    parts(suggestion).forEach((part) => {
-      const key = normalize(part);
-      if (key && !seen.has(key)) { base.push(part); seen.add(key); }
-    });
-    return base.join(", ");
+    const current = parts(existing);
+    const seen = new Set(current.map(normalizeFoodText));
+    const foodSeen = new Set(current.map(photoFoodIdentity).filter(Boolean));
+    const accepted = [];
+    let skippedUncertain = 0, skippedDuplicate = 0;
+    for (const part of parts(suggestion)) {
+      const key = normalizeFoodText(part);
+      // « X ou Y », « semble être X » : une alternative IA n'est pas un aliment confirmé.
+      if (/\b(?:semble|semblerait|pourrait|possiblement|incertain|peut etre|maybe|possibly|might be)\b/.test(key) ||
+          /\b(?:ou|or)\b/.test(key)) {
+        skippedUncertain++;
+        continue;
+      }
+      const identity = photoFoodIdentity(part);
+      // Deux formulations d'un même aliment sur la photo = un seul aliment estimé.
+      // Ne jamais supprimer une quantité explicitement renseignée dans le texte courant.
+      if (!key || seen.has(key) || (identity && foodSeen.has(identity) && !mealQuantityFromText(part))) {
+        skippedDuplicate++;
+        continue;
+      }
+      accepted.push(part);
+      seen.add(key);
+      if (identity) foodSeen.add(identity);
+    }
+    return { accepted, skippedUncertain, skippedDuplicate };
+  }
+  function mergeMealDescription(existing, suggestion) {
+    const { accepted } = photoSuggestionNewParts(existing, suggestion);
+    return [String(existing || "").trim(), ...accepted].filter(Boolean).join(", ");
   }
   function useMealAiSuggestion() {
     if (!mealAiSuggestionText) return;
     const field = $("#mealDescription"), before = field.value.trim();
-    field.value = mergeMealDescription(before, mealAiSuggestionText);
+    const { accepted, skippedUncertain, skippedDuplicate } = photoSuggestionNewParts(before, mealAiSuggestionText);
+    if (!accepted.length) {
+      hideMealAiSuggestion();
+      setMealAiPhotoStatus(skippedUncertain
+        ? "Aliment incertain détecté : confirme-le manuellement avant de le compter."
+        : "Cette photo n’ajoute aucun nouvel aliment.", "success");
+      return;
+    }
+    field.value = [before, ...accepted].filter(Boolean).join(", ");
+    // Toujours enregistrer les segments TELS QUE le moteur nutritionnel les lit.
+    // Gemini peut renvoyer « repas composé de X » ou « et des Y » : ces préfixes
+    // disparaissent dans splitMealIngredients(). Les marquer sous leur forme brute
+    // faisait perdre le contexte photo et rétablissait des tasses complètes.
+    const beforeSegments = new Map();
+    for (const segment of splitMealIngredients(before)) {
+      const key = normalizeFoodText(segment);
+      beforeSegments.set(key, (beforeSegments.get(key) || 0) + 1);
+    }
+    for (const segment of splitMealIngredients(field.value)) {
+      const key = normalizeFoodText(segment);
+      const previous = beforeSegments.get(key) || 0;
+      if (previous) beforeSegments.set(key, previous - 1);
+      else if (key) mealPhotoAiSegments.add(key);
+    }
+    const visiblePhotoDescription = photoEstimatedDescription(field.value);
+    if (visiblePhotoDescription) field.value = visiblePhotoDescription;
     field.dispatchEvent(new Event("input", { bubbles: true }));
     hideMealAiSuggestion();
-    setMealAiPhotoStatus(before ? "Analyse ajoutée au repas sans effacer ta saisie." : "Description ajoutée — vérifie-la et corrige-la au besoin.", "success");
+    const caution = skippedUncertain ? " Aliment incertain ignoré : à confirmer manuellement." : "";
+    const duplicates = skippedDuplicate ? " Doublon photo évité." : "";
+    setMealAiPhotoStatus((before ? "Analyse ajoutée sans effacer ta saisie." : "Description ajoutée — vérifie-la au besoin.") + duplicates + caution, "success");
     field.focus();
   }
   async function invokeMealPhotoAnalysis(imageData) {
@@ -15201,7 +15421,7 @@ function formatSleepDuration(hours) {
         body: {
           imageBase64: comma >= 0 ? imageData.slice(comma + 1) : imageData,
           mimeType: "image/jpeg",
-          locale: "fr-CA",
+          locale: window.ENERGIE_LOCALE || "fr-CA",
         },
       }),
       timeout = new Promise((_, reject) =>
@@ -15220,14 +15440,35 @@ function formatSleepDuration(hours) {
       const { data, error } = await invokeMealPhotoAnalysis(imageData);
       if (error) throw error;
       const description = String(data?.description || "").trim();
-      if (!description) throw new Error("Réponse vide");
-      mealAiSuggestionText = description;
-      const before = $("#mealDescription").value.trim(), merged = mergeMealDescription(before, description);
+      const photoItems = Array.isArray(data?.items)
+        ? data.items.map((item) => String(item || "").trim()).filter(Boolean)
+        : [];
+
+      // Le tableau items est la source structurée principale.
+      // On récupère aussi les aliments certains présents seulement dans la
+      // description naturelle, sans réintroduire les formulations incertaines.
+      const descriptionParts = description
+        ? photoSuggestionNewParts("", description).accepted
+        : [];
+
+      // Fusionner items + description, puis dédupliquer AVANT de transmettre
+      // la suggestion au formulaire. Gemini peut nommer deux fois le même aliment
+      // avec des formulations différentes (ex. "ground beef" + "bœuf haché").
+      const combinedPhotoParts = [...photoItems, ...descriptionParts].filter(Boolean);
+      const suggestion = photoSuggestionNewParts("", combinedPhotoParts.join(", "))
+        .accepted
+        .join(", ");
+      if (!suggestion) throw new Error("Réponse vide");
+      mealAiSuggestionText = suggestion;
+      const before = $("#mealDescription").value.trim(), merged = mergeMealDescription(before, suggestion);
       if (merged !== before) {
         useMealAiSuggestion();
       } else {
+        const photoReview = photoSuggestionNewParts(before, suggestion);
         hideMealAiSuggestion();
-        setMealAiPhotoStatus("Cette photo n’ajoute rien de nouveau à la description.", "success");
+        setMealAiPhotoStatus(photoReview.skippedUncertain
+          ? "Suggestion incertaine ignorée : confirme l’aliment manuellement si tu le reconnais."
+          : "Cette photo n’ajoute rien de nouveau à la description.", "success");
       }
       return true;
     } catch (error) {
@@ -15470,6 +15711,7 @@ function formatSleepDuration(hours) {
     input.addEventListener("change", updateEatingReasonUi),
   );
   ensureGuidedCnfMealUi();
+  window.ENERGIE_CIQUAL_REFRESH_LABELS?.();
   $("#estimateMealNutrition").onclick = estimateCurrentMealNutrition;
   $("#openCnfGuidedEntry").onclick = openCnfGuidedMealEntry;
   $("#cnfGuidedSearch").addEventListener("input", (event) => {
@@ -15597,7 +15839,7 @@ function formatSleepDuration(hours) {
             : [],
         nutrition: nutritionFromInputs() ||
           (db.settings.autoNutritionEstimates !== false && !mealNutritionManuallyEdited
-            ? estimateNutritionFromText($("#mealDescription").value.trim())
+            ? estimateMealEditorNutrition($("#mealDescription").value.trim())
             : null),
         foodReview:
           mealFoodReview?.description === $("#mealDescription").value.trim()

@@ -9,6 +9,8 @@ const runtimeFiles = [
   "index.html",
   "app.js",
   "profile-avatars.js",
+  "ciqual-data.js",
+  "ciqual-search.js",
   "nutrition-corrections.js",
   "config.js",
   "i18n.js",

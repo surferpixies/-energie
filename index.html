@@ -241,7 +241,7 @@
               <label>Sucres (g)<input id="nutritionSugars" type="number" min="0" step="any" inputmode="decimal" placeholder="—"></label>
               <label>Sodium (mg)<input id="nutritionSodium" type="number" min="0" step="any" inputmode="decimal" placeholder="—"></label>
             </div>
-            <p id="nutritionEstimateNote" class="muted tiny">Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.</p>\n            <div class="notice info-notice nutrition-source-note"><strong>Source des données nutritionnelles</strong><p>Les valeurs de référence utilisées par Énergie proviennent du Fichier canadien sur les éléments nutritifs (FCÉN) de Santé Canada, la base de référence officielle canadienne. Énergie adapte ensuite ces valeurs aux aliments et aux quantités reconnus. Les recettes, les marques et les méthodes de préparation peuvent faire varier les valeurs réelles.</p></div>
+            <p id="nutritionEstimateNote" class="muted tiny">Estimation approximative basée sur une portion courante. Les recettes et portions réelles peuvent varier.</p>\n            <div class="notice info-notice nutrition-source-note"><strong>Source des données nutritionnelles</strong><p id="nutritionSourceInline">Énergie utilise le FCÉN de Santé Canada et Ciqual 2025 de l’Anses (France). L’ordre de recherche dépend de la langue choisie. Les quantités et préparations réelles peuvent varier.</p></div>
             <button type="button" class="text-button nutrition-clear" id="clearMealNutrition">Effacer les valeurs</button>
           </section>
         </div>
@@ -731,6 +731,8 @@
   <script src="cnf-runtime.js?v=3.56.126"></script>
   <script src="cnf-catalog.js?v=3.56.145"></script>
   <script src="cnf-search.js?v=3.56.147"></script>
+  <script src="ciqual-data.js?v=3.56.155"></script>
+  <script src="ciqual-search.js?v=3.56.156"></script>
   <script src="nutrition-corrections.js?v=3.56.120"></script>
   <script src="food-categories.js?v=3.31.2"></script>
   <script src="dish-knowledge.js?v=3.31.2"></script>
@@ -749,6 +751,6 @@
   <script src="personal-metrics.js?v=3.56.99"></script>
   <script src="onboarding-images.js?v=3.56.52"></script>
   <script src="profile-avatars.js?v=3.56.154"></script>
-  <script src="app.js?v=3.56.154"></script>
+  <script src="app.js?v=3.56.159"></script>
 </body>
 </html>
