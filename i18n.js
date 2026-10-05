@@ -1036,7 +1036,7 @@
       const target=[...stack.children].find(x=>x.textContent.includes('Objectif')||x.textContent.includes('Water goal'));
       target?.after(card);
     }
-    const sel=card.querySelector('select');sel.value=locale;sel.addEventListener('change',()=>{localStorage.setItem('energieLocale',sel.value);location.reload()});
+    const sel=card.querySelector('select');sel.value=locale;sel.addEventListener('change',()=>{localStorage.setItem('energieLocale',sel.value);const url=new URL(window.location.href);url.searchParams.set('_lang',Date.now().toString());window.location.replace(url.toString())});
   }
   const obs=new MutationObserver(ms=>ms.forEach(m=>{
     if(m.type==='characterData')translateTextNode(m.target);
