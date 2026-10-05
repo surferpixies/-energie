@@ -276,6 +276,7 @@
       ["seche", "sechee", "sechees", "dried", "dehydrate", "dehydrated"],
       ["sucre", "sucree", "sucrees", "sweetened", "sugar added"],
       ["jus", "juice"],
+      ["ketchup", "catsup"],
       ["compote", "sauce"],
       ["granola", "cereale", "cereales", "cereal", "topping", "garniture"],
       ["chevre", "goat"],
