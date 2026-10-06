@@ -2586,6 +2586,8 @@ function formatSleepDuration(hours) {
     "salade de pâtes": { fiber: 4, sugars: 5, sodium: 550 },
     prosciutto: { fiber: 0, sugars: 0, sodium: 1050 },
   };
+  const MEAL_DESCRIPTION_MAX_LENGTH = 1000;
+
   function foodNutrients(food) {
     // Les valeurs FCÉN sont la source nutritionnelle de référence et ne doivent
     // jamais être remplacées par les anciens ajustements manuels Énergie.
@@ -2666,7 +2668,8 @@ function formatSleepDuration(hours) {
   function foodMatchForSegment(segment) {
     const clean = normalizeFoodText(segment),
       comparable = comparableFoodText(segment);
-    if (!clean) return null;
+    if (String(segment || "").length > MEAL_DESCRIPTION_MAX_LENGTH) return null;
+    if (!clean || window.ENERGIE_CNF_SEARCH?.requiresClarification?.(segment)) return null;
     const padded = ` ${comparable} `;
     let best = null;
     for (const candidate of FOOD_CANDIDATES) {
@@ -2701,7 +2704,16 @@ function formatSleepDuration(hours) {
     function suitable(candidate) {
       const checked = checkedCatalogFood(candidate);
       if (!checked) return null;
+      // Une quantité mesurée ne peut pas devenir silencieusement « 1 assiette ».
+      const entered = mealQuantityFromText(segment);
+      if ((entered || mealNaturalCountFromText(segment) != null) &&
+          !nutritionScaleForSegment(segment, checked).quantityUsed) return null;
       const name = normalizeFoodText(checked.cnfNameFr || checked.ciqualNameFr || checked.keys?.[0] || '');
+      const guard = window.ENERGIE_CNF_SEARCH?.isCandidateAllowed;
+      const referenceNames = checked.cnfNameFr || checked.ciqualNameFr
+        ? [checked.cnfNameFr || checked.ciqualNameFr, checked.cnfNameEn].filter(Boolean)
+        : [checked.keys?.[0]].filter(Boolean);
+      if (guard && !referenceNames.some(reference => guard(segment, reference))) return null;
       // Refuser « Bœuf, gras, cru » pour « bœuf haché ». Conserver une fiche
       // FCÉN/Ciqual authentiquement hachée; à défaut, repli Énergie explicite.
       if (wantsGroundBeef && !/\b(?:hache|hachee|ground|minced)\b/.test(name)) return null;
@@ -2719,7 +2731,7 @@ function formatSleepDuration(hours) {
     }
     const official = suitable(window.ENERGIE_CNF_SEARCH?.find?.(segment));
     if (official) return official;
-    return safeLegacy || suitable(best?.food) || null;
+    return suitable(safeLegacy) || suitable(best?.food) || null;
   }
   function mealQuantityNumber(value) {
     const text = String(value || "").trim().replace(",", ".");
@@ -2798,45 +2810,33 @@ function formatSleepDuration(hours) {
         ? { scale, quantityUsed: true, quantityKind: "measured", enteredQuantity: entered }
         : { scale: 1, quantityUsed: false };
     }
+    if (entered) return { scale: 1, quantityUsed: false, quantityKind: "unresolved-measure", enteredQuantity: entered };
     const naturalCount = mealNaturalCountFromText(segment);
-    const naturalSegmentText = normalizeFoodText(segment);
-    const explicitFiletCount = /\b(filet|filets|fillet|fillets)\b/.test(naturalSegmentText);
-    if (naturalCount != null && (naturalCount <= 20 || (explicitFiletCount && naturalCount <= 50))) {
+    if (naturalCount != null) {
       // FCÉN rows with a portion such as "1 egg" / "1 slice" are already
       // expressed per natural portion. A bare leading count therefore scales
       // that portion directly instead of being ignored.
       const portionText = normalizeFoodText(food?.portion || "");
       const segmentText = normalizeFoodText(segment);
-      const countablePortion = /\b(oeuf|egg|tranche|slice|piece|morceau|fruit|pomme|apple|banane|banana|filet|fillet)\b/.test(portionText);
-      const countableFood = /\b(oeuf|oeufs|egg|eggs)\b/.test(segmentText);
-      const sliceCount = /\b(tranche|tranches|slice|slices)\b/.test(segmentText);
+      const countReference = portionText.match(/^(\d+(?:[.,]\d+)?)\s+/);
+      const countablePortion = !!countReference &&
+        !/\b(ml|g|kg|tasse|cup|tbsp|tsp|bol|bowl)\b/.test(portionText) &&
+        /\b(oeufs?|eggs?|tranches?|slices?|pieces?|morceaux?|fruits?|pommes?|apples?|bananes?|bananas?|filets?|fillets?)\b/.test(portionText);
       const filetCount = /\b(filet|filets|fillet|fillets)\b/.test(segmentText);
       // Never invent a filet weight when the FCÉN row is only per 100 g.
       if (filetCount && !/\b(filet|fillet)\b/.test(portionText)) {
         return { scale: 1, quantityUsed: false, quantityKind: "unresolved-count", enteredCount: naturalCount, unresolvedUnit: "filet" };
       }
-      if (countablePortion || countableFood || sliceCount || (filetCount && /\b(filet|fillet)\b/.test(portionText))) {
-        if (sliceCount && !countablePortion && Number(food?.gramsPerPortion) === 100) {
-          // The FCÉN full-catalog fallback is per 100 g. A bread slice needs an
-          // explicit portion conversion; 30 g is used only for an explicit
-          // "tranche/slice" count, never for generic bread text.
-          const gramsPerSlice = 30;
-          return {
-            scale: (naturalCount * gramsPerSlice) / 100,
-            quantityUsed: true,
-            quantityKind: "count",
-            enteredCount: naturalCount,
-            interpretedGrams: naturalCount * gramsPerSlice,
-          };
-        }
-        return { scale: naturalCount, quantityUsed: true, quantityKind: "count", enteredCount: naturalCount };
+      if (countablePortion) {
+        return { scale: naturalCount / Number(countReference[1]), quantityUsed: true, quantityKind: "count", enteredCount: naturalCount };
       }
     }
     return { scale: 1, quantityUsed: false };
   }
   function mealNutritionRecognition(text) {
-    const value = String(text || "").trim(),
-      recognizedDish = mealCompositionAnalysis(value)?.dish;
+    const value = String(text || "").trim();
+    if (value.length > MEAL_DESCRIPTION_MAX_LENGTH) return { recognized: [], unrecognized: ["Description trop longue : 1 000 caractères maximum."] };
+    const recognizedDish = mealCompositionAnalysis(value)?.dish;
     if (!value) return { recognized: [], unrecognized: [] };
     if (recognizedDish?.nutrition && !/[+,;\n\r|]|\s+\/\s+/.test(value))
       return { recognized: [value], unrecognized: [] };
@@ -3040,7 +3040,7 @@ function formatSleepDuration(hours) {
       section.hidden = true;
       return;
     }
-    if (description.length < 3) {
+    if (description.length < 3 || description.length > MEAL_DESCRIPTION_MAX_LENGTH) {
       section.hidden = true;
       return;
     }
@@ -3129,6 +3129,7 @@ function formatSleepDuration(hours) {
   }
 
   function estimateNutritionFromText(text, { photoSegments = null } = {}) {
+    if (String(text || "").length > MEAL_DESCRIPTION_MAX_LENGTH) return null;
     const recognizedDish = mealCompositionAnalysis(text)?.dish;
     if (recognizedDish?.nutrition && !/[+,;\n\r|]|\s+\/\s+/.test(String(text || "")))
       return normalNutrition({
@@ -3138,6 +3139,7 @@ function formatSleepDuration(hours) {
         basis: `${recognizedDish.name} · recette habituelle`,
         estimated: true,
       });
+    if (mealNutritionRecognition(text).unrecognized.length) return null;
     const segments = splitMealIngredients(text);
     if (!segments.length) {
       if (!recognizedDish?.nutrition) return null;
@@ -3762,7 +3764,7 @@ function formatSleepDuration(hours) {
       list.innerHTML = "";
       return;
     }
-    notice.textContent = `ⓘ Estimation partielle · ${items.length} élément${items.length > 1 ? "s" : ""} à vérifier`;
+    notice.textContent = `ⓘ Estimation à préciser · ${items.length} élément${items.length > 1 ? "s" : ""} à vérifier`;
     list.innerHTML = items.map((item) => `<div class="meal-calorie-unrecognized-item"><span aria-hidden="true">?</span><div><strong>${esc(item)}</strong><small>Aucune valeur calorique n’a pu être associée à cet élément.</small></div></div>`).join("");
   }
   function openMealCalorieRecognition() {
@@ -3849,20 +3851,31 @@ function formatSleepDuration(hours) {
   }
   function scheduleAutomaticNutritionPreview() {
     clearTimeout(mealNutritionPreviewTimer);
-    updateMealCompositionReview();
+    const descriptionField = $("#mealDescription");
+    const tooLong = (descriptionField?.value.length || 0) > MEAL_DESCRIPTION_MAX_LENGTH;
+    descriptionField?.setCustomValidity(tooLong ? "Limite de 1 000 caractères pour la description du repas." : "");
+    if (tooLong) {
+      updateMealCompositionReview();
+      fillNutritionInputs(null, "Raccourcis la description à 1 000 caractères pour relancer l’estimation.");
+      return;
+    }
     const guidedNutrition = currentGuidedCnfNutrition();
     if (guidedNutrition) {
+      updateMealCompositionReview();
       fillNutritionInputs(guidedNutrition);
       mealNutritionManuallyEdited = false;
       return;
     }
     if (
       db.settings.autoNutritionEstimates === false
-    )
+    ) {
+      mealNutritionPreviewTimer = setTimeout(updateMealCompositionReview, 450);
       return;
+    }
     if (mealNutritionManuallyEdited) {
       if ($("#mealCalorieMode")?.value !== "manual") {
         mealNutritionPreviewTimer = setTimeout(() => {
+          updateMealCompositionReview();
           if ($("#mealCalorieMode").value === "manual") return;
           $("#nutritionCalories").value = estimateMealEditorNutrition($("#mealDescription").value)?.calories ?? "";
           updateMealCalorieEditor();
@@ -3871,6 +3884,7 @@ function formatSleepDuration(hours) {
       return;
     }
     mealNutritionPreviewTimer = setTimeout(() => {
+      updateMealCompositionReview();
       const description = $("#mealDescription")?.value.trim();
       if (!description) {
         fillNutritionInputs(null, "Décris le repas pour obtenir une estimation modifiable.");

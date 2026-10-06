@@ -23,13 +23,13 @@
   const findCache = new Map();
 
   const stateWords = {
-    raw: ["cru", "crue", "raw"],
-    cooked: ["cuit", "cuite", "cooked"],
+    raw: ["cru", "crue", "crus", "crues", "raw"],
+    cooked: ["cuit", "cuite", "cuits", "cuites", "cooked"],
     boiled: ["bouilli", "bouillie", "boiled"],
     fried: ["frit", "frite", "fried"],
     baked: ["four", "grille", "grillee", "baked", "broiled", "roasted", "roti", "rotie"],
     canned: ["conserve", "canned"],
-    dried: ["seche", "sechee", "dried", "dehydrate", "dehydrated"],
+    dried: ["sec", "secs", "seche", "sechee", "seches", "sechees", "dry", "dried", "dehydrate", "dehydrated"],
     frozen: ["surgele", "surgelee", "frozen"],
   };
 
@@ -46,6 +46,48 @@
       .trim();
   }
 
+  // Contrat commun FCÉN/Ciqual : tout terme alimentaire supplémentaire
+  // doit être écrit. Seuls les descripteurs neutres de la fiche sont permis.
+  const neutralWords = new Set(("rouge verte vert jaune mure mur moyenne durant toute annee ronde cerise orange cru crue cuit cuite frais fraiche raw cooked fresh poisson fish fruit legume vegetable aliment moyen toutes variete varietes espece especes peau pelure sans avec et ou a au aux de du des le la les en entier entiere tranche tranches morceau morceaux partie comestible pulpe chair graine graines pepin pepins removed skin peeled average all varieties species edible portion water eau egoutte egouttee drained bouilli bouillie boiled roti rotie roasted grille grillee baked broiled conserve canned enrichi enriched surgele surgelee frozen sec secs dry seche sechee dried non prepare preparee preparation sel salt ajoute ajoutee added teneur matiere grasse gras fat pour cent percent mg g ml" ).split(" "));
+  const foodTokenCache = new Map();
+  const foodTokens = value => {
+    const key = String(value || "");
+    if (foodTokenCache.has(key)) return foodTokenCache.get(key);
+    const tokens = stripQuantity(key).split(" ")
+    .map(word => word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word)
+    // Formes de pâtes nature : une précision de forme n'ajoute aucun ingrédient.
+    .map(word => ["spaghetti", "macaroni", "pasta", "pate"].includes(word) ? "pate" : word)
+    .filter(Boolean);
+    if (foodTokenCache.size > 20000) foodTokenCache.clear();
+    foodTokenCache.set(key, tokens);
+    return tokens;
+  };
+  function isCandidateAllowed(text, name, { allowPreparationChoice = false } = {}) {
+    const query = new Set(foodTokens(text));
+    const tokens = foodTokens(String(name).split(" · ")[0]);
+    const preparation = ["seche", "sechee", "sec", "dry", "dried", "dehydrate", "deshydrate", "conserve", "canned", "frit", "frite", "fried", "roti", "rotie", "roasted", "bouilli", "bouillie", "boiled", "cuit", "cuite", "cooked", "huile", "oil"];
+    if (!allowPreparationChoice && tokens.some(word => preparation.includes(word) && !query.has(word))) {
+      const wanted = states(text), candidate = states(name);
+      if (!wanted.length || !wanted.some(state => candidate.includes(state))) return false;
+    }
+    return tokens.length > 0 && tokens.every(word => query.has(word) || neutralWords.has(word));
+  }
+  function requiresClarification(text) {
+    const query = stripQuantity(text);
+    // Le poids sec/cuit et la conservation changent fortement les apports.
+    return /\b(pates?|spaghettis?|macaronis?|pasta|riz|rice|poulet|chicken|thon|tuna)\b/.test(query) &&
+      !/\b(cru[e]?s?|cuit[e]?s?|cooked|raw|secs?|seche[e]?s?|dry|dried|bouilli[e]?s?|boiled|roti[e]?s?|grille[e]?s?|roasted|conserve|canned|eau|water|huile|oil)\b/.test(query);
+  }
+
+  function naturalCount(text) {
+    if (quantityKind(text)) return null;
+    const match = normalize(text).match(/^(\d+(?:[.,]\d+)?|un|une|one|deux|two|trois|three)\s+/);
+    if (!match) return null;
+    const words = { un: 1, une: 1, one: 1, deux: 2, two: 2, trois: 3, three: 3 };
+    const count = words[match[1]] ?? Number(match[1]);
+    return Number.isFinite(count) && count > 0 ? count : null;
+  }
+
   function quantityKind(text) {
     const n = normalize(text);
     if (/\b(?:kg|g|gramme|grammes|grams)\b/.test(n)) return "g";
@@ -60,7 +102,7 @@
     const n = normalize(text);
     if (stateCache.has(n)) return stateCache.get(n);
     const result = Object.entries(stateWords)
-      .filter(([, words]) => words.some((word) => n.includes(word)))
+      .filter(([, words]) => words.some((word) => (` ${n} `).includes(` ${word} `)))
       .map(([key]) => key);
     if (stateCache.size > 500) stateCache.clear();
     stateCache.set(n, result);
@@ -112,16 +154,16 @@
     return value;
   }
 
-  function scoreRow(row, text) {
+  function scoreRow(row, text, options = {}) {
     const query = stripQuantity(text);
-    if (!query) return -Infinity;
+    if (!query || !isCandidateAllowed(text, row?.[1], options) && !isCandidateAllowed(text, row?.[2], options)) return -Infinity;
     const meta = rowSearchMeta(row);
     const d = meta.descriptor;
     const aliases = [d.fr, d.en, d.firstFr, d.firstEn].filter(Boolean);
     let score = -Infinity;
 
     for (const alias of aliases) {
-      if (query === alias) score = Math.max(score, alias === d.fr || alias === d.en ? 1200 : 900);
+      if (foodTokens(query).join(" ") === foodTokens(alias).join(" ")) score = Math.max(score, alias === d.fr || alias === d.en ? 1200 : 900);
       else if ((` ${query} `).includes(` ${alias} `)) score = Math.max(score, 720 + alias.split(" ").length * 20);
       else if ((` ${alias} `).includes(` ${query} `) && query.split(" ").length >= 2) score = Math.max(score, 620 + query.split(" ").length * 20);
     }
@@ -129,8 +171,8 @@
     // Le FCÉN nomme souvent les aliments comme « Poisson, tilapia, ... ».
     // Permettre un nom simple (« tilapia ») s'il apparaît comme mot entier,
     // tout en laissant l'étape d'ambiguïté refuser les correspondances serrées.
-    const queryWords = query.split(" ").filter((word) => word.length >= 3);
-    const candidateText = meta.candidateText;
+    const queryWords = foodTokens(query).filter((word) => word.length >= 3);
+    const candidateText = ` ${foodTokens(meta.candidateText).join(" ")} `;
     if (queryWords.length && queryWords.every((word) => candidateText.includes(` ${word} `))) {
       score = Math.max(score, 690 + queryWords.length * 35);
     }
@@ -177,7 +219,7 @@
       : kind === "tbsp" ? /\b15 ml\b/
       : kind === "tsp" ? /\b5 ml\b/
       : null;
-    if (!wanted) return portions[0] || null;
+    if (!wanted) return null;
     return portions.find((p) => wanted.test(normalize(`${p?.[1] || ""} ${p?.[2] || ""}`))) || null;
   }
 
@@ -234,7 +276,16 @@
     let portion = `${grams} g`;
 
     if (kind !== "g" && !(kind == null && requestedDefaultGrams != null)) {
-      const selected = findPortion(row, kind);
+      const count = naturalCount(text);
+      const countPortions = count == null ? [] : (Array.isArray(portions) ? portions : []).filter(p =>
+        /^1\s/.test(normalize(p?.[1])) &&
+        !/\b(ml|g|kg|tasse|cup|tbsp|tsp|bol|bowl)\b/.test(normalize(p?.[1])) &&
+        /\b(fruit|oeuf|egg|tranche|slice|piece|morceau|filet|fillet)\b/.test(normalize(p?.[1])));
+      const size = normalize(text).match(/\b(petit|petite|small|gros|grosse|large|moyen|moyenne|medium)\b/)?.[1];
+      const selected = count != null
+        ? countPortions.find(p => size ? normalize(p[1] + " " + p[2]).includes(size) : /\b(moyen|medium)\b/.test(normalize(p[1] + " " + p[2]))) || (!size ? countPortions[0] : null)
+        : findPortion(row, kind);
+      if (count != null && !selected) return null;
       if (selected && Number(selected[0]) > 0) {
         grams = Number(selected[0]);
         portion = kind === "cup" ? "1 tasse"
@@ -297,6 +348,9 @@
     if (!Array.isArray(items) || items.length < 2) return null;
 
     const foods = items.map(({ row }) => foodFromRow(row, text));
+    if (foods.some(food => !food)) return null;
+    if (naturalCount(text) != null && foods.some(food =>
+        food.portion !== foods[0].portion || food.gramsPerPortion !== foods[0].gramsPerPortion)) return null;
     const nutrientKeys = ["calories", "protein", "carbs", "fat", "fiber", "sugars", "sodium"];
     const averaged = { ...foods[0] };
 
@@ -322,7 +376,7 @@
   }
 
   function find(text) {
-    if (!catalog.length) return null;
+    if (!catalog.length || requiresClarification(text)) return null;
     const cacheKey = normalize(text);
     if (findCache.has(cacheKey)) return findCache.get(cacheKey);
 
@@ -337,7 +391,7 @@
     // défaut plutôt que de retomber sur l'ancienne base faute de pouvoir
     // départager des dizaines de fiches équivalentes.
     const preferred = preferredCommonFood(text);
-    if (preferred) {
+    if (preferred && Number.isFinite(scoreRow(preferred, text))) {
       const normalizedText = normalize(text),
         chickenWithoutQuantity =
           /\b(poulet|chicken)\b/.test(normalizedText) &&
@@ -368,6 +422,9 @@
     const candidates = cleanRanked.length ? cleanRanked : ranked;
     candidates.sort((a, b) => b.score - a.score);
     const first = candidates[0], second = candidates[1];
+    if (second && first.score - second.score < 45 &&
+        Math.abs(Number(first.row[3]?.calories) - Number(second.row[3]?.calories)) >
+          Math.max(10, Number(first.row[3]?.calories) * 0.2)) return remember(null);
     if (second && first.score - second.score < 45) {
       const firstBase = descriptor(first.row).firstFr || descriptor(first.row).firstEn;
       const secondBase = descriptor(second.row).firstFr || descriptor(second.row).firstEn;
@@ -443,7 +500,7 @@
     const preferred = preferredGuidedIds(query);
     const ranked = [];
     for (const row of catalog) {
-      let score = scoreRow(row, text);
+      let score = scoreRow(row, text, { allowPreparationChoice: true });
       if (!Number.isFinite(score)) continue;
       if (hasUnrequestedQualifier(row, text)) score -= 140;
       if (score >= 420) ranked.push({ row, score });
@@ -506,6 +563,9 @@
     scoreRow,
     stripQuantity,
     quantityKind,
+    isCandidateAllowed,
+    requiresClarification,
+    naturalCount,
   });
   root.ENERGIE_CNF_SEARCH = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
