@@ -62,11 +62,11 @@
     foodTokenCache.set(key, tokens);
     return tokens;
   };
-  function isCandidateAllowed(text, name) {
+  function isCandidateAllowed(text, name, { allowPreparationChoice = false } = {}) {
     const query = new Set(foodTokens(text));
     const tokens = foodTokens(String(name).split(" · ")[0]);
     const preparation = ["seche", "sechee", "sec", "dry", "dried", "dehydrate", "deshydrate", "conserve", "canned", "frit", "frite", "fried", "roti", "rotie", "roasted", "bouilli", "bouillie", "boiled", "cuit", "cuite", "cooked", "huile", "oil"];
-    if (tokens.some(word => preparation.includes(word) && !query.has(word))) {
+    if (!allowPreparationChoice && tokens.some(word => preparation.includes(word) && !query.has(word))) {
       const wanted = states(text), candidate = states(name);
       if (!wanted.length || !wanted.some(state => candidate.includes(state))) return false;
     }
@@ -154,9 +154,9 @@
     return value;
   }
 
-  function scoreRow(row, text) {
+  function scoreRow(row, text, options = {}) {
     const query = stripQuantity(text);
-    if (!query || !isCandidateAllowed(text, row?.[1]) && !isCandidateAllowed(text, row?.[2])) return -Infinity;
+    if (!query || !isCandidateAllowed(text, row?.[1], options) && !isCandidateAllowed(text, row?.[2], options)) return -Infinity;
     const meta = rowSearchMeta(row);
     const d = meta.descriptor;
     const aliases = [d.fr, d.en, d.firstFr, d.firstEn].filter(Boolean);
@@ -500,7 +500,7 @@
     const preferred = preferredGuidedIds(query);
     const ranked = [];
     for (const row of catalog) {
-      let score = scoreRow(row, text);
+      let score = scoreRow(row, text, { allowPreparationChoice: true });
       if (!Number.isFinite(score)) continue;
       if (hasUnrequestedQualifier(row, text)) score -= 140;
       if (score >= 420) ranked.push({ row, score });

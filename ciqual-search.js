@@ -13,9 +13,9 @@
   const words=v=>normalize(v).split(' ').filter(t=>t.length>1&&!['de','des','du','la','le','les','au','aux','un','une','sans','avec'].includes(t));
   const state=v=>/\b(cru|crue|raw)\b/.test(normalize(v))?'raw':/\b(cuit|cuite|cuisson|bouilli|bouillie|etouffee|roti|rotie|grille|frit|frite)\b/.test(normalize(v))?'cooked':null;
   const strip=text=>cnf.stripQuantity?cnf.stripQuantity(text):normalize(text);
-  function score(row,text){
+  function score(row,text,options={}){
     const query=strip(text), name=normalize(row[1]);
-    if(!query||query.length<3||!Number.isFinite(row[2])||!cnf.isCandidateAllowed(text,row[1]))return -Infinity;
+    if(!query||query.length<3||!Number.isFinite(row[2])||!cnf.isCandidateAllowed(text,row[1],options))return -Infinity;
     const singular=v=>v.length>3&&v.endsWith('s')?v.slice(0,-1):v;
     const qt=words(query).map(singular),nt=words(name).map(singular),base=normalize(row[1].split(',')[0]);
     if(!qt.length||!qt.every(t=>nt.includes(t)))return -Infinity;
@@ -34,9 +34,9 @@
     n-=Math.max(0,nt.length-qt.length)*17;
     return n;
   }
-  function rank(text,limit=12){
+  function rank(text,limit=12,allowPreparationChoice=false){
     const out=[];
-    for(const row of records){const s=score(row,text);if(s>=600)out.push({row,s});}
+    for(const row of records){const s=score(row,text,{allowPreparationChoice});if(s>=600)out.push({row,s});}
     out.sort((a,b)=>b.s-a.s||String(a.row[0]).localeCompare(String(b.row[0])));
     return out.slice(0,limit).map(({row})=>row);
   }
@@ -67,7 +67,7 @@
       nutritionSource:'ciqual',nutritionSourceLabel:'Anses — Ciqual 2025',cnfCatalogMatch:true}:null;
   }
   const preferred=()=>root.ENERGIE_LOCALE==='fr-FR'?'ciqual':'cnf';
-  const ciqual=Object.freeze({find,search:(text,limit=12)=>rank(text,Math.max(1,Math.min(30,Number(limit)||12))).map(publicRow),getById:id=>publicRow(byId.get(String(id))),nutritionForGrams});
+  const ciqual=Object.freeze({find,search:(text,limit=12)=>rank(text,Math.max(1,Math.min(30,Number(limit)||12)),true).map(publicRow),getById:id=>publicRow(byId.get(String(id))),nutritionForGrams});
   const router=Object.freeze({...cnf,version:3,
     find:text=>preferred()==='ciqual'?(ciqual.find(text)||cnf.find(text)):(cnf.find(text)||ciqual.find(text)),
     search:(text,limit)=>{const a=preferred()==='ciqual'?ciqual:cnf,b=preferred()==='ciqual'?cnf:ciqual;const result=a.search(text,limit);return result.length?result:b.search(text,limit);},

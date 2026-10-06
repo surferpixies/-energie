@@ -36,7 +36,7 @@ for (const input of ['tomate', 'tomates', '250 g tomates', 'carotte', 'carottes'
   assert.ok(cnf.isCandidateAllowed(input, found.cnfNameFr), found.cnfNameFr);
   assert.ok(!/vinaigrette|bacon|gâteau|tarte|salade|sauce/i.test(found.cnfNameFr));
   for (const candidate of api.search(input, 30))
-   assert.ok(cnf.isCandidateAllowed(input, candidate.nameFr), candidate.nameFr);
+   assert.ok(cnf.isCandidateAllowed(input, candidate.nameFr, {allowPreparationChoice:true}), candidate.nameFr);
  }
 }
 for (const locale of ['fr-CA', 'fr-FR']) {
@@ -127,3 +127,14 @@ context.mealCompositionAnalysis = () => ({});
 context.mealNutritionRecognition = () => ({unrecognized:['120 g pâtes']});
 assert.equal(context.estimateNutritionFromText('tomates\n120 g pâtes'), null);
 console.log('food matching safety: catalogues, locales, attaques et replis OK');
+
+for (const locale of ['fr-CA', 'fr-FR']) {
+ global.ENERGIE_LOCALE = locale;
+ const choices = global.ENERGIE_CNF_SEARCH.search('spaghettis', 12);
+ assert.ok(choices.some(row => /\bcuit\b/.test(row.nameFr)), locale);
+ assert.ok(choices.some(row => /\bsec\b/.test(row.nameFr)), locale);
+ assert.ok(choices.every(row => !/sauce|viande|bacon|courge/i.test(row.nameFr)));
+ assert.equal(global.ENERGIE_CNF_SEARCH.find('120 g spaghettis'), null);
+}
+assert.ok(cnf.isCandidateAllowed('spaghettis', 'Pâtes (spaghetti, macaroni), enrichi, sec', {allowPreparationChoice:true}));
+assert.equal(cnf.isCandidateAllowed('spaghettis', 'Spaghetti avec boulettes de viande, cuit', {allowPreparationChoice:true}), false);
