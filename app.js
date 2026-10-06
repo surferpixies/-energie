@@ -2586,6 +2586,8 @@ function formatSleepDuration(hours) {
     "salade de pâtes": { fiber: 4, sugars: 5, sodium: 550 },
     prosciutto: { fiber: 0, sugars: 0, sodium: 1050 },
   };
+  const MEAL_DESCRIPTION_MAX_LENGTH = 1000;
+
   function foodNutrients(food) {
     // Les valeurs FCÉN sont la source nutritionnelle de référence et ne doivent
     // jamais être remplacées par les anciens ajustements manuels Énergie.
@@ -2666,6 +2668,7 @@ function formatSleepDuration(hours) {
   function foodMatchForSegment(segment) {
     const clean = normalizeFoodText(segment),
       comparable = comparableFoodText(segment);
+    if (String(segment || "").length > MEAL_DESCRIPTION_MAX_LENGTH) return null;
     if (!clean || window.ENERGIE_CNF_SEARCH?.requiresClarification?.(segment)) return null;
     const padded = ` ${comparable} `;
     let best = null;
@@ -2831,8 +2834,9 @@ function formatSleepDuration(hours) {
     return { scale: 1, quantityUsed: false };
   }
   function mealNutritionRecognition(text) {
-    const value = String(text || "").trim(),
-      recognizedDish = mealCompositionAnalysis(value)?.dish;
+    const value = String(text || "").trim();
+    if (value.length > MEAL_DESCRIPTION_MAX_LENGTH) return { recognized: [], unrecognized: ["Description trop longue : 1 000 caractères maximum."] };
+    const recognizedDish = mealCompositionAnalysis(value)?.dish;
     if (!value) return { recognized: [], unrecognized: [] };
     if (recognizedDish?.nutrition && !/[+,;\n\r|]|\s+\/\s+/.test(value))
       return { recognized: [value], unrecognized: [] };
@@ -3036,7 +3040,7 @@ function formatSleepDuration(hours) {
       section.hidden = true;
       return;
     }
-    if (description.length < 3) {
+    if (description.length < 3 || description.length > MEAL_DESCRIPTION_MAX_LENGTH) {
       section.hidden = true;
       return;
     }
@@ -3125,6 +3129,7 @@ function formatSleepDuration(hours) {
   }
 
   function estimateNutritionFromText(text, { photoSegments = null } = {}) {
+    if (String(text || "").length > MEAL_DESCRIPTION_MAX_LENGTH) return null;
     const recognizedDish = mealCompositionAnalysis(text)?.dish;
     if (recognizedDish?.nutrition && !/[+,;\n\r|]|\s+\/\s+/.test(String(text || "")))
       return normalNutrition({
@@ -3759,7 +3764,7 @@ function formatSleepDuration(hours) {
       list.innerHTML = "";
       return;
     }
-    notice.textContent = `ⓘ Estimation partielle · ${items.length} élément${items.length > 1 ? "s" : ""} à vérifier`;
+    notice.textContent = `ⓘ Estimation à préciser · ${items.length} élément${items.length > 1 ? "s" : ""} à vérifier`;
     list.innerHTML = items.map((item) => `<div class="meal-calorie-unrecognized-item"><span aria-hidden="true">?</span><div><strong>${esc(item)}</strong><small>Aucune valeur calorique n’a pu être associée à cet élément.</small></div></div>`).join("");
   }
   function openMealCalorieRecognition() {
@@ -3846,20 +3851,31 @@ function formatSleepDuration(hours) {
   }
   function scheduleAutomaticNutritionPreview() {
     clearTimeout(mealNutritionPreviewTimer);
-    updateMealCompositionReview();
+    const descriptionField = $("#mealDescription");
+    const tooLong = (descriptionField?.value.length || 0) > MEAL_DESCRIPTION_MAX_LENGTH;
+    descriptionField?.setCustomValidity(tooLong ? "Limite de 1 000 caractères pour la description du repas." : "");
+    if (tooLong) {
+      updateMealCompositionReview();
+      fillNutritionInputs(null, "Raccourcis la description à 1 000 caractères pour relancer l’estimation.");
+      return;
+    }
     const guidedNutrition = currentGuidedCnfNutrition();
     if (guidedNutrition) {
+      updateMealCompositionReview();
       fillNutritionInputs(guidedNutrition);
       mealNutritionManuallyEdited = false;
       return;
     }
     if (
       db.settings.autoNutritionEstimates === false
-    )
+    ) {
+      mealNutritionPreviewTimer = setTimeout(updateMealCompositionReview, 450);
       return;
+    }
     if (mealNutritionManuallyEdited) {
       if ($("#mealCalorieMode")?.value !== "manual") {
         mealNutritionPreviewTimer = setTimeout(() => {
+          updateMealCompositionReview();
           if ($("#mealCalorieMode").value === "manual") return;
           $("#nutritionCalories").value = estimateMealEditorNutrition($("#mealDescription").value)?.calories ?? "";
           updateMealCalorieEditor();
@@ -3868,6 +3884,7 @@ function formatSleepDuration(hours) {
       return;
     }
     mealNutritionPreviewTimer = setTimeout(() => {
+      updateMealCompositionReview();
       const description = $("#mealDescription")?.value.trim();
       if (!description) {
         fillNutritionInputs(null, "Décris le repas pour obtenir une estimation modifiable.");

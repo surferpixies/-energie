@@ -49,11 +49,19 @@
   // Contrat commun FCÉN/Ciqual : tout terme alimentaire supplémentaire
   // doit être écrit. Seuls les descripteurs neutres de la fiche sont permis.
   const neutralWords = new Set(("rouge verte vert jaune mure mur moyenne durant toute annee ronde cerise orange cru crue cuit cuite frais fraiche raw cooked fresh poisson fish fruit legume vegetable aliment moyen toutes variete varietes espece especes peau pelure sans avec et ou a au aux de du des le la les en entier entiere tranche tranches morceau morceaux partie comestible pulpe chair graine graines pepin pepins removed skin peeled average all varieties species edible portion water eau egoutte egouttee drained bouilli bouillie boiled roti rotie roasted grille grillee baked broiled conserve canned enrichi enriched surgele surgelee frozen sec secs dry seche sechee dried non prepare preparee preparation sel salt ajoute ajoutee added teneur matiere grasse gras fat pour cent percent mg g ml" ).split(" "));
-  const foodTokens = value => stripQuantity(value).split(" ")
+  const foodTokenCache = new Map();
+  const foodTokens = value => {
+    const key = String(value || "");
+    if (foodTokenCache.has(key)) return foodTokenCache.get(key);
+    const tokens = stripQuantity(key).split(" ")
     .map(word => word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word)
     // Formes de pâtes nature : une précision de forme n'ajoute aucun ingrédient.
     .map(word => ["spaghetti", "macaroni", "pasta", "pate"].includes(word) ? "pate" : word)
     .filter(Boolean);
+    if (foodTokenCache.size > 20000) foodTokenCache.clear();
+    foodTokenCache.set(key, tokens);
+    return tokens;
+  };
   function isCandidateAllowed(text, name) {
     const query = new Set(foodTokens(text));
     const tokens = foodTokens(String(name).split(" · ")[0]);

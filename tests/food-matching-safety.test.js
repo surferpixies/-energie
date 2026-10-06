@@ -57,6 +57,7 @@ const source = fs.readFileSync(require.resolve('../app.js'), 'utf8');
 const start = source.indexOf('  function foodMatchForSegment(');
 const end = source.indexOf('  function mealQuantityNumber(', start);
 const context = {
+ MEAL_DESCRIPTION_MAX_LENGTH: 1000,
  window: { ENERGIE_CNF_SEARCH: cnf },
  normalizeFoodText: s => cnf.stripQuantity(s),
  comparableFoodText: s => cnf.stripQuantity(s),

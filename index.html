@@ -161,7 +161,8 @@
       <div class="meal-description-field">
         <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div>
         <div class="meal-description-composer">
-          <textarea id="mealDescription" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli" required></textarea>
+          <textarea id="mealDescription" maxlength="1000" aria-describedby="mealDescriptionLimit" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli" required></textarea>
+          <small id="mealDescriptionLimit" class="muted tiny">Description du repas · 1 000 caractères maximum</small>
           <p id="mealGuidedEntryRequirement" class="meal-guided-entry-requirement" hidden>La saisie guidée FCÉN est obligatoire dans tes préférences.</p>
           <button type="button" id="openCnfGuidedEntry" class="meal-cnf-guided-entry"><span class="meal-cnf-guided-icon" aria-hidden="true">🇨🇦</span><span><strong>Saisie guidée FCÉN</strong><small>Santé Canada</small></span><b aria-hidden="true">›</b></button>
           <div class="meal-description-toolbar">
@@ -730,9 +731,9 @@
   <script src="foods.js?v=3.56.115"></script>
   <script src="cnf-runtime.js?v=3.56.126"></script>
   <script src="cnf-catalog.js?v=3.56.145"></script>
-  <script src="cnf-search.js?v=3.56.159"></script>
+  <script src="cnf-search.js?v=3.56.160"></script>
   <script src="ciqual-data.js?v=3.56.155"></script>
-  <script src="ciqual-search.js?v=3.56.159"></script>
+  <script src="ciqual-search.js?v=3.56.160"></script>
   <script src="nutrition-corrections.js?v=3.56.120"></script>
   <script src="food-categories.js?v=3.31.2"></script>
   <script src="dish-knowledge.js?v=3.31.2"></script>
@@ -751,6 +752,6 @@
   <script src="personal-metrics.js?v=3.56.99"></script>
   <script src="onboarding-images.js?v=3.56.52"></script>
   <script src="profile-avatars.js?v=3.56.154"></script>
-  <script src="app.js?v=3.56.159"></script>
+  <script src="app.js?v=3.56.160"></script>
 </body>
 </html>
