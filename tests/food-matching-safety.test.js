@@ -214,3 +214,17 @@ assert.equal(cnf.isCandidateAllowed('porc', 'Porc au riz'), false);
 assert.equal(cnf.isCandidateAllowed('boeuf cru', 'Boeuf cuit'), false);
 assert.equal(cnf.meatPreparationText('tomates'), 'tomates');
 assert.equal(cnf.meatPreparationText('pâtes'), 'pâtes');
+
+// Les exemples affichés dans le guide doivent utiliser des références réelles.
+for (const locale of ['fr-CA', 'fr-FR']) {
+ global.ENERGIE_LOCALE = locale;
+ context.window.ENERGIE_CNF_SEARCH = global.ENERGIE_CNF_SEARCH;
+ for (const example of ['150 g poulet', '100 g carottes', '2 pommes', '120 g spaghettis cuits']) {
+  const food = context.foodMatchForSegment(example);
+  assert.ok(food, `${locale}: exemple du guide ${example}`);
+  assert.equal(context.nutritionScaleForSegment(example, food).quantityUsed, true, example);
+  assert.ok(!/Pâte de fruits/i.test(food.cnfNameFr));
+ }
+ assert.ok(!/Pâte de fruits/i.test(global.ENERGIE_CNF_SEARCH.find('120 g pâtes cuites')?.cnfNameFr || ''));
+}
+assert.equal(cnf.isCandidateAllowed('pâtes cuites', 'Pâte de fruits'), false);

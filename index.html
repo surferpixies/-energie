@@ -16,6 +16,7 @@
     #splashScreen{position:fixed;inset:0;background:#eef8e7;}
   </style>
   <link rel="stylesheet" href="styles.css?v=3.56.154">
+  <link rel="stylesheet" href="meal-entry-guide.css?v=3.56.166">
   <link rel="stylesheet" href="portrait.css?v=3.56.21">
   <link rel="stylesheet" href="observation-detail.css?v=3.56.21">
   <link rel="stylesheet" href="personal-metrics.css?v=3.56.21">
@@ -29,7 +30,7 @@
   <link rel="stylesheet" href="meal-quick-fill.css?v=3.56.28">
   <link rel="stylesheet" href="beverage-edit.css?v=3.56.29">
   <link rel="stylesheet" href="steps-tracking.css?v=3.56.39">
-  <link rel="stylesheet" href="journal-summary.css?v=3.56.165">
+  <link rel="stylesheet" href="journal-summary.css?v=3.56.166">
   <link rel="stylesheet" href="onboarding.css?v=3.56.52">
   <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.99">
 </head>
@@ -160,6 +161,7 @@
       <section id="mealCalorieTargetGauge" class="meal-calorie-target-gauge" hidden aria-live="polite"></section>
       <div class="meal-description-field">
         <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div>
+        <button type="button" id="openMealEntryGuide" class="text-button meal-entry-guide-link" aria-haspopup="dialog" aria-controls="mealEntryGuideDialog" data-i18n-skip>Guide pour entrer mon repas</button>
         <div class="meal-description-composer">
           <textarea id="mealDescription" maxlength="1000" aria-describedby="mealDescriptionLimit" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli" required></textarea>
           <small id="mealDescriptionLimit" class="muted tiny">Description du repas · 1 000 caractères maximum</small>
@@ -731,9 +733,9 @@
   <script src="foods.js?v=3.56.115"></script>
   <script src="cnf-runtime.js?v=3.56.126"></script>
   <script src="cnf-catalog.js?v=3.56.145"></script>
-  <script src="cnf-search.js?v=3.56.165"></script>
+  <script src="cnf-search.js?v=3.56.166"></script>
   <script src="ciqual-data.js?v=3.56.155"></script>
-  <script src="ciqual-search.js?v=3.56.165"></script>
+  <script src="ciqual-search.js?v=3.56.166"></script>
   <script src="nutrition-corrections.js?v=3.56.120"></script>
   <script src="food-categories.js?v=3.31.2"></script>
   <script src="dish-knowledge.js?v=3.31.2"></script>
@@ -752,6 +754,7 @@
   <script src="personal-metrics.js?v=3.56.99"></script>
   <script src="onboarding-images.js?v=3.56.52"></script>
   <script src="profile-avatars.js?v=3.56.154"></script>
-  <script src="app.js?v=3.56.165"></script>
+  <script src="app.js?v=3.56.166"></script>
+  <script src="meal-entry-guide.js?v=3.56.166"></script>
 </body>
 </html>

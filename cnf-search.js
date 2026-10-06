@@ -95,6 +95,7 @@
     const chickenDescriptors = new Set("viande meat poitrine breast blanc white brune dark cuisse thigh pilon drumstick aile wing griller broiler desosse boneless stewed etuvee light only seulement crue cuite".split(" "));
     const meat = meatWords.test(normalize(text));
     const meatDescriptors = new Set("viande meat seulement only maigre lean gras fat coupe diverse composite cut canadien canadian categorie classe class bifteck steak roast cuisse leg longe loin epaule shoulder poitrine breast griller broiler".split(" "));
+    if (query.has("pate") && !query.has("fruit") && tokens.includes("fruit")) return false;
     const cottage = query.has("cottage");
     if (cottage && tokens.some(word => ["fruit", "legume", "vegetable"].includes(word) && !query.has(word))) return false;
     const cottageDescriptors = new Set("fromage cheese creme creamed m f faible low reduit reduced lactose lipide pressed presse curd gros petit large small grain uncreamed".split(" "));
