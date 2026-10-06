@@ -138,3 +138,16 @@ for (const locale of ['fr-CA', 'fr-FR']) {
 }
 assert.ok(cnf.isCandidateAllowed('spaghettis', 'Pâtes (spaghetti, macaroni), enrichi, sec', {allowPreparationChoice:true}));
 assert.equal(cnf.isCandidateAllowed('spaghettis', 'Spaghetti avec boulettes de viande, cuit', {allowPreparationChoice:true}), false);
+
+for (const locale of ['fr-CA', 'fr-FR']) {
+ global.ENERGIE_LOCALE = locale;
+ const tuna = global.ENERGIE_CNF_SEARCH.search('thon', 10);
+ assert.ok(tuna.some(row => /cru/.test(row.nameFr)));
+ assert.ok(tuna.some(row => /cuit/.test(row.nameFr)));
+ assert.ok(tuna.some(row => /conserve/.test(row.nameFr)));
+ assert.ok(tuna.some(row => /dans l'eau/.test(row.nameFr)));
+ assert.ok(!tuna.some(row => /salade|sandwich/i.test(row.nameFr)));
+ assert.ok(global.ENERGIE_CNF_SEARCH.search('thon cuit', 10).length);
+ assert.equal(global.ENERGIE_CNF_SEARCH.find('1 skyr coco'), null);
+ assert.equal(global.ENERGIE_CNF_SEARCH.search('skyr').length, 0);
+}
