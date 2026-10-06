@@ -62,15 +62,24 @@
     foodTokenCache.set(key, tokens);
     return tokens;
   };
+  const meatWords = /\b(poulet|chicken|boeuf|beef|porc|pork|dinde|turkey|veau|veal|agneau|lamb|canard|duck|lapin|rabbit|chevre|goat|chevreuil|venison|bison)\b/;
+  function meatPreparationText(text) {
+    if (!meatWords.test(normalize(text))) return text;
+    if (/\btartare\b/.test(normalize(text)))
+      return String(text).replace(/\btartare\b/gi, "cru");
+    return states(text).length ? text : `${text} cuit`;
+  }
   function isCandidateAllowed(text, name, { allowPreparationChoice = false } = {}) {
     const query = new Set(foodTokens(text));
-    // Sans indication, le poulet décrit un aliment prêt à manger.
-    // Une mention explicite de cru garde la référence crue.
-    if ((query.has("poulet") || query.has("chicken")) && !states(text).length) {
-      text = `${text} cuit`;
-      query.add("cuit");
+    if (!allowPreparationChoice) {
+      text = meatPreparationText(text);
+      for (const word of foodTokens(text)) query.add(word);
     }
     const tokens = foodTokens(String(name).split(" · ")[0]);
+    if (!allowPreparationChoice && meatWords.test(normalize(text))) {
+      const wanted = states(text), candidate = states(name);
+      if (stateCompatibility(wanted, candidate).bonus < 0) return false;
+    }
     const preparation = ["seche", "sechee", "sec", "dry", "dried", "dehydrate", "deshydrate", "conserve", "canned", "frit", "frite", "fried", "roti", "rotie", "roasted", "bouilli", "bouillie", "boiled", "cuit", "cuite", "cooked", "huile", "oil"];
     if (!allowPreparationChoice && tokens.some(word => preparation.includes(word) && !query.has(word))) {
       const wanted = states(text), candidate = states(name);
@@ -84,6 +93,8 @@
     // du même aliment, pas des ingrédients de recettes.
     const chicken = query.has("poulet") || query.has("chicken");
     const chickenDescriptors = new Set("viande meat poitrine breast blanc white brune dark cuisse thigh pilon drumstick aile wing griller broiler desosse boneless stewed etuvee light only seulement crue cuite".split(" "));
+    const meat = meatWords.test(normalize(text));
+    const meatDescriptors = new Set("viande meat seulement only maigre lean gras fat coupe diverse composite cut canadien canadian categorie classe class bifteck steak roast cuisse leg longe loin epaule shoulder poitrine breast griller broiler".split(" "));
     const cottage = query.has("cottage");
     if (cottage && tokens.some(word => ["fruit", "legume", "vegetable"].includes(word) && !query.has(word))) return false;
     const cottageDescriptors = new Set("fromage cheese creme creamed m f faible low reduit reduced lactose lipide pressed presse curd gros petit large small grain uncreamed".split(" "));
@@ -91,6 +102,7 @@
     return tokens.length > 0 && tokens.every(word => query.has(word) || neutralWords.has(word) ||
       guidedFish && (fishDescriptors.has(word) || guidedPreparation.has(word)) ||
       chicken && chickenDescriptors.has(word) ||
+      meat && meatDescriptors.has(word) ||
       cottage && (cottageDescriptors.has(word) || /^\d+$/.test(word)));
   }
   function requiresClarification(text) {
@@ -203,6 +215,8 @@
     const wantedStates = states(text);
     const candidateStates = meta.candidateStates;
     score += stateCompatibility(wantedStates, candidateStates).bonus;
+    const preciseCooking = foodTokens(text).filter(word => ["roti", "rotie", "grille", "grillee", "bouilli", "bouillie", "frit", "frite"].includes(word));
+    if (preciseCooking.length && preciseCooking.some(word => foodTokens(meta.candidateText).includes(word))) score += 250;
 
     // Éviter qu'un aliment composé dont le nom commence par la requête
     // (ex. « pomme cannelle ») gagne contre l'aliment générique « pomme ».
@@ -266,6 +280,9 @@
       return catalogById.get("2398") || catalogById.get("2116") || null;
     }
 
+    const simple = stripQuantity(text).replace(/\b(cru[e]?s?|cuit[e]?s?|raw|cooked)\b/g, "").trim();
+    const references = { boeuf: ["6169", "6172"], beef: ["6169", "6172"], porc: ["6926", "6288"], pork: ["6926", "6288"], dinde: ["690", "691"], turkey: ["690", "691"], veau: ["3507", "3508"], veal: ["3507", "3508"], agneau: ["3422", "3423"], lamb: ["3422", "3423"] };
+    if (references[simple]) return catalogById.get(references[simple][states(text).includes("raw") ? 0 : 1]) || null;
     const hasChicken = /\b(poulet|chicken)\b/.test(n);
     if (!hasChicken) return null;
 
@@ -397,6 +414,7 @@
   }
 
   function find(text) {
+    text = meatPreparationText(text);
     if (!catalog.length || requiresClarification(text)) return null;
     const cacheKey = normalize(text);
     if (findCache.has(cacheKey)) return findCache.get(cacheKey);
@@ -590,6 +608,7 @@
     quantityKind,
     isCandidateAllowed,
     requiresClarification,
+    meatPreparationText,
     naturalCount,
   });
   root.ENERGIE_CNF_SEARCH = api;

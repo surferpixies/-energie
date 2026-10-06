@@ -168,7 +168,7 @@ for (const locale of ['fr-CA', 'fr-FR']) {
  assert.ok(cottage.every(row => !/avec fruits|avec légumes|pomme de terre/.test(row.nameFr)));
  assert.ok(api.find('filet de poulet'));
  assert.ok(/rôti|cuit/.test(api.find('filet de poulet').cnfNameFr));
- assert.equal(api.find('150 g poulet').calories, api.find('100 g poulet').calories); // référence par 100 g; quantité appliquée par le repas
+ assert.match(api.find('150 g poulet').cnfNameFr, /rôti|cuit/);
  assert.ok(api.find('150 g filet de poulet cuit'), locale);
  assert.ok(api.find('150 g filet de poulet cru'), locale);
 }
@@ -184,3 +184,33 @@ for (const grams of [120, 250]) {
  assert.equal(context.nutritionScaleForSegment(input, food).scale, grams / 100);
 }
 assert.match(context.foodMatchForSegment('150 g filet de poulet cru').cnfNameFr, /cru/);
+
+for (const locale of ['fr-CA', 'fr-FR']) {
+ global.ENERGIE_LOCALE = locale;
+ const api = global.ENERGIE_CNF_SEARCH;
+ for (const meat of ['poulet','boeuf','porc','dinde','veau','agneau']) {
+  for (const grams of [120,250]) {
+   const food = api.find(`${grams} g ${meat}`);
+   assert.ok(food, `${locale}: ${meat}`);
+   assert.ok(/cuit|rôti|grillé/.test(food.cnfNameFr), food.cnfNameFr);
+   assert.ok(!/cru/.test(food.cnfNameFr));
+   context.window.ENERGIE_CNF_SEARCH = api;
+   const scaled = context.nutritionScaleForSegment(`${grams} g ${meat}`, food);
+   const hundred = api.find(`100 g ${meat}`);
+   const expected = hundred.calories * context.nutritionScaleForSegment(`100 g ${meat}`, hundred).scale * grams / 100;
+   assert.ok(Math.abs(food.calories * scaled.scale - expected)<0.01);
+  }
+  for (const state of ['cru','tartare']) {
+   const food = api.find(`150 g ${meat} ${state}`);
+   assert.ok(food, `${locale}: ${meat} ${state}`);
+   assert.match(food.cnfNameFr, /cru/);
+  }
+ }
+}
+assert.equal(cnf.isCandidateAllowed('boeuf', 'Boeuf cru'), false);
+assert.equal(cnf.isCandidateAllowed('porc', 'Porc cru'), false);
+assert.equal(cnf.isCandidateAllowed('boeuf', 'Boeuf en sauce aux légumes'), false);
+assert.equal(cnf.isCandidateAllowed('porc', 'Porc au riz'), false);
+assert.equal(cnf.isCandidateAllowed('boeuf cru', 'Boeuf cuit'), false);
+assert.equal(cnf.meatPreparationText('tomates'), 'tomates');
+assert.equal(cnf.meatPreparationText('pâtes'), 'pâtes');

@@ -17,7 +17,7 @@
     const query=strip(text), name=normalize(row[1]);
     if(!query||query.length<3||!Number.isFinite(row[2])||!cnf.isCandidateAllowed(text,row[1],options))return -Infinity;
     const singular=v=>v.length>3&&v.endsWith('s')?v.slice(0,-1):v;
-    const qt=words(query).map(singular),nt=words(name).map(singular),base=normalize(row[1].split(',')[0]);
+    const qt=words(query).map(singular).filter(t=>!["cru","crue","cuit","cuite","raw","cooked"].includes(t)),nt=words(name).map(singular),base=normalize(row[1].split(',')[0]);
     if(!qt.length||!qt.every(t=>nt.includes(t)))return -Infinity;
     const wanted=state(query),candidate=state(name);
     if(wanted && candidate && wanted!==candidate)return -Infinity;
@@ -26,6 +26,7 @@
     if(query===base)n+=420;
     if(name.startsWith(query+' '))n+=140;
     if(wanted && wanted===candidate)n+=220;
+    if(qt.some(t=>['roti','rotie','grille','grillee','bouilli','bouillie','frit','frite'].includes(t)&&nt.includes(t)))n+=250;
     if(!wanted && candidate==='raw')n+=35;
     if(!wanted && candidate==='cooked')n+=5;
     if(/\b(aliment moyen)\b/.test(name))n-=85;
@@ -53,6 +54,7 @@
       cnfFoodId:PREFIX+row[0],cnfNameFr:row[1],sourceVersion:'2025'};
   }
   function find(text){
+    text=cnf.meatPreparationText(text);
     if(cnf.requiresClarification(text)||cnf.naturalCount(text)!=null)return null;
     const candidates=rank(text,2),row=candidates[0];if(!row)return null;
     const second=candidates[1];
