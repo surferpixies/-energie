@@ -48,7 +48,7 @@
 
   // Contrat commun FCÉN/Ciqual : tout terme alimentaire supplémentaire
   // doit être écrit. Seuls les descripteurs neutres de la fiche sont permis.
-  const neutralWords = new Set(("rouge verte vert jaune mure mur moyenne durant toute annee ronde cerise orange cru crue cuit cuite frais fraiche raw cooked fresh poisson fish fruit legume vegetable aliment moyen toutes variete varietes espece especes peau pelure sans avec et ou a au aux de du des le la les en entier entiere tranche tranches morceau morceaux partie comestible pulpe chair graine graines pepin pepins removed skin peeled average all varieties species edible portion water eau egoutte egouttee drained bouilli bouillie boiled roti rotie roasted grille grillee baked broiled conserve canned enrichi enriched surgele surgelee frozen sec secs dry seche sechee dried non prepare preparee preparation sel salt ajoute ajoutee added teneur matiere grasse gras fat pour cent percent mg g ml" ).split(" "));
+  const neutralWords = new Set(("rouge verte vert jaune mure mur moyenne durant toute annee ronde cerise orange cru crue cuit cuite frais fraiche raw cooked fresh poisson fish fruit legume vegetable aliment moyen toutes variete varietes espece especes peau pelure sans avec et ou a au aux dans l de du des le la les en entier entiere tranche tranches morceau morceaux partie comestible pulpe chair graine graines pepin pepins removed skin peeled average all varieties species edible portion water eau egoutte egouttee drained four bouilli bouillie boiled roti rotie roasted grille grillee baked broiled conserve canned enrichi enriched surgele surgelee frozen sec secs dry seche sechee dried non prepare preparee preparation sel salt ajoute ajoutee added teneur matiere grasse gras fat pour cent percent mg g ml" ).split(" ").map(word => word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word));
   const foodTokenCache = new Map();
   const foodTokens = value => {
     const key = String(value || "");
@@ -70,7 +70,13 @@
       const wanted = states(text), candidate = states(name);
       if (!wanted.length || !wanted.some(state => candidate.includes(state))) return false;
     }
-    return tokens.length > 0 && tokens.every(word => query.has(word) || neutralWords.has(word));
+    // La recherche guidée peut proposer des variantes de conservation ou
+    // d'espèce, sans autoriser les ingrédients d'une recette composée.
+    const fishDescriptors = new Set(["pale", "blanche", "blanc", "jaune", "nageoire", "yellowfin", "bluefin", "white", "light"]);
+    const guidedFish = allowPreparationChoice && ["thon", "tuna"].some(word => query.has(word));
+    const guidedPreparation = new Set(["dans", "l", "huile", "oil"]);
+    return tokens.length > 0 && tokens.every(word => query.has(word) || neutralWords.has(word) ||
+      guidedFish && (fishDescriptors.has(word) || guidedPreparation.has(word)));
   }
   function requiresClarification(text) {
     const query = stripQuantity(text);
