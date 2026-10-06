@@ -46,6 +46,29 @@
       .trim();
   }
 
+  // Contrat commun FCÉN/Ciqual : tout terme alimentaire supplémentaire
+  // doit être écrit. Seuls les descripteurs neutres de la fiche sont permis.
+  const neutralWords = new Set(("rouge verte vert jaune mure mur moyenne durant toute annee ronde cerise orange cru crue cuit cuite frais fraiche raw cooked fresh poisson fish fruit legume vegetable aliment moyen toutes variete varietes espece especes peau pelure sans avec et ou a au aux de du des le la les en entier entiere tranche tranches morceau morceaux partie comestible pulpe chair graine graines pepin pepins removed skin peeled average all varieties species edible portion water eau egoutte egouttee drained bouilli bouillie boiled roti rotie roasted grille grillee baked broiled conserve canned surgele surgelee frozen seche sechee dried non prepare preparee preparation sel salt ajoute ajoutee added teneur matiere grasse gras fat pour cent percent mg g ml" ).split(" "));
+  const foodTokens = value => stripQuantity(value).split(" ")
+    .map(word => word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word)
+    .filter(Boolean);
+  function isCandidateAllowed(text, name) {
+    const query = new Set(foodTokens(text));
+    const tokens = foodTokens(String(name).split(" · ")[0]);
+    const preparation = ["seche", "sechee", "sec", "dry", "dried", "dehydrate", "deshydrate", "conserve", "canned", "frit", "frite", "fried", "roti", "rotie", "roasted", "bouilli", "bouillie", "boiled", "cuit", "cuite", "cooked", "huile", "oil"];
+    if (tokens.some(word => preparation.includes(word) && !query.has(word))) {
+      const wanted = states(text), candidate = states(name);
+      if (!wanted.length || !wanted.some(state => candidate.includes(state))) return false;
+    }
+    return tokens.length > 0 && tokens.every(word => query.has(word) || neutralWords.has(word));
+  }
+  function requiresClarification(text) {
+    const query = stripQuantity(text);
+    // Le poids sec/cuit et la conservation changent fortement les apports.
+    return /\b(pates?|riz|pasta|rice|poulet|chicken|thon|tuna)\b/.test(query) &&
+      !/\b(cru|crue|cuit|cuite|cooked|raw|sec|seche|sechee|dry|dried|bouilli|bouillie|boiled|roti|rotie|grille|grillee|roasted|conserve|canned|eau|water|huile|oil)\b/.test(query);
+  }
+
   function quantityKind(text) {
     const n = normalize(text);
     if (/\b(?:kg|g|gramme|grammes|grams)\b/.test(n)) return "g";
@@ -114,7 +137,7 @@
 
   function scoreRow(row, text) {
     const query = stripQuantity(text);
-    if (!query) return -Infinity;
+    if (!query || !isCandidateAllowed(text, row?.[1]) && !isCandidateAllowed(text, row?.[2])) return -Infinity;
     const meta = rowSearchMeta(row);
     const d = meta.descriptor;
     const aliases = [d.fr, d.en, d.firstFr, d.firstEn].filter(Boolean);
@@ -129,8 +152,8 @@
     // Le FCÉN nomme souvent les aliments comme « Poisson, tilapia, ... ».
     // Permettre un nom simple (« tilapia ») s'il apparaît comme mot entier,
     // tout en laissant l'étape d'ambiguïté refuser les correspondances serrées.
-    const queryWords = query.split(" ").filter((word) => word.length >= 3);
-    const candidateText = meta.candidateText;
+    const queryWords = foodTokens(query).filter((word) => word.length >= 3);
+    const candidateText = ` ${foodTokens(meta.candidateText).join(" ")} `;
     if (queryWords.length && queryWords.every((word) => candidateText.includes(` ${word} `))) {
       score = Math.max(score, 690 + queryWords.length * 35);
     }
@@ -322,7 +345,7 @@
   }
 
   function find(text) {
-    if (!catalog.length) return null;
+    if (!catalog.length || requiresClarification(text)) return null;
     const cacheKey = normalize(text);
     if (findCache.has(cacheKey)) return findCache.get(cacheKey);
 
@@ -337,7 +360,7 @@
     // défaut plutôt que de retomber sur l'ancienne base faute de pouvoir
     // départager des dizaines de fiches équivalentes.
     const preferred = preferredCommonFood(text);
-    if (preferred) {
+    if (preferred && Number.isFinite(scoreRow(preferred, text))) {
       const normalizedText = normalize(text),
         chickenWithoutQuantity =
           /\b(poulet|chicken)\b/.test(normalizedText) &&
@@ -368,6 +391,9 @@
     const candidates = cleanRanked.length ? cleanRanked : ranked;
     candidates.sort((a, b) => b.score - a.score);
     const first = candidates[0], second = candidates[1];
+    if (second && first.score - second.score < 45 &&
+        Math.abs(Number(first.row[3]?.calories) - Number(second.row[3]?.calories)) >
+          Math.max(10, Number(first.row[3]?.calories) * 0.2)) return remember(null);
     if (second && first.score - second.score < 45) {
       const firstBase = descriptor(first.row).firstFr || descriptor(first.row).firstEn;
       const secondBase = descriptor(second.row).firstFr || descriptor(second.row).firstEn;
@@ -506,6 +532,8 @@
     scoreRow,
     stripQuantity,
     quantityKind,
+    isCandidateAllowed,
+    requiresClarification,
   });
   root.ENERGIE_CNF_SEARCH = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

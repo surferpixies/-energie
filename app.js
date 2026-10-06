@@ -2666,7 +2666,7 @@ function formatSleepDuration(hours) {
   function foodMatchForSegment(segment) {
     const clean = normalizeFoodText(segment),
       comparable = comparableFoodText(segment);
-    if (!clean) return null;
+    if (!clean || window.ENERGIE_CNF_SEARCH?.requiresClarification?.(segment)) return null;
     const padded = ` ${comparable} `;
     let best = null;
     for (const candidate of FOOD_CANDIDATES) {
@@ -2702,6 +2702,11 @@ function formatSleepDuration(hours) {
       const checked = checkedCatalogFood(candidate);
       if (!checked) return null;
       const name = normalizeFoodText(checked.cnfNameFr || checked.ciqualNameFr || checked.keys?.[0] || '');
+      const guard = window.ENERGIE_CNF_SEARCH?.isCandidateAllowed;
+      const referenceNames = checked.cnfNameFr || checked.ciqualNameFr
+        ? [checked.cnfNameFr || checked.ciqualNameFr, checked.cnfNameEn].filter(Boolean)
+        : [checked.keys?.[0]].filter(Boolean);
+      if (guard && !referenceNames.some(reference => guard(segment, reference))) return null;
       // Refuser « Bœuf, gras, cru » pour « bœuf haché ». Conserver une fiche
       // FCÉN/Ciqual authentiquement hachée; à défaut, repli Énergie explicite.
       if (wantsGroundBeef && !/\b(?:hache|hachee|ground|minced)\b/.test(name)) return null;
@@ -2719,7 +2724,7 @@ function formatSleepDuration(hours) {
     }
     const official = suitable(window.ENERGIE_CNF_SEARCH?.find?.(segment));
     if (official) return official;
-    return safeLegacy || suitable(best?.food) || null;
+    return suitable(safeLegacy) || suitable(best?.food) || null;
   }
   function mealQuantityNumber(value) {
     const text = String(value || "").trim().replace(",", ".");
@@ -3138,6 +3143,7 @@ function formatSleepDuration(hours) {
         basis: `${recognizedDish.name} · recette habituelle`,
         estimated: true,
       });
+    if (mealNutritionRecognition(text).unrecognized.length) return null;
     const segments = splitMealIngredients(text);
     if (!segments.length) {
       if (!recognizedDish?.nutrition) return null;

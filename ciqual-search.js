@@ -15,8 +15,9 @@
   const strip=text=>cnf.stripQuantity?cnf.stripQuantity(text):normalize(text);
   function score(row,text){
     const query=strip(text), name=normalize(row[1]);
-    if(!query||query.length<3||!Number.isFinite(row[2]))return -Infinity;
-    const qt=words(query),nt=words(name),base=normalize(row[1].split(',')[0]);
+    if(!query||query.length<3||!Number.isFinite(row[2])||!cnf.isCandidateAllowed(text,row[1]))return -Infinity;
+    const singular=v=>v.length>3&&v.endsWith('s')?v.slice(0,-1):v;
+    const qt=words(query).map(singular),nt=words(name).map(singular),base=normalize(row[1].split(',')[0]);
     if(!qt.length||!qt.every(t=>nt.includes(t)))return -Infinity;
     const wanted=state(query),candidate=state(name);
     if(wanted && candidate && wanted!==candidate)return -Infinity;
@@ -52,7 +53,11 @@
       cnfFoodId:PREFIX+row[0],cnfNameFr:row[1],sourceVersion:'2025'};
   }
   function find(text){
-    const row=rank(text,1)[0];if(!row)return null;
+    if(cnf.requiresClarification(text))return null;
+    const candidates=rank(text,2),row=candidates[0];if(!row)return null;
+    const second=candidates[1];
+    if(second && score(row,text)-score(second,text)<45 &&
+       Math.abs(row[2]-second[2])>Math.max(10,row[2]*0.2))return null;
     // Une référence par 100 g n'est PAS une portion visuellement inférée.
     // Une quantité explicitement précisée en grammes peut toutefois être appliquée.
     const explicit=String(text).match(/\b(\d+(?:[.,]\d+)?)\s*(kg|g|grammes?)\b/i);
