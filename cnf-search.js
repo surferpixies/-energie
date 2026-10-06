@@ -71,6 +71,15 @@
       !/\b(cru[e]?s?|cuit[e]?s?|cooked|raw|secs?|seche[e]?s?|dry|dried|bouilli[e]?s?|boiled|roti[e]?s?|grille[e]?s?|roasted|conserve|canned|eau|water|huile|oil)\b/.test(query);
   }
 
+  function naturalCount(text) {
+    if (quantityKind(text)) return null;
+    const match = normalize(text).match(/^(\d+(?:[.,]\d+)?|un|une|one|deux|two|trois|three)\s+/);
+    if (!match) return null;
+    const words = { un: 1, une: 1, one: 1, deux: 2, two: 2, trois: 3, three: 3 };
+    const count = words[match[1]] ?? Number(match[1]);
+    return Number.isFinite(count) && count > 0 ? count : null;
+  }
+
   function quantityKind(text) {
     const n = normalize(text);
     if (/\b(?:kg|g|gramme|grammes|grams)\b/.test(n)) return "g";
@@ -146,7 +155,7 @@
     let score = -Infinity;
 
     for (const alias of aliases) {
-      if (query === alias) score = Math.max(score, alias === d.fr || alias === d.en ? 1200 : 900);
+      if (foodTokens(query).join(" ") === foodTokens(alias).join(" ")) score = Math.max(score, alias === d.fr || alias === d.en ? 1200 : 900);
       else if ((` ${query} `).includes(` ${alias} `)) score = Math.max(score, 720 + alias.split(" ").length * 20);
       else if ((` ${alias} `).includes(` ${query} `) && query.split(" ").length >= 2) score = Math.max(score, 620 + query.split(" ").length * 20);
     }
@@ -202,7 +211,7 @@
       : kind === "tbsp" ? /\b15 ml\b/
       : kind === "tsp" ? /\b5 ml\b/
       : null;
-    if (!wanted) return portions[0] || null;
+    if (!wanted) return null;
     return portions.find((p) => wanted.test(normalize(`${p?.[1] || ""} ${p?.[2] || ""}`))) || null;
   }
 
@@ -259,7 +268,16 @@
     let portion = `${grams} g`;
 
     if (kind !== "g" && !(kind == null && requestedDefaultGrams != null)) {
-      const selected = findPortion(row, kind);
+      const count = naturalCount(text);
+      const countPortions = count == null ? [] : (Array.isArray(portions) ? portions : []).filter(p =>
+        /^1\s/.test(normalize(p?.[1])) &&
+        !/\b(ml|g|kg|tasse|cup|tbsp|tsp|bol|bowl)\b/.test(normalize(p?.[1])) &&
+        /\b(fruit|oeuf|egg|tranche|slice|piece|morceau|filet|fillet)\b/.test(normalize(p?.[1])));
+      const size = normalize(text).match(/\b(petit|petite|small|gros|grosse|large|moyen|moyenne|medium)\b/)?.[1];
+      const selected = count != null
+        ? countPortions.find(p => size ? normalize(p[1] + " " + p[2]).includes(size) : /\b(moyen|medium)\b/.test(normalize(p[1] + " " + p[2]))) || (!size ? countPortions[0] : null)
+        : findPortion(row, kind);
+      if (count != null && !selected) return null;
       if (selected && Number(selected[0]) > 0) {
         grams = Number(selected[0]);
         portion = kind === "cup" ? "1 tasse"
@@ -322,6 +340,9 @@
     if (!Array.isArray(items) || items.length < 2) return null;
 
     const foods = items.map(({ row }) => foodFromRow(row, text));
+    if (foods.some(food => !food)) return null;
+    if (naturalCount(text) != null && foods.some(food =>
+        food.portion !== foods[0].portion || food.gramsPerPortion !== foods[0].gramsPerPortion)) return null;
     const nutrientKeys = ["calories", "protein", "carbs", "fat", "fiber", "sugars", "sodium"];
     const averaged = { ...foods[0] };
 
@@ -536,6 +557,7 @@
     quantityKind,
     isCandidateAllowed,
     requiresClarification,
+    naturalCount,
   });
   root.ENERGIE_CNF_SEARCH = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

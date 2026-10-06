@@ -2703,7 +2703,8 @@ function formatSleepDuration(hours) {
       if (!checked) return null;
       // Une quantité mesurée ne peut pas devenir silencieusement « 1 assiette ».
       const entered = mealQuantityFromText(segment);
-      if (entered && !nutritionScaleForSegment(segment, checked).quantityUsed) return null;
+      if ((entered || mealNaturalCountFromText(segment) != null) &&
+          !nutritionScaleForSegment(segment, checked).quantityUsed) return null;
       const name = normalizeFoodText(checked.cnfNameFr || checked.ciqualNameFr || checked.keys?.[0] || '');
       const guard = window.ENERGIE_CNF_SEARCH?.isCandidateAllowed;
       const referenceNames = checked.cnfNameFr || checked.ciqualNameFr
@@ -2806,38 +2807,25 @@ function formatSleepDuration(hours) {
         ? { scale, quantityUsed: true, quantityKind: "measured", enteredQuantity: entered }
         : { scale: 1, quantityUsed: false };
     }
+    if (entered) return { scale: 1, quantityUsed: false, quantityKind: "unresolved-measure", enteredQuantity: entered };
     const naturalCount = mealNaturalCountFromText(segment);
-    const naturalSegmentText = normalizeFoodText(segment);
-    const explicitFiletCount = /\b(filet|filets|fillet|fillets)\b/.test(naturalSegmentText);
-    if (naturalCount != null && (naturalCount <= 20 || (explicitFiletCount && naturalCount <= 50))) {
+    if (naturalCount != null) {
       // FCÉN rows with a portion such as "1 egg" / "1 slice" are already
       // expressed per natural portion. A bare leading count therefore scales
       // that portion directly instead of being ignored.
       const portionText = normalizeFoodText(food?.portion || "");
       const segmentText = normalizeFoodText(segment);
-      const countablePortion = /\b(oeuf|egg|tranche|slice|piece|morceau|fruit|pomme|apple|banane|banana|filet|fillet)\b/.test(portionText);
-      const countableFood = /\b(oeuf|oeufs|egg|eggs)\b/.test(segmentText);
-      const sliceCount = /\b(tranche|tranches|slice|slices)\b/.test(segmentText);
+      const countReference = portionText.match(/^(\d+(?:[.,]\d+)?)\s+/);
+      const countablePortion = !!countReference &&
+        !/\b(ml|g|kg|tasse|cup|tbsp|tsp|bol|bowl)\b/.test(portionText) &&
+        /\b(oeufs?|eggs?|tranches?|slices?|pieces?|morceaux?|fruits?|pommes?|apples?|bananes?|bananas?|filets?|fillets?)\b/.test(portionText);
       const filetCount = /\b(filet|filets|fillet|fillets)\b/.test(segmentText);
       // Never invent a filet weight when the FCÉN row is only per 100 g.
       if (filetCount && !/\b(filet|fillet)\b/.test(portionText)) {
         return { scale: 1, quantityUsed: false, quantityKind: "unresolved-count", enteredCount: naturalCount, unresolvedUnit: "filet" };
       }
-      if (countablePortion || countableFood || sliceCount || (filetCount && /\b(filet|fillet)\b/.test(portionText))) {
-        if (sliceCount && !countablePortion && Number(food?.gramsPerPortion) === 100) {
-          // The FCÉN full-catalog fallback is per 100 g. A bread slice needs an
-          // explicit portion conversion; 30 g is used only for an explicit
-          // "tranche/slice" count, never for generic bread text.
-          const gramsPerSlice = 30;
-          return {
-            scale: (naturalCount * gramsPerSlice) / 100,
-            quantityUsed: true,
-            quantityKind: "count",
-            enteredCount: naturalCount,
-            interpretedGrams: naturalCount * gramsPerSlice,
-          };
-        }
-        return { scale: naturalCount, quantityUsed: true, quantityKind: "count", enteredCount: naturalCount };
+      if (countablePortion) {
+        return { scale: naturalCount / Number(countReference[1]), quantityUsed: true, quantityKind: "count", enteredCount: naturalCount };
       }
     }
     return { scale: 1, quantityUsed: false };

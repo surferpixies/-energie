@@ -53,7 +53,7 @@
       cnfFoodId:PREFIX+row[0],cnfNameFr:row[1],sourceVersion:'2025'};
   }
   function find(text){
-    if(cnf.requiresClarification(text))return null;
+    if(cnf.requiresClarification(text)||cnf.naturalCount(text)!=null)return null;
     const candidates=rank(text,2),row=candidates[0];if(!row)return null;
     const second=candidates[1];
     if(second && score(row,text)-score(second,text)<45 &&

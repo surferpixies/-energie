@@ -65,6 +65,9 @@ const context = {
  legacyFoodWithAlias: () => null,
 };
 vm.createContext(context);
+const normalizeStart = source.indexOf('  function normalizeFoodText(');
+const normalizeEnd = source.indexOf('  const FOOD_CANDIDATES =', normalizeStart);
+vm.runInContext(source.slice(normalizeStart, normalizeEnd), context);
 const quantityStart = source.indexOf('  function mealQuantityNumber(');
 const quantityEnd = source.indexOf('  function mealNutritionRecognition(', quantityStart);
 vm.runInContext(source.slice(quantityStart, quantityEnd), context);
@@ -88,6 +91,34 @@ context.FOOD_CANDIDATES = [{compareKey:'alimenttest',food:{keys:['alimenttest'],
 assert.equal(context.foodMatchForSegment('250 g alimenttest'), null);
 assert.ok(cnf.find('120 g spaghettis secs'));
 assert.equal(cnf.isCandidateAllowed('spaghetti cuit', 'Spaghetti avec boulettes de viande, cuit'), false);
+// Les unités comptées doivent utiliser une portion unitaire documentée,
+// pas 100 ml de tranches ou une référence de 100 g.
+for (const locale of ['fr-CA', 'fr-FR']) {
+ global.ENERGIE_LOCALE = locale;
+ context.window.ENERGIE_CNF_SEARCH = global.ENERGIE_CNF_SEARCH;
+ let previous = null;
+ for (const count of [1, 2, 10, 20, 21, 50]) {
+  const input = `${count} ${count === 1 ? "pomme" : "pommes"}`;
+  const food = context.foodMatchForSegment(input);
+  assert.ok(food, `${locale}: ${input}`);
+  assert.match(food.portion, /^1 fruit moyen/);
+  assert.equal(food.gramsPerPortion, 182);
+  const quantity = context.nutritionScaleForSegment(input, food);
+  assert.equal(quantity.quantityUsed, true);
+  assert.equal(quantity.scale, count);
+  const calories = food.calories * quantity.scale;
+  assert.ok(Math.abs(calories - 94.64 * count) < 0.00001);
+  if (previous != null) assert.ok(calories > previous);
+  previous = calories;
+ }
+}
+const slicedApple = {keys:['pomme'],calories:24,portion:'100 ml tranches',gramsPerPortion:46};
+assert.equal(context.nutritionScaleForSegment('1 pomme', slicedApple).quantityUsed, false);
+assert.equal(context.nutritionScaleForSegment('50 pommes', slicedApple).quantityUsed, false);
+const threeDates = {keys:['datte'],calories:133,portion:'3 fruits',gramsPerPortion:50};
+assert.equal(context.nutritionScaleForSegment('6 dattes', threeDates).scale, 2);
+assert.equal(context.nutritionScaleForSegment('5 g alimenttest', {portion:'1 assiette'}).quantityUsed, false);
+assert.equal(cnf.find('1 banane'), null); // Pas de poids unitaire inventé.
 const estimateStart = source.indexOf('  function estimateNutritionFromText(');
 const estimateEnd = source.indexOf('    const segments = splitMealIngredients(text);', estimateStart);
 vm.runInContext(source.slice(estimateStart, estimateEnd) + ' return 123; }', context);
