@@ -40,7 +40,7 @@
       .replace(/^(?:\d+(?:[.,]\d+)?|un|une|one|deux|two|trois|three|quatre|four|cinq|five|six|sept|seven|huit|eight|neuf|nine|dix|ten)\s+/, "")
       // "filet(s) de X" describes the cut/portion. X must drive the FCÉN match.
       // Run this AFTER removing the leading count: "2 filets de sole" -> "sole".
-      .replace(/^(?:filet|filets|fillet|fillets)\s+(?:de|des|du|d|of)\s+/, "")
+      .replace(/^\s*(?:filet|filets|fillet|fillets)\s+(?:de|des|du|d|of)\s+/, "")
       .replace(/\b(?:de|des|du|d|un|une|le|la|les)\b/g, " ")
       .replace(/\s+/g, " ")
       .trim();
@@ -68,15 +68,24 @@
     const preparation = ["seche", "sechee", "sec", "dry", "dried", "dehydrate", "deshydrate", "conserve", "canned", "frit", "frite", "fried", "roti", "rotie", "roasted", "bouilli", "bouillie", "boiled", "cuit", "cuite", "cooked", "huile", "oil"];
     if (!allowPreparationChoice && tokens.some(word => preparation.includes(word) && !query.has(word))) {
       const wanted = states(text), candidate = states(name);
-      if (!wanted.length || !wanted.some(state => candidate.includes(state))) return false;
+      if (!wanted.length || stateCompatibility(wanted, candidate).bonus < 0) return false;
     }
     // La recherche guidée peut proposer des variantes de conservation ou
     // d'espèce, sans autoriser les ingrédients d'une recette composée.
     const fishDescriptors = new Set(["pale", "blanche", "blanc", "jaune", "nageoire", "yellowfin", "bluefin", "white", "light"]);
     const guidedFish = allowPreparationChoice && ["thon", "tuna"].some(word => query.has(word));
+    // Les morceaux de volaille et les teneurs du cottage sont des variantes
+    // du même aliment, pas des ingrédients de recettes.
+    const chicken = query.has("poulet") || query.has("chicken");
+    const chickenDescriptors = new Set("viande meat poitrine breast blanc white brune dark cuisse thigh pilon drumstick aile wing griller broiler desosse boneless stewed etuvee light only seulement crue cuite".split(" "));
+    const cottage = query.has("cottage");
+    if (cottage && tokens.some(word => ["fruit", "legume", "vegetable"].includes(word) && !query.has(word))) return false;
+    const cottageDescriptors = new Set("fromage cheese creme creamed m f faible low reduit reduced lactose lipide pressed presse curd gros petit large small grain uncreamed".split(" "));
     const guidedPreparation = new Set(["dans", "l", "huile", "oil"]);
     return tokens.length > 0 && tokens.every(word => query.has(word) || neutralWords.has(word) ||
-      guidedFish && (fishDescriptors.has(word) || guidedPreparation.has(word)));
+      guidedFish && (fishDescriptors.has(word) || guidedPreparation.has(word)) ||
+      chicken && chickenDescriptors.has(word) ||
+      cottage && (cottageDescriptors.has(word) || /^\d+$/.test(word)));
   }
   function requiresClarification(text) {
     const query = stripQuantity(text);
@@ -177,7 +186,7 @@
     // Le FCÉN nomme souvent les aliments comme « Poisson, tilapia, ... ».
     // Permettre un nom simple (« tilapia ») s'il apparaît comme mot entier,
     // tout en laissant l'étape d'ambiguïté refuser les correspondances serrées.
-    const queryWords = foodTokens(query).filter((word) => word.length >= 3);
+    const queryWords = foodTokens(query).filter((word) => word.length >= 3 && !Object.values(stateWords).flat().includes(word));
     const candidateText = ` ${foodTokens(meta.candidateText).join(" ")} `;
     if (queryWords.length && queryWords.every((word) => candidateText.includes(` ${word} `))) {
       score = Math.max(score, 690 + queryWords.length * 35);
@@ -494,6 +503,10 @@
     const q = normalize(query);
     if (["oeuf","oeufs","egg","eggs"].includes(q))
       return ["125","130","133","129","132"];
+    if (["poulet", "filet de poulet", "chicken"].includes(q))
+      return ["842", "841", "567", "565"];
+    if (["cottage", "fromage cottage"].includes(q))
+      return ["120", "107", "25", "27"];
     if (["riz","rice"].includes(q))
       return ["4475","4473"];
     return [];

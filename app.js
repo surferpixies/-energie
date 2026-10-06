@@ -3764,8 +3764,11 @@ function formatSleepDuration(hours) {
       list.innerHTML = "";
       return;
     }
-    notice.textContent = `ⓘ Estimation à préciser · ${items.length} élément${items.length > 1 ? "s" : ""} à vérifier`;
-    list.innerHTML = items.map((item) => `<div class="meal-calorie-unrecognized-item"><span aria-hidden="true">?</span><div><strong>${esc(item)}</strong><small>Aucune valeur calorique n’a pu être associée à cet élément.</small></div></div>`).join("");
+    const preparationMissing = items.some(item => window.ENERGIE_CNF_SEARCH?.requiresClarification?.(item));
+    notice.textContent = preparationMissing
+      ? "ⓘ Précise cru/cuit ou choisis la préparation dans la saisie guidée"
+      : `ⓘ Estimation à préciser · ${items.length} élément${items.length > 1 ? "s" : ""} à vérifier`;
+    list.innerHTML = items.map((item) => `<div class="meal-calorie-unrecognized-item"><span aria-hidden="true">?</span><div><strong>${esc(item)}</strong><small>${window.ENERGIE_CNF_SEARCH?.requiresClarification?.(item) ? "Précise la préparation (cru, cuit, sec ou en conserve), puis la quantité, ou utilise la saisie guidée." : "Aucune valeur calorique n’a pu être associée à cet élément."}</small></div></div>`).join("");
   }
   function openMealCalorieRecognition() {
     updateMealCalorieRecognition();

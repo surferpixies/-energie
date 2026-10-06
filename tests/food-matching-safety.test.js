@@ -151,3 +151,24 @@ for (const locale of ['fr-CA', 'fr-FR']) {
  assert.equal(global.ENERGIE_CNF_SEARCH.find('1 skyr coco'), null);
  assert.equal(global.ENERGIE_CNF_SEARCH.search('skyr').length, 0);
 }
+
+// Régressions : les descripteurs d'un aliment simple ne sont pas des recettes.
+for (const locale of ['fr-CA', 'fr-FR']) {
+ global.ENERGIE_LOCALE = locale;
+ const api = global.ENERGIE_CNF_SEARCH;
+ for (const query of ['poulet', 'filet de poulet']) {
+  const choices = api.search(query, 12);
+  assert.ok(choices.some(row => /cru/.test(row.nameFr)), `${locale}: ${query} cru`);
+  assert.ok(choices.some(row => /rôti|cuit/.test(row.nameFr)), `${locale}: ${query} cuit`);
+  assert.ok(choices.every(row => !/soupe|nouille|sauce|pâte à frire/.test(row.nameFr)));
+ }
+ const cottage = api.search('cottage', 12);
+ assert.ok(cottage.some(row => /2%/.test(row.nameFr)));
+ assert.ok(cottage.some(row => /1%/.test(row.nameFr)));
+ assert.ok(cottage.every(row => !/avec fruits|avec légumes|pomme de terre/.test(row.nameFr)));
+ assert.equal(api.find('filet de poulet'), null);
+ assert.ok(api.find('150 g filet de poulet cuit'), locale);
+ assert.ok(api.find('150 g filet de poulet cru'), locale);
+}
+assert.equal(cnf.isCandidateAllowed('cottage', 'Fromage cottage avec fruits', {allowPreparationChoice:true}), false);
+assert.equal(cnf.isCandidateAllowed('poulet', 'Poulet, soupe avec nouilles', {allowPreparationChoice:true}), false);
