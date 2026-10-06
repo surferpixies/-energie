@@ -1,4 +1,7 @@
-.meal-entry-guide-link{display:block;margin:6px 0 10px;padding:4px 0;color:var(--accent);text-align:left;font-size:.78rem;text-decoration:underline;text-underline-offset:3px;min-height:36px}
+.meal-description-help-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex:0 0 auto;margin-left:auto}
+.meal-description-label-row>label{min-width:0}
+.meal-entry-guide-link{display:block;margin:0;padding:4px 0;color:var(--accent);text-align:right;font-size:.72rem;text-decoration:underline;text-underline-offset:3px;min-height:36px;max-width:165px;line-height:1.35}
+@media(max-width:420px){.meal-entry-guide-link{max-width:112px;font-size:.68rem}.meal-description-label-row{gap:8px}}
 .meal-entry-guide-dialog{width:min(600px,calc(100vw - 24px));max-width:600px}
 .meal-entry-guide-card{width:100%;max-width:600px;max-height:85dvh;overflow:auto;overscroll-behavior:contain;font-size:.9rem;line-height:1.55}
 .meal-entry-guide-card h2{font-size:1.35rem}

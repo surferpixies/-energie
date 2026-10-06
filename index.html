@@ -16,7 +16,7 @@
     #splashScreen{position:fixed;inset:0;background:#eef8e7;}
   </style>
   <link rel="stylesheet" href="styles.css?v=3.56.154">
-  <link rel="stylesheet" href="meal-entry-guide.css?v=3.56.166">
+  <link rel="stylesheet" href="meal-entry-guide.css?v=3.56.167">
   <link rel="stylesheet" href="portrait.css?v=3.56.21">
   <link rel="stylesheet" href="observation-detail.css?v=3.56.21">
   <link rel="stylesheet" href="personal-metrics.css?v=3.56.21">
@@ -160,8 +160,7 @@
       </dialog>
       <section id="mealCalorieTargetGauge" class="meal-calorie-target-gauge" hidden aria-live="polite"></section>
       <div class="meal-description-field">
-        <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div>
-        <button type="button" id="openMealEntryGuide" class="text-button meal-entry-guide-link" aria-haspopup="dialog" aria-controls="mealEntryGuideDialog" data-i18n-skip>Guide pour entrer mon repas</button>
+        <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><div class="meal-description-help-actions"><button type="button" id="openMealEntryGuide" class="text-button meal-entry-guide-link" aria-haspopup="dialog" aria-controls="mealEntryGuideDialog" data-i18n-skip>Guide pour entrer mon repas</button><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div></div>
         <div class="meal-description-composer">
           <textarea id="mealDescription" maxlength="1000" aria-describedby="mealDescriptionLimit" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli" required></textarea>
           <small id="mealDescriptionLimit" class="muted tiny">Description du repas · 1 000 caractères maximum</small>
