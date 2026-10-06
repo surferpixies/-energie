@@ -64,6 +64,12 @@
   };
   function isCandidateAllowed(text, name, { allowPreparationChoice = false } = {}) {
     const query = new Set(foodTokens(text));
+    // Sans indication, le poulet décrit un aliment prêt à manger.
+    // Une mention explicite de cru garde la référence crue.
+    if ((query.has("poulet") || query.has("chicken")) && !states(text).length) {
+      text = `${text} cuit`;
+      query.add("cuit");
+    }
     const tokens = foodTokens(String(name).split(" · ")[0]);
     const preparation = ["seche", "sechee", "sec", "dry", "dried", "dehydrate", "deshydrate", "conserve", "canned", "frit", "frite", "fried", "roti", "rotie", "roasted", "bouilli", "bouillie", "boiled", "cuit", "cuite", "cooked", "huile", "oil"];
     if (!allowPreparationChoice && tokens.some(word => preparation.includes(word) && !query.has(word))) {
@@ -90,7 +96,7 @@
   function requiresClarification(text) {
     const query = stripQuantity(text);
     // Le poids sec/cuit et la conservation changent fortement les apports.
-    return /\b(pates?|spaghettis?|macaronis?|pasta|riz|rice|poulet|chicken|thon|tuna)\b/.test(query) &&
+    return /\b(pates?|spaghettis?|macaronis?|pasta|riz|rice|thon|tuna)\b/.test(query) &&
       !/\b(cru[e]?s?|cuit[e]?s?|cooked|raw|secs?|seche[e]?s?|dry|dried|bouilli[e]?s?|boiled|roti[e]?s?|grille[e]?s?|roasted|conserve|canned|eau|water|huile|oil)\b/.test(query);
   }
 

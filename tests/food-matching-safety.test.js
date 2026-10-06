@@ -41,7 +41,7 @@ for (const input of ['tomate', 'tomates', '250 g tomates', 'carotte', 'carottes'
 }
 for (const locale of ['fr-CA', 'fr-FR']) {
  global.ENERGIE_LOCALE = locale;
- for (const input of ['120 g pâtes', '120 g spaghettis', '250 g spaghettis', 'riz', '140 g thon', '100 g poulet'])
+ for (const input of ['120 g pâtes', '120 g spaghettis', '250 g spaghettis', 'riz', '140 g thon'])
   assert.equal(global.ENERGIE_CNF_SEARCH.find(input), null, `${locale}: ${input}`);
 }
 assert.ok(cnf.isCandidateAllowed('vinaigrette bacon tomates', 'Vinaigrette, bacon et tomates'));
@@ -166,9 +166,21 @@ for (const locale of ['fr-CA', 'fr-FR']) {
  assert.ok(cottage.some(row => /2%/.test(row.nameFr)));
  assert.ok(cottage.some(row => /1%/.test(row.nameFr)));
  assert.ok(cottage.every(row => !/avec fruits|avec légumes|pomme de terre/.test(row.nameFr)));
- assert.equal(api.find('filet de poulet'), null);
+ assert.ok(api.find('filet de poulet'));
+ assert.ok(/rôti|cuit/.test(api.find('filet de poulet').cnfNameFr));
+ assert.equal(api.find('150 g poulet').calories, api.find('100 g poulet').calories); // référence par 100 g; quantité appliquée par le repas
  assert.ok(api.find('150 g filet de poulet cuit'), locale);
  assert.ok(api.find('150 g filet de poulet cru'), locale);
 }
 assert.equal(cnf.isCandidateAllowed('cottage', 'Fromage cottage avec fruits', {allowPreparationChoice:true}), false);
 assert.equal(cnf.isCandidateAllowed('poulet', 'Poulet, soupe avec nouilles', {allowPreparationChoice:true}), false);
+
+context.window.ENERGIE_CNF_SEARCH = cnf;
+for (const grams of [120, 250]) {
+ const input = `${grams} g filet de poulet`;
+ const food = context.foodMatchForSegment(input);
+ assert.ok(food, input);
+ assert.match(food.cnfNameFr, /rôti|cuit/);
+ assert.equal(context.nutritionScaleForSegment(input, food).scale, grams / 100);
+}
+assert.match(context.foodMatchForSegment('150 g filet de poulet cru').cnfNameFr, /cru/);
