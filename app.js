@@ -2701,6 +2701,9 @@ function formatSleepDuration(hours) {
     function suitable(candidate) {
       const checked = checkedCatalogFood(candidate);
       if (!checked) return null;
+      // Une quantité mesurée ne peut pas devenir silencieusement « 1 assiette ».
+      const entered = mealQuantityFromText(segment);
+      if (entered && !nutritionScaleForSegment(segment, checked).quantityUsed) return null;
       const name = normalizeFoodText(checked.cnfNameFr || checked.ciqualNameFr || checked.keys?.[0] || '');
       const guard = window.ENERGIE_CNF_SEARCH?.isCandidateAllowed;
       const referenceNames = checked.cnfNameFr || checked.ciqualNameFr

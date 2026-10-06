@@ -23,13 +23,13 @@
   const findCache = new Map();
 
   const stateWords = {
-    raw: ["cru", "crue", "raw"],
-    cooked: ["cuit", "cuite", "cooked"],
+    raw: ["cru", "crue", "crus", "crues", "raw"],
+    cooked: ["cuit", "cuite", "cuits", "cuites", "cooked"],
     boiled: ["bouilli", "bouillie", "boiled"],
     fried: ["frit", "frite", "fried"],
     baked: ["four", "grille", "grillee", "baked", "broiled", "roasted", "roti", "rotie"],
     canned: ["conserve", "canned"],
-    dried: ["seche", "sechee", "dried", "dehydrate", "dehydrated"],
+    dried: ["sec", "secs", "seche", "sechee", "seches", "sechees", "dry", "dried", "dehydrate", "dehydrated"],
     frozen: ["surgele", "surgelee", "frozen"],
   };
 
@@ -48,9 +48,11 @@
 
   // Contrat commun FCÉN/Ciqual : tout terme alimentaire supplémentaire
   // doit être écrit. Seuls les descripteurs neutres de la fiche sont permis.
-  const neutralWords = new Set(("rouge verte vert jaune mure mur moyenne durant toute annee ronde cerise orange cru crue cuit cuite frais fraiche raw cooked fresh poisson fish fruit legume vegetable aliment moyen toutes variete varietes espece especes peau pelure sans avec et ou a au aux de du des le la les en entier entiere tranche tranches morceau morceaux partie comestible pulpe chair graine graines pepin pepins removed skin peeled average all varieties species edible portion water eau egoutte egouttee drained bouilli bouillie boiled roti rotie roasted grille grillee baked broiled conserve canned surgele surgelee frozen seche sechee dried non prepare preparee preparation sel salt ajoute ajoutee added teneur matiere grasse gras fat pour cent percent mg g ml" ).split(" "));
+  const neutralWords = new Set(("rouge verte vert jaune mure mur moyenne durant toute annee ronde cerise orange cru crue cuit cuite frais fraiche raw cooked fresh poisson fish fruit legume vegetable aliment moyen toutes variete varietes espece especes peau pelure sans avec et ou a au aux de du des le la les en entier entiere tranche tranches morceau morceaux partie comestible pulpe chair graine graines pepin pepins removed skin peeled average all varieties species edible portion water eau egoutte egouttee drained bouilli bouillie boiled roti rotie roasted grille grillee baked broiled conserve canned enrichi enriched surgele surgelee frozen sec secs dry seche sechee dried non prepare preparee preparation sel salt ajoute ajoutee added teneur matiere grasse gras fat pour cent percent mg g ml" ).split(" "));
   const foodTokens = value => stripQuantity(value).split(" ")
     .map(word => word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word)
+    // Formes de pâtes nature : une précision de forme n'ajoute aucun ingrédient.
+    .map(word => ["spaghetti", "macaroni", "pasta", "pate"].includes(word) ? "pate" : word)
     .filter(Boolean);
   function isCandidateAllowed(text, name) {
     const query = new Set(foodTokens(text));
@@ -65,8 +67,8 @@
   function requiresClarification(text) {
     const query = stripQuantity(text);
     // Le poids sec/cuit et la conservation changent fortement les apports.
-    return /\b(pates?|riz|pasta|rice|poulet|chicken|thon|tuna)\b/.test(query) &&
-      !/\b(cru|crue|cuit|cuite|cooked|raw|sec|seche|sechee|dry|dried|bouilli|bouillie|boiled|roti|rotie|grille|grillee|roasted|conserve|canned|eau|water|huile|oil)\b/.test(query);
+    return /\b(pates?|spaghettis?|macaronis?|pasta|riz|rice|poulet|chicken|thon|tuna)\b/.test(query) &&
+      !/\b(cru[e]?s?|cuit[e]?s?|cooked|raw|secs?|seche[e]?s?|dry|dried|bouilli[e]?s?|boiled|roti[e]?s?|grille[e]?s?|roasted|conserve|canned|eau|water|huile|oil)\b/.test(query);
   }
 
   function quantityKind(text) {
@@ -83,7 +85,7 @@
     const n = normalize(text);
     if (stateCache.has(n)) return stateCache.get(n);
     const result = Object.entries(stateWords)
-      .filter(([, words]) => words.some((word) => n.includes(word)))
+      .filter(([, words]) => words.some((word) => (` ${n} `).includes(` ${word} `)))
       .map(([key]) => key);
     if (stateCache.size > 500) stateCache.clear();
     stateCache.set(n, result);
