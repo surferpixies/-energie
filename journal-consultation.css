@@ -23,8 +23,12 @@
 .consultation-sleep-details summary{cursor:pointer;color:var(--muted)}
 .consultation-event .meal-feeling-simple-item{display:inline-flex;align-items:baseline;gap:6px;margin:3px 12px 3px 0}
 .consultation-event .meal-feeling-simple-item b{margin-left:2px;white-space:nowrap}
-.consultation-meal-photos{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:12px 0}
-.consultation-meal-photos img{width:100%;height:180px;object-fit:contain;border-radius:12px;background:var(--surface2);cursor:zoom-in}
+.consultation-meal-content:has(.consultation-meal-photos img){display:grid;grid-template-columns:minmax(0,38%) minmax(0,1fr);column-gap:14px;align-items:start}
+.consultation-meal-content:has(.consultation-meal-photos img)>.consultation-event-heading{grid-column:1/-1}
+.consultation-meal-content:has(.consultation-meal-photos img)>p,.consultation-meal-content:has(.consultation-meal-photos img)>.consultation-entry-open{grid-column:2}
+.consultation-meal-content:has(.consultation-meal-photos img)>p:first-of-type{margin-top:0}
+.consultation-meal-photos{display:grid;grid-column:1;grid-row:2/span 5;gap:8px;margin:0}
+.consultation-meal-photos img{width:100%;height:auto;max-height:180px;object-fit:contain;border-radius:12px;background:var(--surface2);cursor:zoom-in}
 .consultation-meal-photos:empty{display:none}
 .consultation-entry-open{display:block;border:0;padding:0;background:transparent;color:var(--accent);font-size:.78rem;font-weight:700;margin:10px 0 0}
 .consultation-meal-reasons{border-top:1px solid var(--border);padding-top:10px;font-size:.85rem}
