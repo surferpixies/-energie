@@ -8,14 +8,14 @@ const scores = (meal, period) => period === 'before' ? meal.feelingsBefore || {}
 const breakfast = {id:'b',type:'Déjeuner',time:'08:00',description:'Toast',feelingsBefore:{hunger:0},feelingsBeforeQuality:{recordedAt:'2026-10-07T11:50:00Z'},feeling:{scores:{energy:4},recordedAt:'2026-10-07T13:00:00Z'}};
 const day = {meals:[{id:'l',type:'Dîner',time:'12:30'},breakfast,{id:'s',type:'Collation',time:'10:00'}, {id:'s2',type:'Collation',time:'15:00'}, {id:'l2',type:'Dîner',time:'13:00'}],activities:[{id:'a',type:'Marche',minutes:20,at:'2026-10-07T12:30:00Z'}]};
 const original = JSON.stringify(day);
-assert.deepEqual(timeline.events(day,date,scores).map(e=>`${e.kind}:${e.meal?.id||e.activity.id}`), ['before:b','meal:b','activity:a','after:b','meal:s','meal:l','meal:l2','meal:s2']);
+assert.deepEqual(timeline.events(day,date,scores).map(e=>`${e.kind}:${e.meal?.id||e.activity.id}`), ['meal:b','activity:a','meal:s','meal:l','meal:l2','meal:s2']);
 assert.equal(JSON.stringify(day),original,'La vue ne modifie pas le journal');
 const legacy = {id:'old',time:'08:00',feelingsBefore:{pain:2},feeling:{notes:'note',scores:{pain:3}}};
 const old = timeline.events({meals:[legacy],activities:[{id:'untimed'}]},date,scores);
-assert.deepEqual(old.map(e=>e.kind),['before','meal','after','activity']);
-assert.equal(old[0].at,null);
-assert.equal(old[2].at,null);
-assert.equal(old[3].sortAt,null);
+assert.deepEqual(old.map(e=>e.kind),['meal','activity']);
+assert.equal(old[0].before.at,null);
+assert.equal(old[0].after.at,null);
+assert.equal(old[1].sortAt,null);
 assert.equal(timeline.eventTime('25:05',date),null);
 assert.equal(timeline.eventTime('invalid',date),null);
 assert.equal(timeline.eventTime('',date),null);
@@ -27,7 +27,11 @@ const context = vm.createContext({Date, db:{settings:{journalViewMode:'consultat
 vm.runInContext(source.slice(source.indexOf('  function journalViewMode()'), source.indexOf('  function stepsGoalForDay(')),context);
 const meal={...breakfast,description:'<script>alert(1)</script>',eatingReasons:['hunger'],photos:[{url:'photo1'},{local:'photo2'},{url:'photo3'}]};
 const html=context.journalConsultationHtml({...day,sleepHours:8,sleepStartTime:'23:00',sleepEndTime:'07:00',meals:[meal]});
-assert.ok(html.indexOf('consultation-event--sleep')<html.indexOf('consultation-event--before'));
+assert.ok(html.indexOf('consultation-event--sleep')<html.indexOf('consultation-meal-feelings--before'));
+assert.ok(html.indexOf('consultation-meal-feelings--before')<html.indexOf('consultation-meal-content'));
+assert.ok(html.indexOf('consultation-meal-content')<html.indexOf('consultation-meal-feelings--after'));
+assert.ok(html.indexOf('consultation-meal-feelings--after')<html.indexOf('consultation-event--activity'));
+assert.equal((html.match(/<article class="card consultation-event consultation-event--meal"/g)||[]).length,1);
 assert.equal((html.match(/<img /g)||[]).length,3);
 assert.ok(html.includes('J’avais faim'));
 assert.ok(html.includes('Voir les détails'));
@@ -50,3 +54,14 @@ assert.equal(privateDb.days[date].meals[0].photos.length,0,'Les photos exigent l
 assert.equal(cloud.professionalDbFromCloud([daily],[remoteMeal],true).days[date].meals[0].photos.length,2);
 assert.equal(privateDb.days[date].meals[0].feeling.eatingReasons[0],'hunger');
 console.log('Consultation : heures locales, tri, collations multiples, anciennes données, photos, raisons et lecture seule OK');
+
+// Des ressentis saisis à contretemps restent dans leur repas et gardent leurs heures.
+const late={...breakfast,feelingsBeforeQuality:{recordedAt:'2026-10-07T17:00:00Z'},feeling:{scores:{pain:3},recordedAt:'2026-10-07T11:00:00Z'}};
+const grouped=timeline.events({meals:[day.meals[0],late],activities:day.activities},date,scores);
+assert.deepEqual(grouped.map(e=>e.kind),['meal','activity','meal']);
+assert.equal(new Date(grouped[0].before.at).getHours(),13);
+assert.equal(new Date(grouped[0].after.at).getHours(),7);
+const lateHtml=context.journalConsultationHtml({meals:[late]});
+assert.ok(lateHtml.indexOf('consultation-meal-feelings--before')<lateHtml.indexOf('consultation-meal-feelings--after'));
+assert.ok(lateHtml.includes('13 h 00')||lateHtml.includes('13:00'));
+assert.ok(lateHtml.includes('07 h 00')||lateHtml.includes('07:00'));

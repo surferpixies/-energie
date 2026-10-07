@@ -12,16 +12,15 @@
     const items = [];
     for (const meal of day.meals || []) {
       const at = eventTime(meal.time, date);
-      const before = scoresFor(meal, 'before');
-      if (Object.keys(before).length) {
-        const recorded = eventTime(meal.feelingsBeforeQuality?.recordedAt || meal.feeling?.beforeQuality?.recordedAt, date);
-        items.push({kind:'before', meal, scores:before, at:recorded, sortAt:recorded ?? at, rank:0});
-      }
-      items.push({kind:'meal', meal, at, sortAt:at, rank:1});
-      if (meal.feeling) {
-        const recorded = eventTime(meal.feeling.recordedAt, date);
-        items.push({kind:'after', meal, scores:scoresFor(meal, 'after'), at:recorded, sortAt:recorded ?? at, rank:2});
-      }
+      const beforeScores = scoresFor(meal, 'before');
+      // Le repas reste un seul bloc logique même si les ressentis ont été saisis plus tard.
+      const before = Object.keys(beforeScores).length
+        ? {kind:'before', meal, scores:beforeScores, at:eventTime(meal.feelingsBeforeQuality?.recordedAt || meal.feeling?.beforeQuality?.recordedAt, date), nested:true}
+        : null;
+      const after = meal.feeling
+        ? {kind:'after', meal, scores:scoresFor(meal, 'after'), at:eventTime(meal.feeling.recordedAt, date), nested:true}
+        : null;
+      items.push({kind:'meal', meal, at, sortAt:at, rank:1, before, after});
     }
     for (const activity of day.activities || []) {
       const at = eventTime(activity.at || activity.recorded_at, date);

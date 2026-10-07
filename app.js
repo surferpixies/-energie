@@ -9257,13 +9257,18 @@ function formatSleepDuration(hours) {
       content = `<p>${esc(beverage.amountMl)} ml${beverage.notes ? ` · ${esc(beverage.notes)}` : ""}</p>`;
       action = `<button type="button" class="consultation-entry-open" data-edit-beverage="${esc(beverage.id)}">${esc(t(openLabel))}</button>`;
     }
-    return `<article class="card consultation-event consultation-event--${kind}"><div class="consultation-event-heading"><h3>${esc(title)}</h3><time>${consultationTimeHtml(event.at)}</time></div>${content}${action}</article>`;
+    const heading = `<div class="consultation-event-heading"><h3>${esc(title)}</h3><time>${consultationTimeHtml(event.at)}</time></div>`;
+    if (kind === "meal") {
+      return `<article class="card consultation-event consultation-event--meal">${event.before ? journalConsultationEventHtml(event.before) : ""}<section class="consultation-meal-content">${heading}${content}${action}</section>${event.after ? journalConsultationEventHtml(event.after) : ""}</article>`;
+    }
+    if (event.nested) return `<section class="consultation-meal-feelings consultation-meal-feelings--${kind}">${heading}${content}${action}</section>`;
+    return `<article class="card consultation-event consultation-event--${kind}">${heading}${content}${action}</article>`;
   }
 
   function journalConsultationHtml(day) {
     const sleepTags = (day.sleepTags || []).map(sleepMarker).filter(Boolean).map(marker => `${marker.icon} ${esc(t(marker.label))}`).join(" · ");
     const events = window.ENERGIE_CONSULTATION.events(day, selectedDate, feelingScoresFor);
-    return `<div class="journal-consultation"><article class="card consultation-event consultation-event--sleep"><div class="consultation-event-heading"><h3>🌙 ${esc(t("Sommeil de la nuit dernière"))}</h3><strong>${day.sleepHours != null ? esc(formatSleepDuration(day.sleepHours)) : esc(t("Non consigné"))}</strong></div><div class="consultation-sleep-times">${day.sleepStartTime ? `<span>${esc(t("Coucher"))} ${esc(day.sleepStartTime)}</span>` : ""}${day.sleepEndTime ? `<span>${esc(t("Réveil"))} ${esc(day.sleepEndTime)}</span>` : ""}</div>${sleepTags ? `<p>${sleepTags}</p>` : ""}${day.sleepComment ? `<p translate="no">${esc(day.sleepComment)}</p>` : ""}<button type="button" class="consultation-entry-open edit-sleep">${esc(t(professionalClientReadOnly() ? "Voir les détails" : "Voir ou modifier"))}</button></article>${events.map(journalConsultationEventHtml).join("") || `<p class="muted small">${esc(t("Aucune entrée pour cette journée."))}</p>`}${stepsProgressHtml(day)}</div>`;
+    return `<div class="journal-consultation"><article class="card consultation-event consultation-event--sleep"><div class="consultation-event-heading"><h3>🌙 ${esc(t("Sommeil de la nuit dernière"))}</h3><strong>${day.sleepHours != null ? esc(formatSleepDuration(day.sleepHours)) : esc(t("Non consigné"))}</strong></div><div class="consultation-sleep-times">${day.sleepStartTime ? `<span>${esc(t("Coucher"))} ${esc(day.sleepStartTime)}</span>` : ""}${day.sleepEndTime ? `<span>${esc(t("Réveil"))} ${esc(day.sleepEndTime)}</span>` : ""}</div>${sleepTags || day.sleepComment ? `<details class="consultation-sleep-details"><summary>${esc(t("Détails"))}</summary>${sleepTags ? `<p>${sleepTags}</p>` : ""}${day.sleepComment ? `<p translate="no">${esc(day.sleepComment)}</p>` : ""}</details>` : ""}<button type="button" class="consultation-entry-open edit-sleep">${esc(t(professionalClientReadOnly() ? "Voir les détails" : "Voir ou modifier"))}</button></article>${events.map(journalConsultationEventHtml).join("") || `<p class="muted small">${esc(t("Aucune entrée pour cette journée."))}</p>`}${stepsProgressHtml(day)}</div>`;
   }
 
   function bindJournalConsultation() {
