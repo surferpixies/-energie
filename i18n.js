@@ -43,6 +43,11 @@
     'Langue':'Langue','Langue de l’application':'Langue de l’application','Français (Canada)':'Français (Canada)','Français (France)':'Français (France)','English':'English'
   };
   const en={
+    'Vue du journal':'Journal view','Sommaire':'Summary','Détaillée':'Detailed','Consultation':'Consultation',
+    'Heure non consignée':'Time not recorded','Ressentis avant':'Feelings before','Ressentis après':'Feelings after',
+    'Voir les détails':'View details','Voir ou modifier':'View or edit','Coucher':'Bedtime','Réveil':'Wake-up',
+    'Non consigné':'Not recorded','Aucune entrée pour cette journée.':'No entries for this day.',
+    'Qu’est-ce qui t’a amené à manger?':'What prompted you to eat?',
     'Journal':'Journal','Historique':'History','Observations':'Insights','Observations':'Insights','Profil':'Profile',
     'Déjeuner':'Breakfast','Dîner':'Lunch','Souper':'Dinner','Collation':'Snack','En-cas':'Snack','Boisson':'Drink','Repas':'Meal',
     'Mon repas':'My meal','Ajouter un repas':'Add a meal','Modifier le repas':'Edit meal','Choisir un repas favori':'Choose a favorite meal',

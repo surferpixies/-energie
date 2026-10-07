@@ -1,0 +1,18 @@
+.journal-view-options{display:flex;gap:5px;padding:5px;margin:0 0 16px;border:1px solid var(--border);border-radius:16px;background:var(--surface2)}
+.journal-view-options button{flex:1;min-width:0;padding:10px 5px;border:0;border-radius:12px;background:transparent;color:var(--text);font-size:.8rem;font-weight:750}
+.journal-view-options button[aria-pressed="true"]{background:var(--accent);color:white}
+.journal-consultation{display:grid;gap:14px}
+.consultation-event{position:relative;min-width:0;padding:16px;border-left:4px solid color-mix(in srgb,var(--accent) 55%,var(--border));margin:0}
+.consultation-event-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.consultation-event-heading h3{font-size:1rem;margin:0}
+.consultation-event-heading time{font-size:.8rem;font-weight:750;color:var(--muted);text-align:right}
+.consultation-event p{white-space:pre-line;overflow-wrap:anywhere;margin:8px 0}
+.consultation-event--before,.consultation-event--after{background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+.consultation-event .meal-feeling-simple-item{display:inline-flex;margin:3px 6px 3px 0}
+.consultation-meal-photos{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:12px 0}
+.consultation-meal-photos img{width:100%;height:180px;object-fit:contain;border-radius:12px;background:var(--surface2);cursor:zoom-in}
+.consultation-meal-photos:empty{display:none}
+.consultation-entry-open{display:block;border:0;padding:0;background:transparent;color:var(--accent);font-size:.78rem;font-weight:700;margin:10px 0 0}
+.consultation-meal-reasons{border-top:1px solid var(--border);padding-top:10px;font-size:.85rem}
+.consultation-meal-reasons strong{display:block;margin-bottom:4px}
+.consultation-sleep-times{display:flex;gap:12px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}

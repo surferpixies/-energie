@@ -946,6 +946,8 @@ function formatSleepDuration(hours) {
             ? d.sleep_tags
             : [];
         day.sleepComment = d.sleepComment ?? d.sleep_comment ?? "";
+        day.sleepStartTime = d.sleepStartTime || "";
+        day.sleepEndTime = d.sleepEndTime || "";
         day.formDrafts =
           d.formDrafts && typeof d.formDrafts === "object"
             ? { ...d.formDrafts }
@@ -1904,6 +1906,7 @@ function formatSleepDuration(hours) {
             water: d.water,
             activities: (d.activities || []).map(activityToCloud),
             supplements: {
+              sleepTiming: {start: d.sleepStartTime || "", end: d.sleepEndTime || ""},
               taken: d.supplementsTaken || [],
               beverages: d.beverages || [],
               steps: d.steps,
@@ -2224,7 +2227,7 @@ function formatSleepDuration(hours) {
     if (remoteProfilePreferences) {
       const pref = remoteProfilePreferences;
       if (Number(pref.waterGoal) > 0) db.settings.waterGoal = Math.round(Number(pref.waterGoal));
-      if (["detailed", "summary"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
+      if (["detailed", "summary", "consultation"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
       ["insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
       });
@@ -2240,6 +2243,8 @@ function formatSleepDuration(hours) {
         d.sleepHours = r.sleep_hours;
         d.sleepTags = Array.isArray(r.sleep_tags) ? r.sleep_tags : [];
         d.sleepComment = r.sleep_comment || "";
+        if (typeof r.supplements?.sleepTiming?.start === "string") d.sleepStartTime = r.supplements.sleepTiming.start;
+        if (typeof r.supplements?.sleepTiming?.end === "string") d.sleepEndTime = r.supplements.sleepTiming.end;
         d.water = r.water || 0;
         d.beverages = (Array.isArray(r.supplements?.beverages) ? r.supplements.beverages : [])
           .map((item) => normalBeverage(item, r.log_date))
@@ -2274,6 +2279,8 @@ function formatSleepDuration(hours) {
         if (d.sleepHours == null && r.sleep_hours != null) d.sleepHours = r.sleep_hours;
         if (!(d.sleepTags || []).length && Array.isArray(r.sleep_tags)) d.sleepTags = r.sleep_tags;
         if (!d.sleepComment && r.sleep_comment) d.sleepComment = r.sleep_comment;
+        if (!d.sleepStartTime && r.supplements?.sleepTiming?.start) d.sleepStartTime = r.supplements.sleepTiming.start;
+        if (!d.sleepEndTime && r.supplements?.sleepTiming?.end) d.sleepEndTime = r.supplements.sleepTiming.end;
         if (!(Number(d.water) > 0) && Number(r.water) > 0) d.water = Number(r.water);
         if (!(d.beverages || []).length && Array.isArray(r.supplements?.beverages))
           d.beverages = r.supplements.beverages
@@ -5129,6 +5136,8 @@ function formatSleepDuration(hours) {
       d.sleepHours = r.sleep_hours;
       d.sleepTags = Array.isArray(r.sleep_tags) ? r.sleep_tags : [];
       d.sleepComment = r.sleep_comment || "";
+      d.sleepStartTime = r.supplements?.sleepTiming?.start || "";
+      d.sleepEndTime = r.supplements?.sleepTiming?.end || "";
       d.water = Number(r.water) || 0;
       d.beverages = (Array.isArray(r.supplements?.beverages) ? r.supplements.beverages : []).map((item) => normalBeverage(item, r.log_date)).filter(Boolean);
       d.steps = Number.isFinite(Number(r.supplements?.steps)) ? Math.round(Number(r.supplements.steps)) : null;
@@ -6219,7 +6228,7 @@ function formatSleepDuration(hours) {
         if (!control || !control.closest("#app")) return;
         if (
           control.closest(
-            "[data-open-demo-profile],[data-open-lab-scenario],#labRandomScenario,#labNewVariant,#leaveLab,#leaveDemoProfile,#leaveDemoQuick,#switchProfessionalClientBanner,#replayDemoTour,.nav-item,.brain-proof,.why-demo-insight,#previousDay,#nextDay,#goToday,#analysisPreviousDay,#analysisNextDay,#analysisGoLatest,[data-global-observation],[data-quick-meal][data-edit-meal],.professional-followup,[data-open-trend-fullscreen],[data-close-trend-fullscreen],[data-trend-week-detail],[data-close-trend-week]",
+            "[data-journal-view],.consultation-entry-open,[data-open-demo-profile],[data-open-lab-scenario],#labRandomScenario,#labNewVariant,#leaveLab,#leaveDemoProfile,#leaveDemoQuick,#switchProfessionalClientBanner,#replayDemoTour,.nav-item,.brain-proof,.why-demo-insight,#previousDay,#nextDay,#goToday,#analysisPreviousDay,#analysisNextDay,#analysisGoLatest,[data-global-observation],[data-quick-meal][data-edit-meal],.professional-followup,[data-open-trend-fullscreen],[data-close-trend-fullscreen],[data-trend-week-detail],[data-close-trend-week]",
           )
         )
           return;
@@ -6827,7 +6836,7 @@ function formatSleepDuration(hours) {
 
   function bindMealPhotoViewers(scope = document) {
     scope
-      .querySelectorAll(".meal-thumb img, #photoPreviewList img")
+      .querySelectorAll(".meal-thumb img, #photoPreviewList img, .consultation-meal-photos img")
       .forEach((image) => {
         if (image.dataset.photoViewerBound === "true") return;
 
@@ -8893,8 +8902,7 @@ function formatSleepDuration(hours) {
         : summary.count === 1
           ? '1 repas ou collation avec calories estimées.'
           : summary.count + ' repas ou collations avec calories estimées.';
-    const summaryMode = journalViewMode() === 'summary', nextMode = summaryMode ? 'detailed' : 'summary';
-    const viewButton = '<button type="button" class="journal-view-compact" data-journal-view="' + nextMode + '" aria-label="Afficher la vue ' + (summaryMode ? 'détaillée' : 'sommaire') + '"><span aria-hidden="true">' + (summaryMode ? '☷' : '▦') + '</span>' + (summaryMode ? 'Détaillée' : 'Sommaire') + '</button>';
+    const viewButton = '';
     if (db.settings?.calorieTargetGauge === true) {
       return '<section class="daily-calories-card daily-calories-card-target" aria-label="Calories de la journée et cible calorique"><div class="daily-calories-target-heading"><span>Calories de la journée</span>' + viewButton + '</div>' + calorieTargetGaugeHtml(selectedDate, meals, { circular: true, daily: true }) + '<p class="daily-calories-target-note">' + esc(note) + '</p></section>';
     }
@@ -9195,7 +9203,82 @@ function formatSleepDuration(hours) {
   }
 
   function journalViewMode() {
-    return db.settings?.journalViewMode === "summary" ? "summary" : "detailed";
+    return ["summary", "consultation"].includes(db.settings?.journalViewMode)
+      ? db.settings.journalViewMode : "detailed";
+  }
+
+  function journalViewOptionsHtml() {
+    return `<nav class="journal-view-options" aria-label="${esc(t("Vue du journal"))}">${[["summary", "Sommaire"], ["detailed", "Détaillée"], ["consultation", "Consultation"]].map(([mode, label]) => `<button type="button" data-journal-view="${mode}" aria-pressed="${journalViewMode() === mode}">${esc(t(label))}</button>`).join("")}</nav>`;
+  }
+
+  function consultationTimeHtml(at) {
+    if (at == null) return esc(t("Heure non consignée"));
+    const date = new Date(at), locale = window.ENERGIE_LOCALE || "fr-CA";
+    const day = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
+    const clock = date.toLocaleTimeString(locale, {hour:"2-digit", minute:"2-digit", hour12:false});
+    return esc(day === selectedDate ? clock : `${formatCalendarDate(day)} · ${clock}`);
+  }
+
+  function consultationMealPhotosHtml(meal) {
+    const photos = Array.isArray(meal.photos) && meal.photos.length ? meal.photos : [{url:meal.photoUrl, local:meal.photoLocal}];
+    return photos.slice(0,3).map(photo => {
+      const src = photo.url || photo.local;
+      return src ? `<img src="${esc(src)}" alt="${esc(t("Photo du repas"))}" loading="lazy">` : "";
+    }).join("");
+  }
+
+  function journalConsultationEventHtml(event) {
+    const {kind, meal} = event;
+    let title = "", content = "", action = "";
+    const openLabel = professionalClientReadOnly() ? "Voir les détails" : "Voir ou modifier";
+    if (kind === "meal") {
+      title = `${mealIcon(meal.type, meal.description)} ${t(meal.type)}`;
+      const reasons = normalizedEatingReasonState(meal.eatingReasons, meal.eatingReasonOther);
+      const labels = reasons.reasons.map(id => id === "other" && reasons.other ? reasons.other : t(EATING_REASON_META.find(item => item.id === id)?.label || "Autre raison"));
+      content = `<p translate="no">${esc(meal.description || t("Repas"))}</p><div class="consultation-meal-photos" data-consultation-photos="${esc(meal.id)}">${consultationMealPhotosHtml(meal)}</div>${nutritionVisibleToViewer() && meal.nutrition ? `<p class="muted small">≈ ${esc(nutritionText(meal.nutrition))}</p>` : ""}${labels.length ? `<p class="consultation-meal-reasons"><strong>${esc(t("Qu’est-ce qui t’a amené à manger?"))}</strong>${labels.map(esc).join(" · ")}</p>` : ""}${meal.notes ? `<p class="muted small" translate="no">${esc(meal.notes)}</p>` : ""}`;
+      action = `<button type="button" class="consultation-entry-open" data-consultation-meal="${esc(meal.id)}">${esc(t(openLabel))}</button>`;
+    } else if (kind === "before" || kind === "after") {
+      title = `${t(kind === "before" ? "Ressentis avant" : "Ressentis après")} · ${t(meal.type)}`;
+      content = `<div>${feelingScorePreviewHtml(event.scores)}</div>${kind === "after" && meal.feeling?.notes ? `<p translate="no">${esc(meal.feeling.notes)}</p>` : ""}`;
+      action = `<button type="button" class="consultation-entry-open" data-consultation-${kind === "before" ? "meal" : "feeling"}="${esc(meal.id)}">${esc(t(openLabel))}</button>`;
+    } else if (kind === "activity") {
+      const activity = event.activity;
+      title = `${activityIcon(activity.type)} ${t(activity.type || "Activité")}`;
+      content = `<p>${Math.max(0, Number(activity.minutes ?? activity.duration_minutes) || 0)} min · ${esc(t(ACTIVITY_INTENSITY_LABELS[activity.intensity] || "Modérée"))}</p>`;
+      action = `<button type="button" class="consultation-entry-open edit-activity">${esc(t(openLabel))}</button>`;
+    } else if (kind === "observation") {
+      const observation = event.observation;
+      title = t("Ressenti hors repas");
+      content = `<p>${(observation.tags || []).map(id => FEELING_TAGS.find(tag => tag.id === id)).filter(Boolean).map(tag => `${tag.emoji} ${esc(t(tag.label))}`).join(" · ")}</p><p class="muted small">${esc(t("Intensité"))} ${esc(observation.intensity)}/5</p>${observation.notes ? `<p translate="no">${esc(observation.notes)}</p>` : ""}`;
+      action = `<button type="button" class="consultation-entry-open" data-global-observation="${esc(observation.id)}">${esc(t(openLabel))}</button>`;
+    } else if (kind === "beverage") {
+      const beverage = event.beverage, meta = beverageType(beverage.type);
+      title = `${meta.icon} ${t(meta.label)}`;
+      content = `<p>${esc(beverage.amountMl)} ml${beverage.notes ? ` · ${esc(beverage.notes)}` : ""}</p>`;
+      action = `<button type="button" class="consultation-entry-open" data-edit-beverage="${esc(beverage.id)}">${esc(t(openLabel))}</button>`;
+    }
+    return `<article class="card consultation-event consultation-event--${kind}"><div class="consultation-event-heading"><h3>${esc(title)}</h3><time>${consultationTimeHtml(event.at)}</time></div>${content}${action}</article>`;
+  }
+
+  function journalConsultationHtml(day) {
+    const sleepTags = (day.sleepTags || []).map(sleepMarker).filter(Boolean).map(marker => `${marker.icon} ${esc(t(marker.label))}`).join(" · ");
+    const events = window.ENERGIE_CONSULTATION.events(day, selectedDate, feelingScoresFor);
+    return `<div class="journal-consultation"><article class="card consultation-event consultation-event--sleep"><div class="consultation-event-heading"><h3>🌙 ${esc(t("Sommeil de la nuit dernière"))}</h3><strong>${day.sleepHours != null ? esc(formatSleepDuration(day.sleepHours)) : esc(t("Non consigné"))}</strong></div><div class="consultation-sleep-times">${day.sleepStartTime ? `<span>${esc(t("Coucher"))} ${esc(day.sleepStartTime)}</span>` : ""}${day.sleepEndTime ? `<span>${esc(t("Réveil"))} ${esc(day.sleepEndTime)}</span>` : ""}</div>${sleepTags ? `<p>${sleepTags}</p>` : ""}${day.sleepComment ? `<p translate="no">${esc(day.sleepComment)}</p>` : ""}<button type="button" class="consultation-entry-open edit-sleep">${esc(t(professionalClientReadOnly() ? "Voir les détails" : "Voir ou modifier"))}</button></article>${events.map(journalConsultationEventHtml).join("") || `<p class="muted small">${esc(t("Aucune entrée pour cette journée."))}</p>`}${stepsProgressHtml(day)}</div>`;
+  }
+
+  function bindJournalConsultation() {
+    $$('[data-consultation-meal]').forEach(button => button.onclick = () => openMeal(button.dataset.consultationMeal));
+    $$('[data-consultation-feeling]').forEach(button => button.onclick = () => openFeeling(button.dataset.consultationFeeling));
+    bindMealPhotoViewers($("#app"));
+    // Mettre à jour seulement les photos signées tardivement, sans ramener le fil en haut.
+    hydratePhotoUrls().then(() => {
+      if (currentView !== "today" || journalViewMode() !== "consultation") return;
+      $$('[data-consultation-photos]').forEach(gallery => {
+        const meal = ensureDay(db, selectedDate).meals.find(item => item.id === gallery.dataset.consultationPhotos);
+        if (meal) gallery.innerHTML = consultationMealPhotosHtml(meal);
+      });
+      bindMealPhotoViewers($("#app"));
+    });
   }
 
   function stepsGoalForDay(day) {
@@ -9495,7 +9578,7 @@ function formatSleepDuration(hours) {
       (d.sleepTags || []).filter((x) => x !== "none").length - 2,
     );
     $("#app").innerHTML =
-      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${isFuture ? '<aside class="future-meal-planning-note"><span aria-hidden="true">📅</span><div><strong>Planification de repas</strong><small>Tu peux préparer tes repas jusqu’à 2 jours d’avance. Ils ne seront pris en compte dans les Observations qu’une fois la date arrivée.</small></div></aside>' : ""}${clientProfessionalNoteJournalHtml()}${dailyMacroSummaryHtml(meals)}${journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<button class="card sleep-card sleep-card-wide edit-sleep"><div class="wellness-head"><span class="wellness-icon">🌙</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? formatSleepDuration(d.sleepHours) : "À noter"}</strong>${d.sleepStartTime || d.sleepEndTime ? `<span class="sleep-time-summary">${d.sleepStartTime ? `Coucher ${esc(d.sleepStartTime)}` : ""}${d.sleepStartTime && d.sleepEndTime ? " · " : ""}${d.sleepEndTime ? `Réveil ${esc(d.sleepEndTime)}` : ""}</span>` : ""}</div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<div class="card activity-card-with-steps activity-card-wide"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
+      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${isFuture ? '<aside class="future-meal-planning-note"><span aria-hidden="true">📅</span><div><strong>Planification de repas</strong><small>Tu peux préparer tes repas jusqu’à 2 jours d’avance. Ils ne seront pris en compte dans les Observations qu’une fois la date arrivée.</small></div></aside>' : ""}${clientProfessionalNoteJournalHtml()}${dailyMacroSummaryHtml(meals)}${journalViewOptionsHtml()}${journalViewMode() === "consultation" ? journalConsultationHtml(d) : journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<button class="card sleep-card sleep-card-wide edit-sleep"><div class="wellness-head"><span class="wellness-icon">🌙</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? formatSleepDuration(d.sleepHours) : "À noter"}</strong>${d.sleepStartTime || d.sleepEndTime ? `<span class="sleep-time-summary">${d.sleepStartTime ? `Coucher ${esc(d.sleepStartTime)}` : ""}${d.sleepStartTime && d.sleepEndTime ? " · " : ""}${d.sleepEndTime ? `Réveil ${esc(d.sleepEndTime)}` : ""}</span>` : ""}</div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<div class="card activity-card-with-steps activity-card-wide"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
     $("#previousDay").onclick = () => changeJournalDay(-1);
     if (!$("#nextDay").disabled)
       $("#nextDay").onclick = () => changeJournalDay(1);
@@ -9513,7 +9596,7 @@ function formatSleepDuration(hours) {
     });
     $$('[data-journal-view]').forEach((button) => {
       button.onclick = () => {
-        const mode = button.dataset.journalView === "summary" ? "summary" : "detailed";
+        const mode = ["summary", "consultation"].includes(button.dataset.journalView) ? button.dataset.journalView : "detailed";
         if (journalViewMode() === mode) return;
         db.settings.journalViewMode = mode;
         saveLocal("journal-view-mode");
@@ -9561,7 +9644,8 @@ function formatSleepDuration(hours) {
       render();
     });
     $(".edit-sleep")?.addEventListener("click", openSleep);
-    $(".edit-activity")?.addEventListener("click", openActivity);
+    $$(".edit-activity").forEach(button => button.addEventListener("click", openActivity));
+    if (journalViewMode() === "consultation") bindJournalConsultation();
     $$(`[data-add-activity-favorite]`).forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); addFavoriteActivity(b.dataset.addActivityFavorite); }));
     $$(".edit-steps").forEach((button) => button.addEventListener("click", openSteps));
     $("#openBeverage")?.addEventListener("click", () => openBeverage());
