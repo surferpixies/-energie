@@ -3764,11 +3764,15 @@ function formatSleepDuration(hours) {
       list.innerHTML = "";
       return;
     }
+    const filetWeightMissing = items.some(item =>
+      mealNaturalCountFromText(item) != null && /\b(filets?|fillets?)\b/.test(normalizeFoodText(item)));
     const preparationMissing = items.some(item => window.ENERGIE_CNF_SEARCH?.requiresClarification?.(item));
-    notice.textContent = preparationMissing
+    notice.textContent = filetWeightMissing
+      ? "ⓘ Indique le poids total des filets pour calculer le repas"
+      : preparationMissing
       ? "ⓘ Précise cru/cuit ou choisis la préparation dans la saisie guidée"
       : `ⓘ Estimation à préciser · ${items.length} élément${items.length > 1 ? "s" : ""} à vérifier`;
-    list.innerHTML = items.map((item) => `<div class="meal-calorie-unrecognized-item"><span aria-hidden="true">?</span><div><strong>${esc(item)}</strong><small>${window.ENERGIE_CNF_SEARCH?.requiresClarification?.(item) ? "Précise la préparation (cru, cuit, sec ou en conserve), puis la quantité, ou utilise la saisie guidée." : "Aucune valeur calorique n’a pu être associée à cet élément."}</small></div></div>`).join("");
+    list.innerHTML = items.map((item) => `<div class="meal-calorie-unrecognized-item"><span aria-hidden="true">?</span><div><strong>${esc(item)}</strong><small>${mealNaturalCountFromText(item) != null && /\b(filets?|fillets?)\b/.test(normalizeFoodText(item)) ? "Aliment reconnu. Le poids d’un filet varie : indique le poids total consommé en grammes, ou choisis une portion dans la saisie guidée." : window.ENERGIE_CNF_SEARCH?.requiresClarification?.(item) ? "Précise la préparation (cru, cuit, sec ou en conserve), puis la quantité, ou utilise la saisie guidée." : "Aucune valeur calorique n’a pu être associée à cet élément."}</small></div></div>`).join("");
   }
   function openMealCalorieRecognition() {
     updateMealCalorieRecognition();

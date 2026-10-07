@@ -24,7 +24,7 @@
     <pre aria-label="Example meal">150 g chicken\n100 g carrots\n2 apples</pre>
     <p>Meat is treated as cooked unless you write “raw” or “tartare”. For pasta and rice, specify cooked or dry, for example <strong>120 g cooked spaghetti</strong>.</p></section>
     <details open><summary>How to enter quantities</summary><dl>
-      <dt>Weight: g or kg</dt><dd><strong>150 g chicken</strong>, <strong>100 g carrots</strong>. Use the weight of the food you ate. If weighed before cooking, specify “raw”.</dd>
+      <dt>Weight: g or kg</dt><dd><strong>150 g chicken</strong>, <strong>100 g carrots</strong>. Use the weight of the food you ate. If weighed before cooking, specify “raw”. For several meat or fish fillets, enter their total weight: a fillet has no fixed weight.</dd>
       <dt>Volume: cups or ml</dt><dd><strong>1 cup broccoli</strong>. A cup is 250 ml of volume, not 250 g. This works when the food has a documented volume portion. If no estimate appears, use grams or guided entry.</dd>
       <dt>Number of foods</dt><dd><strong>1 apple</strong> or <strong>2 apples</strong> uses a reference medium apple. Size affects the estimate. Counts are supported only when a matching unit portion exists; use grams or guided entry for other fruits and vegetables.</dd>
     </dl><p class="muted small">Without a quantity, a reference portion may be used. It does not measure what you actually ate. Quantities make the estimate more useful.</p></details>
@@ -38,7 +38,7 @@
     <pre aria-label="Exemple de repas">150 g poulet\n100 g carottes\n2 pommes</pre>
     <p>La viande est considérée cuite, sauf si tu écris « cru/crue » ou « tartare ». Pour les pâtes et le riz, précise cuit ou sec, par exemple <strong>120 g spaghettis cuits</strong>.</p></section>
     <details open><summary>Comment écrire les quantités ?</summary><dl>
-      <dt>Poids : g ou kg</dt><dd><strong>150 g poulet</strong>, <strong>100 g carottes</strong>. Utilise le poids de l’aliment consommé. Si tu le pèses avant cuisson, précise « cru ».</dd>
+      <dt>Poids : g ou kg</dt><dd><strong>150 g poulet</strong>, <strong>100 g carottes</strong>. Utilise le poids de l’aliment consommé. Si tu le pèses avant cuisson, précise « cru ». Pour plusieurs filets de viande ou de poisson, indique leur poids total : un filet n’a pas de poids fixe.</dd>
       <dt>Volume : tasses ou ml</dt><dd><strong>1 tasse brocoli</strong>. Une tasse représente 250 ml de volume, pas 250 g. Ce calcul fonctionne si une portion en volume est documentée pour l’aliment. Si aucune estimation n’apparaît, utilise les grammes ou la saisie guidée.</dd>
       <dt>Nombre d’aliments</dt><dd><strong>1 pomme</strong> ou <strong>2 pommes</strong> utilise une pomme moyenne de référence. La taille influence l’estimation. Le nombre fonctionne seulement si une portion unitaire correspondante est disponible; pour les autres fruits et légumes, utilise les grammes ou la saisie guidée.</dd>
     </dl><p class="muted small">Sans quantité, une portion de référence peut être utilisée. Elle ne mesure pas ce que tu as réellement mangé. Ajouter une quantité rend l’estimation plus utile.</p></details>
