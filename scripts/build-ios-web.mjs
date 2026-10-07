@@ -1,4 +1,4 @@
-import { cp, mkdir, readdir, rm } from "node:fs/promises";
+import { access, cp, mkdir, readFile, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -27,6 +27,7 @@ const runtimeFiles = [
   "dish-knowledge.js",
   "observation-engine.js",
   "demo-profiles.js",
+  "demo-lab.js",
   "personal-metrics.js",
   "onboarding-images.js",
   "styles.css",
@@ -89,4 +90,13 @@ for (const file of runtimeFiles) await copyFile(file);
 for (const file of brainFiles) await copyFile(path.join("brain", file));
 await copyActiveAssets();
 
-console.log("Énergie v3.56.126 préparée dans www pour Capacitor iOS.");
+// Vérifier aussi les dépendances ajoutées aux écrans, pas seulement la liste de copie.
+const html = await readFile(path.join(output, "index.html"), "utf8");
+const scripts = [...html.matchAll(/<script\b[^>]*\bsrc="([^"?]+)(?:\?[^"\s]*)?"/g)]
+  .map(match => match[1]).filter(src => !/^(?:https?:)?\/\//.test(src));
+// Le guide charge ses images à la demande, après l'ouverture du journal.
+for (const file of [...scripts, "onboarding-images.js"]) {
+  try { await access(path.join(output, file)); }
+  catch (_) { throw new Error(`Build mobile incomplet : ${file} manque dans www.`); }
+}
+console.log("Énergie préparée dans www pour Capacitor iOS et Android · fichiers requis vérifiés.");
