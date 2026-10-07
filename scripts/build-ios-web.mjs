@@ -16,6 +16,7 @@ const runtimeFiles = [
   "cnf-search.js",
   "ciqual-data.js",
   "ciqual-search.js",
+  "packaged-foods.js",
   "nutrition-corrections.js",
   "config.js",
   "i18n.js",

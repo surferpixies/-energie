@@ -2591,7 +2591,7 @@ function formatSleepDuration(hours) {
   function foodNutrients(food) {
     // Les valeurs FCÉN sont la source nutritionnelle de référence et ne doivent
     // jamais être remplacées par les anciens ajustements manuels Énergie.
-    if (food?.nutritionSource === "cnf") return { ...food };
+    if (["cnf", "ciqual", "product-label"].includes(food?.nutritionSource)) return { ...food };
     const key = normalizeFoodText(food?.keys?.[0] || "");
     const extra = FOOD_NUTRIENT_OVERRIDES[key] || {};
     const categories = new Set(
@@ -2824,7 +2824,7 @@ function formatSleepDuration(hours) {
         /\b(oeufs?|eggs?|tranches?|slices?|pieces?|morceaux?|fruits?|pommes?|apples?|bananes?|bananas?|filets?|fillets?)\b/.test(portionText);
       const filetCount = /\b(filet|filets|fillet|fillets)\b/.test(segmentText);
       // Never invent a filet weight when the FCÉN row is only per 100 g.
-      if (filetCount && !/\b(filet|fillet)\b/.test(portionText)) {
+      if (filetCount && !/\b(filets?|fillets?)\b/.test(portionText)) {
         return { scale: 1, quantityUsed: false, quantityKind: "unresolved-count", enteredCount: naturalCount, unresolvedUnit: "filet" };
       }
       if (countablePortion) {
@@ -3217,7 +3217,11 @@ function formatSleepDuration(hours) {
         : `${matched.length} ingrédients estimés`;
     const sourceKinds = new Set(enriched.map((x) => x.food?.nutritionSource || "legacy"));
     const nutritionSource =
-      sourceKinds.size === 1 && sourceKinds.has("cnf")
+      sourceKinds.size === 1 && sourceKinds.has("product-label")
+        ? "product-label"
+        : sourceKinds.has("product-label")
+          ? "mixed"
+          : sourceKinds.size === 1 && sourceKinds.has("cnf")
         ? "cnf"
         : sourceKinds.size === 1 && sourceKinds.has("ciqual")
           ? "ciqual"
@@ -3238,7 +3242,7 @@ function formatSleepDuration(hours) {
           const entered = mealQuantityFromText(x.segment);
           return {
             input: x.segment,
-            source: ["cnf", "ciqual"].includes(x.food?.nutritionSource) ? x.food.nutritionSource : "energie-foods",
+            source: ["cnf", "ciqual", "product-label"].includes(x.food?.nutritionSource) ? x.food.nutritionSource : "energie-foods",
             cnfFoodId: x.food?.cnfFoodId || null,
             matchedName: x.food?.cnfNameFr || x.food?.keys?.[0] || "",
             enteredQuantity: entered ? { ...entered } : (x.enteredCount != null ? { value: x.enteredCount, unit: "count" } : null),
@@ -3416,20 +3420,24 @@ function formatSleepDuration(hours) {
     nutrientKeys.forEach((key) => {
       total[key] = missing.has(key) ? null : Math.round(total[key] * 10) / 10;
     });
+    const sourceForItem = item => String(item.cnfFoodId).startsWith("PRODUCT:") ? "product-label"
+      : String(item.cnfFoodId).startsWith("CIQUAL:") ? "ciqual" : "cnf";
+    const sources = new Set(items.map(sourceForItem));
+    const guidedSource = sources.size === 1 ? [...sources][0] : "mixed";
     return {
       ...total,
-      source: items.every(item => String(item.cnfFoodId).startsWith("CIQUAL:")) ? "ciqual" : "mixed",
+      source: guidedSource,
       confidence: "high",
-      basis: `${matched} aliment${matched !== 1 ? "s" : ""} lié${matched !== 1 ? "s" : ""} aux référentiels officiels · quantités saisies`,
+      basis: `${matched} aliment${matched !== 1 ? "s" : ""} lié${matched !== 1 ? "s" : ""} aux fiches nutritionnelles · quantités saisies`,
       estimated: true,
       trace: {
         kind: "guided-cnf",
-        source: items.every(item => String(item.cnfFoodId).startsWith("CIQUAL:")) ? "ciqual" : "mixed",
+        source: guidedSource,
         items: items.map((item) => {
           const nutrition = api.nutritionForGrams(item.cnfFoodId, item.grams);
           const reference = api.nutritionForGrams(item.cnfFoodId, 100);
           return {
-            source: String(item.cnfFoodId).startsWith("CIQUAL:") ? "ciqual" : "cnf",
+            source: sourceForItem(item),
             cnfFoodId: String(item.cnfFoodId),
             matchedName: item.nameFr || nutrition?.cnfNameFr || "",
             grams: Number(item.grams) || null,
@@ -3459,7 +3467,7 @@ function formatSleepDuration(hours) {
     const strong = status.querySelector("strong");
     if (strong)
       strong.textContent = items.length
-        ? `${items.length} aliment${items.length > 1 ? "s" : ""} lié${items.length > 1 ? "s" : ""} aux références officielles${Number.isFinite(calories) ? ` · ${Math.round(calories)} kcal` : ""}`
+        ? `${items.length} aliment${items.length > 1 ? "s" : ""} lié${items.length > 1 ? "s" : ""} aux fiches nutritionnelles${Number.isFinite(calories) ? ` · ${Math.round(calories)} kcal` : ""}`
         : "";
   }
   function renderCnfGuidedBasket() {
@@ -3641,6 +3649,7 @@ function formatSleepDuration(hours) {
   function nutritionTraceSourceLabel(source) {
     return source === "cnf" ? "FCÉN · Santé Canada"
       : source === "ciqual" ? "Ciqual 2025 · Anses (France)"
+      : source === "product-label" ? "Étiquette du fabricant · St-Hubert"
       : source === "mixed" ? "Sources combinées (voir le détail)"
       : source === "energie-foods" ? "Référence Énergie"
       : "Estimation automatique";
@@ -3736,6 +3745,8 @@ function formatSleepDuration(hours) {
       note ||
       (n?.source === "barcode"
         ? `Valeurs ${n.basis || "du produit"} provenant de l’étiquette Open Food Facts. Vérifie-les au besoin.`
+        : n?.source === "product-label"
+          ? `Valeurs de l’étiquette officielle St-Hubert : 160 kcal pour 2 lanières (70 g), sans sauce. Quantités ajustées selon ta saisie.`
         : n?.source === "cnf"
           ? `Valeurs de référence du Fichier canadien sur les éléments nutritifs (FCÉN) 2026 de Santé Canada, ajustées selon les quantités reconnues (${n.basis || "portion courante"}). Les recettes, marques et préparations peuvent varier.`
           : n?.source === "ciqual"
@@ -3772,7 +3783,7 @@ function formatSleepDuration(hours) {
       : preparationMissing
       ? "ⓘ Précise cru/cuit ou choisis la préparation dans la saisie guidée"
       : `ⓘ Estimation à préciser · ${items.length} élément${items.length > 1 ? "s" : ""} à vérifier`;
-    list.innerHTML = items.map((item) => `<div class="meal-calorie-unrecognized-item"><span aria-hidden="true">?</span><div><strong>${esc(item)}</strong><small>${mealNaturalCountFromText(item) != null && /\b(filets?|fillets?)\b/.test(normalizeFoodText(item)) ? "Aliment reconnu. Le poids d’un filet varie : indique le poids total consommé en grammes, ou choisis une portion dans la saisie guidée." : window.ENERGIE_CNF_SEARCH?.requiresClarification?.(item) ? "Précise la préparation (cru, cuit, sec ou en conserve), puis la quantité, ou utilise la saisie guidée." : "Aucune valeur calorique n’a pu être associée à cet élément."}</small></div></div>`).join("");
+    list.innerHTML = items.map((item) => `<div class="meal-calorie-unrecognized-item"><span aria-hidden="true">?</span><div><strong>${esc(item)}</strong><small>${mealNaturalCountFromText(item) != null && /\b(filets?|fillets?)\b/.test(normalizeFoodText(item)) ? "Aliment reconnu. Pour des filets panés de marque, ajoute le nom du produit (ex. 4 filets de poulet panés St-Hubert). Sinon, indique leur poids total en grammes ou choisis une portion dans la saisie guidée." : window.ENERGIE_CNF_SEARCH?.requiresClarification?.(item) ? "Précise la préparation (cru, cuit, sec ou en conserve), puis la quantité, ou utilise la saisie guidée." : "Aucune valeur calorique n’a pu être associée à cet élément."}</small></div></div>`).join("");
   }
   function openMealCalorieRecognition() {
     updateMealCalorieRecognition();

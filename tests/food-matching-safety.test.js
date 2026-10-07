@@ -228,3 +228,50 @@ for (const locale of ['fr-CA', 'fr-FR']) {
  assert.ok(!/Pâte de fruits/i.test(global.ENERGIE_CNF_SEARCH.find('120 g pâtes cuites')?.cnfNameFr || ''));
 }
 assert.equal(cnf.isCandidateAllowed('pâtes cuites', 'Pâte de fruits'), false);
+
+// Produit emballé : valeurs d'étiquette et portions comptées, sans substitution.
+require('../packaged-foods.js');
+const productApi = global.ENERGIE_CNF_SEARCH;
+const productId = 'PRODUCT:st-hubert-chicken-strips-600g';
+context.window.ENERGIE_CNF_SEARCH = productApi;
+context.FOOD_CANDIDATES = [];
+context.FOOD_NUTRIENT_OVERRIDES = {};
+vm.runInContext(source.slice(source.indexOf('  function checkedCatalogFood('),source.indexOf('  function foodMatchForSegment(')),context);
+vm.runInContext(source.slice(source.indexOf('  function foodNutrients('),source.indexOf('  function normalizeFoodText(')),context);
+vm.runInContext(source.slice(source.indexOf('  function normalNutrition('),source.indexOf('  function normalizeFeelingScores(')),context);
+vm.runInContext(source.slice(source.indexOf('  function mealNutritionRecognition('),source.indexOf('  function mealCompositionAnalysis(')),context);
+context.mealCompositionAnalysis = () => ({});
+context.photoCupPortionAdjustment = (_segment,_food,quantity) => quantity;
+vm.runInContext(source.slice(source.indexOf('  function estimateNutritionFromText('),source.indexOf('  function mergeNutrition(')),context);
+vm.runInContext(source.slice(source.indexOf('  function guidedCnfNutrition('),source.indexOf('  function currentGuidedCnfNutrition(')),context);
+for(const locale of ['fr-CA','fr-FR']) {
+ global.ENERGIE_LOCALE=locale;
+ for(const [input,expected] of [
+  ['2 lanières de poulet panées St-Hubert',160],
+  ['4 filets de poulet panés St-Hubert',320],
+  ['8 filets de poulet St-Hubert',640],
+  ['140 g lanières de poulet St-Hubert',320],
+ ]) {
+  const n=context.estimateNutritionFromText(input);
+  assert.equal(n?.calories,expected,`${locale}: ${input}`);
+  assert.equal(n.source,'product-label');
+  assert.equal(n.trace.items[0].source,'product-label');
+ }
+ const meal=context.estimateNutritionFromText('4 filets de poulet panés St-Hubert\nlaitue\nconcombres');
+ assert.ok(meal.calories>320);
+ assert.equal(meal.trace.items.length,3);
+ assert.equal(meal.trace.items[0].calories,320);
+ assert.equal(meal.source,'mixed');
+ assert.equal(context.estimateNutritionFromText('4 filets de poulet\nlaitue\nconcombres'),null);
+ assert.equal(context.foodMatchForSegment('4 croquettes de poulet St-Hubert'),null);
+ assert.equal(context.foodMatchForSegment('4 filets de poulet St-Hubert avec sauce'),null);
+ assert.ok(productApi.search('St-Hubert').some(row=>row.id===productId));
+ assert.equal(productApi.getById(productId).portions[0].grams,35);
+ const saved=JSON.parse(JSON.stringify([{cnfFoodId:productId,grams:140,nameFr:productApi.getById(productId).nameFr,quantity:4,unitLabel:'1 lanière',gramsPerUnit:35}]));
+ const guided=context.guidedCnfNutrition(saved);
+ assert.equal(guided.calories,320);
+ assert.equal(guided.source,'product-label');
+ assert.equal(guided.trace.items[0].source,'product-label');
+ assert.equal(guided.fiber,0);
+}
+console.log('St-Hubert : étiquette, comptes, grammes, repas complet, guidé et relecture OK');
