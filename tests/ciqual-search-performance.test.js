@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+require('../cnf-catalog.js');const cnf=require('../cnf-search.js');require('../ciqual-data.js');
+let guards=0;
+const ctx=vm.createContext({ENERGIE_CNF_SEARCH:{...cnf,isCandidateAllowed:(...args)=>{guards++;return cnf.isCandidateAllowed(...args)}},ENERGIE_CIQUAL_CATALOG:global.ENERGIE_CIQUAL_CATALOG,console});
+vm.runInContext(fs.readFileSync(require.resolve('../ciqual-search.js'),'utf8'),ctx);
+const api=ctx.ENERGIE_CIQUAL_SEARCH;
+const one=api.find('100 g ananas');assert.ok(one);assert.ok(guards<100,'Les milliers de fiches sans les mots recherchés ne passent pas dans le garde-fou');
+const before=guards;assert.equal(api.find('100 g ananas'),one);assert.equal(guards,before,'La même recherche utilise son résultat précédent');
+const two=api.find('200 g ananas');assert.equal(two.calories,one.calories*2);
+assert.ok(api.search('poulet cru').some(row=>row.nameFr.includes('cru')));
+assert.ok(api.search('poulet cru').every(row=>cnf.isCandidateAllowed('poulet cru',row.nameFr,{allowPreparationChoice:true})));
+assert.equal(api.find('alimenttotalementinconnu'),null);const unknownGuards=guards;assert.equal(api.find('alimenttotalementinconnu'),null);assert.equal(guards,unknownGuards);
+for(const query of ['tomate','concombre','carotte','pomme'])for(const row of api.search(query))assert.ok(cnf.isCandidateAllowed(query,row.nameFr,{allowPreparationChoice:true}));
+console.log('Ciqual : cache, filtrage préalable, quantités, cru et garde-fous OK');

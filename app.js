@@ -4449,8 +4449,8 @@ function formatSleepDuration(hours) {
       settings: {},
       memories: [],
       updatedAt: new Date().toISOString(),
-    });
-    window.Brain.learnMeals(allMealsFromDB(source));
+    }, {persist:false});
+    window.Brain.learnMeals(allMealsFromDB(source), {persist:false});
   }
   function restoreRealBrainMemory() {
     try {
@@ -6087,14 +6087,14 @@ function formatSleepDuration(hours) {
       db = previousDb;
       selectedDate = previousDate;
       currentView = previousView;
-      if (previousMemory && window.Brain?.replaceMemoryState) window.Brain.replaceMemoryState(previousMemory);
+      if (previousMemory && window.Brain?.replaceMemoryState) window.Brain.replaceMemoryState(previousMemory, {persist:false});
       if (db === labRealDb) { labRealDb = null; labRealBrainMemory = null; }
       insightsComputationCache = null;
       render();
       alert(t("Le scénario n’a pas pu être ouvert. Ton journal a été conservé."));
     } finally { labScenarioLoading = false; }
   }
-  function leaveLab(){if(!labRealDb)return;db=labRealDb;labRealDb=null;if(labRealBrainMemory&&window.Brain?.replaceMemoryState)window.Brain.replaceMemoryState(labRealBrainMemory);labRealBrainMemory=null;labVariant=1;selectedDate=todayKey();currentView="profile";render();}
+  function leaveLab(){if(!labRealDb)return;db=labRealDb;labRealDb=null;if(labRealBrainMemory&&window.Brain?.replaceMemoryState)window.Brain.replaceMemoryState(labRealBrainMemory, {persist:false});labRealBrainMemory=null;labVariant=1;selectedDate=todayKey();currentView="profile";render();}
   function randomLabScenario(){const sc=window.EnergieDemoLab?.randomScenario?.({variant:Date.now()});if(sc)enterLabScenario(sc.id,1);}
   function newLabVariant(){
     const id=db.settings?.demoLab?.scenarioId;
@@ -12962,9 +12962,11 @@ function formatSleepDuration(hours) {
   }
 
   function scheduleBrainCoverageFoodCacheSave() {
+    if (db.settings?.demoLab?.scenarioId) return;
     clearTimeout(brainCoverageFoodCacheSaveTimer);
 
     brainCoverageFoodCacheSaveTimer = setTimeout(() => {
+      if (db.settings?.demoLab?.scenarioId) return;
       try {
         const cache = loadBrainCoverageFoodFactsCache();
         const entries = Object.entries(cache);
@@ -13583,7 +13585,8 @@ function formatSleepDuration(hours) {
   }
   function renderEnergyGuideSlide() {
     const slide = ENERGY_GUIDE_SLIDES[energyGuideIndex];
-    $("#energyGuideBody").innerHTML = `<p class="energy-guide-kicker">${slide.kicker}</p><h2 class="energy-guide-title">${slide.title}</h2><p class="energy-guide-copy">${slide.copy}</p>${slide.media}`;
+    const media = slide.media.replace(/assets\/onboarding\/([a-z-]+)\.jpeg\?v=3\.56\.42/g, (_, name) => energyGuideImage(name));
+    $("#energyGuideBody").innerHTML = `<p class="energy-guide-kicker">${slide.kicker}</p><h2 class="energy-guide-title">${slide.title}</h2><p class="energy-guide-copy">${slide.copy}</p>${media}`;
     $("#energyGuideDots").innerHTML = ENERGY_GUIDE_SLIDES.map((_, i) => `<button type="button" class="energy-guide-dot ${i === energyGuideIndex ? "active" : ""}" data-energy-guide-dot="${i}" aria-label="Étape ${i+1} sur ${ENERGY_GUIDE_SLIDES.length}"></button>`).join("");
     $$('[data-energy-guide-dot]').forEach(b => b.onclick = () => { energyGuideIndex = Number(b.dataset.energyGuideDot); renderEnergyGuideSlide(); });
     $("#energyGuidePrev").disabled = energyGuideIndex === 0;
@@ -13767,7 +13770,21 @@ function formatSleepDuration(hours) {
     // Tous les groupes du Profil commencent fermés à chaque ouverture.
   }
 
-  function openEnergyGuide() {
+  let energyGuideImagesPromise = null;
+  function loadEnergyGuideImages() {
+    if (window.ENERGY_GUIDE_IMAGES) return Promise.resolve();
+    if (!energyGuideImagesPromise) energyGuideImagesPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "onboarding-images.js?v=3.56.52";
+      script.onload = resolve;
+      script.onerror = () => { script.remove(); energyGuideImagesPromise = null; reject(new Error("Images du guide indisponibles")); };
+      document.head.appendChild(script);
+    });
+    return energyGuideImagesPromise;
+  }
+  async function openEnergyGuide() {
+    try { await loadEnergyGuideImages(); }
+    catch (error) { console.warn(error); }
     const dialog = ensureEnergyGuideDialog();
     energyGuideIndex = 0;
     renderEnergyGuideSlide();
@@ -17565,11 +17582,14 @@ function formatSleepDuration(hours) {
       // Une session restaurée peut contenir un user mis en cache avant qu'une
       // nouvelle identité (ex. Apple) ait été liée. Relire le user serveur afin
       // que le Profil reflète les providers réellement associés dès l'ouverture.
+      prepareLocalJournalForSession(session);
+      render();
       const currentUser = await client.auth.getUser();
       if (!currentUser.error && currentUser.data.user?.id === session.user?.id)
         session = { ...session, user: currentUser.data.user };
       prepareLocalJournalForSession(session);
     }
+    if (!session) render();
     client.auth.onAuthStateChange((event, newSession) => {
       const previousUserId = session?.user?.id || null;
       const newUserId = newSession?.user?.id || null;
@@ -17612,7 +17632,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.154");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.176");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});

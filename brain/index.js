@@ -24,16 +24,16 @@
       if (result?.learned) window.dispatchEvent(new CustomEvent("energie:memory-changed", { detail: { reason:"learn", memoryId:result.memory?.id || null } }));
       return result;
     },
-    learnMeals(meals=[]){
+    learnMeals(meals=[],options={}){
       const result=memory.learnMany(meals,(text,options)=>M.parser.parseMeal(text,options));
-      persistMemory();
-      if (result?.learnedCount) window.dispatchEvent(new CustomEvent("energie:memory-changed", { detail: { reason:"learn-many" } }));
+      if (options.persist !== false) persistMemory();
+      if (options.persist !== false && result?.learnedCount) window.dispatchEvent(new CustomEvent("energie:memory-changed", { detail: { reason:"learn-many" } }));
       return result;
     },
     saveMemory:persistMemory,
-    replaceMemoryState(nextState){
+    replaceMemoryState(nextState,options={}){
       const state=memory.replaceState(nextState);
-      persistMemory();
+      if (options.persist !== false) persistMemory();
       return state;
     },
     diagnostics(){ return {version:this.version, foods:this.foods.length, recipes:M.recipes.recipes.length, memories:memory.diagnostics().active, categories:window.ENERGIE_FOOD_CATEGORIES?.categories?.length||0}; }

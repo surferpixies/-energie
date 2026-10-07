@@ -13,13 +13,22 @@
   const words=v=>normalize(v).split(' ').filter(t=>t.length>1&&!['de','des','du','la','le','les','au','aux','un','une','sans','avec'].includes(t));
   const state=v=>/\b(cru|crue|raw)\b/.test(normalize(v))?'raw':/\b(cuit|cuite|cuisson|bouilli|bouillie|etouffee|roti|rotie|grille|frit|frite)\b/.test(normalize(v))?'cooked':null;
   const strip=text=>cnf.stripQuantity?cnf.stripQuantity(text):normalize(text);
-  function score(row,text,options={}){
-    const query=strip(text), name=normalize(row[1]);
-    if(!query||query.length<3||!Number.isFinite(row[2])||!cnf.isCandidateAllowed(text,row[1],options))return -Infinity;
-    const singular=v=>v.length>3&&v.endsWith('s')?v.slice(0,-1):v;
-    const qt=words(query).map(singular).filter(t=>!["cru","crue","cuit","cuite","raw","cooked"].includes(t)),nt=words(name).map(singular),base=normalize(row[1].split(',')[0]);
-    if(!qt.length||!qt.every(t=>nt.includes(t)))return -Infinity;
-    const wanted=state(query),candidate=state(name);
+  const rowSearchMeta = new WeakMap();
+  const singular=v=>v.length>3&&v.endsWith('s')?v.slice(0,-1):v;
+  function queryMeta(text){
+    const query=strip(text);
+    return {query,qt:words(query).map(singular).filter(t=>!["cru","crue","cuit","cuite","raw","cooked"].includes(t)),wanted:state(query)};
+  }
+  function score(row,text,options={},meta=queryMeta(text)){
+    const {query,qt,wanted}=meta;
+    if(!query||query.length<3||!Number.isFinite(row[2])||!qt.length)return -Infinity;
+    if(!rowSearchMeta.has(row)){
+      const name=normalize(row[1]);
+      rowSearchMeta.set(row,{name,nt:words(name).map(singular),base:normalize(row[1].split(',')[0]),candidate:state(name)});
+    }
+    const {name,nt,base,candidate}=rowSearchMeta.get(row);
+    // Filtrer les mots avant le garde-fou coûteux, sans changer les candidats permis.
+    if(!qt.every(t=>nt.includes(t))||!cnf.isCandidateAllowed(text,row[1],options))return -Infinity;
     if(wanted && candidate && wanted!==candidate)return -Infinity;
     let n=qt.length===nt.length?960:700;
     if(query===name)n+=600;
@@ -36,8 +45,8 @@
     return n;
   }
   function rank(text,limit=12,allowPreparationChoice=false){
-    const out=[];
-    for(const row of records){const s=score(row,text,{allowPreparationChoice});if(s>=600)out.push({row,s});}
+    const out=[],meta=queryMeta(text);
+    for(const row of records){const s=score(row,text,{allowPreparationChoice},meta);if(s>=600)out.push({row,s});}
     out.sort((a,b)=>b.s-a.s||String(a.row[0]).localeCompare(String(b.row[0])));
     return out.slice(0,limit).map(({row})=>row);
   }
@@ -53,7 +62,16 @@
       basis:`${g} g · ${row[1]} · Ciqual 2025`,ciqualFoodId:row[0],ciqualNameFr:row[1],
       cnfFoodId:PREFIX+row[0],cnfNameFr:row[1],sourceVersion:'2025'};
   }
+  const findCache = new Map();
   function find(text){
+    const key=String(text||"");
+    if(findCache.has(key))return findCache.get(key);
+    const result=uncachedFind(text);
+    if(findCache.size>=300)findCache.clear();
+    findCache.set(key,result);
+    return result;
+  }
+  function uncachedFind(text){
     text=cnf.meatPreparationText(text);
     if(cnf.requiresClarification(text)||cnf.naturalCount(text)!=null)return null;
     // Ciqual ne fournit pas de poids par tasse : laisser le FCÉN résoudre le volume.
