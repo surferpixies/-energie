@@ -85,8 +85,13 @@
     ]
   });
 
+  const mealCategoryCache = new Map();
+  let categoryCatalog = null;
   function categoriesFor(description){
-    return window.ENERGIE_FOOD_CATEGORIES?.categoryIdsForText?.(description) || [];
+    const catalog = window.ENERGIE_FOOD_CATEGORIES;
+    if (categoryCatalog !== catalog) { mealCategoryCache.clear(); categoryCatalog = catalog; }
+    if (!mealCategoryCache.has(description)) mealCategoryCache.set(description, catalog?.categoryIdsForText?.(description) || []);
+    return mealCategoryCache.get(description);
   }
   function recognizedAs(description,target){
     if(!target) return true;
@@ -179,30 +184,14 @@
   const scenarios = [
     {id:"dairy-digestion",profileName:"Marie",group:"Alimentation",icon:"🥛",title:"Produits laitiers → inconfort digestif",target:"dairy",signal:"digestive",strength:.78,pattern:"exposure"},
     {id:"soy-digestion",profileName:"Camille",group:"Alimentation",icon:"🌿",title:"Soya → inconfort digestif",target:"soy",signal:"digestive",strength:.76,pattern:"exposure"},
-    {id:"seafood-digestion",profileName:"Julie",group:"Alimentation",icon:"🦐",title:"Fruits de mer → inconfort digestif",target:"seafood",signal:"digestive",strength:.80,pattern:"exposure"},
     {id:"gluten-digestion",profileName:"Maxime",group:"Alimentation",icon:"🌾",title:"Aliments avec gluten → inconfort",target:"gluten",signal:"digestive",strength:.68,pattern:"exposure"},
     {id:"legumes-digestion",profileName:"Sarah",group:"Alimentation",icon:"🫘",title:"Légumineuses → ballonnements",target:"legumes",signal:"digestive",strength:.70,pattern:"exposure"},
-    {id:"allium-digestion",profileName:"Antoine",group:"Alimentation",icon:"🧄",title:"Ail/oignon/alliums → inconfort",target:"allium",signal:"digestive",strength:.74,pattern:"exposure"},
     {id:"fried-digestion",profileName:"Léa",group:"Alimentation",icon:"🍟",title:"Aliments frits → lourdeur digestive",target:"fried_foods",signal:"digestive",strength:.70,pattern:"exposure"},
     {id:"spicy-digestion",profileName:"Thomas",group:"Alimentation",icon:"🌶️",title:"Aliments épicés → inconfort",target:"spicy_foods",signal:"digestive",strength:.70,pattern:"exposure"},
-    {id:"processed-energy",profileName:"Émilie",group:"Alimentation",icon:"🍕",title:"Repas transformés → énergie plus basse",target:"processed_foods",signal:"energy",strength:.72,pattern:"exposure"},
     {id:"fiber-improvement",profileName:"Clara",group:"Évolution",icon:"🌾",title:"Fibres + hydratation → amélioration progressive",target:"high_fiber",signal:"positive",strength:.72,pattern:"ramp"},
     {id:"caffeine-sleep",profileName:"Nicolas",group:"Sommeil",icon:"☕",title:"Caféine tardive → sommeil moins favorable",target:"caffeine",signal:"sleep",strength:.80,pattern:"timing"},
     {id:"short-sleep-fatigue",profileName:"Audrey",group:"Sommeil",icon:"😴",title:"Nuit courte → fatigue le lendemain",target:"sleep",signal:"energy",strength:.78,pattern:"sleep"},
     {id:"activity-positive",profileName:"Julien",group:"Activité",icon:"🏃",title:"Journées actives → meilleur ressenti",target:"activity",signal:"positive",strength:.66,pattern:"activity"},
-    {id:"hydration-positive",profileName:"Sophie",group:"Hydratation",icon:"💧",title:"Hydratation régulière → meilleur ressenti",target:"water",signal:"positive",strength:.64,pattern:"water"},
-    {id:"weight-loss",profileName:"Gabriel",group:"Poids",icon:"⚖️",title:"Période de perte de poids",target:"weight",signal:"weight_down",strength:.78,pattern:"weight_down"},
-    {id:"weight-gain",profileName:"Chloé",group:"Poids",icon:"⚖️",title:"Période de prise de poids",target:"weight",signal:"weight_up",strength:.78,pattern:"weight_up"},
-    {id:"withdrawal-rechallenge",profileName:"Amélie",group:"Évolution",icon:"🔄",title:"Retrait puis réintroduction",target:"dairy",signal:"digestive",strength:.82,pattern:"rechallenge"},
-    {id:"dose-response",profileName:"Vincent",group:"Cas complexes",icon:"📈",title:"Effet de quantité",target:"legumes",signal:"digestive",strength:.72,pattern:"dose"},
-    {id:"delayed-reaction",profileName:"Élodie",group:"Cas complexes",icon:"⏱️",title:"Réaction retardée 12–24 h",target:"soy",signal:"digestive",strength:.72,pattern:"delayed"},
-    {id:"false-dairy-allium",profileName:"Hugo",group:"Tests pièges",icon:"🎭",title:"Faux coupable : fromage vs ail",target:"allium",decoy:"dairy",signal:"digestive",strength:.76,pattern:"confounder"},
-    {id:"late-coffee-only",profileName:"Isabelle",group:"Tests pièges",icon:"🕔",title:"Le café du matin est innocent",target:"caffeine",signal:"sleep",strength:.82,pattern:"timing"},
-    {id:"random-no-signal",profileName:"Marc",group:"Contrôles",icon:"🎲",title:"Aucune association réelle",target:"neutral",signal:"none",strength:0,pattern:"control"},
-    {id:"too-few-exposures",profileName:"Karine",group:"Contrôles",icon:"🔬",title:"Trop peu de données pour conclure",target:"seafood",signal:"digestive",strength:.80,pattern:"sparse"},
-    {id:"coincidence-fades",profileName:"Simon",group:"Contrôles",icon:"🫥",title:"Coïncidence temporaire qui disparaît",target:"dairy",signal:"digestive",strength:.75,pattern:"transient"},
-    {id:"missing-data",profileName:"Nadia",group:"Robustesse",icon:"🧩",title:"Données manquantes et signal réel",target:"seafood",signal:"digestive",strength:.74,pattern:"missing"},
-    {id:"chaotic-multifactor",profileName:"Félix",group:"Cas complexes",icon:"🌪️",title:"Sommeil, repas et activité changent ensemble",target:"processed_foods",signal:"energy",strength:.48,pattern:"chaotic"}
   ];
 
   function meal(id,date,time,type,description,tags=[],rating=4,notes=""){

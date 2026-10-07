@@ -23,7 +23,7 @@ assert.deepEqual(timeline.events({observations:[{time:'09:15'}],beverages:[{time
 
 const source = fs.readFileSync(require.resolve('../app.js'),'utf8');
 const esc = x=>String(x??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
-const context = vm.createContext({Date, db:{settings:{journalViewMode:'consultation'}},selectedDate:date,window:{ENERGIE_CONSULTATION:timeline,ENERGIE_LOCALE:'fr-CA'},esc,t:x=>x,professionalClientReadOnly:()=>true,mealIcon:()=>'',nutritionVisibleToViewer:()=>false,normalizedEatingReasonState:(ids,other)=>({reasons:ids||[],other}),EATING_REASON_META:[{id:'hunger',label:'J’avais faim'}],feelingScoresFor:scores,feelingScorePreviewHtml:s=>JSON.stringify(s),formatSleepDuration:h=>`${h} h`,sleepMarker:()=>null,stepsProgressHtml:()=>'',formatCalendarDate:x=>x,ACTIVITY_INTENSITY_LABELS:{moderate:'Modérée'},activityIcon:()=>'',BEVERAGE_TYPES:[],beverageType:()=>({icon:'',label:'Eau'}),FEELING_TAGS:[]});
+const context = vm.createContext({Date, db:{settings:{journalViewMode:'consultation'}},selectedDate:date,window:{ENERGIE_CONSULTATION:timeline,ENERGIE_LOCALE:'fr-CA'},esc,t:x=>x,professionalClientReadOnly:()=>true,mealIcon:()=>'',nutritionVisibleToViewer:()=>false,normalizedEatingReasonState:(ids,other)=>({reasons:ids||[],other}),EATING_REASON_META:[{id:'hunger',label:'J’avais faim'}],feelingScoresFor:scores,feelingScorePreviewHtml:s=>JSON.stringify(s),formatSleepDuration:h=>`${h} h`,sleepMarker:()=>null,stepsProgressHtml:()=>'<div class="test-steps">Pas</div>',formatCalendarDate:x=>x,ACTIVITY_INTENSITY_LABELS:{moderate:'Modérée'},activityIcon:()=>'',BEVERAGE_TYPES:[],beverageType:()=>({icon:'',label:'Eau'}),FEELING_TAGS:[]});
 vm.runInContext(source.slice(source.indexOf('  function journalViewMode()'), source.indexOf('  function stepsGoalForDay(')),context);
 const meal={...breakfast,description:'<script>alert(1)</script>',eatingReasons:['hunger'],photos:[{url:'photo1'},{local:'photo2'},{url:'photo3'}]};
 const html=context.journalConsultationHtml({...day,sleepHours:8,sleepStartTime:'23:00',sleepEndTime:'07:00',meals:[meal]});
@@ -65,3 +65,8 @@ const lateHtml=context.journalConsultationHtml({meals:[late]});
 assert.ok(lateHtml.indexOf('consultation-meal-feelings--before')<lateHtml.indexOf('consultation-meal-feelings--after'));
 assert.ok(lateHtml.includes('13 h 00')||lateHtml.includes('13:00'));
 assert.ok(lateHtml.includes('07 h 00')||lateHtml.includes('07:00'));
+
+const hydrated=context.journalConsultationHtml({meals:[],water:3});
+assert.equal((hydrated.match(/data-water=/g)||[]).length,8);
+assert.equal((hydrated.match(/drop filled/g)||[]).length,3);
+assert.ok(hydrated.indexOf('consultation-hydration')<hydrated.indexOf('test-steps'));

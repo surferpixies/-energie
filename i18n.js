@@ -44,7 +44,7 @@
   };
   const en={
     'Vue du journal':'Journal view','Sommaire':'Summary','Détaillée':'Detailed','Consultation':'Consultation',
-    'Heure non consignée':'Time not recorded','Ressentis avant':'Feelings before','Ressentis après':'Feelings after',
+    'Chargement du scénario…':'Loading the scenario…','Le scénario n’a pas pu être ouvert. Ton journal a été conservé.':'The scenario could not be opened. Your journal was preserved.','Une goutte = 500 ml':'One drop = 500 ml','Heure non consignée':'Time not recorded','Ressentis avant':'Feelings before','Ressentis après':'Feelings after',
     'Voir les détails':'View details','Voir ou modifier':'View or edit','Coucher':'Bedtime','Réveil':'Wake-up',
     'Non consigné':'Not recorded','Aucune entrée pour cette journée.':'No entries for this day.',
     'Qu’est-ce qui t’a amené à manger?':'What prompted you to eat?',

@@ -34,3 +34,8 @@
 .consultation-meal-reasons{border-top:1px solid var(--border);padding-top:10px;font-size:.85rem}
 .consultation-meal-reasons strong{display:block;margin-bottom:4px}
 .consultation-sleep-times{display:flex;gap:12px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+
+.consultation-hydration{padding:12px 16px;margin:0}
+.consultation-hydration h3{font-size:.9rem;margin:0}
+.consultation-hydration .water-row{margin-top:8px}
+.consultation-hydration p{margin:6px 0 0}

@@ -2938,7 +2938,16 @@ function formatSleepDuration(hours) {
     }
     return output;
   }
+  const mealCompositionCache = new Map();
   function mealCompositionAnalysis(text) {
+    const key = `${window.ENERGIE_LOCALE || "fr-CA"}|${String(text || "")}`;
+    if (mealCompositionCache.has(key)) return mealCompositionCache.get(key);
+    const result = uncachedMealCompositionAnalysis(text);
+    if (mealCompositionCache.size >= 300) mealCompositionCache.clear();
+    mealCompositionCache.set(key, result);
+    return result;
+  }
+  function uncachedMealCompositionAnalysis(text) {
     const knownDish = window.ENERGIE_DISH_KNOWLEDGE?.findDish?.(text),
       hasExplicitIngredientList = /[+,;\n\r|]|\s+\/\s+|\b(avec|with)\b/i.test(String(text || "")),
       categoryIds = new Set(
@@ -4077,12 +4086,17 @@ function formatSleepDuration(hours) {
       0,
     );
   }
+  const observationNutritionCache = new Map();
+  function observationNutritionEstimate(description) {
+    const key = `${window.ENERGIE_LOCALE || "fr-CA"}|${String(description || "")}`;
+    if (observationNutritionCache.has(key)) return observationNutritionCache.get(key);
+    const result = estimateNutritionFromText(description) || null;
+    if (observationNutritionCache.size >= 300) observationNutritionCache.clear();
+    observationNutritionCache.set(key, result);
+    return result;
+  }
   function nutritionForRecommendation(meal) {
-    return (
-      normalNutrition(meal.nutrition) ||
-      estimateNutritionFromText(meal.description) ||
-      null
-    );
+    return normalNutrition(meal.nutrition) || observationNutritionEstimate(meal.description);
   }
   function recommendationHistory() {
     try {
@@ -6041,7 +6055,45 @@ function formatSleepDuration(hours) {
       );
     return `<details class="card demo-selector-card lab-selector-panel"><summary><span><small class="eyebrow"><span class="lab-flask" aria-hidden="true">🧪</span> Laboratoire Énergie</small><strong>Scénarios dynamiques</strong><small>60 jours fictifs pour explorer les Observations${active ? ` · Variante ${activeVariant}` : ""}</small></span><span class="demo-selector-meta"><b>${lab.scenarios.length} scénarios</b><i aria-hidden="true">›</i></span></summary><div class="demo-selector-content"><div class="lab-actions"><button class="primary" type="button" id="labRandomScenario">🎲 Scénario surprise</button>${active ? `<button class="secondary" type="button" id="labNewVariant">🎲 Nouvelle variante <span aria-hidden="true">(${activeVariant + 1})</span></button><button class="secondary" type="button" id="leaveLab">Revenir à mon journal</button>` : ""}</div><div class="demo-profile-grid">${lab.scenarios.map((sc) => `<article class="demo-person-card ${active === sc.id ? "is-active" : ""}"><div class="demo-person-head"><span class="demo-person-avatar">${sc.icon}</span><div><h4>${esc(sc.title)}</h4><small>${esc(sc.group)}${active === sc.id ? ` · Variante ${activeVariant}` : ""}</small></div></div><button class="${active === sc.id ? "secondary" : "primary"} small" type="button" data-open-lab-scenario="${sc.id}">${active === sc.id ? "Scénario ouvert" : "Tester"}</button></article>`).join("")}</div></div></details>`;
   }
-  function enterLabScenario(id,variant=1){const lab=window.EnergieDemoLab;if(!lab)return alert("Le Laboratoire n’est pas chargé.");if(!labRealDb){labRealDb=db;try{labRealBrainMemory=brainMemoryState()?JSON.parse(JSON.stringify(brainMemoryState())):null;}catch(_){labRealBrainMemory=null;}}labVariant=variant;db=migrate(lab.generate(id,{variant}));db.settings.demoMode=true;db.settings.demoReadOnly=true;insightsComputationCache=null;observationExplorerResultsCache.clear();buildDemoBrainMemory(db);selectedDate=Object.keys(db.days||{}).sort().at(-1)||todayKey();currentView="insights";render();}
+  let labScenarioLoading = false;
+  async function enterLabScenario(id, variant = 1) {
+    const lab = window.EnergieDemoLab;
+    if (!lab || labScenarioLoading) return;
+    labScenarioLoading = true;
+    const previousDb = db, previousDate = selectedDate, previousView = currentView;
+    if (!labRealDb) {
+      labRealDb = db;
+      try { labRealBrainMemory = brainMemoryState() ? JSON.parse(JSON.stringify(brainMemoryState())) : null; }
+      catch (_) { labRealBrainMemory = null; }
+    }
+    const previousMemory = brainMemoryState() ? JSON.parse(JSON.stringify(brainMemoryState())) : null;
+    try {
+      $("#app").innerHTML = `<section class="card" aria-live="polite"><h2>🧪 ${esc(t("Chargement du scénario…"))}</h2></section>`;
+      // Laisser le navigateur afficher l'état de chargement avant les calculs.
+      await new Promise(resolve => setTimeout(resolve, 0));
+      const nextDb = migrate(lab.generate(id, { variant }));
+      labVariant = variant;
+      db = nextDb;
+      db.settings.demoMode = true;
+      db.settings.demoReadOnly = true;
+      selectedDate = Object.keys(db.days || {}).sort().at(-1) || todayKey();
+      insightsComputationCache = null;
+      observationExplorerResultsCache.clear();
+      buildDemoBrainMemory(db);
+      currentView = "insights";
+      render();
+    } catch (error) {
+      console.error("Laboratoire : ouverture impossible", error);
+      db = previousDb;
+      selectedDate = previousDate;
+      currentView = previousView;
+      if (previousMemory && window.Brain?.replaceMemoryState) window.Brain.replaceMemoryState(previousMemory);
+      if (db === labRealDb) { labRealDb = null; labRealBrainMemory = null; }
+      insightsComputationCache = null;
+      render();
+      alert(t("Le scénario n’a pas pu être ouvert. Ton journal a été conservé."));
+    } finally { labScenarioLoading = false; }
+  }
   function leaveLab(){if(!labRealDb)return;db=labRealDb;labRealDb=null;if(labRealBrainMemory&&window.Brain?.replaceMemoryState)window.Brain.replaceMemoryState(labRealBrainMemory);labRealBrainMemory=null;labVariant=1;selectedDate=todayKey();currentView="profile";render();}
   function randomLabScenario(){const sc=window.EnergieDemoLab?.randomScenario?.({variant:Date.now()});if(sc)enterLabScenario(sc.id,1);}
   function newLabVariant(){
@@ -9265,10 +9317,15 @@ function formatSleepDuration(hours) {
     return `<article class="card consultation-event consultation-event--${kind}">${heading}${content}${action}</article>`;
   }
 
+  function consultationHydrationHtml(day) {
+    const goal = Math.max(1, Math.min(30, Number(db.settings.waterGoal) || 8));
+    const water = Number(day.water) || 0;
+    return `<section class="card consultation-hydration"><div class="row"><h3>💧 ${esc(t("Hydratation"))}</h3><strong>${water}/${goal}</strong></div><div class="water-row">${Array.from({length:goal}, (_, i) => `<button type="button" class="drop ${i < water ? "filled" : ""}" data-water="${i + 1}" aria-label="${(i + 1) * 500} ml">💧</button>`).join("")}</div><p class="muted small">${esc(t("Une goutte = 500 ml"))}</p></section>`;
+  }
   function journalConsultationHtml(day) {
     const sleepTags = (day.sleepTags || []).map(sleepMarker).filter(Boolean).map(marker => `${marker.icon} ${esc(t(marker.label))}`).join(" · ");
     const events = window.ENERGIE_CONSULTATION.events(day, selectedDate, feelingScoresFor);
-    return `<div class="journal-consultation"><article class="card consultation-event consultation-event--sleep"><div class="consultation-event-heading"><h3>🌙 ${esc(t("Sommeil de la nuit dernière"))}</h3><strong>${day.sleepHours != null ? esc(formatSleepDuration(day.sleepHours)) : esc(t("Non consigné"))}</strong></div><div class="consultation-sleep-times">${day.sleepStartTime ? `<span>${esc(t("Coucher"))} ${esc(day.sleepStartTime)}</span>` : ""}${day.sleepEndTime ? `<span>${esc(t("Réveil"))} ${esc(day.sleepEndTime)}</span>` : ""}</div>${sleepTags || day.sleepComment ? `<details class="consultation-sleep-details"><summary>${esc(t("Détails"))}</summary>${sleepTags ? `<p>${sleepTags}</p>` : ""}${day.sleepComment ? `<p translate="no">${esc(day.sleepComment)}</p>` : ""}</details>` : ""}<button type="button" class="consultation-entry-open edit-sleep">${esc(t(professionalClientReadOnly() ? "Voir les détails" : "Voir ou modifier"))}</button></article>${events.map(journalConsultationEventHtml).join("") || `<p class="muted small">${esc(t("Aucune entrée pour cette journée."))}</p>`}${stepsProgressHtml(day)}</div>`;
+    return `<div class="journal-consultation"><article class="card consultation-event consultation-event--sleep"><div class="consultation-event-heading"><h3>🌙 ${esc(t("Sommeil de la nuit dernière"))}</h3><strong>${day.sleepHours != null ? esc(formatSleepDuration(day.sleepHours)) : esc(t("Non consigné"))}</strong></div><div class="consultation-sleep-times">${day.sleepStartTime ? `<span>${esc(t("Coucher"))} ${esc(day.sleepStartTime)}</span>` : ""}${day.sleepEndTime ? `<span>${esc(t("Réveil"))} ${esc(day.sleepEndTime)}</span>` : ""}</div>${sleepTags || day.sleepComment ? `<details class="consultation-sleep-details"><summary>${esc(t("Détails"))}</summary>${sleepTags ? `<p>${sleepTags}</p>` : ""}${day.sleepComment ? `<p translate="no">${esc(day.sleepComment)}</p>` : ""}</details>` : ""}<button type="button" class="consultation-entry-open edit-sleep">${esc(t(professionalClientReadOnly() ? "Voir les détails" : "Voir ou modifier"))}</button></article>${events.map(journalConsultationEventHtml).join("") || `<p class="muted small">${esc(t("Aucune entrée pour cette journée."))}</p>`}${consultationHydrationHtml(day)}${stepsProgressHtml(day)}</div>`;
   }
 
   function bindJournalConsultation() {
@@ -10848,7 +10905,7 @@ function formatSleepDuration(hours) {
 
           if (!nutrition && !nutritionEstimated) {
             nutritionEstimated = true;
-            estimatedNutrition = estimateNutritionFromText(rawText);
+            estimatedNutrition = observationNutritionEstimate(rawText);
           }
 
           nutrition = nutrition || estimatedNutrition;
@@ -13281,7 +13338,7 @@ function formatSleepDuration(hours) {
   document.addEventListener("visibilitychange", () => { if (document.hidden) flushPersonalProfile?.(); });
 
   function calorieEstimator(description) {
-    return db.settings.autoNutritionEstimates !== false ? estimateNutritionFromText(description) : null;
+    return db.settings.autoNutritionEstimates !== false ? observationNutritionEstimate(description) : null;
   }
   function weightKgForDate(date) {
     const entries = Object.entries(db.days || {})
