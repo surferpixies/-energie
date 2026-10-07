@@ -282,6 +282,8 @@
     }
 
     const simple = stripQuantity(text).replace(/\b(cru[e]?s?|cuit[e]?s?|raw|cooked)\b/g, "").trim();
+    // Cottage sans précision : référence nature 2 %; les variantes explicites restent recherchées.
+    if (/^(?:fromage )?cottage$/.test(simple)) return catalogById.get("120") || null;
     const references = { boeuf: ["6169", "6172"], beef: ["6169", "6172"], porc: ["6926", "6288"], pork: ["6926", "6288"], dinde: ["690", "691"], turkey: ["690", "691"], veau: ["3507", "3508"], veal: ["3507", "3508"], agneau: ["3422", "3423"], lamb: ["3422", "3423"] };
     if (references[simple]) return catalogById.get(references[simple][states(text).includes("raw") ? 0 : 1]) || null;
     const hasChicken = /\b(poulet|chicken)\b/.test(n);

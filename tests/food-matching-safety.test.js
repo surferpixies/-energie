@@ -275,3 +275,20 @@ for(const locale of ['fr-CA','fr-FR']) {
  assert.equal(guided.fiber,0);
 }
 console.log('St-Hubert : étiquette, comptes, grammes, repas complet, guidé et relecture OK');
+
+// Le guide doit donner un exemple qui fonctionne dans les deux référentiels.
+for (const locale of ['fr-CA', 'fr-FR']) {
+ global.ENERGIE_LOCALE = locale;
+ const full = context.estimateNutritionFromText('1 tasse cottage');
+ assert.ok(full, locale);
+ for (const [quantity, ratio] of [['1/2', .5], ['1/4', .25]]) {
+  const input = `${quantity} tasse cottage`;
+  const portion = context.estimateNutritionFromText(input);
+  assert.ok(portion, input);
+  assert.ok(Math.abs(portion.calories - full.calories * ratio) < 1, input);
+ }
+ const meal = context.estimateNutritionFromText('laitue\nconcombres\n1/2 tasse cottage');
+ assert.ok(meal, locale);
+ assert.equal(meal.trace.items.length, 3);
+ assert.match(productApi.find('1 tasse cottage').cnfNameFr, /2%/);
+}

@@ -56,6 +56,8 @@
   function find(text){
     text=cnf.meatPreparationText(text);
     if(cnf.requiresClarification(text)||cnf.naturalCount(text)!=null)return null;
+    // Ciqual ne fournit pas de poids par tasse : laisser le FCÉN résoudre le volume.
+    if(cnf.quantityKind(text) && cnf.quantityKind(text)!=='g')return null;
     const candidates=rank(text,2),row=candidates[0];if(!row)return null;
     const second=candidates[1];
     if(second && score(row,text)-score(second,text)<45 &&
