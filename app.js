@@ -13690,175 +13690,53 @@ function formatSleepDuration(hours) {
 
   function enhanceProfileWithAccordions() {
     const profile = $("#app .stack");
-    if (!profile) return;
-
-    // renderProfile() rebuilds the DOM each time. If accordions already exist in
-    // this render, don't wrap them twice.
-    if (profile.querySelector(".profile-accordion")) return;
-
-    const cards = [...profile.children].filter((el) =>
-      el.matches("section.card, details.card")
-    );
-    if (!cards.length) return;
-
-    const norm = (s) =>
-      (s || "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[’‘`´]/g, "'")
-        .replace(/\s+/g, " ")
-        .trim();
-
+    if (!profile || profile.querySelector(".profile-accordion")) return;
+    const cards = [...profile.children].filter((el) => el.matches("section.card, details.card"));
     const buckets = [
-      {
-        key: "about",
-        icon: "👤",
-        title: "À propos de moi",
-        terms: ["a propos de moi", "contexte physiologique"],
-      },
-      {
-        key: "tracking",
-        icon: "🎯",
-        title: "Mes objectifs et suivis",
-        terms: [
-          "objectif d'eau",
-          "suivi des pas",
-          "balance calorique",
-          "balance energetique",
-          "ressenti",
-          "sommeil",
-          "mes favoris",
-          "supplements",
-        ],
-      },
-      {
-        key: "other",
-        icon: "🧑‍⚕️",
-        title: "Professionnel & démonstration",
-        terms: [
-          "accompagnement professionnel",
-          "mode professionnel",
-          "suivi professionnel",
-          "lier mon suivi",
-          "mode demo",
-          "laboratoire energie",
-          "scenarios dynamiques",
-        ],
-      },
-      {
-        key: "help",
-        icon: "🌱",
-        title: "Découvrir Énergie",
-        terms: ["message d", "decouvrir energie"],
-      },
-      {
-        key: "prefs",
-        icon: "⚙️",
-        title: "Préférences de l’application",
-        terms: [
-          "ambiance saisonniere",
-          "observations et recommandations",
-          "langue",
-          "sauvegarde supplementaire",
-          "donnees et sauvegarde",
-          "photos des repas",
-          "elements reconnus",
-          "journal sommaire",
-          "masquer les repas completes",
-          "raisons de manger",
-          "qu'est-ce qui t'a amene a manger",
-          "planification des repas",
-          "jauge de cible calorique",
-          "saisie des repas",
-          "forcer la saisie guidee fcen",
-        ],
-      },
+      {key: "about", icon: "👤", title: "Mon profil personnel", description: "Âge, taille, poids et contexte personnel", selectors: ".personal-profile-card,.physiological-context-card"},
+      {key: "meals", icon: "🍽️", title: "Repas et saisie", description: "FCÉN, Ciqual, favoris et façon de noter mes repas", selectors: ".guided-entry-settings,.nutrition-source-profile-card,.recognized-elements-setting-card,.eating-reasons-setting-card,.future-meal-planning-setting-card,.profile-favorites-panel"},
+      {key: "calories", icon: "⚖️", title: "Calories et objectifs", description: "Affichage, estimations et cible calorique", selectors: ".calorie-balance-profile-card"},
+      {key: "tracking", icon: "💧", title: "Suivi quotidien", description: "Hydratation, pas, Santé, ressentis et suppléments", selectors: ".steps-profile-card,.apple-health-profile-card,#waterGoal,#settingFeelingReminders,#supplementNameInput"},
+      {key: "observations", icon: "👁️", title: "Observations", description: "Tendances, analyses et suggestions", selectors: "#settingInsights,#settingNutrition,#settingRecommendations"},
+      {key: "sharing", icon: "🔒", title: "Confidentialité et partage", description: "Photos, accès professionnel et sauvegarde", selectors: ".profile-avatar-settings-card,.meal-photo-settings-card,.professional-setting-card,.professional-client-link-card,.professional-beta-entry,.profile-backup-panel"},
+      {key: "appearance", icon: "🎨", title: "Apparence", description: "Langue, thème et présentation du journal", selectors: ".seasonal-setting-card,.journal-summary-setting-card,#languageSettingCard,.profile-theme-settings-card"},
+      {key: "help", icon: "🌱", title: "Découvrir Énergie", description: "Guide, informations et scénarios de démonstration", selectors: ".energy-guide-profile-card,.lab-selector-panel,.demo-profile-card,#showWelcomeAgain"},
     ];
-
-    const assigned = new Set();
-
-    buckets.forEach((bucket) => {
-      const matched = cards.filter((card) => {
-        if (assigned.has(card)) return false;
-        if (card.classList.contains("profile-creator-card")) return false;
-        if (card.classList.contains("profile-account-card")) return false;
-        // Le lien professionnel du client doit rester visible directement dans Profil.
-        if (card.classList.contains("professional-client-link-card")) return false;
-
-        const heading =
-          card.querySelector("h2,h3,h4,summary")?.textContent ||
-          card.textContent ||
-          "";
-        const txt = norm(heading.slice(0, 220));
-        return bucket.terms.some((term) => txt.includes(norm(term)));
-      });
-
-      if (!matched.length) return;
-      matched.forEach((card) => assigned.add(card));
-
+    const grouped = new Map(buckets.map((bucket) => [bucket.key, []]));
+    for (const card of cards) {
+      if (card.matches(".profile-account-card,.pilot-mode-profile-card,.profile-creator-card")) continue;
+      // Les identifiants ne changent pas lorsque la langue de l'app change.
+      const bucket = buckets.find((item) => card.matches(item.selectors) || card.querySelector(item.selectors));
+      grouped.get(bucket?.key || "appearance").push(card);
+    }
+    for (const bucket of buckets) {
+      const matched = grouped.get(bucket.key);
+      if (!matched.length) continue;
       const wrap = document.createElement("section");
       wrap.className = "profile-accordion card";
       wrap.dataset.profileAccordion = bucket.key;
-
       const details = document.createElement("details");
       details.className = "profile-accordion-details";
-      details.innerHTML = `
-        <summary>
-          <span class="profile-accordion-title">
-            <span aria-hidden="true">${bucket.icon}</span>
-            <span>
-              <strong>${bucket.title}</strong>
-              <small></small>
-            </span>
-          </span>
-          <span class="profile-accordion-chevron" aria-hidden="true">⌄</span>
-        </summary>
-        <div class="profile-accordion-body"></div>`;
-
+      details.innerHTML = `<summary><span class="profile-accordion-title"><span aria-hidden="true">${bucket.icon}</span><span><strong>${esc(t(bucket.title))}</strong><small>${esc(t(bucket.description))}</small></span></span><span class="profile-accordion-chevron" aria-hidden="true">⌄</span></summary><div class="profile-accordion-body"></div>`;
       wrap.appendChild(details);
-      matched[0].before(wrap);
-      details.open = profileAccordionOpenKey === bucket.key;
-
       const body = details.querySelector(".profile-accordion-body");
       matched.forEach((card) => body.appendChild(card));
-
-      const summaryBits = matched
-        .slice(0, 2)
-        .map((card) =>
-          (
-            card.querySelector("h2,h3,h4,summary strong")?.textContent || ""
-          ).trim(),
-        )
-        .filter(Boolean);
-      details.querySelector("small").textContent =
-        bucket.key === "help"
-          ? "Guide de l’application · Message d’information"
-          : summaryBits.join(" · ");
-
+      details.open = profileAccordionOpenKey === bucket.key;
       details.addEventListener("toggle", () => {
         if (details.open) {
           profileAccordionOpenKey = bucket.key;
-          profile
-            .querySelectorAll(".profile-accordion-details[open]")
-            .forEach((other) => {
-              if (other !== details) other.open = false;
-            });
-        } else if (profileAccordionOpenKey === bucket.key) {
-          profileAccordionOpenKey = null;
-        }
+          profile.querySelectorAll(".profile-accordion-details[open]").forEach((other) => {
+            if (other !== details) other.open = false;
+          });
+        } else if (profileAccordionOpenKey === bucket.key) profileAccordionOpenKey = null;
       });
-    });
-
-    // Less frequently used sections live at the bottom of Profile.
-    // Keep the creator signature as the visual footer.
+      profile.appendChild(wrap);
+    }
+    // Seul le mode pilote reste directement activable, après les catégories.
+    const pilot = profile.querySelector(".pilot-mode-profile-card");
+    if (pilot) profile.appendChild(pilot);
     const creator = profile.querySelector(".profile-creator-card");
-    const helpGroup = profile.querySelector('[data-profile-accordion="help"]');
-    const prefsGroup = profile.querySelector('[data-profile-accordion="prefs"]');
-    if (helpGroup) profile.insertBefore(helpGroup, creator || null);
-    if (prefsGroup) profile.insertBefore(prefsGroup, creator || null);
-
-    // Tous les groupes du Profil commencent fermés à chaque ouverture.
+    if (creator) profile.appendChild(creator);
   }
 
   let energyGuideImagesPromise = null;
@@ -14011,6 +13889,14 @@ function formatSleepDuration(hours) {
     accountCard?.insertAdjacentHTML("afterend", avatarManager.settingsHtml());
     const accountProfileCard = ($("#syncNow") || $("#signIn"))?.closest("section.card");
     accountProfileCard?.insertAdjacentHTML("afterend", `<section class="card pilot-mode-profile-card"><h3>🧪 Mode pilote</h3><p class="muted small">Active un lien discret dans Énergie pour transmettre rapidement une suggestion, un bogue ou un autre commentaire pendant le projet pilote.</p><label class="toggle-row"><span><strong>Activer le mode pilote</strong><small>Le contexte technique est ajouté automatiquement, jamais le contenu de ton journal.</small></span><input id="settingPilotMode" type="checkbox" ${db.settings.pilotMode === true ? "checked" : ""}></label></section>`);
+
+    const calorieOptions = $(".calorie-balance-profile-card .calorie-settings-options");
+    const nutritionNotice = $("#settingNutrition")?.closest("section.card")?.querySelector(".info-notice");
+    if (calorieOptions && nutritionNotice) calorieOptions.prepend(nutritionNotice);
+    const autoNutritionOption = $("#settingAutoNutrition")?.closest("label");
+    if (calorieOptions && autoNutritionOption) calorieOptions.appendChild(autoNutritionOption);
+    $("#app .stack")?.insertAdjacentHTML("beforeend", `<section class="card profile-theme-settings-card"><div class="settings-row"><div><h3>${t("Thème")}</h3><p class="muted small">${t("Choisir une apparence claire ou sombre")}</p></div><button type="button" class="secondary small" id="profileThemeToggle">${t("Changer le thème")}</button></div></section>`);
+    $("#profileThemeToggle")?.addEventListener("click", () => $("#themeToggle")?.click());
 
     // Build the visual Profile groups NOW, before any later binding can interrupt renderProfile().
     enhanceProfileWithAccordions();
@@ -17074,6 +16960,7 @@ function formatSleepDuration(hours) {
       (b.onclick = () => {
         const was = currentView;
         currentView = b.dataset.view;
+        if (currentView === "profile" && was !== "profile") profileAccordionOpenKey = null;
         if (currentView === "today" && was !== "today")
           selectedDate = todayKey();
         render();
@@ -17713,7 +17600,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.178");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.179");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
