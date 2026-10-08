@@ -13249,7 +13249,11 @@ function formatSleepDuration(hours) {
     const started = performance.now();
     try {
       const facts = await prepareBrainCoverageFacts(descriptions, isCurrent);
-      if (!facts || !isCurrent()) return;
+      if (!facts || !isCurrent()) {
+        // Une synchronisation ou un changement de contexte ne doit pas laisser le chargement affiché.
+        if (generation === brainRenderGeneration && currentView === "brain") return renderBrain();
+        return;
+      }
       renderBrainContents(brainCoverageData(60, facts));
       renderProfessionalBetaContextBar();
       renderDemoChrome();
@@ -17654,7 +17658,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.181");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.182");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});

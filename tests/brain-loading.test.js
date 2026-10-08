@@ -35,7 +35,8 @@ function fixture(count=40){
   await large.ctx.renderBrain();assert.equal(large.calls,700,'Only missing facts recalculated beyond cache capacity');
   const left=fixture();const work=left.ctx.renderBrain();left.ctx.currentView='profile';left.node.innerHTML='profile';await work;
   assert.equal(left.draws,0);assert.equal(left.node.innerHTML,'profile');assert.equal(left.calls,0);
-  const switched=fixture();const pending=switched.ctx.renderBrain();switched.ctx.db={settings:{},days:{}};await pending;assert.equal(switched.draws,0);
+  const switched=fixture();const pending=switched.ctx.renderBrain();switched.ctx.db={settings:{},days:{}};await pending;assert.equal(switched.draws,1);assert.equal(switched.reports[0].mealTotal,0,"A changed account is rendered from its own journal instead of leaving loading stuck");
+  const changedDate=fixture();const datePending=changedDate.ctx.renderBrain();changedDate.ctx.selectedDate="2026-10-06";await datePending;assert.equal(changedDate.draws,1,"Active view restarts when its date changes during preparation");
   const duplicate=fixture();const older=duplicate.ctx.renderBrain();const latest=duplicate.ctx.renderBrain();await Promise.all([older,latest]);assert.equal(duplicate.draws,1);
   const demo=fixture();demo.ctx.db.settings.demoMode=true;demo.ctx.selectedDate='2026-10-06';await demo.ctx.renderBrain();assert.equal(demo.reports[0].mealTotal,0,'Demo future meals excluded');
   const parser=vm.createContext({window:{}});

@@ -181,43 +181,55 @@
     const value = {
       descriptor: d,
       candidateText: ` ${normalizedCombined} `,
-      candidateStates: states(normalizedCombined),
+      candidateStates: null,
+      candidateTokens: foodTokens(normalizedCombined),
+      aliases: [d.fr, d.en, d.firstFr, d.firstEn].filter(Boolean).map(alias => ({ alias, tokens: foodTokens(alias).join(" ") })),
       frWordCount: d.fr ? d.fr.split(" ").length : 0,
     };
     if (row && typeof row === "object") rowMetaCache.set(row, value);
     return value;
   }
 
-  function scoreRow(row, text, options = {}) {
-    const query = stripQuantity(text);
-    if (!query || !isCandidateAllowed(text, row?.[1], options) && !isCandidateAllowed(text, row?.[2], options)) return -Infinity;
+  function searchQueryMeta(text) {
+    const query = stripQuantity(text), tokens = foodTokens(query);
+    return { query, tokens: tokens.join(" "), wordCount: query.split(" ").length,
+      words: tokens.filter(word => word.length >= 3 && !Object.values(stateWords).flat().includes(word)),
+      wantedStates: states(text),
+      preciseCooking: foodTokens(text).filter(word => ["roti", "rotie", "grille", "grillee", "bouilli", "bouillie", "frit", "frite"].includes(word)) };
+  }
+
+  function scoreRow(row, text, options = {}, queryMeta = searchQueryMeta(text)) {
+    const { query } = queryMeta;
+    if (!query) return -Infinity;
     const meta = rowSearchMeta(row);
     const d = meta.descriptor;
-    const aliases = [d.fr, d.en, d.firstFr, d.firstEn].filter(Boolean);
+    const aliases = meta.aliases;
     let score = -Infinity;
 
-    for (const alias of aliases) {
-      if (foodTokens(query).join(" ") === foodTokens(alias).join(" ")) score = Math.max(score, alias === d.fr || alias === d.en ? 1200 : 900);
+    for (const { alias, tokens } of aliases) {
+      if (queryMeta.tokens === tokens) score = Math.max(score, alias === d.fr || alias === d.en ? 1200 : 900);
       else if ((` ${query} `).includes(` ${alias} `)) score = Math.max(score, 720 + alias.split(" ").length * 20);
-      else if ((` ${alias} `).includes(` ${query} `) && query.split(" ").length >= 2) score = Math.max(score, 620 + query.split(" ").length * 20);
+      else if ((` ${alias} `).includes(` ${query} `) && queryMeta.wordCount >= 2) score = Math.max(score, 620 + queryMeta.wordCount * 20);
     }
 
     // Le FCÉN nomme souvent les aliments comme « Poisson, tilapia, ... ».
     // Permettre un nom simple (« tilapia ») s'il apparaît comme mot entier,
     // tout en laissant l'étape d'ambiguïté refuser les correspondances serrées.
-    const queryWords = foodTokens(query).filter((word) => word.length >= 3 && !Object.values(stateWords).flat().includes(word));
-    const candidateText = ` ${foodTokens(meta.candidateText).join(" ")} `;
+    const queryWords = queryMeta.words;
+    const candidateText = ` ${meta.candidateTokens.join(" ")} `;
     if (queryWords.length && queryWords.every((word) => candidateText.includes(` ${word} `))) {
       score = Math.max(score, 690 + queryWords.length * 35);
     }
 
     if (!Number.isFinite(score)) return score;
 
-    const wantedStates = states(text);
-    const candidateStates = meta.candidateStates;
+    // Les vérifications de préparation ne concernent que les fiches qui correspondent au texte.
+    if (!isCandidateAllowed(text, row?.[1], options) && !isCandidateAllowed(text, row?.[2], options)) return -Infinity;
+    const wantedStates = queryMeta.wantedStates;
+    const candidateStates = meta.candidateStates ||= states(meta.candidateText);
     score += stateCompatibility(wantedStates, candidateStates).bonus;
-    const preciseCooking = foodTokens(text).filter(word => ["roti", "rotie", "grille", "grillee", "bouilli", "bouillie", "frit", "frite"].includes(word));
-    if (preciseCooking.length && preciseCooking.some(word => foodTokens(meta.candidateText).includes(word))) score += 250;
+    const preciseCooking = queryMeta.preciseCooking;
+    if (preciseCooking.length && preciseCooking.some(word => meta.candidateTokens.includes(word))) score += 250;
 
     // Éviter qu'un aliment composé dont le nom commence par la requête
     // (ex. « pomme cannelle ») gagne contre l'aliment générique « pomme ».
@@ -432,8 +444,9 @@
     // variantes proches. Énergie choisit une référence FCÉN cuite courante par
     // défaut plutôt que de retomber sur l'ancienne base faute de pouvoir
     // départager des dizaines de fiches équivalentes.
+    const queryMeta = searchQueryMeta(text);
     const preferred = preferredCommonFood(text);
-    if (preferred && Number.isFinite(scoreRow(preferred, text))) {
+    if (preferred && Number.isFinite(scoreRow(preferred, text, {}, queryMeta))) {
       const normalizedText = normalize(text),
         chickenWithoutQuantity =
           /\b(poulet|chicken)\b/.test(normalizedText) &&
@@ -448,7 +461,7 @@
 
     const ranked = [];
     for (const row of catalog) {
-      let score = scoreRow(row, text);
+      let score = scoreRow(row, text, {}, queryMeta);
       if (!Number.isFinite(score)) continue;
       const unrequestedQualifier = hasUnrequestedQualifier(row, text);
       if (unrequestedQualifier) score -= 140;
@@ -543,10 +556,11 @@
     const query = stripQuantity(text);
     const max = Math.max(1, Math.min(30, Number(limit) || 12));
     if (!query || query.length < 2) return [];
+    const queryMeta = searchQueryMeta(text);
     const preferred = preferredGuidedIds(query);
     const ranked = [];
     for (const row of catalog) {
-      let score = scoreRow(row, text, { allowPreparationChoice: true });
+      let score = scoreRow(row, text, { allowPreparationChoice: true }, queryMeta);
       if (!Number.isFinite(score)) continue;
       if (hasUnrequestedQualifier(row, text)) score -= 140;
       if (score >= 420) ranked.push({ row, score });
