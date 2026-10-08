@@ -13251,6 +13251,9 @@ function formatSleepDuration(hours) {
       const facts = await prepareBrainCoverageFacts(descriptions, isCurrent);
       if (!facts || !isCurrent()) return;
       renderBrainContents(brainCoverageData(60, facts));
+      renderProfessionalBetaContextBar();
+      renderDemoChrome();
+      bindViewSwipe();
       window.ENERGIE_I18N?.translateDOM?.($("#app"));
       console.log("[Brain perf]", "Préparation progressive:", Math.round(performance.now() - started), "ms");
     } catch (error) {
@@ -17651,7 +17654,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.180");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.181");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});

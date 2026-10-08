@@ -1,7 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const source=fs.readFileSync('app.js','utf8');
 function fixture(count=40){
-  let clock=0,calls=0,draws=0,yields=0;
+  let clock=0,calls=0,draws=0,yields=0,chrome=0;
   const node={innerHTML:''},reports=[];
   const meals=Array.from({length:count},(_,i)=>({description:'repas '+i,feelingsBefore:{},nutrition:{sugars:i%2?3:null},eatingReasons:[]}));
   const ctx=vm.createContext({window:{ENERGIE_LOCALE:'fr-CA',EnergieBrainModules:{parser:{findFoods:text=>[{food:{names:{'fr-CA':text}}}]}}},
@@ -11,18 +11,19 @@ function fixture(count=40){
     mealCompositionAnalysis:()=>{calls++;clock+=10;return {status:trait=>trait==='protein'?'confirmed':'unknown'};},
     todayKey:()=> '2026-10-07',EATING_REASON_META:[],normalizeEatingReasons:x=>x||[],normalizeFeelingScores:x=>x||{},normalizeSupplements:x=>x,
     $:()=>node,esc:x=>x,t:x=>x,analysisDateNavigatorHtml:()=>'',bindAnalysisDateNavigator:()=>{},
+    renderProfessionalBetaContextBar:()=>{chrome++;},renderDemoChrome:()=>{chrome++;},bindViewSwipe:()=>{},
     renderBrainContents:data=>{draws++;reports.push(data);node.innerHTML='ready';},
   });
   vm.runInContext(source.slice(source.indexOf('  const BRAIN_COVERAGE_FOOD_CACHE_KEY'),source.indexOf('  function brainCoverageMetric(')),ctx);
   vm.runInContext(source.slice(source.indexOf('  let brainRenderGeneration'),source.indexOf('  function renderBrainContents(')),ctx);
-  return {ctx,node,reports,get calls(){return calls},get draws(){return draws},get yields(){return yields}};
+  return {ctx,node,reports,get calls(){return calls},get draws(){return draws},get yields(){return yields},get chrome(){return chrome}};
 }
 (async()=>{
   const f=fixture();let heartbeat=false;
   const preparing=f.ctx.renderBrain();assert.ok(f.node.innerHTML.includes('role="status"'),'Loading visible before recognition');
   assert.equal(f.calls,0);setTimeout(()=>heartbeat=true,0);await preparing;
   assert.equal(heartbeat,true,'Other browser work can run during preparation');assert.ok(f.yields>10);
-  assert.equal(f.draws,1);assert.equal(f.calls,40);assert.equal(f.reports[0].mealTotal,40);
+  assert.equal(f.draws,1);assert.equal(f.chrome,2,'Professional and demo context restored after deferred draw');assert.equal(f.calls,40);assert.equal(f.reports[0].mealTotal,40);
   assert.equal(f.reports[0].counts.protein,40);assert.equal(f.reports[0].counts.sugars,20);
   const expected=JSON.stringify(f.reports[0]);const before=f.yields;
   await f.ctx.renderBrain();assert.equal(f.calls,40,'Warm render does not reanalyze');assert.equal(f.yields,before);assert.equal(JSON.stringify(f.reports[1]),expected);
