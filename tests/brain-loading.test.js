@@ -38,6 +38,7 @@ function fixture(count=40){
   const switched=fixture();const pending=switched.ctx.renderBrain();switched.ctx.db={settings:{},days:{}};await pending;assert.equal(switched.draws,1);assert.equal(switched.reports[0].mealTotal,0,"A changed account is rendered from its own journal instead of leaving loading stuck");
   const changedDate=fixture();const datePending=changedDate.ctx.renderBrain();changedDate.ctx.selectedDate="2026-10-06";await datePending;assert.equal(changedDate.draws,1,"Active view restarts when its date changes during preparation");
   const duplicate=fixture();const older=duplicate.ctx.renderBrain();const latest=duplicate.ctx.renderBrain();await Promise.all([older,latest]);assert.equal(duplicate.draws,1);
+  const fast=fixture();fast.ctx.window.EnergieJournalLearning={};await fast.ctx.renderBrain();assert.equal(fast.calls,0,"Main portrait never invokes food recognition");assert.equal(fast.draws,1);fast.node.open=true;await fast.ctx.renderBrain(true);assert.equal(fast.calls,40,"Food details are calculated only on explicit opening");
   const demo=fixture();demo.ctx.db.settings.demoMode=true;demo.ctx.selectedDate='2026-10-06';await demo.ctx.renderBrain();assert.equal(demo.reports[0].mealTotal,0,'Demo future meals excluded');
   const parser=vm.createContext({window:{}});
   for(const path of ['foods.js','food-categories.js','brain/utils.js','brain/database.js','brain/recipes.js','brain/parser.js'])vm.runInContext(fs.readFileSync(path,'utf8'),parser);

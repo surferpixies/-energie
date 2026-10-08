@@ -13233,25 +13233,32 @@ function formatSleepDuration(hours) {
     return `<section class="card brain-eating-reasons-card"><div class="brain-section-head"><div><h2>💭 Ce qui t’amène à manger</h2><p class="muted small">Répartition des raisons consignées durant les ${data.windowDays} derniers jours.</p></div><span class="brain-reasons-coverage">${reasons.coverage}% documenté</span></div><div class="brain-reasons-summary"><strong>${documented}/${mealTotal}</strong><span>repas et collations avec au moins une raison</span></div><div class="brain-reasons-list">${reasons.items.map((reason) => `<div class="brain-reason-row"><span class="brain-reason-icon">${reason.icon}</span><div><strong>${esc(reason.label)}</strong><i><em style="width:${reason.percent}%"></em></i></div><b>${reason.count}<small>${reason.percent}%</small></b></div>`).join("")}</div><p class="muted tiny brain-reasons-note">Plusieurs raisons peuvent être sélectionnées pour un même repas; les pourcentages peuvent donc dépasser 100 % au total. Cette répartition décrit seulement ce que tu as consigné.</p></section>`;
   }
   let brainRenderGeneration = 0;
-  async function renderBrain() {
+  async function renderBrain(showDetails = false) {
     const generation = ++brainRenderGeneration;
     const journal = db, locale = window.ENERGIE_LOCALE, date = selectedDate;
     const isCurrent = () => generation === brainRenderGeneration && currentView === "brain" &&
       db === journal && window.ENERGIE_LOCALE === locale && selectedDate === date;
+    if (window.EnergieJournalLearning && !showDetails) {
+      renderBrainContents(null);
+      return;
+    }
     const cache = loadBrainCoverageFoodFactsCache();
     const descriptions = [...new Set(brainCoverageWindow(60).meals.map((meal) => String(meal.description || "").trim()))];
     if (descriptions.every((text) => Object.prototype.hasOwnProperty.call(cache, brainCoverageFoodFactKey(text)))) {
       renderBrainContents(brainCoverageData(60));
       return;
     }
-    $("#app").innerHTML = `${analysisDateNavigatorHtml()}<section class="hero brain-hero"><p class="eyebrow">🧠 ${esc(t("Cerveau"))}</p><h2>${esc(t("Qualité de ton journal"))}</h2><p role="status" aria-live="polite">${esc(t("Je rassemble les données de ton journal…"))}</p></section>`;
+    const loadingTarget = window.EnergieJournalLearning ? $("#brainKnowledgeContent") : $("#app");
+    if (!loadingTarget) return;
+    loadingTarget.innerHTML = `${window.EnergieJournalLearning ? "" : analysisDateNavigatorHtml()}<section class="hero brain-hero"><p class="eyebrow">🧠 ${esc(t("Cerveau"))}</p><h2>${esc(t("Qualité de ton journal"))}</h2><p role="status" aria-live="polite">${esc(t("Je rassemble les données de ton journal…"))}</p></section>`;
     bindAnalysisDateNavigator();
     const started = performance.now();
     try {
       const facts = await prepareBrainCoverageFacts(descriptions, isCurrent);
+      if (window.EnergieJournalLearning && showDetails && !$("#brainKnowledgeDetails")?.open && isCurrent()) return renderBrain();
       if (!facts || !isCurrent()) {
         // Une synchronisation ou un changement de contexte ne doit pas laisser le chargement affiché.
-        if (generation === brainRenderGeneration && currentView === "brain") return renderBrain();
+        if (generation === brainRenderGeneration && currentView === "brain") return renderBrain(showDetails);
         return;
       }
       renderBrainContents(brainCoverageData(60, facts));
@@ -13290,36 +13297,33 @@ function formatSleepDuration(hours) {
   }
 
   function renderBrainContents(data) {
-    const __brainTotalStart = performance.now();
-    const dayTotal = data.dayTotal, mealTotal = data.mealTotal;
-    const message = data.quality >= 75
-      ? "Ton journal contient une base solide pour produire des observations prudentes."
-      : data.quality >= 40
-        ? "Plusieurs données sont déjà exploitables, mais certaines périodes restent incomplètes."
-        : "Le Cerveau apprend encore : quelques notes régulières rendront les futures observations plus fiables.";
-    const supplementsHtml = data.supplements.length
-      ? `<div class="brain-supplement-grid">${data.supplements.map((item) => `<div class="brain-supplement-row"><span>${supplementIcon(item.name)}</span><div><strong>${esc(item.name)}</strong><small>${item.taken} journée${item.taken !== 1 ? "s" : ""} cochée${item.taken !== 1 ? "s" : ""} sur ${item.total}</small><i><em style="width:${item.percent}%"></em></i></div><b>${item.percent}%</b></div>`).join("")}</div>`
-      : `<p class="muted">Aucun supplément n’est configuré dans Profil.</p>`;
-    $("#app").innerHTML =
-      `${analysisDateNavigatorHtml()}<section class="hero brain-hero"><p class="eyebrow">🧠 Ce qu’Énergie peut réellement analyser</p><h2>Qualité de ton journal</h2><p>${message}</p><div class="brain-confidence"><div class="brain-ring" style="--p:${data.quality}"><strong>${data.quality}%</strong></div><div><strong>Couverture des données</strong><p class="muted small">Calculée sur les 60 derniers jours. Cette jauge mesure la présence des informations, pas la qualité de tes habitudes.</p></div></div><div class="brain-summary-grid"><div class="brain-stat"><strong>${dayTotal}</strong><small>journées documentées</small></div><div class="brain-stat"><strong>${mealTotal}</strong><small>repas consignés</small></div><div class="brain-stat"><strong>${data.counts.after}</strong><small>ressentis après</small></div></div></section><div class="stack"><section class="card"><div class="brain-section-head"><div><h2>📋 Qualité des données</h2><p class="muted small">Couverture durant les 60 derniers jours documentés.</p></div></div><div class="brain-coverage-list">${brainCoverageMetric("🙂", "Ressentis avant", data.counts.before, mealTotal, "Repas possédant au moins un ressenti avant")}${brainCoverageMetric("🧠", "Ressentis après", data.counts.after, mealTotal, "Repas possédant au moins un ressenti après")}${brainCoverageMetric("😴", "Sommeil", data.counts.sleep, dayTotal, "Journées où le sommeil est documenté")}${brainCoverageMetric("💧", "Hydratation", data.counts.water, dayTotal, "Journées où l’eau est documentée")}${brainCoverageMetric("🚶", "Activité", data.counts.activity, dayTotal, "Journées comprenant une activité")}</div></section>${db.settings?.showEatingReasons !== false ? brainEatingReasonsHtml(data, mealTotal) : ""}<section class="card"><div class="brain-section-head"><div><h2>🥗 Données alimentaires reconnaissables</h2><p class="muted small">Présence détectable dans les descriptions ou estimations — aucune évaluation de quantité.</p></div></div><div class="brain-nutrition-grid">${brainNutritionCoverage("Protéines", data.counts.protein, mealTotal, "🥚")}${brainNutritionCoverage("Fibres", data.counts.fiber, mealTotal, "🌾")}${brainNutritionCoverage("Glucides", data.counts.carbs, mealTotal, "🍞")}${brainNutritionCoverage("Sucres estimables", data.counts.sugars, mealTotal, "🍓")}${brainNutritionCoverage("Sodium estimable", data.counts.sodium, mealTotal, "🧂")}</div><p class="muted tiny brain-coverage-note">Ces pourcentages indiquent seulement dans combien de repas la donnée peut être reconnue ou estimée. Ils ne signifient pas que l’apport est suffisant ou excessif.</p></section><section class="card"><div class="brain-section-head"><div><h2>💊 Suppléments</h2><p class="muted small">Régularité des cases cochées sur les journées documentées.</p></div></div>${supplementsHtml}<p class="muted tiny brain-coverage-note">Une case cochée indique ce qui a été consigné dans Énergie; elle ne confirme pas la prise réelle.</p></section><section class="card"><div class="brain-section-head"><div><h2>🍎 Aliments fréquents</h2><p class="muted small">Aliments explicitement reconnus dans les repas des 60 derniers jours.</p></div></div>${data.foods.length ? `<div class="brain-favorites">${data.foods.map(([name, count]) => `<div class="brain-food"><strong>${esc(name)}</strong><span>${count} apparition${count > 1 ? "s" : ""}</span></div>`).join("")}</div>` : `<p class="muted">J’ai besoin de descriptions un peu plus détaillées pour identifier les aliments fréquents.</p>`}</section><section class="card"><h2>🌱 En apprentissage</h2><p>${mealTotal ? `Énergie dispose de ${mealTotal} repas sur cette période. Continue surtout à préciser les ingrédients et à noter les ressentis après les repas : ce sont les données les plus utiles pour produire des observations fiables.` : "Commence simplement à remplir ton journal. Cette section indiquera progressivement quelles données deviennent suffisamment complètes pour être analysées."}</p><p class="muted small">Les associations et tendances possibles demeurent dans l’onglet Observations afin d’éviter les répétitions.</p></section></div>`;
-    const brainMealLabel = $(".brain-summary-grid .brain-stat:nth-child(2) small");
-    if (brainMealLabel) brainMealLabel.textContent = "repas et collations consignés";
-    const nutritionCoverageNote = $(
-      ".brain-nutrition-grid + .brain-coverage-note",
-    );
-    if (nutritionCoverageNote)
-      nutritionCoverageNote.textContent =
-        "Ces pourcentages indiquent seulement dans combien d’entrées — repas ou collations — la donnée peut être reconnue ou estimée. Ils ne signifient pas que l’apport est suffisant ou excessif.";
-    const learningParagraph = $("#app .stack > section.card:last-child > p:first-of-type");
-    if (learningParagraph && mealTotal)
-      learningParagraph.textContent = `Énergie dispose de ${mealTotal} repas et collations sur cette période. Continue surtout à préciser les ingrédients et à noter les ressentis après les entrées alimentaires : ce sont les données les plus utiles pour produire des observations fiables.`;
-    console.log(
-      "[Brain perf]",
-      "TOTAL renderBrain:",
-      Math.round(performance.now() - __brainTotalStart),
-      "ms",
-    );
+    const started = performance.now();
+    const learning = window.EnergieJournalLearning.analyze(db, db.settings?.demoMode ? selectedDate : todayKey());
+    const tr = text => esc(t(text));
+    const metric = (icon, label, value, total, help) => {
+      const html = brainCoverageMetric(icon, t(label), value, total, t(help));
+      return ["Déjeuner", "Dîner", "Souper"].includes(label) ? html.replace(`<strong>${esc(t(label))}</strong>`, `<strong>${mealTypeHtml(label)}</strong>`) : html;
+    };
+    const suggestions = {
+      start: "Commence avec un repas et tes ressentis avant et après. Le Cerveau construira progressivement son portrait.",
+      meals: "Consigner les repas qui manquent habituellement aiderait le Cerveau à mieux connaître tes journées.",
+      before: "Les ressentis avant les repas sont moins souvent renseignés. Quelques notes ajouteraient du contexte à tes observations.",
+      after: "Les ressentis après les repas sont moins souvent renseignés. Quelques notes aideraient à enrichir tes observations.",
+      continue: "Tes repas et tes ressentis sont régulièrement documentés. Continue à ton rythme : chaque entrée enrichit le portrait.",
+    };
+    const dates = value => new Intl.DateTimeFormat(window.ENERGIE_LOCALE === 'en' ? 'en-CA' : window.ENERGIE_LOCALE || 'fr-CA', {day: 'numeric', month: 'short', timeZone: 'UTC'}).format(new Date(`${value}T12:00:00Z`));
+    const completeWeeks = learning.weeks.filter(week => week.days === 7 && !week.partial);
+    const delta = completeWeeks.length >= 2 ? completeWeeks.at(-1).score - completeWeeks.at(-2).score : null;
+    const trend = delta == null ? "La comparaison apparaîtra après deux semaines complètes de suivi."
+      : delta > 0 ? "Ton journal est plus complet que la semaine précédente."
+      : delta < 0 ? "Ton journal contient moins d’informations que la semaine précédente."
+      : "La couverture de ton journal est stable d’une semaine à l’autre.";
+    const supplementary = data ? `<div class="brain-knowledge-stack">${db.settings?.showEatingReasons !== false ? brainEatingReasonsHtml(data, data.mealTotal) : ""}<section><h3>${tr("Données alimentaires reconnaissables")}</h3><p class="muted small">${tr("Aliments reconnus dans les entrées des 60 derniers jours.")}</p><div class="brain-nutrition-grid">${brainNutritionCoverage(t("Protéines"), data.counts.protein, data.mealTotal, "🥚")}${brainNutritionCoverage(t("Fibres"), data.counts.fiber, data.mealTotal, "🌾")}${brainNutritionCoverage(t("Glucides"), data.counts.carbs, data.mealTotal, "🍞")}${brainNutritionCoverage(t("Sucres estimables"), data.counts.sugars, data.mealTotal, "🍓")}${brainNutritionCoverage(t("Sodium estimable"), data.counts.sodium, data.mealTotal, "🧂")}</div><p class="muted tiny">${tr("Ces valeurs décrivent la reconnaissance des données, pas la suffisance des apports.")}</p></section><section><h3>${tr("Aliments fréquents")}</h3>${data.foods.length ? `<div class="brain-favorites">${data.foods.map(([name, count]) => `<div class="brain-food"><strong>${esc(name)}</strong><span>${count}</span></div>`).join("")}</div>` : `<p class="muted small">${tr("Les aliments reconnus apparaîtront ici au fil de tes entrées.")}</p>`}</section><section><h3>${tr("Suppléments")}</h3>${data.supplements.length ? `<div class="brain-supplement-grid">${data.supplements.map(item => `<div class="brain-supplement-row"><span>${supplementIcon(item.name)}</span><div><strong>${esc(item.name)}</strong><small>${item.taken}/${item.total} · ${item.percent}%</small></div></div>`).join("")}</div>` : `<p class="muted small">${tr("Aucun supplément n’est configuré dans Profil.")}</p>`}</section></div>` : "";
+    $("#app").innerHTML = `${analysisDateNavigatorHtml()}<section class="hero brain-hero brain-learning-hero"><p class="eyebrow">🧠 ${tr("Cerveau")}</p><h2>${tr("Ce que j’apprends de toi")}</h2><p>${tr("Tes repas et tes ressentis construisent le portrait de tes habitudes. Les autres suivis ajoutent du contexte.")}</p><div class="brain-confidence"><div class="brain-ring" style="--p:${learning.score}"><strong>${learning.score}%</strong></div><div><strong>${tr("Couverture du journal")}</strong><p class="muted small">${learning.first ? `${esc(dates(learning.first))} – ${esc(dates(learning.anchor))}` : tr("Ton portrait commence avec ta première entrée.")}</p></div></div><div class="brain-summary-grid"><div class="brain-stat"><strong>${learning.documentedDays}/${learning.days}</strong><small>${tr("journées documentées")}</small></div><div class="brain-stat"><strong>${learning.mealTotal}</strong><small>${tr("repas et collations")}</small></div><div class="brain-stat"><strong>${learning.after}/${learning.mealTotal}</strong><small>${tr("ressentis après")}</small></div></div></section><div class="stack"><section class="card"><h2>🍽️ ${tr("Les repas et leurs ressentis")}</h2><p class="muted small">${tr("Le cœur de ce que le Cerveau apprend de toi.")}</p><div class="brain-coverage-list">${learning.types.map(item => metric(mealIcon(item.type), item.type, item.count, item.total, "Journées avec ce repas consigné")).join("")}${metric("🙂", "Ressentis avant", learning.before, learning.mealTotal, "Repas et collations avec un ressenti avant")}${metric("🧠", "Ressentis après", learning.after, learning.mealTotal, "Repas et collations avec un ressenti après")}</div><p class="muted tiny brain-coverage-note">${tr("Les trois repas principaux servent de repères de saisie. Une entrée absente ne signifie pas que tu n’as pas mangé. Les collations sont facultatives.")}</p></section><section class="card"><h2>🌱 ${tr("Au fil des semaines")}</h2><p class="muted small">${tr("Comment ton journal se documente, semaine après semaine.")}</p><div class="brain-week-chart" role="list">${learning.weeks.map(week => `<div class="brain-week" role="listitem"><strong>${week.days ? `${week.score}%` : "—"}</strong><div class="brain-week-track"><i style="height:${week.score}%"></i></div><span>${esc(dates(week.from))}</span><small>${tr(week.days ? week.partial ? "Semaine partielle" : "Semaine entière" : "Sans données")}</small></div>`).join("")}</div><p class="muted small">${tr(trend)}</p><p class="muted tiny">${tr("Les semaines partielles sont indiquées. La comparaison porte sur les deux dernières semaines complètes.")}</p></section><section class="card brain-context-card"><h2>${tr("Ce qui ajoute du contexte")}</h2><div class="brain-coverage-list">${metric("😴", "Sommeil", learning.sleep, learning.days, "Journées avec sommeil consigné")}${metric("💧", "Hydratation", learning.water, learning.days, "Journées avec eau consignée")}${learning.stepsEnabled ? metric("👟", "Pas", learning.steps, learning.days, "Journées avec pas consignés") : ""}</div><p class="muted small brain-activity-note">🏃 ${tr("Journées avec une activité consignée")} : ${learning.activities}/${learning.days}. ${tr("Les activités enrichissent le contexte sans diminuer la couverture lorsqu’il n’y en a pas.")}</p></section><aside class="card brain-did-you-know"><strong>💡 ${tr("Le savais-tu ?")}</strong><p>${tr("Ce que tu consignes dans ton journal nourrit le Cerveau d’Énergie. Les observations puisent dans ces informations pour faire ressortir des tendances : les repas et les ressentis en sont le cœur; le sommeil, l’eau et les mouvements ajoutent du contexte.")}</p></aside><section class="card brain-next-step"><h3>${tr("Pour enrichir ce portrait")}</h3><p>${tr(suggestions[learning.suggestion])}</p></section><details class="card brain-method"><summary>${tr("Comment cette couverture est calculée")}</summary><p class="muted small">${tr("Les repas et les ressentis représentent 80 % de la couverture : 40 % pour les trois repas principaux, 20 % pour les ressentis avant et 20 % pour les ressentis après. L’eau, le sommeil et les pas, si leur suivi est activé, partagent les 20 % restants. Les activités ne sont pas pénalisées.")}</p><p class="muted small">${tr("La période couvre les quatre dernières semaines, à partir de ta première journée documentée. Les journées vides suivantes sont incluses. Il s’agit de la présence des informations, pas d’une note sur tes habitudes ni d’une certitude sur les observations.")}</p></details><details id="brainKnowledgeDetails" class="card brain-knowledge-details" ${data ? "open" : ""}><summary>${tr("Aliments, raisons de manger et suppléments")}</summary><div id="brainKnowledgeContent">${supplementary || `<p class="muted small">${tr("Ces détails sont préparés à l’ouverture.")}</p>`}</div></details></div>`;
     bindAnalysisDateNavigator();
+    const details = $("#brainKnowledgeDetails");
+    if (details && !data) details.ontoggle = () => { if (details.open) { details.ontoggle = null; renderBrain(true); } };
+    console.log("[Brain perf]", "Portrait du journal:", Math.round(performance.now() - started), "ms");
   }
 
   let flushPersonalProfile = null;
@@ -17658,7 +17662,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.182");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.183");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
