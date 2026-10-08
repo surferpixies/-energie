@@ -1,0 +1,18 @@
+.hide-calories [data-calorie-ui],
+.hide-calories .daily-calories-card,
+.hide-calories .meal-calorie-editor,
+.hide-calories #mealCalorieTargetGauge,
+.hide-calories .calorie-display,
+.hide-calories .energy-balance-trend,
+.hide-calories .activity-estimate-card,
+.hide-calories label:has(#activityActualCalories),
+.hide-calories label:has(#nutritionCalories),
+.hide-calories #nutritionEstimateNote,
+.hide-calories .meal-precision-hint,
+.hide-calories .calorie-settings-options,
+.hide-calories .profile-calorie-notice{display:none!important}
+.meal-photo-viewer-dialog.has-photo-actions .meal-photo-viewer-shell{flex-direction:column;gap:14px;padding:18px;background:var(--surface);border-radius:18px;max-height:94dvh;overflow:auto}
+.meal-photo-viewer-dialog.has-photo-actions .meal-photo-viewer-image{max-width:min(84vw,760px);max-height:65dvh}
+.meal-photo-viewer-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
+.meal-photo-viewer-actions button{min-height:44px;padding:12px;white-space:normal}
+@media(max-width:520px){.meal-photo-viewer-actions{grid-template-columns:1fr}.meal-photo-viewer-dialog.has-photo-actions .meal-photo-viewer-image{max-height:52dvh}}
