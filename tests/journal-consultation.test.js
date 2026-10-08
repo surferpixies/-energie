@@ -71,3 +71,11 @@ const hydrated=context.journalConsultationHtml({meals:[],water:3});
 assert.equal((hydrated.match(/data-water=/g)||[]).length,8);
 assert.equal((hydrated.match(/drop filled/g)||[]).length,3);
 assert.ok(hydrated.indexOf('consultation-hydration')<hydrated.indexOf('test-steps'));
+
+const emptyFeelingsHtml=context.journalConsultationHtml({meals:[{id:'plain',type:'Déjeuner',time:'08:00',description:'Pain',notes:'Note du repas'}]});
+assert.ok(emptyFeelingsHtml.indexOf('consultation-meal-header')<emptyFeelingsHtml.indexOf('consultation-meal-feelings--before'));
+assert.ok(emptyFeelingsHtml.includes('data-i18n-key="Déjeuner"'));
+assert.equal((emptyFeelingsHtml.match(/consultation-meal-feelings--empty/g)||[]).length,2);
+assert.ok(emptyFeelingsHtml.includes('Note du repas'));
+assert.ok(emptyFeelingsHtml.includes('consultation-note'));
+assert.ok(emptyFeelingsHtml.indexOf('consultation-meal-content')<emptyFeelingsHtml.indexOf('consultation-meal-feelings--after'));
