@@ -13030,7 +13030,7 @@ function formatSleepDuration(hours) {
     return `<section><div class="brain-section-head"><div><h2>🔎 Observations personnalisées</h2><p class="muted small">Associations détectées dans ${report.analyzedDays} journées récentes.</p></div><span class="muted small">${report.insights.length}</span></div><div class="brain-insight-grid">${report.insights.map(brainInsightCard).join("")}</div><p class="discovery-disclaimer">Ces observations décrivent des associations dans ton propre journal. Elles ne prouvent aucune cause et ne remplacent jamais un avis médical.</p></section>`;
   }
   const BRAIN_COVERAGE_FOOD_CACHE_KEY =
-    "energie-brain-coverage-food-facts-v1";
+    "energie-brain-coverage-food-facts-v2";
 
   let brainCoverageFoodFactsCache = null,
     brainCoverageFoodCacheSaveTimer = null;
@@ -13080,21 +13080,19 @@ function formatSleepDuration(hours) {
   }
 
   function brainCoverageFoodFacts(description = "") {
-    const key = String(description || "").trim(),
+    const text = String(description || "").trim(),
+      key = brainCoverageFoodFactKey(text),
       cache = loadBrainCoverageFoodFactsCache();
 
-    if (cache[key]) return cache[key];
+    if (Object.prototype.hasOwnProperty.call(cache, key)) return cache[key];
 
-    const composition = mealCompositionAnalysis(key),
+    const composition = mealCompositionAnalysis(text),
       recognized = (trait) =>
         ["confirmed", "probable"].includes(
           composition?.status?.(trait),
         ),
       parsedFoods =
-        window.EnergieBrainModules?.parser?.parseMeal?.(
-          key,
-          { memory: false },
-        )?.foods || [];
+        window.EnergieBrainModules?.parser?.findFoods?.(text) || [];
 
     const facts = {
       protein: recognized("protein"),
@@ -13119,12 +13117,18 @@ function formatSleepDuration(hours) {
     };
 
     cache[key] = facts;
+    const keys = Object.keys(cache);
+    if (keys.length > 500) delete cache[keys[0]];
     scheduleBrainCoverageFoodCacheSave();
 
     return facts;
   }
 
-  function brainCoverageData(windowDays = 60) {
+  function brainCoverageFoodFactKey(description) {
+    return `${window.ENERGIE_LOCALE || "fr-CA"}|${String(description || "").trim()}`;
+  }
+
+  function brainCoverageWindow(windowDays = 60) {
     const anchorKey = db.settings?.demoMode ? selectedDate : todayKey(),
       anchor = new Date(`${anchorKey}T12:00:00`),
       first = new Date(anchor);
@@ -13137,8 +13141,13 @@ function formatSleepDuration(hours) {
         (day.meals || []).length || day.sleepHours != null || Number(day.water) > 0 ||
         (day.activities || []).length || (day.observations || []).length,
       ),
-      meals = documented.flatMap(([, day]) => day.meals || []),
-      percent = (value, total) => total ? Math.round(value / total * 100) : 0;
+      meals = documented.flatMap(([, day]) => day.meals || []);
+    return {documented, meals};
+  }
+
+  function brainCoverageData(windowDays = 60, preparedFacts = null) {
+    const {documented, meals} = brainCoverageWindow(windowDays);
+    const percent = (value, total) => total ? Math.round(value / total * 100) : 0;
     const counts = {
       before: meals.filter((meal) => Object.keys(normalizeFeelingScores(meal.feelingsBefore)).length).length,
       after: meals.filter((meal) => meal.feeling && Object.keys(normalizeFeelingScores(meal.feeling.scores)).length).length,
@@ -13157,7 +13166,7 @@ function formatSleepDuration(hours) {
         EATING_REASON_META.map((reason) => [reason.id, 0]),
       );
     meals.forEach((meal) => {
-      const facts = brainCoverageFoodFacts(meal.description || "");
+      const facts = preparedFacts?.get(brainCoverageFoodFactKey(meal.description)) || brainCoverageFoodFacts(meal.description || "");
 
       if (facts.precise) counts.precise += 1;
       if (facts.protein) counts.protein += 1;
@@ -13223,17 +13232,59 @@ function formatSleepDuration(hours) {
       return `<section class="card brain-eating-reasons-card"><div class="brain-section-head"><div><h2>💭 Ce qui t’amène à manger</h2><p class="muted small">Répartition des raisons consignées durant les ${data.windowDays} derniers jours.</p></div></div><div class="brain-reasons-empty"><span>🌱</span><div><strong>Aucune raison consignée pour le moment</strong><p>Cette question demeure facultative. Les réponses apparaîtront ici sans être qualifiées de bonnes ou de mauvaises.</p></div></div></section>`;
     return `<section class="card brain-eating-reasons-card"><div class="brain-section-head"><div><h2>💭 Ce qui t’amène à manger</h2><p class="muted small">Répartition des raisons consignées durant les ${data.windowDays} derniers jours.</p></div><span class="brain-reasons-coverage">${reasons.coverage}% documenté</span></div><div class="brain-reasons-summary"><strong>${documented}/${mealTotal}</strong><span>repas et collations avec au moins une raison</span></div><div class="brain-reasons-list">${reasons.items.map((reason) => `<div class="brain-reason-row"><span class="brain-reason-icon">${reason.icon}</span><div><strong>${esc(reason.label)}</strong><i><em style="width:${reason.percent}%"></em></i></div><b>${reason.count}<small>${reason.percent}%</small></b></div>`).join("")}</div><p class="muted tiny brain-reasons-note">Plusieurs raisons peuvent être sélectionnées pour un même repas; les pourcentages peuvent donc dépasser 100 % au total. Cette répartition décrit seulement ce que tu as consigné.</p></section>`;
   }
-  function renderBrain() {
-    const __brainTotalStart = performance.now();
-    const __brainCoverageStart = performance.now();
-    const data = brainCoverageData(60), dayTotal = data.dayTotal, mealTotal = data.mealTotal;
+  let brainRenderGeneration = 0;
+  async function renderBrain() {
+    const generation = ++brainRenderGeneration;
+    const journal = db, locale = window.ENERGIE_LOCALE, date = selectedDate;
+    const isCurrent = () => generation === brainRenderGeneration && currentView === "brain" &&
+      db === journal && window.ENERGIE_LOCALE === locale && selectedDate === date;
+    const cache = loadBrainCoverageFoodFactsCache();
+    const descriptions = [...new Set(brainCoverageWindow(60).meals.map((meal) => String(meal.description || "").trim()))];
+    if (descriptions.every((text) => Object.prototype.hasOwnProperty.call(cache, brainCoverageFoodFactKey(text)))) {
+      renderBrainContents(brainCoverageData(60));
+      return;
+    }
+    $("#app").innerHTML = `${analysisDateNavigatorHtml()}<section class="hero brain-hero"><p class="eyebrow">🧠 ${esc(t("Cerveau"))}</p><h2>${esc(t("Qualité de ton journal"))}</h2><p role="status" aria-live="polite">${esc(t("Je rassemble les données de ton journal…"))}</p></section>`;
+    bindAnalysisDateNavigator();
+    const started = performance.now();
+    try {
+      const facts = await prepareBrainCoverageFacts(descriptions, isCurrent);
+      if (!facts || !isCurrent()) return;
+      renderBrainContents(brainCoverageData(60, facts));
+      window.ENERGIE_I18N?.translateDOM?.($("#app"));
+      console.log("[Brain perf]", "Préparation progressive:", Math.round(performance.now() - started), "ms");
+    } catch (error) {
+      console.warn("Préparation du Cerveau", error);
+      if (isCurrent()) $("#app").innerHTML = `<section class="card"><h2>${esc(t("Cerveau"))}</h2><p role="status">${esc(t("Les données du Cerveau n’ont pas pu être préparées. Reviens dans cet onglet pour réessayer."))}</p></section>`;
+    }
+  }
 
-    console.log(
-      "[Brain perf]",
-      "brainCoverageData:",
-      Math.round(performance.now() - __brainCoverageStart),
-      "ms",
-    );
+  async function prepareBrainCoverageFacts(descriptions, isCurrent) {
+    // Laisse l'écran se peindre avant de commencer, puis rend la main régulièrement.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const facts = new Map();
+    const cache = loadBrainCoverageFoodFactsCache();
+    // Conserve les résultats présents avant que la limite du cache en évince certains.
+    for (const description of descriptions) {
+      const key = brainCoverageFoodFactKey(description);
+      if (Object.prototype.hasOwnProperty.call(cache, key)) facts.set(key, cache[key]);
+    }
+    let sliceStarted = performance.now();
+    for (const description of descriptions) {
+      if (!isCurrent()) return null;
+      const key = brainCoverageFoodFactKey(description);
+      if (!facts.has(key)) facts.set(key, brainCoverageFoodFacts(description));
+      if (performance.now() - sliceStarted >= 8) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        sliceStarted = performance.now();
+      }
+    }
+    return isCurrent() ? facts : null;
+  }
+
+  function renderBrainContents(data) {
+    const __brainTotalStart = performance.now();
+    const dayTotal = data.dayTotal, mealTotal = data.mealTotal;
     const message = data.quality >= 75
       ? "Ton journal contient une base solide pour produire des observations prudentes."
       : data.quality >= 40
@@ -17600,7 +17651,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.179");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.180");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
