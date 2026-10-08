@@ -394,7 +394,17 @@ public class HealthKitPlugin: CAPPlugin, CAPBridgedPlugin {
             return nil
         }
 
-        return ISO8601DateFormatter().date(from: value)
+        return parseHealthKitDate(value)
+    }
+
+    private func parseHealthKitDate(_ value: String) -> Date? {
+        // JavaScript toISOString() fournit des millisecondes (.000Z / .999Z).
+        // Sans cette option, les dates du rattrapage sont rejetées et la requête revient à aujourd'hui.
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: value) { return date }
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: value)
     }
 
     private func isoString(_ date: Date) -> String {
