@@ -1,0 +1,34 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+require('../professional-options.js');const api=global.EnergieProfessionalOptions;
+const base={hideCalories:false,showCnfGuidedEntry:true,summaryHideCompletedMeals:false,shareMealPhotosWithProfessional:false};
+let policy={ownerId:'client-a',linkId:'link-a',rules:api.cleanRules({hideCalories:{mode:'locked',value:true,token:'calories-a'},summaryHideCompletedMeals:{mode:'default',value:true,token:'summary-a'},shareMealPhotosWithProfessional:{mode:'locked',value:true,token:'privacy-a'}})};
+const settings=api.wrap(base,()=>policy);
+assert.equal(settings.hideCalories,true);assert.equal(settings.summaryHideCompletedMeals,true);assert.equal(settings.shareMealPhotosWithProfessional,false,'Consent cannot be configured');
+assert.equal(JSON.parse(JSON.stringify({settings})).settings.hideCalories,false,'A forced display value must not overwrite the personal setting');
+settings.summaryHideCompletedMeals=false;api.recordChoice(settings,'summaryHideCompletedMeals',policy,'2026-10-08T12:00:00Z');
+assert.equal(settings.summaryHideCompletedMeals,false,'Client overrides a default');
+policy={...policy,rules:{...policy.rules,showCnfGuidedEntry:{mode:'locked',value:false,token:'cnf-a'}}};
+assert.equal(settings.summaryHideCompletedMeals,false,'Unrelated professional changes do not reset the client choice');
+assert.equal(settings.showCnfGuidedEntry,false);
+const loaded=JSON.parse(JSON.stringify(settings));const otherDevice=api.wrap(loaded,()=>policy);assert.equal(otherDevice.summaryHideCompletedMeals,false,'Client choice survives restart and cloud transfer');
+policy={...policy,rules:{...policy.rules,summaryHideCompletedMeals:{mode:'default',value:true,token:'summary-new'}}};assert.equal(settings.summaryHideCompletedMeals,true,'An explicitly changed default has its own revision');
+policy={ownerId:'client-b',linkId:'link-b',rules:{summaryHideCompletedMeals:{mode:'default',value:true,token:'summary-a'}}};assert.equal(settings.summaryHideCompletedMeals,true,'Choices do not leak between links');
+policy=null;assert.equal(settings.hideCalories,false);assert.equal(settings.showCnfGuidedEntry,true,'Removing the policy restores personal choices');
+const merged=api.mergeChoices(base.professionalOptionChoices,{'link-a:summaryHideCompletedMeals':{token:'summary-a',value:true,updatedAt:'2026-10-07T12:00:00Z'}});assert.equal(merged['link-a:summaryHideCompletedMeals'].value,false,'Older cloud copies do not erase a newer client choice');
+assert.deepEqual(api.cleanRules({appleHealthEnabled:{mode:'locked',value:true,token:'x'},hideCalories:{mode:'locked',value:'true',token:'x'}}),{});
+// Exercer l'intégration réelle : serveur absent, retrait du lien et réponse retardée d'un autre compte.
+const source=fs.readFileSync('app.js','utf8'), app={innerHTML:''};
+const ctx=vm.createContext({window:{EnergieProfessionalOptions:api,ENERGIE_LOCALE:'fr-CA'},db:{settings:{...base,professionalOptionPolicy:{ownerId:'client-a',linkId:'link-a',rules:{hideCalories:{mode:'locked',value:true,token:'a'}}}}},session:{user:{id:'client-a'}},professionalBetaMode:false,professionalActiveClient:null,clientProfessionalLink:{id:'link-a'},localJournalOwnerId:()=> 'client-a',saveLocal:()=>{},scheduleFeelingChecks:()=>{},console,$:()=>app,t:x=>x,esc:x=>String(x)});
+vm.runInContext(source.slice(source.indexOf('  let professionalClientOptions'),source.indexOf('  function professionalDbFromCloud')),ctx);
+(async()=>{
+ ctx.wrapProfessionalOptionSettings();assert.equal(ctx.db.settings.hideCalories,true);
+ ctx.session={user:{id:'client-b'}};assert.equal(ctx.db.settings.hideCalories,false,'Cached policy is account-bound');
+ ctx.session={user:{id:'client-a'}};ctx.client={rpc:async()=>({error:{message:'missing function'}})};
+ await ctx.refreshClientProfessionalOptions();assert.equal(ctx.db.settings.hideCalories,true,'Offline/missing migration keeps known policy');
+ let resolve;ctx.client={rpc:()=>new Promise(r=>resolve=r)};const pending=ctx.refreshClientProfessionalOptions();ctx.session={user:{id:'client-b'}};resolve({data:{link_id:'link-a',client_user_id:'client-a',rules:{hideCalories:{mode:'locked',value:true,token:'old'}}}});await pending;
+ assert.equal(ctx.db.settings.hideCalories,false,'Delayed responses cannot apply to a new identity');
+ ctx.session={user:{id:'client-a'}};ctx.clientProfessionalLink=null;await ctx.refreshClientProfessionalOptions();assert.equal(ctx.db.settings.hideCalories,false,'Revoked link clears restrictions');
+ ctx.professionalBetaMode=true;ctx.professionalActiveClient={id:'client-a',linkId:'link-a'};assert.ok(ctx.professionalOptionsPanelHtml().includes('migration Supabase'));
+ ctx.client={rpc:async()=>({data:{link_id:'link-a',client_user_id:'client-a',rules:{},updated_at:null}})};await ctx.loadProfessionalOptionsForClient({id:'link-a'});const html=ctx.professionalOptionsPanelHtml();assert.ok(html.includes('professionalOptionsForm'));assert.equal((html.match(/data-professional-option=/g)||[]).length,8);assert.ok(!html.includes('appleHealthEnabled'));assert.ok(html.includes('Par défaut, modifiable'));
+ console.log('Options par client : règles, consentements, sérialisation, choix inter-appareils, révocation, identités et éditeur OK');
+})().catch(error=>{console.error(error);process.exitCode=1});

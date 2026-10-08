@@ -1,3 +1,4 @@
+require('../professional-options.js');
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const source=fs.readFileSync(require.resolve('../app.js'),'utf8');
 const ctx=vm.createContext({db:{settings:{}},window:{},t:x=>x});
@@ -15,7 +16,7 @@ ctx.db.settings.showCnfGuidedEntry=false;ctx.applyGuidedCnfMealEntryPreference()
 ctx.window.ENERGIE_LOCALE='fr-FR';ctx.applyGuidedCnfMealEntryPreference();assert.equal(nodes.openCnfGuidedEntry.hidden,false);assert.ok(nodes.mealDescription.placeholder.includes('Ciqual'));
 ctx.db.settings.showCiqualGuidedEntry=false;ctx.applyGuidedCnfMealEntryPreference();assert.equal(nodes.mealDescription.readOnly,false);
 ctx.db.settings.showCnfGuidedEntry=true;ctx.window.ENERGIE_LOCALE='en';assert.equal(ctx.guidedEntryEnabled(),true);
-const cloud=vm.createContext({freshDB:()=>({settings:{},days:{}}),ensureDay:(db,key)=>db.days[key]||(db.days[key]={meals:[]}),normalBeverage:x=>x,normalizeActivity:x=>x,normalizeSupplements:x=>x,Metrics:{mergeWeight:()=>null,mergeProfile:()=>({})},normalMeal:x=>x});
+const cloud=vm.createContext({window:{EnergieProfessionalOptions:global.EnergieProfessionalOptions},freshDB:()=>({settings:{},days:{}}),ensureDay:(db,key)=>db.days[key]||(db.days[key]={meals:[]}),normalBeverage:x=>x,normalizeActivity:x=>x,normalizeSupplements:x=>x,Metrics:{mergeWeight:()=>null,mergeProfile:()=>({})},normalMeal:x=>x});
 load('  function professionalDbFromCloud(', '  async function hydrateProfessionalPhotoUrls(',cloud);
 const remote=cloud.professionalDbFromCloud([{log_date:'2026-10-07',updated_at:'2026-10-07',supplements:{profilePreferences:{hideCalories:true,showCnfGuidedEntry:false,showCiqualGuidedEntry:true}}}],[]);
 assert.equal(remote.settings.hideCalories,true);assert.equal(remote.settings.showCnfGuidedEntry,false);assert.equal(remote.settings.showCiqualGuidedEntry,true);

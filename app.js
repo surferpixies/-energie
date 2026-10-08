@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.126";
+  const APP_RELEASE = "3.56.184";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -1467,6 +1467,9 @@ function formatSleepDuration(hours) {
     db.settings.showWelcome = false;
     professionalDemoMode = false;
     professionalBetaMode = false;
+    professionalWorkspaceGeneration++;
+    professionalClientOptions = null;
+    professionalOptionsAvailable = false;
     professionalPersonalDb = null;
     professionalActiveClient = null;
     professionalClientLinks = [];
@@ -1893,6 +1896,7 @@ function formatSleepDuration(hours) {
   async function syncNowPass() {
     syncState = "syncing";
     updateSyncBadge();
+    const preferenceSettings = window.EnergieProfessionalOptions.raw(db.settings);
     const operations = outbox(),
       failed = [];
     for (const op of operations) {
@@ -1925,30 +1929,31 @@ function formatSleepDuration(hours) {
               fixedCalorieTarget: fixedCalorieTarget(),
               calorieDeficitTarget: calorieDeficitTarget(),
               profilePreferences: {
-                waterGoal: Number(db.settings.waterGoal) || 8,
-                journalViewMode: db.settings.journalViewMode || "detailed",
-                summaryHideCompletedMeals: db.settings.summaryHideCompletedMeals !== false,
-                insightsEnabled: db.settings.insightsEnabled !== false,
-                nutritionObservations: db.settings.nutritionObservations !== false,
-                hideCalories: db.settings.hideCalories === true,
-                showCnfGuidedEntry: db.settings.showCnfGuidedEntry !== false,
-                showCiqualGuidedEntry: db.settings.showCiqualGuidedEntry !== false,
-                macroTracking: db.settings.macroTracking !== false,
-                autoNutritionEstimates: db.settings.autoNutritionEstimates !== false,
-                generalRecommendations: db.settings.generalRecommendations !== false,
-                showSources: db.settings.showSources !== false,
-                professionalSupport: db.settings.professionalSupport === true,
-                shareMealPhotosWithProfessional: db.settings.shareMealPhotosWithProfessional === true,
-                feelingReminders: db.settings.feelingReminders !== false,
-                feelingDelayHours: Number(db.settings.feelingDelayHours) || 0.5,
-                feelingDelayPreferenceSet: db.settings.feelingDelayPreferenceSet === true,
-                feelingMealTypes: Array.isArray(db.settings.feelingMealTypes) ? db.settings.feelingMealTypes : ["Déjeuner", "Dîner", "Souper"],
-                seasonalIcons: db.settings.seasonalIcons !== false,
-                showRecognizedElements: db.settings.showRecognizedElements !== false,
-                forceGuidedCnfMealEntry: db.settings.forceGuidedCnfMealEntry === true,
-                showEatingReasons: db.settings.showEatingReasons !== false,
-                futureMealPlanning: db.settings.futureMealPlanning === true,
-                pilotMode: db.settings.pilotMode === true,
+                professionalOptionChoices: window.EnergieProfessionalOptions.cleanChoices(preferenceSettings.professionalOptionChoices),
+                waterGoal: Number(preferenceSettings.waterGoal) || 8,
+                journalViewMode: preferenceSettings.journalViewMode || "detailed",
+                summaryHideCompletedMeals: preferenceSettings.summaryHideCompletedMeals !== false,
+                insightsEnabled: preferenceSettings.insightsEnabled !== false,
+                nutritionObservations: preferenceSettings.nutritionObservations !== false,
+                hideCalories: preferenceSettings.hideCalories === true,
+                showCnfGuidedEntry: preferenceSettings.showCnfGuidedEntry !== false,
+                showCiqualGuidedEntry: preferenceSettings.showCiqualGuidedEntry !== false,
+                macroTracking: preferenceSettings.macroTracking !== false,
+                autoNutritionEstimates: preferenceSettings.autoNutritionEstimates !== false,
+                generalRecommendations: preferenceSettings.generalRecommendations !== false,
+                showSources: preferenceSettings.showSources !== false,
+                professionalSupport: preferenceSettings.professionalSupport === true,
+                shareMealPhotosWithProfessional: preferenceSettings.shareMealPhotosWithProfessional === true,
+                feelingReminders: preferenceSettings.feelingReminders !== false,
+                feelingDelayHours: Number(preferenceSettings.feelingDelayHours) || 0.5,
+                feelingDelayPreferenceSet: preferenceSettings.feelingDelayPreferenceSet === true,
+                feelingMealTypes: Array.isArray(preferenceSettings.feelingMealTypes) ? preferenceSettings.feelingMealTypes : ["Déjeuner", "Dîner", "Souper"],
+                seasonalIcons: preferenceSettings.seasonalIcons !== false,
+                showRecognizedElements: preferenceSettings.showRecognizedElements !== false,
+                forceGuidedCnfMealEntry: preferenceSettings.forceGuidedCnfMealEntry === true,
+                showEatingReasons: preferenceSettings.showEatingReasons !== false,
+                futureMealPlanning: preferenceSettings.futureMealPlanning === true,
+                pilotMode: preferenceSettings.pilotMode === true,
               },
               defaults: db.settings.supplements || [],
               defaultsUpdatedAt: db.settings.supplementsUpdatedAt || db.updatedAt,
@@ -2235,6 +2240,7 @@ function formatSleepDuration(hours) {
     const remoteProfilePreferences = remotePreferenceRows[0]?.supplements?.profilePreferences;
     if (remoteProfilePreferences) {
       const pref = remoteProfilePreferences;
+      db.settings.professionalOptionChoices = window.EnergieProfessionalOptions.mergeChoices(db.settings.professionalOptionChoices, pref.professionalOptionChoices);
       if (Number(pref.waterGoal) > 0) db.settings.waterGoal = Math.round(Number(pref.waterGoal));
       if (["detailed", "summary", "consultation"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
       ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals"].forEach((key) => {
@@ -2365,6 +2371,7 @@ function formatSleepDuration(hours) {
       )
         db.favorites[i] = remote;
     }
+    await refreshClientProfessionalOptions();
     saveLocal("retour-cloud");
     if (recoveredLegacySupplements) {
       const recoveryDay = ensureDay(db, todayKey());
@@ -3387,6 +3394,11 @@ function formatSleepDuration(hours) {
     );
     const calories = Number(nutrition?.calories);
     return Number.isFinite(calories) ? Math.max(0, Math.round(calories)) : null;
+  }
+  function professionalGuidedEntryHidden() {
+    const key = window.ENERGIE_LOCALE === "fr-FR" ? "showCiqualGuidedEntry" : "showCnfGuidedEntry";
+    const rule = currentProfessionalOptionPolicy()?.rules?.[key];
+    return rule?.mode === "locked" && rule.value === false;
   }
   function guidedEntryEnabled() {
     return window.ENERGIE_LOCALE === "fr-FR" ? db.settings?.showCiqualGuidedEntry !== false : db.settings?.showCnfGuidedEntry !== false;
@@ -4974,6 +4986,10 @@ function formatSleepDuration(hours) {
       }
 
       clientProfessionalLink = professionalClientLinks.find((link) => link.status === "active" && link.client_user_id === session.user.id) || null;
+      if (!clientProfessionalLink && !professionalBetaMode) {
+        delete window.EnergieProfessionalOptions.raw(db.settings).professionalOptionPolicy;
+        saveLocal("options-professionnelles-retirees");
+      }
       if (clientProfessionalLink) {
         db.settings.shareMealPhotosWithProfessional =
           clientProfessionalLink.share_photos === true;
@@ -4986,6 +5002,8 @@ function formatSleepDuration(hours) {
   }
   async function loadClientProfessionalFollowup() {
     if (!client || !session || !clientProfessionalLink) return;
+    await refreshClientProfessionalOptions();
+    saveLocal("options-professionnelles");
     const [notesResult, planResult] = await Promise.all([
       client.from("professional_notes").select("*").eq("link_id", clientProfessionalLink.id).eq("visibility", "shared").order("created_at", { ascending: false }),
       client.from("professional_tracking_plans").select("*").eq("link_id", clientProfessionalLink.id).maybeSingle(),
@@ -5157,12 +5175,107 @@ function formatSleepDuration(hours) {
     }
     return `<section class="card professional-client-link-card"><p class="eyebrow">Bêta</p><h3>👩‍⚕️ Lier mon suivi à un professionnel</h3><p class="muted small">Entre le code reçu. En acceptant, tu autorises ce professionnel à consulter ton journal Énergie, incluant repas, ressentis, poids, sommeil, hydratation et activité. Les photos de repas sont partagées seulement si tu actives l’autorisation « Partager mes photos avec mon professionnel ».</p><div class="professional-invite-accept"><input id="professionalInviteCode" type="text" maxlength="8" autocomplete="one-time-code" autocapitalize="characters" placeholder="CODE"><button type="button" class="primary" id="acceptProfessionalInvite">Accepter</button></div></section>`;
   }
+  let professionalClientOptions = null, professionalOptionsAvailable = false, professionalWorkspaceGeneration = 0;
+  function currentProfessionalOptionPolicy() {
+    if (db.settings?.demoMode) return null;
+    if (professionalBetaMode) return professionalActiveClient ? professionalClientOptions : null;
+    const cache = window.EnergieProfessionalOptions.raw(db.settings).professionalOptionPolicy;
+    const ownerId = session?.user?.id || localJournalOwnerId();
+    return cache?.ownerId === ownerId && ownerId ? cache : null;
+  }
+  function wrapProfessionalOptionSettings() {
+    db.settings = window.EnergieProfessionalOptions.wrap(db.settings, currentProfessionalOptionPolicy);
+  }
+  function normalizedProfessionalOptionPolicy(data) {
+    if (!data?.client_user_id || !data?.link_id) return null;
+    return {ownerId:data.client_user_id,linkId:data.link_id,rules:window.EnergieProfessionalOptions.cleanRules(data.rules),updatedAt:data.updated_at || null};
+  }
+  async function refreshClientProfessionalOptions() {
+    if (!client || !session || professionalBetaMode || db.settings?.demoMode) return;
+    const journal = db, ownerId = session.user.id, source = window.EnergieProfessionalOptions.raw(db.settings);
+    if (!clientProfessionalLink) { delete source.professionalOptionPolicy; return; }
+    const linkId = clientProfessionalLink.id;
+    try {
+      const {data,error} = await client.rpc("get_professional_client_options", {p_link_id:linkId});
+      if (error) return; // Hors ligne ou migration absente : conserver la dernière configuration connue.
+      if (db !== journal || session?.user?.id !== ownerId || clientProfessionalLink?.id !== linkId || professionalBetaMode) return;
+      const policy = normalizedProfessionalOptionPolicy(data);
+      if (policy?.ownerId === ownerId && policy.linkId === linkId) source.professionalOptionPolicy = policy;
+      else delete source.professionalOptionPolicy;
+      wrapProfessionalOptionSettings();
+      scheduleFeelingChecks();
+    } catch (_) {}
+  }
+  async function loadProfessionalOptionsForClient(link, generation = professionalWorkspaceGeneration) {
+    professionalClientOptions = null;
+    professionalOptionsAvailable = false;
+    const ownerId = session?.user?.id;
+    try {
+      const {data,error} = await client.rpc("get_professional_client_options", {p_link_id:link.id});
+      if (session?.user?.id !== ownerId || generation !== professionalWorkspaceGeneration) return;
+      if (!error && data?.link_id === link.id) {
+        professionalClientOptions = normalizedProfessionalOptionPolicy(data);
+        professionalOptionsAvailable = true;
+      }
+    } catch (_) {}
+  }
+  function professionalOptionsPanelHtml() {
+    if (!professionalBetaMode || !professionalActiveClient) return "";
+    const tr = text => esc(t(text));
+    if (!professionalOptionsAvailable) return `<details class="card professional-options-panel"><summary>${tr("Options de ce client")}</summary><p class="muted small">${tr("La configuration des options nécessite la migration Supabase des options par client, puis une connexion au serveur.")}</p><button type="button" class="secondary small" id="reloadProfessionalOptions">${tr("Réessayer")}</button></details>`;
+    const source = window.EnergieProfessionalOptions.raw(db.settings);
+    return `<details class="card professional-options-panel"><summary>${tr("Options de ce client")}</summary><p class="muted small">${tr("Adapte Énergie à ce client. Une option imposée s’applique et son contrôle est caché dans son profil. Les autorisations de partage restent au client.")}</p><form id="professionalOptionsForm"><div class="professional-options-grid">${window.EnergieProfessionalOptions.definitions.map(definition => {
+      const rule = professionalClientOptions?.rules?.[definition.key], mode = rule?.mode || "client";
+      const enabled = rule ? rule.value : definition.key === "hideCalories" || definition.key === "forceGuidedCnfMealEntry" ? source[definition.key] === true : source[definition.key] !== false;
+      return `<fieldset class="professional-option-row" data-professional-option="${definition.key}"><legend>${tr(definition.label)}</legend><label>${tr("Qui choisit ?")}<select data-option-mode>${[["client","Au choix du client"],["default","Par défaut, modifiable"],["locked","Imposé par le professionnel"]].map(([value,label]) => `<option value="${value}" ${mode===value?"selected":""}>${tr(label)}</option>`).join("")}</select></label><label>${tr("Réglage")}<select data-option-value ${mode==="client"?"disabled":""}><option value="true" ${enabled?"selected":""}>${tr("Activé")}</option><option value="false" ${!enabled?"selected":""}>${tr("Désactivé")}</option></select></label></fieldset>`;
+    }).join("")}</div><p class="muted tiny">${tr("Un réglage par défaut laisse ensuite le client choisir. En repassant au choix du client, ses préférences personnelles sont rétablies. Les données enregistrées sont conservées.")}</p><button type="submit" class="primary">${tr("Enregistrer les options de ce client")}</button><p id="professionalOptionsStatus" role="status" aria-live="polite"></p></form></details>`;
+  }
+  function bindProfessionalOptionsPanel() {
+    $("#reloadProfessionalOptions")?.addEventListener("click", async () => {
+      const active = professionalActiveClient;
+      if (!active) return;
+      await loadProfessionalOptionsForClient(active.link);
+      if (professionalBetaMode && professionalActiveClient === active) render();
+    });
+    const form = $("#professionalOptionsForm");
+    if (!form) return;
+    form.querySelectorAll('[data-professional-option]').forEach(row => row.querySelector('[data-option-mode]').addEventListener('change', () => {
+      row.querySelector('[data-option-value]').disabled = row.querySelector('[data-option-mode]').value === 'client';
+    }));
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const active = professionalActiveClient, userId = session?.user?.id;
+      if (!professionalBetaMode || !active || !client || !userId) return;
+      const rules = {};
+      form.querySelectorAll('[data-professional-option]').forEach(row => {
+        const mode = row.querySelector('[data-option-mode]').value;
+        if (mode !== 'client') rules[row.dataset.professionalOption] = {mode,value:row.querySelector('[data-option-value]').value === 'true'};
+      });
+      const status = form.querySelector('#professionalOptionsStatus'), button = form.querySelector('[type="submit"]');
+      const expected = professionalClientOptions?.updatedAt || null;
+      button.disabled = true;
+      status.textContent = t("Enregistrement…");
+      try {
+        const {data,error} = await client.rpc("set_professional_client_options", {p_link_id:active.linkId,p_rules:rules,p_expected_updated_at:expected});
+        if (error) throw error;
+        if (!professionalBetaMode || professionalActiveClient !== active || session?.user?.id !== userId) return;
+        const policy = normalizedProfessionalOptionPolicy(data);
+        if (!policy || policy.linkId !== active.linkId || policy.ownerId !== active.id) throw new Error(t("Configuration non confirmée par le serveur."));
+        professionalClientOptions = policy;
+        status.textContent = t("Options enregistrées. Elles seront appliquées à la prochaine synchronisation du client.");
+      } catch (error) {
+        if (professionalActiveClient === active && session?.user?.id === userId) status.textContent = error?.message || t("Impossible d’enregistrer les options.");
+      } finally { button.disabled = false; }
+    });
+  }
+
   function professionalDbFromCloud(dayRows, mealRows, sharePhotos = false) {
     const out = freshDB();
     out.settings.showWelcome = false;
     const displayPreferences = [...(dayRows || [])].filter(row => row.supplements?.profilePreferences)
       .sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0))[0]?.supplements?.profilePreferences;
-    for (const key of ["hideCalories", "showCnfGuidedEntry", "showCiqualGuidedEntry"]) {
+    out.settings.professionalOptionChoices = window.EnergieProfessionalOptions.cleanChoices(displayPreferences?.professionalOptionChoices);
+    for (const key of window.EnergieProfessionalOptions.definitions.map(item => item.key)) {
       if (typeof displayPreferences?.[key] === "boolean") out.settings[key] = displayPreferences[key];
     }
     for (const r of dayRows || []) {
@@ -5238,7 +5351,9 @@ function formatSleepDuration(hours) {
   }
 
   async function loadProfessionalClientWorkspace(clientId) {
+    const generation = ++professionalWorkspaceGeneration, ownerId = session?.user?.id;
     await refreshProfessionalClientAvatars();
+    if (generation !== professionalWorkspaceGeneration || session?.user?.id !== ownerId) return;
     const link = professionalClientLinks.find((item) => item.status === "active" && item.client_user_id === clientId);
     if (!link || !client || !session) return;
     const [daysResult, mealsResult, notesResult, planResult] = await Promise.all([
@@ -5247,11 +5362,14 @@ function formatSleepDuration(hours) {
       client.from("professional_notes").select("*").eq("link_id", link.id).order("created_at", { ascending: false }),
       client.from("professional_tracking_plans").select("*").eq("link_id", link.id).maybeSingle(),
     ]);
+    if (generation !== professionalWorkspaceGeneration || session?.user?.id !== ownerId) return;
     const failure = daysResult.error || mealsResult.error || notesResult.error || planResult.error;
     if (failure) {
       alert(`Impossible d’ouvrir le dossier : ${failure.message || "accès refusé"}`);
       return;
     }
+    await loadProfessionalOptionsForClient(link, generation);
+    if (generation !== professionalWorkspaceGeneration || session?.user?.id !== ownerId) return;
     if (!professionalPersonalDb) professionalPersonalDb = db;
     db = professionalDbFromCloud(
       daysResult.data || [],
@@ -5294,6 +5412,9 @@ function formatSleepDuration(hours) {
     }
   }
   function leaveProfessionalBeta() {
+    professionalWorkspaceGeneration++;
+    professionalClientOptions = null;
+    professionalOptionsAvailable = false;
     try { localStorage.setItem("energie_usage_mode", "personal"); } catch (_) {}
     if (professionalPersonalDb) db = professionalPersonalDb;
     professionalPersonalDb = null;
@@ -5924,7 +6045,8 @@ function formatSleepDuration(hours) {
       : professionalDemoMode
         ? `<div class="dialog-actions"><button type="button" class="primary" id="prepareProfessionalConsultation">✨ Préparer la consultation</button><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalDemo">Quitter le mode professionnel</button></div>`
         : "";
-    $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">${followupEyebrow}</p><h2>📝 Suivi de ${esc(profile.name)}</h2><p>${followupIntro}</p>${followupActions}</section>${professionalTrendHtml()}${trackingPlanPanel}${form}<section class="professional-followup"><div class="section-title"><h2>Chronologie</h2><span class="muted small">${allNotes.length} note${allNotes.length > 1 ? "s" : ""}</span></div><div class="stack">${cards}</div></section>${professionalConsultationHtml(profile)}`;
+    $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">${followupEyebrow}</p><h2>📝 Suivi de ${esc(profile.name)}</h2><p>${followupIntro}</p>${followupActions}</section>${professionalTrendHtml()}${trackingPlanPanel}${professionalOptionsPanelHtml()}${form}<section class="professional-followup"><div class="section-title"><h2>Chronologie</h2><span class="muted small">${allNotes.length} note${allNotes.length > 1 ? "s" : ""}</span></div><div class="stack">${cards}</div></section>${professionalConsultationHtml(profile)}`;
+    bindProfessionalOptionsPanel();
     $("#switchProfessionalClient")?.addEventListener("click", openProfessionalClientPicker);
     $("#leaveProfessionalBeta")?.addEventListener("click", leaveProfessionalBeta);
     $("#leaveProfessionalDemo")?.addEventListener("click", leaveDemoMode);
@@ -6780,6 +6902,7 @@ function formatSleepDuration(hours) {
   }
 
   function render() {
+    wrapProfessionalOptionSettings();
     flushPersonalProfile?.();
     const demoDataVersions = { marie: "marie-dairy-v3", sophie: "sophie-fiber-v2", elodie: "elodie-soya-v2" };
     const activeDemoId = db.settings?.demoProfileId;
@@ -6798,6 +6921,7 @@ function formatSleepDuration(hours) {
     document.documentElement.dataset.theme =
       db.settings.theme === "dark" ? "dark" : "";
     document.body.classList.toggle("hide-calories", !caloriesVisible());
+    document.body.classList.toggle("professional-hide-guided-options", professionalGuidedEntryHidden());
     document.body.classList.toggle("professional-beta-mode", !!professionalBetaMode);
     avatarManager.renderHeader();
     $("#todayLabel").textContent =
@@ -12915,6 +13039,8 @@ function formatSleepDuration(hours) {
     return `<section class="card steps-observation-card"><div class="steps-observation-head"><span aria-hidden="true">👟</span><div><p class="eyebrow">Progression</p><h3>Pas par jour</h3></div><strong>${averageSteps.toLocaleString("fr-CA")}<small>moyenne</small></strong></div><div class="steps-line-chart"><svg viewBox="0 0 700 265" role="img" aria-label="Évolution du nombre de pas par jour et objectif quotidien">${ticks}<polyline class="steps-goal-line" points="${goalPoints}"></polyline><text class="steps-goal-label" x="${chartRight - 4}" y="${Math.max(chartTop + 14, yFor(latestGoal) - 8)}" text-anchor="end">Objectif ${latestGoal.toLocaleString("fr-CA")}</text>${rows.length > 1 ? `<polyline class="steps-data-line" points="${points}"></polyline>` : ""}${circles}${dates}</svg></div><div class="steps-chart-legend"><span><i></i> Pas quotidiens</span><span><i></i> Objectif du jour</span><strong>${reached}/${rows.length} objectif${rows.length > 1 ? "s" : ""} atteint${reached > 1 ? "s" : ""}</strong></div><p class="muted tiny steps-chart-note">Chaque point correspond à une journée. Si l’objectif change, la ligne pointillée évolue à partir de cette date sans modifier les journées précédentes.</p></section>`;
   }
   function persistProfilePreference(reason = "parametre") {
+    const choiceKey = reason.startsWith("parametre-") ? reason.slice(10) : ({"affichage-calories":"hideCalories","rappels-ressenti":"feelingReminders"})[reason];
+    if (choiceKey) window.EnergieProfessionalOptions.recordChoice(db.settings, choiceKey, currentProfessionalOptionPolicy());
     if (saveLocal(reason) === false) return false;
     if (session && !db.settings.demoMode && !professionalBetaMode)
       setDayChanged(todayKey());
@@ -13756,7 +13882,7 @@ function formatSleepDuration(hours) {
     const cards = [...profile.children].filter((el) => el.matches("section.card, details.card"));
     const buckets = [
       {key: "about", icon: "👤", title: "Mon profil personnel", description: "Âge, taille, poids et contexte personnel", selectors: ".personal-profile-card,.physiological-context-card"},
-      {key: "meals", icon: "🍽️", title: "Repas et saisie", description: "FCÉN, Ciqual, favoris et façon de noter mes repas", selectors: ".guided-entry-settings,.nutrition-source-profile-card,.recognized-elements-setting-card,.eating-reasons-setting-card,.future-meal-planning-setting-card,.profile-favorites-panel"},
+      {key: "meals", icon: "🍽️", title: "Repas et saisie", description: professionalGuidedEntryHidden() ? "Favoris, méthodes de saisie et options des repas" : "FCÉN, Ciqual, favoris et façon de noter mes repas", selectors: ".guided-entry-settings,.nutrition-source-profile-card,.recognized-elements-setting-card,.eating-reasons-setting-card,.future-meal-planning-setting-card,.profile-favorites-panel"},
       {key: "calories", icon: "⚖️", title: "Calories et objectifs", description: "Affichage, estimations et cible calorique", selectors: ".calorie-balance-profile-card"},
       {key: "tracking", icon: "💧", title: "Suivi quotidien", description: "Hydratation, pas, Santé, ressentis et suppléments", selectors: ".steps-profile-card,.apple-health-profile-card,#waterGoal,#settingFeelingReminders,#supplementNameInput"},
       {key: "observations", icon: "👁️", title: "Observations", description: "Tendances, analyses et suggestions", selectors: "#settingInsights,#settingNutrition,#settingRecommendations"},
@@ -13959,6 +14085,8 @@ function formatSleepDuration(hours) {
     if (calorieOptions && autoNutritionOption) calorieOptions.appendChild(autoNutritionOption);
     $("#app .stack")?.insertAdjacentHTML("beforeend", `<section class="card profile-theme-settings-card"><div class="settings-row"><div><h3>${t("Thème")}</h3><p class="muted small">${t("Choisir une apparence claire ou sombre")}</p></div><button type="button" class="secondary small" id="profileThemeToggle">${t("Changer le thème")}</button></div></section>`);
     $("#profileThemeToggle")?.addEventListener("click", () => $("#themeToggle")?.click());
+
+    if (!professionalBetaMode) window.EnergieProfessionalOptions.hideControls($("#app"), currentProfessionalOptionPolicy());
 
     // Build the visual Profile groups NOW, before any later binding can interrupt renderProfile().
     enhanceProfileWithAccordions();
@@ -17662,7 +17790,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.183");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.184");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});

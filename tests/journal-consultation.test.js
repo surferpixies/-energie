@@ -1,3 +1,4 @@
+require('../professional-options.js');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
@@ -43,7 +44,7 @@ assert.equal((context.journalViewOptionsHtml().match(/data-journal-view=/g)||[])
 assert.ok(context.journalViewOptionsHtml().includes('data-journal-view="consultation" aria-pressed="true"'));
 context.db.settings.journalViewMode='summary';assert.equal(context.journalViewMode(),'summary');
 context.db.settings.journalViewMode='unknown';assert.equal(context.journalViewMode(),'detailed');
-const cloud = vm.createContext({freshDB:()=>({settings:{},days:{}}),ensureDay:(db,key)=>db.days[key]||(db.days[key]={meals:[]}),normalBeverage:x=>x,normalizeActivity:x=>x,normalizeSupplements:x=>x,Metrics:{mergeWeight:()=>null,mergeProfile:()=>({})},normalMeal:x=>x});
+const cloud = vm.createContext({window:{EnergieProfessionalOptions:global.EnergieProfessionalOptions},freshDB:()=>({settings:{},days:{}}),ensureDay:(db,key)=>db.days[key]||(db.days[key]={meals:[]}),normalBeverage:x=>x,normalizeActivity:x=>x,normalizeSupplements:x=>x,Metrics:{mergeWeight:()=>null,mergeProfile:()=>({})},normalMeal:x=>x});
 vm.runInContext(source.slice(source.indexOf('  function professionalDbFromCloud('),source.indexOf('  async function hydrateProfessionalPhotoUrls(')),cloud);
 const daily={log_date:date,sleep_hours:8,supplements:{sleepTiming:{start:'23:00',end:'07:00'}}};
 const remoteMeal={id:'cloud',meal_date:date,meal_time:'08:00',photo_paths:['private1','private2'],feeling:{beforeScores:{hunger:2},eatingReasons:['hunger']}};

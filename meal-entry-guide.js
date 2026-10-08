@@ -30,7 +30,7 @@
       <dt>Half or quarter portions</dt><dd>Write <strong>1/2</strong> for one half and <strong>1/4</strong> for one quarter, with the unit: <strong>1/2 cup cottage cheese</strong>. Plain cottage cheese without a specified fat content uses the 2% reference.</dd>
       <dt>Number of foods</dt><dd><strong>1 apple</strong> or <strong>2 apples</strong> uses a reference medium apple. Size affects the estimate. Counts are supported only when a matching unit portion exists; use grams or guided entry for other fruits and vegetables.</dd>
     </dl><pre aria-label="Example with half a cup">lettuce\ncucumber\n1/2 cup cottage cheese</pre><p class="muted small">Without a quantity, a reference portion may be used. It does not measure what you actually ate. Quantities make the estimate more useful.</p></details>
-    <details><summary>🔎 Guided entry with ${source}</summary><p>Search for a food, choose the matching preparation, enter its quantity and unit, then add it. Repeat for the other foods and finish the entry.</p><p>Canadian Nutrient File (Health Canada) is the first reference, with Ciqual 2025 (Anses, France) as fallback. Choose units offered for the selected food.</p></details>
+    <details data-guided-ui><summary>🔎 Guided entry with ${source}</summary><p>Search for a food, choose the matching preparation, enter its quantity and unit, then add it. Repeat for the other foods and finish the entry.</p><p>Canadian Nutrient File (Health Canada) is the first reference, with Ciqual 2025 (Anses, France) as fallback. Choose units offered for the selected food.</p></details>
     <details><summary>📷 Photo</summary><p>A photo records your meal. The analysis starts only when you request it. Use “Analyze with AI” if you want a suggested description, then check the foods and quantities before using it.</p></details>
     <details><summary>▥ Scan a product</summary><p>Use Scanner for a packaged product with a barcode. Check the product and nutrition label, then enter the amount you ate. Label values per 100 g do not mean you ate 100 g.</p></details>
     <details data-calorie-ui><summary>If no calories appear</summary><p>Check the food name, quantity and preparation. Try guided entry to select a precise reference. For a missing product, use its barcode or enter the calories from its label.</p><p>Calories are estimates. A meal with an unresolved food needs clarification before a complete automatic total can be shown.</p></details>
@@ -45,7 +45,7 @@
       <dt>Une demie ou un quart</dt><dd>Écris <strong>1/2</strong> pour une demie et <strong>1/4</strong> pour un quart, suivi de l’unité : <strong>1/2 tasse cottage</strong>. Le cottage sans précision utilise une référence nature à 2 % de matières grasses.</dd>
       <dt>Nombre d’aliments</dt><dd><strong>1 pomme</strong> ou <strong>2 pommes</strong> utilise une pomme moyenne de référence. La taille influence l’estimation. Le nombre fonctionne seulement si une portion unitaire correspondante est disponible; pour les autres fruits et légumes, utilise les grammes ou la saisie guidée.</dd>
     </dl><pre aria-label="Exemple avec une demi-tasse">laitue\nconcombres\n1/2 tasse cottage</pre><p class="muted small">Sans quantité, une portion de référence peut être utilisée. Elle ne mesure pas ce que tu as réellement mangé. Ajouter une quantité rend l’estimation plus utile.</p></details>
-    <details><summary>🔎 Saisie guidée avec ${source}</summary><p>Recherche un aliment, choisis la fiche et la préparation qui correspondent à ton repas, puis saisis la quantité et l’unité. Ajoute les autres aliments et termine la saisie.</p><p>La recherche utilise ${sourceDescription}. Choisis parmi les unités proposées pour l’aliment sélectionné.</p></details>
+    <details data-guided-ui><summary>🔎 Saisie guidée avec ${source}</summary><p>Recherche un aliment, choisis la fiche et la préparation qui correspondent à ton repas, puis saisis la quantité et l’unité. Ajoute les autres aliments et termine la saisie.</p><p>La recherche utilise ${sourceDescription}. Choisis parmi les unités proposées pour l’aliment sélectionné.</p></details>
     <details><summary>📷 Photo</summary><p>La photo garde une trace de ton repas. L’analyse démarre seulement à ta demande. Utilise « Analyser avec l’IA » si tu souhaites une description suggérée, puis vérifie les aliments et les quantités avant de l’utiliser.</p></details>
     <details><summary>▥ Scanner un produit</summary><p>Utilise Scanner pour un produit emballé avec un code-barres. Vérifie le produit et ses valeurs nutritionnelles, puis indique la quantité consommée. Une étiquette « pour 100 g » ne signifie pas que tu as mangé 100 g.</p></details>
     <details data-calorie-ui><summary>Si les calories ne s’affichent pas</summary><p>Vérifie le nom de l’aliment, la quantité et la préparation. Essaie la saisie guidée pour choisir une référence précise. Pour un produit absent, utilise son code-barres ou inscris les calories de son étiquette.</p><p>Les calories restent des estimations. Un aliment à préciser dans le repas peut empêcher l’affichage d’un total automatique complet.</p></details>
@@ -53,7 +53,26 @@
     <button type="button" class="primary" data-close-meal-guide>${english ? 'Got it' : 'J’ai compris'}</button>
   </section>`;
   document.body.append(dialog);
-  button.addEventListener('click', () => dialog.showModal());
-  dialog.querySelectorAll('[data-close-meal-guide]').forEach(control =>
-    control.addEventListener('click', () => dialog.close()));
+  const originalMarkup = dialog.innerHTML;
+  button.addEventListener('click', () => {
+    dialog.innerHTML = originalMarkup;
+    if (document.body.classList.contains('professional-hide-guided-options')) {
+      dialog.querySelectorAll('[data-guided-ui]').forEach(section => section.remove());
+      const intro = dialog.querySelector('.meal-entry-guide-card > p');
+      if (intro) intro.textContent = english
+        ? 'You can write your meal, add a photo or scan a product. You do not need to use every method.'
+        : 'Tu peux écrire ton repas, ajouter une photo ou scanner un produit. Tu n’as pas besoin d’utiliser toutes les méthodes.';
+      const walker = document.createTreeWalker(dialog, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) walker.currentNode.textContent = walker.currentNode.textContent
+        .replace('use grams or guided entry for other fruits and vegetables.', 'use grams for other fruits and vegetables.')
+        .replace('use grams or guided entry.', 'use grams.')
+        .replace('Try guided entry to select a precise reference. ', '')
+        .replace('utilise les grammes ou la saisie guidée.', 'utilise les grammes.')
+        .replace('utilise les grammes ou passe par la saisie guidée.', 'utilise les grammes.')
+        .replace('Essaie la saisie guidée pour choisir une référence précise. ', '');
+    }
+    dialog.querySelectorAll('[data-close-meal-guide]').forEach(control =>
+      control.addEventListener('click', () => dialog.close()));
+    dialog.showModal();
+  });
 })(window);

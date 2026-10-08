@@ -9,6 +9,7 @@ const runtimeFiles = [
   "index.html",
   "app.js",
   "brain-journal.js",
+  "professional-options.js",
   "meal-entry-guide.js",
   "journal-consultation.js",
   "journal-consultation.css",
