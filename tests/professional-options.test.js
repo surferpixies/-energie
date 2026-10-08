@@ -22,6 +22,7 @@ const ctx=vm.createContext({window:{EnergieProfessionalOptions:api,ENERGIE_LOCAL
 vm.runInContext(source.slice(source.indexOf('  let professionalClientOptions'),source.indexOf('  function professionalDbFromCloud')),ctx);
 (async()=>{
  ctx.wrapProfessionalOptionSettings();assert.equal(ctx.db.settings.hideCalories,true);
+ ctx.clientProfessionalLink={id:'link-b'};assert.equal(ctx.db.settings.hideCalories,false,'A known new professional link cannot reuse the former professional’s policy');ctx.clientProfessionalLink={id:'link-a'};
  ctx.session={user:{id:'client-b'}};assert.equal(ctx.db.settings.hideCalories,false,'Cached policy is account-bound');
  ctx.session={user:{id:'client-a'}};ctx.client={rpc:async()=>({error:{message:'missing function'}})};
  await ctx.refreshClientProfessionalOptions();assert.equal(ctx.db.settings.hideCalories,true,'Offline/missing migration keeps known policy');

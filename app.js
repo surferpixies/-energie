@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.184";
+  const APP_RELEASE = "3.56.185";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -5181,7 +5181,7 @@ function formatSleepDuration(hours) {
     if (professionalBetaMode) return professionalActiveClient ? professionalClientOptions : null;
     const cache = window.EnergieProfessionalOptions.raw(db.settings).professionalOptionPolicy;
     const ownerId = session?.user?.id || localJournalOwnerId();
-    return cache?.ownerId === ownerId && ownerId ? cache : null;
+    return cache?.ownerId === ownerId && ownerId && (!clientProfessionalLink || cache.linkId === clientProfessionalLink.id) ? cache : null;
   }
   function wrapProfessionalOptionSettings() {
     db.settings = window.EnergieProfessionalOptions.wrap(db.settings, currentProfessionalOptionPolicy);
@@ -17790,7 +17790,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.184");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.185");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
