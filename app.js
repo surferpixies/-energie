@@ -8552,6 +8552,23 @@ function formatSleepDuration(hours) {
     return new Date(`${dateKey}T23:59:59.999`).toISOString();
   }
 
+  function healthKitHistoryDates(today) {
+    const start = new Date(`${today}T12:00:00`);
+    start.setDate(start.getDate() - 180);
+    let firstDate = start.toLocaleDateString("en-CA");
+    for (const key of Object.keys(db.days || {})) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(key) && key < firstDate &&
+          healthKitDateKey(`${key}T12:00:00`) === key) firstDate = key;
+    }
+    const dates = [];
+    const cursor = new Date(`${firstDate}T12:00:00`);
+    while (cursor.toLocaleDateString("en-CA") <= today) {
+      dates.push(cursor.toLocaleDateString("en-CA"));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return dates;
+  }
+
   function healthKitWorkoutType(workout = {}) {
     const mapped = String(workout.energieType || "").trim();
 
@@ -8682,52 +8699,49 @@ function formatSleepDuration(hours) {
       const today = todayKey();
       const changedDates = new Set();
 
-      // PAS
-      const stepsResult = await plugin.readSteps({
-        startDate: healthKitDayStart(today),
-        endDate: healthKitDayEnd(today),
-      });
+      // Rattrape au moins six mois, et tout l'historique déjà présent dans Énergie.
+      const historyDates = healthKitHistoryDates(today);
+      const firstDate = historyDates[0];
+      const targetDb = db;
+      const targetUserId = session.user.id;
+      const stillCurrent = () => db === targetDb && session?.user?.id === targetUserId &&
+        !db.settings.demoMode && !professionalBetaMode && db.settings.appleHealthEnabled === true;
+      const [stepsHistory, sleepResult, workoutsResult, weightResult] = await Promise.all([
+        plugin.readSteps({startDate: healthKitDayStart(firstDate), endDate: healthKitDayEnd(today), daily: true}),
+        plugin.readSleep({startDate: healthKitDayStart(firstDate, 1), endDate: healthKitDayEnd(today)}),
+        plugin.readWorkouts({startDate: healthKitDayStart(firstDate), endDate: healthKitDayEnd(today)}),
+        typeof plugin.readWeight === "function"
+          ? plugin.readWeight({startDate: healthKitDayStart(firstDate), endDate: healthKitDayEnd(today)})
+          : Promise.resolve({measurements: []}),
+      ]);
+      // Une ancienne app native ne renvoie qu'un total : ne jamais l'attribuer à un jour.
+      const stepsResult = Array.isArray(stepsHistory?.days) ? stepsHistory : {
+        days: [{date: today, ...(await plugin.readSteps({
+          startDate: healthKitDayStart(today), endDate: healthKitDayEnd(today),
+        }))}],
+      };
+      if (!stillCurrent()) return false;
 
-      if (Number.isFinite(Number(stepsResult?.steps))) {
-        const day = ensureDay(db, today);
-        const nextSteps = Math.max(
-          0,
-          Math.round(Number(stepsResult.steps)),
-        );
-
-        if (day.steps !== nextSteps) {
-          day.steps = nextSteps;
-
-          if (!(Number(day.stepsGoal) > 0))
-            day.stepsGoal =
-              Number(db.settings.stepsGoal) || 8000;
-
-          changedDates.add(today);
-        }
+      // PAS : actualise aujourd'hui; dans le passé, complète seulement les valeurs manquantes.
+      for (const entry of stepsResult.days) {
+        const dateKey = entry?.date;
+        const nextSteps = Math.round(Number(entry?.steps));
+        if (!historyDates.includes(dateKey) || !(nextSteps > 0) || !Number.isFinite(nextSteps)) continue;
+        const previous = db.days[dateKey]?.steps;
+        if (dateKey !== today && Number(previous) > 0) continue;
+        const day = ensureDay(db, dateKey);
+        if (day.steps === nextSteps) continue;
+        day.steps = nextSteps;
+        if (!(Number(day.stepsGoal) > 0)) day.stepsGoal = Number(db.settings.stepsGoal) || 8000;
+        changedDates.add(dateKey);
       }
 
-      // SOMMEIL
-      const sleepResult = await plugin.readSleep({
-        startDate: healthKitDayStart(today, 3),
-        endDate: healthKitDayEnd(today),
-      });
-
-      for (let offset = 0; offset <= 2; offset += 1) {
-        const date = new Date(`${today}T12:00:00`);
-        date.setDate(date.getDate() - offset);
-
-        const dateKey =
-          date.toLocaleDateString("en-CA");
-
-        const hours = healthKitSleepingHours(
-          sleepResult?.samples,
-          dateKey,
-        );
-
-        if (hours == null) continue;
-
+      // SOMMEIL : la nuit appartient au jour du réveil; respecte les anciennes saisies.
+      for (const dateKey of historyDates) {
+        if (dateKey !== today && Number(db.days[dateKey]?.sleepHours) > 0) continue;
+        const hours = healthKitSleepingHours(sleepResult?.samples, dateKey);
+        if (!(hours > 0)) continue;
         const day = ensureDay(db, dateKey);
-
         if (Number(day.sleepHours) !== Number(hours)) {
           day.sleepHours = hours;
           changedDates.add(dateKey);
@@ -8740,11 +8754,6 @@ function formatSleepDuration(hours) {
       // faite ensuite dans Énergie ne sera donc pas écrasée par une ancienne
       // mesure provenant de Santé.
       if (typeof plugin.readWeight === "function") {
-        const weightResult = await plugin.readWeight({
-          startDate: healthKitDayStart(today, 180),
-          endDate: healthKitDayEnd(today),
-        });
-
         (weightResult?.measurements || []).forEach((measurement) => {
           const kg = Number(measurement?.kg);
           const dateKey = healthKitDateKey(measurement?.date);
@@ -8773,11 +8782,6 @@ function formatSleepDuration(hours) {
       }
 
       // ACTIVITÉS
-      const workoutsResult = await plugin.readWorkouts({
-        startDate: healthKitDayStart(today, 7),
-        endDate: healthKitDayEnd(today),
-      });
-
       (workoutsResult?.workouts || []).forEach(
         (workout) => {
           if (!workout?.uuid || !workout?.startDate)
@@ -8829,14 +8833,26 @@ function formatSleepDuration(hours) {
         },
       );
 
-      changedDates.forEach((date) =>
-        setDayChanged(date),
-      );
-
-      db.settings.appleHealthLastSync =
-        new Date().toISOString();
-
+      const syncedAt = new Date().toISOString();
+      changedDates.forEach((date) => { db.days[date].updatedAt = syncedAt; });
+      db.settings.appleHealthLastSync = syncedAt;
+      // Sauvegarde le journal et la file une seule fois pour tout le rattrapage.
       saveLocal("apple-health-sync");
+      if (changedDates.size) {
+        const pending = outbox();
+        changedDates.forEach((date) => {
+          const op = {kind: "day", date, _ownerUserId: targetUserId, _queuedAt: `${Date.now()}-${uid()}`};
+          const index = pending.findIndex((item) => item.kind === "day" && item.date === date);
+          if (index >= 0) pending[index] = op;
+          else pending.push(op);
+        });
+        if (setOutbox(pending)) {
+          syncState = "pending";
+          updateSyncBadge();
+          if (navigator.onLine) syncNow();
+        }
+        render();
+      }
 
       if (showResult) {
         const count = changedDates.size;
@@ -13954,7 +13970,7 @@ function formatSleepDuration(hours) {
           <h3>🍎 Apple Health</h3>
           <p class="muted small">
             Importe automatiquement le sommeil, les pas, les activités et le poids de Santé.
-            Les valeurs restent modifiables dans Énergie.
+            Rattrape aussi les journées passées sans données, sur six mois et tout ton historique Énergie. Les valeurs déjà saisies dans le passé sont conservées.
           </p>
           <div class="settings-row">
             <div>
@@ -17697,7 +17713,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.177");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.178");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});

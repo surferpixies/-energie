@@ -76,6 +76,41 @@ public class HealthKitPlugin: CAPPlugin, CAPBridgedPlugin {
             options: .strictStartDate
         )
 
+        if call.getBool("daily") == true {
+            // Une seule requête, découpée selon les journées locales (incluant les changements d'heure).
+            let calendar = Calendar.current
+            let query = HKStatisticsCollectionQuery(
+                quantityType: stepType,
+                quantitySamplePredicate: predicate,
+                options: .cumulativeSum,
+                anchorDate: calendar.startOfDay(for: startDate),
+                intervalComponents: DateComponents(day: 1)
+            )
+            query.initialResultsHandler = { query, results, error in
+                defer { self.healthStore.stop(query) }
+                if let error = error {
+                    call.reject("Impossible de lire les pas : \(error.localizedDescription)")
+                    return
+                }
+                let formatter = DateFormatter()
+                formatter.calendar = calendar
+                formatter.locale = Locale(identifier: "en_US_POSIX")
+                formatter.timeZone = calendar.timeZone
+                formatter.dateFormat = "yyyy-MM-dd"
+                var days: [[String: Any]] = []
+                results?.enumerateStatistics(from: startDate, to: endDate) { statistics, _ in
+                    guard let quantity = statistics.sumQuantity() else { return }
+                    days.append([
+                        "date": formatter.string(from: statistics.startDate),
+                        "steps": Int(quantity.doubleValue(for: HKUnit.count()).rounded())
+                    ])
+                }
+                call.resolve(["days": days])
+            }
+            healthStore.execute(query)
+            return
+        }
+
         let query = HKStatisticsQuery(
             quantityType: stepType,
             quantitySamplePredicate: predicate,

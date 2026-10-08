@@ -10,7 +10,8 @@
     ? 'Ciqual 2025 (Anses, France), avec le FCÉN de Santé Canada en secours'
     : 'le FCÉN de Santé Canada, avec Ciqual 2025 (Anses, France) en secours';
   const title = english ? 'Guide to entering my meal' : 'Guide pour entrer mon repas';
-  button.textContent = title;
+  button.innerHTML = `<span class="meal-guide-full-label">${title}</span><span class="meal-guide-short-label">${english ? "Entry guide" : "Guide de saisie"}</span>`;
+  button.setAttribute("aria-label", title);
   const dialog = document.createElement('dialog');
   dialog.id = 'mealEntryGuideDialog';
   dialog.className = 'meal-entry-guide-dialog';
