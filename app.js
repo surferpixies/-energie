@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.185";
+  const APP_RELEASE = "3.56.186";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -5222,12 +5222,15 @@ function formatSleepDuration(hours) {
   function professionalOptionsPanelHtml() {
     if (!professionalBetaMode || !professionalActiveClient) return "";
     const tr = text => esc(t(text));
-    if (!professionalOptionsAvailable) return `<details class="card professional-options-panel"><summary>${tr("Options de ce client")}</summary><p class="muted small">${tr("La configuration des options nécessite la migration Supabase des options par client, puis une connexion au serveur.")}</p><button type="button" class="secondary small" id="reloadProfessionalOptions">${tr("Réessayer")}</button></details>`;
+    if (!professionalOptionsAvailable) return `<details class="card professional-options-panel"><summary><span aria-hidden="true">⚙️</span> ${tr("Options de ce client")} <span class="professional-options-chevron" aria-hidden="true">›</span></summary><p class="muted small">${tr("La configuration des options nécessite la migration Supabase des options par client, puis une connexion au serveur.")}</p><button type="button" class="secondary small" id="reloadProfessionalOptions">${tr("Réessayer")}</button></details>`;
     const source = window.EnergieProfessionalOptions.raw(db.settings);
-    return `<details class="card professional-options-panel"><summary>${tr("Options de ce client")}</summary><p class="muted small">${tr("Adapte Énergie à ce client. Une option imposée s’applique et son contrôle est caché dans son profil. Les autorisations de partage restent au client.")}</p><form id="professionalOptionsForm"><div class="professional-options-grid">${window.EnergieProfessionalOptions.definitions.map(definition => {
-      const rule = professionalClientOptions?.rules?.[definition.key], mode = rule?.mode || "client";
-      const enabled = rule ? rule.value : definition.key === "hideCalories" || definition.key === "forceGuidedCnfMealEntry" ? source[definition.key] === true : source[definition.key] !== false;
-      return `<fieldset class="professional-option-row" data-professional-option="${definition.key}"><legend>${tr(definition.label)}</legend><label>${tr("Qui choisit ?")}<select data-option-mode>${[["client","Au choix du client"],["default","Par défaut, modifiable"],["locked","Imposé par le professionnel"]].map(([value,label]) => `<option value="${value}" ${mode===value?"selected":""}>${tr(label)}</option>`).join("")}</select></label><label>${tr("Réglage")}<select data-option-value ${mode==="client"?"disabled":""}><option value="true" ${enabled?"selected":""}>${tr("Activé")}</option><option value="false" ${!enabled?"selected":""}>${tr("Désactivé")}</option></select></label></fieldset>`;
+    return `<details class="card professional-options-panel"><summary><span aria-hidden="true">⚙️</span> ${tr("Options de ce client")} <span class="professional-options-chevron" aria-hidden="true">›</span></summary><p class="muted small">${tr("Adapte Énergie à ce client. Une option imposée s’applique et son contrôle est caché dans son profil. Les autorisations de partage restent au client.")}</p><form id="professionalOptionsForm"><div class="professional-options-grid">${window.EnergieProfessionalOptions.definitions.filter(definition => !['showCiqualGuidedEntry','summaryHideCompletedMeals'].includes(definition.key)).map(definition => {
+      const guided = definition.key === 'showCnfGuidedEntry';
+      const sourceKey = guided && window.ENERGIE_LOCALE === 'fr-FR' ? 'showCiqualGuidedEntry' : definition.key;
+      const label = guided ? (window.ENERGIE_LOCALE === 'fr-FR' ? 'Afficher la saisie guidée Ciqual' : 'Afficher la saisie guidée FCÉN') : definition.label;
+      const rule = professionalClientOptions?.rules?.[sourceKey], mode = rule?.mode || "client";
+      const enabled = rule ? rule.value : definition.key === "hideCalories" || definition.key === "forceGuidedCnfMealEntry" ? source[definition.key] === true : source[sourceKey] !== false;
+      return `<fieldset class="professional-option-row" data-professional-option="${definition.key}"><legend>${tr(label)}</legend><label>${tr("Qui choisit ?")}<select data-option-mode>${[["client","Au choix du client"],["default","Par défaut, modifiable"],["locked","Imposé par le professionnel"]].map(([value,label]) => `<option value="${value}" ${mode===value?"selected":""}>${tr(label)}</option>`).join("")}</select></label><label>${tr("Réglage")}<select data-option-value ${mode==="client"?"disabled":""}><option value="true" ${enabled?"selected":""}>${tr("Activé")}</option><option value="false" ${!enabled?"selected":""}>${tr("Désactivé")}</option></select></label></fieldset>`;
     }).join("")}</div><p class="muted tiny">${tr("Un réglage par défaut laisse ensuite le client choisir. En repassant au choix du client, ses préférences personnelles sont rétablies. Les données enregistrées sont conservées.")}</p><button type="submit" class="primary">${tr("Enregistrer les options de ce client")}</button><p id="professionalOptionsStatus" role="status" aria-live="polite"></p></form></details>`;
   }
   function bindProfessionalOptionsPanel() {
@@ -5249,7 +5252,12 @@ function formatSleepDuration(hours) {
       const rules = {};
       form.querySelectorAll('[data-professional-option]').forEach(row => {
         const mode = row.querySelector('[data-option-mode]').value;
-        if (mode !== 'client') rules[row.dataset.professionalOption] = {mode,value:row.querySelector('[data-option-value]').value === 'true'};
+        if (mode !== 'client') {
+          const rule = {mode,value:row.querySelector('[data-option-value]').value === 'true'};
+          rules[row.dataset.professionalOption] = rule;
+          // Le même choix couvre les deux sources, même après un changement de langue.
+          if (row.dataset.professionalOption === 'showCnfGuidedEntry') rules.showCiqualGuidedEntry = {...rule};
+        }
       });
       const status = form.querySelector('#professionalOptionsStatus'), button = form.querySelector('[type="submit"]');
       const expected = professionalClientOptions?.updatedAt || null;
@@ -6045,7 +6053,7 @@ function formatSleepDuration(hours) {
       : professionalDemoMode
         ? `<div class="dialog-actions"><button type="button" class="primary" id="prepareProfessionalConsultation">✨ Préparer la consultation</button><button type="button" class="secondary" id="switchProfessionalClient">Changer de client</button><button type="button" class="text-button" id="leaveProfessionalDemo">Quitter le mode professionnel</button></div>`
         : "";
-    $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">${followupEyebrow}</p><h2>📝 Suivi de ${esc(profile.name)}</h2><p>${followupIntro}</p>${followupActions}</section>${professionalTrendHtml()}${trackingPlanPanel}${professionalOptionsPanelHtml()}${form}<section class="professional-followup"><div class="section-title"><h2>Chronologie</h2><span class="muted small">${allNotes.length} note${allNotes.length > 1 ? "s" : ""}</span></div><div class="stack">${cards}</div></section>${professionalConsultationHtml(profile)}`;
+    $("#app").innerHTML = `<section class="hero professional-followup-hero"><p class="eyebrow">${followupEyebrow}</p><h2>📝 Suivi de ${esc(profile.name)}</h2><p>${followupIntro}</p>${followupActions}${professionalOptionsPanelHtml()}</section>${professionalTrendHtml()}${trackingPlanPanel}${form}<section class="professional-followup"><div class="section-title"><h2>Chronologie</h2><span class="muted small">${allNotes.length} note${allNotes.length > 1 ? "s" : ""}</span></div><div class="stack">${cards}</div></section>${professionalConsultationHtml(profile)}`;
     bindProfessionalOptionsPanel();
     $("#switchProfessionalClient")?.addEventListener("click", openProfessionalClientPicker);
     $("#leaveProfessionalBeta")?.addEventListener("click", leaveProfessionalBeta);
@@ -17790,7 +17798,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.185");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.186");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
