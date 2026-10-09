@@ -79,3 +79,9 @@ assert.equal((emptyFeelingsHtml.match(/consultation-meal-feelings--empty/g)||[])
 assert.ok(emptyFeelingsHtml.includes('Note du repas'));
 assert.ok(emptyFeelingsHtml.includes('consultation-note'));
 assert.ok(emptyFeelingsHtml.indexOf('consultation-meal-content')<emptyFeelingsHtml.indexOf('consultation-meal-feelings--after'));
+
+const groupedMealHtml=context.journalConsultationEventHtml(timeline.events({meals:[meal]},date,scores)[0]);
+assert.equal((groupedMealHtml.match(/class="consultation-entry-open"/g)||[]).length,1,'Un seul lien pour le repas et ses ressentis');
+assert.ok(groupedMealHtml.includes('data-consultation-meal="'+meal.id+'"'));
+assert.ok(groupedMealHtml.indexOf('consultation-meal-footer')>groupedMealHtml.indexOf('consultation-meal-feelings--after'));
+assert.ok(!groupedMealHtml.includes('data-consultation-feeling='));

@@ -58,3 +58,19 @@
 .consultation-meal-feelings--empty{background:transparent}
 .consultation-meal-feelings--empty .consultation-event-heading{margin-bottom:8px}
 @media(max-width:480px){.consultation-meal-header{padding:17px 16px}.consultation-meal-sections{padding:12px;gap:12px}.consultation-meal-content,.consultation-meal-feelings{padding:14px}.consultation-meal-content:has(.consultation-meal-photos img){column-gap:12px}}
+
+/* Ressentis compacts et un seul accès pour l'ensemble du repas. */
+.consultation-meal-feelings{padding:10px 14px}
+.consultation-meal-feelings .consultation-event-heading{margin-bottom:7px}
+.consultation-meal-feelings .consultation-event-heading h3{font-size:.83rem}
+.consultation-meal-feelings .consultation-event-heading time{font-size:.74rem}
+.consultation-meal-feelings .meal-feeling-simple-item{margin:3px 12px 3px 0;font-size:.82rem;gap:8px}
+.consultation-meal-feelings .consultation-note{margin-top:9px;padding-top:8px;font-size:.8rem}
+.consultation-meal-feelings--empty{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.consultation-meal-feelings--empty .consultation-event-heading,.consultation-meal-feelings--empty p{margin:0}
+.consultation-meal-footer{padding:0 22px 16px}
+.consultation-meal-footer .consultation-entry-open{margin:0;min-height:34px;text-align:left}
+.consultation-event--observation{padding:12px 14px}
+.consultation-event--observation h3{font-size:.9rem}
+.consultation-event--observation p{font-size:.82rem;margin:6px 0}
+@media(max-width:480px){.consultation-meal-feelings{padding:10px 12px}.consultation-meal-footer{padding:0 16px 12px}}

@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.187";
+  const APP_RELEASE = "3.56.188";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -9515,7 +9515,7 @@ function formatSleepDuration(hours) {
     } else if (kind === "before" || kind === "after") {
       title = t(kind === "before" ? "Ressentis avant" : "Ressentis après");
       content = `<div>${feelingScorePreviewHtml(event.scores)}</div>${kind === "after" && meal.feeling?.notes ? `<p class="consultation-note"><strong>${esc(t("Notes"))}</strong><span translate="no">${esc(meal.feeling.notes)}</span></p>` : ""}`;
-      action = `<button type="button" class="consultation-entry-open" data-consultation-${kind === "before" ? "meal" : "feeling"}="${esc(meal.id)}">${esc(t(openLabel))}</button>`;
+
     } else if (kind === "activity") {
       const activity = event.activity;
       title = `${activityIcon(activity.type)} ${t(activity.type || "Activité")}`;
@@ -9536,7 +9536,7 @@ function formatSleepDuration(hours) {
     if (kind === "meal") {
       const missingFeelings = kind => `<section class="consultation-meal-feelings consultation-meal-feelings--${kind} consultation-meal-feelings--empty"><div class="consultation-event-heading"><h3>${esc(t(kind === "before" ? "Ressentis avant" : "Ressentis après"))}</h3></div><p class="muted small">${esc(t("Non consigné"))}</p></section>`;
       const mealHeader = `<header class="consultation-meal-header"><h2><span aria-hidden="true">${mealIcon(meal.type, meal.description)}</span> <span data-i18n-key="${esc(meal.type)}">${esc(t(meal.type))}</span></h2><time>${consultationTimeHtml(event.at)}</time></header>`;
-      return `<article class="card consultation-event consultation-event--meal">${mealHeader}<div class="consultation-meal-sections">${event.before ? journalConsultationEventHtml(event.before) : missingFeelings("before")}<section class="consultation-meal-content">${heading}${content}${action}</section>${event.after ? journalConsultationEventHtml(event.after) : missingFeelings("after")}</div></article>`;
+      return `<article class="card consultation-event consultation-event--meal">${mealHeader}<div class="consultation-meal-sections">${event.before ? journalConsultationEventHtml(event.before) : missingFeelings("before")}<section class="consultation-meal-content">${heading}${content}</section>${event.after ? journalConsultationEventHtml(event.after) : missingFeelings("after")}</div><footer class="consultation-meal-footer">${action}</footer></article>`;
     }
     if (event.nested) return `<section class="consultation-meal-feelings consultation-meal-feelings--${kind}">${heading}${content}${action}</section>`;
     return `<article class="card consultation-event consultation-event--${kind}">${heading}${content}${action}</article>`;
@@ -17800,7 +17800,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.187");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.188");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
