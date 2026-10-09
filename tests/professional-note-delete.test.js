@@ -15,7 +15,7 @@ function fixture(visibility = 'shared') {
     session:{user:{id:'owner'}}, accountDeletionBusy:false,
     activeDemoProfile:()=>({id:'customer'}), readProfessionalNotes:()=>ctx.professionalNotesCache,
     writeProfessionalNotes:next=>{writes++;ctx.professionalNotesCache=next;}, renderFollowup:()=>renders++,
-    confirm:()=>{confirmations++;return true;}, alert:message=>ctx.messages.push(message), messages:[],
+    confirmProfessionalNoteDeletion:async()=>{confirmations++;return true;}, alert:message=>ctx.messages.push(message), messages:[],
     client:{from:table=>{assert.equal(table,'professional_notes');return {delete:()=>{
       calls++;const query={eq:(key,value)=>{filters.push([key,value]);return query;},select:async fields=>{
         assert.equal(fields,'id'); return typeof result==='function'?result():result;
@@ -37,7 +37,7 @@ function fixture(visibility = 'shared') {
     const f=fixture();f.setResult(response);await f.ctx.deleteProfessionalNote('note');
     assert.equal(f.ctx.professionalNotesCache.length,2);assert.equal(f.stats().renders,0);assert.equal(f.ctx.messages.length,1);
   }
-  const cancel=fixture();cancel.ctx.confirm=()=>false;await cancel.ctx.deleteProfessionalNote('note');assert.equal(cancel.stats().calls,0);
+  const cancel=fixture();cancel.ctx.confirmProfessionalNoteDeletion=async()=>false;await cancel.ctx.deleteProfessionalNote('note');assert.equal(cancel.stats().calls,0);
   const viewer=fixture();viewer.ctx.professionalBetaMode=false;await viewer.ctx.deleteProfessionalNote('note');assert.equal(viewer.stats().calls,0);assert.equal(viewer.stats().writes,0);
   const wrongClient=fixture();wrongClient.ctx.professionalActiveClient.id='elsewhere';await wrongClient.ctx.deleteProfessionalNote('note');assert.equal(wrongClient.stats().calls,0);
   const demo=fixture();demo.ctx.professionalBetaMode=false;demo.ctx.professionalDemoMode=true;demo.ctx.db.settings.demoMode=true;
@@ -45,7 +45,7 @@ function fixture(visibility = 'shared') {
   const changed=fixture();changed.setResult(()=>{changed.ctx.session.user.id='new-owner';return {data:[{id:'note'}],error:null};});
   await changed.ctx.deleteProfessionalNote('note');assert.equal(changed.ctx.professionalNotesCache.length,2);assert.equal(changed.stats().renders,0);
   const duplicate=fixture();let release;duplicate.setResult(()=>new Promise(resolve=>release=resolve));
-  const pending=duplicate.ctx.deleteProfessionalNote('note');await duplicate.ctx.deleteProfessionalNote('note');
+  const pending=duplicate.ctx.deleteProfessionalNote('note');await duplicate.ctx.deleteProfessionalNote('note');await Promise.resolve();
   assert.equal(duplicate.stats().calls,1);release({data:[{id:'note'}],error:null});await pending;
   console.log('Notes professionnelles : privée/partagée, confirmation serveur, refus, client, démo, changement de compte et double clic OK');
 })().catch(error=>{console.error(error);process.exitCode=1;});

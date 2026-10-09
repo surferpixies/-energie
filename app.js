@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.197";
+  const APP_RELEASE = "3.56.198";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -6053,6 +6053,30 @@ function formatSleepDuration(hours) {
     const prompt = analysis.less[0] ? `La situation « ${analysis.less[0].factor.label} » revient-elle assez régulièrement pour mériter une exploration plus ciblée avec ${profile.name} ?` : `Y a-t-il un élément du journal que ${profile.name} aimerait explorer plus précisément pendant la consultation ?`;
     return `<dialog class="professional-consultation-dialog" id="professionalConsultationDialog"><div class="professional-consultation-sheet"><div class="professional-consultation-head"><div><p class="eyebrow">Résumé avant consultation</p><h2>🩺 ${esc(profile.name)}</h2><p>${esc(formatDate(analysis.startDate))} au ${esc(formatDate(analysis.endDate))}</p></div><button type="button" class="icon-button" data-close-professional-consultation aria-label="Fermer">✕</button></div><div class="consultation-coverage-grid"><div><strong>${analysis.documentedDays}</strong><small>jours documentés / 30</small></div><div><strong>${analysis.meals}</strong><small>repas et collations</small></div><div><strong>${analysis.analyzableDays}</strong><small>journées avec ressentis</small></div></div><section class="consultation-section"><div class="consultation-section-title"><span>🔎</span><div><small>Ce qui mérite une attention</small><h3>Pistes à explorer</h3></div></div><div class="consultation-priority-list">${lessCards}</div></section>${goodCards ? `<section class="consultation-section"><div class="consultation-section-title"><span>🌤️</span><div><small>Ce qui semble aller dans le bon sens</small><h3>Évolution positive</h3></div></div><div class="consultation-signal-list">${goodCards}</div></section>` : ""}<section class="consultation-section consultation-two-column"><div><small class="eyebrow">Ressentis fréquents</small><div class="consultation-chips">${symptomHtml}</div></div><div><small class="eyebrow">Plan convenu</small><div class="consultation-chips">${trackedHtml}</div></div></section><section class="consultation-question"><span>💬</span><div><small>Question pour la consultation</small><strong>${esc(prompt)}</strong></div></section>${analysis.noteCount ? `<section class="consultation-existing-followup"><span>📝</span><div><small>Suivi déjà en place</small><strong>${analysis.noteCount} note${analysis.noteCount > 1 ? "s" : ""} au dossier</strong>${analysis.latestNote ? `<p>Dernière note : ${esc(analysis.latestNote.contextLabel || "Suivi général")} · ${esc(professionalNoteTime(analysis.latestNote.createdAt))}</p>` : ""}</div></section>` : ""}<p class="muted tiny consultation-caution">Résumé exploratoire basé sur les données consignées. Les associations présentées servent à orienter la discussion et ne constituent ni une preuve de cause à effet ni un diagnostic.</p><div class="dialog-actions consultation-actions"><button type="button" class="secondary" data-close-professional-consultation>Fermer</button><button type="button" class="primary" id="addConsultationToFollowup">Ajouter au suivi</button></div></div></dialog>`;
   }
+  function confirmProfessionalNoteDeletion(message) {
+    if (document.getElementById("professionalNoteDeleteDialog")) return Promise.resolve(false);
+    return new Promise(resolve => {
+      const previousFocus = document.activeElement;
+      const dialog = document.createElement("dialog");
+      dialog.id = "professionalNoteDeleteDialog";
+      dialog.style.maxWidth = "420px";
+      dialog.innerHTML = `<section class="dialog-card"><div class="dialog-header"><h2>Supprimer la note?</h2></div><p>${esc(message)}</p><div class="professional-note-actions"><button type="button" class="secondary" data-note-delete-cancel>Annuler</button><button type="button" class="primary" data-note-delete-confirm>Supprimer</button></div></section>`;
+      let accepted = false;
+      const finish = value => { accepted = value; dialog.close(); };
+      dialog.querySelector("[data-note-delete-cancel]").onclick = () => finish(false);
+      dialog.querySelector("[data-note-delete-confirm]").onclick = () => finish(true);
+      dialog.addEventListener("cancel", event => { event.preventDefault(); finish(false); });
+      dialog.addEventListener("close", () => {
+        dialog.remove();
+        if (previousFocus?.isConnected) previousFocus.focus();
+        resolve(accepted);
+      }, { once: true });
+      document.body.appendChild(dialog);
+      dialog.showModal();
+      dialog.querySelector("[data-note-delete-cancel]").focus();
+    });
+  }
+
   const professionalNoteDeletes = new Set();
   async function deleteProfessionalNote(noteId, button) {
     if (professionalNoteDeletes.has(noteId)) return;
@@ -6065,11 +6089,12 @@ function formatSleepDuration(hours) {
       ? professionalBetaMode && session?.user?.id === owner && professionalActiveClient?.id === clientId && professionalActiveClient?.linkId === linkId && !accountDeletionBusy
       : professionalDemoMode && db.settings.demoMode && activeDemoProfile().id === clientId;
     const visibility = note.visibility === "private" ? "privée" : "partagée avec le client";
-    if (!confirm(`Supprimer définitivement cette note ${visibility}? Cette action est irréversible.`)) return;
-    if (!current()) return;
     professionalNoteDeletes.add(noteId);
-    if (button) { button.disabled = true; button.textContent = "Suppression…"; }
+    if (button) button.disabled = true;
     try {
+      if (!await confirmProfessionalNoteDeletion(`Supprimer définitivement cette note ${visibility}? Cette action est irréversible.`)) return;
+      if (!current()) return;
+      if (button) button.textContent = "Suppression…";
       if (real) {
         // Vérifier la ligne supprimée : une permission refusée peut retourner zéro ligne.
         const { data, error } = await client.from("professional_notes").delete()
@@ -18091,7 +18116,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.197");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.198");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
