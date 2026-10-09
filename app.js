@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.190";
+  const APP_RELEASE = "3.56.191";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -14148,7 +14148,7 @@ function formatSleepDuration(hours) {
       `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.21" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     if (session && !professionalBetaMode && !db.settings.demoMode) {
-      $("#app .stack")?.insertAdjacentHTML("beforeend", `<section class="card profile-privacy-card" aria-labelledby="profilePrivacyTitle"><div class="profile-privacy-heading"><span aria-hidden="true">🔒</span><h3 id="profilePrivacyTitle">${esc(t("Tes données, tes choix"))}</h3></div><p>${esc(t("Ton journal est enregistré sur ton appareil et synchronisé avec ton compte Énergie lorsque tu es connecté."))}</p><p>${esc(t("Le partage de ton journal passe par les professionnels que tu autorises. La visibilité de ta photo se règle dans Confidentialité et partage."))}</p><p>${esc(t("L’analyse des photos par l’IA est facultative : une photo est transmise au service d’analyse seulement lorsque tu la demandes."))}</p><p>${esc(t("Tu peux exporter ton journal ou demander la suppression de ton compte ci-dessous."))}</p></section><section class="profile-delete-account"><button type="button" id="deleteOwnAccount" class="profile-delete-account-button" ${accountDeletionBusy ? "disabled" : ""}>${esc(t("Supprimer mon compte"))}</button><p id="deleteOwnAccountStatus" class="muted small" role="status" aria-live="polite"></p></section>`);
+      $("#app .stack")?.insertAdjacentHTML("beforeend", `<section class="card profile-privacy-card" aria-labelledby="profilePrivacyTitle"><div class="profile-privacy-heading"><span aria-hidden="true">🔒</span><h3 id="profilePrivacyTitle">${esc(t("Confidentialité de tes données"))}</h3></div><h4>${esc(t("Ce qui est conservé"))}</h4><p>${esc(t("Énergie conserve une copie locale de ton journal sur ton appareil. Lorsque tu es connecté, tes repas, ressentis, sommeil, hydratation, activités, poids et renseignements de profil enregistrés sont synchronisés dans la base de données associée à ton compte. Les photos synchronisées sont conservées dans un espace de stockage distinct."))}</p><h4>${esc(t("Ce que ton professionnel peut consulter"))}</h4><p>${esc(t("Un professionnel que tu autorises en acceptant son invitation peut consulter ton journal, les renseignements de profil utilisés pour le suivi et les tendances qui en découlent. Il ne peut pas modifier tes entrées du journal, mais peut ajouter des notes de suivi. Les photos de repas et ta photo de profil nécessitent chacune une autorisation distincte. Tu peux retirer son accès sans supprimer ton compte ni ton journal."))}</p><h4>${esc(t("Analyse photo facultative"))}</h4><p>${esc(t("Une photo est transmise au service d’analyse par l’IA seulement lorsque tu choisis « Analyser avec l’IA ». Ajouter une photo à ton repas ne déclenche pas cette analyse."))}</p><h4>${esc(t("Suppression définitive"))}</h4><p>${esc(t("Après ta confirmation, la suppression efface ton compte Énergie, les données qui lui sont associées, ses photos et ses liens de suivi. La copie locale sur cet appareil est effacée lorsque le serveur confirme la suppression. Cette action est irréversible : tu ne pourras pas récupérer ton compte ou ton journal dans Énergie. Exporte ton journal avant de continuer si tu souhaites en garder une copie."))}</p><p class="profile-privacy-retention">${esc(t("Les données d’Apple Santé restent intactes. La suppression ne retire pas les copies déjà exportées ou conservées hors d’Énergie. Des copies peuvent subsister temporairement dans les sauvegardes de l’hébergeur, selon sa durée de rétention; elles ne constituent pas une option de récupération de ton compte."))}</p></section><section class="profile-delete-account"><button type="button" id="deleteOwnAccount" class="profile-delete-account-button" ${accountDeletionBusy ? "disabled" : ""}>${esc(t("Supprimer mon compte"))}</button><p id="deleteOwnAccountStatus" class="muted small" role="status" aria-live="polite"></p></section>`);
       $("#deleteOwnAccount")?.addEventListener("click", deleteOwnAccount);
     }
     decorateSupplementIcons();
@@ -17845,7 +17845,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.190");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.191");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
