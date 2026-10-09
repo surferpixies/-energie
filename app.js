@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.189";
+  const APP_RELEASE = "3.56.190";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -14148,7 +14148,7 @@ function formatSleepDuration(hours) {
       `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.21" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
     if (session && !professionalBetaMode && !db.settings.demoMode) {
-      $("#app .stack")?.insertAdjacentHTML("beforeend", `<section class="profile-delete-account"><button type="button" id="deleteOwnAccount" class="profile-delete-account-button" ${accountDeletionBusy ? "disabled" : ""}>${esc(t("Supprimer mon compte"))}</button><p id="deleteOwnAccountStatus" class="muted small" role="status" aria-live="polite"></p></section>`);
+      $("#app .stack")?.insertAdjacentHTML("beforeend", `<section class="card profile-privacy-card" aria-labelledby="profilePrivacyTitle"><div class="profile-privacy-heading"><span aria-hidden="true">🔒</span><h3 id="profilePrivacyTitle">${esc(t("Tes données, tes choix"))}</h3></div><p>${esc(t("Ton journal est enregistré sur ton appareil et synchronisé avec ton compte Énergie lorsque tu es connecté."))}</p><p>${esc(t("Le partage de ton journal passe par les professionnels que tu autorises. La visibilité de ta photo se règle dans Confidentialité et partage."))}</p><p>${esc(t("L’analyse des photos par l’IA est facultative : une photo est transmise au service d’analyse seulement lorsque tu la demandes."))}</p><p>${esc(t("Tu peux exporter ton journal ou demander la suppression de ton compte ci-dessous."))}</p></section><section class="profile-delete-account"><button type="button" id="deleteOwnAccount" class="profile-delete-account-button" ${accountDeletionBusy ? "disabled" : ""}>${esc(t("Supprimer mon compte"))}</button><p id="deleteOwnAccountStatus" class="muted small" role="status" aria-live="polite"></p></section>`);
       $("#deleteOwnAccount")?.addEventListener("click", deleteOwnAccount);
     }
     decorateSupplementIcons();
@@ -17845,7 +17845,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.189");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.190");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
