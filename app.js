@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.192";
+  const APP_RELEASE = "3.56.194";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -245,6 +245,10 @@
       intensity,
       estimatedCalories,
       actualCalories,
+      source: a.source || null,
+      sourceApp: a.sourceApp || null,
+      originalType: a.originalType || null,
+      originalTitle: a.originalTitle || null,
       at: a.at || a.recorded_at || new Date().toISOString(),
     };
   }
@@ -257,6 +261,7 @@
       intensity: x.intensity,
       estimatedCalories: x.estimatedCalories,
       actualCalories: x.actualCalories,
+      source: x.source, sourceApp: x.sourceApp, originalType: x.originalType, originalTitle: x.originalTitle,
       at: x.at,
     };
   }
@@ -951,6 +956,7 @@ function formatSleepDuration(hours) {
           : Array.isArray(d.sleep_tags)
             ? d.sleep_tags
             : [];
+        day.sleepSource = d.sleepSource || null;
         day.sleepComment = d.sleepComment ?? d.sleep_comment ?? "";
         day.sleepStartTime = d.sleepStartTime || "";
         day.sleepEndTime = d.sleepEndTime || "";
@@ -960,7 +966,7 @@ function formatSleepDuration(hours) {
             : {};
         day.water = Number(d.water ?? d.waterGlasses ?? d.eau ?? 0) || 0;
         day.steps = Number.isFinite(Number(d.steps)) && Number(d.steps) >= 0 ? Math.round(Number(d.steps)) : null;
-        day.stepsSource = ["manual", "healthkit"].includes(d.stepsSource) ? d.stepsSource : null;
+        day.stepsSource = ["manual", "healthkit", "healthconnect"].includes(d.stepsSource) ? d.stepsSource : null;
         day.stepsGoal = Number.isFinite(Number(d.stepsGoal)) && Number(d.stepsGoal) > 0 ? Math.round(Number(d.stepsGoal)) : null;
         day.beverages = (Array.isArray(d.beverages) ? d.beverages : [])
           .map((item) => normalBeverage(item, k))
@@ -1921,6 +1927,7 @@ function formatSleepDuration(hours) {
             water: d.water,
             activities: (d.activities || []).map(activityToCloud),
             supplements: {
+              sleepSource: d.sleepSource || null,
               sleepTiming: {start: d.sleepStartTime || "", end: d.sleepEndTime || ""},
               taken: d.supplementsTaken || [],
               beverages: d.beverages || [],
@@ -2267,6 +2274,7 @@ function formatSleepDuration(hours) {
       if (remoteIsNewer) {
         d.sleepHours = r.sleep_hours;
         d.sleepTags = Array.isArray(r.sleep_tags) ? r.sleep_tags : [];
+        d.sleepSource = r.supplements?.sleepSource || null;
         d.sleepComment = r.sleep_comment || "";
         if (typeof r.supplements?.sleepTiming?.start === "string") d.sleepStartTime = r.supplements.sleepTiming.start;
         if (typeof r.supplements?.sleepTiming?.end === "string") d.sleepEndTime = r.supplements.sleepTiming.end;
@@ -2275,7 +2283,7 @@ function formatSleepDuration(hours) {
           .map((item) => normalBeverage(item, r.log_date))
           .filter(Boolean);
         d.steps = Number.isFinite(Number(r.supplements?.steps)) ? Math.round(Number(r.supplements.steps)) : null;
-        d.stepsSource = ["manual", "healthkit"].includes(r.supplements?.stepsSource) ? r.supplements.stepsSource : null;
+        d.stepsSource = ["manual", "healthkit", "healthconnect"].includes(r.supplements?.stepsSource) ? r.supplements.stepsSource : null;
         d.stepsGoal = Number.isFinite(Number(r.supplements?.stepsGoal)) ? Math.round(Number(r.supplements.stepsGoal)) : null;
         if (typeof r.supplements?.stepsTracking === "boolean") db.settings.stepsTracking = r.supplements.stepsTracking;
         if (Number(r.supplements?.currentStepsGoal) > 0) db.settings.stepsGoal = Math.round(Number(r.supplements.currentStepsGoal));
@@ -2306,6 +2314,7 @@ function formatSleepDuration(hours) {
         if (!(d.sleepTags || []).length && Array.isArray(r.sleep_tags)) d.sleepTags = r.sleep_tags;
         if (!d.sleepComment && r.sleep_comment) d.sleepComment = r.sleep_comment;
         if (!d.sleepStartTime && r.supplements?.sleepTiming?.start) d.sleepStartTime = r.supplements.sleepTiming.start;
+        if (!d.sleepSource && r.supplements?.sleepSource && Number(d.sleepHours) === Number(r.sleep_hours)) d.sleepSource = r.supplements.sleepSource;
         if (!d.sleepEndTime && r.supplements?.sleepTiming?.end) d.sleepEndTime = r.supplements.sleepTiming.end;
         if (!(Number(d.water) > 0) && Number(r.water) > 0) d.water = Number(r.water);
         if (!(d.beverages || []).length && Array.isArray(r.supplements?.beverages))
@@ -2314,7 +2323,7 @@ function formatSleepDuration(hours) {
             .filter(Boolean);
         if (d.steps == null && Number.isFinite(Number(r.supplements?.steps))) {
           d.steps = Math.round(Number(r.supplements.steps));
-          d.stepsSource = ["manual", "healthkit"].includes(r.supplements?.stepsSource) ? r.supplements.stepsSource : null;
+          d.stepsSource = ["manual", "healthkit", "healthconnect"].includes(r.supplements?.stepsSource) ? r.supplements.stepsSource : null;
         }
         if (d.stepsGoal == null && Number(r.supplements?.stepsGoal) > 0) d.stepsGoal = Math.round(Number(r.supplements.stepsGoal));
         if (!(d.activities || []).length && Array.isArray(r.activities))
@@ -9034,6 +9043,104 @@ function formatSleepDuration(hours) {
     }
   }
 
+
+  function nativeHealthConnect() {
+    return window.Capacitor?.getPlatform?.() === "android" ? window.Capacitor?.Plugins?.HealthConnect || null : null;
+  }
+  let healthConnectBusy = false;
+  async function syncHealthConnect({requestAuthorization = false, showResult = false} = {}) {
+    const plugin = nativeHealthConnect();
+    if (!plugin || healthConnectBusy || !session || professionalBetaMode || db.settings.demoMode || accountDeletionBusy) return false;
+    if (!requestAuthorization && !db.settings.healthConnectEnabled) return false;
+    healthConnectBusy = true;
+    const targetDb = db, owner = session.user.id;
+    const current = () => db === targetDb && session?.user?.id === owner && !professionalBetaMode && !db.settings.demoMode && !accountDeletionBusy;
+    const button = $("#connectHealthConnect"), status = $("#healthConnectStatus");
+    if (button) button.disabled = true;
+    try {
+      const availability = await plugin.isAvailable();
+      if (!current()) return false;
+      if (!availability.available) {
+        if (showResult) alert("Health Connect doit être installé et à jour. Utilise « Ouvrir Health Connect ».");
+        return false;
+      }
+      if (requestAuthorization) {
+        const result = await plugin.requestAuthorization();
+        if (!current()) return false;
+        if (!result.authorized) {
+          if (showResult) alert("Aucune catégorie Health Connect n’a été autorisée.");
+          return false;
+        }
+        db.settings.healthConnectEnabled = true;
+        db.settings.stepsTracking = true;
+      }
+      const start = new Date();
+      start.setDate(start.getDate() - 28);
+      const snapshot = await plugin.readSnapshot({startDate: start.toLocaleDateString("en-CA")});
+      if (!current() || !db.settings.healthConnectEnabled) return false;
+      if (!snapshot.authorized) {
+        db.settings.healthConnectEnabled = false;
+        saveLocal("health-connect-permissions");
+        render();
+        if (showResult) alert("Les permissions Health Connect ont été retirées. Reconnecte Health Connect pour reprendre les imports.");
+        return false;
+      }
+      const changed = window.EnergieHealthConnect.merge(snapshot, {db, today: todayKey(), ensureDay, normalizeActivity, Metrics, sleepingHours: healthKitSleepingHours});
+      const timestamp = new Date().toISOString();
+      changed.forEach(date => { db.days[date].updatedAt = timestamp; });
+      const stepsRead = snapshot.days?.find(row => row.date === todayKey());
+      db.settings.healthConnectLastSteps = stepsRead && Number.isFinite(Number(stepsRead.steps)) ? Number(stepsRead.steps) : null;
+      db.settings.healthConnectLastSync = timestamp;
+      db.settings.healthConnectLastErrors = snapshot.errors || [];
+      saveLocal("health-connect-sync");
+      if (changed.size) {
+        const pending = outbox();
+        for (const date of changed) {
+          const op = {kind: "day", date, _ownerUserId: owner, _queuedAt: `${Date.now()}-${uid()}`};
+          const index = pending.findIndex(item => item.kind === "day" && item.date === date);
+          if (index >= 0) pending[index] = op; else pending.push(op);
+        }
+        if (setOutbox(pending)) {
+          syncState = "pending";
+          updateSyncBadge();
+          if (navigator.onLine) syncNow();
+        }
+      }
+      render();
+      if (showResult) {
+        const errors = snapshot.errors?.length ? ` Lecture à réessayer : ${snapshot.errors.join(", ")}.` : "";
+        alert(`Health Connect synchronisé · ${changed.size} journée(s) mise(s) à jour.${errors}`);
+      }
+      return true;
+    } catch (error) {
+      console.warn("Synchronisation Health Connect", error);
+      if (status) status.textContent = "La synchronisation n’a pas abouti. Réessaie ou vérifie les permissions.";
+      if (showResult) alert(`Impossible de synchroniser Health Connect : ${error?.message || "réessaie"}.`);
+      return false;
+    } finally {
+      healthConnectBusy = false;
+      if (button) button.disabled = false;
+    }
+  }
+  function addHealthConnectProfile() {
+    const plugin = nativeHealthConnect();
+    if (!plugin) return;
+    const enabled = db.settings.healthConnectEnabled === true;
+    const last = db.settings.healthConnectLastSync ? new Date(db.settings.healthConnectLastSync).toLocaleString() : "Jamais";
+    const stepsRead = db.settings.healthConnectLastSteps;
+    const stepsInfo = stepsRead != null ? `Pas lus dans Health Connect aujourd’hui : ${Number(stepsRead)} · Journal : ${Number(db.days[todayKey()]?.steps) || 0}.` : "";
+    const errors = db.settings.healthConnectLastErrors?.length ? `Lecture à réessayer : ${db.settings.healthConnectLastErrors.join(", ")}.` : "";
+    $("#app .stack")?.insertAdjacentHTML("beforeend", `<section class="card health-connect-profile-card"><h3>💚 Health Connect</h3><p class="muted small">Importe les pas, le sommeil, les activités et le poids disponibles sur ton téléphone Android. Tu choisis les catégories autorisées.</p><p class="muted tiny">Synchronisation à l’ouverture et sur demande · jusqu’à 28 jours précédents. Le sommeil est importé lorsque des stades sont disponibles; les calories d’activité restent des estimations.</p><p class="muted small">Dernière synchronisation : ${esc(last)}</p><p class="muted small">${esc(stepsInfo)}</p><p id="healthConnectStatus" class="muted small" role="status">${esc(errors)}</p><div class="button-row"><button type="button" id="connectHealthConnect" class="primary">${enabled ? "Synchroniser Health Connect" : "Connecter Health Connect"}</button><button type="button" id="openHealthConnect" class="secondary">Ouvrir Health Connect</button></div>${enabled ? '<div class="button-row"><button type="button" id="authorizeHealthConnect" class="text-button">Modifier les autorisations</button><button type="button" id="disconnectHealthConnect" class="text-button">Arrêter les imports</button></div>' : ""}<p class="muted tiny">Les données importées sont enregistrées dans ton journal et synchronisées avec ton compte. Arrêter les imports conserve ton historique.</p></section>`);
+    $("#connectHealthConnect")?.addEventListener("click", () => syncHealthConnect({requestAuthorization: !enabled, showResult: true}));
+    $("#authorizeHealthConnect")?.addEventListener("click", () => syncHealthConnect({requestAuthorization: true, showResult: true}));
+    $("#openHealthConnect")?.addEventListener("click", () => plugin.openProvider().catch(() => alert("Impossible d’ouvrir Health Connect.")));
+    $("#disconnectHealthConnect")?.addEventListener("click", () => {
+      db.settings.healthConnectEnabled = false;
+      saveLocal("health-connect-disabled");
+      render();
+    });
+  }
+
   function nativeLocalNotifications() {
     return window.Capacitor?.Plugins?.LocalNotifications || null;
   }
@@ -13914,7 +14021,7 @@ function formatSleepDuration(hours) {
       {key: "about", icon: "👤", title: "Mon profil personnel", description: "Âge, taille, poids et contexte personnel", selectors: ".personal-profile-card,.physiological-context-card"},
       {key: "meals", icon: "🍽️", title: "Repas et saisie", description: professionalGuidedEntryHidden() ? "Favoris, méthodes de saisie et options des repas" : "FCÉN, Ciqual, favoris et façon de noter mes repas", selectors: ".guided-entry-settings,.nutrition-source-profile-card,.recognized-elements-setting-card,.eating-reasons-setting-card,.future-meal-planning-setting-card,.profile-favorites-panel"},
       {key: "calories", icon: "⚖️", title: "Calories et objectifs", description: "Affichage, estimations et cible calorique", selectors: ".calorie-balance-profile-card"},
-      {key: "tracking", icon: "💧", title: "Suivi quotidien", description: "Hydratation, pas, Santé, ressentis et suppléments", selectors: ".steps-profile-card,.apple-health-profile-card,#waterGoal,#settingFeelingReminders,#supplementNameInput"},
+      {key: "tracking", icon: "💧", title: "Suivi quotidien", description: "Hydratation, pas, Santé, ressentis et suppléments", selectors: ".steps-profile-card,.apple-health-profile-card,.health-connect-profile-card,#waterGoal,#settingFeelingReminders,#supplementNameInput"},
       {key: "observations", icon: "👁️", title: "Observations", description: "Tendances, analyses et suggestions", selectors: "#settingInsights,#settingNutrition,#settingRecommendations"},
       {key: "sharing", icon: "🔒", title: "Confidentialité et partage", description: "Photos, accès professionnel et sauvegarde", selectors: ".profile-avatar-settings-card,.meal-photo-settings-card,.professional-setting-card,.professional-client-link-card,.professional-beta-entry,.profile-backup-panel"},
       {key: "appearance", icon: "🎨", title: "Apparence", description: "Langue, thème et présentation du journal", selectors: ".seasonal-setting-card,.journal-summary-setting-card,#languageSettingCard,.profile-theme-settings-card"},
@@ -14149,6 +14256,8 @@ function formatSleepDuration(hours) {
     $("#profileThemeToggle")?.addEventListener("click", () => $("#themeToggle")?.click());
 
     if (!professionalBetaMode) window.EnergieProfessionalOptions.hideControls($("#app"), currentProfessionalOptionPolicy());
+
+    addHealthConnectProfile();
 
     // Build the visual Profile groups NOW, before any later binding can interrupt renderProfile().
     enhanceProfileWithAccordions();
@@ -16529,6 +16638,7 @@ function formatSleepDuration(hours) {
     if (hours !== null && (!Number.isFinite(hours) || hours < 0 || hours > 24))
       return alert("Entre une durée de sommeil valide entre 0 et 24 heures.");
     d.sleepHours = hours;
+    d.sleepSource = "manual";
     d.sleepStartTime = $("#sleepStartTime").value || "";
     d.sleepEndTime = $("#sleepEndTime").value || "";
     d.sleepTags = [...document.querySelectorAll("[data-sleep-tag]:checked")].map((input) => input.value);
@@ -17847,6 +17957,7 @@ function formatSleepDuration(hours) {
         await pullCloud(false);
         await syncNow();
         await syncAppleHealth();
+        await syncHealthConnect();
       }
     }
     render();
@@ -17857,7 +17968,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.192");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.194");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
@@ -17940,6 +18051,7 @@ function formatSleepDuration(hours) {
           if (displayed) displayed.outerHTML = avatarManager.avatarHtml(professionalActiveClient.name, professionalActiveClient.avatarUrl, "professional-context-avatar");
         }).catch(() => {});
       }
+      syncHealthConnect().catch(error => console.warn("Health Connect au retour", error));
       syncAppleHealth().catch((error) =>
         console.warn("Apple Health au retour dans l’app", error),
       );
@@ -17954,3 +18066,4 @@ function parseAppNumber(value) {
   const number = Number(normalized);
   return Number.isFinite(number) ? number : null;
 }
+

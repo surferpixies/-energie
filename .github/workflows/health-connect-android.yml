@@ -1,0 +1,31 @@
+name: Health Connect Android validation
+on:
+  push:
+    branches: [feature/health-connect-2026-10-09]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - run: npm ci
+      - run: TZ=America/Toronto node tests/apple-health-history.test.js
+      - run: TZ=America/Toronto node tests/health-connect.test.js
+      - run: npm run android:sync
+      - run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - run: chmod +x gradlew && ./gradlew :app:assembleDebug --no-daemon
+        working-directory: android
