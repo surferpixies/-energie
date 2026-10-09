@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.193";
+  const APP_RELEASE = "3.56.194";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -9088,6 +9088,8 @@ function formatSleepDuration(hours) {
       const changed = window.EnergieHealthConnect.merge(snapshot, {db, today: todayKey(), ensureDay, normalizeActivity, Metrics, sleepingHours: healthKitSleepingHours});
       const timestamp = new Date().toISOString();
       changed.forEach(date => { db.days[date].updatedAt = timestamp; });
+      const stepsRead = snapshot.days?.find(row => row.date === todayKey());
+      db.settings.healthConnectLastSteps = stepsRead && Number.isFinite(Number(stepsRead.steps)) ? Number(stepsRead.steps) : null;
       db.settings.healthConnectLastSync = timestamp;
       db.settings.healthConnectLastErrors = snapshot.errors || [];
       saveLocal("health-connect-sync");
@@ -9125,8 +9127,10 @@ function formatSleepDuration(hours) {
     if (!plugin) return;
     const enabled = db.settings.healthConnectEnabled === true;
     const last = db.settings.healthConnectLastSync ? new Date(db.settings.healthConnectLastSync).toLocaleString() : "Jamais";
+    const stepsRead = db.settings.healthConnectLastSteps;
+    const stepsInfo = stepsRead != null ? `Pas lus dans Health Connect aujourd’hui : ${Number(stepsRead)} · Journal : ${Number(db.days[todayKey()]?.steps) || 0}.` : "";
     const errors = db.settings.healthConnectLastErrors?.length ? `Lecture à réessayer : ${db.settings.healthConnectLastErrors.join(", ")}.` : "";
-    $("#app .stack")?.insertAdjacentHTML("beforeend", `<section class="card health-connect-profile-card"><h3>💚 Health Connect</h3><p class="muted small">Importe les pas, le sommeil, les activités et le poids disponibles sur ton téléphone Android. Tu choisis les catégories autorisées.</p><p class="muted tiny">Synchronisation à l’ouverture et sur demande · jusqu’à 28 jours précédents. Le sommeil est importé lorsque des stades sont disponibles; les calories d’activité restent des estimations.</p><p class="muted small">Dernière synchronisation : ${esc(last)}</p><p id="healthConnectStatus" class="muted small" role="status">${esc(errors)}</p><div class="button-row"><button type="button" id="connectHealthConnect" class="primary">${enabled ? "Synchroniser Health Connect" : "Connecter Health Connect"}</button><button type="button" id="openHealthConnect" class="secondary">Ouvrir Health Connect</button></div>${enabled ? '<div class="button-row"><button type="button" id="authorizeHealthConnect" class="text-button">Modifier les autorisations</button><button type="button" id="disconnectHealthConnect" class="text-button">Arrêter les imports</button></div>' : ""}<p class="muted tiny">Les données importées sont enregistrées dans ton journal et synchronisées avec ton compte. Arrêter les imports conserve ton historique.</p></section>`);
+    $("#app .stack")?.insertAdjacentHTML("beforeend", `<section class="card health-connect-profile-card"><h3>💚 Health Connect</h3><p class="muted small">Importe les pas, le sommeil, les activités et le poids disponibles sur ton téléphone Android. Tu choisis les catégories autorisées.</p><p class="muted tiny">Synchronisation à l’ouverture et sur demande · jusqu’à 28 jours précédents. Le sommeil est importé lorsque des stades sont disponibles; les calories d’activité restent des estimations.</p><p class="muted small">Dernière synchronisation : ${esc(last)}</p><p class="muted small">${esc(stepsInfo)}</p><p id="healthConnectStatus" class="muted small" role="status">${esc(errors)}</p><div class="button-row"><button type="button" id="connectHealthConnect" class="primary">${enabled ? "Synchroniser Health Connect" : "Connecter Health Connect"}</button><button type="button" id="openHealthConnect" class="secondary">Ouvrir Health Connect</button></div>${enabled ? '<div class="button-row"><button type="button" id="authorizeHealthConnect" class="text-button">Modifier les autorisations</button><button type="button" id="disconnectHealthConnect" class="text-button">Arrêter les imports</button></div>' : ""}<p class="muted tiny">Les données importées sont enregistrées dans ton journal et synchronisées avec ton compte. Arrêter les imports conserve ton historique.</p></section>`);
     $("#connectHealthConnect")?.addEventListener("click", () => syncHealthConnect({requestAuthorization: !enabled, showResult: true}));
     $("#authorizeHealthConnect")?.addEventListener("click", () => syncHealthConnect({requestAuthorization: true, showResult: true}));
     $("#openHealthConnect")?.addEventListener("click", () => plugin.openProvider().catch(() => alert("Impossible d’ouvrir Health Connect.")));
@@ -14253,11 +14257,12 @@ function formatSleepDuration(hours) {
 
     if (!professionalBetaMode) window.EnergieProfessionalOptions.hideControls($("#app"), currentProfessionalOptionPolicy());
 
+    addHealthConnectProfile();
+
     // Build the visual Profile groups NOW, before any later binding can interrupt renderProfile().
     enhanceProfileWithAccordions();
 
     bindPersonalProfile();
-    addHealthConnectProfile();
     $("#app .stack")?.insertAdjacentHTML(
       "beforeend",
       `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.21" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
@@ -17963,7 +17968,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.193");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.194");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
@@ -18061,3 +18066,4 @@ function parseAppNumber(value) {
   const number = Number(normalized);
   return Number.isFinite(number) ? number : null;
 }
+
