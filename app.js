@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.195";
+  const APP_RELEASE = "3.56.196";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -4974,32 +4974,38 @@ function formatSleepDuration(hours) {
     profileAccountType = cleanType;
     return true;
   }
+  let professionalBetaStateGeneration = 0;
   async function loadProfessionalBetaState() {
-    professionalClientLinks = [];
-    clientProfessionalLink = null;
-    professionalNotesCache = [];
-    professionalTrackingPlanCache = null;
-    if (!client || !session) return;
+    const generation = ++professionalBetaStateGeneration, ownerId = session?.user?.id;
+    if (!client || !ownerId) {
+      professionalClientLinks = [];
+      clientProfessionalLink = null;
+      if (!professionalBetaMode) { professionalNotesCache = []; professionalTrackingPlanCache = null; }
+      return;
+    }
+    const current = () => generation === professionalBetaStateGeneration && session?.user?.id === ownerId;
     try {
       const { data, error } = await client
         .from("professional_client_links")
         .select("id,professional_user_id,client_user_id,client_label,professional_label,status,invite_code,share_journal,share_photos,created_at,accepted_at")
-        .or(`professional_user_id.eq.${session.user.id},client_user_id.eq.${session.user.id}`)
+        .or(`professional_user_id.eq.${ownerId},client_user_id.eq.${ownerId}`)
         .order("created_at", { ascending: false });
+      if (!current()) return;
       if (error) throw error;
-      professionalClientLinks = data || [];
+      let links = data || [];
 
       // Pour un professionnel, toujours privilégier le nom actuel du profil client.
-      if (professionalClientLinks.some((link) => link.professional_user_id === session.user.id)) {
+      if (links.some((link) => link.professional_user_id === session.user.id)) {
         const { data: clientNames, error: clientNamesError } =
           await client.rpc("get_professional_client_display_names");
 
+        if (!current()) return;
         if (!clientNamesError && Array.isArray(clientNames)) {
           const namesByLink = new Map(
             clientNames.map((row) => [row.link_id, row.current_display_name])
           );
 
-          professionalClientLinks = professionalClientLinks.map((link) => ({
+          links = links.map((link) => ({
             ...link,
             client_label:
               namesByLink.get(link.id) ||
@@ -5009,15 +5015,21 @@ function formatSleepDuration(hours) {
         }
       }
 
+      if (!current()) return;
+      professionalClientLinks = links;
       clientProfessionalLink = professionalClientLinks.find((link) => link.status === "active" && link.client_user_id === session.user.id) || null;
       if (!clientProfessionalLink && !professionalBetaMode) {
         delete window.EnergieProfessionalOptions.raw(db.settings).professionalOptionPolicy;
         saveLocal("options-professionnelles-retirees");
       }
-      if (clientProfessionalLink) {
+      // Le suivi personnel ne doit jamais remplacer les notes du dossier client ouvert.
+      if (clientProfessionalLink && !professionalBetaMode) {
         db.settings.shareMealPhotosWithProfessional =
           clientProfessionalLink.share_photos === true;
         await loadClientProfessionalFollowup();
+      } else if (!professionalBetaMode) {
+        professionalNotesCache = [];
+        professionalTrackingPlanCache = null;
       }
     } catch (error) {
       // La bêta reste invisible tant que la migration Supabase n'est pas installée.
@@ -5025,23 +5037,27 @@ function formatSleepDuration(hours) {
     }
   }
   async function loadClientProfessionalFollowup() {
-    if (!client || !session || !clientProfessionalLink) return;
+    if (!client || !session || !clientProfessionalLink || professionalBetaMode) return;
+    const journal = db, ownerId = session.user.id, linkId = clientProfessionalLink.id;
+    const current = () => db === journal && session?.user?.id === ownerId && clientProfessionalLink?.id === linkId && !professionalBetaMode;
     await refreshClientProfessionalOptions();
+    if (!current()) return;
     saveLocal("options-professionnelles");
     const [notesResult, planResult] = await Promise.all([
-      client.from("professional_notes").select("*").eq("link_id", clientProfessionalLink.id).eq("visibility", "shared").order("created_at", { ascending: false }),
-      client.from("professional_tracking_plans").select("*").eq("link_id", clientProfessionalLink.id).maybeSingle(),
+      client.from("professional_notes").select("*").eq("link_id", linkId).eq("visibility", "shared").order("created_at", { ascending: false }),
+      client.from("professional_tracking_plans").select("*").eq("link_id", linkId).maybeSingle(),
     ]);
+    if (!current()) return;
     if (!notesResult.error) professionalNotesCache = (notesResult.data || []).map((note) => ({
-      id: note.id, clientId: session.user.id, visibility: note.visibility, contextType: note.context_type,
+      id: note.id, clientId: ownerId, visibility: note.visibility, contextType: note.context_type,
       contextId: note.context_id || "", contextDate: note.context_date || "", contextLabel: note.context_label || "Suivi général",
       content: note.content, createdAt: note.created_at, updatedAt: note.updated_at,
     }));
-    if (!planResult.error && planResult.data) professionalTrackingPlanCache = {
-      clientId: session.user.id,
+    if (!planResult.error) professionalTrackingPlanCache = planResult.data ? {
+      clientId: ownerId,
       feelingIds: normalizeFeelingIds(planResult.data.feeling_ids || []),
       updatedAt: planResult.data.updated_at,
-    };
+    } : null;
   }
   function randomProfessionalInviteCode() {
     const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -18075,7 +18091,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.195");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.196");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
