@@ -20,7 +20,7 @@ function fixture() {
     readWorkouts: async options => {calls.push(['workouts',options]);return {workouts};},
   };
   const db = {settings:{appleHealthEnabled:true},days:{
-    '2026-10-02':{steps:1234,sleepHours:7,activities:[]},
+    '2026-10-02':{steps:1234,stepsSource:'manual',sleepHours:7,activities:[]},
     '2026-10-03':{steps:0,sleepHours:null,activities:[]},
     '2026-10-07':{steps:20,sleepHours:null,activities:[]},
   }};
@@ -63,6 +63,27 @@ function fixture() {
   const failure=fixture();failure.plugin.readWorkouts=async()=>{throw Error('permission/query failure');};
   failure.ctx.console={warn:()=>{}};assert.equal(await failure.ctx.syncAppleHealth(),false);
   assert.equal(failure.saved.length,0);assert.equal(failure.ctx.db.days['2026-10-07'].steps,20);
+  const partial=fixture();
+  partial.ctx.db.days['2026-10-03']={steps:847,activities:[]};
+  partial.plugin.readSteps=async()=>({days:[{date:'2026-10-03',steps:8305}]});
+  await partial.ctx.syncAppleHealth();
+  assert.equal(partial.ctx.db.days['2026-10-03'].steps,8305,'Recent legacy partial total refreshed');
+  assert.equal(partial.ctx.db.days['2026-10-03'].stepsSource,'healthkit');
+  partial.plugin.readSteps=async()=>({days:[{date:'2026-10-03',steps:8100}]});
+  await partial.ctx.syncAppleHealth();
+  assert.equal(partial.ctx.db.days['2026-10-03'].steps,8100,'Health corrections can decrease a total');
+  partial.ctx.db.days['2026-10-03'].steps=7000;
+  partial.ctx.db.days['2026-10-03'].stepsSource='manual';
+  await partial.ctx.syncAppleHealth();
+  assert.equal(partial.ctx.db.days['2026-10-03'].steps,7000,'Manual edit survives subsequent sync');
+  partial.ctx.db.days['2026-10-07']={steps:100,stepsSource:'manual',activities:[]};
+  partial.plugin.readSteps=async()=>({days:[{date:'2026-10-07',steps:9000},{date:'2026-09-01',steps:6000},{date:'2026-09-02',steps:6500}]});
+  partial.ctx.db.days['2026-09-01']={steps:500,stepsSource:'healthkit',activities:[]};
+  partial.ctx.db.days['2026-09-02']={steps:500,activities:[]};
+  await partial.ctx.syncAppleHealth();
+  assert.equal(partial.ctx.db.days['2026-10-07'].steps,100,'Today manual steps preserved');
+  assert.equal(partial.ctx.db.days['2026-09-01'].steps,6000,'Older identified imports refreshed');
+  assert.equal(partial.ctx.db.days['2026-09-02'].steps,500,'Older unidentified values preserved');
   const dates=fixture();dates.ctx.db.days['2025-01-01']={activities:[]};
   assert.equal(dates.ctx.healthKitHistoryDates('2026-10-07')[0],'2025-01-01');
   const dst=dates.ctx.healthKitHistoryDates('2026-03-10');

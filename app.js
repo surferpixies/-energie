@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.191";
+  const APP_RELEASE = "3.56.192";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -960,6 +960,7 @@ function formatSleepDuration(hours) {
             : {};
         day.water = Number(d.water ?? d.waterGlasses ?? d.eau ?? 0) || 0;
         day.steps = Number.isFinite(Number(d.steps)) && Number(d.steps) >= 0 ? Math.round(Number(d.steps)) : null;
+        day.stepsSource = ["manual", "healthkit"].includes(d.stepsSource) ? d.stepsSource : null;
         day.stepsGoal = Number.isFinite(Number(d.stepsGoal)) && Number(d.stepsGoal) > 0 ? Math.round(Number(d.stepsGoal)) : null;
         day.beverages = (Array.isArray(d.beverages) ? d.beverages : [])
           .map((item) => normalBeverage(item, k))
@@ -1924,6 +1925,7 @@ function formatSleepDuration(hours) {
               taken: d.supplementsTaken || [],
               beverages: d.beverages || [],
               steps: d.steps,
+              stepsSource: d.stepsSource || null,
               stepsGoal: d.stepsGoal,
               stepsTracking: db.settings.stepsTracking === true,
               currentStepsGoal: Number(db.settings.stepsGoal) || 8000,
@@ -2273,6 +2275,7 @@ function formatSleepDuration(hours) {
           .map((item) => normalBeverage(item, r.log_date))
           .filter(Boolean);
         d.steps = Number.isFinite(Number(r.supplements?.steps)) ? Math.round(Number(r.supplements.steps)) : null;
+        d.stepsSource = ["manual", "healthkit"].includes(r.supplements?.stepsSource) ? r.supplements.stepsSource : null;
         d.stepsGoal = Number.isFinite(Number(r.supplements?.stepsGoal)) ? Math.round(Number(r.supplements.stepsGoal)) : null;
         if (typeof r.supplements?.stepsTracking === "boolean") db.settings.stepsTracking = r.supplements.stepsTracking;
         if (Number(r.supplements?.currentStepsGoal) > 0) db.settings.stepsGoal = Math.round(Number(r.supplements.currentStepsGoal));
@@ -2309,7 +2312,10 @@ function formatSleepDuration(hours) {
           d.beverages = r.supplements.beverages
             .map((item) => normalBeverage(item, r.log_date))
             .filter(Boolean);
-        if (d.steps == null && Number.isFinite(Number(r.supplements?.steps))) d.steps = Math.round(Number(r.supplements.steps));
+        if (d.steps == null && Number.isFinite(Number(r.supplements?.steps))) {
+          d.steps = Math.round(Number(r.supplements.steps));
+          d.stepsSource = ["manual", "healthkit"].includes(r.supplements?.stepsSource) ? r.supplements.stepsSource : null;
+        }
         if (d.stepsGoal == null && Number(r.supplements?.stepsGoal) > 0) d.stepsGoal = Math.round(Number(r.supplements.stepsGoal));
         if (!(d.activities || []).length && Array.isArray(r.activities))
           d.activities = r.activities.map(normalizeActivity);
@@ -8863,16 +8869,21 @@ function formatSleepDuration(hours) {
       };
       if (!stillCurrent()) return false;
 
-      // PAS : actualise aujourd'hui; dans le passé, complète seulement les valeurs manquantes.
+      // PAS : réactualise les imports Santé et protège les saisies manuelles identifiées.
+      // Les anciennes valeurs sans origine sont relues sur sept jours pour corriger les totaux partiels.
+      const recentStepDates = new Set(historyDates.slice(-7));
       for (const entry of stepsResult.days) {
         const dateKey = entry?.date;
         const nextSteps = Math.round(Number(entry?.steps));
         if (!historyDates.includes(dateKey) || !(nextSteps > 0) || !Number.isFinite(nextSteps)) continue;
         const previous = db.days[dateKey]?.steps;
-        if (dateKey !== today && Number(previous) > 0) continue;
+        const source = db.days[dateKey]?.stepsSource;
+        if (source === "manual") continue;
+        if (dateKey !== today && Number(previous) > 0 && source !== "healthkit" && !recentStepDates.has(dateKey)) continue;
         const day = ensureDay(db, dateKey);
-        if (day.steps === nextSteps) continue;
+        if (day.steps === nextSteps && day.stepsSource === "healthkit") continue;
         day.steps = nextSteps;
+        day.stepsSource = "healthkit";
         if (!(Number(day.stepsGoal) > 0)) day.stepsGoal = Number(db.settings.stepsGoal) || 8000;
         changedDates.add(dateKey);
       }
@@ -16534,6 +16545,7 @@ function formatSleepDuration(hours) {
       return alert("Entre un nombre de pas entre 0 et 200 000.");
     const day = ensureDay(db, selectedDate);
     day.steps = Math.round(value);
+    day.stepsSource = "manual";
     if (!(Number(day.stepsGoal) > 0))
       day.stepsGoal = Math.max(100, Number(db.settings?.stepsGoal) || 8000);
     setDayChanged(selectedDate);
@@ -17845,7 +17857,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.191");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.192");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
