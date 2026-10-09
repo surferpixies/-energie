@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.196";
+  const APP_RELEASE = "3.56.197";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -6267,7 +6267,7 @@ function formatSleepDuration(hours) {
       $("#professionalNoteForm .eyebrow").textContent = "Nouvelle note";
     };
     $("#cancelProfessionalNoteEdit")?.addEventListener("click", cancelNoteEdit);
-    $('[data-edit-professional-note]').forEach(button => button.addEventListener("click", () => {
+    $$('[data-edit-professional-note]').forEach(button => button.addEventListener("click", () => {
       if (noteSaving) return;
       const note = allNotes.find(item => item.id === button.dataset.editProfessionalNote);
       if (!note || !isProfessionalOperator) return;
@@ -6328,7 +6328,7 @@ function formatSleepDuration(hours) {
       }
       renderFollowup();
     });
-    $('[data-delete-professional-note]').forEach((button) =>
+    $$('[data-delete-professional-note]').forEach((button) =>
       button.addEventListener("click", () => deleteProfessionalNote(button.dataset.deleteProfessionalNote, button)),
     );
   }
@@ -17980,7 +17980,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.196");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.197");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
