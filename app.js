@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.188";
+  const APP_RELEASE = "3.56.189";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -1869,6 +1869,7 @@ function formatSleepDuration(hours) {
     return op?._queuedAt || "legacy";
   }
   async function syncNow() {
+    if (accountDeletionBusy) return;
     if (db.settings?.demoLab?.scenarioId) return;
     if (professionalBetaMode || db.settings.demoMode || !client || !session || !navigator.onLine)
       return;
@@ -1894,12 +1895,15 @@ function formatSleepDuration(hours) {
     }
   }
   async function syncNowPass() {
+    if (accountDeletionBusy) return;
+    const syncOwnerId = session?.user?.id;
     syncState = "syncing";
     updateSyncBadge();
     const preferenceSettings = window.EnergieProfessionalOptions.raw(db.settings);
     const operations = outbox(),
       failed = [];
     for (const op of operations) {
+      if (accountDeletionBusy || session?.user?.id !== syncOwnerId) return;
       try {
         if (op._ownerUserId && op._ownerUserId !== session.user.id) {
           console.warn("Opération de synchronisation ignorée : propriétaire différent.", op.kind);
@@ -2104,6 +2108,7 @@ function formatSleepDuration(hours) {
         failed.push(op);
       }
     }
+    if (accountDeletionBusy || session?.user?.id !== syncOwnerId) return;
     const failedRevisions = new Set(
         failed.map(
           (op) => `${syncOperationKey(op)}:${syncOperationRevision(op)}`,
@@ -2133,6 +2138,8 @@ function formatSleepDuration(hours) {
     if (!failed.length && !pending) await pullCloud(false);
   }
   async function pullCloud(show = true) {
+    if (accountDeletionBusy) return;
+    const cloudOwnerId = session?.user?.id, cloudJournal = db;
     if (db.settings?.demoLab?.scenarioId) return;
     if (professionalBetaMode || db.settings.demoMode || !client || !session || !navigator.onLine)
       return;
@@ -2158,6 +2165,7 @@ function formatSleepDuration(hours) {
         .eq("user_id", session.user.id)
         .order("usage_count", { ascending: false }),
     ]);
+    if (accountDeletionBusy || session?.user?.id !== cloudOwnerId || db !== cloudJournal) return;
     if (dr.error || mr.error || fr.error) {
       console.error(dr.error || mr.error || fr.error);
       syncState = "error";
@@ -2372,6 +2380,7 @@ function formatSleepDuration(hours) {
         db.favorites[i] = remote;
     }
     await refreshClientProfessionalOptions();
+    if (accountDeletionBusy || session?.user?.id !== cloudOwnerId || db !== cloudJournal) return;
     saveLocal("retour-cloud");
     if (recoveredLegacySupplements) {
       const recoveryDay = ensureDay(db, todayKey());
@@ -13963,6 +13972,38 @@ function formatSleepDuration(hours) {
     dialog.classList.add("energy-guide-dialog-fallback");
   }
 
+  let accountDeletionBusy = false;
+  async function deleteOwnAccount() {
+    if (accountDeletionBusy || !client || !session || professionalBetaMode || db.settings.demoMode) return;
+    if (!navigator.onLine) return alert(t("Connecte-toi à Internet pour supprimer ton compte."));
+    const ownerId = session.user.id;
+    if (!confirm(t("Supprimer définitivement ton compte Énergie, ton journal, tes photos et tes liens de suivi? Cette action est irréversible. Les données d’Apple Santé ne seront pas supprimées."))) return;
+    const button = $("#deleteOwnAccount"), status = $("#deleteOwnAccountStatus");
+    accountDeletionBusy = true;
+    if (button) button.disabled = true;
+    if (status) status.textContent = t("Suppression en cours…");
+    try {
+      const {data,error} = await client.functions.invoke("delete-account", {body:{confirmation:"DELETE"}});
+      if (error || data?.deleted !== true || data?.userId !== ownerId) throw new Error("delete-not-confirmed");
+      if (session?.user?.id && session.user.id !== ownerId) return;
+      const appleLinked = hasAppleIdentity();
+      for (const timer of formAutosaveTimers.values()) clearTimeout(timer);
+      formAutosaveTimers.clear();
+      avatarManager.clear();
+      // Le serveur a confirmé la suppression : retirer aussi les copies locales.
+      session = null;
+      clearLocalJournalAfterSignOut();
+      try { await client.auth.signOut({scope:"local"}); } catch (_) {}
+      render();
+      alert(t("Ton compte Énergie a été supprimé.") + (appleLinked ? "\n\n" + t("Tu peux aussi retirer Énergie dans les réglages de ton compte Apple, sous Connexion avec Apple.") : ""));
+    } catch (_) {
+      if (session?.user?.id === ownerId && status) status.textContent = t("La suppression n’a pas été confirmée. Vérifie ta connexion et réessaie. Si le problème persiste, contacte le soutien Énergie.");
+    } finally {
+      accountDeletionBusy = false;
+      if (button) button.disabled = false;
+    }
+  }
+
   function renderProfile() {
     flushPersonalProfile?.();
     flushPersonalProfile = null;
@@ -14106,6 +14147,10 @@ function formatSleepDuration(hours) {
       "beforeend",
       `<section class="card profile-creator-card" aria-label="Créateur de l’application"><img src="./surferpixies-signature.png?v=3.56.21" alt="Logo SurferPixies"><div><strong>SurferPixies</strong><span>Philippe Dumont · Créateur d’Énergie</span><small>© 2026 · Tous droits réservés</small></div></section>`,
     );
+    if (session && !professionalBetaMode && !db.settings.demoMode) {
+      $("#app .stack")?.insertAdjacentHTML("beforeend", `<section class="profile-delete-account"><button type="button" id="deleteOwnAccount" class="profile-delete-account-button" ${accountDeletionBusy ? "disabled" : ""}>${esc(t("Supprimer mon compte"))}</button><p id="deleteOwnAccountStatus" class="muted small" role="status" aria-live="polite"></p></section>`);
+      $("#deleteOwnAccount")?.addEventListener("click", deleteOwnAccount);
+    }
     decorateSupplementIcons();
     keepPhysiologicalPanelOpen = false;
     const saveDisplayNameFromProfile = async () => {
@@ -17800,7 +17845,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.188");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.189");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
