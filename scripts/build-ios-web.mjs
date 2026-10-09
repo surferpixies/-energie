@@ -8,6 +8,7 @@ const output = path.join(root, "www");
 const runtimeFiles = [
   "index.html",
   "app.js",
+  "health-connect.js",
   "brain-journal.js",
   "professional-options.js",
   "meal-entry-guide.js",
@@ -103,3 +104,4 @@ for (const file of [...scripts, "onboarding-images.js"]) {
   catch (_) { throw new Error(`Build mobile incomplet : ${file} manque dans www.`); }
 }
 console.log("Énergie préparée dans www pour Capacitor iOS et Android · fichiers requis vérifiés.");
+
