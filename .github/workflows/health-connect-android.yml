@@ -20,6 +20,8 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
       - run: npm ci
       - run: TZ=America/Toronto node tests/apple-health-history.test.js
       - run: TZ=America/Toronto node tests/health-connect.test.js
