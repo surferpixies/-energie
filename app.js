@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.194";
+  const APP_RELEASE = "3.56.195";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -6037,6 +6037,80 @@ function formatSleepDuration(hours) {
     const prompt = analysis.less[0] ? `La situation « ${analysis.less[0].factor.label} » revient-elle assez régulièrement pour mériter une exploration plus ciblée avec ${profile.name} ?` : `Y a-t-il un élément du journal que ${profile.name} aimerait explorer plus précisément pendant la consultation ?`;
     return `<dialog class="professional-consultation-dialog" id="professionalConsultationDialog"><div class="professional-consultation-sheet"><div class="professional-consultation-head"><div><p class="eyebrow">Résumé avant consultation</p><h2>🩺 ${esc(profile.name)}</h2><p>${esc(formatDate(analysis.startDate))} au ${esc(formatDate(analysis.endDate))}</p></div><button type="button" class="icon-button" data-close-professional-consultation aria-label="Fermer">✕</button></div><div class="consultation-coverage-grid"><div><strong>${analysis.documentedDays}</strong><small>jours documentés / 30</small></div><div><strong>${analysis.meals}</strong><small>repas et collations</small></div><div><strong>${analysis.analyzableDays}</strong><small>journées avec ressentis</small></div></div><section class="consultation-section"><div class="consultation-section-title"><span>🔎</span><div><small>Ce qui mérite une attention</small><h3>Pistes à explorer</h3></div></div><div class="consultation-priority-list">${lessCards}</div></section>${goodCards ? `<section class="consultation-section"><div class="consultation-section-title"><span>🌤️</span><div><small>Ce qui semble aller dans le bon sens</small><h3>Évolution positive</h3></div></div><div class="consultation-signal-list">${goodCards}</div></section>` : ""}<section class="consultation-section consultation-two-column"><div><small class="eyebrow">Ressentis fréquents</small><div class="consultation-chips">${symptomHtml}</div></div><div><small class="eyebrow">Plan convenu</small><div class="consultation-chips">${trackedHtml}</div></div></section><section class="consultation-question"><span>💬</span><div><small>Question pour la consultation</small><strong>${esc(prompt)}</strong></div></section>${analysis.noteCount ? `<section class="consultation-existing-followup"><span>📝</span><div><small>Suivi déjà en place</small><strong>${analysis.noteCount} note${analysis.noteCount > 1 ? "s" : ""} au dossier</strong>${analysis.latestNote ? `<p>Dernière note : ${esc(analysis.latestNote.contextLabel || "Suivi général")} · ${esc(professionalNoteTime(analysis.latestNote.createdAt))}</p>` : ""}</div></section>` : ""}<p class="muted tiny consultation-caution">Résumé exploratoire basé sur les données consignées. Les associations présentées servent à orienter la discussion et ne constituent ni une preuve de cause à effet ni un diagnostic.</p><div class="dialog-actions consultation-actions"><button type="button" class="secondary" data-close-professional-consultation>Fermer</button><button type="button" class="primary" id="addConsultationToFollowup">Ajouter au suivi</button></div></div></dialog>`;
   }
+  const professionalNoteDeletes = new Set();
+  async function deleteProfessionalNote(noteId, button) {
+    if (professionalNoteDeletes.has(noteId)) return;
+    const real = professionalBetaMode;
+    const profile = real ? professionalActiveClient : professionalDemoMode && db.settings.demoMode ? activeDemoProfile() : null;
+    const note = profile && readProfessionalNotes().find(item => item.id === noteId && item.clientId === profile.id);
+    if (!note || (real && (!client || !session || accountDeletionBusy))) return;
+    const owner = session?.user?.id, clientId = profile.id, linkId = profile.linkId;
+    const current = () => real
+      ? professionalBetaMode && session?.user?.id === owner && professionalActiveClient?.id === clientId && professionalActiveClient?.linkId === linkId && !accountDeletionBusy
+      : professionalDemoMode && db.settings.demoMode && activeDemoProfile().id === clientId;
+    const visibility = note.visibility === "private" ? "privée" : "partagée avec le client";
+    if (!confirm(`Supprimer définitivement cette note ${visibility}? Cette action est irréversible.`)) return;
+    if (!current()) return;
+    professionalNoteDeletes.add(noteId);
+    if (button) { button.disabled = true; button.textContent = "Suppression…"; }
+    try {
+      if (real) {
+        // Vérifier la ligne supprimée : une permission refusée peut retourner zéro ligne.
+        const { data, error } = await client.from("professional_notes").delete()
+          .eq("id", noteId).eq("professional_user_id", owner).eq("link_id", linkId).select("id");
+        if (error) throw error;
+        if (!Array.isArray(data) || data.length !== 1 || data[0].id !== noteId)
+          throw new Error("La suppression n’a pas été confirmée. Vérifie tes permissions et réessaie.");
+        if (!current()) return;
+        professionalNotesCache = professionalNotesCache.filter(item => item.id !== noteId);
+      } else {
+        writeProfessionalNotes(readProfessionalNotes().filter(item => item.id !== noteId));
+      }
+      renderFollowup();
+    } catch (error) {
+      if (current()) alert(`Impossible de supprimer la note : ${error?.message || "réessaie"}`);
+    } finally {
+      professionalNoteDeletes.delete(noteId);
+      if (button) { button.disabled = false; button.textContent = "Supprimer la note"; }
+    }
+  }
+
+  async function updateProfessionalNote(noteId, changes) {
+    const real = professionalBetaMode;
+    const profile = real ? professionalActiveClient : professionalDemoMode && db.settings.demoMode ? activeDemoProfile() : null;
+    const note = profile && readProfessionalNotes().find(item => item.id === noteId && item.clientId === profile.id);
+    if (!note || (real && (!client || !session || accountDeletionBusy))) return false;
+    const content = String(changes.content || "").trim();
+    if (!content) { alert("Écris une note avant d’enregistrer."); return false; }
+    const visibility = changes.visibility === "private" ? "private" : "shared";
+    const owner = session?.user?.id, clientId = profile.id, linkId = profile.linkId;
+    const current = () => real
+      ? professionalBetaMode && session?.user?.id === owner && professionalActiveClient?.id === clientId && professionalActiveClient?.linkId === linkId && !accountDeletionBusy
+      : professionalDemoMode && db.settings.demoMode && activeDemoProfile().id === clientId;
+    const updatedAt = new Date().toISOString();
+    try {
+      if (real) {
+        const { data, error } = await client.from("professional_notes")
+          .update({content, visibility, updated_at: updatedAt})
+          .eq("id", noteId).eq("professional_user_id", owner).eq("link_id", linkId)
+          .select("id,content,visibility,updated_at");
+        if (error) throw error;
+        if (!Array.isArray(data) || data.length !== 1 || data[0].id !== noteId)
+          throw new Error("La modification n’a pas été confirmée. Vérifie tes permissions et réessaie.");
+        if (!current()) return false;
+        professionalNotesCache = professionalNotesCache.map(item => item.id === noteId
+          ? {...item, content: data[0].content, visibility: data[0].visibility, updatedAt: data[0].updated_at} : item);
+      } else {
+        writeProfessionalNotes(readProfessionalNotes().map(item => item.id === noteId
+          ? {...item, content, visibility, updatedAt} : item));
+      }
+      return true;
+    } catch (error) {
+      if (current()) alert(`Impossible de modifier la note : ${error?.message || "réessaie"}`);
+      return false;
+    }
+  }
+
   function renderFollowup() {
     const clientView = hasClientProfessionalFollowup();
     if (!db.settings.demoMode && !professionalBetaMode && !clientView) {
@@ -6062,10 +6136,10 @@ function formatSleepDuration(hours) {
       .filter((note) => isProfessionalOperator || note.visibility === "shared")
       .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
     const form = isProfessionalOperator
-      ? `<form id="professionalNoteForm" class="card professional-followup professional-note-form"><div><p class="eyebrow">Nouvelle note</p><h3>Ajouter au suivi de ${esc(profile.name)}</h3></div><label>Visibilité<select id="professionalNoteVisibility"><option value="shared">Partagée avec le client</option><option value="private">Privée — professionnel seulement</option></select></label><label>Contexte<select id="professionalNoteContext">${professionalContextOptionsHtml()}</select></label><label>Note<textarea id="professionalNoteContent" rows="4" required placeholder="Écrire une observation ou une piste de suivi…"></textarea></label><button type="submit" class="primary">Enregistrer la note</button></form>`
+      ? `<form id="professionalNoteForm" class="card professional-followup professional-note-form"><div><p class="eyebrow">Nouvelle note</p><h3>Ajouter au suivi de ${esc(profile.name)}</h3></div><label>Visibilité<select id="professionalNoteVisibility"><option value="shared">Partagée avec le client</option><option value="private">Privée — professionnel seulement</option></select></label><label>Contexte<select id="professionalNoteContext">${professionalContextOptionsHtml()}</select></label><label>Note<textarea id="professionalNoteContent" rows="4" required placeholder="Écrire une observation ou une piste de suivi…"></textarea></label><div class="dialog-actions"><button type="submit" class="primary" id="professionalNoteSubmit">Enregistrer la note</button><button type="button" class="secondary" id="cancelProfessionalNoteEdit" hidden>Annuler</button></div></form>`
       : "";
     const cards = allNotes.length
-      ? allNotes.map((note) => `<article class="card professional-note-card ${note.visibility === "private" ? "is-private" : "is-shared"}"><div class="professional-note-head"><span>${note.visibility === "private" ? "🔒 Note privée" : "👁️ Partagée avec le client"}</span><time>${esc(professionalNoteTime(note.createdAt))}</time></div><strong>${esc(note.contextLabel || "Suivi général")}</strong><p>${esc(note.content)}</p>${isProfessionalOperator ? `<button type="button" class="text-button professional-note-delete" data-delete-professional-note="${note.id}">Supprimer</button>` : ""}</article>`).join("")
+      ? allNotes.map((note) => `<article class="card professional-note-card ${note.visibility === "private" ? "is-private" : "is-shared"}"><div class="professional-note-head"><span>${note.visibility === "private" ? "🔒 Note privée" : "👁️ Partagée avec le client"}</span><time>${esc(professionalNoteTime(note.createdAt))}</time></div><strong>${esc(note.contextLabel || "Suivi général")}</strong><p>${esc(note.content)}</p>${isProfessionalOperator ? `<div class="professional-note-actions"><button type="button" class="secondary small" data-edit-professional-note="${esc(note.id)}">✏️ Modifier</button><button type="button" class="secondary small professional-note-delete" data-delete-professional-note="${esc(note.id)}">🗑️ Supprimer la note</button></div>` : ""}</article>`).join("")
       : `<section class="card empty"><span>📝</span><p>Aucune note partagée n’est disponible pour ce suivi.</p></section>`;
     const trackingPlanPanel = isProfessionalOperator
       ? professionalTrackingPlanHtml()
@@ -6176,8 +6250,52 @@ function formatSleepDuration(hours) {
       }
       renderFollowup();
     });
+    let editingNoteId = null, noteSaving = false;
+    const cancelNoteEdit = () => {
+      editingNoteId = null;
+      $("#professionalNoteForm")?.reset();
+      $("#professionalNoteContext").disabled = false;
+      $("#professionalNoteSubmit").textContent = "Enregistrer la note";
+      $("#cancelProfessionalNoteEdit").hidden = true;
+      $("#professionalNoteForm .eyebrow").textContent = "Nouvelle note";
+    };
+    $("#cancelProfessionalNoteEdit")?.addEventListener("click", cancelNoteEdit);
+    $('[data-edit-professional-note]').forEach(button => button.addEventListener("click", () => {
+      if (noteSaving) return;
+      const note = allNotes.find(item => item.id === button.dataset.editProfessionalNote);
+      if (!note || !isProfessionalOperator) return;
+      editingNoteId = note.id;
+      $("#professionalNoteContent").value = note.content || "";
+      $("#professionalNoteVisibility").value = note.visibility === "private" ? "private" : "shared";
+      const context = $("#professionalNoteContext");
+      const value = [note.contextType || "global", note.contextId || "", note.contextDate || "", note.contextLabel || "Suivi général"].join("|");
+      if (![...context.options].some(option => option.value === value)) {
+        const option = document.createElement("option");
+        option.value = value; option.textContent = note.contextLabel || "Suivi général"; context.appendChild(option);
+      }
+      context.value = value; context.disabled = true;
+      $("#professionalNoteForm .eyebrow").textContent = "Modifier la note";
+      $("#professionalNoteSubmit").textContent = "Enregistrer les modifications";
+      $("#cancelProfessionalNoteEdit").hidden = false;
+      $("#professionalNoteForm").scrollIntoView({behavior: "smooth", block: "start"});
+      $("#professionalNoteContent").focus({preventScroll: true});
+    }));
     $("#professionalNoteForm")?.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (noteSaving) return;
+      if (editingNoteId) {
+        noteSaving = true;
+        const submit = $("#professionalNoteSubmit"), cancel = $("#cancelProfessionalNoteEdit");
+        submit.disabled = true; cancel.disabled = true;
+        try {
+          const saved = await updateProfessionalNote(editingNoteId, {
+            content: $("#professionalNoteContent").value,
+            visibility: $("#professionalNoteVisibility").value,
+          });
+          if (saved) renderFollowup();
+        } finally { noteSaving = false; submit.disabled = false; cancel.disabled = false; }
+        return;
+      }
       const rawContext = $("#professionalNoteContext").value.split("|");
       const content = $("#professionalNoteContent").value.trim();
       if (!content) return;
@@ -6204,18 +6322,7 @@ function formatSleepDuration(hours) {
       renderFollowup();
     });
     $$('[data-delete-professional-note]').forEach((button) =>
-      button.addEventListener("click", async () => {
-        if (!confirm("Supprimer cette note de suivi?")) return;
-        const noteId = button.dataset.deleteProfessionalNote;
-        if (professionalBetaMode) {
-          const { error } = await client.from("professional_notes").delete().eq("id", noteId);
-          if (error) { alert(`Impossible de supprimer la note : ${error.message}`); return; }
-          professionalNotesCache = professionalNotesCache.filter((note) => note.id !== noteId);
-        } else {
-          writeProfessionalNotes(readProfessionalNotes().filter((note) => note.id !== noteId));
-        }
-        renderFollowup();
-      }),
+      button.addEventListener("click", () => deleteProfessionalNote(button.dataset.deleteProfessionalNote, button)),
     );
   }
   function labScenarioCardsHtml() {
@@ -17968,7 +18075,7 @@ function formatSleepDuration(hours) {
   if ((location.protocol === "http:" || location.protocol === "https:") && "serviceWorker" in navigator) {
     window.addEventListener("load", async () => {
       try {
-        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.194");
+        const reg = await navigator.serviceWorker.register("./sw.js?v=3.56.195");
         // Mettre le cache à jour en arrière-plan, sans recharger l'app pendant
         // le splash. Le prochain lancement utilisera naturellement le nouveau SW.
         reg.update().catch(() => {});
