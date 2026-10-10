@@ -6053,41 +6053,9 @@ function formatSleepDuration(hours) {
     const prompt = analysis.less[0] ? `La situation « ${analysis.less[0].factor.label} » revient-elle assez régulièrement pour mériter une exploration plus ciblée avec ${profile.name} ?` : `Y a-t-il un élément du journal que ${profile.name} aimerait explorer plus précisément pendant la consultation ?`;
     return `<dialog class="professional-consultation-dialog" id="professionalConsultationDialog"><div class="professional-consultation-sheet"><div class="professional-consultation-head"><div><p class="eyebrow">Résumé avant consultation</p><h2>🩺 ${esc(profile.name)}</h2><p>${esc(formatDate(analysis.startDate))} au ${esc(formatDate(analysis.endDate))}</p></div><button type="button" class="icon-button" data-close-professional-consultation aria-label="Fermer">✕</button></div><div class="consultation-coverage-grid"><div><strong>${analysis.documentedDays}</strong><small>jours documentés / 30</small></div><div><strong>${analysis.meals}</strong><small>repas et collations</small></div><div><strong>${analysis.analyzableDays}</strong><small>journées avec ressentis</small></div></div><section class="consultation-section"><div class="consultation-section-title"><span>🔎</span><div><small>Ce qui mérite une attention</small><h3>Pistes à explorer</h3></div></div><div class="consultation-priority-list">${lessCards}</div></section>${goodCards ? `<section class="consultation-section"><div class="consultation-section-title"><span>🌤️</span><div><small>Ce qui semble aller dans le bon sens</small><h3>Évolution positive</h3></div></div><div class="consultation-signal-list">${goodCards}</div></section>` : ""}<section class="consultation-section consultation-two-column"><div><small class="eyebrow">Ressentis fréquents</small><div class="consultation-chips">${symptomHtml}</div></div><div><small class="eyebrow">Plan convenu</small><div class="consultation-chips">${trackedHtml}</div></div></section><section class="consultation-question"><span>💬</span><div><small>Question pour la consultation</small><strong>${esc(prompt)}</strong></div></section>${analysis.noteCount ? `<section class="consultation-existing-followup"><span>📝</span><div><small>Suivi déjà en place</small><strong>${analysis.noteCount} note${analysis.noteCount > 1 ? "s" : ""} au dossier</strong>${analysis.latestNote ? `<p>Dernière note : ${esc(analysis.latestNote.contextLabel || "Suivi général")} · ${esc(professionalNoteTime(analysis.latestNote.createdAt))}</p>` : ""}</div></section>` : ""}<p class="muted tiny consultation-caution">Résumé exploratoire basé sur les données consignées. Les associations présentées servent à orienter la discussion et ne constituent ni une preuve de cause à effet ni un diagnostic.</p><div class="dialog-actions consultation-actions"><button type="button" class="secondary" data-close-professional-consultation>Fermer</button><button type="button" class="primary" id="addConsultationToFollowup">Ajouter au suivi</button></div></div></dialog>`;
   }
-  function confirmProfessionalNoteDeletion(message, button) {
-    const card = button?.closest(".professional-note-card");
-    if (!card || card.querySelector("[data-note-delete-confirmation]")) return Promise.resolve(false);
-    return new Promise(resolve => {
-      const panel = document.createElement("section");
-      panel.dataset.noteDeleteConfirmation = "";
-      panel.className = "notice professional-note-delete-confirmation";
-      panel.setAttribute("role", "alertdialog");
-      panel.setAttribute("aria-label", "Confirmer la suppression de la note");
-      panel.innerHTML = `<strong>Supprimer la note?</strong><p>${esc(message)}</p><div class="professional-note-actions"><button type="button" class="secondary small" data-note-delete-cancel>Annuler</button><button type="button" class="primary small" data-note-delete-confirm>Confirmer la suppression</button></div>`;
-      let settled = false;
-      const observer = new MutationObserver(() => {
-        if (!panel.isConnected) finish(false);
-      });
-      const finish = accepted => {
-        if (settled) return;
-        settled = true;
-        observer.disconnect();
-        panel.remove();
-        if (button.isConnected) {
-          button.disabled = false;
-          button.focus();
-        }
-        resolve(accepted);
-      };
-      panel.querySelector("[data-note-delete-cancel]").onclick = () => finish(false);
-      panel.querySelector("[data-note-delete-confirm]").onclick = () => finish(true);
-      panel.addEventListener("keydown", event => {
-        if (event.key === "Escape") { event.preventDefault(); finish(false); }
-      });
-      card.appendChild(panel);
-      observer.observe(document.body, { childList: true, subtree: true });
-      panel.scrollIntoView({ block: "nearest" });
-      panel.querySelector("[data-note-delete-cancel]").focus();
-    });
+  function confirmProfessionalNoteDeletion(message) {
+    // Utilise la même boîte native que la suppression des repas sur Web, iOS et Android.
+    return Promise.resolve(confirm(`Supprimer la note?\n\n${message}`));
   }
 
   const professionalNoteDeletes = new Set();
