@@ -6343,7 +6343,7 @@ function formatSleepDuration(hours) {
       }
       renderFollowup();
     });
-    $('[data-delete-professional-note]').forEach((button) =>
+    document.querySelectorAll('[data-delete-professional-note]').forEach((button) =>
       button.addEventListener("click", () => deleteProfessionalNote(button.dataset.deleteProfessionalNote, button)),
     );
   }
