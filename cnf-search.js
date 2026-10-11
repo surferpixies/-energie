@@ -333,7 +333,7 @@
       const countPortions = count == null ? [] : (Array.isArray(portions) ? portions : []).filter(p =>
         /^1\s/.test(normalize(p?.[1])) &&
         !/\b(ml|g|kg|tasse|cup|tbsp|tsp|bol|bowl)\b/.test(normalize(p?.[1])) &&
-        /\b(fruit|oeuf|egg|tranche|slice|piece|morceau|filet|fillet)\b/.test(normalize(p?.[1])));
+        /\b(fruit|oeuf|egg|tranche|slice|piece|morceau|filet|fillet|moyen(?:ne)?|medium|petit(?:e)?|small|gros(?:se)?|large)\b/.test(normalize(p?.[1])));
       const size = normalize(text).match(/\b(petit|petite|small|gros|grosse|large|moyen|moyenne|medium)\b/)?.[1];
       const selected = count != null
         ? countPortions.find(p => size ? normalize(p[1] + " " + p[2]).includes(size) : /\b(moyen|medium)\b/.test(normalize(p[1] + " " + p[2]))) || (!size ? countPortions[0] : null)
