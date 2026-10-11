@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.212";
+  const APP_RELEASE = "3.56.213";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -14358,6 +14358,54 @@ function formatSleepDuration(hours) {
     if (calorieOptions && autoNutritionOption) calorieOptions.appendChild(autoNutritionOption);
     $("#app .stack")?.insertAdjacentHTML("beforeend", `<section class="card profile-theme-settings-card"><div class="settings-row"><div><h3>${t("Thème")}</h3><p class="muted small">${t("Choisir une apparence claire ou sombre")}</p></div><button type="button" class="secondary small" id="profileThemeToggle">${t("Changer le thème")}</button></div></section>`);
     $("#profileThemeToggle")?.addEventListener("click", () => $("#themeToggle")?.click());
+
+    if (window.Capacitor?.isNativePlatform?.() !== true) {
+      $("#app .stack")?.insertAdjacentHTML(
+        "beforeend",
+        `<section class="card profile-app-sharing-card" aria-labelledby="profileAppSharingTitle"><div class="profile-app-sharing-heading"><span aria-hidden="true">🔗</span><h3 id="profileAppSharingTitle">Énergie sur vos autres appareils</h3></div><p class="muted small">Partage le lien de la version Web d’Énergie.</p><div class="profile-app-sharing-actions"><button type="button" class="secondary small" id="copyPublicWebAppLink">Copier le lien</button><button type="button" class="secondary small" id="sharePublicWebAppLink">Partager</button></div><p id="publicWebAppLinkStatus" class="muted tiny" role="status" aria-live="polite"></p></section>`,
+      );
+      const appLink = new URL("./", window.location.href).href,
+        status = $("#publicWebAppLinkStatus");
+      const copyAppLink = async () => {
+        try {
+          if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+          await navigator.clipboard.writeText(appLink);
+        } catch (_) {
+          const field = document.createElement("textarea");
+          field.value = appLink;
+          field.setAttribute("readonly", "");
+          field.style.position = "fixed";
+          field.style.opacity = "0";
+          document.body.appendChild(field);
+          field.select();
+          const copied = document.execCommand("copy");
+          field.remove();
+          if (!copied) {
+            if (status) status.textContent = `Copie impossible. Adresse du site : ${appLink}`;
+            return false;
+          }
+        }
+        if (status) status.textContent = "Lien copié. Tu peux le coller dans un courriel ou un message.";
+        return true;
+      };
+      $("#copyPublicWebAppLink")?.addEventListener("click", copyAppLink);
+      $("#sharePublicWebAppLink")?.addEventListener("click", async () => {
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: "Énergie",
+              text: "Découvre Énergie, ton espace pour suivre tes repas et ton bien-être.",
+              url: appLink,
+            });
+            if (status) status.textContent = "Lien partagé.";
+            return;
+          } catch (error) {
+            if (error?.name === "AbortError") return;
+          }
+        }
+        await copyAppLink();
+      });
+    }
 
     if (!professionalBetaMode) window.EnergieProfessionalOptions.hideControls($("#app"), currentProfessionalOptionPolicy());
 
