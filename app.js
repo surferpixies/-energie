@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.209";
+  const APP_RELEASE = "3.56.210";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10801,16 +10801,34 @@ function formatSleepDuration(hours) {
           .sort((a, b) => b.usageCount - a.usageCount)
           .map(
             (f) =>
-              `<article class="card favorite-card"><div class="favorite-icon">${mealIcon(f.type, f.description)}</div><div><h3>${esc(f.name)}</h3><p>${esc(f.description)}</p><small class="muted">Utilisé ${f.usageCount || 0} fois</small></div><div class="favorite-actions"><button class="primary small" data-use-favorite="${f.id}">Utiliser</button><button class="delete-meal" data-delete-favorite="${f.id}">×</button></div></article>`,
+              `<article class="card favorite-card"><div class="favorite-icon">${mealIcon(f.type, f.description)}</div><div><div class="favorite-title-row"><h3>${esc(f.name)}</h3><button type="button" class="favorite-rename" data-rename-favorite="${esc(f.id)}" aria-label="Renommer ${esc(f.name)}" title="Renommer le favori"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button></div><p>${esc(f.description)}</p><small class="muted">Utilisé ${f.usageCount || 0} fois</small></div><div class="favorite-actions"><button class="primary small" data-use-favorite="${esc(f.id)}">Utiliser</button><button class="delete-meal" data-delete-favorite="${esc(f.id)}">×</button></div></article>`,
           )
           .join("")
       : `<section class="card empty"><div class="food-art">⭐</div><p>Ajoute un repas existant à tes favoris avec l’étoile.</p></section>`;
   }
   function bindFavoriteActions() {
-    $$("[data-use-favorite]").forEach(
+    $("[data-use-favorite]").forEach(
       (b) => (b.onclick = () => useFavorite(b.dataset.useFavorite)),
     );
-    $$("[data-delete-favorite]").forEach(
+    $("[data-rename-favorite]").forEach((b) => {
+      b.onclick = () => {
+        const f = db.favorites.find((x) => x.id === b.dataset.renameFavorite);
+        if (!f) return;
+        const name = prompt("Nom du favori :", f.name || "");
+        if (name === null) return;
+        const trimmed = name.trim();
+        if (!trimmed) {
+          alert("Le nom du favori ne peut pas être vide.");
+          return;
+        }
+        if (trimmed === f.name) return;
+        f.name = trimmed;
+        f.updatedAt = new Date().toISOString();
+        setFavoriteChanged(f);
+        render();
+      };
+    });
+    $("[data-delete-favorite]").forEach(
       (b) =>
         (b.onclick = () => {
           const f = db.favorites.find((x) => x.id === b.dataset.deleteFavorite);
