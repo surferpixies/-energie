@@ -15,7 +15,7 @@
     html,body{margin:0;background:#eef8e7;}
     #splashScreen{position:fixed;inset:0;background:#eef8e7;}
   </style>
-  <link rel="stylesheet" href="styles.css?v=3.56.205">
+  <link rel="stylesheet" href="styles.css?v=3.56.206">
   <link rel="stylesheet" href="meal-entry-guide.css?v=3.56.199">
   <link rel="stylesheet" href="display-preferences.css?v=3.56.199">
   <link rel="stylesheet" href="journal-consultation.css?v=3.56.199">
@@ -163,6 +163,10 @@
       <section id="mealCalorieTargetGauge" class="meal-calorie-target-gauge" hidden aria-live="polite"></section>
       <div class="meal-description-field">
         <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><div class="meal-description-help-actions"><button type="button" id="openMealEntryGuide" class="text-button meal-entry-guide-link" aria-haspopup="dialog" aria-controls="mealEntryGuideDialog" data-i18n-skip>Guide pour entrer mon repas</button><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div></div>
+        <label id="mealFavoriteNameWrap" class="meal-favorite-name-wrap" for="mealFavoriteName" hidden>
+          <span><strong>Nom du favori</strong><small>Facultatif · affiché dans les favoris</small></span>
+          <input id="mealFavoriteName" name="energie_meal_favorite_name" type="text" maxlength="60" autocomplete="off" autocapitalize="sentences" placeholder="Ex. Déjeuner rapide">
+        </label>
         <div class="meal-description-composer">
           <textarea id="mealDescription" maxlength="1000" aria-describedby="mealDescriptionLimit" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli" required></textarea>
           <small id="mealDescriptionLimit" class="muted tiny">Description du repas · 1 000 caractères maximum</small>
@@ -758,7 +762,7 @@
   <script src="journal-consultation.js?v=3.56.199"></script>
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
-  <script src="app.js?v=3.56.207"></script>
+  <script src="app.js?v=3.56.209"></script>
   <script src="meal-entry-guide.js?v=3.56.199"></script>
 </body>
 </html>
