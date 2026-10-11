@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.214";
+  const APP_RELEASE = "3.56.215";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -14408,6 +14408,22 @@ function formatSleepDuration(hours) {
           }
         }
         await copyAppLink();
+      });
+    } else {
+      $("#app .stack")?.insertAdjacentHTML(
+        "beforeend",
+        `<section class="card profile-app-sharing-card" aria-labelledby="profileNativeWebAppTitle"><div class="profile-app-sharing-heading"><span aria-hidden="true">🌐</span><h3 id="profileNativeWebAppTitle">Énergie sur vos autres appareils</h3></div><p class="muted small">Retrouve ton journal dans la version Web d’Énergie.</p><div class="profile-app-sharing-actions"><button type="button" class="secondary small" id="openPublicWebAppLink">Ouvrir la version Web <span aria-hidden="true">↗</span></button></div><p id="nativeWebAppLinkStatus" class="muted tiny" role="status" aria-live="polite"></p></section>`,
+      );
+      const status = $("#nativeWebAppLinkStatus"),
+        browser = window.Capacitor?.registerPlugin?.("Browser");
+      $("#openPublicWebAppLink")?.addEventListener("click", async () => {
+        try {
+          if (!browser?.open) throw new Error("Browser plugin unavailable");
+          await browser.open({ url: "https://surferpixies.github.io/-energie/" });
+        } catch (error) {
+          console.warn("Ouverture de la version Web impossible:", error);
+          if (status) status.textContent = "Impossible d’ouvrir la version Web. Vérifie ta connexion et réessaie.";
+        }
       });
     }
 
