@@ -14313,8 +14313,8 @@ function formatSleepDuration(hours) {
     }
     const professionalSettingsSection = $("#settingProfessionalSupport")?.closest("section.card");
     const professionalBetaHtml = professionalBetaProfileHtml();
-    if (hasProfessionalBetaAccess) void refreshInlineProfessionalClientAvatars().catch(error => console.warn("Avatars clients :", error));
     professionalSettingsSection?.insertAdjacentHTML("afterend", professionalBetaHtml);
+    if (hasProfessionalBetaAccess) void refreshInlineProfessionalClientAvatars().catch(error => console.warn("Avatars clients :", error));
     const photoSettingsAnchor = $(".professional-beta-entry,.professional-client-link-card") || professionalSettingsSection;
     photoSettingsAnchor?.insertAdjacentHTML("afterend", `<section class="card meal-photo-settings-card"><h3>📷 Photos des repas</h3><p class="muted small">Jusqu’à 3 photos peuvent être ajoutées à un repas. Une photo ajoutée est conservée automatiquement; tu peux la retirer manuellement du repas si tu ne souhaites plus la garder.</p><label class="toggle-row"><span><strong>Partager mes photos avec mon professionnel</strong><small>Autorisation distincte, utilisée lorsqu’un professionnel sera lié à ton compte.</small></span><input id="settingShareMealPhotos" type="checkbox" ${db.settings.shareMealPhotosWithProfessional === true ? "checked" : ""}></label><p class="muted tiny">L’analyse par l’IA reste facultative et n’est lancée que lorsque tu choisis « Analyser avec l’IA ».</p></section>`);
     const welcomeInfoSection = $("#showWelcomeAgain")?.closest("section.card");
