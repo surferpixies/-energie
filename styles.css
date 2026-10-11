@@ -2129,3 +2129,11 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .meal-calorie-recognition-notice:not([hidden]){display:block;width:100%;margin:8px 0 4px;padding:11px 13px;border:1.5px solid var(--accent);border-radius:10px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--text);font-size:.84rem;font-weight:750;line-height:1.4;text-align:left;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .meal-calorie-recognition-notice:hover{background:color-mix(in srgb,var(--accent) 19%,var(--surface))}
 .meal-calorie-recognition-notice:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Bouton discret pour rompre un lien professionnel */
+.professional-unlink-button{display:inline-grid;place-items:center;flex:0 0 38px;width:38px;height:38px;min-height:38px;padding:0;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--muted);cursor:pointer;transition:color .16s ease,border-color .16s ease,background .16s ease}
+.professional-unlink-button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.professional-unlink-button:hover,.professional-unlink-button:focus-visible{border-color:color-mix(in srgb,var(--danger) 42%,var(--border));background:color-mix(in srgb,var(--danger) 9%,var(--surface));color:var(--danger)}
+.professional-unlink-button:focus-visible{outline:2px solid var(--danger);outline-offset:2px}
+.professional-unlink-button:disabled{opacity:.55;cursor:wait}
+.professional-client-managed-row{grid-template-columns:minmax(0,1fr) 38px;gap:8px}
