@@ -2879,7 +2879,7 @@ function formatSleepDuration(hours) {
       // L'accepter uniquement pour une référence explicitement unitaire,
       // jamais pour une quantité au poids ou au volume.
       const wholeFoodPortion = !!countReference &&
-        /^\d+(?:[.,]\d+)?\s+(?:moyenn?e?s?|gros|grosses?|petits?|petites?|large|medium|small)$/i.test(portionText) &&
+        /^\d+(?:[.,]\d+)?\s+(?:moyenn?e?s?|gros|grosses?|grand|grande|grands|grandes|petits?|petites?|large|medium|small)\b/i.test(portionText) &&
         !/\b(?:g|kg|ml|l|tasses?|cups?|tranches?|slices?)\b/i.test(portionText);
       if (countablePortion || wholeFoodPortion) {
         return { scale: naturalCount / Number(countReference[1]), quantityUsed: true, quantityKind: "count", enteredCount: naturalCount };
