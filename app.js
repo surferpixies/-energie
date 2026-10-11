@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.199";
+  const APP_RELEASE = "3.56.205";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -3883,11 +3883,20 @@ function formatSleepDuration(hours) {
     // Une ancienne sauvegarde ou une restauration de formulaire peut contenir
     // les valeurs nutritionnelles sans la trace détaillée. La reconstruire
     // depuis la description afin que l'explication reste toujours disponible.
-    if (!manual && !currentMealNutritionTrace?.items?.length) {
+    if (!manual &&
+        (!currentMealNutritionTrace?.items?.length || Metrics.number(input.value) == null)) {
       const description = $("#mealDescription")?.value.trim() || "",
         rebuiltNutrition =
           currentGuidedCnfNutrition() ||
           (description ? estimateMealEditorNutrition(description) : null);
+
+      // Une fiche autosauvegardée peut avoir gardé le texte du repas et la
+      // trace nutritionnelle sans son total. Réinjecter l'estimation complète.
+      if (Metrics.number(input.value) == null && rebuiltNutrition?.calories != null &&
+          Number.isFinite(Number(rebuiltNutrition.calories))) {
+        fillNutritionInputs(rebuiltNutrition);
+        return;
+      }
 
       if (rebuiltNutrition?.trace?.items?.length)
         currentMealNutritionTrace = {
@@ -5190,6 +5199,9 @@ function formatSleepDuration(hours) {
     renderProfile();
     alert("Le suivi professionnel est maintenant lié à ton compte. Tu peux retirer cet accès en tout temps.");
   }
+  function professionalUnlinkIconHtml() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m10 13 4-4"/><path d="M15 7.5 17.5 5a4.25 4.25 0 0 1 6 6l-3 3a4.25 4.25 0 0 1-6 0"/><path d="M9 16.5 6.5 19a4.25 4.25 0 0 1-6-6l3-3a4.25 4.25 0 0 1 6 0"/><path d="m3 3 18 18"/></svg>';
+  }
   async function revokeProfessionalLink(linkId) {
     if (!client || !session || !linkId) return;
     const link = professionalClientLinks.find((item) => item.id === linkId) ||
@@ -5214,7 +5226,7 @@ function formatSleepDuration(hours) {
   }
   function professionalInlineClientsHtml() {
     const active = professionalClientLinks.filter(link => link.status === "active" && link.client_user_id);
-    return active.length ? active.map(link => `<div class="professional-client-managed-row"><button type="button" class="professional-client-option" data-profile-professional-client="${esc(link.client_user_id)}">${avatarManager.avatarHtml(link.client_label || "Client Énergie", link.avatarUrl, "professional-list-avatar")}<span><strong>${esc(link.client_label || "Client Énergie")}</strong><small>Ouvrir le dossier client</small></span><b>›</b></button><button type="button" class="text-button professional-client-remove" data-revoke-professional-link="${esc(link.id)}" aria-label="Retirer ${esc(link.client_label || "ce client")}">Retirer</button></div>`).join("") : '<p class="muted small">Aucun client lié pour le moment.</p>';
+    return active.length ? active.map(link => `<div class="professional-client-managed-row"><button type="button" class="professional-client-option" data-profile-professional-client="${esc(link.client_user_id)}">${avatarManager.avatarHtml(link.client_label || "Client Énergie", link.avatarUrl, "professional-list-avatar")}<span><strong>${esc(link.client_label || "Client Énergie")}</strong><small>Ouvrir le dossier client</small></span><b>›</b></button><button type="button" class="icon-button professional-unlink-button professional-client-remove" data-revoke-professional-link="${esc(link.id)}" aria-label="Rompre le lien avec ${esc(link.client_label || "ce client")}" title="Rompre le lien">${professionalUnlinkIconHtml()}</button></div>`).join("") : '<p class="muted small">Aucun client lié pour le moment.</p>';
   }
   async function refreshInlineProfessionalClientAvatars() {
     const list = document.querySelector(".professional-inline-client-list");
@@ -5231,7 +5243,7 @@ function formatSleepDuration(hours) {
       return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-overview"><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""} en attente</small></span></div><div class="professional-invite-primary-action"><button type="button" class="primary" id="createProfessionalInvite">✉️ Envoyer une nouvelle invitation par courriel</button></div></div><details class="card professional-inline-clients"><summary><span>👥 <strong>Consulter mes clients</strong><small>${active.length} client${active.length > 1 ? "s" : ""} lié${active.length > 1 ? "s" : ""} · Ouvrir un dossier</small></span><span aria-hidden="true">›</span></summary><div class="professional-inline-client-list">${professionalInlineClientsHtml()}</div></details><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
     }
     if (clientProfessionalLink) {
-      return `<section class="card professional-client-link-card"><p class="eyebrow">Suivi professionnel</p><h3>👩‍⚕️ Suivi lié à ${esc(clientProfessionalLink.professional_label || "ton professionnel")}</h3><p class="muted small">Ton journal est partagé avec ce professionnel pour ton suivi. ${clientProfessionalLink.share_photos === true ? "Les photos de repas sont également partagées." : "Les photos de repas ne sont pas partagées."}</p><div class="dialog-actions"><button type="button" class="secondary" id="openClientFollowup">Ouvrir mon suivi</button><button type="button" class="text-button" id="revokeProfessionalAccess">Retirer l’accès</button></div></section>`;
+      return `<section class="card professional-client-link-card"><p class="eyebrow">Suivi professionnel</p><h3>👩‍⚕️ Suivi lié à ${esc(clientProfessionalLink.professional_label || "ton professionnel")}</h3><p class="muted small">Ton journal est partagé avec ce professionnel pour ton suivi. ${clientProfessionalLink.share_photos === true ? "Les photos de repas sont également partagées." : "Les photos de repas ne sont pas partagées."}</p><div class="dialog-actions"><button type="button" class="secondary" id="openClientFollowup">Ouvrir mon suivi</button><button type="button" class="icon-button professional-unlink-button" id="revokeProfessionalAccess" aria-label="Rompre le lien avec ${esc(clientProfessionalLink.professional_label || 'ce professionnel')}" title="Rompre le lien">${professionalUnlinkIconHtml()}</button></div></section>`;
     }
     return `<section class="card professional-client-link-card"><p class="eyebrow">Bêta</p><h3>👩‍⚕️ Lier mon suivi à un professionnel</h3><p class="muted small">Entre le code reçu. En acceptant, tu autorises ce professionnel à consulter ton journal Énergie, incluant repas, ressentis, poids, sommeil, hydratation et activité. Les photos de repas sont partagées seulement si tu actives l’autorisation « Partager mes photos avec mon professionnel ».</p><div class="professional-invite-accept"><input id="professionalInviteCode" type="text" maxlength="8" autocomplete="one-time-code" autocapitalize="characters" placeholder="CODE"><button type="button" class="primary" id="acceptProfessionalInvite">Accepter</button></div></section>`;
   }
@@ -14666,11 +14678,6 @@ function formatSleepDuration(hours) {
     $("#replayDemoTour")?.addEventListener("click", startDemoTour);
     $("#leaveDemoProfile")?.addEventListener("click", leaveDemoMode);
     $("#openClientFollowup")?.addEventListener("click", async () => { await loadClientProfessionalFollowup(); currentView = "followup"; render(); });
-    $("#revokeProfessionalAccess")?.addEventListener("click", () => revokeProfessionalLink(clientProfessionalLink?.id));
-    $("[data-revoke-professional-link]").forEach((button) => button.addEventListener("click", (event) => {
-      event.stopPropagation();
-      revokeProfessionalLink(button.dataset.revokeProfessionalLink);
-    }));
     bindFavoriteActions();
     $("#exportData").onclick = exportData;
     $("#importData").onclick = () => $("#importFile").click();
@@ -18077,6 +18084,20 @@ function formatSleepDuration(hours) {
     if (acceptInviteButton) {
       event.preventDefault();
       acceptProfessionalInvite($("#professionalInviteCode")?.value);
+      return;
+    }
+    const unlinkButton = event.target.closest("[data-revoke-professional-link], #revokeProfessionalAccess");
+    if (unlinkButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (unlinkButton.disabled) return;
+      unlinkButton.disabled = true;
+      const linkId = unlinkButton.dataset.revokeProfessionalLink || clientProfessionalLink?.id;
+      revokeProfessionalLink(linkId).catch((error) => {
+        console.error("Retrait du lien professionnel:", error);
+      }).finally(() => {
+        if (unlinkButton.isConnected) unlinkButton.disabled = false;
+      });
       return;
     }
     const inlineClient = event.target.closest("[data-profile-professional-client]");
