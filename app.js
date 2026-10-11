@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.213";
+  const APP_RELEASE = "3.56.214";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -14359,6 +14359,10 @@ function formatSleepDuration(hours) {
     $("#app .stack")?.insertAdjacentHTML("beforeend", `<section class="card profile-theme-settings-card"><div class="settings-row"><div><h3>${t("Thème")}</h3><p class="muted small">${t("Choisir une apparence claire ou sombre")}</p></div><button type="button" class="secondary small" id="profileThemeToggle">${t("Changer le thème")}</button></div></section>`);
     $("#profileThemeToggle")?.addEventListener("click", () => $("#themeToggle")?.click());
 
+    if (!professionalBetaMode) window.EnergieProfessionalOptions.hideControls($("#app"), currentProfessionalOptionPolicy());
+
+    // Build the visual Profile groups NOW, before any later binding can interrupt renderProfile().
+    enhanceProfileWithAccordions();
     if (window.Capacitor?.isNativePlatform?.() !== true) {
       $("#app .stack")?.insertAdjacentHTML(
         "beforeend",
@@ -14407,10 +14411,6 @@ function formatSleepDuration(hours) {
       });
     }
 
-    if (!professionalBetaMode) window.EnergieProfessionalOptions.hideControls($("#app"), currentProfessionalOptionPolicy());
-
-    // Build the visual Profile groups NOW, before any later binding can interrupt renderProfile().
-    enhanceProfileWithAccordions();
 
     bindPersonalProfile();
     if (session && !professionalBetaMode && !db.settings.demoMode) {
