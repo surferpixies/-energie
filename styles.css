@@ -2146,3 +2146,9 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .professional-client-managed-row{grid-template-columns:minmax(0,1fr) auto;gap:8px}
 .professional-unlink-button{gap:5px;width:auto;min-width:0;height:36px;min-height:36px;padding:0 9px;border-radius:12px;font-size:.76rem;font-weight:700;white-space:nowrap}
 .professional-client-link-card .professional-unlink-button{padding-inline:10px}
+
+/* Nom facultatif affiché lorsqu’un repas est ajouté aux favoris */
+.meal-favorite-name-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,.8fr);align-items:center;gap:8px 12px;margin:0 0 8px;padding:9px 11px;border:1px solid var(--border);border-radius:12px;background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+.meal-favorite-name-wrap>span{display:grid;gap:2px}.meal-favorite-name-wrap>span strong{font-size:.8rem}.meal-favorite-name-wrap>span small{color:var(--muted);font-size:.68rem;line-height:1.25}
+.meal-favorite-name-wrap>input{width:100%;min-width:0;min-height:38px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:.84rem}
+@media(max-width:440px){.meal-favorite-name-wrap{grid-template-columns:1fr;gap:6px}}
