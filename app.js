@@ -5199,7 +5199,7 @@ function formatSleepDuration(hours) {
     if (hasProfessionalBetaAccess) {
       const active = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
       const pending = professionalClientLinks.filter((link) => link.status === "pending");
-      return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-overview"><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""} en attente</small></span></div><div class="professional-invite-primary-action"><button type="button" class="primary" id="createProfessionalInvite">✉️ Envoyer une nouvelle invitation par courriel</button></div></div><div class="professional-mode-action"><button type="button" class="primary" id="openProfessionalBeta">Ouvrir l’espace professionnel</button></div><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
+      return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-overview"><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""} en attente</small></span></div><div class="professional-invite-primary-action"><button type="button" class="primary" id="createProfessionalInvite">✉️ Envoyer une nouvelle invitation par courriel</button></div></div><details class="professional-inline-clients"><summary>👥 Consulter mes clients (${active.length})</summary><div class="professional-inline-client-list">${active.length ? active.map(link => `<button type="button" class="professional-client-option" data-profile-professional-client="${esc(link.client_user_id)}">${avatarManager.avatarHtml(link.client_label || "Client Énergie", link.avatarUrl, "professional-list-avatar")}<span><strong>${esc(link.client_label || "Client Énergie")}</strong><small>Ouvrir le dossier client</small></span><b>›</b></button>`).join("") : `<p class="muted small">Aucun client lié pour le moment.</p>`}</div></details><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
     }
     if (clientProfessionalLink) {
       return `<section class="card professional-client-link-card"><p class="eyebrow">Suivi professionnel</p><h3>👩‍⚕️ Suivi lié à ${esc(clientProfessionalLink.professional_label || "ton professionnel")}</h3><p class="muted small">Ton journal est partagé avec ce professionnel pour ton suivi. ${clientProfessionalLink.share_photos === true ? "Les photos de repas sont également partagées." : "Les photos de repas ne sont pas partagées."}</p><div class="dialog-actions"><button type="button" class="secondary" id="openClientFollowup">Ouvrir mon suivi</button><button type="button" class="text-button" id="revokeProfessionalAccess">Retirer l’accès</button></div></section>`;
@@ -5432,13 +5432,17 @@ function formatSleepDuration(hours) {
     currentView = "followup";
     render();
   }
-  async function startProfessionalBeta() {
+  async function startProfessionalBeta(requestedClientId = null) {
     if (!hasProfessionalBetaAccess || !session) return;
     try { localStorage.setItem("energie_usage_mode", "professional"); } catch (_) {}
     await loadProfessionalBetaState();
     const active = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
     professionalBetaMode = true;
     professionalPersonalDb = db;
+    if (requestedClientId && active.some(link => link.client_user_id === requestedClientId)) {
+      await loadProfessionalClientWorkspace(requestedClientId);
+      return;
+    }
     if (active.length === 1) {
       await loadProfessionalClientWorkspace(active[0].client_user_id);
       return;
@@ -14041,13 +14045,14 @@ function formatSleepDuration(hours) {
     const cards = [...profile.children].filter((el) => el.matches("section.card, details.card"));
     const buckets = [
       {key: "about", icon: "👤", title: "Mon profil personnel", description: "Âge, taille, poids et contexte personnel", selectors: ".personal-profile-card,.physiological-context-card"},
+      {key: "professional", icon: "👩‍⚕️", title: "Espace professionnel", description: "Clients, invitations et scénarios de démonstration", selectors: ".professional-setting-card,.professional-client-link-card,.professional-beta-entry,.lab-selector-panel,.demo-profile-card"},
       {key: "meals", icon: "🍽️", title: "Repas et saisie", description: professionalGuidedEntryHidden() ? "Favoris, méthodes de saisie et options des repas" : "FCÉN, Ciqual, favoris et façon de noter mes repas", selectors: ".guided-entry-settings,.nutrition-source-profile-card,.recognized-elements-setting-card,.eating-reasons-setting-card,.future-meal-planning-setting-card,.profile-favorites-panel"},
       {key: "calories", icon: "⚖️", title: "Calories et objectifs", description: "Affichage, estimations et cible calorique", selectors: ".calorie-balance-profile-card"},
       {key: "tracking", icon: "💧", title: "Suivi quotidien", description: "Hydratation, pas, Santé, ressentis et suppléments", selectors: ".steps-profile-card,.apple-health-profile-card,#waterGoal,#settingFeelingReminders,#supplementNameInput"},
       {key: "observations", icon: "👁️", title: "Observations", description: "Tendances, analyses et suggestions", selectors: "#settingInsights,#settingNutrition,#settingRecommendations"},
-      {key: "sharing", icon: "🔒", title: "Confidentialité et partage", description: "Photos, accès professionnel et sauvegarde", selectors: ".profile-avatar-settings-card,.meal-photo-settings-card,.professional-setting-card,.professional-client-link-card,.professional-beta-entry,.profile-backup-panel"},
+      {key: "sharing", icon: "🔒", title: "Confidentialité et partage", description: "Photos, accès professionnel et sauvegarde", selectors: ".profile-avatar-settings-card,.meal-photo-settings-card,.profile-backup-panel"},
       {key: "appearance", icon: "🎨", title: "Apparence", description: "Langue, thème et présentation du journal", selectors: ".seasonal-setting-card,.journal-summary-setting-card,#languageSettingCard,.profile-theme-settings-card"},
-      {key: "help", icon: "🌱", title: "Découvrir Énergie", description: "Guide, informations et scénarios de démonstration", selectors: ".energy-guide-profile-card,.lab-selector-panel,.demo-profile-card,#showWelcomeAgain"},
+      {key: "help", icon: "🌱", title: "Découvrir Énergie", description: "Guide, informations et scénarios de démonstration", selectors: ".energy-guide-profile-card,#showWelcomeAgain"},
     ];
     const grouped = new Map(buckets.map((bucket) => [bucket.key, []]));
     for (const card of cards) {
@@ -18038,6 +18043,12 @@ function formatSleepDuration(hours) {
     if (acceptInviteButton) {
       event.preventDefault();
       acceptProfessionalInvite($("#professionalInviteCode")?.value);
+      return;
+    }
+    const inlineClient = event.target.closest("[data-profile-professional-client]");
+    if (inlineClient) {
+      event.preventDefault();
+      startProfessionalBeta(inlineClient.dataset.profileProfessionalClient);
       return;
     }
     const professionalBetaButton = event.target.closest("#openProfessionalBeta");
