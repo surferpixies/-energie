@@ -5203,12 +5203,23 @@ function formatSleepDuration(hours) {
     await loadProfessionalBetaState();
     render();
   }
+  function professionalInlineClientsHtml() {
+    const active = professionalClientLinks.filter(link => link.status === "active" && link.client_user_id);
+    return active.length ? active.map(link => `<button type="button" class="professional-client-option" data-profile-professional-client="${esc(link.client_user_id)}">${avatarManager.avatarHtml(link.client_label || "Client Énergie", link.avatarUrl, "professional-list-avatar")}<span><strong>${esc(link.client_label || "Client Énergie")}</strong><small>Ouvrir le dossier client</small></span><b>›</b></button>`).join("") : '<p class="muted small">Aucun client lié pour le moment.</p>';
+  }
+  async function refreshInlineProfessionalClientAvatars() {
+    const list = document.querySelector(".professional-inline-client-list");
+    if (!list || !hasProfessionalBetaAccess || !session) return;
+    const owner = session.user.id;
+    await refreshProfessionalClientAvatars();
+    if (session?.user?.id === owner && list.isConnected) list.innerHTML = professionalInlineClientsHtml();
+  }
   function professionalBetaProfileHtml() {
     if (!session) return "";
     if (hasProfessionalBetaAccess) {
       const active = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
       const pending = professionalClientLinks.filter((link) => link.status === "pending");
-      return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-overview"><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""} en attente</small></span></div><div class="professional-invite-primary-action"><button type="button" class="primary" id="createProfessionalInvite">✉️ Envoyer une nouvelle invitation par courriel</button></div></div><details class="professional-inline-clients"><summary>👥 Consulter mes clients (${active.length})</summary><div class="professional-inline-client-list">${active.length ? active.map(link => `<button type="button" class="professional-client-option" data-profile-professional-client="${esc(link.client_user_id)}">${avatarManager.avatarHtml(link.client_label || "Client Énergie", link.avatarUrl, "professional-list-avatar")}<span><strong>${esc(link.client_label || "Client Énergie")}</strong><small>Ouvrir le dossier client</small></span><b>›</b></button>`).join("") : `<p class="muted small">Aucun client lié pour le moment.</p>`}</div></details><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
+      return `<section class="card professional-beta-entry"><div><p class="eyebrow">Bêta privée</p><h3>👩‍⚕️ Mode professionnel</h3><p class="muted small">Ton compte peut passer du journal personnel à l’espace professionnel sans changer de connexion.</p></div><div class="professional-beta-overview"><div class="professional-beta-metrics"><span><strong>${active.length}</strong><small>client${active.length !== 1 ? "s" : ""} lié${active.length !== 1 ? "s" : ""}</small></span><span><strong>${pending.length}</strong><small>invitation${pending.length !== 1 ? "s" : ""} en attente</small></span></div><div class="professional-invite-primary-action"><button type="button" class="primary" id="createProfessionalInvite">✉️ Envoyer une nouvelle invitation par courriel</button></div></div><details class="card professional-inline-clients"><summary><span>👥 <strong>Consulter mes clients</strong><small>${active.length} client${active.length > 1 ? "s" : ""} lié${active.length > 1 ? "s" : ""} · Ouvrir un dossier</small></span><span aria-hidden="true">›</span></summary><div class="professional-inline-client-list">${professionalInlineClientsHtml()}</div></details><p class="muted tiny">Bêta réservée aux comptes explicitement autorisés dans Supabase.</p></section>`;
     }
     if (clientProfessionalLink) {
       return `<section class="card professional-client-link-card"><p class="eyebrow">Suivi professionnel</p><h3>👩‍⚕️ Suivi lié à ${esc(clientProfessionalLink.professional_label || "ton professionnel")}</h3><p class="muted small">Ton journal est partagé avec ce professionnel pour ton suivi. ${clientProfessionalLink.share_photos === true ? "Les photos de repas sont également partagées." : "Les photos de repas ne sont pas partagées."}</p><div class="dialog-actions"><button type="button" class="secondary" id="openClientFollowup">Ouvrir mon suivi</button><button type="button" class="text-button" id="revokeProfessionalAccess">Retirer l’accès</button></div></section>`;
@@ -14152,11 +14163,11 @@ function formatSleepDuration(hours) {
     const cards = [...profile.children].filter((el) => el.matches("section.card, details.card"));
     const buckets = [
       {key: "about", icon: "👤", title: "Mon profil personnel", description: "Âge, taille, poids et contexte personnel", selectors: ".personal-profile-card,.physiological-context-card"},
-      {key: "professional", icon: "👩‍⚕️", title: "Espace professionnel", description: "Clients, invitations et scénarios de démonstration", selectors: ".professional-setting-card,.professional-client-link-card,.professional-beta-entry,.lab-selector-panel,.demo-profile-card"},
+      {key: "professional", icon: "👩‍⚕️", title: "Espace professionnel", description: "Clients, invitations et scénarios de démonstration", selectors: ".professional-client-link-card,.professional-beta-entry,.lab-selector-panel,.demo-profile-card"},
       {key: "meals", icon: "🍽️", title: "Repas et saisie", description: professionalGuidedEntryHidden() ? "Favoris, méthodes de saisie et options des repas" : "FCÉN, Ciqual, favoris et façon de noter mes repas", selectors: ".guided-entry-settings,.nutrition-source-profile-card,.recognized-elements-setting-card,.eating-reasons-setting-card,.future-meal-planning-setting-card,.profile-favorites-panel"},
       {key: "calories", icon: "⚖️", title: "Calories et objectifs", description: "Affichage, estimations et cible calorique", selectors: ".calorie-balance-profile-card"},
       {key: "tracking", icon: "💧", title: "Suivi quotidien", description: "Hydratation, pas, Santé, ressentis et suppléments", selectors: ".steps-profile-card,.apple-health-profile-card,.health-connect-profile-card,#waterGoal,#settingFeelingReminders,#supplementNameInput"},
-      {key: "observations", icon: "👁️", title: "Observations", description: "Tendances, analyses et suggestions", selectors: "#settingInsights,#settingNutrition,#settingRecommendations"},
+      {key: "observations", icon: "👁️", title: "Observations", description: "Tendances, analyses et suggestions", selectors: "#settingInsights,#settingNutrition,#settingRecommendations,.professional-setting-card"},
       {key: "sharing", icon: "🔒", title: "Confidentialité et partage", description: "Photos, accès professionnel et sauvegarde", selectors: ".profile-avatar-settings-card,.meal-photo-settings-card,.profile-backup-panel"},
       {key: "appearance", icon: "🎨", title: "Apparence", description: "Langue, thème et présentation du journal", selectors: ".seasonal-setting-card,.journal-summary-setting-card,#languageSettingCard,.profile-theme-settings-card"},
       {key: "help", icon: "🌱", title: "Découvrir Énergie", description: "Guide, informations et scénarios de démonstration", selectors: ".energy-guide-profile-card,#showWelcomeAgain"},
@@ -14302,6 +14313,7 @@ function formatSleepDuration(hours) {
     }
     const professionalSettingsSection = $("#settingProfessionalSupport")?.closest("section.card");
     const professionalBetaHtml = professionalBetaProfileHtml();
+    if (hasProfessionalBetaAccess) void refreshInlineProfessionalClientAvatars().catch(error => console.warn("Avatars clients :", error));
     professionalSettingsSection?.insertAdjacentHTML("afterend", professionalBetaHtml);
     const photoSettingsAnchor = $(".professional-beta-entry,.professional-client-link-card") || professionalSettingsSection;
     photoSettingsAnchor?.insertAdjacentHTML("afterend", `<section class="card meal-photo-settings-card"><h3>📷 Photos des repas</h3><p class="muted small">Jusqu’à 3 photos peuvent être ajoutées à un repas. Une photo ajoutée est conservée automatiquement; tu peux la retirer manuellement du repas si tu ne souhaites plus la garder.</p><label class="toggle-row"><span><strong>Partager mes photos avec mon professionnel</strong><small>Autorisation distincte, utilisée lorsqu’un professionnel sera lié à ton compte.</small></span><input id="settingShareMealPhotos" type="checkbox" ${db.settings.shareMealPhotosWithProfessional === true ? "checked" : ""}></label><p class="muted tiny">L’analyse par l’IA reste facultative et n’est lancée que lorsque tu choisis « Analyser avec l’IA ».</p></section>`);
