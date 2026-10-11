@@ -2137,3 +2137,7 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .professional-unlink-button:focus-visible{outline:2px solid var(--danger);outline-offset:2px}
 .professional-unlink-button:disabled{opacity:.55;cursor:wait}
 .professional-client-managed-row{grid-template-columns:minmax(0,1fr) 38px;gap:8px}
+
+/* Libellé clair avec une icône compacte pour rompre le lien */
+.professional-unlink-button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;width:auto;max-width:100%;height:36px;min-height:36px;padding:0 10px;font-size:.76rem;font-weight:700;white-space:nowrap}
+.professional-unlink-button svg{flex:0 0 16px;width:16px;height:16px}
