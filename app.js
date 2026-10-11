@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.211";
+  const APP_RELEASE = "3.56.212";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10801,7 +10801,7 @@ function formatSleepDuration(hours) {
           .sort((a, b) => b.usageCount - a.usageCount)
           .map(
             (f) =>
-              `<article class="card favorite-card"><div class="favorite-icon">${mealIcon(f.type, f.description)}</div><div><div class="favorite-title-row"><h3>${esc(f.name)}</h3><button type="button" class="favorite-rename" data-rename-favorite="${esc(f.id)}" aria-label="Renommer ${esc(f.name)}" title="Renommer le favori"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button></div><form class="favorite-name-editor" data-favorite-editor="${esc(f.id)}" hidden><label class="favorite-name-label" for="favorite-name-${esc(f.id)}"><span><strong>Nom du favori</strong><small>Facultatif · affiché dans les favoris</small></span><input id="favorite-name-${esc(f.id)}" name="favorite-name" type="text" maxlength="60" autocomplete="off" autocapitalize="sentences" value="${esc(f.name)}"></label><div class="favorite-name-editor-actions"><button type="submit" class="primary small">Enregistrer</button><button type="button" class="small secondary" data-cancel-favorite-edit="${esc(f.id)}">Annuler</button></div></form><p>${esc(f.description)}</p><small class="muted">Utilisé ${f.usageCount || 0} fois</small></div><div class="favorite-actions"><button class="primary small" data-use-favorite="${esc(f.id)}">Utiliser</button><button class="delete-meal" data-delete-favorite="${esc(f.id)}">×</button></div></article>`,
+              `<article class="card favorite-card"><div class="favorite-icon">${mealIcon(f.type, f.description)}</div><div><div class="favorite-title-row"><h3>${esc(f.name)}</h3><button type="button" class="favorite-rename" data-rename-favorite="${esc(f.id)}" aria-label="Renommer ${esc(f.name)}" title="Renommer le favori"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button></div><form class="favorite-name-editor" data-favorite-editor="${esc(f.id)}" hidden><label class="favorite-name-label" for="favorite-name-${esc(f.id)}"><span><strong>Nommer ce favori</strong><small>Facultatif · affiché dans les favoris</small></span><input id="favorite-name-${esc(f.id)}" name="favorite-name" type="text" maxlength="60" autocomplete="off" autocapitalize="sentences" value="${esc(f.name)}"></label><div class="favorite-name-editor-actions"><button type="submit" class="primary small">Enregistrer</button><button type="button" class="small secondary" data-cancel-favorite-edit="${esc(f.id)}">Annuler</button></div></form><p>${esc(f.description)}</p><small class="muted">Utilisé ${f.usageCount || 0} fois</small></div><div class="favorite-actions"><button class="primary small" data-use-favorite="${esc(f.id)}">Utiliser</button><button class="delete-meal" data-delete-favorite="${esc(f.id)}">×</button></div></article>`,
           )
           .join("")
       : `<section class="card empty"><div class="food-art">⭐</div><p>Ajoute un repas existant à tes favoris avec l’étoile.</p></section>`;
