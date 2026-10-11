@@ -5201,18 +5201,29 @@ function formatSleepDuration(hours) {
   }
   async function revokeProfessionalLink(linkId) {
     if (!client || !session || !linkId) return;
-    if (!confirm("Retirer l’accès professionnel à ton journal?")) return;
+    const link = professionalClientLinks.find((item) => item.id === linkId) ||
+      (clientProfessionalLink?.id === linkId ? clientProfessionalLink : null);
+    const isProfessional = link?.professional_user_id === session.user.id;
+    const label = isProfessional
+      ? link?.client_label || "ce client"
+      : link?.professional_label || "ce professionnel";
+    const confirmation = isProfessional
+      ? `Retirer ${label} de tes clients? Cette personne n’aura plus accès à son journal par ton espace professionnel.`
+      : "Retirer l’accès professionnel à ton journal? Ton journal personnel et tes données resteront dans ton compte.";
+    if (!confirm(confirmation)) return;
+    const wasOpenClient = professionalBetaMode && professionalActiveClient?.linkId === linkId;
     const { error } = await client.rpc("revoke_professional_link", { p_link_id: linkId });
     if (error) {
       alert(`Impossible de retirer l’accès : ${error.message}`);
       return;
     }
     await loadProfessionalBetaState();
-    render();
+    if (wasOpenClient) leaveProfessionalBeta();
+    else render();
   }
   function professionalInlineClientsHtml() {
     const active = professionalClientLinks.filter(link => link.status === "active" && link.client_user_id);
-    return active.length ? active.map(link => `<button type="button" class="professional-client-option" data-profile-professional-client="${esc(link.client_user_id)}">${avatarManager.avatarHtml(link.client_label || "Client Énergie", link.avatarUrl, "professional-list-avatar")}<span><strong>${esc(link.client_label || "Client Énergie")}</strong><small>Ouvrir le dossier client</small></span><b>›</b></button>`).join("") : '<p class="muted small">Aucun client lié pour le moment.</p>';
+    return active.length ? active.map(link => `<div class="professional-client-managed-row"><button type="button" class="professional-client-option" data-profile-professional-client="${esc(link.client_user_id)}">${avatarManager.avatarHtml(link.client_label || "Client Énergie", link.avatarUrl, "professional-list-avatar")}<span><strong>${esc(link.client_label || "Client Énergie")}</strong><small>Ouvrir le dossier client</small></span><b>›</b></button><button type="button" class="text-button professional-client-remove" data-revoke-professional-link="${esc(link.id)}" aria-label="Retirer ${esc(link.client_label || "ce client")}">Retirer</button></div>`).join("") : '<p class="muted small">Aucun client lié pour le moment.</p>';
   }
   async function refreshInlineProfessionalClientAvatars() {
     const list = document.querySelector(".professional-inline-client-list");
@@ -14765,6 +14776,10 @@ function formatSleepDuration(hours) {
     $("#leaveDemoProfile")?.addEventListener("click", leaveDemoMode);
     $("#openClientFollowup")?.addEventListener("click", async () => { await loadClientProfessionalFollowup(); currentView = "followup"; render(); });
     $("#revokeProfessionalAccess")?.addEventListener("click", () => revokeProfessionalLink(clientProfessionalLink?.id));
+    $("[data-revoke-professional-link]").forEach((button) => button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      revokeProfessionalLink(button.dataset.revokeProfessionalLink);
+    }));
     bindFavoriteActions();
     $("#exportData").onclick = exportData;
     $("#importData").onclick = () => $("#importFile").click();

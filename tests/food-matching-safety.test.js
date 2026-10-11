@@ -119,7 +119,18 @@ assert.equal(context.nutritionScaleForSegment('50 pommes', slicedApple).quantity
 const threeDates = {keys:['datte'],calories:133,portion:'3 fruits',gramsPerPortion:50};
 assert.equal(context.nutritionScaleForSegment('6 dattes', threeDates).scale, 2);
 assert.equal(context.nutritionScaleForSegment('5 g alimenttest', {portion:'1 assiette'}).quantityUsed, false);
-assert.equal(cnf.find('1 banane'), null); // Pas de poids unitaire inventé.
+context.window.ENERGIE_CNF_SEARCH = cnf;
+for (const [input, count] of [
+ ['1 banane', 1], ['2 bananes', 2], ['1 pomme', 1], ['2 pêches', 2],
+ ['3 kiwis', 3], ['1 carotte', 1], ['3 carottes', 3],
+]) {
+ const food = context.foodMatchForSegment(input);
+ assert.ok(food, input);
+ assert.match(food.portion, /moyen|medium|petit|small|fruit/i, input);
+ const quantity = context.nutritionScaleForSegment(input, food);
+ assert.equal(quantity.quantityUsed, true, input);
+ assert.equal(quantity.scale, count, input);
+}
 const estimateStart = source.indexOf('  function estimateNutritionFromText(');
 const estimateEnd = source.indexOf('    const segments = splitMealIngredients(text);', estimateStart);
 vm.runInContext(source.slice(estimateStart, estimateEnd) + ' return 123; }', context);

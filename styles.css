@@ -2124,7 +2124,7 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .professional-inline-clients>summary small{display:block;margin-top:4px;color:var(--muted);font-size:.73rem;font-weight:400}
 .professional-inline-clients[open]>summary>span:last-child{transform:rotate(90deg)}
 .professional-inline-client-list{padding:4px 10px 12px;display:grid;gap:7px}
-.professional-inline-client-list .professional-client-option{width:100%}
+.professional-inline-client-list .professional-client-option{width:100%}.professional-client-managed-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:7px}.professional-client-managed-row>.professional-client-option{min-width:0}.professional-client-remove{padding-inline:8px;color:#a72f2b;white-space:nowrap}
 /* Lien de correction des calories : visible et facile à toucher */
 .meal-calorie-recognition-notice:not([hidden]){display:block;width:100%;margin:8px 0 4px;padding:11px 13px;border:1.5px solid var(--accent);border-radius:10px;background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--text);font-size:.84rem;font-weight:750;line-height:1.4;text-align:left;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .meal-calorie-recognition-notice:hover{background:color-mix(in srgb,var(--accent) 19%,var(--surface))}
