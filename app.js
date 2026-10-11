@@ -2865,7 +2865,14 @@ function formatSleepDuration(hours) {
       if (filetCount && !/\b(filets?|fillets?)\b/.test(portionText)) {
         return { scale: 1, quantityUsed: false, quantityKind: "unresolved-count", enteredCount: naturalCount, unresolvedUnit: "filet" };
       }
-      if (countablePortion) {
+      // Les aliments entiers du catalogue Énergie ont parfois une portion
+      // "1 moyenne" (banane) ou "1 gros" (œuf), sans nom d'unité.
+      // L'accepter uniquement pour une référence explicitement unitaire,
+      // jamais pour une quantité au poids ou au volume.
+      const wholeFoodPortion = !!countReference &&
+        /^\d+(?:[.,]\d+)?\s+(?:moyenn?e?s?|gros|grosses?|petits?|petites?|large|medium|small)$/i.test(portionText) &&
+        !/\b(?:g|kg|ml|l|tasses?|cups?|tranches?|slices?)\b/i.test(portionText);
+      if (countablePortion || wholeFoodPortion) {
         return { scale: naturalCount / Number(countReference[1]), quantityUsed: true, quantityKind: "count", enteredCount: naturalCount };
       }
     }
