@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.205";
+  const APP_RELEASE = "3.56.208";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -15027,6 +15027,14 @@ function formatSleepDuration(hours) {
     if (!button) return;
     button.setAttribute("aria-pressed", String(!!active));
     button.dataset.favoriteId = favoriteId || "";
+    const favoriteNameWrap = $("#mealFavoriteNameWrap"),
+      favoriteNameInput = $("#mealFavoriteName");
+    if (favoriteNameWrap) favoriteNameWrap.hidden = !active;
+    if (favoriteNameInput) {
+      if (!active) favoriteNameInput.value = "";
+      else if (favoriteId)
+        favoriteNameInput.value = db.favorites.find((favorite) => favorite.id === favoriteId)?.name || "";
+    }
     button.querySelector(".meal-favorite-toggle-icon").textContent = active ? "★" : "☆";
     const label = active
       ? "Retirer ce repas des favoris"
@@ -16074,10 +16082,10 @@ function formatSleepDuration(hours) {
       alert("Ce repas est déjà dans tes favoris.");
       return;
     }
-    const name = prompt("Nom du repas favori :", m.description.slice(0, 45));
-    if (!name) return;
+    const name = prompt("Nom du favori (facultatif) :", "");
+    if (name === null) return;
     const f = normalFavorite({
-      name: name.trim(),
+      name: name.trim() || m.description.slice(0, 45),
       type: m.type,
       description: m.description,
       notes: m.notes,
@@ -16485,6 +16493,7 @@ function formatSleepDuration(hours) {
         (wantsFavorite ? favoriteForMeal(savedMeal) : null);
     if (wantsFavorite) {
       if (savedFavorite) {
+        savedFavorite.name = $("#mealFavoriteName")?.value.trim() || savedMeal.description.slice(0, 45);
         savedFavorite.description = savedMeal.description;
         savedFavorite.notes = savedMeal.notes || "";
         savedFavorite.type = savedMeal.type;
@@ -16492,7 +16501,7 @@ function formatSleepDuration(hours) {
         setFavoriteChanged(savedFavorite);
       } else {
         const favorite = normalFavorite({
-          name: savedMeal.description.slice(0, 45),
+          name: $("#mealFavoriteName")?.value.trim() || savedMeal.description.slice(0, 45),
           type: savedMeal.type,
           description: savedMeal.description,
           notes: savedMeal.notes,
