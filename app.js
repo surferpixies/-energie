@@ -2708,6 +2708,13 @@ function formatSleepDuration(hours) {
       comparable = comparableFoodText(segment);
     if (String(segment || "").length > MEAL_DESCRIPTION_MAX_LENGTH) return null;
     if (!clean || window.ENERGIE_CNF_SEARCH?.requiresClarification?.(segment)) return null;
+    // Une quantité explicite de dattes est un aliment entier comptable.
+    // Priorité à la portion locale vérifiée (3 dattes = 133 kcal),
+    // sans laisser les correspondances FCÉN/Ciqual détourner ce cas.
+    if (/^(?:\d+(?:[.,]\d+)?|un|une|one|deux|two|trois|three|quatre|four|cinq|five|six|sept|seven|huit|eight|neuf|nine|dix|ten)\s+(?:dattes?|dates?)$/.test(clean)) {
+      const dates = checkedCatalogFood(legacyFoodWithAlias("dattes", "datte", "dates"));
+      if (dates && nutritionScaleForSegment(segment, dates).quantityUsed) return dates;
+    }
     const padded = ` ${comparable} `;
     let best = null;
     for (const candidate of FOOD_CANDIDATES) {
