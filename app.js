@@ -587,6 +587,9 @@
         waterGoal: 8,
         stepsTracking: false,
         stepsGoal: 8000,
+        glucoseTracking: false,
+        glucoseMode: "free",
+        glucoseReminderTimes: ["08:00", "12:00", "20:00"],
         appleHealthEnabled: false,
         calorieBalanceTracking: false,
         calorieTargetGauge: false,
@@ -667,6 +670,7 @@ function formatSleepDuration(hours) {
         steps: null,
         stepsGoal: null,
         beverages: [],
+        glucoseMeasurements: [],
         activities: [],
         meals: [],
         observations: [],
@@ -688,6 +692,7 @@ function formatSleepDuration(hours) {
     d.formDrafts =
       d.formDrafts && typeof d.formDrafts === "object" ? d.formDrafts : {};
     d.water = Number(d.water) || 0;
+    d.glucoseMeasurements = (Array.isArray(d.glucoseMeasurements) ? d.glucoseMeasurements : []).filter(x => x && Number.isFinite(Number(x.value)) && Number(x.value)>0 && Number(x.value)<40 && /^\d{2}:\d{2}$/.test(x.time || "")).map(x => ({id: String(x.id || uid()), value: Number(x.value), time: x.time, context: ["fasting","before","after","bedtime","other"].includes(x.context) ? x.context : "other"}));
     d.beverages = (Array.isArray(d.beverages) ? d.beverages : [])
       .map((item) => normalBeverage(item, key))
       .filter(Boolean);
@@ -1924,6 +1929,7 @@ function formatSleepDuration(hours) {
               sleepTiming: {start: d.sleepStartTime || "", end: d.sleepEndTime || ""},
               taken: d.supplementsTaken || [],
               beverages: d.beverages || [],
+              glucoseMeasurements: d.glucoseMeasurements || [],
               steps: d.steps,
               stepsSource: d.stepsSource || null,
               stepsGoal: d.stepsGoal,
@@ -1937,6 +1943,9 @@ function formatSleepDuration(hours) {
               profilePreferences: {
                 professionalOptionChoices: window.EnergieProfessionalOptions.cleanChoices(preferenceSettings.professionalOptionChoices),
                 waterGoal: Number(preferenceSettings.waterGoal) || 8,
+                glucoseTracking: preferenceSettings.glucoseTracking === true,
+                glucoseMode: preferenceSettings.glucoseMode === "scheduled" ? "scheduled" : "free",
+                glucoseReminderTimes: (preferenceSettings.glucoseReminderTimes || []).filter(x => /^\d{2}:\d{2}$/.test(x)).slice(0,6),
                 journalViewMode: preferenceSettings.journalViewMode || "detailed",
                 summaryHideCompletedMeals: preferenceSettings.summaryHideCompletedMeals !== false,
                 insightsEnabled: preferenceSettings.insightsEnabled !== false,
@@ -2253,9 +2262,11 @@ function formatSleepDuration(hours) {
       db.settings.professionalOptionChoices = window.EnergieProfessionalOptions.mergeChoices(db.settings.professionalOptionChoices, pref.professionalOptionChoices);
       if (Number(pref.waterGoal) > 0) db.settings.waterGoal = Math.round(Number(pref.waterGoal));
       if (["detailed", "summary", "consultation"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
-      ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals"].forEach((key) => {
+      ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals","glucoseTracking"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
       });
+      if (["free","scheduled"].includes(pref.glucoseMode)) db.settings.glucoseMode = pref.glucoseMode;
+      if (Array.isArray(pref.glucoseReminderTimes)) db.settings.glucoseReminderTimes = pref.glucoseReminderTimes.filter(x => /^\d{2}:\d{2}$/.test(x)).slice(0,6);
       if (Number(pref.feelingDelayHours) > 0) db.settings.feelingDelayHours = Number(pref.feelingDelayHours);
       if (Array.isArray(pref.feelingMealTypes)) db.settings.feelingMealTypes = [...pref.feelingMealTypes];
     }
@@ -2271,6 +2282,7 @@ function formatSleepDuration(hours) {
         if (typeof r.supplements?.sleepTiming?.start === "string") d.sleepStartTime = r.supplements.sleepTiming.start;
         if (typeof r.supplements?.sleepTiming?.end === "string") d.sleepEndTime = r.supplements.sleepTiming.end;
         d.water = r.water || 0;
+        d.glucoseMeasurements = Array.isArray(r.supplements?.glucoseMeasurements) ? r.supplements.glucoseMeasurements : [];
         d.beverages = (Array.isArray(r.supplements?.beverages) ? r.supplements.beverages : [])
           .map((item) => normalBeverage(item, r.log_date))
           .filter(Boolean);
@@ -10023,6 +10035,45 @@ function formatSleepDuration(hours) {
     $("#quickFeelingDialog").showModal();
   }
 
+
+  function glucoseProfileHtml() {
+    const times = (db.settings.glucoseReminderTimes || ["08:00"]).slice(0, 6);
+    return `<section class="card glucose-profile-card"><h3>🩸 ${t("Suivi de la glycémie")}</h3><p class="muted small">${t("Mesures manuelles en mmol/L. Aucune interprétation médicale automatique.")}</p>
+    <label class="toggle-row"><span><strong>${t("Activer le suivi de la glycémie")}</strong></span><input type="checkbox" id="glucoseTrackingEnabled" ${db.settings.glucoseTracking ? "checked" : ""}></label>
+    ${db.settings.glucoseTracking ? `<label class="settings-row"><span>${t("Mode de saisie")}</span><select id="glucoseMode"><option value="free" ${db.settings.glucoseMode !== "scheduled" ? "selected" : ""}>${t("Saisie libre")}</option><option value="scheduled" ${db.settings.glucoseMode === "scheduled" ? "selected" : ""}>${t("Heures fixes")}</option></select></label>
+    ${db.settings.glucoseMode === "scheduled" ? `<label class="settings-row"><span>${t("Mesures par jour")}</span><select id="glucoseCount">${[1,2,3,4,5,6].map(n => `<option value="${n}" ${times.length === n ? "selected" : ""}>${n}</option>`).join("")}</select></label><div class="personal-weight-grid">${times.map((time,i)=>`<label>${t("Mesure")} ${i+1}<input type="time" data-glucose-time="${i}" value="${esc(time)}"></label>`).join("")}</div><p class="muted tiny">${t("Heures enregistrées pour de futurs rappels. Les notifications automatiques ne sont pas encore activées.")}</p>` : ""}` : ""}</section>`;
+  }
+  function glucoseJournalHtml(d) {
+    if (!db.settings.glucoseTracking || db.settings.demoMode || professionalBetaMode) return "";
+    const contexts = {fasting:t("À jeun"),before:t("Avant un repas"),after:t("Après un repas"),bedtime:t("Au coucher"),other:t("Autre")};
+    const entries = (d.glucoseMeasurements || []).slice().sort((a,b)=>a.time.localeCompare(b.time));
+    return `<section class="card glucose-journal-card"><h3>🩸 ${t("Glycémie")}</h3><form id="glucoseEntryForm"><div class="personal-weight-grid"><label>${t("Valeur (mmol/L)")}<input id="glucoseValue" required inputmode="decimal" type="text" placeholder="5,4"></label><label>${t("Heure")}<input id="glucoseTime" required type="time" value="${new Date().toTimeString().slice(0,5)}"></label><label>${t("Contexte")}<select id="glucoseContext">${Object.entries(contexts).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join("")}</select></label></div><button type="submit" class="secondary">${t("Enregistrer la mesure")}</button><p class="muted tiny" id="glucoseStatus" role="status"></p></form><div>${entries.map(x=>`<div class="settings-row"><span><strong>${esc(String(x.value).replace(".",","))} mmol/L</strong> · ${esc(x.time)} · ${esc(contexts[x.context] || contexts.other)}</span><button type="button" class="secondary small" data-delete-glucose="${esc(x.id)}">${t("Retirer")}</button></div>`).join("")}</div></section>`;
+  }
+  function bindGlucoseJournal() {
+    const form = $("#glucoseEntryForm");
+    if (!form) return;
+    form.onsubmit = event => {
+      event.preventDefault();
+      const raw = $("#glucoseValue").value.trim().replace(",",".");
+      const value = Number(raw);
+      if (!Number.isFinite(value) || value <= 0 || value >= 40) { $("#glucoseStatus").textContent = t("Entre une mesure valide en mmol/L."); return; }
+      const d = ensureDay(db, selectedDate);
+      d.glucoseMeasurements.push({id:uid(), value, time:$("#glucoseTime").value, context:$("#glucoseContext").value});
+      d.updatedAt = new Date().toISOString();
+      saveLocal("glycemie");
+      setDayChanged(selectedDate);
+      render();
+    };
+    $("[data-delete-glucose]").forEach(btn => btn.onclick = () => {
+      const d = ensureDay(db, selectedDate);
+      d.glucoseMeasurements = d.glucoseMeasurements.filter(x=>x.id !== btn.dataset.deleteGlucose);
+      d.updatedAt = new Date().toISOString();
+      saveLocal("glycemie-retirer");
+      setDayChanged(selectedDate);
+      render();
+    });
+  }
+
   function renderToday() {
     const d = ensureDay(db, selectedDate),
       goal = db.settings.waterGoal || 8,
@@ -10072,7 +10123,8 @@ function formatSleepDuration(hours) {
       (d.sleepTags || []).filter((x) => x !== "none").length - 2,
     );
     $("#app").innerHTML =
-      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${isFuture ? '<aside class="future-meal-planning-note"><span aria-hidden="true">📅</span><div><strong>Planification de repas</strong><small>Tu peux préparer tes repas jusqu’à 2 jours d’avance. Ils ne seront pris en compte dans les Observations qu’une fois la date arrivée.</small></div></aside>' : ""}${clientProfessionalNoteJournalHtml()}${dailyMacroSummaryHtml(meals)}${journalViewOptionsHtml()}${journalViewMode() === "consultation" ? journalConsultationHtml(d) : journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<button class="card sleep-card sleep-card-wide edit-sleep"><div class="wellness-head"><span class="wellness-icon">🌙</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? formatSleepDuration(d.sleepHours) : "À noter"}</strong>${d.sleepStartTime || d.sleepEndTime ? `<span class="sleep-time-summary">${d.sleepStartTime ? `Coucher ${esc(d.sleepStartTime)}` : ""}${d.sleepStartTime && d.sleepEndTime ? " · " : ""}${d.sleepEndTime ? `Réveil ${esc(d.sleepEndTime)}` : ""}</span>` : ""}</div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<div class="card activity-card-with-steps activity-card-wide"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
+      `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${isFuture ? '<aside class="future-meal-planning-note"><span aria-hidden="true">📅</span><div><strong>Planification de repas</strong><small>Tu peux préparer tes repas jusqu’à 2 jours d’avance. Ils ne seront pris en compte dans les Observations qu’une fois la date arrivée.</small></div></aside>' : ""}${clientProfessionalNoteJournalHtml()}${glucoseJournalHtml(d)}${dailyMacroSummaryHtml(meals)}${journalViewOptionsHtml()}${journalViewMode() === "consultation" ? journalConsultationHtml(d) : journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<button class="card sleep-card sleep-card-wide edit-sleep"><div class="wellness-head"><span class="wellness-icon">🌙</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? formatSleepDuration(d.sleepHours) : "À noter"}</strong>${d.sleepStartTime || d.sleepEndTime ? `<span class="sleep-time-summary">${d.sleepStartTime ? `Coucher ${esc(d.sleepStartTime)}` : ""}${d.sleepStartTime && d.sleepEndTime ? " · " : ""}${d.sleepEndTime ? `Réveil ${esc(d.sleepEndTime)}` : ""}</span>` : ""}</div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<div class="card activity-card-with-steps activity-card-wide"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
+    bindGlucoseJournal();
     $("#previousDay").onclick = () => changeJournalDay(-1);
     if (!$("#nextDay").disabled)
       $("#nextDay").onclick = () => changeJournalDay(1);
@@ -14303,6 +14355,7 @@ function formatSleepDuration(hours) {
     const waterSettingsSection = $("#waterGoal")?.closest("section.card");
     const targetGaugeEnabled = db.settings.calorieTargetGauge === true, targetMode = calorieTargetMode(), fixedTarget = fixedCalorieTarget();
     waterSettingsSection?.insertAdjacentHTML("afterend", `<section class="card calorie-balance-profile-card"><h3>⚖️ Affichage des calories</h3><label class="toggle-row"><span><strong>Masquer toutes les calories</strong><small>Masque les calories, les cibles et les graphiques dans le Journal, les repas et les activités. Les valeurs enregistrées sont conservées.</small></span><input id="settingHideCalories" type="checkbox" ${db.settings.hideCalories === true ? "checked" : ""}></label><div class="calorie-settings-options"><p class="muted small">Optionnel · utile surtout pour suivre une tendance de déficit ou de surplus calorique.</p><label class="toggle-row"><span><strong>Afficher mon déficit calorique estimé</strong><small>Ajoute un graphique sous « Calories par jour » dans Observations</small></span><input id="settingCalorieBalanceTracking" type="checkbox" ${db.settings.calorieBalanceTracking === true ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher ma cible calorique</strong><small>Transforme « Calories de la journée » en jauge visuelle et l’affiche aussi pendant la saisie des repas</small></span><input id="settingCalorieTargetGauge" type="checkbox" ${targetGaugeEnabled ? "checked" : ""}></label><div class="settings-row setting-dependent calorie-target-method-setting ${targetGaugeEnabled ? "" : "is-disabled"}" id="calorieTargetModeSetting"><span class="calorie-target-method-heading"><strong>Comment veux-tu définir ta cible?</strong><small>Choisis simplement l’option qui te convient. Tu pourras la changer en tout temps.</small></span><div class="calorie-target-method-buttons" role="group" aria-label="Méthode de cible calorique"><button type="button" class="calorie-target-method-button ${targetMode === "estimated" ? "is-selected" : ""}" data-calorie-target-mode="estimated" aria-pressed="${targetMode === "estimated" ? "true" : "false"}" ${targetGaugeEnabled ? "" : "disabled"}><span class="calorie-target-method-icon" aria-hidden="true">⚡</span><span><b>Calcul Énergie</b><small>Selon ton profil, tes activités et le déficit choisi.</small></span></button><button type="button" class="calorie-target-method-button ${targetMode === "fixed" ? "is-selected" : ""}" data-calorie-target-mode="fixed" aria-pressed="${targetMode === "fixed" ? "true" : "false"}" ${targetGaugeEnabled ? "" : "disabled"}><span class="calorie-target-method-icon" aria-hidden="true">🎯</span><span><b>Cible fixe</b><small>Une valeur précise, par exemple celle donnée par ta nutritionniste.</small></span></button></div></div><label class="settings-row setting-dependent ${targetGaugeEnabled && targetMode === "estimated" ? "" : "is-disabled"}" id="calorieDeficitTargetSetting"><span><strong>Déficit quotidien visé</strong><small>Utilisé seulement lorsque la cible est calculée par Énergie</small></span><select id="settingCalorieDeficitTarget" ${targetGaugeEnabled && targetMode === "estimated" ? "" : "disabled"}><option value="250" ${calorieDeficitTarget() === 250 ? "selected" : ""}>250 kcal</option><option value="400" ${calorieDeficitTarget() === 400 ? "selected" : ""}>400 kcal</option><option value="500" ${calorieDeficitTarget() === 500 ? "selected" : ""}>500 kcal</option></select></label><div class="settings-row setting-dependent ${targetGaugeEnabled && targetMode === "fixed" ? "" : "is-disabled"}" id="fixedCalorieTargetSetting"><div><strong>Cible calorique quotidienne</strong><p class="muted tiny">Ex. : valeur recommandée par ta nutritionniste</p></div><label><input id="settingFixedCalorieTarget" type="number" min="100" max="10000" step="10" inputmode="numeric" placeholder="1750" value="${fixedTarget || ""}" ${targetGaugeEnabled && targetMode === "fixed" ? "" : "disabled"}><span>kcal</span></label></div><div class="calorie-balance-formula"><strong>Comment ça fonctionne</strong><p><b>Calculée par Énergie :</b> ${t("dépense ≈ métabolisme de repos (Mifflin-St Jeor) × 1,2 + activités; le 🎯 représente le déficit choisi.")}</p><p><b>Cible fixe :</b> la jauge utilise directement la valeur saisie et ne change pas avec les activités.</p><small>${t("Le graphique « Déficit / surplus calorique » dans Observations conserve toujours son calcul actuel, peu importe la méthode choisie pour la jauge.")}</small></div></div></section>`);
+    $(".calorie-balance-profile-card")?.insertAdjacentHTML("afterend", glucoseProfileHtml());
     $(".calorie-balance-profile-card")?.insertAdjacentHTML("afterend", `<section class="card steps-profile-card"><h3>👟 Suivi des pas</h3><p class="muted small">Affiche les pas dans le Journal et leur progression dans Observations.</p><label class="toggle-row"><span><strong>Suivre mes pas</strong><small>Tu peux masquer ce suivi sans supprimer ton historique</small></span><input id="settingStepsTracking" type="checkbox" ${db.settings.stepsTracking === true ? "checked" : ""}></label><div id="stepsGoalSetting" class="settings-row ${db.settings.stepsTracking === true ? "" : "is-disabled"}"><div><strong>Objectif quotidien</strong><p class="muted tiny">Utilisé pour les nouvelles journées seulement</p></div><label><input id="stepsGoal" type="number" min="100" max="100000" step="100" inputmode="numeric" value="${Number(db.settings.stepsGoal) || 8000}" ${db.settings.stepsTracking === true ? "" : "disabled"}><span>${window.ENERGIE_LOCALE === "en" ? "steps" : "pas"}</span></label></div></section>`);
 
     if (nativeHealthKit()) {
@@ -14611,6 +14664,10 @@ function formatSleepDuration(hours) {
       saveLocal("cible-deficit-calorique");
       setDayChanged(todayKey());
     });
+    $("#glucoseTrackingEnabled")?.addEventListener("change", event => { db.settings.glucoseTracking = event.target.checked; persistProfilePreference("glycemie"); renderProfile(); });
+    $("#glucoseMode")?.addEventListener("change", event => { db.settings.glucoseMode = event.target.value; persistProfilePreference("glycemie-mode"); renderProfile(); });
+    $("#glucoseCount")?.addEventListener("change", event => { const count=Number(event.target.value); const arr=db.settings.glucoseReminderTimes || []; db.settings.glucoseReminderTimes=Array.from({length:count},(_,i)=>arr[i] || ["08:00","12:00","18:00","20:00","22:00","23:00"][i]); persistProfilePreference("glycemie-heures"); renderProfile(); });
+    $("[data-glucose-time]").forEach(input => input.addEventListener("change", event => { const arr=[...(db.settings.glucoseReminderTimes || [])]; arr[Number(event.target.dataset.glucoseTime)]=event.target.value; db.settings.glucoseReminderTimes=arr; persistProfilePreference("glycemie-heures"); }));
     $("#settingStepsTracking")?.addEventListener("change", (event) => {
       db.settings.stepsTracking = event.target.checked;
       persistProfilePreference("suivi-pas");
