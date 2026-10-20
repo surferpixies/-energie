@@ -14216,6 +14216,7 @@ function formatSleepDuration(hours) {
     wrap.innerHTML = calorieTargetGaugeHtml(selectedDate, mealTargetGaugeMeals(), { circular: true });
   }
 
+  let glucoseChartPoints = [];
   function bindGlucoseObservationFilter() {
     const select = $("#glucoseObservationFilter");
     if (!select) return;
@@ -14257,11 +14258,12 @@ function formatSleepDuration(hours) {
       const value=hi-i*(hi-lo)/3;
       return '<line x1="' + left + '" x2="' + (w-right) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '" stroke="#dce7de"/><text x="' + (left-7) + '" y="' + (y+4).toFixed(1) + '" text-anchor="end" font-size="12" fill="#657b6c">' + esc(value.toFixed(1).replace(".", ",")) + '</text>';
     }).join("");
-    const dots = coordinates.map(p => '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="4" fill="#2e985f" stroke="#fff" stroke-width="1.5"><title>' + esc(p.date + " " + p.time + " · " + String(p.value).replace(".", ",") + " mmol/L" + (p.mealId ? " · Après un repas" : p.context ? " · " + p.context : "")) + '</title></circle>').join("");
+    glucoseChartPoints = coordinates;
+    const dots = coordinates.map((p,i) => '<g data-glucose-point="' + i + '" role="button" tabindex="0" style="cursor:pointer" aria-label="' + esc(p.date + ' ' + p.time + ' ' + p.value + ' mmol/L') + '"><line x1="' + p.x.toFixed(1) + '" x2="' + p.x.toFixed(1) + '" y1="' + (h-bottom) + '" y2="' + p.y.toFixed(1) + '" stroke="#399e67" stroke-width="4"/><circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="6" fill="#2e985f" stroke="#fff" stroke-width="2"/><circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="14" fill="transparent"><title>' + esc(p.date + ' ' + p.time + ' · ' + p.value + ' mmol/L') + '</title></circle></g>').join("");
     const graph = '<div style="width:100%;overflow-x:auto"><svg viewBox="0 0 640 190" role="img" aria-label="Évolution de ' + visible.length + ' mesures de glycémie pendant les 30 derniers jours" style="display:block;width:100%;min-width:330px;height:auto">' + grid + dots + '<text x="' + left + '" y="' + (h-7) + '" fill="#657b6c" font-size="12">' + esc(start.slice(5)) + '</text><text x="' + (w-right) + '" y="' + (h-7) + '" text-anchor="end" fill="#657b6c" font-size="12">' + esc(end.slice(5)) + '</text></svg></div>';
     const last=visible.at(-1);
     const latest = 'Dernière mesure : ' + esc(last.date + " à " + last.time) + ' · ' + visible.length + ' mesure' + (points.length>1?"s":"") + ' sur 30 jours';
-    return '<article class="card glucose-observations-trend" style="width:100%;box-sizing:border-box;margin:14px 0">' + title + filters + '<p class="muted tiny">' + latest + '</p>' + graph + '<p class="metrics-note">Chaque point représente une mesure enregistrée. Les contextes (à jeun, heures fixes et après les repas) peuvent varier. Les lignes servent à visualiser la succession des mesures, sans interprétation médicale ni valeurs ajoutées aux jours sans saisie.</p></article>';
+    return '<article class="card glucose-observations-trend" style="width:100%;box-sizing:border-box;margin:14px 0">' + title + filters + '<p class="muted tiny">' + latest + '</p>' + graph + '<div class="glucose-measure-detail" hidden></div><p class="metrics-note">Chaque point représente une mesure enregistrée. Les contextes (à jeun, heures fixes et après les repas) peuvent varier. Les lignes servent à visualiser la succession des mesures, sans interprétation médicale ni valeurs ajoutées aux jours sans saisie.</p></article>';
   }
   function personalTrendsHtml() {
     const end = demoAnalysisContext()?.cutoff || todayKey(), profile = personalProfile(), unit = profile.weight?.unit || "kg";
