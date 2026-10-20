@@ -1057,6 +1057,28 @@
     "Journal": "Journal",
     "Calories disponibles pour 2 des 3 entrées saisies · total partiel.": "Calories available for 2 of 3 logged entries · partial total.",
   });
+  // Remaining sport names in the activity picker (values remain in French in storage).
+  Object.assign(en, {
+  "Golf": "Golf",
+  "Kickboxing": "Kickboxing",
+  "Plongée sous-marine": "Scuba diving",
+  "Racquetball": "Racquetball",
+  "Rugby": "Rugby",
+  "Snowboard": "Snowboarding",
+  "Softball": "Softball",
+  "Sports aquatiques": "Water sports",
+  "Sports de disque": "Disc sports",
+  "Sports de neige": "Snow sports",
+  "Sports de pagaie": "Paddle sports",
+  "Sports de surf": "Surf sports",
+  "Squash": "Squash",
+  "Step": "Step aerobics",
+  "Tai-chi": "Tai chi",
+  "Tennis de table": "Table tennis",
+  "Triathlon": "Triathlon",
+  "Voile": "Sailing",
+  "Water-polo": "Water polo"
+});
   // English UI audit — drinks, steps, activities, snacks and professional workspace.
   Object.assign(en, {
     "Type de boisson": "Beverage type",
