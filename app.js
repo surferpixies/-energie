@@ -9738,7 +9738,7 @@ function formatSleepDuration(hours) {
   function glucoseMealCompactHtml(meal) {
     const status = glucoseMealDueInfo(meal);
     if (!status) return "";
-    const label = status.reading ? esc(String(status.reading.value).replace(".", ",")) + " mmol/L" : status.ready ? "à noter" : "dès " + esc(status.dueTime);
+    const label = status.reading ? esc(String(status.reading.value).replace(".", ",")) + " mmol/L" : status.ready ? (window.ENERGIE_LOCALE === "en" ? "to record" : "à noter") : (window.ENERGIE_LOCALE === "en" ? "from " : "dès ") + esc(status.dueTime);
     return '<span style="display:inline-flex;align-items:center;gap:3px;white-space:nowrap;flex-shrink:0;max-width:100%;font-size:.72rem;line-height:1.2;color:#536d58;margin-top:3px">🩸 ' + label + '</span>';
   }
   function glucoseMealNoteHtml(meal) {
