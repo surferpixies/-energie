@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.248";
+  const APP_RELEASE = "3.56.249";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -14151,7 +14151,7 @@ function formatSleepDuration(hours) {
     const preferred = db.settings.glucoseMode === "scheduled" ? "scheduled" : db.settings.glucoseMode === "meals" ? "after" : "fasting";
     const selected = ["fasting","scheduled","after","other"].includes(filter) ? filter : preferred;
     const filtered = points.filter(p => selected === "scheduled" ? !!p.scheduledTime : selected === "after" ? !!p.mealId || (p.context === "after" && !p.scheduledTime) : selected === "fasting" ? p.context === "fasting" && !p.scheduledTime && !p.mealId : !p.mealId && !p.scheduledTime && p.context !== "fasting" && p.context !== "after");
-    const filters = '<label style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.86rem">Contexte obligatoire <select id="glucoseObservationFilter" style="max-width:240px"><option value="fasting"' + (selected === "fasting" ? " selected" : "") + '>À jeun</option><option value="scheduled"' + (selected === "scheduled" ? " selected" : "") + '>Heures fixes</option><option value="after"' + (selected === "after" ? " selected" : "") + '>Après les repas</option><option value="other"' + (selected === "other" ? " selected" : "") + '>Autres</option></select></label>';
+    const filters = '<label style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:.86rem;margin:16px 0 20px">Type de mesure <select id="glucoseObservationFilter" style="max-width:240px"><option value="fasting"' + (selected === "fasting" ? " selected" : "") + '>À jeun</option><option value="scheduled"' + (selected === "scheduled" ? " selected" : "") + '>Heures fixes</option><option value="after"' + (selected === "after" ? " selected" : "") + '>Après les repas</option><option value="other"' + (selected === "other" ? " selected" : "") + '>Autres</option></select></label>';
     const visible = filtered;
     const title = '<div class="metrics-heading"><h3>🩸 Évolution de la glycémie</h3><strong>' + (visible.length ? esc(String(visible.at(-1).value).replace(".", ",")) + ' mmol/L' : "—") + '</strong></div>';
     if (!visible.length) return '<article class="card glucose-observations-trend" style="width:100%;box-sizing:border-box;margin:14px 0">' + title + filters + '<p class="metrics-empty">Aucune mesure enregistrée dans les 30 derniers jours.</p><p class="metrics-note">Les valeurs sont affichées sans interprétation médicale.</p></article>';
