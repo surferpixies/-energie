@@ -123,7 +123,7 @@
             <button class="secondary small" id="changeProfileAvatar" type="button">${avatarPath ? "Modifier ma photo" : "Ajouter ma photo"}</button>
             ${avatarPath ? '<button class="text-button" id="removeProfileAvatar" type="button">Supprimer</button>' : ""}
           </div>
-          <small class="muted">Facultative · photo compressée automatiquement.</small>
+          
           <p class="muted tiny" id="profileAvatarStatus" role="status" aria-live="polite"></p>
         </div>
       </div>`;
