@@ -10165,13 +10165,37 @@ function formatSleepDuration(hours) {
     );
     $("#app").innerHTML =
       `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${isFuture ? '<aside class="future-meal-planning-note"><span aria-hidden="true">📅</span><div><strong>Planification de repas</strong><small>Tu peux préparer tes repas jusqu’à 2 jours d’avance. Ils ne seront pris en compte dans les Observations qu’une fois la date arrivée.</small></div></aside>' : ""}${clientProfessionalNoteJournalHtml()}${dailyMacroSummaryHtml(meals)}${journalViewOptionsHtml()}${glucoseJournalHtml(d)}${journalViewMode() === "consultation" ? journalConsultationHtml(d) : journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<button class="card sleep-card sleep-card-wide edit-sleep"><div class="wellness-head"><span class="wellness-icon">🌙</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? formatSleepDuration(d.sleepHours) : "À noter"}</strong>${d.sleepStartTime || d.sleepEndTime ? `<span class="sleep-time-summary">${d.sleepStartTime ? `Coucher ${esc(d.sleepStartTime)}` : ""}${d.sleepStartTime && d.sleepEndTime ? " · " : ""}${d.sleepEndTime ? `Réveil ${esc(d.sleepEndTime)}` : ""}</span>` : ""}</div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<div class="card activity-card-with-steps activity-card-wide"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
+    if (db.settings.glucoseTracking && db.settings.glucoseMode === "meals" && !db.settings.demoMode && !professionalBetaMode) {
+      const selectedTypes = db.settings.glucoseMealTypes || ["Déjeuner","Dîner","Souper"];
+      const trackedMeals = d.meals.filter(meal => meal.id && selectedTypes.includes(meal.type));
+      const delay = Number(db.settings.glucoseMealDelay || 120);
+      const rows = trackedMeals.map(meal => {
+        const recorded = d.glucoseMeasurements.find(x => x.mealId === meal.id);
+        return `<div class="glucose-after-meal-row" id="glucose-meal-${esc(meal.id)}" style="display:grid;grid-template-columns:minmax(125px,1fr) minmax(110px,1fr) 100px auto;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #e1e9df"><strong>${mealTypeHtml(meal.type)} · ${esc(meal.time)}</strong><span style="font-size:.85rem">${recorded ? esc(String(recorded.value).replace(".",",")) + " mmol/L ✓" : "Non renseignée"}</span><input data-glucose-after-value="${esc(meal.id)}" type="text" inputmode="decimal" placeholder="mmol/L" aria-label="Glycémie après le repas" style="box-sizing:border-box;width:100%;min-width:0;padding:6px"><button type="button" class="secondary small" data-save-glucose-meal="${esc(meal.id)}">${recorded ? "Modifier" : "Noter"}</button></div>`;
+      }).join("");
+      $("#journalView").insertAdjacentHTML("beforeend", `<section class="card glucose-journal-card" style="padding:12px 16px;margin-top:12px"><div class="glucose-compact-head"><h3 style="font-size:1rem;margin:0 0 7px">🩸 Glycémie après les repas</h3><span class="muted tiny">+${delay} min</span></div>${rows || '<p class="muted small">Aucun repas concerné enregistré pour cette journée.</p>'}<p class="muted tiny" id="glucoseMealStatus" role="status"></p></section>`);
+      $("[data-save-glucose-meal]").forEach(button => button.onclick = () => {
+        const mealId = button.dataset.saveGlucoseMeal;
+        const input = $("[data-glucose-after-value]").find(el => el.dataset.glucoseAfterValue === mealId);
+        const meal = d.meals.find(m => m.id === mealId);
+        const value = Number((input?.value || "").trim().replace(",","."));
+        if (!meal || !Number.isFinite(value) || value <= 0 || value >= 40) { $("#glucoseMealStatus").textContent = t("Entre une mesure valide en mmol/L."); return; }
+        const existing = d.glucoseMeasurements.find(x => x.mealId === mealId);
+        const time = new Date().toTimeString().slice(0,5);
+        if (existing) { existing.value=value; existing.time=time; }
+        else d.glucoseMeasurements.push({id:uid(),value,time,context:"after",mealId});
+        d.updatedAt = new Date().toISOString();
+        saveLocal("glycemie-apres-repas"); setDayChanged(selectedDate); render();
+      });
+    }
     bindGlucoseJournal();
-    $$("[data-glucose-for-meal]").forEach(button => button.addEventListener("click", () => {
+    $("[data-glucose-for-meal]").forEach(button => button.addEventListener("click", () => {
       const meal = ensureDay(db, selectedDate).meals.find(m => m.id === button.dataset.glucoseForMeal);
-      const input = $("#glucoseValue");
+      const input = db.settings.glucoseMode === "meals"
+        ? $("[data-glucose-after-value]").find(el => el.dataset.glucoseAfterValue === meal?.id)
+        : $("#glucoseValue");
       if (!input || !meal) return;
-      $("#glucoseContext").value = "after";
-      // Keep a manual reading independent of the scheduled reminder's due time.
+      if ($("#glucoseContext")) $("#glucoseContext").value = "after";
       input.focus();
       input.scrollIntoView({behavior:"smooth",block:"center"});
     }));
