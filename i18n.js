@@ -1745,6 +1745,32 @@
   "Les calories sont des estimations et dépendent de la qualité du journal.": "Calories are estimates and depend on the quality of journal entries.",
   "Tableau intelligent": "Smart dashboard"
 });
+  // Observations: calorie, energy balance and weight chart labels.
+  Object.assign(en, {
+  "Explorer les changements de mon poids": "Explore changes in my weight",
+  "Déficit / surplus calorique": "Calorie deficit / surplus",
+  "Calories par jour": "Calories per day",
+  "Voir les valeurs": "Show values",
+  "Valeur": "Value",
+  "Repas estimés": "Meals estimated",
+  "partiel": "partial",
+  "Évolution des mesures de poids": "Weight measurement trend",
+  "Balance énergétique estimée par jour": "Estimated daily energy balance",
+  "Calories estimées des repas saisis par jour": "Estimated calories from logged meals per day",
+  "Estimations des repas saisis, pas un objectif. Les jours sans estimation restent vides; les barres en pointillé indiquent une estimation partielle. Un journal incomplet peut sous-estimer le total.": "Estimates from logged meals, not a target. Days without an estimate remain blank; dotted bars indicate a partial estimate. An incomplete journal may underestimate the total.",
+  "Valeur négative = déficit estimé; valeur positive = surplus estimé. Dépense ≈ métabolisme de repos (Mifflin-St Jeor) × 1,2 + activités enregistrées. Les journées sans Déjeuner, Dîner et Souper complets, ou avec une estimation calorique partielle, sont ignorées. Il s’agit d’un ordre de grandeur, pas d’une mesure exacte.": "A negative value represents an estimated deficit; a positive value represents an estimated surplus. Expenditure ≈ resting metabolic rate (Mifflin–St Jeor) × 1.2 + logged activities. Days without complete breakfast, lunch and dinner entries, or with partial calorie estimates, are excluded. These are approximate estimates, not exact measurements.",
+  "mes données uniquement": "my data only",
+  "données du profil fictif": "demo profile data",
+  "30 jours": "30 days",
+  "Non renseigné": "Not provided",
+  "Mesures enregistrées dans le Profil": "Measurements saved in Profile",
+  "Repas et collations enregistrés": "Logged meals and snacks",
+  "Aucune journée calculable sur cette période": "No days can be calculated for this period",
+  "Complète l’âge, le sexe, la taille et au moins une mesure de poids dans Profil.": "Complete age, sex, height and at least one weight measurement in Profile.",
+  "estimation partielle": "partial estimate",
+  "Une première mesure : il en faut au moins deux pour voir une évolution.": "One measurement recorded; at least two are needed to show a trend.",
+  "Ton choix est respecté.": "Your choice is respected."
+});
   function translateString(s){
     let out=translate(s);
     // Never feed a mapped French meal name back into another meal mapping.
