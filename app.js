@@ -607,6 +607,7 @@
         showWelcome: true,
         insightsEnabled: true,
         nutritionObservations: true,
+        nutrientIntakeTracking: false,
         macroTracking: true,
         autoNutritionEstimates: true,
         generalRecommendations: true,
@@ -2266,7 +2267,7 @@ function formatSleepDuration(hours) {
       db.settings.professionalOptionChoices = window.EnergieProfessionalOptions.mergeChoices(db.settings.professionalOptionChoices, pref.professionalOptionChoices);
       if (Number(pref.waterGoal) > 0) db.settings.waterGoal = Math.round(Number(pref.waterGoal));
       if (["detailed", "summary", "consultation"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
-      ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals","glucoseTracking"].forEach((key) => {
+      ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","nutrientIntakeTracking","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals","glucoseTracking"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
       });
       if (["free","scheduled","meals"].includes(pref.glucoseMode)) db.settings.glucoseMode = pref.glucoseMode;
@@ -12052,6 +12053,7 @@ function formatSleepDuration(hours) {
       lastMeal?.date || "",
       db.settings?.demoMode ? db.settings?.demoProfileId || "demo" : "user",
       db.settings?.insightsEnabled === false ? "off" : "on",
+      db.settings?.nutrientIntakeTracking === true ? "nutrients-on" : "nutrients-off",
       window.ENERGIE_LOCALE || "fr-CA",
     ].join("|");
   }
@@ -13132,6 +13134,35 @@ function formatSleepDuration(hours) {
     insightsHasRendered = true;
     insightsRenderedDataKey = insightsDataKey();
   }
+  function nutrientIntakeObservationsHtml() {
+    if (db.settings?.nutrientIntakeTracking !== true) return "";
+    const en = window.ENERGIE_LOCALE === "en";
+    const keys = ["protein", "carbs", "fat", "fiber", "sugars", "sodium"];
+    const labels = en ? ["Protein", "Carbs", "Fat", "Fiber", "Sugars", "Sodium"] : ["Protéines", "Glucides", "Lipides", "Fibres", "Sucres", "Sodium"];
+    const today = new Date(selectedDate + "T12:00:00");
+    const dates = Array.from({length: 7}, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() - (6 - i));
+      return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, "0"), String(d.getDate()).padStart(2, "0")].join("-");
+    });
+    const meals = mealsThroughSelectedDate().filter(m => !m.planned && !m.isPlanned && dates.includes(m.date));
+    const rows = dates.map(date => {
+      const daily = meals.filter(m => m.date === date);
+      const available = daily.filter(m => m.nutrition && keys.some(k => m.nutrition[k] != null && m.nutrition[k] !== "" && Number.isFinite(Number(m.nutrition[k]))));
+      const cells = keys.map(key => {
+        const valid = daily.filter(m => m.nutrition && m.nutrition[key] != null && m.nutrition[key] !== "" && Number.isFinite(Number(m.nutrition[key])));
+        if (!valid.length) return "—";
+        const sum = valid.reduce((total, m) => total + Number(m.nutrition[key]), 0);
+        return `${(key === "sodium" ? Math.round(sum) : Math.round(sum * 10) / 10).toLocaleString(en ? "en-CA" : "fr-CA")}${valid.length < daily.length ? "*" : ""}`;
+      });
+      const status = !daily.length ? "—" : `${available.length}/${daily.length}`;
+      return `<tr><td>${esc(date.slice(5))}</td><td>${esc(status)}</td>${cells.map(c => `<td style="text-align:right">${esc(c)}</td>`).join("")}</tr>`;
+    });
+    const explanation = en
+      ? "Last 7 days · based on saved meal nutrition data. Amounts are in grams, except sodium (mg). * Partial value: one or more meals have no value for that nutrient. A dash means no recorded value, not zero."
+      : "7 derniers jours · selon les valeurs nutritionnelles enregistrées des repas. Quantités en grammes, sauf sodium (mg). * Valeur partielle : au moins un repas ne possède pas de valeur pour ce nutriment. Un tiret signifie une donnée absente, pas zéro.";
+    return `<section class="card nutrient-intake-observations"><h3>🥑 ${en ? "Nutrient intake" : "Apports nutritionnels"}</h3><p class="muted small">${explanation}</p><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:650px"><thead><tr><th>Date</th><th>${en ? "Meals with data" : "Repas avec données"}</th>${labels.map(label => `<th style="text-align:right">${label}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div></section>`;
+  }
   function renderInsightsContent() {
     const __obsTotalStart = performance.now();
     const perf = (label, fn) => {
@@ -13279,7 +13310,7 @@ function formatSleepDuration(hours) {
         : "";
     const __obsBaseDomStart = performance.now();
     $("#app").innerHTML =
-      `${perf("analysisDateNavigatorHtml", () => analysisDateNavigatorHtml())}<section class="hero"><p class="eyebrow">Tableau intelligent</p><h2>Ce qu’Énergie apprend sur toi</h2><p>Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer leurs causes.</p></section>${previewBanner}${perf("discoverySectionHtml", () => discoverySectionHtml(discoveryReport, negativeFeelings))}<div class="grid dashboard-overview"><section class="card stat-card compact-stat-card compact-row-card dashboard-hero-card"><div class="stat-card-heading"><span>🍎</span><div><h3>Tu utilises Énergie depuis</h3><p class="muted small">Date de départ du journal</p></div></div><div class="metric metric-small">${esc(story.since)}</div></section><section class="card stat-card dashboard-mini-card"><span>⭐</span><h3>Point fort</h3><p>${esc(story.strength)}</p></section><section class="card stat-card dashboard-mini-card"><span>💡</span><h3>Habitude observée</h3><p>${esc(story.habit)}</p></section><section class="card stat-card dashboard-mini-card"><span>🎯</span><h3>Suggestion principale</h3><p>${esc(story.suggestion)}</p></section></div>${perf("professionalDiscussionHtml", () => professionalDiscussionHtml(meals))}<div class="section-title"><h2>🧠 Autres observations</h2><span class="muted small">${insights.length} carte${insights.length > 1 ? "s" : ""}</span></div><div class="insight-grid">${insights.length ? perf("insightHtml cards", () => insights.map(insightHtml).join("")) : `<section class="card empty wide"><div class="food-art">🧠</div><p>${db.settings.insightsEnabled ? "Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles." : "Les observations sont désactivées dans les paramètres."}</p></section>`}</div>${perf("demoDiscoveryHtml", () => demoDiscoveryHtml())}${usePreview && !db.settings.demoMode ? '<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>' : ""}`;
+      `${perf("analysisDateNavigatorHtml", () => analysisDateNavigatorHtml())}<section class="hero"><p class="eyebrow">Tableau intelligent</p><h2>Ce qu’Énergie apprend sur toi</h2><p>Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer leurs causes.</p></section>${previewBanner}${nutrientIntakeObservationsHtml()}${perf("discoverySectionHtml", () => discoverySectionHtml(discoveryReport, negativeFeelings))}<div class="grid dashboard-overview"><section class="card stat-card compact-stat-card compact-row-card dashboard-hero-card"><div class="stat-card-heading"><span>🍎</span><div><h3>Tu utilises Énergie depuis</h3><p class="muted small">Date de départ du journal</p></div></div><div class="metric metric-small">${esc(story.since)}</div></section><section class="card stat-card dashboard-mini-card"><span>⭐</span><h3>Point fort</h3><p>${esc(story.strength)}</p></section><section class="card stat-card dashboard-mini-card"><span>💡</span><h3>Habitude observée</h3><p>${esc(story.habit)}</p></section><section class="card stat-card dashboard-mini-card"><span>🎯</span><h3>Suggestion principale</h3><p>${esc(story.suggestion)}</p></section></div>${perf("professionalDiscussionHtml", () => professionalDiscussionHtml(meals))}<div class="section-title"><h2>🧠 Autres observations</h2><span class="muted small">${insights.length} carte${insights.length > 1 ? "s" : ""}</span></div><div class="insight-grid">${insights.length ? perf("insightHtml cards", () => insights.map(insightHtml).join("")) : `<section class="card empty wide"><div class="food-art">🧠</div><p>${db.settings.insightsEnabled ? "Continue d’enregistrer tes repas pour obtenir d’autres observations personnelles." : "Les observations sont désactivées dans les paramètres."}</p></section>`}</div>${perf("demoDiscoveryHtml", () => demoDiscoveryHtml())}${usePreview && !db.settings.demoMode ? '<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>' : ""}`;
     console.log(
       "[Obs perf]",
       "base DOM insertion:",
@@ -14459,6 +14490,7 @@ function formatSleepDuration(hours) {
     const energyGuideButton = $("#openEnergyGuide");
     if (energyGuideButton) energyGuideButton.onclick = openEnergyGuide;
     const nutritionAnchor = $("#settingNutrition")?.closest("label");
+    nutritionAnchor?.closest("section.card")?.insertAdjacentHTML("beforeend", `<label class="toggle-row"><span><strong>${t("Suivre mes apports nutritionnels")}</strong><small>${t("Afficher le tableau des apports dans Observations. Les journées incomplètes sont indiquées, sans objectif imposé.")}</small></span><input id="settingNutrientIntake" type="checkbox" ${db.settings.nutrientIntakeTracking === true ? "checked" : ""}></label>`);
     nutritionAnchor?.closest("section.card")?.insertAdjacentHTML("afterend", `<section class="card nutrition-source-profile-card"><h3>📚 ${t("Source des données nutritionnelles")}</h3><p class="muted small">${t("Énergie reconnaît les aliments avec deux bases officielles. Tu peux afficher ou masquer leur lien de saisie guidée dans les réglages FCÉN / Ciqual. L’ordre de recherche dépend de la langue :")}</p>${window.ENERGIE_LOCALE === "fr-FR" ? `<p class="muted small"><strong>1. Ciqual 2025 — Anses (France)</strong> · ${t("source prioritaire pour le français de France.")}</p><p class="muted small"><strong>2. FCÉN — Santé Canada</strong> · ${t("source de secours lorsqu’aucune correspondance suffisamment fiable n’est trouvée dans Ciqual.")}</p>` : `<p class="muted small"><strong>1. FCÉN — Santé Canada</strong> · ${t("source prioritaire pour le français du Canada.")}</p><p class="muted small"><strong>2. Ciqual 2025 — Anses (France)</strong> · ${t("source de secours lorsqu’aucune correspondance suffisamment fiable n’est trouvée dans le FCÉN.")}</p>`}<p class="muted small">${t("Les valeurs de référence sont ensuite adaptées aux quantités réellement renseignées ou estimées dans le repas.")}</p><p class="muted tiny">${t("Pour les produits scannés, les données de l’étiquette peuvent provenir d’Open Food Facts lorsqu’elles sont disponibles. Les recettes, les marques et les méthodes de préparation peuvent faire varier les valeurs réelles.")}</p></section>`);
     if (session && profileSinceHtml)
       $("#syncNow")
@@ -14878,6 +14910,7 @@ function formatSleepDuration(hours) {
       };
     toggleSetting("#settingAutoNutrition", "autoNutritionEstimates");
     toggleSetting("#settingNutrition", "nutritionObservations");
+    toggleSetting("#settingNutrientIntake", "nutrientIntakeTracking");
     toggleSetting("#settingRecommendations", "generalRecommendations");
     toggleSetting("#settingSources", "showSources");
     toggleSetting("#settingProfessionalSupport", "professionalSupport");
