@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.244";
+  const APP_RELEASE = "3.56.245";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10001,7 +10001,7 @@ function formatSleepDuration(hours) {
         ? `${type} · ${state.detail}`
         : `Ajouter ${type.toLowerCase()}`;
 
-    return `<button type="button" class="journal-summary-action journal-summary-meal-card ${state.needsBrain ? "needs-brain-action" : ""} ${state.complete ? "is-complete" : ""}" data-summary-meal-card="${esc(type)}" data-summary-meal-id="${esc(state.mealId || "")}" aria-label="${esc(aria)}"><span class="summary-meal-visual ${visualClass}" aria-hidden="true">${state.visual}</span><span class="summary-meal-copy"><span>${esc(state.label)}</span><strong>${mealTypeHtml(type)}</strong><small>${esc(state.detail)}</small></span>${journalSummaryMealActionHtml(state)}${state.mealId ? glucoseMealCompactHtml(meals.find(m => m.id === state.mealId)) : ""}</button>`;
+    return `<button type="button" class="journal-summary-action journal-summary-meal-card ${state.needsBrain ? "needs-brain-action" : ""} ${state.complete ? "is-complete" : ""}" data-summary-meal-card="${esc(type)}" data-summary-meal-id="${esc(state.mealId || "")}" aria-label="${esc(aria)}"><span class="summary-meal-visual ${visualClass}" aria-hidden="true">${state.visual}</span><span class="summary-meal-copy"><span>${esc(state.label)}</span><strong>${mealTypeHtml(type)}</strong><small>${esc(state.detail)}</small>${state.mealId ? glucoseMealCompactHtml(meals.find(m => m.id === state.mealId)) : ""}</span>${journalSummaryMealActionHtml(state)}</button>`;
   }
 
   function journalSummaryMealsHtml(meals) {
@@ -10087,9 +10087,9 @@ function formatSleepDuration(hours) {
     if (mode === "scheduled") {
       const times = (db.settings.glucoseReminderTimes || ["08:00","12:00","20:00"]).slice(0,6);
       const entries = d.glucoseMeasurements || [];
-      return `<section class="card glucose-journal-card" style="padding:12px 16px;margin:10px 0"><h3 style="font-size:1rem;margin:0 0 8px">🩸 ${t("Glycémie")} · Heures fixes</h3><div style="display:grid;gap:5px">${times.map((time,i) => {
+      return `<section class="card glucose-journal-card glucose-scheduled-compact" style="padding:9px 14px!important;margin:7px 0!important;border-radius:18px"><h3 style="font-size:.98rem;margin:0 0 5px">🩸 ${t("Glycémie")} · Heures fixes</h3><div style="display:grid;gap:0">${times.map((time,i) => {
         const reading = entries.find(x => x.scheduledTime === time);
-        return `<div style="display:grid;grid-template-columns:65px minmax(100px,1fr) 100px auto;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #e1e9df"><strong>${esc(time)}</strong><span style="font-size:.85rem">${reading ? esc(String(reading.value).replace(".",",")) + " mmol/L ✓" : "Non renseignée"}</span><input data-glucose-slot-value="${i}" aria-label="Mesure ${esc(time)}" type="text" inputmode="decimal" placeholder="mmol/L" style="min-width:0;width:100%;box-sizing:border-box;padding:6px"><button class="secondary small" type="button" data-glucose-slot-save="${i}">${reading ? "Modifier" : "Noter"}</button></div>`;
+        return `<div style="display:grid;grid-template-columns:58px minmax(95px,1fr) 90px auto;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid #e1e9df;min-height:38px"><strong>${esc(time)}</strong><span style="font-size:.85rem">${reading ? esc(String(reading.value).replace(".",",")) + " mmol/L ✓" : "Non renseignée"}</span><input data-glucose-slot-value="${i}" aria-label="Mesure ${esc(time)}" type="text" inputmode="decimal" placeholder="mmol/L" style="min-width:0;width:100%;box-sizing:border-box;padding:4px 7px;height:32px;min-height:32px;font-size:.84rem"><button class="secondary small" type="button" style="padding:5px 10px;min-height:32px;font-size:.82rem" data-glucose-slot-save="${i}">${reading ? "Modifier" : "Noter"}</button></div>`;
       }).join("")}</div><p class="muted tiny" id="glucoseStatus" role="status"></p></section>`;
     }
     const contexts = {fasting:t("À jeun"),before:t("Avant un repas"),after:t("Après un repas"),bedtime:t("Au coucher"),other:t("Autre")};
