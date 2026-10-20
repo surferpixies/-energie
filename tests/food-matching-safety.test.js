@@ -113,6 +113,14 @@ for (const locale of ['fr-CA', 'fr-FR']) {
   previous = calories;
  }
 }
+// Un terme anglais doit reconnaître le même fruit, même quand l'interface est FR.
+context.FOOD_CANDIDATES = [{compareKey:'apple',food:{keys:['pomme','apple'],calories:95,portion:'1 moyenne'}}];
+for (const input of ['1 apple', '2 apples']) {
+ const food = context.foodMatchForSegment(input);
+ assert.ok(food, input);
+ assert.equal(context.nutritionScaleForSegment(input, food).quantityUsed, true, input);
+}
+assert.equal(context.foodMatchForSegment('2 apple pies'), null);
 const slicedApple = {keys:['pomme'],calories:24,portion:'100 ml tranches',gramsPerPortion:46};
 assert.equal(context.nutritionScaleForSegment('1 pomme', slicedApple).quantityUsed, false);
 assert.equal(context.nutritionScaleForSegment('50 pommes', slicedApple).quantityUsed, false);
