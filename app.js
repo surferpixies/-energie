@@ -14285,7 +14285,7 @@ function formatSleepDuration(hours) {
     const slot = p => selected === "scheduled" ? Math.max(0,slots.indexOf(p.scheduledTime)) : selected === "after" ? Math.max(0,slots.indexOf(mealGroup(p))) : 0;
     const left=52,right=20,top=18,bottom=68,h=254;
     const dayWidth = selected === "after" ? slots.length*30+68 : Math.max(175,slots.length*47+28);
-    const slotX = (day,position) => left+day*dayWidth+(dayWidth-(slots.length-1)*30)/2+position*30;
+    const slotX = (day,position) => selected === "after" ? left+day*dayWidth+(dayWidth-(slots.length-1)*30)/2+position*30 : left+day*dayWidth+dayWidth/(slots.length+1)*(position+1);
     const w=left+right+dayWidth*dates.length;
     const scaleY = v => top+(hi-v)/(hi-lo)*(h-top-bottom);
     const occupied = new Map();
