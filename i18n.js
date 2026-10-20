@@ -1413,6 +1413,29 @@
   "Ambiance saisonnière": "Seasonal theme",
   "Photo de profil": "Profile photo"
 });
+  // Meals and entry localization.
+  Object.assign(en, {
+  "Calories estimées, sans objectif": "Estimated calories, no target",
+  "Seul le total calorique est affiché en haut du Journal, avec sa tendance dans Observations. Les autres chiffres nutritionnels restent masqués.": "Only total calories appear at the top of Journal, with the trend in Insights. Other nutrition figures remain hidden.",
+  "Éléments reconnus": "Recognized items",
+  "Cette petite carte résume ce qu’Énergie reconnaît dans la description du repas. Tu peux la masquer pour alléger la saisie sans désactiver l’analyse du repas ni les estimations nutritionnelles.": "This card summarizes what Énergie recognizes in a meal description. You can hide it without disabling meal analysis or nutrition estimates.",
+  "Afficher « Éléments reconnus »": "Show “Recognized items”",
+  "Affiche la carte sous la description du repas": "Show the card below the meal description",
+  "Source des données nutritionnelles": "Nutrition data sources",
+  "Énergie reconnaît les aliments avec deux bases officielles. Tu peux afficher ou masquer leur lien de saisie guidée dans les réglages FCÉN / Ciqual. L’ordre de recherche dépend de la langue :": "Énergie recognizes food using two official databases. Guided-entry links can be shown or hidden in CNF / Ciqual settings. Search order depends on language:",
+  "source prioritaire pour le français du Canada.": "primary source for Canadian French and English.",
+  "source prioritaire pour le français de France.": "primary source for French (France).",
+  "source de secours lorsqu’aucune correspondance suffisamment fiable n’est trouvée dans le FCÉN.": "fallback when no sufficiently reliable match is found in CNF.",
+  "source de secours lorsqu’aucune correspondance suffisamment fiable n’est trouvée dans Ciqual.": "fallback when no sufficiently reliable match is found in Ciqual.",
+  "Les valeurs de référence sont ensuite adaptées aux quantités réellement renseignées ou estimées dans le repas.": "Reference values are adjusted to quantities entered or estimated in the meal.",
+  "Pour les produits scannés, les données de l’étiquette peuvent provenir d’Open Food Facts lorsqu’elles sont disponibles. Les recettes, les marques et les méthodes de préparation peuvent faire varier les valeurs réelles.": "For scanned products, label data may come from Open Food Facts where available. Actual values vary with recipe, brand and preparation.",
+  "Planification des repas": "Meal planning",
+  "Optionnel · utile si tu souhaites préparer ton journal à l’avance.": "Optional · useful for planning your journal ahead.",
+  "Permettre la saisie de repas à l’avance": "Allow meals to be logged in advance",
+  "Autorise la navigation et la saisie jusqu’à 2 jours dans le futur. Cette limite est fixe à 2 jours.": "Allows navigating and logging meals up to 2 days ahead. The limit is fixed at 2 days.",
+  "Les repas planifiés restent enregistrés, mais ne participent pas aux Observations ni à l’apprentissage d’Énergie avant la date prévue.": "Planned meals remain saved but do not contribute to Insights or Énergie's learning until their scheduled date.",
+  "Raisons de manger": "Reasons for eating"
+});
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
   window.t=translateString;
