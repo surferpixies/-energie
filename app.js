@@ -9787,8 +9787,8 @@ function formatSleepDuration(hours) {
     const steps = day?.steps != null && Number.isFinite(Number(day.steps)) ? Math.max(0, Number(day.steps)) : null,
       goal = stepsGoalForDay(day),
       pct = steps == null ? 0 : Math.min(100, Math.round((steps / goal) * 100)),
-      label = steps == null ? "Ajouter mes pas" : `${steps.toLocaleString("fr-CA")} / ${goal.toLocaleString("fr-CA")} pas`;
-    return `<button type="button" class="steps-journal-button edit-steps ${compact ? "journal-summary-steps" : ""}" aria-label="${steps == null ? "Ajouter le nombre de pas" : `Modifier les pas, ${label}`}"><span class="steps-journal-icon" aria-hidden="true">👟</span><span><small>Pas aujourd’hui</small><strong>${label}</strong><i class="steps-journal-progress"><b style="width:${pct}%"></b></i></span><em aria-hidden="true">›</em></button>`;
+      label = steps == null ? "Ajouter mes pas" : `${steps.toLocaleString("fr-CA")} / ${goal.toLocaleString("fr-CA")} ${window.ENERGIE_LOCALE === "en" ? "steps" : "pas"}`;
+    return `<button type="button" class="steps-journal-button edit-steps ${compact ? "journal-summary-steps" : ""}" aria-label="${steps == null ? "Ajouter le nombre de pas" : `Modifier les pas, ${label}`}"><span class="steps-journal-icon" aria-hidden="true">👟</span><span><small>${steps == null || steps === 0 ? "Pas aujourd’hui" : "Mes pas aujourd’hui"}</small><strong>${label}</strong><i class="steps-journal-progress"><b style="width:${pct}%"></b></i></span><em aria-hidden="true">›</em></button>`;
   }
 
   function openSteps() {
