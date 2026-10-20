@@ -43,6 +43,31 @@
     'Langue':'Langue','Langue de l’application':'Langue de l’application','Français (Canada)':'Français (Canada)','Français (France)':'Français (France)','English':'English'
   };
   const en={
+    "Saisie plus précise": "More precise entry",
+    "Saisie guidée avec le FCÉN": "Guided entry using the CNF",
+    "Recherche un aliment dans le Fichier canadien sur les éléments nutritifs de Santé Canada, choisis une quantité, puis ajoute les autres aliments du repas.": "Search Health Canada's Canadian Nutrient File, choose a quantity, then add the other foods in your meal.",
+    "Rechercher un aliment": "Search for a food",
+    "Ex. aubergine, œuf, fromage cottage…": "E.g. eggplant, egg, cottage cheese…",
+    "Aliment sélectionné": "Selected food",
+    "Quantité": "Quantity",
+    "Unité": "Unit",
+    "Ajouter cet aliment": "Add this food",
+    "Aliments du repas": "Foods in this meal",
+    "Ajouter un autre aliment": "Add another food",
+    "Aucun aliment ajouté pour l’instant.": "No foods added yet.",
+    "Les valeurs sont calculées directement à partir des fiches FCÉN choisies et des quantités saisies. Pour un plat maison ou un produit de marque, la composition réelle peut tout de même varier.": "Values are calculated from the selected Canadian Nutrient File records and entered quantities. The actual composition of homemade dishes or branded products may vary.",
+    "Terminer la saisie": "Finish entry",
+    "Annuler": "Cancel",
+    "Fatigue, manque d’énergie ou envie de dormir": "Fatigue, low energy or sleepiness",
+    "Faiblesse, étourdissements ou tremblements": "Weakness, dizziness or trembling",
+    "Brouillard mental ou concentration difficile": "Brain fog or difficulty concentrating",
+    "Mal de tête ou migraine": "Headache or migraine",
+    "Sensibilité à la lumière, au bruit ou aux odeurs": "Sensitivity to light, noise or smells",
+    "Démangeaisons ou rougeurs": "Itching or redness",
+    "Somnolence ou envie de dormir": "Drowsiness or sleepiness",
+    "Sensibilité au bruit": "Sensitivity to noise",
+    "Difficulté à se concentrer": "Difficulty concentrating",
+    "Rougeurs": "Redness",
     "Complété": "Completed",
     "Repas + avant + après": "Meal + before + after",
     "Avant le repas": "Before the meal",
@@ -1533,6 +1558,9 @@
       for(const [pattern,replacement] of rules) if(pattern.test(s)) return s.replace(pattern,replacement);
     }
     if(locale==='en'){
+      // Dynamic guided-entry basket counters and nutrient totals.
+      if (/^(\d+) aliments? · (.+) kcal$/.test(s)) return s.replace(/^(\d+) aliments? · (.+) kcal$/, (_,n,kcal) => n + (n === "1" ? " food" : " foods") + " · " + kcal + " kcal");
+      if (/^(\d+) aliments?$/.test(s)) return s.replace(/^(\d+) aliments?$/, (_,n) => n + (n === "1" ? " food" : " foods"));
       // Nutrition and glucose strings include values that cannot be dictionary keys.
       if (/^Mesure enregistrée : (.+) mmol\/L$/.test(s)) return s.replace(/^Mesure enregistrée : /, "Recorded measurement: ");
       if (/^Votre mesure de glycémie pourra être indiquée à partir de (.+)\.$/.test(s)) return s.replace(/^Votre mesure de glycémie pourra être indiquée à partir de /, "You can record your blood glucose from ");
