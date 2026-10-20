@@ -1175,6 +1175,58 @@
     "Lien actif": "Active link",
     "Mes clients": "My clients",
   });
+  // Web localization refinements for Journal and professional profile.
+  Object.assign(en, {
+    "Vérifie toujours la description proposée.": "Always verify the suggested description.",
+    "Aucune collation notée": "No snacks logged",
+    "Aucune collation enregistrée.": "No snacks saved yet.",
+    "Enregistrer comme activité favorite": "Save as a favorite activity",
+    "Terminer": "Done",
+    "Sauvegardé": "Saved",
+    "Sauvegardé ✓": "Saved ✓",
+    "Sauvegarde à reprendre": "Save failed. Try again.",
+    "Marche": "Walking",
+    "Modérée": "Moderate",
+    "Aujourd’hui, mes pas": "Today's steps",
+    "Mes pas aujourd’hui": "Today's steps",
+    "Pas aujourd’hui": "No steps today",
+    "Nombre de pas aujourd’hui": "Today's steps",
+    "Nom": "Name",
+    "Ma photo de profil": "My profile photo",
+    "Edit ma photo": "Edit my photo",
+    "Modifier ma photo": "Edit my photo",
+    "Tu utilises Énergie depuis": "You've been using Énergie since",
+    "Espaces": "Spaces",
+    "Mon espace personnel": "My personal space",
+    "Espace professionnel": "Professional workspace",
+    "Connexion Apple": "Apple sign-in",
+    "Ton identifiant Apple est associé à ce compte Énergie.": "Your Apple ID is linked to this Énergie account.",
+    "client lié": "linked client",
+    "clients liés": "linked clients",
+    "invitation en attente": "pending invitation",
+    "invitations en attente": "pending invitations",
+    "Envoyer une nouvelle invitation par courriel": "Send a new invitation by email",
+    "Consulter mes clients": "View my clients",
+    "Ouvrir un dossier": "Open a client record",
+    "Laboratoire Énergie": "Énergie lab",
+    "LABORATOIRE ÉNERGIE": "ÉNERGIE LAB",
+    "Scénarios dynamiques": "Dynamic scenarios",
+    "60 jours fictifs pour explorer les Observations": "60 simulated days to explore Insights",
+    "Scénario surprise": "Surprise scenario",
+    "Produits laitiers → inconfort digestif": "Dairy → digestive discomfort",
+    "Soya → inconfort digestif": "Soy → digestive discomfort",
+    "Aliments avec gluten → inconfort digestif": "Gluten-containing foods → digestive discomfort",
+    "Alimentation": "Food",
+    "Tester": "Try",
+    "scénarios": "scenarios",
+    "scénario": "scenario",
+    "Mode professionnel": "Professional mode",
+    "Bêta privée": "Private beta",
+    "Bêta réservée aux comptes explicitement autorisés dans Supabase.": "",
+    "Ma photo": "My photo",
+    "Supprimer ma photo": "Delete my photo",
+    "Éditer ma photo": "Edit my photo",
+  });
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
   window.t=translateString;
@@ -1206,6 +1258,18 @@
       for(const [pattern,replacement] of rules) if(pattern.test(s)) return s.replace(pattern,replacement);
     }
     if(locale==='en'){
+      // Dynamic activity rows, counts and profile dates. Preserve stored activity keys.
+      if (/^(Marche|Course|Vélo|Musculation|Yoga|Natation|Randonnée|Pilates|Danse|Elliptique|Rameur|Autre) · (\\d+) min$/.test(s)) {
+        return s.replace(/^(.+) · (\\d+) min$/, (_,activity,mins) => `${translate(activity)} · ${mins} min`);
+      }
+      if (/^(Faible|Modérée|Élevée) · (.+)$/.test(s)) {
+        return s.replace(/^(.+?) · (.+)$/, (_,intensity,time) => `${translate(intensity)} · ${time}`);
+      }
+      if (/^\\d+ clients? liés? · Ouvrir un dossier$/.test(s)) {
+        return s.replace(/^(\\d+) clients? liés? · Ouvrir un dossier$/, (_,count) => `${count} linked client${count==='1'?'':'s'} · Open a client record`);
+      }
+      if (/^\\d+ scénarios$/.test(s)) return s.replace(/^(\\d+) scénarios$/, '$1 scenarios');
+      if (/^Tu utilises Énergie depuis (.+)$/.test(s)) return s.replace(/^Tu utilises Énergie depuis (.+)$/, (_,date) => `You've been using Énergie since ${date}`);
       // Contextual messages produced with live numbers remain translatable.
       if (out === s) {
         let match;
