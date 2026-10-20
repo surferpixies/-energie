@@ -2757,7 +2757,13 @@ function formatSleepDuration(hours) {
       const guard = window.ENERGIE_CNF_SEARCH?.isCandidateAllowed;
       const referenceNames = checked.cnfNameFr || checked.ciqualNameFr
         ? [checked.cnfNameFr || checked.ciqualNameFr, checked.cnfNameEn].filter(Boolean)
-        : [checked.keys?.[0]].filter(Boolean);
+        : (checked.keys || []).filter(alias => {
+            // Accepter les noms FR/EN du même aliment entier, sans élargir
+            // "apple" à "apple pie" ni contourner la vérification FCÉN.
+            const requestedFood = normalizeFoodText(segment)
+              .replace(/^(?:\\d+(?:[.,]\\d+)?|un|une|one|deux|two|trois|three|quatre|four|cinq|five|six|sept|seven|huit|eight|neuf|nine|dix|ten)\\s+/, '');
+            return comparableFoodText(requestedFood) === comparableFoodText(alias);
+          });
       if (guard && !referenceNames.some(reference => guard(segment, reference))) return null;
       // Refuser « Bœuf, gras, cru » pour « bœuf haché ». Conserver une fiche
       // FCÉN/Ciqual authentiquement hachée; à défaut, repli Énergie explicite.
