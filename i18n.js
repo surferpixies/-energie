@@ -1364,6 +1364,45 @@
   "Mes favoris": "My favorites",
   "Pas": "Steps"
 });
+  // Feedback dialog, profile privacy, calories and daily tracking.
+  Object.assign(en, {
+  "Partager un commentaire": "Send feedback",
+  "Choisis ce qui correspond le mieux. Le contexte technique est ajouté automatiquement, sans le contenu de ton journal.": "Choose the option that fits best. Technical context is included automatically, never your journal contents.",
+  "Soumettre une suggestion": "Submit a suggestion",
+  "Signaler un bogue": "Report a bug",
+  "Votre commentaire": "Your feedback",
+  "Décris ce que tu as remarqué, ce que tu essayais de faire ou ce qui pourrait être amélioré…": "Describe what you noticed, what you were trying to do, or what could be improved…",
+  "Pièce jointe": "Attachment",
+  "(facultatif · max. 10 Mo)": "(optional · max. 10 MB)",
+  "Avant d’ajouter une capture ou un document, vérifie qu’il ne contient pas d’information personnelle que tu ne souhaites pas transmettre.": "Before attaching a screenshot or document, make sure it contains no personal information you don't wish to share.",
+  "Contexte transmis automatiquement": "Automatically included context",
+  "Envoyer": "Send",
+  "Suggestion / bogue": "Suggestion / bug",
+  "Signaler une suggestion, un bogue ou un autre commentaire": "Send a suggestion, bug report or other feedback",
+  "Suivi des pas": "Step tracking",
+  "pas": "steps",
+  "Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.": "Feelings are central to Énergie’s insights. Recording them after meals helps compare changes over time.",
+  "Ressentis positifs": "Positive feelings",
+  "Inconforts à suivre": "Discomforts to track",
+  "Calculée par Énergie :": "Calculated by Énergie:",
+  "dépense ≈ métabolisme de repos (Mifflin-St Jeor) × 1,2 + activités; le 🎯 représente le déficit choisi.": "expenditure ≈ resting metabolism (Mifflin-St Jeor) × 1.2 + activities; 🎯 indicates your chosen deficit.",
+  "Cible fixe :": "Fixed target:",
+  "Le graphique « Déficit / surplus calorique » dans Observations conserve toujours son calcul actuel, peu importe la méthode choisie pour la jauge.": "The “Calorie deficit / surplus” chart in Insights keeps its current calculation regardless of the gauge method.",
+  "Photo de profil": "Profile photo",
+  "Tu décides où ta photo apparaît. Les deux autorisations sont indépendantes.": "You decide where your photo appears. The two permissions are independent.",
+  "Afficher ma photo": "Show my photo",
+  "Dans l’en-tête de mon journal Énergie.": "In my Énergie journal header.",
+  "Autoriser mes professionnels à voir ma photo": "Allow my professionals to see my photo",
+  "Dans leur liste de clients et le bandeau de ton dossier, uniquement si le partage est actif.": "In their client list and your record header, only when sharing is enabled.",
+  "Désactivés par défaut. Sinon, seules tes initiales sont affichées.": "Off by default. Otherwise, only your initials are shown.",
+  "Jusqu’à 3 photos peuvent être ajoutées à un repas. Une photo ajoutée est conservée automatiquement; tu peux la retirer manuellement du repas si tu ne souhaites plus la garder.": "You can add up to 3 photos to a meal. Photos are saved automatically and can be removed from the meal at any time.",
+  "Autorisation distincte, utilisée lorsqu’un professionnel sera lié à ton compte.": "Separate permission, used when a professional is linked to your account.",
+  "L’analyse par l’IA reste facultative et n’est lancée que lorsque tu choisis « Analyser avec l’IA ».": "AI analysis is optional and only starts when you choose “Analyze with AI”.",
+  "Données et sauvegarde": "Data & backup",
+  "Options avancées": "Advanced options",
+  "Copie locale": "Local copy",
+  "Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.": "These tools are not needed for normal Énergie use. They help you manually save or transfer a complete copy of your journal."
+});
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
   window.t=translateString;
