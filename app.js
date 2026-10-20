@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.243";
+  const APP_RELEASE = "3.56.244";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -9739,7 +9739,7 @@ function formatSleepDuration(hours) {
     const status = glucoseMealDueInfo(meal);
     if (!status) return "";
     const label = status.reading ? esc(String(status.reading.value).replace(".", ",")) + " mmol/L" : status.ready ? "à noter" : "dès " + esc(status.dueTime);
-    return '<span style="display:block;font-size:.75rem;color:#536d58;margin-top:3px">🩸 ' + label + '</span>';
+    return '<span style="display:inline-flex;align-items:center;gap:3px;white-space:nowrap;flex-shrink:0;max-width:100%;font-size:.72rem;line-height:1.2;color:#536d58;margin-top:3px">🩸 ' + label + '</span>';
   }
   function glucoseMealNoteHtml(meal) {
     const status = glucoseMealDueInfo(meal);
@@ -9756,7 +9756,7 @@ function formatSleepDuration(hours) {
       const contextLabels = {fasting:t("À jeun"),before:t("Avant un repas"),after:t("Après un repas"),bedtime:t("Au coucher"),other:t("Autre")};
       title = "🩸 " + t("Glycémie");
       content = `<p><strong>${esc(String(measure.value).replace(".", ","))} mmol/L</strong> · ${esc(contextLabels[measure.context] || contextLabels.other)}</p>`;
-      action = `<button type="button" class="consultation-entry-open" data-delete-glucose="${esc(measure.id)}">${esc(t("Retirer"))}</button>`;
+      action = professionalClientReadOnly() ? "" : `<button type="button" class="consultation-entry-open" data-delete-glucose="${esc(measure.id)}">${esc(t("Retirer"))}</button>`;
     } else if (kind === "meal") {
       title = t("Repas");
       const reasons = normalizedEatingReasonState(meal.eatingReasons, meal.eatingReasonOther);
@@ -10112,8 +10112,7 @@ function formatSleepDuration(hours) {
       d.updatedAt = new Date().toISOString();
       saveLocal("glycemie-heure-fixe"); setDayChanged(selectedDate); render();
     });
-    if (!form) return;
-    form.onsubmit = event => {
+    if (form) form.onsubmit = event => {
       event.preventDefault();
       const raw = $("#glucoseValue").value.trim().replace(",",".");
       const value = Number(raw);
