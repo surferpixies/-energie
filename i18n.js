@@ -1091,10 +1091,10 @@
       // Contextual messages produced with live numbers remain translatable.
       if (out === s) {
         let match;
-        if ((match = s.match(/^Calories disponibles pour (\\d+) des (\\d+) entrées saisies · total partiel\\.$/))) return `Calories available for ${match[1]} of ${match[2]} logged entries · partial total.`;
+        if ((match = s.match(/^Calories disponibles pour (\d+) des (\d+) entrées saisies · total partiel\.$/))) return `Calories available for ${match[1]} of ${match[2]} logged entries · partial total.`;
         if ((match = s.match(/^≈ (.+) kcal avant le repère déficit · total partiel · 🎯 (.+)$/))) return `≈ ${match[1]} kcal before the deficit marker · partial total · 🎯 ${match[2]}`;
-        if ((match = s.match(/^(\\d+) entrées · repas et collations$/))) return `${match[1]} entries · meals and snacks`;
-        if ((match = s.match(/^Tu as documenté (\\d+) journées ce mois-ci\\. Ce volume permet de dégager des tendances plus représentatives, sans établir de lien de cause à effet\\.$/))) return `You logged ${match[1]} days this month. This amount of data helps identify more representative patterns without establishing causation.`;
+        if ((match = s.match(/^(\d+) entrées · repas et collations$/))) return `${match[1]} entries · meals and snacks`;
+        if ((match = s.match(/^Tu as documenté (\d+) journées ce mois-ci\. Ce volume permet de dégager des tendances plus représentatives, sans établir de lien de cause à effet\.$/))) return `You logged ${match[1]} days this month. This amount of data helps identify more representative patterns without establishing causation.`;
       }
       const mealWord=x=>translate(x.charAt(0).toUpperCase()+x.slice(1)).toLowerCase();
       out=out
