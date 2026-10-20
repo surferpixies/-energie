@@ -9788,7 +9788,7 @@ function formatSleepDuration(hours) {
     if (kind === "meal") {
       const missingFeelings = kind => `<section class="consultation-meal-feelings consultation-meal-feelings--${kind} consultation-meal-feelings--empty"><div class="consultation-event-heading"><h3>${esc(t(kind === "before" ? "Ressentis avant" : "Ressentis après"))}</h3></div><p class="muted small">${esc(t("Non consigné"))}</p></section>`;
       const mealHeader = `<header class="consultation-meal-header"><h2><span aria-hidden="true">${mealIcon(meal.type, meal.description)}</span> <span data-i18n-key="${esc(meal.type)}">${esc(t(meal.type))}</span></h2><time>${consultationTimeHtml(event.at)}</time></header>`;
-      return `<article class="card consultation-event consultation-event--meal">${mealHeader}<div class="consultation-meal-sections">${event.before ? journalConsultationEventHtml(event.before) : missingFeelings("before")}<section class="consultation-meal-content">${heading}${content}</section>${event.after ? journalConsultationEventHtml(event.after) : missingFeelings("after")}</div><footer class="consultation-meal-footer">${action}${db.settings.glucoseTracking && db.settings.glucoseMode === "meals" && (db.settings.glucoseMealTypes || []).includes(meal.type) ? `<button type="button" class="secondary small glucose-meal-shortcut" data-glucose-for-meal="${esc(meal.id)}" ${glucoseMealDueInfo(meal)?.ready ? "" : "disabled"}>🩸 ${esc(t("Glycémie"))}</button>` : ""}${glucoseMealNoteHtml(meal)}</footer></article>`;
+      return `<article class="card consultation-event consultation-event--meal">${mealHeader}<div class="consultation-meal-sections">${event.before ? journalConsultationEventHtml(event.before) : missingFeelings("before")}<section class="consultation-meal-content">${heading}${content}</section>${event.after ? journalConsultationEventHtml(event.after) : missingFeelings("after")}</div><footer class="consultation-meal-footer">${action}${db.settings.glucoseTracking && (db.settings.glucoseMealTypes || []).includes(meal.type) ? `<button type="button" class="secondary small glucose-meal-shortcut" data-glucose-for-meal="${esc(meal.id)}" ${glucoseMealDueInfo(meal)?.ready ? "" : "disabled"}>🩸 ${esc(t("Glycémie"))}</button>` : ""}${glucoseMealNoteHtml(meal)}</footer></article>`;
     }
     if (event.nested) return `<section class="consultation-meal-feelings consultation-meal-feelings--${kind}">${heading}${content}${action}</section>`;
     return `<article class="card consultation-event consultation-event--${kind}">${heading}${content}${action}</article>`;
@@ -14317,7 +14317,7 @@ function formatSleepDuration(hours) {
     };
     const mealGroups = ["all","after"].includes(selected) ? visible.filter(p=>p.mealId || p.context==="after").map(mealGroup) : [];
     const slots = selected === "all" ? ["À jeun","Déjeuner","Dîner","Souper",...(mealGroups.includes("Collation") ? ["Collation"] : []),"Autres"] : selected === "after" ? ["Déjeuner","Dîner","Souper",...(mealGroups.includes("Collation") ? ["Collation"] : [])] : selected === "scheduled" ? [...new Set([...(db.settings.glucoseReminderTimes || []),...visible.map(p=>p.scheduledTime)].filter(Boolean))].sort() : ["Mesure"];
-    const slot = p => selected === "all" ? (p.context === "fasting" && !p.mealId ? 0 : (p.mealId || p.context === "after") ? Math.max(0,slots.indexOf(mealGroup(p))) : slots.length-1) : selected === "scheduled" ? Math.max(0,slots.indexOf(p.scheduledTime)) : selected === "after" ? Math.max(0,slots.indexOf(mealGroup(p))) : 0;
+    const slot = p => selected === "all" ? (p.context === "fasting" && !p.mealId ? 0 : (p.mealId || p.context === "after") ? Math.max(1,slots.indexOf(mealGroup(p))) : slots.length-1) : selected === "scheduled" ? Math.max(0,slots.indexOf(p.scheduledTime)) : selected === "after" ? Math.max(0,slots.indexOf(mealGroup(p))) : 0;
     const left=52,right=20,top=18,bottom=68,h=254;
     const dayWidth = ["all","after"].includes(selected) ? slots.length*38+68 : Math.max(175,slots.length*47+28);
     const slotX = (day,position) => ["all","after"].includes(selected) ? left+day*dayWidth+(dayWidth-(slots.length-1)*38)/2+position*38 : left+day*dayWidth+dayWidth/(slots.length+1)*(position+1);
@@ -16003,7 +16003,7 @@ function formatSleepDuration(hours) {
     const note = status.reading ? 'Mesure enregistrée : ' + esc(String(status.reading.value).replace(".", ",")) + ' mmol/L'
       : status.ready ? t("Mesure de glycémie à noter") : t("Votre mesure de glycémie pourra être indiquée à partir de ") + esc(status.dueTime) + ".";
     const controls = !readOnly
-      ? '<div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap"><input id="mealGlucoseValue" type="text" inputmode="decimal" aria-label="Glycémie en mmol/L" placeholder="mmol/L" value="' + esc(status.reading ? String(status.reading.value).replace(".", ",") : "") + '" style="width:110px;min-height:38px"><button type="button" class="secondary small" id="saveMealGlucose">' + (status.reading ? "Modifier" : "Enregistrer") + '</button></div><small id="mealGlucoseError" role="status"></small>'
+      ? '<div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap"><input id="mealGlucoseValue" type="text" inputmode="decimal" aria-label="Glycémie en mmol/L" placeholder="mmol/L" value="' + esc(status.reading ? String(status.reading.value).replace(".", ",") : "") + '" style="width:110px;min-height:38px"><input id="mealGlucoseTime" type="time" aria-label="Heure de la mesure" value="\' + esc(status.reading?.time || new Date().toTimeString().slice(0,5)) + \'" style="width:120px;min-height:38px"><button type="button" class="secondary small" id="saveMealGlucose">' + (status.reading ? "Modifier" : "Enregistrer") + '</button></div><small id="mealGlucoseError" role="status"></small>'
       : "";
     panel.innerHTML = heading + '<p class="muted small" style="margin:6px 0">' + note + '</p>' + controls;
     $("#mealForm .meal-form-actions").before(panel);
@@ -16015,8 +16015,9 @@ function formatSleepDuration(hours) {
       }
       const d = ensureDay(db, selectedDate);
       const previous = d.glucoseMeasurements.find(x => x.mealId === meal.id);
-      if (previous) { previous.value = value; previous.time = new Date().toTimeString().slice(0,5); }
-      else d.glucoseMeasurements.push({id:uid(),value,time:new Date().toTimeString().slice(0,5),context:"after",mealId:meal.id});
+      const measuredAt = $("#mealGlucoseTime")?.value || new Date().toTimeString().slice(0,5);
+      if (previous) { previous.value = value; previous.time = measuredAt; }
+      else d.glucoseMeasurements.push({id:uid(),value,time:measuredAt,context:"after",mealId:meal.id});
       d.updatedAt = new Date().toISOString();
       saveLocal("glycemie-apres-repas"); setDayChanged(selectedDate);
       $("#mealDialog").addEventListener("close", () => render(), {once:true});
