@@ -3563,7 +3563,7 @@ function formatSleepDuration(hours) {
     const strong = status.querySelector("strong");
     if (strong)
       strong.textContent = items.length
-        ? `${items.length} aliment${items.length > 1 ? "s" : ""} lié${items.length > 1 ? "s" : ""} aux fiches nutritionnelles${caloriesVisible() && Number.isFinite(calories) ? ` · ${Math.round(calories)} kcal` : ""}`
+        ? `${window.ENERGIE_LOCALE === "en" ? `${items.length} ${items.length === 1 ? "food" : "foods"} linked to nutrition records` : `${items.length} aliment${items.length > 1 ? "s" : ""} lié${items.length > 1 ? "s" : ""} aux fiches nutritionnelles`}${caloriesVisible() && Number.isFinite(calories) ? ` · ${Math.round(calories)} kcal` : ""}`
         : "";
   }
   function renderCnfGuidedBasket() {
@@ -15823,9 +15823,9 @@ function formatSleepDuration(hours) {
     panel.id = "mealGlucosePanel";
     panel.className = "meal-glucose-inline";
     panel.style.cssText = "border-top:1px solid #dce7d8;padding:12px 0;margin-top:10px";
-    const heading = '<strong>🩸 Suivi de la glycémie</strong>';
+    const heading = `<strong>🩸 ${t("Suivi de la glycémie")}</strong>`;
     const note = status.reading ? 'Mesure enregistrée : ' + esc(String(status.reading.value).replace(".", ",")) + ' mmol/L'
-      : status.ready ? "Mesure de glycémie à noter" : "Votre mesure de glycémie pourra être indiquée à partir de " + esc(status.dueTime) + ".";
+      : status.ready ? t("Mesure de glycémie à noter") : t("Votre mesure de glycémie pourra être indiquée à partir de ") + esc(status.dueTime) + ".";
     const controls = status.ready && !readOnly
       ? '<div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap"><input id="mealGlucoseValue" type="text" inputmode="decimal" aria-label="Glycémie en mmol/L" placeholder="mmol/L" value="' + esc(status.reading ? String(status.reading.value).replace(".", ",") : "") + '" style="width:110px;min-height:38px"><button type="button" class="secondary small" id="saveMealGlucose">' + (status.reading ? "Modifier" : "Enregistrer") + '</button></div><small id="mealGlucoseError" role="status"></small>'
       : "";
@@ -15967,7 +15967,7 @@ function formatSleepDuration(hours) {
     photoData = mealPhotoDrafts[0]?.local || mealPhotoDrafts[0]?.url || null;
     photoRemoved = false;
     hideMealAiSuggestion();
-    setMealAiPhotoStatus("Photo seulement par défaut · ✨ analyse IA sur demande.");
+    setMealAiPhotoStatus(t("Photo seulement par défaut · ✨ analyse IA sur demande."));
     $("#mealPhoto").value = "";
     showPhotoPreview();
     applyGuidedCnfMealEntryPreference(readOnly);
