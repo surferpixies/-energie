@@ -14243,7 +14243,13 @@ function formatSleepDuration(hours) {
     const min = Math.min(...visible.map(p => p.value)), max = Math.max(...visible.map(p => p.value));
     const lo = Math.max(0, min - Math.max(.5,(max-min)*.15)), hi = max + Math.max(.5,(max-min)*.15);
     const w=640,h=190, left=42,right=14,top=12,bottom=34;
-    const scaleX = p => left + ((new Date(p.date + "T" + p.time + ":00").getTime() - new Date(start + "T00:00:00").getTime()) / (new Date(addDaysKey(end,1) + "T00:00:00").getTime() - new Date(start + "T00:00:00").getTime())) * (w-left-right);
+    const slots = selected === "after" ? ["Déjeuner","Dîner","Souper","Collation"] : selected === "scheduled" ? [...new Set([...(db.settings.glucoseReminderTimes || []),...visible.map(p=>p.scheduledTime)].filter(Boolean))].sort() : ["Mesure"];
+    const slot = p => selected === "scheduled" ? Math.max(0,slots.indexOf(p.scheduledTime)) : selected === "after" ? Math.max(0,slots.indexOf(db.days?.[p.date]?.meals?.find(m=>m.id===p.mealId)?.type || "Collation")) : 0;
+    const scaleX = p => {
+      const day = Math.round((new Date(p.date+"T12:00:00")-new Date(start+"T12:00:00"))/86400000);
+      const width=(w-left-right)/30;
+      return left+width*(day+.5)+((slot(p)-(slots.length-1)/2)*Math.min(4,width/Math.max(2,slots.length)));
+    };
     const scaleY = v => top+(hi-v)/(hi-lo)*(h-top-bottom);
     const coordinates = visible.map(p => ({...p,x:scaleX(p),y:scaleY(p.value)}));
     const grid = [0,1,2,3].map(i => {
