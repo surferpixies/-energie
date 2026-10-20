@@ -1259,16 +1259,16 @@
     }
     if(locale==='en'){
       // Dynamic activity rows, counts and profile dates. Preserve stored activity keys.
-      if (/^(Marche|Course|Vélo|Musculation|Yoga|Natation|Randonnée|Pilates|Danse|Elliptique|Rameur|Autre) · (\\d+) min$/.test(s)) {
-        return s.replace(/^(.+) · (\\d+) min$/, (_,activity,mins) => `${translate(activity)} · ${mins} min`);
+      if (/^(Marche|Course|Vélo|Musculation|Yoga|Natation|Randonnée|Pilates|Danse|Elliptique|Rameur|Autre) · (\d+) min$/.test(s)) {
+        return s.replace(/^(.+) · (\d+) min$/, (_,activity,mins) => `${translate(activity)} · ${mins} min`);
       }
       if (/^(Faible|Modérée|Élevée) · (.+)$/.test(s)) {
         return s.replace(/^(.+?) · (.+)$/, (_,intensity,time) => `${translate(intensity)} · ${time}`);
       }
-      if (/^\\d+ clients? liés? · Ouvrir un dossier$/.test(s)) {
-        return s.replace(/^(\\d+) clients? liés? · Ouvrir un dossier$/, (_,count) => `${count} linked client${count==='1'?'':'s'} · Open a client record`);
+      if (/^\d+ clients? liés? · Ouvrir un dossier$/.test(s)) {
+        return s.replace(/^(\d+) clients? liés? · Ouvrir un dossier$/, (_,count) => `${count} linked client${count==='1'?'':'s'} · Open a client record`);
       }
-      if (/^\\d+ scénarios$/.test(s)) return s.replace(/^(\\d+) scénarios$/, '$1 scenarios');
+      if (/^\d+ scénarios$/.test(s)) return s.replace(/^(\d+) scénarios$/, '$1 scenarios');
       if (/^Tu utilises Énergie depuis (.+)$/.test(s)) return s.replace(/^Tu utilises Énergie depuis (.+)$/, (_,date) => `You've been using Énergie since ${date}`);
       // Contextual messages produced with live numbers remain translatable.
       if (out === s) {
