@@ -43,6 +43,44 @@
     'Langue':'Langue','Langue de l’application':'Langue de l’application','Français (Canada)':'Français (Canada)','Français (France)':'Français (France)','English':'English'
   };
   const en={
+    "Complété": "Completed",
+    "Repas + avant + après": "Meal + before + after",
+    "Avant le repas": "Before the meal",
+    "Après le repas": "After the meal",
+    "Modifier": "Edit",
+    "Compose ton repas ou reprends un repas récent": "Build your meal or reuse a recent one",
+    "Déjeuner d’hier": "Yesterday’s breakfast",
+    "Souper d’hier": "Yesterday’s dinner",
+    "Souper précédent": "Previous dinner",
+    "Favoris": "Favorites",
+    "Récents": "Recent",
+    "Description du repas · 1 000 caractères maximum": "Meal description · 1,000 characters maximum",
+    "Comment cette estimation a-t-elle été calculée ?": "How was this estimate calculated?",
+    "Comment cette estimation a-t-elle été calculée?": "How was this estimate calculated?",
+    "Nutrition estimée": "Estimated nutrition",
+    "Détail du calcul": "Calculation details",
+    "Source du calcul :": "Calculation source:",
+    "Quantité interprétée :": "Interpreted quantity:",
+    "Correspondance :": "Match:",
+    "Les valeurs demeurent des estimations et peuvent varier selon le produit, la portion et la préparation.": "Values are estimates and may vary by product, serving size and preparation.",
+    "Inconforts": "Discomforts",
+    "Ballonnements": "Bloating",
+    "Gaz": "Gas",
+    "Douleurs ou crampes abdominales": "Abdominal pain or cramps",
+    "Reflux ou brûlures d’estomac": "Reflux or heartburn",
+    "Nausées ou vomissements": "Nausea or vomiting",
+    "Diarrhée ou selles urgentes": "Diarrhea or urgent bowel movements",
+    "Constipation": "Constipation",
+    "Lourdeur ou digestion lente": "Heaviness or slow digestion",
+    "Suivi de la glycémie": "Blood glucose tracking",
+    "Mesure de glycémie à noter": "Blood glucose measurement due",
+    "Enregistrer": "Save",
+    "Mesure enregistrée :": "Recorded measurement:",
+    "Dépense estimée": "Estimated expenditure",
+    "Dépense planifiée": "Planned expenditure",
+    "avant le repère déficit": "before the deficit target",
+    "Non consigné": "Not recorded",
+    "1 ressenti": "1 feeling",
     "Options de ce client": "Options for this client",
     "La configuration des options nécessite la migration Supabase des options par client, puis une connexion au serveur.": "Configuring options requires the Supabase per-client options migration and a server connection.",
     "Adapte Énergie à ce client. Une option imposée s’applique et son contrôle est caché dans son profil. Les autorisations de partage restent au client.": "Adapt Énergie to this client. A required option applies and its control is hidden in their profile. Sharing permissions remain under the client’s control.",
@@ -1495,6 +1533,12 @@
       for(const [pattern,replacement] of rules) if(pattern.test(s)) return s.replace(pattern,replacement);
     }
     if(locale==='en'){
+      // Nutrition and glucose strings include values that cannot be dictionary keys.
+      if (/^Mesure enregistrée : (.+) mmol\/L$/.test(s)) return s.replace(/^Mesure enregistrée : /, "Recorded measurement: ");
+      if (/^Votre mesure de glycémie pourra être indiquée à partir de (.+)\.$/.test(s)) return s.replace(/^Votre mesure de glycémie pourra être indiquée à partir de /, "You can record your blood glucose from ");
+      if (/^Dépense estimée ≈ (.+) kcal$/.test(s)) return s.replace(/^Dépense estimée/, "Estimated expenditure");
+      if (/^≈ (.+) kcal avant le repère déficit · (.+)$/.test(s)) return s.replace("avant le repère déficit", "before the deficit target");
+      if (/^(.+) kcal avant le repère déficit$/.test(s)) return s.replace("avant le repère déficit", "before the deficit target");
       // Dynamic activity rows, counts and profile dates. Preserve stored activity keys.
       if (/^(Marche|Course|Vélo|Musculation|Yoga|Natation|Randonnée|Pilates|Danse|Elliptique|Rameur|Autre) · (\d+) min$/.test(s)) {
         return s.replace(/^(.+) · (\d+) min$/, (_,activity,mins) => `${translate(activity)} · ${mins} min`);
