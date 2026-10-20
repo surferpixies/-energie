@@ -13347,7 +13347,7 @@ function formatSleepDuration(hours) {
         : "";
     const __obsBaseDomStart = performance.now();
     $("#app").innerHTML =
-      `${perf("analysisDateNavigatorHtml", () => analysisDateNavigatorHtml())}<section class="hero"><p class="eyebrow">Tableau intelligent</p><h2>Ce qu’Énergie apprend sur toi</h2><p>Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer leurs causes.</p></section>${previewBanner}${nutrientIntakeObservationsHtml()}${perf("discoverySectionHtml", () => discoverySectionHtml(discoveryReport, negativeFeelings))}${perf("professionalDiscussionHtml", () => professionalDiscussionHtml(meals))}${perf("demoDiscoveryHtml", () => demoDiscoveryHtml())}${usePreview && !db.settings.demoMode ? '<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>' : ""}`;
+      `${perf("analysisDateNavigatorHtml", () => analysisDateNavigatorHtml())}<section class="hero"><p class="eyebrow">Tableau intelligent</p><h2>Ce qu’Énergie apprend sur toi</h2><p>Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer leurs causes.</p></section>${previewBanner}${perf("discoverySectionHtml", () => discoverySectionHtml(discoveryReport, negativeFeelings))}${perf("professionalDiscussionHtml", () => professionalDiscussionHtml(meals))}${perf("demoDiscoveryHtml", () => demoDiscoveryHtml())}${usePreview && !db.settings.demoMode ? '<p class="preview-footnote">Les valeurs du mode aperçu sont fictives et servent uniquement à prévisualiser la présentation.</p>' : ""}`;
     console.log(
       "[Obs perf]",
       "base DOM insertion:",
@@ -13359,6 +13359,8 @@ function formatSleepDuration(hours) {
     bindNutrientIntakeFilters();
     $(".observation-explorer-card")?.insertAdjacentHTML("afterend", perf("weightObservationHtml", () => weightObservationHtml()));
     $(".observation-explorer-card")?.insertAdjacentHTML("afterend", glucoseObservationsHtml());
+    $(".glucose-observations-card")?.insertAdjacentHTML("beforebegin", nutrientIntakeObservationsHtml());
+    bindNutrientIntakeFilters();
     bindGlucoseObservationFilter();
     const personalTrends = $("#app .personal-trends");
     (personalTrends || $("#app .hero"))?.insertAdjacentHTML("afterend", perf("stepsObservationHtml", () => stepsObservationHtml()));
