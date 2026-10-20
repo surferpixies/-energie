@@ -14263,7 +14263,7 @@ function formatSleepDuration(hours) {
     if (!visible.length) return '<article class="card glucose-observations-trend glucose-observations-empty" style="width:100%;box-sizing:border-box;margin:14px 0;padding:18px 22px">' + title + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px 20px;margin-top:10px">' + filters + '<p class="muted small" style="margin:0">Aucune mesure enregistrée dans les 30 derniers jours.</p></div></article>';
     const min = Math.min(...visible.map(p => p.value)), max = Math.max(...visible.map(p => p.value));
     const lo = Math.max(0, min - Math.max(.5,(max-min)*.15)), hi = max + Math.max(.5,(max-min)*.15);
-    const w=640,h=190, left=42,right=14,top=12,bottom=34;
+    const w=1200,h=220, left=48,right=20,top=12,bottom=38;
     const slots = selected === "after" ? ["Déjeuner","Dîner","Souper","Collation"] : selected === "scheduled" ? [...new Set([...(db.settings.glucoseReminderTimes || []),...visible.map(p=>p.scheduledTime)].filter(Boolean))].sort() : ["Mesure"];
     const slot = p => selected === "scheduled" ? Math.max(0,slots.indexOf(p.scheduledTime)) : selected === "after" ? Math.max(0,slots.indexOf(db.days?.[p.date]?.meals?.find(m=>m.id===p.mealId)?.type || "Collation")) : 0;
     const scaleX = p => {
@@ -14272,7 +14272,13 @@ function formatSleepDuration(hours) {
       return left+width*(day+.5)+((slot(p)-(slots.length-1)/2)*Math.min(4,width/Math.max(2,slots.length)));
     };
     const scaleY = v => top+(hi-v)/(hi-lo)*(h-top-bottom);
-    const coordinates = visible.map(p => ({...p,x:scaleX(p),y:scaleY(p.value)}));
+    const occupied = new Map();
+    const coordinates = visible.map(p => {
+      const key = p.date+"|"+slot(p);
+      const index = occupied.get(key) || 0;
+      occupied.set(key,index+1);
+      return {...p,x:scaleX(p)+index*5,y:scaleY(p.value)};
+    });
     const grid = [0,1,2,3].map(i => {
       const y=top+i*(h-top-bottom)/3;
       const value=hi-i*(hi-lo)/3;
@@ -14280,7 +14286,7 @@ function formatSleepDuration(hours) {
     }).join("");
     glucoseChartPoints = coordinates;
     const dots = coordinates.map((p,i) => '<g data-glucose-point="' + i + '" role="button" tabindex="0" style="cursor:pointer" aria-label="' + esc(p.date + ' ' + p.time + ' ' + p.value + ' mmol/L') + '"><line x1="' + p.x.toFixed(1) + '" x2="' + p.x.toFixed(1) + '" y1="' + (h-bottom) + '" y2="' + p.y.toFixed(1) + '" stroke="#399e67" stroke-width="4"/><circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="6" fill="#2e985f" stroke="#fff" stroke-width="2"/><circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="14" fill="transparent"><title>' + esc(p.date + ' ' + p.time + ' · ' + p.value + ' mmol/L') + '</title></circle></g>').join("");
-    const graph = '<div style="width:100%;overflow-x:auto"><svg viewBox="0 0 640 190" role="img" aria-label="Évolution de ' + visible.length + ' mesures de glycémie pendant les 30 derniers jours" style="display:block;width:100%;min-width:330px;height:auto">' + grid + dots + '<text x="' + left + '" y="' + (h-7) + '" fill="#657b6c" font-size="12">' + esc(start.slice(5)) + '</text><text x="' + (w-right) + '" y="' + (h-7) + '" text-anchor="end" fill="#657b6c" font-size="12">' + esc(end.slice(5)) + '</text></svg></div>';
+    const graph = '<div style="width:100%;overflow-x:auto"><svg viewBox="0 0 1200 220" role="img" aria-label="Évolution de ' + visible.length + ' mesures de glycémie pendant les 30 derniers jours" style="display:block;width:100%;min-width:900px;height:auto">' + grid + dots + '<text x="' + left + '" y="' + (h-7) + '" fill="#657b6c" font-size="12">' + esc(start.slice(5)) + '</text><text x="' + (w-right) + '" y="' + (h-7) + '" text-anchor="end" fill="#657b6c" font-size="12">' + esc(end.slice(5)) + '</text></svg></div>';
     const last=visible.at(-1);
     const latest = 'Dernière mesure : ' + esc(last.date + " à " + last.time) + ' · ' + visible.length + ' mesure' + (points.length>1?"s":"") + ' sur 30 jours';
     return '<article class="card glucose-observations-trend" style="width:100%;box-sizing:border-box;margin:14px 0">' + title + filters + '<p class="muted tiny">' + latest + '</p>' + graph + '<div class="glucose-measure-detail" hidden></div><p class="metrics-note">Chaque point représente une mesure enregistrée. Les contextes (à jeun, heures fixes et après les repas) peuvent varier. Clique sur une barre pour consulter la mesure et son repas associé, sans interprétation médicale ni données inventées.</p></article>';
