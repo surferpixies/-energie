@@ -1436,6 +1436,29 @@
   "Les repas planifiés restent enregistrés, mais ne participent pas aux Observations ni à l’apprentissage d’Énergie avant la date prévue.": "Planned meals remain saved but do not contribute to Insights or Énergie's learning until their scheduled date.",
   "Raisons de manger": "Reasons for eating"
 });
+  // Optional manual glucose tracking.
+  Object.assign(en, {
+  "Suivi de la glycémie": "Blood glucose tracking",
+  "Mesures manuelles en mmol/L. Aucune interprétation médicale automatique.": "Manual readings in mmol/L. No automatic medical interpretation.",
+  "Activer le suivi de la glycémie": "Enable blood glucose tracking",
+  "Saisie libre": "Free entry",
+  "Heures fixes": "Scheduled times",
+  "Mesures par jour": "Readings per day",
+  "Mesure": "Reading",
+  "Heures enregistrées pour de futurs rappels. Les notifications automatiques ne sont pas encore activées.": "Times are saved for future reminders. Automatic notifications are not enabled yet.",
+  "Glycémie": "Blood glucose",
+  "Valeur (mmol/L)": "Value (mmol/L)",
+  "Heure": "Time",
+  "Contexte": "Context",
+  "À jeun": "Fasting",
+  "Avant un repas": "Before a meal",
+  "Après un repas": "After a meal",
+  "Au coucher": "At bedtime",
+  "Autre": "Other",
+  "Enregistrer la mesure": "Save reading",
+  "Retirer": "Remove",
+  "Entre une mesure valide en mmol/L.": "Enter a valid reading in mmol/L."
+});
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
   window.t=translateString;
