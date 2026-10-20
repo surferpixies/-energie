@@ -1788,6 +1788,17 @@
         .replace(/^Depuis le (.+)$/,'Depuis le $1')
         .replace(/^(\d+) journée(s?)$/,(_,n)=>`${n} jour${n==='1'?'':'s'}`);
     }
+    if(locale==='en' && out===s){
+      let match;
+      if((match=s.match(/^(\d+) pistes? trouvées?$/))) return match[1]+' patterns found';
+      if((match=s.match(/^Dernière mesure : (.+) à (.+) · (\d+) mesures? sur 30 jours$/))) return 'Latest measurement: '+match[1]+' at '+match[2]+' · '+match[3]+' measurements over 30 days';
+      if((match=s.match(/^Voir les repas concernés \((\d+)\)$/))) return 'View related meals ('+match[1]+')';
+      if((match=s.match(/^écart \+(\d+) pts$/))) return 'difference +'+match[1]+' pts';
+      if((match=s.match(/^Comparaison avec (.+)$/))) return 'Comparison with '+match[1];
+      if((match=s.match(/^(Diminution|Augmentation) de (.+) sur (\d+) jours\.$/))) return (match[1]==='Diminution'?'Decrease':'Increase')+' of '+match[2]+' over '+match[3]+' days.';
+      if((match=s.match(/^Chevauche largement « (.+) »$/))) return 'Largely overlaps with “'+translateString(match[1])+'”';
+      if((match=s.match(/^🔄 Montre-moi autre chose \((\d+)\)$/))) return '🔄 Show something else ('+match[1]+')';
+    }
     return out;
   }
   // Remember the output per node/attribute: observer callbacks and subsequent
