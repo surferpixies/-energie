@@ -46,6 +46,8 @@
     "Saisie plus précise": "More precise entry",
     "Saisie guidée avec le FCÉN": "Guided entry using the CNF",
     "Saisie guidée FCÉN": "Guided CNF entry",
+    "Suivre mes apports nutritionnels": "Track my nutrient intake",
+    "Afficher le tableau des apports dans Observations. Les journées incomplètes sont indiquées, sans objectif imposé.": "Show nutrient intake in Observations. Incomplete days are identified, with no prescribed targets.",
     "à noter": "to record",
     "À noter": "To record",
     "Aucun repas noté": "No meal logged",
