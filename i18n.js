@@ -1227,6 +1227,26 @@
     "Supprimer ma photo": "Delete my photo",
     "Éditer ma photo": "Edit my photo",
   });
+  // Remaining laboratory and dynamic controls.
+  Object.assign(en, {
+  "Dernière fois": "Last time",
+  "Enregistrer comme activité favorite": "Save as a favorite activity",
+  "⭐ Enregistrer comme activité favorite": "⭐ Save as a favorite activity",
+  "Scénario surprise": "Surprise scenario",
+  "🎲 Scénario surprise": "🎲 Surprise scenario",
+  "Légumineuses → ballonnements": "Legumes → bloating",
+  "Aliments frits → lourdeur digestive": "Fried foods → digestive heaviness",
+  "Aliments épicés → inconfort": "Spicy foods → discomfort",
+  "Fibres + hydratation → amélioration progressive": "Fiber + hydration → gradual improvement",
+  "Caféine tardive → sommeil moins favorable": "Late caffeine → poorer sleep",
+  "Nuit courte → fatigue le lendemain": "Short sleep → next-day fatigue",
+  "Journées actives → meilleur ressenti": "Active days → better wellbeing",
+  "Aliments avec gluten → inconfort": "Gluten-containing foods → discomfort",
+  "Évolution": "Progress",
+  "Activité": "Activity",
+  "Dernière fois ·": "Last time ·",
+  "Envoyer une nouvelle invitation par courriel": "Send a new invitation by email"
+});
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
   window.t=translateString;
@@ -1270,6 +1290,7 @@
       }
       if (/^\d+ scénarios$/.test(s)) return s.replace(/^(\d+) scénarios$/, '$1 scenarios');
       if (/^Tu utilises Énergie depuis (.+)$/.test(s)) return s.replace(/^Tu utilises Énergie depuis (.+)$/, (_,date) => `You've been using Énergie since ${date}`);
+      if (/^Dernière fois · /.test(s)) return s.replace(/^Dernière fois · /, 'Last time · ');
       // Contextual messages produced with live numbers remain translatable.
       if (out === s) {
         let match;
