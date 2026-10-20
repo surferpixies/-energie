@@ -694,7 +694,7 @@ function formatSleepDuration(hours) {
     d.formDrafts =
       d.formDrafts && typeof d.formDrafts === "object" ? d.formDrafts : {};
     d.water = Number(d.water) || 0;
-    d.glucoseMeasurements = (Array.isArray(d.glucoseMeasurements) ? d.glucoseMeasurements : []).filter(x => x && Number.isFinite(Number(x.value)) && Number(x.value)>0 && Number(x.value)<40 && /^\d{2}:\d{2}$/.test(x.time || "")).map(x => ({id: String(x.id || uid()), value: Number(x.value), time: x.time, context: ["fasting","before","after","bedtime","other"].includes(x.context) ? x.context : "other"}));
+    d.glucoseMeasurements = (Array.isArray(d.glucoseMeasurements) ? d.glucoseMeasurements : []).filter(x => x && Number.isFinite(Number(x.value)) && Number(x.value)>0 && Number(x.value)<40 && /^\d{2}:\d{2}$/.test(x.time || "")).map(x => ({id: String(x.id || uid()), value: Number(x.value), time: x.time, context: ["fasting","before","after","bedtime","other"].includes(x.context) ? x.context : "other",...(typeof x.scheduledTime === "string" ? {scheduledTime:x.scheduledTime} : {}),...(typeof x.mealId === "string" ? {mealId:x.mealId} : {})}));
     d.beverages = (Array.isArray(d.beverages) ? d.beverages : [])
       .map((item) => normalBeverage(item, key))
       .filter(Boolean);
@@ -10062,12 +10062,36 @@ function formatSleepDuration(hours) {
   }
   function glucoseJournalHtml(d) {
     if (!db.settings.glucoseTracking || db.settings.demoMode || professionalBetaMode) return "";
+    const mode = db.settings.glucoseMode || "free";
+    if (mode === "meals") return "";
+    if (mode === "scheduled") {
+      const times = (db.settings.glucoseReminderTimes || ["08:00","12:00","20:00"]).slice(0,6);
+      const entries = d.glucoseMeasurements || [];
+      return `<section class="card glucose-journal-card" style="padding:12px 16px;margin:10px 0"><h3 style="font-size:1rem;margin:0 0 8px">🩸 ${t("Glycémie")} · Heures fixes</h3><div style="display:grid;gap:5px">${times.map((time,i) => {
+        const reading = entries.find(x => x.scheduledTime === time);
+        return `<div style="display:grid;grid-template-columns:65px minmax(100px,1fr) 100px auto;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #e1e9df"><strong>${esc(time)}</strong><span style="font-size:.85rem">${reading ? esc(String(reading.value).replace(".",",")) + " mmol/L ✓" : "Non renseignée"}</span><input data-glucose-slot-value="${i}" aria-label="Mesure ${esc(time)}" type="text" inputmode="decimal" placeholder="mmol/L" style="min-width:0;width:100%;box-sizing:border-box;padding:6px"><button class="secondary small" type="button" data-glucose-slot-save="${i}">${reading ? "Modifier" : "Noter"}</button></div>`;
+      }).join("")}</div><p class="muted tiny" id="glucoseStatus" role="status"></p></section>`;
+    }
     const contexts = {fasting:t("À jeun"),before:t("Avant un repas"),after:t("Après un repas"),bedtime:t("Au coucher"),other:t("Autre")};
     const entries = (d.glucoseMeasurements || []).slice().sort((a,b)=>a.time.localeCompare(b.time));
-    return `<style>.glucose-journal-card{padding:16px 20px!important;margin-block:12px!important}.glucose-compact-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.glucose-compact-head h3{margin:0 0 10px}.glucose-journal-card #glucoseEntryForm .personal-weight-grid{gap:10px;align-items:end}.glucose-journal-card #glucoseEntryForm label{font-size:.9rem}.glucose-journal-card #glucoseEntryForm input,.glucose-journal-card #glucoseEntryForm select{min-height:38px;padding:7px 10px}.glucose-journal-card #glucoseEntryForm button{padding:9px 15px;margin-top:9px}.glucose-info{font-size:.82rem;position:relative}.glucose-info summary{cursor:pointer;white-space:nowrap}.glucose-info p{max-width:330px;font-size:.85rem;line-height:1.4;margin:8px 0}</style><section class="card glucose-journal-card"><div class="glucose-compact-head"><h3>🩸 ${t("Glycémie")}</h3><details class="glucose-info"><summary aria-label="Information sur le suivi de la glycémie">ⓘ Info</summary><p>Consigne uniquement les mesures en mmol/L. Énergie ne pose aucun diagnostic et ne remplace pas les consignes de ton professionnel de la santé.</p></details></div><form id="glucoseEntryForm"><div class="personal-weight-grid"><label>${t("Valeur (mmol/L)")}<input id="glucoseValue" required inputmode="decimal" type="text" placeholder="5,4"></label><label>${t("Heure")}<input id="glucoseTime" required type="time" value="${new Date().toTimeString().slice(0,5)}"></label><label>${t("Contexte")}<select id="glucoseContext">${Object.entries(contexts).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join("")}</select></label></div><button type="submit" class="secondary">${t("Enregistrer la mesure")}</button><p class="muted tiny" id="glucoseStatus" role="status"></p></form><div ${journalViewMode() === "consultation" ? "hidden" : ""}>${entries.map(x=>`<div class="settings-row"><span><strong>${esc(String(x.value).replace(".",","))} mmol/L</strong> · ${esc(x.time)} · ${esc(contexts[x.context] || contexts.other)}</span><button type="button" class="secondary small" data-delete-glucose="${esc(x.id)}">${t("Retirer")}</button></div>`).join("")}</div></section>`;
+    return `<style>.glucose-journal-card{padding:16px 20px!important;margin-block:12px!important}.glucose-compact-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.glucose-compact-head h3{margin:0 0 10px}.glucose-journal-card #glucoseEntryForm .personal-weight-grid{gap:10px;align-items:end}.glucose-journal-card #glucoseEntryForm label{font-size:.9rem}.glucose-journal-card #glucoseEntryForm input,.glucose-journal-card #glucoseEntryForm select{min-height:38px;padding:7px 10px}.glucose-journal-card #glucoseEntryForm button{padding:9px 15px;margin-top:9px}.glucose-info{font-size:.82rem;position:relative}.glucose-info summary{cursor:pointer;white-space:nowrap}.glucose-info p{max-width:330px;font-size:.85rem;line-height:1.4;margin:8px 0}</style><style>.glucose-tight-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;align-items:end}.glucose-tight-fields label{display:flex;flex-direction:column;gap:4px}.glucose-tight-fields input,.glucose-tight-fields select{box-sizing:border-box;width:100%;min-height:36px;height:36px}.glucose-journal-card{padding:12px 16px!important}.glucose-journal-card #glucoseEntryForm button{margin-top:7px!important}.glucose-journal-card h3{font-size:1rem!important}@media(max-width:650px){.glucose-tight-fields{grid-template-columns:1fr 1fr}.glucose-tight-fields label:last-child{grid-column:1/3}}</style><section class="card glucose-journal-card"><div class="glucose-compact-head"><h3>🩸 ${t("Glycémie")}</h3><details class="glucose-info"><summary aria-label="Information sur le suivi de la glycémie">ⓘ Info</summary><p>Consigne uniquement les mesures en mmol/L. Énergie ne pose aucun diagnostic et ne remplace pas les consignes de ton professionnel de la santé.</p></details></div><form id="glucoseEntryForm"><div class="glucose-tight-fields"><label>${t("Valeur (mmol/L)")}<input id="glucoseValue" required inputmode="decimal" type="text" placeholder="5,4"></label><label>${t("Heure")}<input id="glucoseTime" required type="time" value="${new Date().toTimeString().slice(0,5)}"></label><label>${t("Contexte")}<select id="glucoseContext">${Object.entries(contexts).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join("")}</select></label></div><button type="submit" class="secondary">${t("Enregistrer la mesure")}</button><p class="muted tiny" id="glucoseStatus" role="status"></p></form><div ${journalViewMode() === "consultation" ? "hidden" : ""}>${entries.map(x=>`<div class="settings-row"><span><strong>${esc(String(x.value).replace(".",","))} mmol/L</strong> · ${esc(x.time)} · ${esc(contexts[x.context] || contexts.other)}</span><button type="button" class="secondary small" data-delete-glucose="${esc(x.id)}">${t("Retirer")}</button></div>`).join("")}</div></section>`;
   }
   function bindGlucoseJournal() {
     const form = $("#glucoseEntryForm");
+    $("[data-glucose-slot-save]").forEach(button => button.onclick = () => {
+      const i = Number(button.dataset.glucoseSlotSave);
+      const time = (db.settings.glucoseReminderTimes || [])[i];
+      const input = $("[data-glucose-slot-value]").find(el => Number(el.dataset.glucoseSlotValue) === i);
+      if (!time || !input) return;
+      const value = Number(input.value.trim().replace(",","."));
+      if (!Number.isFinite(value) || value <= 0 || value >= 40) { $("#glucoseStatus").textContent = t("Entre une mesure valide en mmol/L."); return; }
+      const d = ensureDay(db,selectedDate);
+      const previous = d.glucoseMeasurements.find(x => x.scheduledTime === time);
+      if (previous) { previous.value = value; previous.time = new Date().toTimeString().slice(0,5); }
+      else d.glucoseMeasurements.push({id:uid(),value,time:new Date().toTimeString().slice(0,5),context:"other",scheduledTime:time});
+      d.updatedAt = new Date().toISOString();
+      saveLocal("glycemie-heure-fixe"); setDayChanged(selectedDate); render();
+    });
     if (!form) return;
     form.onsubmit = event => {
       event.preventDefault();
