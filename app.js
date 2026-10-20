@@ -10054,7 +10054,7 @@ function formatSleepDuration(hours) {
       .slice(0, 3)
       .map(
         (a) =>
-          `<span class="activity-chip">${activityIcon(a.type)} ${esc(window.t?.(a.type) || a.type)}</span>`,
+          `<span class="activity-chip">${activityIcon(a.type)} <span data-i18n-key="${esc(a.type)}">${esc(window.t?.(a.type) || a.type)}</span></span>`,
       )
       .join("");
     const sleepChips = (d.sleepTags || [])
@@ -13754,7 +13754,7 @@ function formatSleepDuration(hours) {
   function personalProfileHtml() {
     const profile = personalProfile(), age = profile.age || {}, height = profile.height || {}, weight = profile.weight || {}, sex = profile.sex || {}, unit = weight.unit || "kg";
     const latest = latestPersonalWeight(), todayWeight = Metrics.weightRecord(db.days[todayKey()]?.weightMeasurement);
-    const modes = (mode) => [["unspecified", "Non renseigné"], ["provided", "Je souhaite le renseigner"], ["declined", "Je préfère ne pas répondre"]].map(([value, label]) => `<option value="${value}" ${(mode || "unspecified") === value ? "selected" : ""}>${label}</option>`).join("");
+    const modes = (mode) => [["unspecified", "Non renseigné"], ["provided", "Je souhaite le renseigner"], ["declined", "Je préfère ne pas répondre"]].map(([value, label]) => `<option value="${value}" ${(mode || "unspecified") === value ? "selected" : ""}>${esc(window.t?.(label) || label)}</option>`).join("");
     const selectedSex = sex.mode === "declined" ? "declined" : sex.value || "unspecified";
     return `<section class="card personal-profile-card" aria-labelledby="personalProfileTitle"><h3 id="personalProfileTitle">À propos de moi</h3><p class="muted small">Tout est facultatif. Si tu actives la balance énergétique, l’âge, le sexe, la taille et le poids servent seulement à estimer la dépense quotidienne — jamais à fixer un objectif.</p><fieldset ${db.settings.demoMode ? "disabled" : ""}>
       <div class="personal-profile-field"><label for="profileAgeMode">Âge</label><select id="profileAgeMode">${modes(age.mode)}</select><label id="profileAgeFields" class="personal-profile-value" ${age.mode === "provided" ? "" : "hidden"}><span>Âge en années</span><input type="text" inputmode="numeric" autocomplete="off" id="profileAge" value="${age.value ?? ""}" placeholder="Ex. 42" aria-describedby="profileAgeError"><small id="profileAgeError" class="personal-field-error" aria-live="polite"></small></label></div>
