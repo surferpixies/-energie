@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.242";
+  const APP_RELEASE = "3.56.243";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -7743,7 +7743,7 @@ function formatSleepDuration(hours) {
     const actionLabel =
       main && type !== "Collation" ? `Modifier ${type}` : `Ajouter ${type}`;
     const feelingStatus = main ? mealFeelingStatus(main) : null;
-    return `<button class="meal-quick-card ${done ? "is-complete" : ""} ${feelingStatus ? "has-feeling-status" : ""}" data-quick-meal="${esc(type)}" ${main && type !== "Collation" ? `data-edit-meal="${main.id}"` : ""} aria-label="${esc(actionLabel)}"><span class="meal-quick-icon">${done && type !== "Collation" ? "✓" : icon}</span><span><strong>${mealTypeHtml(type)}</strong><small${main && type !== "Collation" ? ' translate="no"' : ""}>${subtitle}</small></span><span class="meal-quick-action">${actionIcon}</span>${feelingStatus ? `<span class="meal-quick-feeling-status is-${feelingStatus.tone}"><i aria-hidden="true">${feelingStatus.icon}</i><span>${esc(feelingStatus.label)}</span></span>` : ""}${main ? glucoseMealNoteHtml(main) : ""}</button>`;
+    return `<button class="meal-quick-card ${done ? "is-complete" : ""} ${feelingStatus ? "has-feeling-status" : ""}" data-quick-meal="${esc(type)}" ${main && type !== "Collation" ? `data-edit-meal="${main.id}"` : ""} aria-label="${esc(actionLabel)}"><span class="meal-quick-icon">${done && type !== "Collation" ? "✓" : icon}</span><span><strong>${mealTypeHtml(type)}</strong><small${main && type !== "Collation" ? ' translate="no"' : ""}>${subtitle}</small></span><span class="meal-quick-action">${actionIcon}</span>${feelingStatus ? `<span class="meal-quick-feeling-status is-${feelingStatus.tone}"><i aria-hidden="true">${feelingStatus.icon}</i><span>${esc(feelingStatus.label)}</span></span>` : ""}${main ? glucoseMealCompactHtml(main) : ""}</button>`;
   }
   function journalMaxDate() {
     if (db.settings?.demoMode) {
@@ -9735,6 +9735,12 @@ function formatSleepDuration(hours) {
     const reading = (ensureDay(db, selectedDate).glucoseMeasurements || []).find(x => x.mealId === meal.id);
     return {dueTime, ready:Date.now() >= due.getTime(), reading};
   }
+  function glucoseMealCompactHtml(meal) {
+    const status = glucoseMealDueInfo(meal);
+    if (!status) return "";
+    const label = status.reading ? esc(String(status.reading.value).replace(".", ",")) + " mmol/L" : status.ready ? "à noter" : "dès " + esc(status.dueTime);
+    return '<span style="display:block;font-size:.75rem;color:#536d58;margin-top:3px">🩸 ' + label + '</span>';
+  }
   function glucoseMealNoteHtml(meal) {
     const status = glucoseMealDueInfo(meal);
     if (!status) return "";
@@ -9995,7 +10001,7 @@ function formatSleepDuration(hours) {
         ? `${type} · ${state.detail}`
         : `Ajouter ${type.toLowerCase()}`;
 
-    return `<button type="button" class="journal-summary-action journal-summary-meal-card ${state.needsBrain ? "needs-brain-action" : ""} ${state.complete ? "is-complete" : ""}" data-summary-meal-card="${esc(type)}" data-summary-meal-id="${esc(state.mealId || "")}" aria-label="${esc(aria)}"><span class="summary-meal-visual ${visualClass}" aria-hidden="true">${state.visual}</span><span class="summary-meal-copy"><span>${esc(state.label)}</span><strong>${mealTypeHtml(type)}</strong><small>${esc(state.detail)}</small></span>${journalSummaryMealActionHtml(state)}${state.mealId ? glucoseMealNoteHtml(meals.find(m => m.id === state.mealId)) : ""}</button>`;
+    return `<button type="button" class="journal-summary-action journal-summary-meal-card ${state.needsBrain ? "needs-brain-action" : ""} ${state.complete ? "is-complete" : ""}" data-summary-meal-card="${esc(type)}" data-summary-meal-id="${esc(state.mealId || "")}" aria-label="${esc(aria)}"><span class="summary-meal-visual ${visualClass}" aria-hidden="true">${state.visual}</span><span class="summary-meal-copy"><span>${esc(state.label)}</span><strong>${mealTypeHtml(type)}</strong><small>${esc(state.detail)}</small></span>${journalSummaryMealActionHtml(state)}${state.mealId ? glucoseMealCompactHtml(meals.find(m => m.id === state.mealId)) : ""}</button>`;
   }
 
   function journalSummaryMealsHtml(meals) {
@@ -10179,30 +10185,6 @@ function formatSleepDuration(hours) {
     );
     $("#app").innerHTML =
       `${!navigator.onLine ? '<div class="offline-banner">Tu es hors ligne. Les changements seront synchronisés plus tard.</div>' : ""}<div id="journalView"><section class="journal-date-nav"><button class="journal-arrow" id="previousDay" aria-label="Jour précédent">‹</button><button class="journal-date-main ${isToday ? "is-today" : ""}" id="goToday"><span>${esc(dayLabel)}</span><strong class="journal-date-value"><span class="seasonal-day-icon-wrap">${seasonalDecorationHtml(selectedDate)}</span><span>${esc(formatCalendarDate(selectedDate))}</span></strong></button><button class="journal-arrow ${selectedDate >= latestDate ? "is-disabled" : ""}" id="nextDay" aria-label="Jour suivant" ${selectedDate >= latestDate ? 'disabled aria-disabled="true"' : ""}>›</button></section>${isFuture ? '<aside class="future-meal-planning-note"><span aria-hidden="true">📅</span><div><strong>Planification de repas</strong><small>Tu peux préparer tes repas jusqu’à 2 jours d’avance. Ils ne seront pris en compte dans les Observations qu’une fois la date arrivée.</small></div></aside>' : ""}${clientProfessionalNoteJournalHtml()}${dailyMacroSummaryHtml(meals)}${journalViewOptionsHtml()}${glucoseJournalHtml(d)}${journalViewMode() === "consultation" ? journalConsultationHtml(d) : journalViewMode() === "summary" ? journalSummaryHtml(d, meals) : `<div class="journal-detailed-content">${journalBrainCardHtml(selectedDate)}${weeklyTrendSummaryHtml(selectedDate)}<button class="card sleep-card sleep-card-wide edit-sleep"><div class="wellness-head"><span class="wellness-icon">🌙</span><div><small>Sommeil</small><strong>${d.sleepHours != null ? formatSleepDuration(d.sleepHours) : "À noter"}</strong>${d.sleepStartTime || d.sleepEndTime ? `<span class="sleep-time-summary">${d.sleepStartTime ? `Coucher ${esc(d.sleepStartTime)}` : ""}${d.sleepStartTime && d.sleepEndTime ? " · " : ""}${d.sleepEndTime ? `Réveil ${esc(d.sleepEndTime)}` : ""}</span>` : ""}</div><b>›</b></div><div class="sleep-bar"><i style="width:${sleepPct}%"></i></div>${sleepChips || d.sleepComment ? `<div class="sleep-chip-row">${sleepChips}${sleepExtra ? `<span class="sleep-chip">+${sleepExtra}</span>` : ""}${d.sleepComment ? `<span class="sleep-comment-preview">📝 ${esc(d.sleepComment)}</span>` : ""}</div>` : ""}</button><section class="meal-quick-grid">${mealQuickCard("Déjeuner", "🍳", meals)}${mealQuickCard("Dîner", "🥪", meals)}${mealQuickCard("Souper", "🍝", meals)}${mealQuickCard("Collation", mealIcon("Collation", meals.find((m) => m.type === "Collation")?.description || ""), meals)}</section>${feelingImportanceNudge}<div class="card activity-card-with-steps activity-card-wide"><button class="activity-card edit-activity"><div class="wellness-head"><span class="wellness-icon">${(d.activities || [])[0] ? activityIcon(d.activities[0].type) : "🚶"}</span><div><small>Activité</small><strong>${activity.label}</strong></div><b>›</b></div><div class="activity-chip-row">${activityChips || '<span class="muted small">Choisir une activité</span>'}</div></button>${stepsProgressHtml(d)}</div>${hydrationCardHtml(d, goal, water)}${supplementsTodayHtml(d)}</div>`}</div>`;
-    if (db.settings.glucoseTracking && db.settings.glucoseMode === "meals" && !db.settings.demoMode && !professionalBetaMode) {
-      const selectedTypes = db.settings.glucoseMealTypes || ["Déjeuner","Dîner","Souper"];
-      const trackedMeals = d.meals.filter(meal => meal.id && selectedTypes.includes(meal.type));
-      const delay = Number(db.settings.glucoseMealDelay || 120);
-      const rows = trackedMeals.map(meal => {
-        const recorded = d.glucoseMeasurements.find(x => x.mealId === meal.id);
-        return `<div class="glucose-after-meal-row" id="glucose-meal-${esc(meal.id)}" style="display:grid;grid-template-columns:minmax(125px,1fr) minmax(110px,1fr) 100px auto;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #e1e9df"><strong>${mealTypeHtml(meal.type)} · ${esc(meal.time)}</strong><span style="font-size:.85rem">${recorded ? esc(String(recorded.value).replace(".",",")) + " mmol/L ✓" : (glucoseMealDueInfo(meal)?.ready ? "À renseigner" : "Disponible à " + esc(glucoseMealDueInfo(meal)?.dueTime || "—"))}</span><input ${glucoseMealDueInfo(meal)?.ready ? "" : "disabled"} data-glucose-after-value="${esc(meal.id)}" type="text" inputmode="decimal" placeholder="mmol/L" aria-label="Glycémie après le repas" style="box-sizing:border-box;width:100%;min-width:0;padding:6px"><button type="button" class="secondary small" data-save-glucose-meal="${esc(meal.id)}" ${glucoseMealDueInfo(meal)?.ready ? "" : "disabled"}>${recorded ? "Modifier" : "Noter"}</button></div>`;
-      }).join("");
-      $("#journalView").insertAdjacentHTML("beforeend", `<section class="card glucose-journal-card" style="padding:12px 16px;margin-top:12px"><div class="glucose-compact-head"><h3 style="font-size:1rem;margin:0 0 7px">🩸 Glycémie après les repas</h3><span class="muted tiny">+${delay} min</span></div>${rows || '<p class="muted small">Aucun repas concerné enregistré pour cette journée.</p>'}<p class="muted tiny" id="glucoseMealStatus" role="status"></p></section>`);
-      $$("[data-save-glucose-meal]").forEach(button => button.onclick = () => {
-        const mealId = button.dataset.saveGlucoseMeal;
-        const input = $$("[data-glucose-after-value]").find(el => el.dataset.glucoseAfterValue === mealId);
-        const meal = d.meals.find(m => m.id === mealId);
-        const value = Number((input?.value || "").trim().replace(",","."));
-        if (!glucoseMealDueInfo(meal)?.ready) { $("#glucoseMealStatus").textContent = "Mesure disponible à partir de " + (glucoseMealDueInfo(meal)?.dueTime || "l’heure prévue"); return; }
-        if (!meal || !Number.isFinite(value) || value <= 0 || value >= 40) { $("#glucoseMealStatus").textContent = t("Entre une mesure valide en mmol/L."); return; }
-        const existing = d.glucoseMeasurements.find(x => x.mealId === mealId);
-        const time = new Date().toTimeString().slice(0,5);
-        if (existing) { existing.value=value; existing.time=time; }
-        else d.glucoseMeasurements.push({id:uid(),value,time,context:"after",mealId});
-        d.updatedAt = new Date().toISOString();
-        saveLocal("glycemie-apres-repas"); setDayChanged(selectedDate); render();
-      });
-    }
     bindGlucoseJournal();
     $$("[data-glucose-for-meal]").forEach(button => button.addEventListener("click", () => {
       const meal = ensureDay(db, selectedDate).meals.find(m => m.id === button.dataset.glucoseForMeal);
@@ -14278,7 +14260,7 @@ function formatSleepDuration(hours) {
       {key: "professional", icon: "👩‍⚕️", title: "Espace professionnel", description: "Clients, invitations et scénarios de démonstration", selectors: ".professional-client-link-card,.professional-beta-entry,.lab-selector-panel,.demo-profile-card"},
       {key: "meals", icon: "🍽️", title: "Repas et saisie", description: professionalGuidedEntryHidden() ? "Favoris, méthodes de saisie et options des repas" : "FCÉN, Ciqual, favoris et façon de noter mes repas", selectors: ".guided-entry-settings,.nutrition-source-profile-card,.recognized-elements-setting-card,.eating-reasons-setting-card,.future-meal-planning-setting-card,.profile-favorites-panel"},
       {key: "calories", icon: "⚖️", title: "Calories et objectifs", description: "Affichage, estimations et cible calorique", selectors: ".calorie-balance-profile-card"},
-      {key: "tracking", icon: "💧", title: "Suivi quotidien", description: "Hydratation, pas, Santé, ressentis et suppléments", selectors: ".steps-profile-card,.glucose-profile-card,.apple-health-profile-card,#waterGoal,#settingFeelingReminders,#supplementNameInput"},
+      {key: "tracking", icon: "💧", title: "Suivi quotidien", description: "Hydratation, pas, glycémie, Santé, ressentis et suppléments", selectors: ".steps-profile-card,.glucose-profile-card,.apple-health-profile-card,#waterGoal,#settingFeelingReminders,#supplementNameInput"},
       {key: "observations", icon: "👁️", title: "Observations", description: "Tendances, analyses et suggestions", selectors: "#settingInsights,#settingNutrition,#settingRecommendations,.professional-setting-card"},
       {key: "sharing", icon: "🔒", title: "Confidentialité et partage", description: "Photos, accès professionnel et sauvegarde", selectors: ".profile-avatar-settings-card,.meal-photo-settings-card,.profile-backup-panel"},
       {key: "appearance", icon: "🎨", title: "Apparence", description: "Langue, thème et présentation du journal", selectors: ".seasonal-setting-card,.journal-summary-setting-card,#languageSettingCard,.profile-theme-settings-card"},
@@ -15789,6 +15771,39 @@ function formatSleepDuration(hours) {
         ? `${selected.length} raison${selected.length > 1 ? "s" : ""} sélectionnée${selected.length > 1 ? "s" : ""}`
         : "Facultatif · plusieurs réponses possibles";
   }
+  function renderMealGlucosePanel(meal, readOnly = false) {
+    $("#mealGlucosePanel")?.remove();
+    if (!meal || db.settings.demoMode || professionalBetaMode) return;
+    const status = glucoseMealDueInfo(meal);
+    if (!status) return;
+    const panel = document.createElement("section");
+    panel.id = "mealGlucosePanel";
+    panel.className = "meal-glucose-inline";
+    panel.style.cssText = "border-top:1px solid #dce7d8;padding:12px 0;margin-top:10px";
+    const heading = '<strong>🩸 Suivi de la glycémie</strong>';
+    const note = status.reading ? 'Mesure enregistrée : ' + esc(String(status.reading.value).replace(".", ",")) + ' mmol/L'
+      : status.ready ? "Mesure de glycémie à noter" : "Votre mesure de glycémie pourra être indiquée à partir de " + esc(status.dueTime) + ".";
+    const controls = status.ready && !readOnly
+      ? '<div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap"><input id="mealGlucoseValue" type="text" inputmode="decimal" aria-label="Glycémie en mmol/L" placeholder="mmol/L" value="' + esc(status.reading ? String(status.reading.value).replace(".", ",") : "") + '" style="width:110px;min-height:38px"><button type="button" class="secondary small" id="saveMealGlucose">' + (status.reading ? "Modifier" : "Enregistrer") + '</button></div><small id="mealGlucoseError" role="status"></small>'
+      : "";
+    panel.innerHTML = heading + '<p class="muted small" style="margin:6px 0">' + note + '</p>' + controls;
+    $("#mealForm .meal-form-actions").before(panel);
+    $("#saveMealGlucose")?.addEventListener("click", () => {
+      const value = Number(($("#mealGlucoseValue")?.value || "").trim().replace(",", "."));
+      if (!Number.isFinite(value) || value <= 0 || value >= 40) {
+        $("#mealGlucoseError").textContent = t("Entre une mesure valide en mmol/L.");
+        return;
+      }
+      const d = ensureDay(db, selectedDate);
+      const previous = d.glucoseMeasurements.find(x => x.mealId === meal.id);
+      if (previous) { previous.value = value; previous.time = new Date().toTimeString().slice(0,5); }
+      else d.glucoseMeasurements.push({id:uid(),value,time:new Date().toTimeString().slice(0,5),context:"after",mealId:meal.id});
+      d.updatedAt = new Date().toISOString();
+      saveLocal("glycemie-apres-repas"); setDayChanged(selectedDate);
+      renderMealGlucosePanel(meal, readOnly);
+    });
+  }
+
   function openMeal(id = null, presetType = null, forceReadOnly = false) {
     clearTimeout(mealNutritionPreviewTimer);
     mealPhotoAiSegments.clear();
@@ -15917,6 +15932,7 @@ function formatSleepDuration(hours) {
       delete d.formDrafts["mealForm:nouveau"];
       saveLocal("nettoyage-brouillon-repas-legacy");
     }
+    renderMealGlucosePanel(m, readOnly);
     $("#mealDialog").showModal();
     // Sur iPhone, la synchronisation peut avoir déjà remplacé la copie locale
     // par un chemin Supabase. Résoudre l’URL signée dès l’ouverture évite que
