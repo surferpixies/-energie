@@ -1897,6 +1897,13 @@
     }
     if(locale==='en' && out===s){
       let match;
+      if((match=s.match(/^Moyenne estimée sur (\d+) jours?$/))) return 'Estimated average over '+match[1]+' day'+(match[1]==='1'?'':'s');
+      if((match=s.match(/^Moyenne sur (\d+) jours? avec estimation$/))) return 'Average over '+match[1]+' day'+(match[1]==='1'?'':'s')+' with estimates';
+      if((match=s.match(/^30 jours · (.+)$/))) return '30 days · '+translateString(match[1]);
+      if((match=s.match(/^Évolution des mesures de poids \((.+)\)$/))) return 'Weight measurement trend ('+match[1]+')';
+      if((match=s.match(/^Calories estimées des repas saisis par jour \((.+)\)$/))) return 'Estimated calories from logged meals per day ('+match[1]+')';
+      if((match=s.match(/^Balance énergétique estimée par jour \((.+)\)$/))) return 'Estimated daily energy balance ('+match[1]+')';
+      if((match=s.match(/^(.+) · partiel$/))) return match[1]+' · partial';
       if((match=s.match(/^(\d+) pistes? trouvées?$/))) return match[1]+' patterns found';
       if((match=s.match(/^Dernière mesure : (.+) à (.+) · (\d+) mesures? sur 30 jours$/))) return 'Latest measurement: '+match[1]+' at '+match[2]+' · '+match[3]+' measurements over 30 days';
       if((match=s.match(/^Voir les repas concernés \((\d+)\)$/))) return 'View related meals ('+match[1]+')';
