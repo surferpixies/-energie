@@ -13159,6 +13159,12 @@ function formatSleepDuration(hours) {
       nutrientIntakeFilter.mode = button.dataset.nutrientRange;
       refresh();
     });
+    section.querySelectorAll("[data-nutrient-day]").forEach(button => button.onclick = () => {
+      const host = section.querySelector(".nutrient-day-detail-host");
+      if (!host) return;
+      host.innerHTML = nutrientDayDetailHtml(button.dataset.nutrientDay);
+      host.querySelector("[data-close-nutrient-day]")?.addEventListener("click", () => {host.innerHTML = "";});
+    });
     const from = section.querySelector("#nutrientDateFrom");
     const to = section.querySelector("#nutrientDateTo");
     [from,to].forEach(input => input?.addEventListener("change", () => {
@@ -13167,6 +13173,22 @@ function formatSleepDuration(hours) {
       nutrientIntakeFilter.mode = "custom";
       if (from.value && to.value) refresh();
     }));
+  }
+  function nutrientDayDetailHtml(date) {
+    const en = window.ENERGIE_LOCALE === "en";
+    const keys = ["protein","carbs","fat","fiber","sugars","sodium"];
+    const labels = en ? ["Protein","Carbs","Fat","Fiber","Sugars","Sodium"] : ["Protéines","Glucides","Lipides","Fibres","Sucres","Sodium"];
+    const meals = mealsThroughSelectedDate().filter(m => m.date === date && !m.planned && !m.isPlanned);
+    const valid = v => v != null && v !== "" && Number.isFinite(Number(v));
+    const rows = meals.map(m => {
+      const n = m.nutrition || {};
+      const nutrients = keys.map((k,i) => labels[i] + ": " + (valid(n[k]) ? String(n[k]) + (k === "sodium" ? " mg" : " g") : "—")).join(" · ");
+      const items = Array.isArray(n.trace?.items) ? n.trace.items : [];
+      const linked = items.map(x => esc(x.matchedName || x.cnfFoodId || "") + (x.grams ? " (" + esc(String(x.grams)) + " g)" : "")).join(", ");
+      const absent = keys.filter(k => !valid(n[k])).map(k => labels[keys.indexOf(k)]).join(", ");
+      return '<article style="padding:12px 0;border-top:1px solid #dae5d5"><strong>' + esc(m.type || "") + ' · ' + esc(m.time || "") + '</strong><p>' + esc(m.description || "") + '</p><p class="muted small">' + (en ? "Source: " : "Source : ") + esc(n.source || "—") + ' · ' + (en ? "Confidence: " : "Confiance : ") + esc(n.confidence || "—") + '</p><p>' + esc(nutrients) + '</p>' + (linked ? '<p class="muted small">' + (en ? "Linked foods: " : "Aliments liés : ") + linked + '</p>' : "") + (absent ? '<p class="muted small">' + (en ? "Missing: " : "Données absentes : ") + esc(absent) + '</p>' : "") + '</article>';
+    }).join("");
+    return '<div class="nutrient-day-detail" style="margin-top:18px;padding:16px;border:1px solid #d6e3ce;border-radius:14px"><button type="button" class="secondary small" data-close-nutrient-day>' + (en ? "Close" : "Fermer") + '</button><h4>' + (en ? "Nutrition details for " : "Détails nutritionnels du ") + esc(date) + '</h4><p class="muted small">' + (en ? "Missing data are not zero." : "Les données manquantes ne représentent pas zéro.") + '</p>' + (rows || (en ? "No meals logged." : "Aucun repas enregistré.")) + '</div>';
   }
   function nutrientIntakeObservationsHtml() {
     if (db.settings?.nutrientIntakeTracking !== true) return "";
@@ -13193,12 +13215,12 @@ function formatSleepDuration(hours) {
         return `${(key === "sodium" ? Math.round(sum) : Math.round(sum * 10) / 10).toLocaleString(en ? "en-CA" : "fr-CA")}${valid.length < daily.length ? "*" : ""}`;
       });
       const status = !daily.length ? "—" : `${available.length}/${daily.length}`;
-      return `<tr><td>${esc(date.slice(5))}</td><td class="nutrient-meals-count">${esc(status)}</td>${cells.map(c => `<td class="nutrient-value">${esc(c)}</td>`).join("")}</tr>`;
+      return `<tr><td><button type="button" class="text-button" data-nutrient-day="${esc(date)}">${esc(date.slice(5))} ↗</button></td><td class="nutrient-meals-count">${esc(status)}</td>${cells.map(c => `<td class="nutrient-value">${esc(c)}</td>`).join("")}</tr>`;
     });
     const explanation = en
       ? "Selected period · based on saved meal nutrition data. Amounts are in grams, except sodium (mg). * Partial value: one or more meals have no value for that nutrient. A dash means no recorded value, not zero."
       : "Période sélectionnée · selon les valeurs nutritionnelles enregistrées des repas. Quantités en grammes, sauf sodium (mg). * Valeur partielle : au moins un repas ne possède pas de valeur pour ce nutriment. Un tiret signifie une donnée absente, pas zéro.";
-    return `<section class="card nutrient-intake-observations"><style>.nutrient-intake-observations .nutrient-intake-table{width:100%;min-width:900px;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}.nutrient-intake-observations .nutrient-intake-table th,.nutrient-intake-observations .nutrient-intake-table td{padding:13px 15px;white-space:nowrap;border-bottom:1px solid rgba(40,85,51,.12)}.nutrient-intake-observations .nutrient-intake-table th{text-align:left;font-size:.88rem;color:#466650;background:rgba(218,237,207,.45);font-weight:700}.nutrient-intake-observations .nutrient-intake-table td{font-size:.95rem}.nutrient-intake-observations .nutrient-intake-table .nutrient-value,.nutrient-intake-observations .nutrient-intake-table th.nutrient-value{text-align:right}.nutrient-intake-observations .nutrient-intake-table tbody tr:nth-child(even){background:rgba(218,237,207,.24)}.nutrient-intake-observations .nutrient-intake-table tbody tr:last-child td{border-bottom:0}.nutrient-intake-observations .nutrient-intake-scroll{overflow-x:auto;margin-top:18px;border:1px solid rgba(40,85,51,.13);border-radius:15px}.nutrient-intake-observations .nutrient-intake-filters{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:20px 0 4px}</style><h3>🥑 ${en ? "Nutrient intake" : "Apports nutritionnels"}</h3><p class="muted small">${explanation}</p><div class="nutrient-intake-filters"><button type="button" class="secondary small" data-nutrient-range="week" aria-pressed="${nutrientIntakeFilter.mode==="week"}">${en?"Last week":"Dernière semaine"}</button><button type="button" class="secondary small" data-nutrient-range="month" aria-pressed="${nutrientIntakeFilter.mode==="month"}">${en?"Last month":"Dernier mois"}</button><label class="muted small">${en?"From":"Du"} <input id="nutrientDateFrom" type="date" value="${esc(nutrientIntakeFilter.mode==="custom" && nutrientIntakeFilter.from ? nutrientIntakeFilter.from : range.from)}" max="${esc(selectedDate)}"></label><label class="muted small">${en?"To":"Au"} <input id="nutrientDateTo" type="date" value="${esc(nutrientIntakeFilter.mode==="custom" && nutrientIntakeFilter.to ? nutrientIntakeFilter.to : range.to)}" max="${esc(selectedDate)}"></label></div><div class="nutrient-intake-scroll" role="region" tabindex="0" aria-label="${en ? "Nutrient intake table" : "Tableau des apports nutritionnels"}"><table class="nutrient-intake-table"><thead><tr><th>Date</th><th class="nutrient-meals-count">${en ? "Meals with data" : "Repas avec données"}</th>${labels.map(label => `<th class="nutrient-value">${label}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div></section>`;
+    return `<section class="card nutrient-intake-observations"><style>.nutrient-intake-observations .nutrient-intake-table{width:100%;min-width:900px;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}.nutrient-intake-observations .nutrient-intake-table th,.nutrient-intake-observations .nutrient-intake-table td{padding:13px 15px;white-space:nowrap;border-bottom:1px solid rgba(40,85,51,.12)}.nutrient-intake-observations .nutrient-intake-table th{text-align:left;font-size:.88rem;color:#466650;background:rgba(218,237,207,.45);font-weight:700}.nutrient-intake-observations .nutrient-intake-table td{font-size:.95rem}.nutrient-intake-observations .nutrient-intake-table .nutrient-value,.nutrient-intake-observations .nutrient-intake-table th.nutrient-value{text-align:right}.nutrient-intake-observations .nutrient-intake-table tbody tr:nth-child(even){background:rgba(218,237,207,.24)}.nutrient-intake-observations .nutrient-intake-table tbody tr:last-child td{border-bottom:0}.nutrient-intake-observations .nutrient-intake-scroll{overflow-x:auto;margin-top:18px;border:1px solid rgba(40,85,51,.13);border-radius:15px}.nutrient-intake-observations .nutrient-intake-filters{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:20px 0 4px}</style><h3>🥑 ${en ? "Nutrient intake" : "Apports nutritionnels"}</h3><p class="muted small">${explanation}</p><div class="nutrient-intake-filters"><button type="button" class="secondary small" data-nutrient-range="week" aria-pressed="${nutrientIntakeFilter.mode==="week"}">${en?"Last week":"Dernière semaine"}</button><button type="button" class="secondary small" data-nutrient-range="month" aria-pressed="${nutrientIntakeFilter.mode==="month"}">${en?"Last month":"Dernier mois"}</button><label class="muted small">${en?"From":"Du"} <input id="nutrientDateFrom" type="date" value="${esc(nutrientIntakeFilter.mode==="custom" && nutrientIntakeFilter.from ? nutrientIntakeFilter.from : range.from)}" max="${esc(selectedDate)}"></label><label class="muted small">${en?"To":"Au"} <input id="nutrientDateTo" type="date" value="${esc(nutrientIntakeFilter.mode==="custom" && nutrientIntakeFilter.to ? nutrientIntakeFilter.to : range.to)}" max="${esc(selectedDate)}"></label></div><div class="nutrient-intake-scroll" role="region" tabindex="0" aria-label="${en ? "Nutrient intake table" : "Tableau des apports nutritionnels"}"><table class="nutrient-intake-table"><thead><tr><th>Date</th><th class="nutrient-meals-count">${en ? "Meals with data" : "Repas avec données"}</th>${labels.map(label => `<th class="nutrient-value">${label}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div><div class="nutrient-day-detail-host" aria-live="polite"></div></section>`;
   }
   function renderInsightsContent() {
     const __obsTotalStart = performance.now();
