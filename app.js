@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.240";
+  const APP_RELEASE = "3.56.241";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10078,10 +10078,10 @@ function formatSleepDuration(hours) {
   }
   function bindGlucoseJournal() {
     const form = $("#glucoseEntryForm");
-    $("[data-glucose-slot-save]").forEach(button => button.onclick = () => {
+    $$("[data-glucose-slot-save]").forEach(button => button.onclick = () => {
       const i = Number(button.dataset.glucoseSlotSave);
       const time = (db.settings.glucoseReminderTimes || [])[i];
-      const input = $("[data-glucose-slot-value]").find(el => Number(el.dataset.glucoseSlotValue) === i);
+      const input = $$("[data-glucose-slot-value]").find(el => Number(el.dataset.glucoseSlotValue) === i);
       if (!time || !input) return;
       const value = Number(input.value.trim().replace(",","."));
       if (!Number.isFinite(value) || value <= 0 || value >= 40) { $("#glucoseStatus").textContent = t("Entre une mesure valide en mmol/L."); return; }
@@ -10174,9 +10174,9 @@ function formatSleepDuration(hours) {
         return `<div class="glucose-after-meal-row" id="glucose-meal-${esc(meal.id)}" style="display:grid;grid-template-columns:minmax(125px,1fr) minmax(110px,1fr) 100px auto;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #e1e9df"><strong>${mealTypeHtml(meal.type)} · ${esc(meal.time)}</strong><span style="font-size:.85rem">${recorded ? esc(String(recorded.value).replace(".",",")) + " mmol/L ✓" : "Non renseignée"}</span><input data-glucose-after-value="${esc(meal.id)}" type="text" inputmode="decimal" placeholder="mmol/L" aria-label="Glycémie après le repas" style="box-sizing:border-box;width:100%;min-width:0;padding:6px"><button type="button" class="secondary small" data-save-glucose-meal="${esc(meal.id)}">${recorded ? "Modifier" : "Noter"}</button></div>`;
       }).join("");
       $("#journalView").insertAdjacentHTML("beforeend", `<section class="card glucose-journal-card" style="padding:12px 16px;margin-top:12px"><div class="glucose-compact-head"><h3 style="font-size:1rem;margin:0 0 7px">🩸 Glycémie après les repas</h3><span class="muted tiny">+${delay} min</span></div>${rows || '<p class="muted small">Aucun repas concerné enregistré pour cette journée.</p>'}<p class="muted tiny" id="glucoseMealStatus" role="status"></p></section>`);
-      $("[data-save-glucose-meal]").forEach(button => button.onclick = () => {
+      $$("[data-save-glucose-meal]").forEach(button => button.onclick = () => {
         const mealId = button.dataset.saveGlucoseMeal;
-        const input = $("[data-glucose-after-value]").find(el => el.dataset.glucoseAfterValue === mealId);
+        const input = $$("[data-glucose-after-value]").find(el => el.dataset.glucoseAfterValue === mealId);
         const meal = d.meals.find(m => m.id === mealId);
         const value = Number((input?.value || "").trim().replace(",","."));
         if (!meal || !Number.isFinite(value) || value <= 0 || value >= 40) { $("#glucoseMealStatus").textContent = t("Entre une mesure valide en mmol/L."); return; }
@@ -10189,10 +10189,10 @@ function formatSleepDuration(hours) {
       });
     }
     bindGlucoseJournal();
-    $("[data-glucose-for-meal]").forEach(button => button.addEventListener("click", () => {
+    $$("[data-glucose-for-meal]").forEach(button => button.addEventListener("click", () => {
       const meal = ensureDay(db, selectedDate).meals.find(m => m.id === button.dataset.glucoseForMeal);
       const input = db.settings.glucoseMode === "meals"
-        ? $("[data-glucose-after-value]").find(el => el.dataset.glucoseAfterValue === meal?.id)
+        ? $$("[data-glucose-after-value]").find(el => el.dataset.glucoseAfterValue === meal?.id)
         : $("#glucoseValue");
       if (!input || !meal) return;
       if ($("#glucoseContext")) $("#glucoseContext").value = "after";
