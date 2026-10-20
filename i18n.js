@@ -1703,7 +1703,7 @@
       if (/^\d+ scénarios$/.test(s)) return s.replace(/^(\d+) scénarios$/, '$1 scenarios');
       if (/^Tu utilises Énergie depuis (.+)$/.test(s)) return s.replace(/^Tu utilises Énergie depuis (.+)$/, (_,date) => `You've been using Énergie since ${date}`);
       if (/^Dernière fois · /.test(s)) return s.replace(/^Dernière fois · /, 'Last time · ');
-      if (/^Dernière mesure : /.test(s)) return s.replace(/^Dernière mesure : (.+) à (.+) · (\\d+) mesures? sur 30 jours$/, (_,date,time,n) => `Latest measurement: ${date} at ${time} · ${n} measurement${n==='1'?'':'s'} over 30 days`).replace(/^Dernière mesure : /, 'Latest measurement: ');
+      if (/^Dernière mesure : /.test(s)) return s.replace(/^Dernière mesure : (.+) à (.+) · (\d+) mesures? sur 30 jours$/, (_,date,time,n) => `Latest measurement: ${date} at ${time} · ${n} measurement${n==='1'?'':'s'} over 30 days`).replace(/^Dernière mesure : /, 'Latest measurement: ');
       // Contextual messages produced with live numbers remain translatable.
       if (out === s) {
         let match;
