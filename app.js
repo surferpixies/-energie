@@ -10760,12 +10760,12 @@ function formatSleepDuration(hours) {
     const count = items.reduce((sum, item) => sum + item.count, 0),
       averages = feelingContextAverages();
     if (!items.length)
-      return `<div class="dashboard-feelings-section is-empty"><p class="eyebrow">${esc(label)}</p><h4>${esc(emptyTitle)}</h4><p class="muted small">${esc(emptyText)}</p></div>`;
-    return `<div class="dashboard-feelings-section"><div class="dashboard-feelings-section-head"><div><p class="eyebrow">${esc(label)}</p><h4>Éléments signalés</h4></div><span class="muted small">${count} fois</span></div><div class="history-feelings-list">${items
+      return `<div class="dashboard-feelings-section is-empty"><p class="eyebrow">${esc(t(label))}</p><h4>${esc(t(emptyTitle))}</h4><p class="muted small">${esc(t(emptyText))}</p></div>`;
+    return `<div class="dashboard-feelings-section"><div class="dashboard-feelings-section-head"><div><p class="eyebrow">${esc(t(label))}</p><h4>Éléments signalés</h4></div><span class="muted small">${count} ${window.ENERGIE_LOCALE === "en" ? "times" : "fois"}</span></div><div class="history-feelings-list">${items
       .slice(0, limit)
       .map(
         (item) =>
-          `<details class="history-feeling-detail feeling-observation-detail"><summary><span class="history-feeling-detail-title">${item.emoji} ${esc(item.label)}</span><b>${item.count}</b></summary><div class="history-feeling-detail-body">${item.occurrences
+          `<details class="history-feeling-detail feeling-observation-detail"><summary><span class="history-feeling-detail-title">${item.emoji} ${esc(t(item.label))}</span><b>${item.count}</b></summary><div class="history-feeling-detail-body">${item.occurrences
             .slice(0, occurrenceLimit)
             .map((occ) => {
               const evolution =
