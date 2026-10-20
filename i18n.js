@@ -1247,6 +1247,28 @@
   "Dernière fois ·": "Last time ·",
   "Envoyer une nouvelle invitation par courriel": "Send a new invitation by email"
 });
+  // Personal profile and summary localization.
+  Object.assign(en, {
+  "Tout est facultatif. Si tu actives la balance énergétique, l’âge, le sexe, la taille et le poids servent seulement à estimer la dépense quotidienne — jamais à fixer un objectif.": "Everything is optional. If you enable energy balance, age, sex, height and weight are used only to estimate daily energy expenditure — never to set a target.",
+  "Âge": "Age",
+  "Âge en années": "Age in years",
+  "Sexe": "Sex",
+  "Taille": "Height",
+  "Taille en centimètres": "Height in centimeters",
+  "Je souhaite le renseigner": "I want to provide this",
+  "Non renseigné": "Not provided",
+  "Je préfère ne pas répondre": "I prefer not to answer",
+  "Masculin": "Male",
+  "Féminin": "Female",
+  "Autre": "Other",
+  "Dernière mesure": "Latest measurement",
+  "Date de la mesure": "Measurement date",
+  "Aucune mesure enregistrée.": "No measurements recorded.",
+  "Ex. 42": "e.g. 42",
+  "Ex. 175": "e.g. 175",
+  "Ajouter": "Add",
+  "Dernière fois": "Last time"
+});
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
   window.t=translateString;
@@ -1291,6 +1313,7 @@
       if (/^\d+ scénarios$/.test(s)) return s.replace(/^(\d+) scénarios$/, '$1 scenarios');
       if (/^Tu utilises Énergie depuis (.+)$/.test(s)) return s.replace(/^Tu utilises Énergie depuis (.+)$/, (_,date) => `You've been using Énergie since ${date}`);
       if (/^Dernière fois · /.test(s)) return s.replace(/^Dernière fois · /, 'Last time · ');
+      if (/^Dernière mesure : /.test(s)) return s.replace(/^Dernière mesure : /, 'Latest measurement: ');
       // Contextual messages produced with live numbers remain translatable.
       if (out === s) {
         let match;
