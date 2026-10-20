@@ -107,7 +107,21 @@
   function updateGuidedLabels(){
     if(!root.document)return;
     const fr=preferred()==='ciqual';
+    const en=root.ENERGIE_LOCALE==='en';
     const set=(selector,value)=>{const node=document.querySelector(selector);if(node)node.textContent=value;};
+    if(en){
+      set('#openCnfGuidedEntry strong',fr?'Guided Ciqual entry':'Guided CNF entry');
+      set('#openCnfGuidedEntry small',fr?'Anses · France':'Health Canada');
+      set('#cnfGuidedMealDialog .dialog-header h2',fr?'🇫🇷 Guided entry using Ciqual':'🇨🇦 Guided entry using the CNF');
+      set('#cnfGuidedMealDialog .cnf-guided-intro',fr
+        ? 'Search Ciqual 2025 (Anses, France), choose an amount, and add the food to your meal. If no sufficiently reliable match is found, Health Canada’s CNF is used as a fallback.'
+        : 'Search Health Canada’s Canadian Nutrient File (CNF), choose an amount, and add the food to your meal. If no sufficiently reliable match is found, Ciqual 2025 (Anses, France) is used as a fallback.');
+      set('#mealGuidedEntryRequirement','Guided nutrition entry is required in your preferences.');
+      set('#cnfGuidedMealDialog .cnf-guided-note',fr
+        ? 'Values are calculated from the selected records and entered amounts. Primary source: Ciqual 2025 (Anses); fallback: CNF (Health Canada). Recipes and products may vary.'
+        : 'Values are calculated from the selected records and entered amounts. Primary source: CNF (Health Canada); fallback: Ciqual 2025 (Anses). Recipes and products may vary.');
+      return;
+    }
     set('#openCnfGuidedEntry .meal-cnf-guided-icon',fr?'🇫🇷':'🇨🇦');
     set('#openCnfGuidedEntry strong',fr?'Saisie guidée Ciqual':'Saisie guidée FCÉN');
     set('#openCnfGuidedEntry small',fr?'Anses · France':'Santé Canada');
