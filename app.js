@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.241";
+  const APP_RELEASE = "3.56.242";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -7743,7 +7743,7 @@ function formatSleepDuration(hours) {
     const actionLabel =
       main && type !== "Collation" ? `Modifier ${type}` : `Ajouter ${type}`;
     const feelingStatus = main ? mealFeelingStatus(main) : null;
-    return `<button class="meal-quick-card ${done ? "is-complete" : ""} ${feelingStatus ? "has-feeling-status" : ""}" data-quick-meal="${esc(type)}" ${main && type !== "Collation" ? `data-edit-meal="${main.id}"` : ""} aria-label="${esc(actionLabel)}"><span class="meal-quick-icon">${done && type !== "Collation" ? "✓" : icon}</span><span><strong>${mealTypeHtml(type)}</strong><small${main && type !== "Collation" ? ' translate="no"' : ""}>${subtitle}</small></span><span class="meal-quick-action">${actionIcon}</span>${feelingStatus ? `<span class="meal-quick-feeling-status is-${feelingStatus.tone}"><i aria-hidden="true">${feelingStatus.icon}</i><span>${esc(feelingStatus.label)}</span></span>` : ""}</button>`;
+    return `<button class="meal-quick-card ${done ? "is-complete" : ""} ${feelingStatus ? "has-feeling-status" : ""}" data-quick-meal="${esc(type)}" ${main && type !== "Collation" ? `data-edit-meal="${main.id}"` : ""} aria-label="${esc(actionLabel)}"><span class="meal-quick-icon">${done && type !== "Collation" ? "✓" : icon}</span><span><strong>${mealTypeHtml(type)}</strong><small${main && type !== "Collation" ? ' translate="no"' : ""}>${subtitle}</small></span><span class="meal-quick-action">${actionIcon}</span>${feelingStatus ? `<span class="meal-quick-feeling-status is-${feelingStatus.tone}"><i aria-hidden="true">${feelingStatus.icon}</i><span>${esc(feelingStatus.label)}</span></span>` : ""}${main ? glucoseMealNoteHtml(main) : ""}</button>`;
   }
   function journalMaxDate() {
     if (db.settings?.demoMode) {
@@ -9727,6 +9727,20 @@ function formatSleepDuration(hours) {
     }).join("");
   }
 
+  function glucoseMealDueInfo(meal) {
+    if (!meal || !db.settings.glucoseTracking || db.settings.glucoseMode !== "meals" || !(db.settings.glucoseMealTypes || []).includes(meal.type) || !/^\d{2}:\d{2}$/.test(meal.time || "")) return null;
+    const due = new Date(new Date(selectedDate + "T" + meal.time + ":00").getTime() + Number(db.settings.glucoseMealDelay || 120) * 60000);
+    if (Number.isNaN(due.getTime())) return null;
+    const dueTime = due.toLocaleTimeString("fr-CA", {hour:"2-digit",minute:"2-digit",hour12:false});
+    const reading = (ensureDay(db, selectedDate).glucoseMeasurements || []).find(x => x.mealId === meal.id);
+    return {dueTime, ready:Date.now() >= due.getTime(), reading};
+  }
+  function glucoseMealNoteHtml(meal) {
+    const status = glucoseMealDueInfo(meal);
+    if (!status) return "";
+    const message = status.reading ? "🩸 Glycémie enregistrée : " + esc(String(status.reading.value).replace(".", ",")) + " mmol/L" : status.ready ? "🩸 Mesure de glycémie disponible depuis " + esc(status.dueTime) : "🩸 Votre mesure de glycémie pourra être indiquée à partir de " + esc(status.dueTime);
+    return `<span class="glucose-meal-inline-note" style="display:block;font-size:.78rem;line-height:1.35;margin-top:5px;color:#486856">${message}</span>`;
+  }
   function journalConsultationEventHtml(event) {
     const {kind, meal} = event;
     let title = "", content = "", action = "";
@@ -9767,7 +9781,7 @@ function formatSleepDuration(hours) {
     if (kind === "meal") {
       const missingFeelings = kind => `<section class="consultation-meal-feelings consultation-meal-feelings--${kind} consultation-meal-feelings--empty"><div class="consultation-event-heading"><h3>${esc(t(kind === "before" ? "Ressentis avant" : "Ressentis après"))}</h3></div><p class="muted small">${esc(t("Non consigné"))}</p></section>`;
       const mealHeader = `<header class="consultation-meal-header"><h2><span aria-hidden="true">${mealIcon(meal.type, meal.description)}</span> <span data-i18n-key="${esc(meal.type)}">${esc(t(meal.type))}</span></h2><time>${consultationTimeHtml(event.at)}</time></header>`;
-      return `<article class="card consultation-event consultation-event--meal">${mealHeader}<div class="consultation-meal-sections">${event.before ? journalConsultationEventHtml(event.before) : missingFeelings("before")}<section class="consultation-meal-content">${heading}${content}</section>${event.after ? journalConsultationEventHtml(event.after) : missingFeelings("after")}</div><footer class="consultation-meal-footer">${action}${db.settings.glucoseTracking && db.settings.glucoseMode === "meals" && (db.settings.glucoseMealTypes || []).includes(meal.type) ? `<button type="button" class="secondary small glucose-meal-shortcut" data-glucose-for-meal="${esc(meal.id)}">🩸 ${esc(t("Glycémie"))}</button>` : ""}</footer></article>`;
+      return `<article class="card consultation-event consultation-event--meal">${mealHeader}<div class="consultation-meal-sections">${event.before ? journalConsultationEventHtml(event.before) : missingFeelings("before")}<section class="consultation-meal-content">${heading}${content}</section>${event.after ? journalConsultationEventHtml(event.after) : missingFeelings("after")}</div><footer class="consultation-meal-footer">${action}${db.settings.glucoseTracking && db.settings.glucoseMode === "meals" && (db.settings.glucoseMealTypes || []).includes(meal.type) ? `<button type="button" class="secondary small glucose-meal-shortcut" data-glucose-for-meal="${esc(meal.id)}" ${glucoseMealDueInfo(meal)?.ready ? "" : "disabled"}>🩸 ${esc(t("Glycémie"))}</button>` : ""}${glucoseMealNoteHtml(meal)}</footer></article>`;
     }
     if (event.nested) return `<section class="consultation-meal-feelings consultation-meal-feelings--${kind}">${heading}${content}${action}</section>`;
     return `<article class="card consultation-event consultation-event--${kind}">${heading}${content}${action}</article>`;
@@ -9981,7 +9995,7 @@ function formatSleepDuration(hours) {
         ? `${type} · ${state.detail}`
         : `Ajouter ${type.toLowerCase()}`;
 
-    return `<button type="button" class="journal-summary-action journal-summary-meal-card ${state.needsBrain ? "needs-brain-action" : ""} ${state.complete ? "is-complete" : ""}" data-summary-meal-card="${esc(type)}" data-summary-meal-id="${esc(state.mealId || "")}" aria-label="${esc(aria)}"><span class="summary-meal-visual ${visualClass}" aria-hidden="true">${state.visual}</span><span class="summary-meal-copy"><span>${esc(state.label)}</span><strong>${mealTypeHtml(type)}</strong><small>${esc(state.detail)}</small></span>${journalSummaryMealActionHtml(state)}</button>`;
+    return `<button type="button" class="journal-summary-action journal-summary-meal-card ${state.needsBrain ? "needs-brain-action" : ""} ${state.complete ? "is-complete" : ""}" data-summary-meal-card="${esc(type)}" data-summary-meal-id="${esc(state.mealId || "")}" aria-label="${esc(aria)}"><span class="summary-meal-visual ${visualClass}" aria-hidden="true">${state.visual}</span><span class="summary-meal-copy"><span>${esc(state.label)}</span><strong>${mealTypeHtml(type)}</strong><small>${esc(state.detail)}</small></span>${journalSummaryMealActionHtml(state)}${state.mealId ? glucoseMealNoteHtml(meals.find(m => m.id === state.mealId)) : ""}</button>`;
   }
 
   function journalSummaryMealsHtml(meals) {
@@ -10171,7 +10185,7 @@ function formatSleepDuration(hours) {
       const delay = Number(db.settings.glucoseMealDelay || 120);
       const rows = trackedMeals.map(meal => {
         const recorded = d.glucoseMeasurements.find(x => x.mealId === meal.id);
-        return `<div class="glucose-after-meal-row" id="glucose-meal-${esc(meal.id)}" style="display:grid;grid-template-columns:minmax(125px,1fr) minmax(110px,1fr) 100px auto;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #e1e9df"><strong>${mealTypeHtml(meal.type)} · ${esc(meal.time)}</strong><span style="font-size:.85rem">${recorded ? esc(String(recorded.value).replace(".",",")) + " mmol/L ✓" : "Non renseignée"}</span><input data-glucose-after-value="${esc(meal.id)}" type="text" inputmode="decimal" placeholder="mmol/L" aria-label="Glycémie après le repas" style="box-sizing:border-box;width:100%;min-width:0;padding:6px"><button type="button" class="secondary small" data-save-glucose-meal="${esc(meal.id)}">${recorded ? "Modifier" : "Noter"}</button></div>`;
+        return `<div class="glucose-after-meal-row" id="glucose-meal-${esc(meal.id)}" style="display:grid;grid-template-columns:minmax(125px,1fr) minmax(110px,1fr) 100px auto;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #e1e9df"><strong>${mealTypeHtml(meal.type)} · ${esc(meal.time)}</strong><span style="font-size:.85rem">${recorded ? esc(String(recorded.value).replace(".",",")) + " mmol/L ✓" : (glucoseMealDueInfo(meal)?.ready ? "À renseigner" : "Disponible à " + esc(glucoseMealDueInfo(meal)?.dueTime || "—"))}</span><input ${glucoseMealDueInfo(meal)?.ready ? "" : "disabled"} data-glucose-after-value="${esc(meal.id)}" type="text" inputmode="decimal" placeholder="mmol/L" aria-label="Glycémie après le repas" style="box-sizing:border-box;width:100%;min-width:0;padding:6px"><button type="button" class="secondary small" data-save-glucose-meal="${esc(meal.id)}" ${glucoseMealDueInfo(meal)?.ready ? "" : "disabled"}>${recorded ? "Modifier" : "Noter"}</button></div>`;
       }).join("");
       $("#journalView").insertAdjacentHTML("beforeend", `<section class="card glucose-journal-card" style="padding:12px 16px;margin-top:12px"><div class="glucose-compact-head"><h3 style="font-size:1rem;margin:0 0 7px">🩸 Glycémie après les repas</h3><span class="muted tiny">+${delay} min</span></div>${rows || '<p class="muted small">Aucun repas concerné enregistré pour cette journée.</p>'}<p class="muted tiny" id="glucoseMealStatus" role="status"></p></section>`);
       $$("[data-save-glucose-meal]").forEach(button => button.onclick = () => {
@@ -10179,6 +10193,7 @@ function formatSleepDuration(hours) {
         const input = $$("[data-glucose-after-value]").find(el => el.dataset.glucoseAfterValue === mealId);
         const meal = d.meals.find(m => m.id === mealId);
         const value = Number((input?.value || "").trim().replace(",","."));
+        if (!glucoseMealDueInfo(meal)?.ready) { $("#glucoseMealStatus").textContent = "Mesure disponible à partir de " + (glucoseMealDueInfo(meal)?.dueTime || "l’heure prévue"); return; }
         if (!meal || !Number.isFinite(value) || value <= 0 || value >= 40) { $("#glucoseMealStatus").textContent = t("Entre une mesure valide en mmol/L."); return; }
         const existing = d.glucoseMeasurements.find(x => x.mealId === mealId);
         const time = new Date().toTimeString().slice(0,5);
