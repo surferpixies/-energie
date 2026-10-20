@@ -1403,6 +1403,16 @@
   "Copie locale": "Local copy",
   "Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.": "These tools are not needed for normal Énergie use. They help you manually save or transfer a complete copy of your journal."
 });
+  // Final Web settings localization before iOS sync.
+  Object.assign(en, {
+  "Journal sommaire": "Journal summary",
+  "Choisis comment les repas complétés s’affichent dans le Journal en mode sommaire.": "Choose how completed meals appear in the Journal's Summary view.",
+  "Masquer les repas complétés": "Hide completed meals",
+  "Un repas disparaît du sommaire lorsqu’il contient le repas, le ressenti avant et le ressenti après. La carte Collation reste toujours visible.": "A meal disappears from Summary once it has a meal entry and both before- and after-meal feelings. The Snack card always remains visible.",
+  "Suivi des pas": "Step tracking",
+  "Ambiance saisonnière": "Seasonal theme",
+  "Photo de profil": "Profile photo"
+});
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
   window.t=translateString;
