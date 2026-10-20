@@ -1809,6 +1809,7 @@
   "fermented foods": "fermented foods",
   "Explore changes in my weight": "Explore changes in my weight"
 });
+  Object.assign(en, {"Je remarque que…":"I've noticed that…","Mal de tête ou migraine":"Headache or migraine"});
   function translateString(s){
     let out=translate(s);
     // Never feed a mapped French meal name back into another meal mapping.
