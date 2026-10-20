@@ -3573,7 +3573,7 @@ function formatSleepDuration(hours) {
       totalNutrition = guidedCnfNutrition(mealCnfGuidedDraft),
       totalCalories = Number(totalNutrition?.calories);
     if (!list || !count || !finish) return;
-    count.textContent = `${mealCnfGuidedDraft.length} aliment${mealCnfGuidedDraft.length !== 1 ? "s" : ""}${caloriesVisible() && Number.isFinite(totalCalories) ? ` · ${Math.round(totalCalories)} kcal` : ""}`;
+    count.textContent = `${mealCnfGuidedDraft.length} ${window.ENERGIE_LOCALE === "en" ? (mealCnfGuidedDraft.length === 1 ? "food" : "foods") : `aliment${mealCnfGuidedDraft.length !== 1 ? "s" : ""}`}${caloriesVisible() && Number.isFinite(totalCalories) ? ` · ${Math.round(totalCalories)} kcal` : ""}`;
     finish.disabled = !mealCnfGuidedDraft.length;
     list.innerHTML = mealCnfGuidedDraft.length
       ? mealCnfGuidedDraft.map((item) => {
