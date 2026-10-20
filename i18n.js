@@ -45,6 +45,14 @@
   const en={
     "Saisie plus précise": "More precise entry",
     "Saisie guidée avec le FCÉN": "Guided entry using the CNF",
+    "Saisie guidée FCÉN": "Guided CNF entry",
+    "Saisie guidée Ciqual": "Guided Ciqual entry",
+    "La saisie guidée nutritionnelle est obligatoire dans tes préférences.": "Guided nutrition entry is required in your preferences.",
+    "Aucun aliment trouvé dans les référentiels. Essaie un terme plus simple ou précise la préparation.": "No food found in the reference databases. Try a simpler term or specify how it is prepared.",
+    "Entre une quantité valide.": "Enter a valid amount.",
+    "Grammes (g)": "Grams (g)",
+    "La recherche nutritionnelle n’est pas disponible pour le moment.": "Nutrition search is not available right now.",
+
     "Recherche un aliment dans le Fichier canadien sur les éléments nutritifs de Santé Canada, choisis une quantité, puis ajoute les autres aliments du repas.": "Search Health Canada's Canadian Nutrient File, choose a quantity, then add the other foods in your meal.",
     "Rechercher un aliment": "Search for a food",
     "Ex. aubergine, œuf, fromage cottage…": "E.g. eggplant, egg, cottage cheese…",
