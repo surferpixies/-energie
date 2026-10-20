@@ -15800,6 +15800,7 @@ function formatSleepDuration(hours) {
       else d.glucoseMeasurements.push({id:uid(),value,time:new Date().toTimeString().slice(0,5),context:"after",mealId:meal.id});
       d.updatedAt = new Date().toISOString();
       saveLocal("glycemie-apres-repas"); setDayChanged(selectedDate);
+      $("#mealDialog").addEventListener("close", () => render(), {once:true});
       renderMealGlucosePanel(meal, readOnly);
     });
   }
