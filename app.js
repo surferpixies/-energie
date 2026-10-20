@@ -13359,7 +13359,7 @@ function formatSleepDuration(hours) {
     bindNutrientIntakeFilters();
     $(".observation-explorer-card")?.insertAdjacentHTML("afterend", perf("weightObservationHtml", () => weightObservationHtml()));
     $(".observation-explorer-card")?.insertAdjacentHTML("afterend", glucoseObservationsHtml());
-    $(".glucose-observations-card")?.insertAdjacentHTML("beforebegin", nutrientIntakeObservationsHtml());
+    $(".glucose-observations-trend")?.insertAdjacentHTML("beforebegin", nutrientIntakeObservationsHtml());
     bindNutrientIntakeFilters();
     bindGlucoseObservationFilter();
     const personalTrends = $("#app .personal-trends");
