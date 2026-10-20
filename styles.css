@@ -2169,3 +2169,20 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .glucose-profile-card .personal-weight-grid label{min-width:0}
 .glucose-profile-card input[type=time]{width:100%;box-sizing:border-box}
 @media(max-width:650px){.glucose-journal-card .personal-weight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.glucose-journal-card .personal-weight-grid label:last-child{grid-column:1/-1}.glucose-profile-card .settings-row{flex-wrap:wrap}}
+
+
+/* 3.56.259 — Observations: roomier cards and full-width energy balance */
+#app .personal-trends-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:stretch}
+#app .personal-trends-grid > .energy-balance-trend{grid-column:1 / -1}
+#app .personal-trends-grid > .personal-trend-card{min-width:0}
+#app .personal-trends-grid > .energy-balance-trend .metrics-chart,
+#app .personal-trends-grid > .energy-balance-trend svg{max-width:100%}
+#app .personal-trends{margin-block:26px 34px}
+#app .nutrient-intake-observations{margin-block:26px 34px}
+#app .nutrient-intake-observations .nutrient-meals-count{text-align:center}
+#app .nutrient-intake-observations + section,
+#app .nutrient-intake-observations + .card{margin-top:26px}
+@media(max-width:700px){
+  #app .personal-trends-grid{grid-template-columns:minmax(0,1fr);gap:20px}
+  #app .personal-trends-grid > .energy-balance-trend{grid-column:1}
+}
