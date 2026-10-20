@@ -10105,6 +10105,7 @@ function formatSleepDuration(hours) {
     return `<section class="card glucose-journal-card glucose-unified" style="padding:13px 16px;margin:10px 0"><h3>🩸 ${t("Suivi de la glycémie")}</h3>
       <p class="muted tiny">${t("Mesures manuelles en mmol/L. Aucune interprétation médicale automatique.")}</p>
       ${assigned}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:12px 0"><label style="flex:1;min-width:110px">${t("À jeun")} (mmol/L)<input id="glucoseFastingValue" type="text" inputmode="decimal" placeholder="5,4" style="width:100%"></label><label style="flex:1;min-width:110px">${t("Heure")}<input id="glucoseFastingTime" type="time" value="${readings.find(x=>x.context==="fasting")?.time || new Date().toTimeString().slice(0,5)}" style="width:100%"></label><button type="button" class="secondary small" data-save-glucose-fasting>${t("Enregistrer")}</button></div>
       ${extras.length ? '<h4 style="margin:12px 0 4px">'+t("Autres")+'</h4>'+extras.map(x=>row(contexts[x.context]||contexts.other,x,x.context,null)).join("") : ""}
       <form id="glucoseEntryForm" style="margin-top:12px"><strong>${t("Ajouter une mesure supplémentaire")}</strong>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;align-items:end;margin-top:8px">
@@ -10115,6 +10116,21 @@ function formatSleepDuration(hours) {
   }
   function bindGlucoseJournal() {
     const form = $("#glucoseEntryForm");
+    $("[data-save-glucose-fasting]")?.addEventListener("click", () => {
+      const input = $("#glucoseFastingValue"), time = $("#glucoseFastingTime")?.value;
+      const value = Number((input?.value || "").trim().replace(",", "."));
+      if (!time || !Number.isFinite(value) || value <= 0 || value >= 40) {
+        const status = $("#glucoseStatus");
+        if(status) status.textContent = t("Entre une mesure valide en mmol/L.");
+        return;
+      }
+      const day = ensureDay(db,selectedDate);
+      const existing = (day.glucoseMeasurements || []).find(x=>x.context==="fasting" && !x.mealId);
+      if(existing){existing.value=value;existing.time=time;}
+      else (day.glucoseMeasurements ||= []).push({id:uid(),value,time,context:"fasting"});
+      day.updatedAt=new Date().toISOString();
+      saveLocal("glycemie-a-jeun");setDayChanged(selectedDate);render();
+    });
     $$("[data-glucose-slot-save]").forEach(button => button.onclick = () => {
       const i = Number(button.dataset.glucoseSlotSave);
       const time = (db.settings.glucoseReminderTimes || [])[i];
