@@ -1459,6 +1459,11 @@
   "Retirer": "Remove",
   "Entre une mesure valide en mmol/L.": "Enter a valid reading in mmol/L."
 });
+  Object.assign(en, {
+  "Délai après le début du repas": "Delay after meal start",
+  "Repas concernés": "Meals to include",
+  "Le délai est calculé à partir de l’heure de début du repas enregistrée dans le Journal. Les notifications automatiques ne sont pas encore activées.": "The delay is calculated from the meal start time recorded in Journal. Automatic notifications are not enabled yet."
+});
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
   window.t=translateString;
