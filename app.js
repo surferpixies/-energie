@@ -14265,8 +14265,24 @@ function formatSleepDuration(hours) {
     const lo = Math.max(0, min - Math.max(.5,(max-min)*.15)), hi = max + Math.max(.5,(max-min)*.15);
     // Show actual measurement days, newest first, reserving today at the far left.
     const dates = [...new Set([end,...visible.map(p=>p.date)])].sort((a,b)=>b.localeCompare(a));
-    const slots = selected === "after" ? ["Déjeuner","Dîner","Souper","Collation"] : selected === "scheduled" ? [...new Set([...(db.settings.glucoseReminderTimes || []),...visible.map(p=>p.scheduledTime)].filter(Boolean))].sort() : ["Mesure"];
-    const slot = p => selected === "scheduled" ? Math.max(0,slots.indexOf(p.scheduledTime)) : selected === "after" ? Math.max(0,slots.indexOf(db.days?.[p.date]?.meals?.find(m=>m.id===p.mealId)?.type || "Collation")) : 0;
+    // Three clearly separated meal columns per day. A fourth column is used only for actual snacks.
+    // Older/manual after-meal readings may have no mealId: place them in the day's meal
+    // column using the most recent preceding recorded meal, then time of day as fallback.
+    // This is only a visual grouping; never create a meal link that does not exist.
+    const mealGroup = p => {
+      const meals = db.days?.[p.date]?.meals || [];
+      const linked = p.mealId ? meals.find(m => m.id === p.mealId) : null;
+      const normalized = type => ["Déjeuner","Dîner","Souper","Collation"].find(name => name.toLocaleLowerCase("fr-CA") === String(type || "").toLocaleLowerCase("fr-CA"));
+      if (linked) return normalized(linked.type) || "Collation";
+      const preceding = meals.filter(m => /^\\d{2}:\\d{2}$/.test(m.time || "") && m.time <= p.time)
+        .sort((a,b) => b.time.localeCompare(a.time))[0];
+      if (preceding && normalized(preceding.type)) return normalized(preceding.type);
+      const hour = Number(p.time.slice(0,2));
+      return hour < 11 ? "Déjeuner" : hour < 16 ? "Dîner" : "Souper";
+    };
+    const mealGroups = selected === "after" ? visible.map(mealGroup) : [];
+    const slots = selected === "after" ? ["Déjeuner","Dîner","Souper",...(mealGroups.includes("Collation") ? ["Collation"] : [])] : selected === "scheduled" ? [...new Set([...(db.settings.glucoseReminderTimes || []),...visible.map(p=>p.scheduledTime)].filter(Boolean))].sort() : ["Mesure"];
+    const slot = p => selected === "scheduled" ? Math.max(0,slots.indexOf(p.scheduledTime)) : selected === "after" ? Math.max(0,slots.indexOf(mealGroup(p))) : 0;
     const left=52,right=20,top=18,bottom=68,h=254;
     const dayWidth=Math.max(175,slots.length*47+28);
     const w=left+right+dayWidth*dates.length;
