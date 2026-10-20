@@ -14246,7 +14246,6 @@ function formatSleepDuration(hours) {
     const scaleX = p => left + ((new Date(p.date + "T" + p.time + ":00").getTime() - new Date(start + "T00:00:00").getTime()) / (new Date(addDaysKey(end,1) + "T00:00:00").getTime() - new Date(start + "T00:00:00").getTime())) * (w-left-right);
     const scaleY = v => top+(hi-v)/(hi-lo)*(h-top-bottom);
     const coordinates = visible.map(p => ({...p,x:scaleX(p),y:scaleY(p.value)}));
-    const path = coordinates.length > 1 ? '<polyline points="' + coordinates.map(p => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(" ") + '" fill="none" stroke="#399e67" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' : "";
     const grid = [0,1,2,3].map(i => {
       const y=top+i*(h-top-bottom)/3;
       const value=hi-i*(hi-lo)/3;
