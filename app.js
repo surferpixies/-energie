@@ -3581,7 +3581,7 @@ function formatSleepDuration(hours) {
           const qty = item.unitKind === "g"
             ? `${Math.round(Number(item.grams) || 0)} g`
             : `${Number(item.quantity) === 1 ? item.unitLabel : `${guidedCnfNumber(item.quantity)} × ${item.unitLabel}`} · ≈ ${Math.round(Number(item.grams) || 0)} g`;
-          return `<article class="cnf-guided-item"><div><strong>${esc(item.nameFr || "Aliment")}</strong><small>${esc(qty)}</small></div>${caloriesVisible() && calories != null ? `<span class="cnf-guided-item-kcal">${calories} kcal</span>` : ""}<button type="button" data-remove-cnf-guided="${esc(item.entryId)}" aria-label="Retirer ${esc(item.nameFr || "cet aliment")}">×</button></article>`;
+          return `<article class="cnf-guided-item"><div><strong>${esc((window.ENERGIE_LOCALE === "en" && item.nameEn) || item.nameFr || "Food")}</strong><small>${esc(qty)}</small></div>${caloriesVisible() && calories != null ? `<span class="cnf-guided-item-kcal">${calories} kcal</span>` : ""}<button type="button" data-remove-cnf-guided="${esc(item.entryId)}" aria-label="Retirer ${esc((window.ENERGIE_LOCALE === "en" && item.nameEn) || item.nameFr || "this food")}">×</button></article>`;
         }).join("")
       : '<p class="cnf-guided-empty">Aucun aliment ajouté pour l’instant.</p>';
     $$("[data-remove-cnf-guided]").forEach((button) => {
@@ -3634,8 +3634,8 @@ function formatSleepDuration(hours) {
       food = api?.getById?.(id);
     if (!food) return;
     mealCnfGuidedSelected = food;
-    $("#cnfGuidedFoodName").textContent = food.nameFr || "Aliment";
-    $("#cnfGuidedFoodEnglish").textContent = food.nameEn || "";
+    $("#cnfGuidedFoodName").textContent = (window.ENERGIE_LOCALE === "en" && food.nameEn) || food.nameFr || "Food";
+    $("#cnfGuidedFoodEnglish").textContent = window.ENERGIE_LOCALE === "en" ? (food.nameFr || "") : (food.nameEn || "");
     const portions = (food.portions || [])
       .filter(
         (portion, index, list) =>
@@ -3675,7 +3675,7 @@ function formatSleepDuration(hours) {
       ? matches
           .map(
             (food) =>
-              `<button type="button" class="cnf-guided-result" data-cnf-guided-food="${esc(food.id)}"><span>🍽️</span><span><strong>${esc(food.nameFr)}</strong>${food.nameEn ? `<small>${esc(food.nameEn)}</small>` : ""}</span><b aria-hidden="true">›</b></button>`,
+              `<button type="button" class="cnf-guided-result" data-cnf-guided-food="${esc(food.id)}"><span>🍽️</span><span><strong>${esc((window.ENERGIE_LOCALE === "en" && food.nameEn) || food.nameFr)}</strong>${(window.ENERGIE_LOCALE === "en" ? food.nameFr : food.nameEn) ? `<small>${esc(window.ENERGIE_LOCALE === "en" ? food.nameFr : food.nameEn)}</small>` : ""}</span><b aria-hidden="true">›</b></button>`,
           )
           .join("")
       : '<p class="cnf-guided-empty">Aucun aliment trouvé dans les référentiels. Essaie un terme plus simple ou précise la préparation.</p>';
