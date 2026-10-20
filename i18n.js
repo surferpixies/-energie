@@ -1771,6 +1771,44 @@
   "Une première mesure : il en faut au moins deux pour voir une évolution.": "One measurement recorded; at least two are needed to show a trend.",
   "Ton choix est respecté.": "Your choice is respected."
 });
+  Object.assign(en, {
+  "Tendance plus solide": "Stronger pattern",
+  "Tendance répétée": "Repeated pattern",
+  "Début de piste": "Emerging pattern",
+  "Ressentis positifs": "Positive feelings",
+  "🌿 Ressentis positifs": "🌿 Positive feelings",
+  "🌦️ Inconforts": "🌦️ Discomforts",
+  "FAITS CONSIGNÉS": "RECORDED EVENTS",
+  "Faits consignés": "Recorded events",
+  "Je me sens bien": "I feel good",
+  "Rassasié": "Satisfied",
+  "Énergique": "Energetic",
+  "Sensation de légèreté": "Feeling light",
+  "Fatigue, manque d'énergie ou envie de dormir": "Tiredness, low energy or sleepiness",
+  "Fatigue, manque d’énergie ou envie de dormir": "Tiredness, low energy or sleepiness",
+  "Mal de tête ou migraine": "Headache or migraine",
+  "Brouillard mental ou concentration difficile": "Brain fog or difficulty concentrating",
+  "Nausées ou vomissements": "Nausea or vomiting",
+  "Douleurs ou crampes abdominales": "Abdominal pain or cramps",
+  "Ballonnements": "Bloating",
+  "Irritabilité ou humeur basse": "Irritability or low mood",
+  "Diarrhée ou selles urgentes": "Diarrhea or urgent bowel movements",
+  "Reflux ou brûlures d'estomac": "Reflux or heartburn",
+  "Reflux ou brûlures d’estomac": "Reflux or heartburn",
+  "Stress ou anxiété": "Stress or anxiety",
+  "Fringale ou envie de sucre": "Food cravings or sugar cravings",
+  "Démangeaisons ou rougeurs": "Itching or redness",
+  "Pas par jour": "Steps per day",
+  "Pas quotidiens": "Daily steps",
+  "Objectif du jour": "Daily goal",
+  "PROGRESSION": "PROGRESS",
+  "Progression": "Progress",
+  "Pendant cette période : activité ↑ · pas ↑": "During this period: activity ↑ · steps ↑",
+  "Dernière mesure de la période": "Latest measurement in this period",
+  "Fermented foods et mal de tête ou migraine": "Fermented foods and headache or migraine",
+  "fermented foods": "fermented foods",
+  "Explore changes in my weight": "Explore changes in my weight"
+});
   function translateString(s){
     let out=translate(s);
     // Never feed a mapped French meal name back into another meal mapping.
