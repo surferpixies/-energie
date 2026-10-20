@@ -9729,7 +9729,7 @@ function formatSleepDuration(hours) {
   }
 
   function glucoseMealDueInfo(meal) {
-    if (!meal || !db.settings.glucoseTracking || db.settings.glucoseMode !== "meals" || !(db.settings.glucoseMealTypes || []).includes(meal.type) || !/^\d{2}:\d{2}$/.test(meal.time || "")) return null;
+    if (!meal || !db.settings.glucoseTracking || !/^\d{2}:\d{2}$/.test(meal.time || "")) return null;
     const due = new Date(new Date(selectedDate + "T" + meal.time + ":00").getTime() + Number(db.settings.glucoseMealDelay || 120) * 60000);
     if (Number.isNaN(due.getTime())) return null;
     const dueTime = due.toLocaleTimeString("fr-CA", {hour:"2-digit",minute:"2-digit",hour12:false});
@@ -10074,12 +10074,10 @@ function formatSleepDuration(hours) {
 
 
   function glucoseProfileHtml() {
-    const times = (db.settings.glucoseReminderTimes || ["08:00", "12:00", "20:00"]).slice(0, 6);
-    return `<style>.glucose-profile-card{padding:18px 20px!important}.glucose-profile-card h3{margin:0}.glucose-profile-card .settings-row{gap:10px;margin:8px 0}.glucose-profile-card .personal-weight-grid{gap:10px}.glucose-profile-card .personal-weight-grid input{min-height:40px;padding:8px 10px}.glucose-profile-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.glucose-profile-head details{font-size:.82rem}.glucose-profile-head summary{cursor:pointer}.glucose-profile-head details p{max-width:320px;margin:8px 0}</style><section class="card glucose-profile-card"><div class="glucose-profile-head"><h3>🩸 ${t("Suivi de la glycémie")}</h3><details><summary aria-label="Information sur la glycémie">ⓘ Info</summary><p>${t("Tu peux consigner manuellement tes mesures en mmol/L. Les heures programmées servent à préparer de futurs rappels, qui ne sont pas encore activés.")}</p></details></div><p class="muted small">${t("Mesures manuelles en mmol/L. Aucune interprétation médicale automatique.")}</p>
-    <label class="toggle-row"><span><strong>${t("Activer le suivi de la glycémie")}</strong></span><input type="checkbox" id="glucoseTrackingEnabled" ${db.settings.glucoseTracking ? "checked" : ""}></label>
-    ${db.settings.glucoseTracking ? `<label class="settings-row"><span>${t("Mode de saisie")}</span><select id="glucoseMode"><option value="free" ${db.settings.glucoseMode === "free" || !["scheduled","meals"].includes(db.settings.glucoseMode) ? "selected" : ""}>${t("Saisie libre")}</option><option value="scheduled" ${db.settings.glucoseMode === "scheduled" ? "selected" : ""}>${t("Heures fixes")}</option><option value="meals" ${db.settings.glucoseMode === "meals" ? "selected" : ""}>${t("Après les repas")}</option></select></label>
-    ${db.settings.glucoseMode === "meals" ? `<label class="settings-row"><span>${t("Délai après le début du repas")}</span><select id="glucoseMealDelay">${[60,90,120].map(n => `<option value="${n}" ${Number(db.settings.glucoseMealDelay || 120) === n ? "selected" : ""}>${n} min</option>`).join("")}</select></label><div class="settings-row"><span>${t("Repas concernés")}</span><div class="settings-check-grid">${["Déjeuner","Dîner","Souper"].map(meal=>`<label><input type="checkbox" data-glucose-meal="${meal}" ${(db.settings.glucoseMealTypes || []).includes(meal) ? "checked" : ""}> ${esc(t(meal))}</label>`).join("")}</div></div><p class="muted tiny">${t("Le délai est calculé à partir de l’heure de début du repas enregistrée dans le Journal. Les notifications automatiques ne sont pas encore activées.")}</p>` : ""}
-    ${db.settings.glucoseMode === "scheduled" ? `<label class="settings-row"><span>${t("Mesures par jour")}</span><select id="glucoseCount">${[1,2,3,4,5,6].map(n => `<option value="${n}" ${times.length === n ? "selected" : ""}>${n}</option>`).join("")}</select></label><div class="personal-weight-grid">${times.map((time,i)=>`<label>${t("Mesure")} ${i+1}<input type="time" data-glucose-time="${i}" value="${esc(time)}"></label>`).join("")}</div><p class="muted tiny">${t("Heures enregistrées pour de futurs rappels. Les notifications automatiques ne sont pas encore activées.")}</p>` : ""}` : ""}</section>`;
+    return `<section class="card glucose-profile-card"><div class="glucose-profile-head"><h3>🩸 ${t("Suivi de la glycémie")}</h3></div>
+      <p class="muted small">${t("Mesures manuelles en mmol/L. Aucune interprétation médicale automatique.")}</p>
+      <label class="toggle-row"><span><strong>${t("Activer le suivi de la glycémie")}</strong></span><input type="checkbox" id="glucoseTrackingEnabled" ${db.settings.glucoseTracking ? "checked" : ""}></label>
+      ${db.settings.glucoseTracking ? `<label class="settings-row"><span>${t("Délai après le début du repas")}</span><select id="glucoseMealDelay">${[30,60,90,120,150,180].map(n=>`<option value="${n}" ${Number(db.settings.glucoseMealDelay || 120) === n ? "selected" : ""}>${n} min</option>`).join("")}</select></label><p class="muted tiny">${t("Le délai est calculé à partir de l’heure de début du repas enregistrée dans le Journal. Les notifications automatiques ne sont pas encore activées.")}</p>` : ""}</section>`;
   }
   function glucoseJournalHtml(d) {
     if (!db.settings.glucoseTracking || db.settings.demoMode || professionalBetaMode) return "";
@@ -15986,7 +15984,7 @@ function formatSleepDuration(hours) {
     const heading = `<strong>🩸 ${t("Suivi de la glycémie")}</strong>`;
     const note = status.reading ? 'Mesure enregistrée : ' + esc(String(status.reading.value).replace(".", ",")) + ' mmol/L'
       : status.ready ? t("Mesure de glycémie à noter") : t("Votre mesure de glycémie pourra être indiquée à partir de ") + esc(status.dueTime) + ".";
-    const controls = status.ready && !readOnly
+    const controls = !readOnly
       ? '<div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap"><input id="mealGlucoseValue" type="text" inputmode="decimal" aria-label="Glycémie en mmol/L" placeholder="mmol/L" value="' + esc(status.reading ? String(status.reading.value).replace(".", ",") : "") + '" style="width:110px;min-height:38px"><button type="button" class="secondary small" id="saveMealGlucose">' + (status.reading ? "Modifier" : "Enregistrer") + '</button></div><small id="mealGlucoseError" role="status"></small>'
       : "";
     panel.innerHTML = heading + '<p class="muted small" style="margin:6px 0">' + note + '</p>' + controls;
