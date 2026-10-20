@@ -14289,10 +14289,10 @@ function formatSleepDuration(hours) {
     const points = Object.entries(db.days || {}).flatMap(([date, day]) =>
       date >= start && date <= end ? (day.glucoseMeasurements || []).filter(x => Number.isFinite(Number(x.value)) && Number(x.value) > 0 && Number(x.value) < 40 && /^\d{2}:\d{2}$/.test(x.time || "")).map(x => ({date,time:x.time,value:Number(x.value),context:x.context,mealId:x.mealId,scheduledTime:x.scheduledTime})) : []
     ).sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time));
-    const preferred = db.settings.glucoseMode === "scheduled" ? "scheduled" : db.settings.glucoseMode === "meals" ? "after" : "fasting";
-    const selected = ["fasting","scheduled","after","other"].includes(filter) ? filter : preferred;
-    const filtered = points.filter(p => selected === "scheduled" ? !!p.scheduledTime : selected === "after" ? !!p.mealId || (p.context === "after" && !p.scheduledTime) : selected === "fasting" ? p.context === "fasting" && !p.scheduledTime && !p.mealId : !p.mealId && !p.scheduledTime && p.context !== "fasting" && p.context !== "after");
-    const filters = '<label style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:.86rem;margin:16px 0 20px">Type de mesure <select id="glucoseObservationFilter" style="max-width:240px"><option value="fasting"' + (selected === "fasting" ? " selected" : "") + '>À jeun</option><option value="scheduled"' + (selected === "scheduled" ? " selected" : "") + '>Heures fixes</option><option value="after"' + (selected === "after" ? " selected" : "") + '>Après les repas</option><option value="other"' + (selected === "other" ? " selected" : "") + '>Autres</option></select></label>';
+    const preferred = "all";
+    const selected = ["all","fasting","scheduled","after","other"].includes(filter) ? filter : preferred;
+    const filtered = points.filter(p => selected === "all" ? true : selected === "scheduled" ? !!p.scheduledTime : selected === "after" ? !!p.mealId || (p.context === "after" && !p.scheduledTime) : selected === "fasting" ? p.context === "fasting" && !p.scheduledTime && !p.mealId : !p.mealId && !p.scheduledTime && p.context !== "fasting" && p.context !== "after");
+    const filters = '<label style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:.86rem;margin:16px 0 20px">Type de mesure <select id="glucoseObservationFilter" style="max-width:240px"><option value="all"' + (selected === "all" ? " selected" : "") + '>Toutes les mesures</option><option value="fasting"' + (selected === "fasting" ? " selected" : "") + '>À jeun</option><option value="scheduled"' + (selected === "scheduled" ? " selected" : "") + '>Heures fixes</option><option value="after"' + (selected === "after" ? " selected" : "") + '>Après les repas</option><option value="other"' + (selected === "other" ? " selected" : "") + '>Autres</option></select></label>';
     const visible = filtered;
     const title = '<div class="metrics-heading"><h3>🩸 ' + esc(t("Évolution de la glycémie")) + '</h3><strong>' + (visible.length ? esc(String(visible.at(-1).value).replace(".", ",")) + ' mmol/L' : "—") + '</strong></div>';
     if (!visible.length) return '<article class="card glucose-observations-trend glucose-observations-empty" style="width:100%;box-sizing:border-box;margin:14px 0;padding:18px 22px">' + title + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px 20px;margin-top:10px">' + filters + '<p class="muted small" style="margin:0">Aucune mesure enregistrée dans les 30 derniers jours.</p></div></article>';
@@ -14315,12 +14315,12 @@ function formatSleepDuration(hours) {
       const hour = Number(p.time.slice(0,2));
       return hour < 11 ? "Déjeuner" : hour < 16 ? "Dîner" : "Souper";
     };
-    const mealGroups = selected === "after" ? visible.map(mealGroup) : [];
-    const slots = selected === "after" ? ["Déjeuner","Dîner","Souper",...(mealGroups.includes("Collation") ? ["Collation"] : [])] : selected === "scheduled" ? [...new Set([...(db.settings.glucoseReminderTimes || []),...visible.map(p=>p.scheduledTime)].filter(Boolean))].sort() : ["Mesure"];
-    const slot = p => selected === "scheduled" ? Math.max(0,slots.indexOf(p.scheduledTime)) : selected === "after" ? Math.max(0,slots.indexOf(mealGroup(p))) : 0;
+    const mealGroups = ["all","after"].includes(selected) ? visible.filter(p=>p.mealId || p.context==="after").map(mealGroup) : [];
+    const slots = selected === "all" ? ["À jeun","Déjeuner","Dîner","Souper",...(mealGroups.includes("Collation") ? ["Collation"] : []),"Autres"] : selected === "after" ? ["Déjeuner","Dîner","Souper",...(mealGroups.includes("Collation") ? ["Collation"] : [])] : selected === "scheduled" ? [...new Set([...(db.settings.glucoseReminderTimes || []),...visible.map(p=>p.scheduledTime)].filter(Boolean))].sort() : ["Mesure"];
+    const slot = p => selected === "all" ? (p.context === "fasting" && !p.mealId ? 0 : (p.mealId || p.context === "after") ? Math.max(0,slots.indexOf(mealGroup(p))) : slots.length-1) : selected === "scheduled" ? Math.max(0,slots.indexOf(p.scheduledTime)) : selected === "after" ? Math.max(0,slots.indexOf(mealGroup(p))) : 0;
     const left=52,right=20,top=18,bottom=68,h=254;
-    const dayWidth = selected === "after" ? slots.length*30+68 : Math.max(175,slots.length*47+28);
-    const slotX = (day,position) => selected === "after" ? left+day*dayWidth+(dayWidth-(slots.length-1)*30)/2+position*30 : left+day*dayWidth+dayWidth/(slots.length+1)*(position+1);
+    const dayWidth = ["all","after"].includes(selected) ? slots.length*38+68 : Math.max(175,slots.length*47+28);
+    const slotX = (day,position) => ["all","after"].includes(selected) ? left+day*dayWidth+(dayWidth-(slots.length-1)*38)/2+position*38 : left+day*dayWidth+dayWidth/(slots.length+1)*(position+1);
     const w=left+right+dayWidth*dates.length;
     const scaleY = v => top+(hi-v)/(hi-lo)*(h-top-bottom);
     const occupied = new Map();
@@ -14339,7 +14339,7 @@ function formatSleepDuration(hours) {
     const dots=coordinates.map((p,i)=>'<g data-glucose-point="'+i+'" role="button" tabindex="0" style="cursor:pointer" aria-label="'+esc(p.date+" "+p.time+" "+p.value+" mmol/L") +'"><line x1="'+p.x.toFixed(1)+'" x2="'+p.x.toFixed(1)+'" y1="'+(h-bottom)+'" y2="'+p.y.toFixed(1)+'" stroke="#399e67" stroke-width="4"/><circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="6" fill="#2e985f" stroke="#fff" stroke-width="2"/><circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="14" fill="transparent"><title>'+esc(p.date+" "+p.time+" · "+p.value+" mmol/L")+'</title></circle></g>').join("");
     const labels=dates.map((date,day)=>{
       const x=left+day*dayWidth+dayWidth/2;
-      const names=slots.map((name,i)=>'<text x="'+(slotX(day,i)).toFixed(1)+'" y="'+(h-38)+'" text-anchor="middle" fill="#728679" font-size="10">'+esc(selected==="after"?["Déj.","Dîn.","Soup.","Coll."][i]:selected==="scheduled"?name:"")+'</text>').join("");
+      const names=slots.map((name,i)=>'<text x="'+(slotX(day,i)).toFixed(1)+'" y="'+(h-38)+'" text-anchor="middle" fill="#728679" font-size="10">'+esc(selected==="all"?({ "À jeun":"À jeun","Déjeuner":"Déj.","Dîner":"Dîn.","Souper":"Soup.","Collation":"Coll.","Autres":"Autres" }[name] || name):selected==="after"?["Déj.","Dîn.","Soup.","Coll."][i]:selected==="scheduled"?name:"")+'</text>').join("");
       return names+'<text x="'+x.toFixed(1)+'" y="'+(h-13)+'" text-anchor="middle" fill="#526c59" font-weight="600" font-size="13">'+esc(date===todayKey()?"Aujourd’hui":date.slice(5))+'</text>';
     }).join("");
     const graph='<div style="width:100%;overflow-x:auto"><svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Évolution des mesures de glycémie, jours récents à gauche" style="display:block;width:'+w+'px;max-width:none;height:auto">'+grid+labels+dots+'<text x="8" y="12" fill="#657b6c" font-size="10">mmol/L</text></svg></div>';
