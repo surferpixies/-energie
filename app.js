@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.247";
+  const APP_RELEASE = "3.56.248";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -13290,7 +13290,7 @@ function formatSleepDuration(hours) {
     $("#app .hero")?.insertAdjacentHTML("afterend", perf("observationExplorerHtml", () => observationExplorerHtml()));
     $(".observation-explorer-card")?.insertAdjacentHTML("afterend", perf("weightObservationHtml", () => weightObservationHtml()));
     $(".observation-explorer-card")?.insertAdjacentHTML("afterend", glucoseObservationsHtml());
-    $("#glucoseObservationFilter")?.addEventListener("change", event => { const host = $(".glucose-observations-trend"); if (host) host.outerHTML = glucoseObservationsHtml(event.target.value); const select = $("#glucoseObservationFilter"); if (select) select.value = event.target.value; });
+    bindGlucoseObservationFilter();
     const personalTrends = $("#app .personal-trends");
     (personalTrends || $("#app .hero"))?.insertAdjacentHTML("afterend", perf("stepsObservationHtml", () => stepsObservationHtml()));
     const explorerCard = $(".observation-explorer-card"),
@@ -14131,16 +14131,27 @@ function formatSleepDuration(hours) {
     wrap.innerHTML = calorieTargetGaugeHtml(selectedDate, mealTargetGaugeMeals(), { circular: true });
   }
 
-  function glucoseObservationsHtml(filter = "all") {
+  function bindGlucoseObservationFilter() {
+    const select = $("#glucoseObservationFilter");
+    if (!select) return;
+    select.onchange = event => {
+      const chosen = event.target.value;
+      const host = $(".glucose-observations-trend");
+      if (host) host.outerHTML = glucoseObservationsHtml(chosen);
+      bindGlucoseObservationFilter();
+    };
+  }
+  function glucoseObservationsHtml(filter = null) {
     if (db.settings.glucoseTracking !== true || db.settings.demoMode || professionalBetaMode) return "";
     const end = selectedDate < todayKey() ? selectedDate : todayKey();
     const start = addDaysKey(end, -29);
     const points = Object.entries(db.days || {}).flatMap(([date, day]) =>
       date >= start && date <= end ? (day.glucoseMeasurements || []).filter(x => Number.isFinite(Number(x.value)) && Number(x.value) > 0 && Number(x.value) < 40 && /^\d{2}:\d{2}$/.test(x.time || "")).map(x => ({date,time:x.time,value:Number(x.value),context:x.context,mealId:x.mealId,scheduledTime:x.scheduledTime})) : []
     ).sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time));
-    const selected = ["all","fasting","scheduled","after","other"].includes(filter) ? filter : "all";
-    const filtered = points.filter(p => selected === "all" || (selected === "scheduled" ? !!p.scheduledTime : selected === "after" ? !!p.mealId || p.context === "after" : selected === "fasting" ? p.context === "fasting" : !p.mealId && !p.scheduledTime && p.context !== "fasting" && p.context !== "after"));
-    const filters = '<label style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.86rem">Afficher <select id="glucoseObservationFilter" style="max-width:240px"><option value="all">Toutes les mesures</option><option value="fasting">À jeun</option><option value="scheduled">Heures fixes</option><option value="after">Après les repas</option><option value="other">Autres</option></select></label>';
+    const preferred = db.settings.glucoseMode === "scheduled" ? "scheduled" : db.settings.glucoseMode === "meals" ? "after" : "fasting";
+    const selected = ["fasting","scheduled","after","other"].includes(filter) ? filter : preferred;
+    const filtered = points.filter(p => selected === "scheduled" ? !!p.scheduledTime : selected === "after" ? !!p.mealId || (p.context === "after" && !p.scheduledTime) : selected === "fasting" ? p.context === "fasting" && !p.scheduledTime && !p.mealId : !p.mealId && !p.scheduledTime && p.context !== "fasting" && p.context !== "after");
+    const filters = '<label style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.86rem">Contexte obligatoire <select id="glucoseObservationFilter" style="max-width:240px"><option value="fasting"' + (selected === "fasting" ? " selected" : "") + '>À jeun</option><option value="scheduled"' + (selected === "scheduled" ? " selected" : "") + '>Heures fixes</option><option value="after"' + (selected === "after" ? " selected" : "") + '>Après les repas</option><option value="other"' + (selected === "other" ? " selected" : "") + '>Autres</option></select></label>';
     const visible = filtered;
     const title = '<div class="metrics-heading"><h3>🩸 Évolution de la glycémie</h3><strong>' + (visible.length ? esc(String(visible.at(-1).value).replace(".", ",")) + ' mmol/L' : "—") + '</strong></div>';
     if (!visible.length) return '<article class="card glucose-observations-trend" style="width:100%;box-sizing:border-box;margin:14px 0">' + title + filters + '<p class="metrics-empty">Aucune mesure enregistrée dans les 30 derniers jours.</p><p class="metrics-note">Les valeurs sont affichées sans interprétation médicale.</p></article>';
