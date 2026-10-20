@@ -12986,7 +12986,7 @@ function formatSleepDuration(hours) {
       if(!a.period) return `<details class="card wide weight-observation-fold" data-weight-fold="${direction}"><summary><span class="observation-fold-icon" aria-hidden="true">${icon}</span><span class="observation-fold-copy"><strong>${title}</strong><small>Aucune variation d’au moins 3 lb détectée</small></span><em aria-hidden="true">⌄</em></summary><div class="weight-observation-fold-body" data-weight-observation-result="${direction}"></div></details>`;
       const aligned=a.signals.filter(s=>s.aligned===true).slice(0,3);
       const text=aligned.length
-        ? `Pendant cette période : ${aligned.map(s=>`${s.label.toLowerCase()} ${s.direction==="up"?"↑":"↓"}`).join(" · ")}`
+        ? `${window.ENERGIE_LOCALE === "en" ? "During this period" : "Pendant cette période"} : ${aligned.map(s=>`${window.ENERGIE_LOCALE === "en" ? ({ "Activité":"activity", "Pas":"steps", "Hydratation":"hydration", "Sommeil":"sleep", "Apports énergétiques estimés":"estimated energy intake" }[s.label] || s.label) : s.label.toLowerCase()} ${s.direction==="up"?"↑":"↓"}`).join(" · ")}`
         : "Variation nette détectée · voir les changements observés pendant cette période";
       return `<details class="card wide weight-observation-fold" data-weight-fold="${direction}"><summary><span class="observation-fold-icon" aria-hidden="true">${icon}</span><span class="observation-fold-copy"><strong>${title}</strong><small>${esc(text)}</small></span><em aria-hidden="true">⌄</em></summary><div class="weight-observation-fold-body" data-weight-observation-result="${direction}"></div></details>`;
     };
