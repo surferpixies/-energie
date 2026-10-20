@@ -967,6 +967,96 @@
     'Revenir à l’estimation automatique':'Return to the automatic estimate',
     'Entrez des calories positives ou nulles, ou revenez à l’estimation automatique.':'Enter zero or positive calories, or return to the automatic estimate.'
   });
+
+  // ENERGIE_EN_COMPLETION_2026_10_19 — specific labels that the initial dictionary missed.
+  Object.assign(en, {
+    "Ressentis": "Feelings",
+    "Pas aujourd'hui": "Not today",
+    "Pas aujourd’hui": "Not today",
+    "Que veux-tu noter?": "What would you like to log?",
+    "Que veux-tu noter ?": "What would you like to log?",
+    "Calories de la journée": "Daily calories",
+    "Calories de la journée et cible calorique": "Daily calories and target",
+    "Activité saisie": "Activity logged",
+    "Boisson": "Drink",
+    "Boissons et hydratation": "Drinks and hydration",
+    "Ajouter une boisson": "Add a drink",
+    "Ajouter la boisson": "Add drink",
+    "Add la boisson": "Add drink",
+    "+ Boisson": "+ Drink",
+    "Quantité (ml)": "Amount (ml)",
+    "Les boissons sont conservées avec leur heure afin de pouvoir comparer plus tard les habitudes et le sommeil. Une association observée ne prouve pas une cause.": "Drinks are saved with their time so you can compare habits and sleep later. An observed association does not prove causation.",
+    "Filter": "Filter",
+    "Filtrer": "Filter",
+    "repas et collations": "meals and snacks",
+    "Ce qu’Énergie apprend sur toi": "What Énergie is learning about you",
+    "Avec les données recueillies, Énergie fait ressortir des habitudes possibles, sans diagnostic et sans prétendre expliquer les causes.": "Using your logged data, Énergie highlights possible patterns without diagnosing or claiming to explain their causes.",
+    "Tableau intelligent": "Smart dashboard",
+    "EXPLORER MON HISTORIQUE": "EXPLORE MY HISTORY",
+    "Explorer mon historique": "Explore my history",
+    "Mon espace personnel": "My personal space",
+    "Espace professionnel": "Professional space",
+    "Espace professionnel · Bêta": "Professional space · Beta",
+    "Choisir un client": "Choose a client",
+    "Mes clients": "My clients",
+    "Choisis un client pour ouvrir son suivi.": "Choose a client to open their record.",
+    "Plan de suivi personnalisé": "Personalized tracking plan",
+    "Suivi professionnel": "Professional follow-up",
+    "Profil et préférences": "Profile and preferences",
+    "À propos de moi": "About me",
+    "À propos": "About",
+    "Marche": "Walking",
+    "Course": "Running",
+    "Vélo": "Cycling",
+    "Musculation": "Strength training",
+    "Yoga": "Yoga",
+    "Natation": "Swimming",
+    "Aquabike": "Aqua cycling",
+    "Aquagym": "Water aerobics",
+    "Randonnée": "Hiking",
+    "Pilates": "Pilates",
+    "Danse": "Dancing",
+    "Elliptique": "Elliptical",
+    "Rameur": "Rowing",
+    "Tennis": "Tennis",
+    "Badminton": "Badminton",
+    "Soccer": "Soccer",
+    "Hockey": "Hockey",
+    "Pickleball": "Pickleball",
+    "Volleyball": "Volleyball",
+    "Ski de fond": "Cross-country skiing",
+    "Patinage": "Skating",
+    "Escaliers": "Stairs",
+    "HIIT": "HIIT",
+    "Étirements": "Stretching",
+    "Autre": "Other",
+    "Eau": "Water",
+    "Eau pétillante": "Sparkling water",
+    "Café": "Coffee",
+    "Café latté": "Latte",
+    "Cappuccino": "Cappuccino",
+    "Thé": "Tea",
+    "Tisane": "Herbal tea",
+    "Chocolat chaud": "Hot chocolate",
+    "Jus de fruits": "Fruit juice",
+    "Smoothie": "Smoothie",
+    "Lait": "Milk",
+    "Boisson gazeuse": "Soft drink",
+    "Boisson énergisante": "Energy drink",
+    "Bière": "Beer",
+    "Vin": "Wine",
+    "Spiritueux": "Spirits",
+    "Pas": "Steps",
+    "Hydratation": "Hydration",
+    "Sommeil": "Sleep",
+    "Activité": "Activity",
+    "Poids": "Weight",
+    "Historique": "History",
+    "Observations": "Insights",
+    "Mon journal": "My journal",
+    "Journal": "Journal",
+    "Calories disponibles pour 2 des 3 entrées saisies · total partiel.": "Calories available for 2 of 3 logged entries · partial total.",
+  });
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
   window.t=translateString;
@@ -998,6 +1088,14 @@
       for(const [pattern,replacement] of rules) if(pattern.test(s)) return s.replace(pattern,replacement);
     }
     if(locale==='en'){
+      // Contextual messages produced with live numbers remain translatable.
+      if (out === s) {
+        let match;
+        if ((match = s.match(/^Calories disponibles pour (\\d+) des (\\d+) entrées saisies · total partiel\\.$/))) return `Calories available for ${match[1]} of ${match[2]} logged entries · partial total.`;
+        if ((match = s.match(/^≈ (.+) kcal avant le repère déficit · total partiel · 🎯 (.+)$/))) return `≈ ${match[1]} kcal before the deficit marker · partial total · 🎯 ${match[2]}`;
+        if ((match = s.match(/^(\\d+) entrées · repas et collations$/))) return `${match[1]} entries · meals and snacks`;
+        if ((match = s.match(/^Tu as documenté (\\d+) journées ce mois-ci\\. Ce volume permet de dégager des tendances plus représentatives, sans établir de lien de cause à effet\\.$/))) return `You logged ${match[1]} days this month. This amount of data helps identify more representative patterns without establishing causation.`;
+      }
       const mealWord=x=>translate(x.charAt(0).toUpperCase()+x.slice(1)).toLowerCase();
       out=out
         .replace(/^(\d+)\/(\d+) repas principal(?:aux)?$/,(_,a,b)=>`${a}/${b} main meals`)
