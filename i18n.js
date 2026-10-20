@@ -1269,6 +1269,27 @@
   "Ajouter": "Add",
   "Dernière fois": "Last time"
 });
+  // Physiological context localization.
+  Object.assign(en, {
+  "Contexte physiologique": "Physiological context",
+  "Cycle, grossesse ou ménopause · facultatif": "Cycle, pregnancy or menopause · optional",
+  "Ces renseignements sensibles restent facultatifs. Ils sont enregistrés avec ton profil, mais ne modifient pas encore les analyses.": "This sensitive information is optional. It is saved with your profile but does not currently affect the analyses.",
+  "Contexte à prendre en compte": "Context to consider",
+  "Cycle menstruel": "Menstrual cycle",
+  "Grossesse": "Pregnancy",
+  "Ménopause": "Menopause",
+  "Non activé": "Not enabled",
+  "Aucun": "None",
+  "Début des dernières menstruations": "First day of last menstrual period",
+  "Cette date servira éventuellement à comparer des périodes semblables, sans attribuer automatiquement un ressenti au cycle.": "This date may eventually help compare similar periods without automatically attributing feelings to the menstrual cycle.",
+  "Date prévue d’accouchement": "Estimated due date",
+  "(facultative)": "(optional)",
+  "Cette information servira éventuellement à situer le contexte. Énergie ne remplace pas le suivi médical.": "This information may eventually provide additional context. Énergie does not replace medical care.",
+  "La ménopause est notée comme contexte personnel. Ce choix ne déclenche aucun diagnostic ni aucune modification automatique des observations.": "Menopause is recorded as personal context. This choice does not trigger a diagnosis or automatically change your insights.",
+  "Aucun contexte physiologique n’est utilisé.": "No physiological context is in use.",
+  "🔒 Énergie ne tente jamais de déduire une grossesse, un cycle ou une ménopause à partir des repas et ressentis.": "🔒 Énergie never attempts to infer pregnancy, a menstrual cycle or menopause from meals or feelings.",
+  "Énergie ne tente jamais de déduire une grossesse, un cycle ou une ménopause à partir des repas et ressentis.": "Énergie never attempts to infer pregnancy, a menstrual cycle or menopause from meals or feelings."
+});
   const translate=s=>dict[s]||s;
   window.ENERGIE_I18N={locale,t:translateString,translateDOM:root=>translateDOM(root)};
   window.t=translateString;
