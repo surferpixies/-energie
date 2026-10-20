@@ -14284,7 +14284,8 @@ function formatSleepDuration(hours) {
     const slots = selected === "after" ? ["Déjeuner","Dîner","Souper",...(mealGroups.includes("Collation") ? ["Collation"] : [])] : selected === "scheduled" ? [...new Set([...(db.settings.glucoseReminderTimes || []),...visible.map(p=>p.scheduledTime)].filter(Boolean))].sort() : ["Mesure"];
     const slot = p => selected === "scheduled" ? Math.max(0,slots.indexOf(p.scheduledTime)) : selected === "after" ? Math.max(0,slots.indexOf(mealGroup(p))) : 0;
     const left=52,right=20,top=18,bottom=68,h=254;
-    const dayWidth=Math.max(175,slots.length*47+28);
+    const dayWidth = selected === "after" ? slots.length*30+68 : Math.max(175,slots.length*47+28);
+    const slotX = (day,position) => left+day*dayWidth+(dayWidth-(slots.length-1)*30)/2+position*30;
     const w=left+right+dayWidth*dates.length;
     const scaleY = v => top+(hi-v)/(hi-lo)*(h-top-bottom);
     const occupied = new Map();
@@ -14293,7 +14294,7 @@ function formatSleepDuration(hours) {
       const count=occupied.get(key)||0;
       occupied.set(key,count+1);
       const offset=count===0 ? 0 : Math.ceil(count/2)*11*(count%2 ? 1 : -1);
-      return {...p,x:left+day*dayWidth+dayWidth/(slots.length+1)*(position+1)+offset,y:scaleY(p.value)};
+      return {...p,x:slotX(day,position)+offset,y:scaleY(p.value)};
     });
     const grid=[0,1,2,3].map(i=>{
       const y=top+i*(h-top-bottom)/3, value=hi-i*(hi-lo)/3;
@@ -14303,7 +14304,7 @@ function formatSleepDuration(hours) {
     const dots=coordinates.map((p,i)=>'<g data-glucose-point="'+i+'" role="button" tabindex="0" style="cursor:pointer" aria-label="'+esc(p.date+" "+p.time+" "+p.value+" mmol/L") +'"><line x1="'+p.x.toFixed(1)+'" x2="'+p.x.toFixed(1)+'" y1="'+(h-bottom)+'" y2="'+p.y.toFixed(1)+'" stroke="#399e67" stroke-width="4"/><circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="6" fill="#2e985f" stroke="#fff" stroke-width="2"/><circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="14" fill="transparent"><title>'+esc(p.date+" "+p.time+" · "+p.value+" mmol/L")+'</title></circle></g>').join("");
     const labels=dates.map((date,day)=>{
       const x=left+day*dayWidth+dayWidth/2;
-      const names=slots.map((name,i)=>'<text x="'+(left+day*dayWidth+dayWidth/(slots.length+1)*(i+1)).toFixed(1)+'" y="'+(h-38)+'" text-anchor="middle" fill="#728679" font-size="10">'+esc(selected==="after"?["Déj.","Dîn.","Soup.","Coll."][i]:selected==="scheduled"?name:"")+'</text>').join("");
+      const names=slots.map((name,i)=>'<text x="'+(slotX(day,i)).toFixed(1)+'" y="'+(h-38)+'" text-anchor="middle" fill="#728679" font-size="10">'+esc(selected==="after"?["Déj.","Dîn.","Soup.","Coll."][i]:selected==="scheduled"?name:"")+'</text>').join("");
       return names+'<text x="'+x.toFixed(1)+'" y="'+(h-13)+'" text-anchor="middle" fill="#526c59" font-weight="600" font-size="13">'+esc(date===todayKey()?"Aujourd’hui":date.slice(5))+'</text>';
     }).join("");
     const graph='<div style="width:100%;overflow-x:auto"><svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Évolution des mesures de glycémie, jours récents à gauche" style="display:block;width:'+w+'px;max-width:none;height:auto">'+grid+labels+dots+'<text x="8" y="12" fill="#657b6c" font-size="10">mmol/L</text></svg></div>';
