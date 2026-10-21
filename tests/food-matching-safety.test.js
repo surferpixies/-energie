@@ -527,6 +527,37 @@ const englishEvaluationCases=[
  {family:'ambiguous',input:'140 g tuna',expect:'clarification'},
  {family:'safety',input:'2 apple pies',expect:'reject'},
 ];
+// Cas quotidiens additionnels : séparer les attentes des essais exploratoires.
+const everydayCases={
+ fr:[
+  '1 pomme','2 bananes','100 g carottes','200 g carottes','150 g brocoli',
+  '100 g tomates','200 g concombres','200 g spaghettis cuits',
+  '150 g riz cuit','150 g poulet','150 g saumon cuit',
+  '100 g pommes de terre','100 g fraises','100 g fromage cottage',
+  '2 oeufs','1 bagel','30 g fromage à la crème'
+ ],
+ en:[
+  '1 apple','2 bananas','100 g carrots','200 g carrots','150 g broccoli',
+  '100 g tomatoes','200 g cucumber','200 g cooked spaghetti',
+  '150 g cooked rice','150 g cooked chicken','150 g cooked salmon',
+  '100 g potatoes','100 g strawberries','100 g cottage cheese',
+  '2 eggs','1 bagel','30 g cream cheese'
+ ]
+};
+const everydayReport={rows:[],summary:{}};
+for(const locale of ['fr-CA','fr-FR','en-CA','en-US']){
+ global.ENERGIE_LOCALE=locale;
+ const entries=everydayCases[locale.startsWith('en')?'en':'fr'];
+ const rows=entries.map(input=>{
+  const n=context.estimateNutritionFromText(input);
+  return {locale,input,recognized:Number.isFinite(n?.calories)&&n.calories>0,
+    calories:n?.calories??null,traceCount:n?.trace?.items?.length??0};
+ });
+ everydayReport.rows.push(...rows);
+ everydayReport.summary[locale]={tested:rows.length,recognized:rows.filter(x=>x.recognized).length,
+  failed:rows.filter(x=>!x.recognized).map(x=>x.input)};
+}
+console.log('EVERYDAY_INPUT_AUDIT',JSON.stringify(everydayReport.summary));
 const evaluation={date:new Date().toISOString(),scope:'Jeu de contrôle déterministe, non représentatif; aucun intervalle de confiance',rows:[],byFamily:{}};
 for(const locale of ['fr-CA','fr-FR','en-CA','en-US']){
  global.ENERGIE_LOCALE=locale;
@@ -553,7 +584,6 @@ if(process.env.NUTRITION_EVALUATION_REPORT){
  fs.mkdirSync(require('node:path').dirname(target),{recursive:true});
  fs.writeFileSync(target,JSON.stringify(evaluation,null,2));
 }
-console.log('EN_DIAGNOSTIC',JSON.stringify(evaluation.failures.filter(x=>x.locale==='en-CA').map(x=>({input:x.input, stripped:cnf.stripQuantity(x.input), official:cnf.find(x.input)?.cnfFoodId, guided:cnf.search(x.input,2).map(z=>({id:z.id,en:z.nameEn?.slice(0,65)})), legacy:context.FOOD_CANDIDATES.filter(z=>z.compareKey===context.comparableFoodText(x.input)).slice(0,2).map(z=>z.food.keys[0])}))));
 console.log('REALISTIC_EVALUATION',JSON.stringify({total:evaluation.total,passed:evaluation.passed,ratePercent:evaluation.ratePercent,failures:evaluation.failures}));
 assert.equal(evaluation.failures.filter(x=>x.family==='securite').length,0,'Aucun échec de sécurité toléré');
 assert.ok(evaluation.ratePercent>=90,'Cible minimale du jeu de contrôle: 90 %');
