@@ -440,18 +440,18 @@
       return value;
     };
 
-    // « Saumon cuit » a plusieurs variantes d'espèce/origine dans le FCÉN.
-    // Référence par défaut documentée : Atlantique d'élevage, au four/grillé.
-    // Jamais pour une requête qui précise une autre espèce ou préparation.
-    if (/^(?:saumon cuit|salmon cooked)$/.test(stripQuantity(text))) {
-      const salmon = catalogById.get("3183");
-      if (salmon) return remember(foodFromRow(salmon, text));
-    }
-    // Morue cuite non précisée : morue de l'Atlantique au four/grillée.
-    // Ne pas confondre avec morue-lingue, morue charbonnière ou morue grise.
-    if (/^(?:morue cuite|cod cooked)$/.test(stripQuantity(text))) {
-      const cod = catalogById.get("3195");
-      if (cod) return remember(foodFromRow(cod, text));
+    // Références cuites explicites pour des noms courts ambigus dans le FCÉN.
+    // Ne jamais élargir cette liste sans vérifier la fiche et ses préparations.
+    const cookedFishDefaults = {
+      "saumon cuit": "3183",
+      "salmon cooked": "3183",
+      "morue cuite": "3195",
+      "cod cooked": "3195",
+    };
+    const cookedFishId = cookedFishDefaults[stripQuantity(text)];
+    if (cookedFishId) {
+      const cookedFish = catalogById.get(cookedFishId);
+      if (cookedFish) return remember(foodFromRow(cookedFish, text));
     }
 
     // Pour certains aliments très courants, le FCÉN contient de nombreuses
