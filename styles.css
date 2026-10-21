@@ -2186,3 +2186,32 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   #app .personal-trends-grid{grid-template-columns:minmax(0,1fr);gap:20px}
   #app .personal-trends-grid > .energy-balance-trend{grid-column:1}
 }
+
+/* 3.56.279 — Glycemia journal: iPhone-safe, compact rows */
+.glucose-journal-card.glucose-unified{min-width:0;max-width:100%;overflow:hidden}
+.glucose-journal-card.glucose-unified .glucose-unified-row{min-width:0}
+.glucose-journal-card.glucose-unified .glucose-unified-row>label{min-width:0}
+.glucose-journal-card.glucose-unified .glucose-unified-row input{min-width:0;max-width:100%}
+.glucose-journal-card.glucose-unified #glucoseEntryForm label{min-width:0}
+.glucose-journal-card.glucose-unified #glucoseEntryForm input,
+.glucose-journal-card.glucose-unified #glucoseEntryForm select{width:100%;max-width:100%;box-sizing:border-box}
+@media(max-width:700px){
+  .glucose-journal-card.glucose-unified .glucose-unified-row{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:5px 9px!important;
+    padding:9px 0!important;
+    align-items:end!important
+  }
+  .glucose-journal-card.glucose-unified .glucose-unified-row>strong{grid-column:1/-1;align-self:auto!important}
+  .glucose-journal-card.glucose-unified .glucose-unified-row>label{grid-column:auto}
+  .glucose-journal-card.glucose-unified .glucose-unified-row>button{
+    grid-column:1/-1;width:100%;min-width:0;max-width:100%;
+    padding:7px 12px!important
+  }
+  .glucose-journal-card.glucose-unified #glucoseEntryForm>div{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important
+  }
+  .glucose-journal-card.glucose-unified #glucoseEntryForm>div>label:last-child{grid-column:1/-1}
+}
