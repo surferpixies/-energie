@@ -270,6 +270,7 @@ context.FOOD_NUTRIENT_OVERRIDES = {};
 vm.runInContext(source.slice(source.indexOf('  function checkedCatalogFood('),source.indexOf('  function foodMatchForSegment(')),context);
 vm.runInContext(source.slice(source.indexOf('  function foodNutrients('),source.indexOf('  function normalizeFoodText(')),context);
 vm.runInContext(source.slice(source.indexOf('  function normalNutrition('),source.indexOf('  function normalizeFeelingScores(')),context);
+vm.runInContext(source.slice(source.indexOf('  function hasUnspecifiedPackagedSauce('),source.indexOf('  function mealNutritionRecognition(')),context);
 vm.runInContext(source.slice(source.indexOf('  function mealNutritionRecognition('),source.indexOf('  function mealCompositionAnalysis(')),context);
 context.mealCompositionAnalysis = () => ({});
 context.photoCupPortionAdjustment = (_segment,_food,quantity) => quantity;
