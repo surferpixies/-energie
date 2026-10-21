@@ -31,19 +31,18 @@ const ctx=vm.createContext(sandbox);
 load("foods.js",ctx);
 load("cnf-catalog.js",ctx);
 const catalog=Array.isArray(sandbox.ENERGIE_CNF_CATALOG)?sandbox.ENERGIE_CNF_CATALOG:[];
-check(catalog.length>0,"Catalogue FCÉN chargé",`0 fiche dans cnf-catalog.js (le fichier est-il généré/embarqu é ?)`);
+check(catalog.length>=5000,"Catalogue FCÉN complet (minimum 5000 fiches)",`0 fiche dans cnf-catalog.js (le fichier est-il généré/embarqué ?)`);
 load("cnf-search.js",ctx);
 const api=sandbox.ENERGIE_CNF_SEARCH;
 check(Boolean(api && typeof api.find==="function" && typeof api.getById==="function" && typeof api.nutritionForGrams==="function"),"API de recherche FCÉN disponible");
 
 const ids=new Set();
-const sampleFailures=[];
 let usableCalories=0, absentCalories=0, ambiguousNames=0;
 const frIndex=new Map();
 for(const [index,row] of catalog.entries()){
   const id=String(row?.[0]??"");const fr=String(row?.[1]??"").trim();
   const en=String(row?.[2]??"").trim();const nutrients=row?.[3]||{};
-  check(Boolean(id&&fr&&en&&typeof nutrients==="object"),"Fiche valide #"+index,id);
+  check(Boolean(id&&fr&&en&&nutrients&&typeof nutrients==="object"&&!Array.isArray(nutrients)),"Fiche valide #"+index,id);
   check(!ids.has(id),"Identifiant unique #"+index,id);
   ids.add(id);
   const kcal=nutrients.calories;
@@ -80,6 +79,26 @@ if(api){
   check(api.requiresClarification("spaghetti")===true,
     "Spaghetti : demander cru/cuit");
 }
+// Couverture par familles dans le catalogue complet : signale les exports tronqués.
+// Ces recherches portent sur les noms officiels et ne valident pas, à elles seules,
+// la saisie libre et le choix de la meilleure préparation.
+const groups = {
+  pates: /spaghett|macaroni|linguine|penne|lasagn|fusilli|ravioli|tortellini|pasta/i,
+  viandes: /boeuf|bœuf|beef|porc|pork|veau|veal|agneau|lamb|bison|venison/i,
+  volailles: /poulet|chicken|dinde|turkey|canard|duck/i,
+  poissons: /saumon|salmon|thon|tuna|morue|cod|sole|trout|truite/i,
+  fruits: /banane|banana|pomme|apple|orange|fraise|strawberry|ananas|pineapple/i,
+  legumes: /tomate|tomato|carotte|carrot|brocoli|broccoli|concombre|cucumber/i,
+  laitiers: /fromage|cheese|yogourt|yogurt|milk|lait|cream/i,
+  noix: /arachide|peanut|amande|almond|walnut|noix/i
+};
+const familyCoverage={};
+for(const [family,pattern] of Object.entries(groups)){
+  const count=catalog.reduce((n,row)=>n+(pattern.test(String(row?.[1]||"")+" "+String(row?.[2]||""))?1:0),0);
+  familyCoverage[family]=count;
+  check(count>0,"Famille FCÉN couverte : "+family);
+}
+// Distinguer calories absentes et calories nulles authentiques.
 // Vérifier les aliments simples du catalogue de repli, sans les présenter
 // comme validés de bout en bout dans le formulaire repas.
 const foods=Array.isArray(sandbox.ENERGIE_FOODS)?sandbox.ENERGIE_FOODS:[];
@@ -93,7 +112,7 @@ for(const [label,alias] of Object.entries({
 }
 const report={date:new Date().toISOString(),source:"cnf-catalog.js local",
   catalogRows:catalog.length,rowsWithCalories:usableCalories,rowsWithoutCalories:absentCalories,
-  ambiguousFrenchNames:ambiguousNames,checksPassed:passed,checksFailed:failures,
+  ambiguousFrenchNames:ambiguousNames,familyCoverage,checksPassed:passed,checksFailed:failures,
   status:failures?"FAIL":"PASS",errors:errors.slice(0,100),
   scope:"Intégrité FCÉN + règles de sécurité; PAS un test end-to-end de saisie repas"};
 console.log(JSON.stringify(report,null,2));
