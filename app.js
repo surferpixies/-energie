@@ -3984,15 +3984,39 @@ function formatSleepDuration(hours) {
       list.innerHTML = "";
       return;
     }
+    // Ne pas confondre « aliment inconnu » et « unité non convertible ».
+    // La recherche FCÉN peut connaître l'amande sans connaître le poids de 5 unités.
+    const weightGuidance = (item) => {
+      if (mealNaturalCountFromText(item) == null || mealQuantityFromText(item)) return false;
+      const foodName = window.ENERGIE_CNF_SEARCH?.stripQuantity?.(item);
+      if (!foodName) return false;
+      const food = window.ENERGIE_CNF_SEARCH?.find?.(foodName);
+      if (!food) return false;
+      return /\\b100\\s*g\\b/i.test(String(food.portion || "")) ||
+        Number(food.gramsPerPortion) === 100;
+    };
     const filetWeightMissing = items.some(item =>
-      mealNaturalCountFromText(item) != null && /\b(filets?|fillets?)\b/.test(normalizeFoodText(item)));
+      mealNaturalCountFromText(item) != null && /\\b(filets?|fillets?)\\b/.test(normalizeFoodText(item)));
     const preparationMissing = items.some(item => window.ENERGIE_CNF_SEARCH?.requiresClarification?.(item));
+    const countNeedsWeight = items.some(weightGuidance);
     notice.textContent = filetWeightMissing
       ? "ⓘ Indique le poids total des filets pour calculer le repas"
       : preparationMissing
       ? "ⓘ Précise cru/cuit ou choisis la préparation dans la saisie guidée"
+      : countNeedsWeight
+      ? "ⓘ Aliment trouvé · précise son poids total en grammes"
       : `ⓘ Estimation à préciser · ${items.length} élément${items.length > 1 ? "s" : ""} à vérifier`;
-    list.innerHTML = items.map((item) => `<div class="meal-calorie-unrecognized-item"><span aria-hidden="true">?</span><div><strong>${esc(item)}</strong><small>${mealNaturalCountFromText(item) != null && /\b(filets?|fillets?)\b/.test(normalizeFoodText(item)) ? "Aliment reconnu. Pour des filets panés de marque, ajoute le nom du produit (ex. 4 filets de poulet panés St-Hubert). Sinon, indique leur poids total en grammes ou choisis une portion dans la saisie guidée." : window.ENERGIE_CNF_SEARCH?.requiresClarification?.(item) ? "Précise la préparation (cru, cuit, sec ou en conserve), puis la quantité, ou utilise la saisie guidée." : "Aucune valeur calorique n’a pu être associée à cet élément."}</small></div></div>`).join("");
+    list.innerHTML = items.map((item) => {
+      const filet = mealNaturalCountFromText(item) != null && /\\b(filets?|fillets?)\\b/.test(normalizeFoodText(item));
+      const message = filet
+        ? "Aliment reconnu. Pour des filets panés de marque, ajoute le nom du produit (ex. 4 filets de poulet panés St-Hubert). Sinon, indique leur poids total en grammes ou choisis une portion dans la saisie guidée."
+        : window.ENERGIE_CNF_SEARCH?.requiresClarification?.(item)
+          ? "Précise la préparation (cru, cuit, sec ou en conserve), puis la quantité, ou utilise la saisie guidée."
+          : weightGuidance(item)
+            ? "Aliment trouvé dans la FCÉN, mais le poids de chaque unité n'est pas connu. Indique le poids total en grammes (ex. 6 g amandes) ou utilise la saisie guidée."
+            : "Aucune valeur calorique n’a pu être associée à cet élément.";
+      return `<div class="meal-calorie-unrecognized-item"><span aria-hidden="true">?</span><div><strong>${esc(item)}</strong><small>${esc(message)}</small></div></div>`;
+    }).join("");
   }
   function openMealCalorieRecognition() {
     updateMealCalorieRecognition();
