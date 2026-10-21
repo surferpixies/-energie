@@ -358,6 +358,12 @@ const matrixPools = [
  ['1 banane','100 g fromage cottage','100 g fraises','100 g amandes','1 pomme'],
  ['150 g saumon cuit','100 g brocoli','100 g pommes de terre','100 g carottes','100 g tomates'],
  ['150 g boeuf cuit','100 g riz cuit','100 g brocoli','100 g carottes','100 g concombres'],
+ ['150 g morue cuite','100 g brocoli','100 g pommes de terre','100 g carottes','100 g tomates'],
+ ['150 g truite cuite','100 g riz cuit','100 g brocoli','100 g carottes','100 g tomates'],
+ ['150 g thon cuit','100 g pommes de terre','100 g brocoli','100 g carottes','100 g tomates'],
+ ['150 g crevettes cuites','100 g riz cuit','100 g brocoli','100 g carottes','100 g tomates'],
+ ['150 g porc cuit','100 g riz cuit','100 g brocoli','100 g carottes','100 g tomates'],
+ ['150 g dinde cuite','100 g riz cuit','100 g brocoli','100 g carottes','100 g tomates'],
 ];
 const matrixFailures=[];
 const matrixSummary={tested:0,complete:0,notCalculable:0,missingTrace:0,incorrectTotal:0};
