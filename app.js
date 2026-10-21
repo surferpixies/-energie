@@ -2791,11 +2791,14 @@ function formatSleepDuration(hours) {
       const identityText = String(segment || "").replace(/^\s*(?:\d+(?:[.,]\d+)?|une?)\s+c\.?\s*[aà]\s*soupe\s+(?:de\s+)?/i, "");
       const knownPeanutButter = wantsPeanutButter &&
         (checked.keys || []).some(alias => ["beurre d arachide", "beurre de pinotte", "peanut butter"].includes(normalizeFoodText(alias)));
-      const knownCookedSalmon = checked.cnfFoodId === "3183" &&
-        /^(?:saumon cuit|salmon cooked)$/.test(window.ENERGIE_CNF_SEARCH?.stripQuantity?.(segment) || "");
-      const knownCookedCod = checked.cnfFoodId === "3195" &&
-        /^(?:morue cuite|cod cooked)$/.test(window.ENERGIE_CNF_SEARCH?.stripQuantity?.(segment) || "");
-      if (guard && !knownPeanutButter && !knownCookedSalmon && !knownCookedCod &&
+      // Autoriser seulement les références cuites explicitement documentées.
+      const cookedFishDefaults = {
+        "saumon cuit": "3183", "salmon cooked": "3183",
+        "morue cuite": "3195", "cod cooked": "3195",
+      };
+      const cookedFishInput = window.ENERGIE_CNF_SEARCH?.stripQuantity?.(segment) || "";
+      const knownCookedFish = cookedFishDefaults[cookedFishInput] === checked.cnfFoodId;
+      if (guard && !knownPeanutButter && !knownCookedFish &&
           !referenceNames.some(reference => guard(identityText, reference))) return null;
       // Refuser « Bœuf, gras, cru » pour « bœuf haché ». Conserver une fiche
       // FCÉN/Ciqual authentiquement hachée; à défaut, repli Énergie explicite.
