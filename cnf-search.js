@@ -440,6 +440,14 @@
       return value;
     };
 
+    // « Saumon cuit » a plusieurs variantes d'espèce/origine dans le FCÉN.
+    // Référence par défaut documentée : Atlantique d'élevage, au four/grillé.
+    // Jamais pour une requête qui précise une autre espèce ou préparation.
+    if (/^(?:saumon cuit|salmon cooked)$/.test(stripQuantity(text))) {
+      const salmon = catalogById.get("3183");
+      if (salmon) return remember(foodFromRow(salmon, text));
+    }
+
     // Pour certains aliments très courants, le FCÉN contient de nombreuses
     // variantes proches. Énergie choisit une référence FCÉN cuite courante par
     // défaut plutôt que de retomber sur l'ancienne base faute de pouvoir
