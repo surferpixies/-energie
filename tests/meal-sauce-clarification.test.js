@@ -1,0 +1,21 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const source = fs.readFileSync(require.resolve('../app.js'), 'utf8');
+const corrections = require('../nutrition-corrections.js');
+const sauce = corrections.find(item => item.keys.includes('sauce à la viande'));
+assert.ok(sauce, 'Sauce à la viande must be recognized');
+for (const alias of ['sauce à la viande', 'meat sauce', 'sauce bolognaise', 'bolognese sauce'])
+  assert.ok(sauce.keys.includes(alias), alias);
+assert.equal(sauce.gramsPerPortion, 150);
+const beginning = source.indexOf('  function openMealNutritionTrace()');
+const end = source.indexOf('  function nutritionFromInputs()', beginning);
+assert.ok(beginning > 0 && end > beginning);
+const dialogCode = source.slice(beginning, end);
+assert.match(dialogCode, /genericMeatSauce/);
+assert.match(dialogCode, /item\.source === "energie-foods"/);
+assert.match(dialogCode, /mealClarifySauce/);
+assert.match(dialogCode, /description\?\.focus\(\)/);
+assert.match(dialogCode, /Que contient ta sauce à la viande/);
+assert.match(dialogCode, /What's in your meat sauce/);
+assert.doesNotMatch(dialogCode, /description\.value\s*=/, 'Never alter ingredients automatically');
+console.log('MEAT_SAUCE_CLARIFICATION_CONTRACT', JSON.stringify({languages: ['fr','en'], defaultGrams: 150, optional: true}));
