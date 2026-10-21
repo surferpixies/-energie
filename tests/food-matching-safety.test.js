@@ -374,7 +374,7 @@ const matrixPools = [
  ['150 g dinde cuite','100 g riz cuit','100 g brocoli','100 g carottes','100 g tomates'],
 ];
 const matrixFailures=[];
-const matrixSummary={tested:0,complete:0,notCalculable:0,missingTrace:0,incorrectTotal:0};
+const matrixSummary={tested:0,complete:0,notCalculable:0,missingTrace:0,incorrectTotal:0,unrecognizedIngredients:0};
 const tolerance=1.1;
 for(const locale of ['fr-CA','fr-FR']){
  global.ENERGIE_LOCALE=locale;
@@ -389,6 +389,7 @@ for(const locale of ['fr-CA','fr-FR']){
     const caseInfo={locale,ingredients,separator:separator==='\n'?'newline':'plus'};
     if(individually.some(x=>!x)||!result){
       matrixSummary.notCalculable++;
+      matrixSummary.unrecognizedIngredients+=ingredients.filter((_,i)=>!individually[i]).length;
       matrixFailures.push({...caseInfo,reason:'not-calculable',individualFailures:ingredients.filter((_,i)=>!individually[i]),unrecognized:context.mealNutritionRecognition(ingredients.join(separator)).unrecognized});
       continue;
     }
@@ -409,6 +410,8 @@ for(const locale of ['fr-CA','fr-FR']){
   }
  }
 }
+// La matrice ne valide plus silencieusement les échecs exploratoires.
+if(matrixFailures.length) process.exitCode=1;
 const matrixReport={date:new Date().toISOString(),scope:'Calcul de production en memoire, sans sauvegarde',
  summary:matrixSummary,failures:matrixFailures};
 if(process.env.NUTRITION_MEAL_REPORT){
