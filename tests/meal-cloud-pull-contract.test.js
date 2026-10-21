@@ -59,6 +59,22 @@ day.meals[0].nutrition = { calories: 1 };
 day.meals[0].updatedAt = '2026-10-20T12:00:00Z';
 vm.runInContext(source.slice(begin, end), ctx);
 assert.equal(day.meals[0].nutrition.calories, 511.5);
+// Une ancienne ligne cloud sans nutrition ne doit pas effacer le calcul local
+// lorsque la description du repas est toujours identique.
+day.meals[0].nutrition = ctx.normalNutrition(nutrition);
+day.meals[0].updatedAt = '2026-10-20T12:00:00Z';
+row.nutrition = null;
+row.updated_at = '2026-10-21T17:00:00Z';
+vm.runInContext(source.slice(begin, end), ctx);
+assert.equal(day.meals[0].nutrition.calories, 511.5);
+assert.equal(day.meals[0].nutrition.trace.items.length, 4);
+// Un autre repas portant le même identifiant mais une nouvelle description
+// ne doit pas conserver de chiffres qui ne correspondent plus aux aliments.
+row.description = 'Nouveau repas sans calcul';
+row.updated_at = '2026-10-21T18:00:00Z';
+vm.runInContext(source.slice(begin, end), ctx);
+assert.equal(day.meals[0].nutrition, null);
+assert.equal(day.meals[0].description, 'Nouveau repas sans calcul');
 console.log('MEAL_CLOUD_PULL_CONTRACT', JSON.stringify({
   calories: restored.nutrition.calories, ingredients: restored.nutrition.trace.items.length,
   source: restored.nutrition.source, cloudRefresh: true,
