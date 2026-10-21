@@ -64,3 +64,53 @@ Les proportions des calories/macros doivent suivre la quantité uniquement **à 
 
 ## Défaut ouvert au 21 octobre 2026
 - Description « bagel fromage à la crème / 1 banane / 1 cuillère beurre d'arachide » : reconnaissance et calcul global non encore vérifiés de bout en bout. Plusieurs correctifs ciblés ont été apportés; **ne pas considérer ce cas comme réussi sans exécution réelle**.
+
+## Campagne exhaustive FCÉN — couverture de TOUT le catalogue, pas une liste de 50 aliments
+
+Le socle de test doit être **généré automatiquement à partir de chaque fiche FCÉN réellement chargée** dans `cnf-catalog.js`. N'importe quel nombre de fiches : aucune exclusion arbitraire. Si la fiche a plusieurs noms français/anglais, tester chaque nom exploitable; ne pas transformer tous les synonymes anglais en résultats français sans contrôle.
+
+### Inventaire et couverture mesurables
+- Compter le nombre total de fiches FCÉN, fiches avec calories, fiches sans calories, fiches par catégorie, par état et par unité de référence. Enregistrer ce nombre à chaque livraison.
+- Pour chaque fiche avec une valeur calorique valide, vérifier : chargement, identifiant, nom, énergie par 100 g, macronutriments numériques plausibles, conversion aller-retour par portion et stabilité du calcul. Détecter les collisions d'identifiants.
+- Pour chaque fiche sans calories renseignées, afficher « donnée absente », **pas** 0 et pas une estimation masquée.
+- Tester la correspondance textuelle sur tous les noms FCÉN pertinents, avec classement : exacte, ambiguë, quantité non convertible, sans donnée; **ne pas exiger que toute chaîne de catalogue soit une saisie grand public non ambiguë**.
+- Produire un fichier de résultats avec la liste des identifiants non reconnus, des faux positifs, des conversions invalides et des exceptions acceptées. Un simple pourcentage global ne suffit pas.
+
+### Familles obligatoires (les fiches FCÉN de chacune, sans limitation)
+- Pâtes : spaghetti, linguine, fettucine/fettuccine, macaroni, penne, fusilli, rotini, farfalle, rigatoni, lasagne, ravioli, tortellini, nouilles et nouilles aux œufs; cru/sec vs bouilli/cuit; pâtes de blé, complètes, enrichies et sans gluten; sauces et plats préparés distincts.
+- Viandes : bœuf (haché, steak, rôti, coupes maigres ou grasses), veau, porc (côtelettes, longe, filet, bacon, jambon), agneau, chèvre, gibier (chevreuil, orignal, bison), abats, viandes transformées; crues/cuites, avec/sans os ou peau, cuisson, teneur en gras.
+- Volailles : poulet, dinde, canard, oie; poitrine, cuisse, pilon, aile, haché; cru/cuit, grillé/frit/rôti, avec/sans peau.
+- Poissons et fruits de mer : saumon, thon cru/cuit/en conserve, truite, morue, sole, tilapia, sardine, crevette, pétoncle, moule, huître, homard, crabe; frais/surgelé/fumé/en conserve.
+- Fruits : pommes, poires, bananes, agrumes, raisins, baies, melons, mangue, ananas, kiwi, fruits à noyau, fruits séchés et en conserve; frais vs jus, avec/sans peau.
+- Légumes : tomates, concombres, carottes, pommes de terre, patates douces, poivrons, brocoli, chou-fleur, choux, laitues, épinards, champignons, courges, asperges, oignons, ail, céleri, betteraves, haricots verts, légumes racines et légumes congelés; cru vs cuit vs frit vs conserve.
+- Céréales/féculents : riz de toutes sortes, quinoa, boulgour, orge, avoine, pain, bagel, muffin, tortillas, céréales, farines, semoule, couscous; sec/cuit.
+- Légumineuses/noix/graines : lentilles, pois chiches, haricots secs et cuits, soya, tofu, tempeh, arachides, amandes, noix et toutes les pâtes/beurres de noix.
+- Laitages/œufs : laits et boissons substituts, yogourts, skyr, fromages frais et affinés, cottage, fromage à la crème, crème, beurre, œufs et préparations d'œufs.
+- Huiles/condiments, desserts, collations, boissons, produits manufacturés, préparations mixtes et entrées multiples du catalogue : inclus également. Un plat composé **ne doit pas** automatiquement autoriser une correspondance avec son ingrédient de base.
+
+### Matrice de variations à appliquer intelligemment
+Pour chaque fiche compatible avec l'unité :
+1. Référence de base : nom exact + quantité de référence; énergie et macros recalculées.
+2. Poids : 1 g, 50 g, 100 g, 150 g, 250 g, 500 g, 1 kg — tests de proportionnalité et arrondis, si base massique.
+3. Volume : 15 ml, 100 ml, 250 ml, tasse, 1/2 tasse — **uniquement** si densité / portion vérifiée.
+4. Cuillères : 1/2, 1, 2 c. à thé ou à soupe — uniquement si facteur de conversion validé.
+5. Unités naturelles : 1, 2, 3, 10, 50 fruits, œufs, filets, tranches, pièces — si une portion unitaire est définie; autrement « quantité à préciser ».
+6. Orthographe : accents, apostrophes droites/courbes, pluriels, majuscules, espaces, synonymes FR-CA/FR-FR/EN attestés.
+7. Préparation : cru/cuit/bouilli/rôti/frit/séché/en conserve; jamais une variante non correspondante par défaut.
+8. Provenance locale : FCÉN d'abord en fr-CA, Ciqual d'abord en fr-FR, avec repli identifié et sans remplacer une fiche fiable par une suggestion approximative.
+
+### Tests de repas composés / collisions
+- Générer des combinaisons 2 à 5 aliments de familles différentes (plusieurs centaines minimum) avec séparateurs : virgule, retour de ligne, « + », « et », « avec », « sur », « garni de ».
+- Vérifier **conservation de la somme** : total reconnu = somme de chaque ingrédient avec la même référence et quantité.
+- Vérifier que la présence d'une préparation composée dans le catalogue ne détourne pas le match d'un aliment simple.
+- Tester les mêmes repas avec ingrédient inconnu ajouté : somme partielle inchangée, statut « partiel » et nom inconnu visible.
+- Tester le total des calories et chaque macro avec une tolérance d'arrondi publiée, sans imposer l'égalité d'énergie estimée à 4P+4G+9L (les tables officielles peuvent différer).
+
+### Seuils de publication
+- 100 % des scénarios de sécurité P0 et des tests d'intégrité des données passent.
+- 100 % des fiches FCÉN sont **inventoriées et évaluées**. Les exceptions sont chiffrées, justifiées et accessibles dans un rapport; ne pas prétendre 100 % de reconnaissance automatique si la fiche est ambiguë.
+- Comparaison du nombre de cas réussis et échoués à la version précédente; **aucune régression critique tolérée**.
+- Validation bout en bout sur saisie repas, confirmation des calories dans l'interface, sauvegarde/rechargement, puis observation/journal.
+- Exécuter en intégration continue à chaque changement des fichiers d'alimentation, de recherche, du moteur et avant tout déploiement. Les tests doivent être branchés au même code de production, pas à une simulation divergente.
+
+**État : ce plan élargi reste un cahier de tests. Le harnais exhaustif et son rapport d'exécution ne sont pas encore implémentés.**
