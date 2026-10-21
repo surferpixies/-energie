@@ -10110,7 +10110,7 @@ function formatSleepDuration(hours) {
     return '<section class="card glucose-journal-card glucose-unified" style="grid-column:1/-1;width:100%;box-sizing:border-box;padding:7px 12px;margin:5px 0"><h3 style="margin:0 0 4px;font-size:1.08rem">🩸 '+t("Suivi de la glycémie")+'</h3><p class="muted tiny" style="margin:0 0 4px">'+t("Mesures manuelles en mmol/L. Aucune interprétation médicale automatique.")+'</p>'
       +'<div style="overflow-x:auto">'+assigned+'</div>'
       +(extras.length ? '<h4 style="margin:14px 0 5px">'+t("Mesures supplémentaires")+'</h4>'+extras.map(x=>'<div style="display:flex;align-items:center;gap:10px;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5ecdf"><span>'+esc(x.time||"")+' · '+esc(String(x.value).replace(".",","))+' mmol/L · '+esc(contexts[x.context]||t("Autre"))+'</span>'+(canEdit?'<button type="button" class="secondary small" data-delete-glucose="'+esc(x.id)+'">'+t("Retirer")+'</button>':"")+'</div>').join("") : "")
-      +(canEdit ? '<form id="glucoseEntryForm" style="margin-top:6px"><strong>'+t("Ajouter une mesure supplémentaire")+'</strong><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:9px;align-items:end;margin-top:6px"><label>'+t("Valeur (mmol/L)")+'<input id="glucoseValue" type="text" required inputmode="decimal" placeholder="5,4" style="width:100%;height:40px;min-height:0;padding:6px 10px;box-sizing:border-box;font-size:.95rem"></label><label>'+t("Heure")+'<input id="glucoseTime" type="time" required style="width:100%;height:40px;min-height:0;padding:6px 10px;box-sizing:border-box;font-size:.95rem" value="'+now.toTimeString().slice(0,5)+'"></label><label>'+t("Contexte")+'<select id="glucoseContext" style="width:100%;height:40px;min-height:0;padding:6px 10px;box-sizing:border-box;font-size:.95rem">'+Object.entries(contexts).map(([k,v])=>'<option value="'+k+'">'+esc(v)+'</option>').join("")+'</select></label></div><button class="secondary small" type="submit" style="margin-top:10px">'+t("Enregistrer la mesure")+'</button></form>' : "")
+      +(canEdit ? '<form id="glucoseEntryForm" style="margin-top:6px"><strong>'+t("Ajouter une mesure supplémentaire")+'</strong><div class="glucose-unified-row glucose-extra-row"><label><small>'+t("mmol/L")+'</small><input id="glucoseValue" type="text" required inputmode="decimal" placeholder="5,4" aria-label="'+t("Valeur (mmol/L)")+'"></label><label><small>'+t("Heure")+'</small><input id="glucoseTime" type="time" required value="'+now.toTimeString().slice(0,5)+'"></label><button class="secondary small" type="submit" aria-label="'+t("Enregistrer la mesure")+'">'+t("Enregistrer la mesure")+'</button></div></form>' : "")
       +'<p id="glucoseStatus" role="status" class="muted tiny"></p></section>';
   }
   function bindGlucoseJournal() {
@@ -10137,7 +10137,7 @@ function formatSleepDuration(hours) {
       const value=parse($("#glucoseValue")?.value),time=$("#glucoseTime")?.value;
       if(!Number.isFinite(value)||value<=0||value>=40||!/^\d{2}:\d{2}$/.test(time||""))return invalid();
       const day=ensureDay(db,selectedDate);
-      (day.glucoseMeasurements ||= []).push({id:uid(),value,time,context:$("#glucoseContext").value});
+      (day.glucoseMeasurements ||= []).push({id:uid(),value,time,context:"other"});
       day.updatedAt=new Date().toISOString();saveLocal("glycemie-supplementaire");setDayChanged(selectedDate);render();
     });
     $$("[data-delete-glucose]").forEach(btn=>btn.onclick=()=>{
