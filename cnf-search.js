@@ -99,6 +99,21 @@
     // « beurre d'arachide » n'est jamais du beurre laitier.
     if ((query.has("arachide") || query.has("peanut")) &&
         !tokens.includes("arachide") && !tokens.includes("peanut")) return false;
+    // Vérifier l'identité de la noix/graine : un beurre d'amandes ne peut
+    // devenir du beurre laitier, d'arachide ou de noisettes.
+    const nutFamilies = [
+      ["arachide", "peanut", "peanuts"],
+      ["amande", "almond", "almonds"],
+      ["noisette", "hazelnut", "hazelnuts"],
+      ["cajou", "cashew", "cashews"],
+      ["pistache", "pistachio", "pistachios"],
+      ["tournesol", "sunflower"],
+      ["sesame", "tahini"],
+    ];
+    const requestedNut = nutFamilies.find(family => family.some(word => query.has(word)));
+    if (requestedNut && !requestedNut.some(word => tokens.includes(word))) return false;
+    const candidateNut = nutFamilies.find(family => family.some(word => tokens.includes(word)));
+    if (candidateNut && !candidateNut.some(word => query.has(word))) return false;
     const cottage = query.has("cottage");
     if (cottage && tokens.some(word => ["fruit", "legume", "vegetable"].includes(word) && !query.has(word))) return false;
     const cottageDescriptors = new Set("fromage cheese creme creamed m f faible low reduit reduced lactose lipide pressed presse curd gros petit large small grain uncreamed".split(" "));
