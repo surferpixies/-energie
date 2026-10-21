@@ -450,3 +450,65 @@ for(const locale of ['fr-CA','fr-FR']){
   return {input,calories:n?.calories??null,source:n?.source??null,recognized:n?.trace?.items?.length??0,unrecognized:context.mealNutritionRecognition(input).unrecognized};
  })}));
 }
+
+
+// Évaluation distincte : formulations usuelles et comportements attendus.
+// Cette mesure ne prétend PAS être un taux représentatif de tous les usagers.
+const evaluationCases=[
+ {family:'fruit',input:'1 banane',expect:'recognized'},
+ {family:'fruit',input:'1 pomme',expect:'recognized'},
+ {family:'fruit',input:'100 g fraises',expect:'recognized'},
+ {family:'fruit',input:'100 g ananas',expect:'recognized'},
+ {family:'legume',input:'100 g carottes',expect:'recognized'},
+ {family:'legume',input:'100 g tomates',expect:'recognized'},
+ {family:'legume',input:'100 g concombres',expect:'recognized'},
+ {family:'legume',input:'100 g brocoli',expect:'recognized'},
+ {family:'viande',input:'150 g poulet',expect:'recognized'},
+ {family:'viande',input:'150 g filet de poulet cuit',expect:'recognized'},
+ {family:'viande',input:'150 g boeuf cuit',expect:'recognized'},
+ {family:'viande',input:'150 g porc cuit',expect:'recognized'},
+ {family:'viande',input:'150 g dinde cuite',expect:'recognized'},
+ {family:'poisson',input:'150 g saumon cuit',expect:'recognized'},
+ {family:'poisson',input:'150 g morue cuite',expect:'recognized'},
+ {family:'poisson',input:'150 g truite cuite',expect:'recognized'},
+ {family:'poisson',input:'150 g thon cuit',expect:'recognized'},
+ {family:'poisson',input:'150 g crevettes cuites',expect:'recognized'},
+ {family:'feculent',input:'120 g spaghettis cuits',expect:'recognized'},
+ {family:'feculent',input:'100 g riz cuit',expect:'recognized'},
+ {family:'feculent',input:'100 g pommes de terre',expect:'recognized'},
+ {family:'laitier',input:'100 g fromage cottage',expect:'recognized'},
+ {family:'laitier',input:'30 g fromage à la crème',expect:'recognized'},
+ {family:'noix',input:'100 g amandes',expect:'recognized'},
+ {family:'noix',input:'1 c. à soupe beurre d\'arachide',expect:'recognized'},
+ {family:'boulangerie',input:'1 bagel',expect:'recognized'},
+ {family:'ambigu',input:'120 g spaghettis',expect:'clarification'},
+ {family:'ambigu',input:'140 g thon',expect:'clarification'},
+ {family:'securite',input:'2 apple pies',expect:'reject'},
+ {family:'securite',input:'4 filets de poulet St-Hubert avec sauce',expect:'reject'},
+];
+const evaluation={date:new Date().toISOString(),scope:'Jeu de contrôle déterministe, non représentatif; aucun intervalle de confiance',rows:[],byFamily:{}};
+for(const locale of ['fr-CA','fr-FR']){
+ global.ENERGIE_LOCALE=locale;
+ for(const item of evaluationCases){
+  const result=context.estimateNutritionFromText(item.input);
+  const recognized=Number.isFinite(result?.calories) && result.calories>0;
+  const outcome=recognized?'recognized':cnf.requiresClarification(item.input)?'clarification':'reject';
+  const passed=outcome===item.expect;
+  evaluation.rows.push({locale,...item,outcome,passed,calories:recognized?result.calories:null});
+  const key=locale+'/'+item.family;
+  const group=evaluation.byFamily[key]||{total:0,passed:0};
+  group.total++;
+  if(passed)group.passed++;
+  evaluation.byFamily[key]=group;
+ }
+}
+evaluation.total=evaluation.rows.length;
+evaluation.passed=evaluation.rows.filter(x=>x.passed).length;
+evaluation.ratePercent=Math.round(10000*evaluation.passed/evaluation.total)/100;
+evaluation.failures=evaluation.rows.filter(x=>!x.passed);
+if(process.env.NUTRITION_EVALUATION_REPORT){
+ const target=process.env.NUTRITION_EVALUATION_REPORT;
+ fs.mkdirSync(require('node:path').dirname(target),{recursive:true});
+ fs.writeFileSync(target,JSON.stringify(evaluation,null,2));
+}
+console.log('REALISTIC_EVALUATION',JSON.stringify({total:evaluation.total,passed:evaluation.passed,ratePercent:evaluation.ratePercent,failures:evaluation.failures}));
