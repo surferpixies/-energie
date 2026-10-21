@@ -2761,10 +2761,13 @@ function formatSleepDuration(hours) {
     // « bœuf » devient « b uf » dans normalizeFoodText : accepter aussi cette graphie.
     // Une demande de viande hachée ne doit pas aboutir à une coupe de bœuf générique.
     const wantsGroundBeef = /\b(?:boeuf|b uf) hache\b|\bground beef\b/.test(clean);
+    const wantsPeanutButter = /\b(?:beurre d arachide|beurre de pinotte|peanut butter)\b/.test(clean);
     const safeLegacy = wantsPlainCottage
       ? legacyFoodWithAlias('fromage cottage', 'cottage cheese', 'cottage')
       : wantsGroundBeef
-        ? legacyFoodWithAlias('boeuf haché', 'ground beef') : null;
+        ? legacyFoodWithAlias('boeuf haché', 'ground beef')
+        : wantsPeanutButter
+          ? legacyFoodWithAlias("beurre d arachide", "beurre de pinotte", "peanut butter") : null;
     function suitable(candidate) {
       const checked = checkedCatalogFood(candidate);
       if (!checked) return null;
@@ -2786,7 +2789,9 @@ function formatSleepDuration(hours) {
       // Strip a measured spoon serving before validating food identity.
       // The portion itself is still validated/scaled by nutritionScaleForSegment.
       const identityText = String(segment || "").replace(/^\s*(?:\d+(?:[.,]\d+)?|une?)\s+c\.?\s*[aà]\s*soupe\s+(?:de\s+)?/i, "");
-      if (guard && !referenceNames.some(reference => guard(identityText, reference))) return null;
+      const knownPeanutButter = wantsPeanutButter &&
+        (checked.keys || []).some(alias => ["beurre d arachide", "beurre de pinotte", "peanut butter"].includes(normalizeFoodText(alias)));
+      if (guard && !knownPeanutButter && !referenceNames.some(reference => guard(identityText, reference))) return null;
       // Refuser « Bœuf, gras, cru » pour « bœuf haché ». Conserver une fiche
       // FCÉN/Ciqual authentiquement hachée; à défaut, repli Énergie explicite.
       if (wantsGroundBeef && !/\b(?:hache|hachee|ground|minced)\b/.test(name)) return null;
@@ -2801,6 +2806,11 @@ function formatSleepDuration(hours) {
     if (best?.food?.nutritionSource === 'cnf' && window.ENERGIE_LOCALE !== 'fr-FR') {
       const verified = suitable(best.food);
       if (verified) return verified;
+    }
+    if (wantsPeanutButter) {
+      // Verified same-food aliases, with strict measured-portion validation.
+      const peanut = suitable(safeLegacy);
+      if (peanut) return peanut;
     }
     const official = suitable(window.ENERGIE_CNF_SEARCH?.find?.(segment));
     if (official) return official;
