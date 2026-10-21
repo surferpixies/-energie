@@ -445,6 +445,7 @@ const benchmarkFoods=benchmarkWindow.ENERGIE_FOODS||[];
 context.FOOD_CANDIDATES=benchmarkFoods.flatMap(food=>(food.keys||[]).map(key=>({
  food,key:context.normalizeFoodText(key),compareKey:context.comparableFoodText(key)
 })).filter(row=>row.key));
+context.legacyFoodWithAlias=(...aliases)=>benchmarkFoods.find(food=>(food.keys||[]).some(key=>aliases.includes(key)))||null;
 console.log('BENCHMARK_CATALOG_RESTORED',context.FOOD_CANDIDATES.length);
 // Diagnostic non bloquant des cas P0 avant de définir les attentes exactes.
 const p0Cases=[
