@@ -343,6 +343,9 @@ const matrixPools = [
  ['100 g carottes','150 g poulet','120 g spaghettis cuits','100 g tomates','100 g concombres'],
  ['100 g brocoli','150 g filet de poulet cuit','120 g spaghettis cuits','100 g carottes','100 g tomates'],
  ['100 g pommes','100 g carottes','100 g tomates','100 g concombres','100 g brocoli'],
+ ['1 banane','100 g fromage cottage','100 g fraises','100 g amandes','1 pomme'],
+ ['150 g saumon cuit','100 g brocoli','100 g pommes de terre','100 g carottes','100 g tomates'],
+ ['150 g boeuf cuit','100 g riz cuit','100 g brocoli','100 g carottes','100 g concombres'],
 ];
 const matrixFailures=[];
 const matrixSummary={tested:0,complete:0,notCalculable:0,missingTrace:0,incorrectTotal:0};
