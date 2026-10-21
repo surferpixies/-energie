@@ -2071,7 +2071,9 @@ function formatSleepDuration(hours) {
               error.message || "",
             )
           ) {
-            if (payload.nutrition?.caloriesManual) throw error;
+            // Ne jamais annoncer une synchronisation réussie en perdant les
+            // calories calculées, la trace des ingrédients ou les macros.
+            if (payload.nutrition != null) throw error;
             delete payload.nutrition;
             delete payload.recommendation;
             delete payload.photo_paths;
