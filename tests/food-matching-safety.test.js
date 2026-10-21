@@ -324,7 +324,7 @@ for (const locale of ['fr-CA','fr-FR']) {
  ]) {
   const singles=ingredients.map(s=>context.estimateNutritionFromText(s));
   assert.ok(singles.every(Boolean), locale+': ingrédient individuel manquant '+ingredients.join(' / '));
-  const meal=context.estimateNutritionFromText(ingredients.join('\\n'));
+  const meal=context.estimateNutritionFromText(ingredients.join('\n'));
   assert.ok(meal,locale+': repas complet non calculé '+ingredients.join(' / '));
   assert.equal(meal.trace?.items?.length,ingredients.length,locale+': ingrédients perdus ou dupliqués');
   const expected=singles.reduce((sum,n)=>sum+Number(n.calories),0);
