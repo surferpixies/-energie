@@ -357,7 +357,7 @@ for(const locale of ['fr-CA','fr-FR']){
     matrixSummary.tested++;
     const individually=ingredients.map(input=>context.estimateNutritionFromText(input));
     const result=context.estimateNutritionFromText(ingredients.join(separator));
-    const caseInfo={locale,ingredients,separator:separator==='\\n'?'newline':'plus'};
+    const caseInfo={locale,ingredients,separator:separator==='\n'?'newline':'plus'};
     if(individually.some(x=>!x)||!result){
       matrixSummary.notCalculable++;
       matrixFailures.push({...caseInfo,reason:'not-calculable',individualFailures:ingredients.filter((_,i)=>!individually[i]),unrecognized:context.mealNutritionRecognition(ingredients.join(separator)).unrecognized});
