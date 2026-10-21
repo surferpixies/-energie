@@ -14284,7 +14284,7 @@ function formatSleepDuration(hours) {
     const min = Math.min(...visible.map(p => p.value)), max = Math.max(...visible.map(p => p.value));
     const lo = Math.max(0, min - Math.max(.5,(max-min)*.15)), hi = max + Math.max(.5,(max-min)*.15);
     // Show actual measurement days, newest first, reserving today at the far left.
-    const dates = [...new Set([end,...visible.map(p=>p.date)])].sort((a,b)=>b.localeCompare(a));
+    const dates = [...new Set(visible.map(p=>p.date))].sort((a,b)=>a.localeCompare(b));
     // Three clearly separated meal columns per day. A fourth column is used only for actual snacks.
     // Older/manual after-meal readings may have no mealId: place them in the day's meal
     // column using the most recent preceding recorded meal, then time of day as fallback.
@@ -14331,11 +14331,17 @@ function formatSleepDuration(hours) {
       if (!byDay.has(point.date)) byDay.set(point.date, []);
       byDay.get(point.date).push(point);
     });
-    const curve = [...byDay.values()].map(dayPoints => {
-      if (dayPoints.length < 2) return "";
-      const ordered = dayPoints.slice().sort((a,b)=>a.time.localeCompare(b.time));
-      return '<polyline fill="none" stroke="#399e67" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round" points="'+ordered.map(point=>point.x.toFixed(1)+','+point.y.toFixed(1)).join(' ')+'"/>';
+    const orderedDays = dates.map(date => (byDay.get(date) || []).slice().sort((a,b)=>a.time.localeCompare(b.time)));
+    const dailyCurves = orderedDays.map(dayPoints => dayPoints.length < 2 ? "" :
+      '<polyline fill="none" stroke="#399e67" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round" points="'+dayPoints.map(point=>point.x.toFixed(1)+','+point.y.toFixed(1)).join(' ')+'"/>'
+    ).join("");
+    const betweenDays = orderedDays.slice(0,-1).map((dayPoints,index) => {
+      const next = orderedDays[index+1];
+      if (!dayPoints.length || !next.length) return "";
+      const from = dayPoints[dayPoints.length-1], to = next[0];
+      return '<line x1="'+from.x.toFixed(1)+'" y1="'+from.y.toFixed(1)+'" x2="'+to.x.toFixed(1)+'" y2="'+to.y.toFixed(1)+'" stroke="#399e67" stroke-width="1.5" stroke-dasharray="4 4" stroke-opacity="0.35"/>';
     }).join("");
+    const curve = dailyCurves + betweenDays;
     const dots=coordinates.map((p,i)=>{
       const tooltip=p.date+" · "+p.time+" · "+contextLabel(p)+" · "+String(p.value).replace(".",",")+" mmol/L";
       return '<g data-glucose-point="'+i+'" role="button" tabindex="0" style="cursor:pointer" aria-label="'+esc(tooltip)+'"><circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="6" fill="#2e985f" stroke="#fff" stroke-width="2"/><circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="15" fill="transparent"><title>'+esc(tooltip)+'</title></circle></g>';
@@ -14348,7 +14354,7 @@ function formatSleepDuration(hours) {
     const graph='<div style="width:100%;overflow-x:auto"><svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Évolution des mesures de glycémie, jours récents à gauche" style="display:block;width:'+w+'px;max-width:none;height:auto">'+grid+labels+curve+dots+'<text x="8" y="12" fill="#657b6c" font-size="10">mmol/L</text></svg></div>';
     const last=visible.at(-1);
     const latest = 'Dernière mesure : ' + esc(last.date + " à " + last.time) + ' · ' + visible.length + ' mesure' + (visible.length>1?"s":"") + ' sur 30 jours';
-    return '<article class="card glucose-observations-trend" style="width:100%;box-sizing:border-box;margin:14px 0">' + title + '<p class="muted tiny">' + latest + '</p>' + graph + '<div class="glucose-measure-detail" hidden></div><p class="metrics-note">Chaque point représente une mesure enregistrée. Les mesures ne sont reliées qu’à l’intérieur d’une même journée. Clique sur un point pour consulter la mesure et son repas associé, sans interprétation médicale ni données inventées.</p></article>';
+    return '<article class="card glucose-observations-trend" style="width:100%;box-sizing:border-box;margin:14px 0">' + title + '<p class="muted tiny">' + latest + '</p>' + graph + '<div class="glucose-measure-detail" hidden></div><p class="metrics-note">Chaque point représente une mesure enregistrée. Les mesures d’une même journée sont reliées par une ligne pleine; un pointillé discret relie le dernier point d’une journée au premier point de la suivante. Clique sur un point pour consulter la mesure et son repas associé, sans interprétation médicale ni données inventées.</p></article>';
   }
   function personalTrendsHtml() {
     const end = demoAnalysisContext()?.cutoff || todayKey(), profile = personalProfile(), unit = profile.weight?.unit || "kg";
