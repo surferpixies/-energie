@@ -6,6 +6,30 @@
   // comme « fromage blanc » ne soient pas confondus avec « fromage ».
   const corrections = [
     {
+      keys: ["riz au jasmin cuit", "riz jasmin cuit", "cooked jasmine rice", "jasmine rice cooked"],
+      calories: 247,
+      protein: 5.2, carbs: 53.5, fat: 0.5,
+      portion: "190 g", gramsPerPortion: 190, tags: ["féculent"],
+    },
+    {
+      keys: ["oeufs brouillés", "oeufs brouilles", "œufs brouillés", "œufs brouillées", "oeufs brouillées", "scrambled eggs", "oeuf brouillé", "œuf brouillé"],
+      calories: 100,
+      protein: 7, carbs: 1, fat: 7.5,
+      portion: "1 oeuf", gramsPerPortion: 60, tags: ["protéine"],
+    },
+    {
+      keys: ["carré de chocolat noir", "carre de chocolat noir", "dark chocolate square", "square of dark chocolate"],
+      calories: 55,
+      protein: 0.8, carbs: 4.6, fat: 3.8,
+      portion: "1 carré", gramsPerPortion: 10, tags: ["collation"],
+    },
+    {
+      keys: ["amandes", "amande", "almonds", "almond"],
+      calories: 7,
+      protein: 0.26, carbs: 0.26, fat: 0.61,
+      portion: "1 amande", gramsPerPortion: 1.2, tags: ["noix"],
+    },
+    {
       // Hypothèse explicite pour une soupe non détaillée, à personnaliser.
       keys: ["soupe", "soup"],
       calories: 160,
