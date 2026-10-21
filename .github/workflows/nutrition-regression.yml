@@ -32,4 +32,11 @@ jobs:
         with:
           node-version: '22'
       - name: Test FCEN catalogue and matching safety
-        run: npm run test:nutrition
+        run: NUTRITION_AUDIT_PATH=reports/fcen-mass-audit.json npm run test:nutrition
+      - name: Upload FCEN audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fcen-mass-audit
+          path: reports/fcen-mass-audit.json
+          if-no-files-found: warn
