@@ -2821,7 +2821,7 @@ function formatSleepDuration(hours) {
         "saumon cuit": "3183", "salmon cooked": "3183",
         "morue cuite": "3195", "cod cooked": "3195",
       };
-      const cookedFishInput = window.ENERGIE_CNF_SEARCH?.stripQuantity?.(segment) || "";
+      const cookedFishInput = window.ENERGIE_CNF_SEARCH?.stripQuantity?.(englishEquivalent || segment) || "";
       const knownCookedFish = Boolean(cookedFishDefaults[cookedFishInput]) &&
         cookedFishDefaults[cookedFishInput] === checked.cnfFoodId;
       const exactEnglishEquivalent = englishEquivalent &&
