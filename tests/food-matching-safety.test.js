@@ -435,6 +435,15 @@ console.log('Matrice repas : '+JSON.stringify({...matrixSummary,sampleFailures:m
 // Le rapport est exploratoire pour les nouveaux repas : les échecs restent
 // visibles pour triage, tandis que les scénarios P0 ci-dessus restent bloquants.
 
+// Restaurer le catalogue local après les scénarios de sécurité qui ont
+// volontairement vidé ou remplacé FOOD_CANDIDATES.
+const benchmarkWindow={};
+vm.runInNewContext(fs.readFileSync(require.resolve('../foods.js'),'utf8'),{window:benchmarkWindow});
+const benchmarkFoods=benchmarkWindow.ENERGIE_FOODS||[];
+context.FOOD_CANDIDATES=benchmarkFoods.flatMap(food=>(food.keys||[]).map(key=>({
+ food,key:context.normalizeFoodText(key),compareKey:context.comparableFoodText(key)
+})).filter(row=>row.key));
+console.log('BENCHMARK_CATALOG_RESTORED',context.FOOD_CANDIDATES.length);
 // Diagnostic non bloquant des cas P0 avant de définir les attentes exactes.
 const p0Cases=[
  "1 bagel",
