@@ -10002,7 +10002,7 @@ function formatSleepDuration(hours) {
         ? `${type} · ${state.detail}`
         : `Ajouter ${type.toLowerCase()}`;
 
-    return `<button type="button" class="journal-summary-action journal-summary-meal-card ${state.needsBrain ? "needs-brain-action" : ""} ${state.complete ? "is-complete" : ""}" data-summary-meal-card="${esc(type)}" data-summary-meal-id="${esc(state.mealId || "")}" aria-label="${esc(aria)}"><span class="summary-meal-visual ${visualClass}" aria-hidden="true">${state.visual}</span><span class="summary-meal-copy"><span>${esc(state.label)}</span><strong>${mealTypeHtml(type)}</strong><small>${esc(state.detail)}</small>${state.mealId ? glucoseMealCompactHtml(meals.find(m => m.id === state.mealId)) : ""}</span>${journalSummaryMealActionHtml(state)}</button>`;
+    return `<button type="button" class="journal-summary-action journal-summary-meal-card ${state.needsBrain ? "needs-brain-action" : ""} ${state.complete ? "is-complete" : ""}" data-summary-meal-card="${esc(type)}" data-summary-meal-id="${esc(state.mealId || "")}" aria-label="${esc(aria)}"><span class="summary-meal-visual ${visualClass}" aria-hidden="true">${state.visual}</span><span class="summary-meal-copy"><span>${esc(state.label)}</span><strong>${mealTypeHtml(type)}</strong><small>${esc(state.detail)}</small></span>${journalSummaryMealActionHtml(state)}</button>`;
   }
 
   function journalSummaryMealsHtml(meals) {
@@ -10023,7 +10023,7 @@ function formatSleepDuration(hours) {
     meals = journalCountedMeals(meals);
     const sleepRecorded = day.sleepHours != null || (day.sleepTags || []).length > 0 || String(day.sleepComment || "").trim(),
       sleepPrompt = sleepRecorded ? "" : `<button type="button" class="journal-summary-action journal-summary-sleep needs-brain-action sleep-needs-brain-action" id="journalSummarySleep"><span class="energy-action-brain sleep-energy-action-brain" aria-hidden="true">🧠</span><span class="sleep-summary-copy"><span>À noter une fois aujourd’hui</span><strong>Sommeil</strong><small>Durée, qualité ou commentaire</small></span><span class="summary-sleep-visual" aria-hidden="true">🌙</span><span class="summary-action-plus" aria-hidden="true">+</span></button>`;
-    return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}${journalSummaryMealsHtml(meals)}${summaryActivityHtml(day)}${summaryHydrationHtml(day)}${stepsProgressHtml(day, true)}</div></section>`;
+    return `<section class="journal-summary" aria-labelledby="journalSummaryTitle"><div class="journal-summary-intro"><div><p class="eyebrow">Ajout rapide</p><h2 id="journalSummaryTitle">Que veux-tu noter?</h2></div></div><div class="journal-summary-grid">${sleepPrompt}${journalSummaryMealsHtml(meals)}${glucoseJournalHtml(day)}${summaryActivityHtml(day)}${summaryHydrationHtml(day)}${stepsProgressHtml(day, true)}</div></section>`;
   }
 
   function updateQuickMealTypeDialog(meals, now = new Date()) {
@@ -10082,88 +10082,69 @@ function formatSleepDuration(hours) {
 
   function glucoseJournalHtml(d) {
     if (!db.settings.glucoseTracking || db.settings.demoMode || professionalBetaMode) return "";
-    const readings = (d.glucoseMeasurements || []).slice().sort((a,b)=>(a.time||"").localeCompare(b.time||""));
-    const contexts = {fasting:t("À jeun"),before:t("Avant un repas"),after:t("Après un repas"),bedtime:t("Au coucher"),other:t("Autre")};
+    const readings = d.glucoseMeasurements || [];
     const meals = d.meals || [];
-    const slots = [
-      {label:t("À jeun"),context:"fasting"},
-      ...["Déjeuner","Dîner","Souper"].map(type=>({label:t("Après les repas")+" · "+t(type),type,context:"after"}))
-    ];
-    const row = (label, reading, context, meal) => `<div class="glucose-unified-row" style="display:grid;grid-template-columns:minmax(100px,1fr) auto auto;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #e5ecdf">
-      <div><strong>${esc(label)}</strong><small style="display:block;color:#687a6c">${reading ? esc(reading.time||"")+" · "+esc(String(reading.value).replace(".",","))+" mmol/L" : "—"}</small></div>
-      <span>${meal && !reading ? esc(meal.time||"") : ""}</span>
-      ${reading ? `<button type="button" class="secondary small" data-delete-glucose="${esc(reading.id)}">${t("Retirer")}</button>` : ""}
-    </div>`;
     const used = new Set();
-    const assigned = slots.map(item=>{
+    const canEdit = !professionalClientReadOnly();
+    const contexts = {before:t("Avant un repas"),after:t("Après un repas"),bedtime:t("Au coucher"),other:t("Autre")};
+    const rows = [{key:"fasting",label:t("À jeun"),context:"fasting"}, ...["Déjeuner","Dîner","Souper"].map(type=>({key:type,label:t("Après")+" "+t(type).toLowerCase(),type,context:"after"}))];
+    const now = new Date();
+    const today = selectedDate === todayKey();
+    const at = time => /^\d{2}:\d{2}$/.test(time || "") ? new Date(selectedDate+"T"+time+":00") : null;
+    const slotHtml = item => {
       const meal = item.type ? meals.find(m=>m.type===item.type) : null;
-      const reading = readings.find(x => !used.has(x.id) && (item.context==="fasting" ? x.context==="fasting" : meal && x.mealId===meal.id));
-      if(reading) used.add(reading.id);
-      return row(item.label,reading,item.context,meal);
-    }).join("");
-    const extras = readings.filter(x=>!used.has(x.id));
-    return `<section class="card glucose-journal-card glucose-unified" style="padding:13px 16px;margin:10px 0"><h3>🩸 ${t("Suivi de la glycémie")}</h3>
-      <p class="muted tiny">${t("Mesures manuelles en mmol/L. Aucune interprétation médicale automatique.")}</p>
-      ${assigned}
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:12px 0"><label style="flex:1;min-width:110px">${t("À jeun")} (mmol/L)<input id="glucoseFastingValue" type="text" inputmode="decimal" placeholder="5,4" style="width:100%"></label><label style="flex:1;min-width:110px">${t("Heure")}<input id="glucoseFastingTime" type="time" value="${readings.find(x=>x.context==="fasting")?.time || new Date().toTimeString().slice(0,5)}" style="width:100%"></label><button type="button" class="secondary small" data-save-glucose-fasting>${t("Enregistrer")}</button></div>
-      ${extras.length ? '<h4 style="margin:12px 0 4px">'+t("Autres")+'</h4>'+extras.map(x=>row(contexts[x.context]||contexts.other,x,x.context,null)).join("") : ""}
-      <form id="glucoseEntryForm" style="margin-top:12px"><strong>${t("Ajouter une mesure supplémentaire")}</strong>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;align-items:end;margin-top:8px">
-      <label>${t("Valeur (mmol/L)")}<input id="glucoseValue" type="text" required inputmode="decimal" placeholder="5,4"></label>
-      <label>${t("Heure")}<input id="glucoseTime" type="time" required value="${new Date().toTimeString().slice(0,5)}"></label>
-      <label>${t("Contexte")}<select id="glucoseContext">${Object.entries(contexts).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join("")}</select></label></div>
-      <button class="secondary small" type="submit" style="margin-top:10px">${t("Enregistrer la mesure")}</button><p id="glucoseStatus" role="status" class="muted tiny"></p></form></section>`;
+      const reading = readings.find(x=>!used.has(x.id) && (item.key==="fasting" ? x.context==="fasting" && !x.mealId : (meal && x.mealId===meal.id) || x.glucoseSlot===item.key));
+      if (reading) used.add(reading.id);
+      const due = meal && at(meal.time) ? new Date(at(meal.time).getTime()+Number(db.settings.glucoseMealDelay||120)*60000) : null;
+      const dueNow = today && !reading && (item.key==="fasting" ? now.getHours()<12 : due && now >= due);
+      const pulse = dueNow ? '<span class="energy-action-brain" aria-label="'+esc(t("Mesure à noter"))+'" style="display:inline-block;margin-right:5px">🧠</span>' : "";
+      const time = reading?.time || (item.key==="fasting" ? (today ? now.toTimeString().slice(0,5) : "08:00") : (due ? due.toTimeString().slice(0,5) : now.toTimeString().slice(0,5)));
+      return '<div class="glucose-unified-row" style="display:grid;grid-template-columns:minmax(110px,1.3fr) minmax(70px,.7fr) minmax(100px,.8fr) auto;align-items:end;gap:9px;padding:9px 0;border-bottom:1px solid #e5ecdf">'
+        +'<strong style="align-self:center">'+pulse+esc(item.label)+'</strong>'
+        +'<label style="margin:0"><small>'+esc(t("mmol/L"))+'</small><input data-glucose-row-value="'+esc(item.key)+'" aria-label="'+esc(item.label)+'" inputmode="decimal" type="text" placeholder="5,4" value="'+(reading ? esc(String(reading.value).replace(".",",")) : "")+'" '+(canEdit?"":"disabled")+' style="width:100%"></label>'
+        +'<label style="margin:0"><small>'+esc(t("Heure"))+'</small><input data-glucose-row-time="'+esc(item.key)+'" aria-label="'+esc(t("Heure"))+' '+esc(item.label)+'" type="time" value="'+esc(time)+'" '+(canEdit?"":"disabled")+' style="width:100%"></label>'
+        +(canEdit ? '<button type="button" class="secondary small" data-save-glucose-row="'+esc(item.key)+'">'+esc(t("Enregistrer"))+'</button>' : "")+'</div>';
+    };
+    const assigned=rows.map(slotHtml).join("");
+    const extras=readings.filter(x=>!used.has(x.id));
+    return '<section class="card glucose-journal-card glucose-unified" style="padding:13px 16px;margin:10px 0"><h3>🩸 '+t("Suivi de la glycémie")+'</h3><p class="muted tiny">'+t("Mesures manuelles en mmol/L. Aucune interprétation médicale automatique.")+'</p>'
+      +'<div style="overflow-x:auto">'+assigned+'</div>'
+      +(extras.length ? '<h4 style="margin:14px 0 5px">'+t("Mesures supplémentaires")+'</h4>'+extras.map(x=>'<div style="display:flex;align-items:center;gap:10px;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5ecdf"><span>'+esc(x.time||"")+' · '+esc(String(x.value).replace(".",","))+' mmol/L · '+esc(contexts[x.context]||t("Autre"))+'</span>'+(canEdit?'<button type="button" class="secondary small" data-delete-glucose="'+esc(x.id)+'">'+t("Retirer")+'</button>':"")+'</div>').join("") : "")
+      +(canEdit ? '<form id="glucoseEntryForm" style="margin-top:14px"><strong>'+t("Ajouter une mesure supplémentaire")+'</strong><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;align-items:end;margin-top:8px"><label>'+t("Valeur (mmol/L)")+'<input id="glucoseValue" type="text" required inputmode="decimal" placeholder="5,4"></label><label>'+t("Heure")+'<input id="glucoseTime" type="time" required value="'+now.toTimeString().slice(0,5)+'"></label><label>'+t("Contexte")+'<select id="glucoseContext">'+Object.entries(contexts).map(([k,v])=>'<option value="'+k+'">'+esc(v)+'</option>').join("")+'</select></label></div><button class="secondary small" type="submit" style="margin-top:10px">'+t("Enregistrer la mesure")+'</button></form>' : "")
+      +'<p id="glucoseStatus" role="status" class="muted tiny"></p></section>';
   }
   function bindGlucoseJournal() {
-    const form = $("#glucoseEntryForm");
-    $("[data-save-glucose-fasting]")?.addEventListener("click", () => {
-      const input = $("#glucoseFastingValue"), time = $("#glucoseFastingTime")?.value;
-      const value = Number((input?.value || "").trim().replace(",", "."));
-      if (!time || !Number.isFinite(value) || value <= 0 || value >= 40) {
-        const status = $("#glucoseStatus");
-        if(status) status.textContent = t("Entre une mesure valide en mmol/L.");
-        return;
-      }
-      const day = ensureDay(db,selectedDate);
-      const existing = (day.glucoseMeasurements || []).find(x=>x.context==="fasting" && !x.mealId);
-      if(existing){existing.value=value;existing.time=time;}
-      else (day.glucoseMeasurements ||= []).push({id:uid(),value,time,context:"fasting"});
-      day.updatedAt=new Date().toISOString();
-      saveLocal("glycemie-a-jeun");setDayChanged(selectedDate);render();
+    const status = $("#glucoseStatus");
+    const invalid = () => {if(status)status.textContent=t("Entre une mesure valide en mmol/L.");};
+    const parse = x => Number(String(x||"").trim().replace(",","."));
+    $$("[data-save-glucose-row]").forEach(button=>button.onclick=()=>{
+      if(professionalClientReadOnly()) return preventProfessionalClientEdit();
+      const key=button.dataset.saveGlucoseRow;
+      const valueInput=$$("[data-glucose-row-value]").find(x=>x.dataset.glucoseRowValue===key);
+      const timeInput=$$("[data-glucose-row-time]").find(x=>x.dataset.glucoseRowTime===key);
+      const value=parse(valueInput?.value),time=timeInput?.value;
+      if(!Number.isFinite(value)||value<=0||value>=40||!/^\d{2}:\d{2}$/.test(time||""))return invalid();
+      const day=ensureDay(db,selectedDate);
+      const meal=key==="fasting" ? null : (day.meals||[]).find(m=>m.type===key);
+      const old=(day.glucoseMeasurements||[]).find(x=>key==="fasting" ? x.context==="fasting"&&!x.mealId : (meal&&x.mealId===meal.id)||x.glucoseSlot===key);
+      if(old){old.value=value;old.time=time;if(key!=="fasting"){old.glucoseSlot=key;old.context="after";if(meal)old.mealId=meal.id;}}
+      else (day.glucoseMeasurements ||= []).push({id:uid(),value,time,context:key==="fasting"?"fasting":"after",...(key==="fasting"?{}:{glucoseSlot:key,...(meal?{mealId:meal.id}:{})})});
+      day.updatedAt=new Date().toISOString();saveLocal("glycemie-tableau");setDayChanged(selectedDate);render();
     });
-    $$("[data-glucose-slot-save]").forEach(button => button.onclick = () => {
-      const i = Number(button.dataset.glucoseSlotSave);
-      const time = (db.settings.glucoseReminderTimes || [])[i];
-      const input = $$("[data-glucose-slot-value]").find(el => Number(el.dataset.glucoseSlotValue) === i);
-      if (!time || !input) return;
-      const value = Number(input.value.trim().replace(",","."));
-      if (!Number.isFinite(value) || value <= 0 || value >= 40) { $("#glucoseStatus").textContent = t("Entre une mesure valide en mmol/L."); return; }
-      const d = ensureDay(db,selectedDate);
-      const previous = d.glucoseMeasurements.find(x => x.scheduledTime === time);
-      if (previous) { previous.value = value; previous.time = new Date().toTimeString().slice(0,5); }
-      else d.glucoseMeasurements.push({id:uid(),value,time:new Date().toTimeString().slice(0,5),context:"other",scheduledTime:time});
-      d.updatedAt = new Date().toISOString();
-      saveLocal("glycemie-heure-fixe"); setDayChanged(selectedDate); render();
-    });
-    if (form) form.onsubmit = event => {
+    $("#glucoseEntryForm")?.addEventListener("submit",event=>{
       event.preventDefault();
-      const raw = $("#glucoseValue").value.trim().replace(",",".");
-      const value = Number(raw);
-      if (!Number.isFinite(value) || value <= 0 || value >= 40) { $("#glucoseStatus").textContent = t("Entre une mesure valide en mmol/L."); return; }
-      const d = ensureDay(db, selectedDate);
-      d.glucoseMeasurements.push({id:uid(), value, time:$("#glucoseTime").value, context:$("#glucoseContext").value});
-      d.updatedAt = new Date().toISOString();
-      saveLocal("glycemie");
-      setDayChanged(selectedDate);
-      render();
-    };
-    $$("[data-delete-glucose]").forEach(btn => btn.onclick = () => {
-      const d = ensureDay(db, selectedDate);
-      d.glucoseMeasurements = d.glucoseMeasurements.filter(x=>x.id !== btn.dataset.deleteGlucose);
-      d.updatedAt = new Date().toISOString();
-      saveLocal("glycemie-retirer");
-      setDayChanged(selectedDate);
-      render();
+      if(professionalClientReadOnly())return preventProfessionalClientEdit();
+      const value=parse($("#glucoseValue")?.value),time=$("#glucoseTime")?.value;
+      if(!Number.isFinite(value)||value<=0||value>=40||!/^\d{2}:\d{2}$/.test(time||""))return invalid();
+      const day=ensureDay(db,selectedDate);
+      (day.glucoseMeasurements ||= []).push({id:uid(),value,time,context:$("#glucoseContext").value});
+      day.updatedAt=new Date().toISOString();saveLocal("glycemie-supplementaire");setDayChanged(selectedDate);render();
+    });
+    $$("[data-delete-glucose]").forEach(btn=>btn.onclick=()=>{
+      if(professionalClientReadOnly())return preventProfessionalClientEdit();
+      const day=ensureDay(db,selectedDate);
+      day.glucoseMeasurements=(day.glucoseMeasurements||[]).filter(x=>x.id!==btn.dataset.deleteGlucose);
+      day.updatedAt=new Date().toISOString();saveLocal("glycemie-retirer");setDayChanged(selectedDate);render();
     });
   }
 
@@ -16169,7 +16150,6 @@ function formatSleepDuration(hours) {
       delete d.formDrafts["mealForm:nouveau"];
       saveLocal("nettoyage-brouillon-repas-legacy");
     }
-    renderMealGlucosePanel(m, readOnly);
     $("#mealDialog").showModal();
     // Sur iPhone, la synchronisation peut avoir déjà remplacé la copie locale
     // par un chemin Supabase. Résoudre l’URL signée dès l’ouverture évite que
