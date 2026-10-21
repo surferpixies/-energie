@@ -3876,13 +3876,16 @@ function formatSleepDuration(hours) {
       const kcal = item.quantityKind === "unresolved-count" ? "Poids à préciser" : item.calories != null ? `${item.calories} kcal` : "—";
       return `<div class="meal-nutrition-trace-item"><strong>${esc(item.input || match)}</strong><span>Correspondance : ${esc(match)}</span><span>Quantité interprétée : <b>${esc(quantity)}</b></span><span>Source : ${esc(nutritionTraceSourceLabel(item.source))}</span>${caloriesVisible() ? `<em>${esc(kcal)}</em>` : ""}</div>`;
     }).join("");
-    const genericMeatSauce = trace.items.some((item) =>
-      item.source === "energie-foods" &&
-      /(?:sauce [aà] la viande|sauce bolognaise|sauce bolognese|meat sauce|bolognese sauce)/i.test(item.input || item.matchedName || "")
-    );
-    const english = /^en\b/i.test(window.ENERGIE_LOCALE || "");
-    const clarify = genericMeatSauce
-      ? `<div class="meal-nutrition-trace-item"><strong>${english ? "What's in your meat sauce?" : "Que contient ta sauce à la viande ?"}</strong><span>${english ? "This is a generic serving estimate. For a more personalized calculation, replace the generic sauce in your meal description with the ingredients and amounts in your serving (e.g. ground beef, tomato sauce, onions, carrots)." : "C'est une estimation pour une portion courante. Pour un calcul plus personnalisé, remplace la sauce générique dans la description par les ingrédients et quantités de ta portion (ex. bœuf haché, sauce tomate, oignons, carottes)."}</span><button type="button" id="mealClarifySauce" class="meal-nutrition-trace-link">${english ? "Describe my sauce" : "Préciser ma sauce"}</button></div>`
+    // Les plats composés sont reconnus rapidement, mais leur recette reste une
+    // hypothèse. Proposer une précision sans exiger de saisie détaillée.
+    const genericComposite = trace.items.some((item) => {
+      const name = normalizeFoodText(item.matchedName || item.input || "");
+      return /^(?:sauce a la viande|sauce bolognaise|sauce bolognese|meat sauce|bolognese sauce|soupe|soup|rago[uû]t|ragout|stew|sandwich|salade|salad)$/.test(name) ||
+        /^(?:soupe aux legumes|soupe poulet nouilles|soupe tomate|soupe miso|vegetable soup|chicken noodle soup|tomato soup|salade grecque|greek salad|salade cesar|caesar salad|pasta salad|salade de pates)$/.test(name);
+    });
+    const english = /^en\\b/i.test(window.ENERGIE_LOCALE || "");
+    const clarify = genericComposite
+      ? `<div class="meal-nutrition-trace-item"><strong>${english ? "Want to describe what's in this dish?" : "Tu veux préciser ce que contient ce plat ?"}</strong><span>${english ? "This uses a standard recipe or serving. You can keep this estimate, or replace the dish in your meal description with the ingredients and amounts you ate. Do not keep both: that would double-count calories." : "Ce calcul utilise une recette ou portion habituelle. Tu peux garder cette estimation, ou remplacer le plat dans ta description par les ingrédients et quantités consommés. Ne conserve pas les deux : les calories seraient comptées deux fois."}</span><button type="button" id="mealClarifySauce" class="meal-nutrition-trace-link">${english ? "Specify ingredients" : "Préciser les ingrédients"}</button></div>`
       : "";
     body.innerHTML = `<div class="meal-nutrition-trace-source">Source du calcul : <strong>${esc(nutritionTraceSourceLabel(trace.source))}</strong></div>${rows}${clarify}`;
     const clarifyButton = $("#mealClarifySauce");
