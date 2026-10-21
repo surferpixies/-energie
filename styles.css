@@ -2424,3 +2424,58 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
    grid-template-columns:78px 108px!important;column-gap:10px!important
  }
 }
+
+/* 3.56.284 — Identical glucose and extra-reading rows; flatten native iOS time field */
+@media(max-width:700px){
+ .glucose-journal-card.glucose-unified .glucose-unified-row input[type=time],
+ .glucose-journal-card.glucose-unified #glucoseEntryForm .glucose-extra-row input[type=time]{
+   display:block!important;height:32px!important;min-height:32px!important;
+   max-height:32px!important;border-radius:9px!important;
+   -webkit-appearance:none!important;appearance:none!important;
+   padding:0 6px!important;line-height:32px!important;
+   font-size:16px!important;vertical-align:middle!important
+ }
+ .glucose-journal-card.glucose-unified input[type=time]::-webkit-date-and-time-value{
+   text-align:center!important;height:30px!important;min-height:0!important;
+   line-height:30px!important;display:flex!important;align-items:center!important;
+   justify-content:center!important
+ }
+ .glucose-journal-card.glucose-unified input[type=time]::-webkit-datetime-edit{
+   padding:0!important;line-height:30px!important;height:30px!important
+ }
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row{
+   display:grid!important;grid-template-columns:84px 118px 36px!important;
+   column-gap:14px!important;row-gap:4px!important;
+   justify-content:start!important;align-items:end!important;
+   padding:8px 0!important;margin-top:4px!important;width:100%!important
+ }
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>label{
+   grid-column:auto!important;min-width:0!important;width:100%!important;
+   max-width:100%!important;font-size:inherit!important
+ }
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>label small{
+   display:block!important;font-size:.64rem!important;
+   line-height:1.1!important;margin-bottom:4px!important
+ }
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row input{
+   display:block!important;width:100%!important;min-width:0!important;
+   max-width:100%!important;height:32px!important;min-height:32px!important;
+   max-height:32px!important;margin:0!important;border-radius:9px!important;
+   box-sizing:border-box!important;font-size:16px!important
+ }
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>button{
+   grid-column:3!important;justify-self:start!important;align-self:end!important;
+   width:36px!important;min-width:36px!important;max-width:36px!important;
+   height:32px!important;min-height:32px!important;max-height:32px!important;
+   margin:0!important;padding:0!important;border-radius:9px!important;
+   font-size:0!important;line-height:1!important
+ }
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>button:after{
+   content:"✓";font-size:16px!important;font-weight:800
+ }
+}
+@media(max-width:350px){
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row{
+   grid-template-columns:78px 108px 34px!important;column-gap:10px!important
+ }
+}
