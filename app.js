@@ -2385,8 +2385,15 @@ function formatSleepDuration(hours) {
       if (i < 0) d.meals.push(remote);
       else if (
         new Date(remote.updatedAt) >= new Date(d.meals[i].updatedAt || 0)
-      )
-        Object.assign(d.meals[i], remote);
+      ) {
+        // Une ancienne ligne distante sans nutrition ne doit pas effacer une
+        // estimation locale du même repas lors d'un simple rafraîchissement.
+        const local = d.meals[i];
+        if (!remote.nutrition && local.nutrition &&
+            remote.description === local.description)
+          remote.nutrition = local.nutrition;
+        Object.assign(local, remote);
+      }
     }
     for (const r of fr.data || []) {
       const remote = normalFavorite({
