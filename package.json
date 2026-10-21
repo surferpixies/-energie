@@ -10,7 +10,7 @@
     "ios:open": "npx cap open ios",
     "android:sync": "npm run build:ios-web && npx cap sync android",
     "android:open": "npx cap open android",
-    "test:nutrition": "node tests/nutrition-catalog.test.cjs && node tests/nutrition-catalog-matrix.test.cjs && node tests/food-matching-safety.test.js && node tests/meal-sync-error-contract.test.js && node tests/meal-cloud-pull-contract.test.js && node tests/meal-sauce-clarification.test.js && node tests/nutrition-portion-engine.test.js && node tests/nutrition-quantities.test.js && node tests/nutrition-realistic-meals.test.js && node tests/nutrition-recognition-audit.test.cjs",
+    "test:nutrition": "node tests/nutrition-catalog.test.cjs && node tests/nutrition-catalog-matrix.test.cjs && node tests/food-matching-safety.test.js && node tests/meal-sync-error-contract.test.js && node tests/meal-cloud-pull-contract.test.js && node tests/meal-sauce-clarification.test.js && node tests/meal-weight-guidance.test.js && node tests/nutrition-portion-engine.test.js && node tests/nutrition-quantities.test.js && node tests/nutrition-realistic-meals.test.js && node tests/nutrition-recognition-audit.test.cjs",
     "test:nutrition:full": "NUTRITION_FULL_RECOGNITION=1 NUTRITION_RECOGNITION_REPORT=reports/fcen-recognition-full.json node tests/nutrition-recognition-audit.test.cjs"
   },
   "dependencies": {
