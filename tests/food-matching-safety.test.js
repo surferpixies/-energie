@@ -7,6 +7,9 @@ require('../ciqual-data.js');
 require('../ciqual-search.js');
 const ciqual = global.ENERGIE_CIQUAL_SEARCH;
 
+assert.equal(cnf.isCandidateAllowed("beurre d'arachide", "Beurre, sans sel"),false);
+assert.equal(cnf.isCandidateAllowed("peanut butter", "Butter, unsalted"),false);
+assert.ok(cnf.search("beurre arachide",10).every(x=>/arachide|peanut/i.test(x.nameFr+" "+x.nameEn)));
 const attacks = [
  ['tomate', 'Vinaigrette, bacon et tomates'],
  ['carotte', 'Gâteau aux carottes'],
@@ -423,7 +426,6 @@ console.log('Matrice repas : '+JSON.stringify({...matrixSummary,sampleFailures:m
 // Le rapport est exploratoire pour les nouveaux repas : les échecs restent
 // visibles pour triage, tandis que les scénarios P0 ci-dessus restent bloquants.
 
-console.log('P0_SOURCE_DIAG',JSON.stringify({bagel:cnf.search('bagel',5),peanut:cnf.search('beurre arachide',5),butter:cnf.search('peanut butter',5),legacy:context.legacyFoodWithAlias?.('beurre d arachide')?.portion}));
 // Diagnostic non bloquant des cas P0 avant de définir les attentes exactes.
 const p0Cases=[
  "1 bagel",
