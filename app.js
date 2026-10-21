@@ -2722,7 +2722,32 @@ function formatSleepDuration(hours) {
       return { ...food, portion: `${grams} g` };
     return food;
   }
+  // Equivalents vérifiés pour des saisies anglophones exactes et pesées.
+  // Pas de correspondance partielle : sauces, recettes et qualificatifs inconnus restent refusés.
+  function englishWeightedFoodEquivalent(segment) {
+    const match = String(segment || "").trim().toLowerCase()
+      .match(/^(\d+(?:[.,]\d+)?)\s*g\s+([a-z ]+)$/);
+    if (!match) return null;
+    const equivalents = {
+      "strawberries": "fraises",
+      "tomatoes": "tomates",
+      "potatoes": "pommes de terre",
+      "almonds": "amandes",
+      "cooked pork": "porc cuit",
+      "cooked salmon": "saumon cuit",
+      "cooked cod": "morue cuite",
+      "cooked trout": "truite cuite",
+      "cooked tuna": "thon cuit",
+      "cooked shrimp": "crevettes cuites",
+      "cooked rice": "riz cuit",
+      "cottage cheese": "fromage cottage",
+      "cream cheese": "fromage à la crème",
+    };
+    const equivalent = equivalents[match[2]];
+    return equivalent ? match[1] + " g " + equivalent : null;
+  }
   function foodMatchForSegment(segment) {
+    const englishEquivalent = englishWeightedFoodEquivalent(segment);
     const clean = normalizeFoodText(segment),
       comparable = comparableFoodText(segment);
     if (String(segment || "").length > MEAL_DESCRIPTION_MAX_LENGTH) return null;
@@ -2799,7 +2824,9 @@ function formatSleepDuration(hours) {
       const cookedFishInput = window.ENERGIE_CNF_SEARCH?.stripQuantity?.(segment) || "";
       const knownCookedFish = Boolean(cookedFishDefaults[cookedFishInput]) &&
         cookedFishDefaults[cookedFishInput] === checked.cnfFoodId;
-      if (guard && !knownPeanutButter && !knownCookedFish &&
+      const exactEnglishEquivalent = englishEquivalent &&
+        referenceNames.some(reference => guard?.(englishEquivalent, reference));
+      if (guard && !knownPeanutButter && !knownCookedFish && !exactEnglishEquivalent &&
           !referenceNames.some(reference => guard(identityText, reference))) return null;
       // Refuser « Bœuf, gras, cru » pour « bœuf haché ». Conserver une fiche
       // FCÉN/Ciqual authentiquement hachée; à défaut, repli Énergie explicite.
@@ -2821,6 +2848,8 @@ function formatSleepDuration(hours) {
       const peanut = suitable(safeLegacy);
       if (peanut) return peanut;
     }
+    const translatedOfficial = englishEquivalent && suitable(window.ENERGIE_CNF_SEARCH?.find?.(englishEquivalent));
+    if (translatedOfficial) return translatedOfficial;
     const official = suitable(window.ENERGIE_CNF_SEARCH?.find?.(segment));
     if (official) return official;
     return suitable(safeLegacy) || suitable(best?.food) || null;
