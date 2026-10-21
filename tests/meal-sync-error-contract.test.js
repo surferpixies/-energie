@@ -42,7 +42,7 @@ async function check({ nutrition, errorMessage, expectedCalls, shouldReject }) {
   vm.createContext(context);
   vm.runInContext(code, context);
   if (shouldReject) {
-    await assert.rejects(context.execute(), /nutrition/i);
+    await assert.rejects(context.execute(), error => /nutrition/i.test(String(error?.message || error)));
   } else {
     await context.execute();
   }
