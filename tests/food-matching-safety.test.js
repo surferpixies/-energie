@@ -521,3 +521,5 @@ if(process.env.NUTRITION_EVALUATION_REPORT){
  fs.writeFileSync(target,JSON.stringify(evaluation,null,2));
 }
 console.log('REALISTIC_EVALUATION',JSON.stringify({total:evaluation.total,passed:evaluation.passed,ratePercent:evaluation.ratePercent,failures:evaluation.failures}));
+assert.equal(evaluation.failures.filter(x=>x.family==='securite').length,0,'Aucun échec de sécurité toléré');
+assert.ok(evaluation.ratePercent>=90,'Cible minimale du jeu de contrôle: 90 %');
