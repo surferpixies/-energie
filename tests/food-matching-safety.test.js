@@ -496,10 +496,40 @@ const evaluationCases=[
  {family:'securite',input:'2 apple pies',expect:'reject'},
  {family:'securite',input:'4 filets de poulet St-Hubert avec sauce',expect:'reject'},
 ];
+const englishEvaluationCases=[
+ {family:'fruit',input:'1 banana',expect:'recognized'},
+ {family:'fruit',input:'1 apple',expect:'recognized'},
+ {family:'fruit',input:'100 g strawberries',expect:'recognized'},
+ {family:'fruit',input:'100 g pineapple',expect:'recognized'},
+ {family:'vegetable',input:'100 g carrots',expect:'recognized'},
+ {family:'vegetable',input:'100 g tomatoes',expect:'recognized'},
+ {family:'vegetable',input:'100 g cucumber',expect:'recognized'},
+ {family:'vegetable',input:'100 g broccoli',expect:'recognized'},
+ {family:'meat',input:'150 g cooked chicken',expect:'recognized'},
+ {family:'meat',input:'150 g cooked beef',expect:'recognized'},
+ {family:'meat',input:'150 g cooked pork',expect:'recognized'},
+ {family:'meat',input:'150 g cooked turkey',expect:'recognized'},
+ {family:'fish',input:'150 g cooked salmon',expect:'recognized'},
+ {family:'fish',input:'150 g cooked cod',expect:'recognized'},
+ {family:'fish',input:'150 g cooked trout',expect:'recognized'},
+ {family:'fish',input:'150 g cooked tuna',expect:'recognized'},
+ {family:'fish',input:'150 g cooked shrimp',expect:'recognized'},
+ {family:'starch',input:'120 g cooked spaghetti',expect:'recognized'},
+ {family:'starch',input:'100 g cooked rice',expect:'recognized'},
+ {family:'starch',input:'100 g potatoes',expect:'recognized'},
+ {family:'dairy',input:'100 g cottage cheese',expect:'recognized'},
+ {family:'dairy',input:'30 g cream cheese',expect:'recognized'},
+ {family:'nuts',input:'100 g almonds',expect:'recognized'},
+ {family:'nuts',input:'1 tbsp peanut butter',expect:'recognized'},
+ {family:'bakery',input:'1 bagel',expect:'recognized'},
+ {family:'ambiguous',input:'120 g spaghetti',expect:'clarification'},
+ {family:'ambiguous',input:'140 g tuna',expect:'clarification'},
+ {family:'safety',input:'2 apple pies',expect:'reject'},
+];
 const evaluation={date:new Date().toISOString(),scope:'Jeu de contrôle déterministe, non représentatif; aucun intervalle de confiance',rows:[],byFamily:{}};
-for(const locale of ['fr-CA','fr-FR']){
+for(const locale of ['fr-CA','fr-FR','en-CA','en-US']){
  global.ENERGIE_LOCALE=locale;
- for(const item of evaluationCases){
+ for(const item of locale.startsWith('en')?englishEvaluationCases:evaluationCases){
   const result=context.estimateNutritionFromText(item.input);
   const recognized=Number.isFinite(result?.calories) && result.calories>0;
   const outcome=recognized?'recognized':cnf.requiresClarification(item.input)?'clarification':'reject';
@@ -516,6 +546,7 @@ evaluation.total=evaluation.rows.length;
 evaluation.passed=evaluation.rows.filter(x=>x.passed).length;
 evaluation.ratePercent=Math.round(10000*evaluation.passed/evaluation.total)/100;
 evaluation.failures=evaluation.rows.filter(x=>!x.passed);
+evaluation.byLocale=Object.fromEntries(['fr-CA','fr-FR','en-CA','en-US'].map(locale=>{const rows=evaluation.rows.filter(x=>x.locale===locale);return [locale,{total:rows.length,passed:rows.filter(x=>x.passed).length,ratePercent:Math.round(10000*rows.filter(x=>x.passed).length/rows.length)/100}]}));
 if(process.env.NUTRITION_EVALUATION_REPORT){
  const target=process.env.NUTRITION_EVALUATION_REPORT;
  fs.mkdirSync(require('node:path').dirname(target),{recursive:true});
