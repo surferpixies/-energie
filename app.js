@@ -2969,7 +2969,7 @@ function formatSleepDuration(hours) {
       const countReference = portionText.match(/^(\d+(?:[.,]\d+)?)\s+/);
       const countablePortion = !!countReference &&
         !/\b(ml|g|kg|tasse|cup|tbsp|tsp|bol|bowl)\b/.test(portionText) &&
-        /\b(oeufs?|eggs?|tranches?|slices?|pieces?|morceaux?|fruits?|pommes?|apples?|bananes?|bananas?|dattes?|dates?|filets?|fillets?)\b/.test(portionText);
+        /\b(oeufs?|eggs?|tranches?|slices?|pieces?|morceaux?|fruits?|pommes?|apples?|bananes?|bananas?|dattes?|dates?|filets?|fillets?|amandes?|almonds?|carres?|squares?)\b/.test(portionText);
       const filetCount = /\b(filet|filets|fillet|fillets)\b/.test(segmentText);
       // Never invent a filet weight when the FCÉN row is only per 100 g.
       if (filetCount && !/\b(filets?|fillets?)\b/.test(portionText)) {
