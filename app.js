@@ -7669,6 +7669,16 @@ function formatSleepDuration(hours) {
       return false;
     }
   }
+  function snackCaloriesLabel(meal) {
+    if (!caloriesVisible()) return "";
+    const nutrition = normalNutrition(meal?.nutrition) ||
+      (db.settings.autoNutritionEstimates !== false
+        ? observationNutritionEstimate(meal?.description || "") : null);
+    const value = Number(nutrition?.calories);
+    return Number.isFinite(value) && value >= 0
+      ? `≈ ${Math.round(value)} kcal`
+      : "";
+  }
   function saveQuickSnack() {
     if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     const description = $("#quickSnackDescription").value.trim();
@@ -7680,7 +7690,7 @@ function formatSleepDuration(hours) {
         time: now.toTimeString().slice(0, 5),
         description,
         notes: "",
-        nutrition: null,
+        nutrition: db.settings.autoNutritionEstimates !== false ? estimateNutritionFromText(description) : null,
         feelingsBefore: {},
         feelingsBeforeQuality: null,
         feeling: null,
@@ -7725,7 +7735,7 @@ function formatSleepDuration(hours) {
       ? snacks
           .map(
             (m) =>
-              `<article class="snack-manager-item"><button type="button" class="snack-manager-main" data-edit-snack="${m.id}"><span>${mealIcon(m.type, m.description)}</span><span><strong>${esc(m.description)}</strong><small>${esc(m.time)}</small></span></button><button type="button" class="snack-manager-delete" data-delete-snack="${m.id}" aria-label="Supprimer ${esc(m.description)}">🗑️</button></article>`,
+              `<article class="snack-manager-item"><button type="button" class="snack-manager-main" data-edit-snack="${m.id}"><span>${mealIcon(m.type, m.description)}</span><span><strong>${esc(m.description)}</strong><small>${esc(m.time)}${snackCaloriesLabel(m) ? ` · ${esc(snackCaloriesLabel(m))}` : ""}</small></span></button><button type="button" class="snack-manager-delete" data-delete-snack="${m.id}" aria-label="Supprimer ${esc(m.description)}">🗑️</button></article>`,
           )
           .join("")
       : '<p class="muted small">Aucune collation enregistrée.</p>';
@@ -7863,7 +7873,7 @@ function formatSleepDuration(hours) {
     const subtitle =
       type === "Collation"
         ? count
-          ? `${count} collation${count > 1 ? "s" : ""} notée${count > 1 ? "s" : ""}`
+          ? `${count} collation${count > 1 ? "s" : ""} notée${count > 1 ? "s" : ""}${caloriesVisible() ? (() => { const known = found.map(snackCaloriesLabel).filter(Boolean); const values = found.map(m => Number((normalNutrition(m.nutrition) || (db.settings.autoNutritionEstimates !== false ? observationNutritionEstimate(m.description) : null))?.calories)).filter(Number.isFinite); return known.length && values.length === count ? ` · ≈ ${Math.round(values.reduce((a,b) => a+b, 0))} kcal` : ""; })() : ""}`
           : "Plusieurs possibles"
         : main
           ? `${esc(main.description)} · ${esc(main.time)}`
