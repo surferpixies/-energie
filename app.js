@@ -2833,6 +2833,7 @@ function formatSleepDuration(hours) {
             // Accepter les noms FR/EN du même aliment entier, sans élargir
             // "apple" à "apple pie" ni contourner la vérification FCÉN.
             const requestedFood = normalizeFoodText(segment)
+              .replace(/^\d+(?:[.,]\d+)?\s*(?:g|grammes?|grams?|kg|kilogrammes?|oz|ounces?|ml|millilitres?|tasses?|cups?)\s+/, '')
               .replace(/^(?:\d+(?:[.,]\d+)?|un|une|one|deux|two|trois|three|quatre|four|cinq|five|six|sept|seven|huit|eight|neuf|nine|dix|ten)\s+/, '');
             return comparableFoodText(requestedFood) === comparableFoodText(alias);
           });
