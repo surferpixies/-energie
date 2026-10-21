@@ -14253,6 +14253,8 @@ function formatSleepDuration(hours) {
   let glucoseChartPoints = [];
   function bindGlucoseObservationFilter() {
     document.querySelectorAll(".glucose-observations-trend [data-glucose-point], .glucose-fullscreen-dialog [data-glucose-point]").forEach(button => {
+      if (button.dataset.glucoseBound === "1") return;
+      button.dataset.glucoseBound = "1";
       const show = () => {
         const point = glucoseChartPoints[Number(button.dataset.glucosePoint)];
         const host = button.closest(".glucose-observations-trend, .glucose-fullscreen-dialog")?.querySelector(".glucose-measure-detail");
@@ -14272,7 +14274,10 @@ function formatSleepDuration(hours) {
       button.addEventListener("click",show);
       button.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();show();}});
     });
-    $(".glucose-expand-chart")?.addEventListener("click", () => {
+    const expandButton = $(".glucose-expand-chart");
+    if (expandButton && expandButton.dataset.glucoseBound !== "1") {
+    expandButton.dataset.glucoseBound = "1";
+    expandButton.addEventListener("click", () => {
       const source = $(".glucose-observations-trend");
       if (!source) return;
       const dialog = document.createElement("dialog");
@@ -14287,6 +14292,7 @@ function formatSleepDuration(hours) {
       dialog.showModal();
       bindGlucoseObservationFilter();
     });
+    }
   }
   function glucoseObservationsHtml(filter = null) {
     if (db.settings.glucoseTracking !== true || db.settings.demoMode || professionalBetaMode) return "";
