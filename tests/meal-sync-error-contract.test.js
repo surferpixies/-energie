@@ -13,7 +13,7 @@ assert.ok(start >= 0 && end > start, 'Bloc de synchronisation des repas introuva
 const branch = source.slice(start + 10, end + 10);
 // Le bloc extrait commence par « else if » et se termine par la fermeture
 // de la branche. Le « if (false) » sert uniquement de point d'entrée syntaxique.
-const code = 'async function execute() { if (false) {} ' + branch + ' }';
+const code = 'async function execute() { for (const op of [testOp]) { if (false) {} ' + branch + ' } }';
 async function check({ nutrition, errorMessage, expectedCalls, shouldReject }) {
   const calls = [];
   const meal = {
@@ -23,7 +23,7 @@ async function check({ nutrition, errorMessage, expectedCalls, shouldReject }) {
     updatedAt: '2026-10-21T12:00:00Z',
   };
   const context = {
-    op: { kind: 'meal', date: meal.date, id: meal.id },
+    testOp: { kind: 'meal', date: meal.date, id: meal.id },
     db: {}, session: { user: { id: 'test-user' } },
     ensureDay: () => ({ meals: [meal] }),
     uploadPhoto: async () => {},
