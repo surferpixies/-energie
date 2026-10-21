@@ -14285,6 +14285,7 @@ function formatSleepDuration(hours) {
       dialog.innerHTML = `<div class="professional-trend-dialog-head"><strong>🩸 ${esc(t("Évolution de la glycémie"))}</strong><button type="button" class="secondary" data-close-glucose-fullscreen>${esc(t("Fermer"))} ✕</button></div><p class="muted small">${window.ENERGIE_LOCALE==="en"?"Rotate your phone for a wider view. Tap a point to view its details.":"Tourne ton téléphone à l’horizontale pour agrandir le graphique. Touche un point pour voir ses détails."}</p><div class="glucose-fullscreen-scroll"></div><div class="glucose-measure-detail" hidden></div>`;
       const chart = source.querySelector("svg")?.cloneNode(true);
       if (!chart) return;
+      chart.querySelectorAll("[data-glucose-bound]").forEach(point => delete point.dataset.glucoseBound);
       dialog.querySelector(".glucose-fullscreen-scroll").appendChild(chart);
       document.body.appendChild(dialog);
       dialog.querySelector("[data-close-glucose-fullscreen]").onclick = () => dialog.close();
