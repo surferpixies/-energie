@@ -76,6 +76,6 @@ vm.runInContext(source.slice(begin, end), ctx);
 assert.equal(day.meals[0].nutrition, null);
 assert.equal(day.meals[0].description, 'Nouveau repas sans calcul');
 console.log('MEAL_CLOUD_PULL_CONTRACT', JSON.stringify({
-  calories: restored.nutrition.calories, ingredients: restored.nutrition.trace.items.length,
-  source: restored.nutrition.source, cloudRefresh: true,
+  calories: nutrition.calories, ingredients: nutrition.trace.items.length,
+  source: nutrition.source, cloudRefresh: true, missingCloudNutritionProtected: true, changedDescriptionCleared: true,
 }));
