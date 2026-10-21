@@ -1,0 +1,35 @@
+name: Nutrition FCEN regression
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app.js'
+      - 'foods.js'
+      - 'cnf-*.js'
+      - 'ciqual-*.js'
+      - 'nutrition-corrections.js'
+      - 'tests/**'
+      - 'package.json'
+      - '.github/workflows/nutrition-regression.yml'
+  pull_request:
+    paths:
+      - 'app.js'
+      - 'foods.js'
+      - 'cnf-*.js'
+      - 'ciqual-*.js'
+      - 'nutrition-corrections.js'
+      - 'tests/**'
+      - 'package.json'
+      - '.github/workflows/nutrition-regression.yml'
+  workflow_dispatch:
+jobs:
+  nutrition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test FCEN catalogue and matching safety
+        run: npm run test:nutrition
