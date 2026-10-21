@@ -447,6 +447,12 @@
       const salmon = catalogById.get("3183");
       if (salmon) return remember(foodFromRow(salmon, text));
     }
+    // Morue cuite non précisée : morue de l'Atlantique au four/grillée.
+    // Ne pas confondre avec morue-lingue, morue charbonnière ou morue grise.
+    if (/^(?:morue cuite|cod cooked)$/.test(stripQuantity(text))) {
+      const cod = catalogById.get("3195");
+      if (cod) return remember(foodFromRow(cod, text));
+    }
 
     // Pour certains aliments très courants, le FCÉN contient de nombreuses
     // variantes proches. Énergie choisit une référence FCÉN cuite courante par
