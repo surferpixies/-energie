@@ -559,6 +559,18 @@ for(const locale of ['fr-CA','fr-FR','en-CA','en-US']){
 }
 console.log('EVERYDAY_INPUT_AUDIT',JSON.stringify(everydayReport.summary));
 assert.ok(everydayReport.rows.every(row=>row.recognized),'Un aliment du quotidien non reconnu : '+everydayReport.rows.filter(row=>!row.recognized).map(row=>row.locale+' '+row.input).join('; '));
+// Vérification exploratoire des unités anglaises : pas de conversion présumée.
+const englishUnits=['4 oz cooked chicken','6 oz cooked salmon','1 tbsp peanut butter','2 tbsp peanut butter','1 cup cooked rice','1 cup carrots','200 g cooked spaghetti'];
+const unitAudit=[];
+for(const locale of ['en-CA','en-US']){
+ global.ENERGIE_LOCALE=locale;
+ for(const input of englishUnits){
+  const result=context.estimateNutritionFromText(input);
+  unitAudit.push({locale,input,calories:result?.calories??null,
+    source:result?.source??null,quantity:result?.trace?.items?.[0]?.quantity??null});
+ }
+}
+console.log('ENGLISH_UNIT_AUDIT',JSON.stringify(unitAudit));
 const evaluation={date:new Date().toISOString(),scope:'Jeu de contrôle déterministe, non représentatif; aucun intervalle de confiance',rows:[],byFamily:{}};
 for(const locale of ['fr-CA','fr-FR','en-CA','en-US']){
  global.ENERGIE_LOCALE=locale;
