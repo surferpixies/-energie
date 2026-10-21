@@ -360,13 +360,13 @@ for(const locale of ['fr-CA','fr-FR']){
     const caseInfo={locale,ingredients,separator:separator==='\\n'?'newline':'plus'};
     if(individually.some(x=>!x)||!result){
       matrixSummary.notCalculable++;
-      matrixFailures.push({...caseInfo,reason:'not-calculable'});
+      matrixFailures.push({...caseInfo,reason:'not-calculable',individualFailures:ingredients.filter((_,i)=>!individually[i]),unrecognized:context.mealNutritionRecognition(ingredients.join(separator)).unrecognized});
       continue;
     }
     const traceCount=result.trace?.items?.length;
     if(traceCount!==ingredients.length){
       matrixSummary.missingTrace++;
-      matrixFailures.push({...caseInfo,reason:'trace-count',actual:traceCount});
+      matrixFailures.push({...caseInfo,reason:'trace-count',actual:traceCount,recognized:context.mealNutritionRecognition(ingredients.join(separator)).recognized,traceItems:result.trace?.items?.map(x=>({name:x.name||x.segment||x.cnfNameFr,calories:x.calories}))});
       continue;
     }
     const expected=individually.reduce((total,x)=>total+Number(x.calories),0);
