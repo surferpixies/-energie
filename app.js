@@ -2940,7 +2940,13 @@ function formatSleepDuration(hours) {
         "$1 c. à soupe de ")
       .replace(/\b(bagels?)\s+(?=fromage\s+[aà]\s+la\s+cr[eè]me\b)/gi, "$1 + ");
   }
+  function hasUnspecifiedPackagedSauce(text) {
+    const value = normalizeFoodText(text);
+    return /\\bst hubert\\b/.test(value) &&
+      /\\b(?:avec|with)\\s+(?:(?:de|la|une|the)\\s+)*sauce\\b/.test(value);
+  }
   function mealNutritionRecognition(text) {
+    if (hasUnspecifiedPackagedSauce(text)) return { recognized: [], unrecognized: [String(text)] };
     const value = normalizeCommonMealPhrasing(text).trim();
     if (value.length > MEAL_DESCRIPTION_MAX_LENGTH) return { recognized: [], unrecognized: ["Description trop longue : 1 000 caractères maximum."] };
     const recognizedDish = mealCompositionAnalysis(value)?.dish;
@@ -3246,6 +3252,8 @@ function formatSleepDuration(hours) {
 
   function estimateNutritionFromText(text, { photoSegments = null } = {}) {
     if (String(text || "").length > MEAL_DESCRIPTION_MAX_LENGTH) return null;
+    // Une sauce non décrite n'est pas comprise dans l'étiquette du produit.
+    if (hasUnspecifiedPackagedSauce(text)) return null;
     const recognizedDish = mealCompositionAnalysis(text)?.dish;
     if (recognizedDish?.nutrition && !/[+,;\n\r|]|\s+\/\s+/.test(String(text || "")))
       return normalNutrition({
