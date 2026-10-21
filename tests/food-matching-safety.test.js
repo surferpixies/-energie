@@ -10,6 +10,15 @@ const ciqual = global.ENERGIE_CIQUAL_SEARCH;
 assert.equal(cnf.isCandidateAllowed("beurre d'arachide", "Beurre, sans sel"),false);
 assert.equal(cnf.isCandidateAllowed("peanut butter", "Butter, unsalted"),false);
 assert.ok(cnf.search("beurre arachide",10).every(x=>/arachide|peanut/i.test(x.nameFr+" "+x.nameEn)));
+for(const [input,wrong] of [
+ ["beurre d'amandes","Beurre, non salé"],
+ ["beurre d'amandes","Beurre d'arachide, crémeux"],
+ ["beurre de noisettes","Beurre d'amandes"],
+ ["beurre de cajou","Beurre de noisettes"],
+ ["beurre de tournesol","Beurre d'arachide"],
+ ["almond butter","Peanut butter, smooth"],
+ ["hazelnut butter","Almond butter"],
+]) assert.equal(cnf.isCandidateAllowed(input,wrong),false,input+" -> "+wrong);
 const attacks = [
  ['tomate', 'Vinaigrette, bacon et tomates'],
  ['carotte', 'Gâteau aux carottes'],
