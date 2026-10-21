@@ -2747,6 +2747,15 @@ function formatSleepDuration(hours) {
     return equivalent ? match[1] + " g " + equivalent : null;
   }
   function foodMatchForSegment(segment) {
+    // Avoir une masse en grammes avant de choisir la fiche évite de
+    // traiter « 4 oz » comme quatre portions naturelles.
+    const ounces = String(segment || "").trim().match(/^(\d+(?:[.,]\d+)?)\s*(?:oz|ounces?)\s+(.+)$/i);
+    if (ounces) {
+      const grams = Number(ounces[1].replace(",", ".")) * 28.349523125;
+      return Number.isFinite(grams) && grams > 0
+        ? foodMatchForSegment(grams.toFixed(4) + " g " + ounces[2])
+        : null;
+    }
     const englishEquivalent = englishWeightedFoodEquivalent(segment);
     const clean = normalizeFoodText(segment),
       comparable = comparableFoodText(segment);
@@ -2867,6 +2876,7 @@ function formatSleepDuration(hours) {
     const unit = normalizeFoodText(value);
     if (/^(g|gramme|grammes|gram)$/.test(unit)) return "g";
     if (/^(kg|kilogramme|kilogrammes)$/.test(unit)) return "kg";
+    if (/^(oz|ounce|ounces)$/.test(unit)) return "oz";
     if (/^(ml|millilitre|millilitres)$/.test(unit)) return "ml";
     if (/^(l|litre|litres)$/.test(unit)) return "l";
     if (/^(tasse|tasses|cup|cups)$/.test(unit)) return "cup";
@@ -2878,6 +2888,7 @@ function formatSleepDuration(hours) {
     const n = mealQuantityNumber(value), canonical = mealQuantityUnit(unit);
     if (n == null || !canonical) return null;
     if (canonical === "kg") return { value: n * 1000, unit: "g" };
+    if (canonical === "oz") return { value: n * 28.349523125, unit: "g" };
     if (canonical === "l") return { value: n * 1000, unit: "ml" };
     return { value: n, unit: canonical };
   }
@@ -2888,7 +2899,7 @@ function formatSleepDuration(hours) {
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[’']/g, " ");
     const number = "(\\d+(?:[.,]\\d+)?|\\d+\\s*\\/\\s*\\d+)";
-    const unit = "(kg|kilogrammes?|g|grammes?|grams?|ml|millilitres?|l|litres?|tasses?|cups?|c\\.?\\s*a\\s*soupe|cuilleres?\\s*a\\s*soupe|tbsp|c\\.?\\s*a\\s*the|cuilleres?\\s*a\\s*the|tsp)";
+    const unit = "(kg|kilogrammes?|oz|ounces?|g|grammes?|grams?|ml|millilitres?|l|litres?|tasses?|cups?|c\\.?\\s*a\\s*soupe|cuilleres?\\s*a\\s*soupe|tbsp|c\\.?\\s*a\\s*the|cuilleres?\\s*a\\s*the|tsp)";
     const match = raw.match(new RegExp(`${number}\\s*${unit}\\b`, "i"));
     return match ? normalizedMealQuantity(match[1], match[2]) : null;
   }
@@ -2903,7 +2914,7 @@ function formatSleepDuration(hours) {
       .replace(/[’']/g, " ")
       .trim(),
       number = "(\\d+(?:[.,]\\d+)?|\\d+\\s*\\/\\s*\\d+)",
-      unit = "(kg|kilogrammes?|g|grammes?|grams?|ml|millilitres?|l|litres?|tasses?|cups?|c\\.?\\s*a\\s*soupe|cuilleres?\\s*a\\s*soupe|tbsp|c\\.?\\s*a\\s*the|cuilleres?\\s*a\\s*the|tsp)";
+      unit = "(kg|kilogrammes?|oz|ounces?|g|grammes?|grams?|ml|millilitres?|l|litres?|tasses?|cups?|c\\.?\\s*a\\s*soupe|cuilleres?\\s*a\\s*soupe|tbsp|c\\.?\\s*a\\s*the|cuilleres?\\s*a\\s*the|tsp)";
     return new RegExp(`^${number}\\s*${unit}$`, "i").test(raw);
   }
   function mealNaturalCountFromText(text) {
