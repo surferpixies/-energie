@@ -3876,7 +3876,22 @@ function formatSleepDuration(hours) {
       const kcal = item.quantityKind === "unresolved-count" ? "Poids à préciser" : item.calories != null ? `${item.calories} kcal` : "—";
       return `<div class="meal-nutrition-trace-item"><strong>${esc(item.input || match)}</strong><span>Correspondance : ${esc(match)}</span><span>Quantité interprétée : <b>${esc(quantity)}</b></span><span>Source : ${esc(nutritionTraceSourceLabel(item.source))}</span>${caloriesVisible() ? `<em>${esc(kcal)}</em>` : ""}</div>`;
     }).join("");
-    body.innerHTML = `<div class="meal-nutrition-trace-source">Source du calcul : <strong>${esc(nutritionTraceSourceLabel(trace.source))}</strong></div>${rows}`;
+    const genericMeatSauce = trace.items.some((item) =>
+      item.source === "energie-foods" &&
+      /(?:sauce [aà] la viande|sauce bolognaise|sauce bolognese|meat sauce|bolognese sauce)/i.test(item.input || item.matchedName || "")
+    );
+    const english = /^en\b/i.test(window.ENERGIE_LOCALE || "");
+    const clarify = genericMeatSauce
+      ? `<div class="meal-nutrition-trace-item"><strong>${english ? "What's in your meat sauce?" : "Que contient ta sauce à la viande ?"}</strong><span>${english ? "This is a generic serving estimate. For a more personalized calculation, describe the ingredients and their quantities (e.g. ground beef, tomato sauce, onions, carrots)." : "C'est une estimation pour une portion courante. Pour un calcul plus personnalisé, précise les ingrédients et leurs quantités (ex. bœuf haché, sauce tomate, oignons, carottes)."}</span><button type="button" id="mealClarifySauce" class="meal-nutrition-trace-link">${english ? "Describe my sauce" : "Préciser ma sauce"}</button></div>`
+      : "";
+    body.innerHTML = `<div class="meal-nutrition-trace-source">Source du calcul : <strong>${esc(nutritionTraceSourceLabel(trace.source))}</strong></div>${rows}${clarify}`;
+    const clarifyButton = $("#mealClarifySauce");
+    if (clarifyButton) clarifyButton.onclick = () => {
+      dialog.close();
+      const description = $("#mealDescription");
+      description?.focus();
+      description?.scrollIntoView({ block: "center", behavior: "smooth" });
+    };
     dialog.showModal();
   }
 
