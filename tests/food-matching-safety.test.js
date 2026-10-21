@@ -571,6 +571,15 @@ for(const locale of ['en-CA','en-US']){
  }
 }
 console.log('ENGLISH_UNIT_AUDIT',JSON.stringify(unitAudit));
+for(const locale of ['en-CA','en-US']){
+ const rows=unitAudit.filter(x=>x.locale===locale);
+ const find=input=>rows.find(x=>x.input===input);
+ assert.equal(find('1 tbsp peanut butter').calories,95,locale+': 1 tbsp peanut butter');
+ assert.equal(find('2 tbsp peanut butter').calories,190,locale+': 2 tbsp peanut butter');
+ assert.equal(find('200 g cooked spaghetti').calories,316,locale+': cooked spaghetti weight');
+ // Lacunes documentées : oz et cup cooked rice ne sont pas encore validés.
+}
+
 const evaluation={date:new Date().toISOString(),scope:'Jeu de contrôle déterministe, non représentatif; aucun intervalle de confiance',rows:[],byFamily:{}};
 for(const locale of ['fr-CA','fr-FR','en-CA','en-US']){
  global.ENERGIE_LOCALE=locale;
