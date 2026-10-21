@@ -2791,7 +2791,10 @@ function formatSleepDuration(hours) {
       const identityText = String(segment || "").replace(/^\s*(?:\d+(?:[.,]\d+)?|une?)\s+c\.?\s*[aà]\s*soupe\s+(?:de\s+)?/i, "");
       const knownPeanutButter = wantsPeanutButter &&
         (checked.keys || []).some(alias => ["beurre d arachide", "beurre de pinotte", "peanut butter"].includes(normalizeFoodText(alias)));
-      if (guard && !knownPeanutButter && !referenceNames.some(reference => guard(identityText, reference))) return null;
+      const knownCookedSalmon = checked.cnfFoodId === "3183" &&
+        /^(?:saumon cuit|salmon cooked)$/.test(window.ENERGIE_CNF_SEARCH?.stripQuantity?.(segment) || "");
+      if (guard && !knownPeanutButter && !knownCookedSalmon &&
+          !referenceNames.some(reference => guard(identityText, reference))) return null;
       // Refuser « Bœuf, gras, cru » pour « bœuf haché ». Conserver une fiche
       // FCÉN/Ciqual authentiquement hachée; à défaut, repli Énergie explicite.
       if (wantsGroundBeef && !/\b(?:hache|hachee|ground|minced)\b/.test(name)) return null;
