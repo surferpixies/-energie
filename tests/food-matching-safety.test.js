@@ -638,3 +638,29 @@ assert.ok(evaluation.ratePercent>=90,'Cible minimale du jeu de contrôle: 90 %')
   'La synchronisation ne doit pas retirer les calories en cas de schéma ancien');
  console.log('NUTRITION_SERIALIZATION_CONTRACT',JSON.stringify({calories:loaded.calories,ingredients:loaded.trace.items.length,source:loaded.source}));
 }
+
+ 
+// Régression issue d'un véritable dîner signalé : quatre aliments courants.
+{
+ const everydayCorrections=require('../nutrition-corrections.js');
+ const known=[...everydayCorrections,...benchmarkFoods];
+ context.FOOD_CANDIDATES=known.flatMap(food=>(food.keys||[]).map(key=>({
+  food,key:context.normalizeFoodText(key),compareKey:context.comparableFoodText(key)
+ })).filter(x=>x.key));
+ context.legacyFoodWithAlias=(...aliases)=>known.find(food=>(food.keys||[]).some(key=>aliases.includes(key)))||null;
+ for(const locale of ['fr-CA','en-CA']){
+  global.ENERGIE_LOCALE=locale;
+  const inputs=locale==='fr-CA'
+   ? ['Riz au jasmin cuit','2 oeufs brouillées','Carré de chocolat noir','5 amandes']
+   : ['cooked jasmine rice','2 scrambled eggs','dark chocolate square','5 almonds'];
+  for(const input of inputs){
+   const n=context.estimateNutritionFromText(input);
+   assert.ok(n?.calories>0 && n?.trace?.items?.length===1,locale+': '+input);
+  }
+ }
+ const eggs=context.estimateNutritionFromText('2 oeufs brouillées');
+ const almonds=context.estimateNutritionFromText('5 amandes');
+ assert.equal(eggs.calories,200,'Deux oeufs doivent rester deux portions');
+ assert.equal(almonds.calories,35,'Cinq amandes doivent rester cinq unités');
+ console.log('REAL_LUNCH_REGRESSION',JSON.stringify({eggs:eggs.calories,almonds:almonds.calories}));
+}
