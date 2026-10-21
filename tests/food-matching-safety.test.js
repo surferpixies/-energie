@@ -117,7 +117,7 @@ for (const locale of ['fr-CA', 'fr-FR']) {
 context.FOOD_CANDIDATES = [{compareKey:'apple',food:{keys:['pomme','apple'],calories:95,portion:'1 moyenne'}}];
 for (const input of ['1 apple', '2 apples']) {
  const food = context.foodMatchForSegment(input);
- assert.ok(food, input+' debug='+JSON.stringify({candidate:context.FOOD_CANDIDATES[0],guard:cnf.isCandidateAllowed(input,'apple'),quantity:context.nutritionScaleForSegment(input,context.FOOD_CANDIDATES[0].food),clean:context.normalizeFoodText(input),comparable:context.comparableFoodText(input),official:cnf.find(input)?.cnfNameFr}));
+ assert.ok(food, input+' debug='+JSON.stringify({candidate:context.FOOD_CANDIDATES[0],guard:cnf.isCandidateAllowed(input,'apple'),quantity:context.nutritionScaleForSegment(input,context.FOOD_CANDIDATES[0].food),clean:context.normalizeFoodText(input),comparable:context.comparableFoodText(input),official:cnf.find(input)?.cnfNameFr,checked:context.checkedCatalogFood(context.FOOD_CANDIDATES[0].food),alias:context.FOOD_CANDIDATES[0].food.keys.filter(alias=>context.comparableFoodText(context.normalizeFoodText(input).replace(/^(?:\\d+(?:[.,]\\d+)?|un|une|one|deux|two|trois|three|quatre|four|cinq|five|six|sept|seven|huit|eight|neuf|nine|dix|ten)\\s+/,''))===context.comparableFoodText(alias)),guardDirect:cnf.isCandidateAllowed(input,'apple')}));
  assert.equal(context.nutritionScaleForSegment(input, food).quantityUsed, true, input);
 }
 assert.equal(context.foodMatchForSegment('2 apple pies'), null);
