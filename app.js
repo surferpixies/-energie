@@ -2942,8 +2942,8 @@ function formatSleepDuration(hours) {
   }
   function hasUnspecifiedPackagedSauce(text) {
     const value = normalizeFoodText(text);
-    return /\\bst hubert\\b/.test(value) &&
-      /\\b(?:avec|with)\\s+(?:(?:de|la|une|the)\\s+)*sauce\\b/.test(value);
+    return /\bst hubert\b/.test(value) &&
+      /\b(?:avec|with)\s+(?:(?:de|la|une|the)\s+)*sauce\b/.test(value);
   }
   function mealNutritionRecognition(text) {
     if (hasUnspecifiedPackagedSauce(text)) return { recognized: [], unrecognized: [String(text)] };
