@@ -33,4 +33,13 @@ assert.ok(Math.abs(calories("100 g riz blanc", "riz blanc") - 205 * 100 / 190) <
 assert.equal(520 * portions.scaleForDish("½ portion de lasagne").scale, 260);
 assert.ok(Math.abs(480 * portions.scaleForDish("2 tacos", food("tacos")).scale - 320) < 0.0001);
 
+
+// Sauce à la viande : estimation par défaut d'une assiette courante, FR/EN.
+// La saisie d'un poids doit toujours remplacer la portion indicative.
+for (const alias of ['sauce à la viande', 'sauce bolognaise', 'meat sauce', 'bolognese sauce']) {
+  assert.equal(calories(alias, 'sauce à la viande'), 190, alias);
+  assert.equal(calories('300 g ' + alias, 'sauce à la viande'), 380, alias);
+}
+assert.equal(food('sauce à la viande').gramsPerPortion, 150);
+
 console.log("nutrition realistic meal tests passed");
