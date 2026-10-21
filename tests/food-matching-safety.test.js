@@ -311,3 +311,24 @@ for (const locale of ['fr-CA', 'fr-FR']) {
  assert.equal(meal.trace.items.length, 3);
  assert.match(productApi.find('1 tasse cottage').cnfNameFr, /2%/);
 }
+
+
+// Non-régression des repas composés : vérifier le calcul de production, pas
+// une addition manuelle de calories issues d'une autre base.
+for (const locale of ['fr-CA','fr-FR']) {
+ global.ENERGIE_LOCALE = locale;
+ for (const ingredients of [
+  ['150 g poulet', '100 g carottes', '120 g spaghettis cuits'],
+  ['100 g tomates', '100 g concombres', '150 g filet de poulet cuit'],
+  ['100 g carottes', '150 g poulet', '120 g spaghettis cuits'],
+ ]) {
+  const singles=ingredients.map(s=>context.estimateNutritionFromText(s));
+  assert.ok(singles.every(Boolean), locale+': ingrédient individuel manquant '+ingredients.join(' / '));
+  const meal=context.estimateNutritionFromText(ingredients.join('\\n'));
+  assert.ok(meal,locale+': repas complet non calculé '+ingredients.join(' / '));
+  assert.equal(meal.trace?.items?.length,ingredients.length,locale+': ingrédients perdus ou dupliqués');
+  const expected=singles.reduce((sum,n)=>sum+Number(n.calories),0);
+  assert.ok(Math.abs(meal.calories-expected)<1.1,locale+': total repas différent de la somme des ingrédients');
+ }
+}
+console.log('Repas multi-ingrédients : reconnaissance et conservation du total OK');
