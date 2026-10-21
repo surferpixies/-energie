@@ -3883,7 +3883,7 @@ function formatSleepDuration(hours) {
       return /^(?:sauce a la viande|sauce bolognaise|sauce bolognese|meat sauce|bolognese sauce|soupe|soup|rago[uû]t|ragout|stew|sandwich|salade|salad)$/.test(name) ||
         /^(?:soupe aux legumes|soupe poulet nouilles|soupe tomate|soupe miso|vegetable soup|chicken noodle soup|tomato soup|salade grecque|greek salad|salade cesar|caesar salad|pasta salad|salade de pates)$/.test(name);
     });
-    const english = /^en\\b/i.test(window.ENERGIE_LOCALE || "");
+    const english = /^en\b/i.test(window.ENERGIE_LOCALE || "");
     const clarify = genericComposite
       ? `<div class="meal-nutrition-trace-item"><strong>${english ? "Want to describe what's in this dish?" : "Tu veux préciser ce que contient ce plat ?"}</strong><span>${english ? "This uses a standard recipe or serving. You can keep this estimate, or replace the dish in your meal description with the ingredients and amounts you ate. Do not keep both: that would double-count calories." : "Ce calcul utilise une recette ou portion habituelle. Tu peux garder cette estimation, ou remplacer le plat dans ta description par les ingrédients et quantités consommés. Ne conserve pas les deux : les calories seraient comptées deux fois."}</span><button type="button" id="mealClarifySauce" class="meal-nutrition-trace-link">${english ? "Specify ingredients" : "Préciser les ingrédients"}</button></div>`
       : "";
