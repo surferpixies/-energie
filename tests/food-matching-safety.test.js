@@ -334,6 +334,7 @@ for (const locale of ['fr-CA','fr-FR']) {
 console.log('Repas multi-ingrédients : reconnaissance et conservation du total OK');
 
 
+console.log('DIAGNOSTIC_SAUMON',JSON.stringify({find:cnf.find('150 g saumon cuit'),choices:cnf.search('saumon cuit',5),app:context.foodMatchForSegment('150 g saumon cuit'),unrecognized:context.mealNutritionRecognition('150 g saumon cuit').unrecognized}));
 // Matrice reproductible de repas composés. Les aliments qui ne sont pas
 // calculables sont rapportés, jamais transformés silencieusement en zéro.
 // Ne teste pas encore l'écriture ni la relecture Supabase.
