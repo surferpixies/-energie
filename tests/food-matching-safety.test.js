@@ -84,6 +84,7 @@ vm.runInContext(source.slice(normalizeStart, normalizeEnd), context);
 const quantityStart = source.indexOf('  function mealQuantityNumber(');
 const quantityEnd = source.indexOf('  function mealNutritionRecognition(', quantityStart);
 vm.runInContext(source.slice(quantityStart, quantityEnd), context);
+vm.runInContext(source.slice(source.indexOf('  function englishWeightedFoodEquivalent('),start),context);
 vm.runInContext(source.slice(start,end), context);
 assert.ok(!/vinaigrette/i.test(context.foodMatchForSegment('250 g tomates').cnfNameFr));
 assert.equal(context.foodMatchForSegment('120 g pâtes'), null);
