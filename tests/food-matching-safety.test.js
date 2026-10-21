@@ -334,7 +334,7 @@ for (const locale of ['fr-CA','fr-FR']) {
 console.log('Repas multi-ingrédients : reconnaissance et conservation du total OK');
 
 
-console.log('DIAGNOSTIC_SAUMON',JSON.stringify({find:cnf.find('150 g saumon cuit'),simple:cnf.search('saumon',5),english:cnf.search('salmon',5),cooked:cnf.search('saumon cuit',5),catalogRows:global.ENERGIE_CNF_CATALOG.filter(row=>/saumon|salmon/i.test(row[1]+' '+row[2])).slice(0,8).map(row=>({id:row[0],fr:row[1],en:row[2]}))}));
+console.log('DIAGNOSTIC_SAUMON',JSON.stringify(global.ENERGIE_CNF_CATALOG.filter(row=>/saumon/i.test(row[1])&&/cuit|grill|four|rôti/i.test(row[1])).slice(0,30).map(row=>({id:row[0],fr:row[1].slice(0,130),allowed:cnf.isCandidateAllowed('150 g saumon cuit',row[1]),score:cnf.scoreRow(row,'150 g saumon cuit')}))));
 // Matrice reproductible de repas composés. Les aliments qui ne sont pas
 // calculables sont rapportés, jamais transformés silencieusement en zéro.
 // Ne teste pas encore l'écriture ni la relecture Supabase.
