@@ -570,6 +570,7 @@ for(const locale of ['en-CA','en-US']){
     source:result?.source??null,quantity:result?.trace?.items?.[0]?.quantity??null});
  }
 }
+console.log('RICE_CUP_DIAGNOSTIC',JSON.stringify({rice:cnf.find('200 g riz cuit'),cup:cnf.search('riz cuit',3).map(x=>({id:x.id,portions:x.portions?.slice(0,8)})),english:context.foodMatchForSegment('1 cup cooked rice'),french:context.foodMatchForSegment('1 tasse riz cuit')}));
 console.log('ENGLISH_UNIT_AUDIT',JSON.stringify(unitAudit));
 for(const locale of ['en-CA','en-US']){
  const rows=unitAudit.filter(x=>x.locale===locale);
