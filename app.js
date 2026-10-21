@@ -2797,7 +2797,8 @@ function formatSleepDuration(hours) {
         "morue cuite": "3195", "cod cooked": "3195",
       };
       const cookedFishInput = window.ENERGIE_CNF_SEARCH?.stripQuantity?.(segment) || "";
-      const knownCookedFish = cookedFishDefaults[cookedFishInput] === checked.cnfFoodId;
+      const knownCookedFish = Boolean(cookedFishDefaults[cookedFishInput]) &&
+        cookedFishDefaults[cookedFishInput] === checked.cnfFoodId;
       if (guard && !knownPeanutButter && !knownCookedFish &&
           !referenceNames.some(reference => guard(identityText, reference))) return null;
       // Refuser « Bœuf, gras, cru » pour « bœuf haché ». Conserver une fiche
