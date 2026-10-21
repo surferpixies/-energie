@@ -658,6 +658,17 @@ assert.ok(evaluation.ratePercent>=90,'Cible minimale du jeu de contrôle: 90 %')
    assert.ok(n?.calories>0 && n?.trace?.items?.length===1,locale+': '+input);
   }
  }
+ for(const [input,calories] of [
+   ['100 g Riz au jasmin cuit',130],
+   ['190 g Riz au jasmin cuit',247],
+   ['100 g cooked jasmine rice',130],
+   ['190 g cooked jasmine rice',247],
+ ]) {
+   const result=context.estimateNutritionFromText(input);
+   assert.ok(result, 'Measured food must remain recognized: '+input);
+   assert.ok(Math.abs(result.calories-calories)<0.2,input+': '+result.calories);
+   assert.equal(result.trace.items[0].quantityUsed,true,input);
+ }
  const eggs=context.estimateNutritionFromText('2 oeufs brouillées');
  const almonds=context.estimateNutritionFromText('5 amandes');
  assert.equal(eggs.calories,200,'Deux oeufs doivent rester deux portions');
