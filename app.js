@@ -13237,6 +13237,7 @@ function formatSleepDuration(hours) {
       }
     }
     const meals = mealsThroughSelectedDate().filter(m => !m.planned && !m.isPlanned && dates.includes(m.date));
+    const mobileCards = [];
     const rows = [...dates].reverse().map(date => {
       const daily = meals.filter(m => m.date === date);
       const available = daily.filter(m => m.nutrition && keys.some(k => m.nutrition[k] != null && m.nutrition[k] !== "" && Number.isFinite(Number(m.nutrition[k]))));
@@ -13247,12 +13248,13 @@ function formatSleepDuration(hours) {
         return `${(key === "sodium" ? Math.round(sum) : Math.round(sum * 10) / 10).toLocaleString(en ? "en-CA" : "fr-CA")}${valid.length < daily.length ? "*" : ""}`;
       });
       const status = !daily.length ? "—" : `${available.length}/${daily.length}`;
+      mobileCards.push(`<div class="nutrient-mobile-day"><button type="button" class="text-button" data-nutrient-day="${esc(date)}">${esc(date.slice(5))} ↗</button><small>${en?"Meals with data":"Repas avec données"} : ${esc(status)}</small><div class="nutrient-mobile-values">${labels.map((label,i)=>`<span><small>${esc(label)}</small><strong>${esc(cells[i])}</strong></span>`).join("")}</div></div>`);
       return `<tr><td><button type="button" class="text-button" data-nutrient-day="${esc(date)}">${esc(date.slice(5))} ↗</button></td><td class="nutrient-meals-count">${esc(status)}</td>${cells.map(c => `<td class="nutrient-value">${esc(c)}</td>`).join("")}</tr>`;
     });
     const explanation = en
       ? "Selected period · based on saved meal nutrition data. Amounts are in grams, except sodium (mg). * Partial value: one or more meals have no value for that nutrient. A dash means no recorded value, not zero."
       : "Période sélectionnée · selon les valeurs nutritionnelles enregistrées des repas. Quantités en grammes, sauf sodium (mg). * Valeur partielle : au moins un repas ne possède pas de valeur pour ce nutriment. Un tiret signifie une donnée absente, pas zéro.";
-    return `<section class="card nutrient-intake-observations"><style>.nutrient-intake-observations .nutrient-intake-table{width:100%;min-width:0;table-layout:fixed;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}.nutrient-intake-observations .nutrient-intake-table th,.nutrient-intake-observations .nutrient-intake-table td{padding:10px 4px;white-space:normal;overflow-wrap:anywhere;border-bottom:1px solid rgba(40,85,51,.12)}.nutrient-intake-observations .nutrient-intake-table th{text-align:left;font-size:.88rem;color:#466650;background:rgba(218,237,207,.45);font-weight:700}.nutrient-intake-observations .nutrient-intake-table td{font-size:.95rem}.nutrient-intake-observations .nutrient-intake-table .nutrient-value,.nutrient-intake-observations .nutrient-intake-table th.nutrient-value{text-align:right}.nutrient-intake-observations .nutrient-intake-table tbody tr:nth-child(even){background:rgba(218,237,207,.24)}.nutrient-intake-observations .nutrient-intake-table tbody tr:last-child td{border-bottom:0}.nutrient-intake-observations .nutrient-intake-scroll{overflow-x:hidden;margin-top:14px;border:1px solid rgba(40,85,51,.13);border-radius:15px}.nutrient-intake-observations .nutrient-intake-filters{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:20px 0 4px}</style><h3>🥑 ${en ? "Nutrient intake" : "Apports nutritionnels"}</h3><p class="muted small">${explanation}</p><div class="nutrient-intake-filters"><button type="button" class="secondary small" data-nutrient-range="week" aria-pressed="${nutrientIntakeFilter.mode==="week"}">${en?"Last week":"Dernière semaine"}</button><button type="button" class="secondary small" data-nutrient-range="month" aria-pressed="${nutrientIntakeFilter.mode==="month"}">${en?"Last month":"Dernier mois"}</button><label class="muted small">${en?"From":"Du"} <input id="nutrientDateFrom" type="date" value="${esc(nutrientIntakeFilter.mode==="custom" && nutrientIntakeFilter.from ? nutrientIntakeFilter.from : range.from)}" max="${esc(selectedDate)}"></label><label class="muted small">${en?"To":"Au"} <input id="nutrientDateTo" type="date" value="${esc(nutrientIntakeFilter.mode==="custom" && nutrientIntakeFilter.to ? nutrientIntakeFilter.to : range.to)}" max="${esc(selectedDate)}"></label></div><div class="nutrient-intake-groups" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px"><button type="button" class="secondary small" data-nutrient-group="macro" aria-pressed="${group==="macro"}">${en?"Macronutrients":"Macronutriments"}</button><button type="button" class="secondary small" data-nutrient-group="other" aria-pressed="${group==="other"}">${en?"Fiber, sugars & sodium":"Fibres, sucres et sodium"}</button></div><div class="nutrient-intake-scroll" role="region" tabindex="0" aria-label="${en ? "Nutrient intake table" : "Tableau des apports nutritionnels"}"><table class="nutrient-intake-table"><thead><tr><th>Date</th><th class="nutrient-meals-count">${en ? "Meals with data" : "Repas avec données"}</th>${labels.map(label => `<th class="nutrient-value">${label}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div><div class="nutrient-day-detail-host" aria-live="polite"></div></section>`;
+    return `<section class="card nutrient-intake-observations"><style>.nutrient-intake-observations .nutrient-intake-table{width:100%;min-width:0;table-layout:fixed;border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}.nutrient-intake-observations .nutrient-intake-table th,.nutrient-intake-observations .nutrient-intake-table td{padding:10px 4px;white-space:normal;overflow-wrap:anywhere;border-bottom:1px solid rgba(40,85,51,.12)}.nutrient-intake-observations .nutrient-intake-table th{text-align:left;font-size:.88rem;color:#466650;background:rgba(218,237,207,.45);font-weight:700}.nutrient-intake-observations .nutrient-intake-table td{font-size:.95rem}.nutrient-intake-observations .nutrient-intake-table .nutrient-value,.nutrient-intake-observations .nutrient-intake-table th.nutrient-value{text-align:right}.nutrient-intake-observations .nutrient-intake-table tbody tr:nth-child(even){background:rgba(218,237,207,.24)}.nutrient-intake-observations .nutrient-intake-table tbody tr:last-child td{border-bottom:0}.nutrient-intake-observations .nutrient-intake-scroll{overflow-x:hidden;margin-top:14px;border:1px solid rgba(40,85,51,.13);border-radius:15px}.nutrient-intake-observations .nutrient-intake-filters{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:20px 0 4px}</style><h3>🥑 ${en ? "Nutrient intake" : "Apports nutritionnels"}</h3><p class="muted small">${explanation}</p><div class="nutrient-intake-filters"><button type="button" class="secondary small" data-nutrient-range="week" aria-pressed="${nutrientIntakeFilter.mode==="week"}">${en?"Last week":"Dernière semaine"}</button><button type="button" class="secondary small" data-nutrient-range="month" aria-pressed="${nutrientIntakeFilter.mode==="month"}">${en?"Last month":"Dernier mois"}</button><label class="muted small">${en?"From":"Du"} <input id="nutrientDateFrom" type="date" value="${esc(nutrientIntakeFilter.mode==="custom" && nutrientIntakeFilter.from ? nutrientIntakeFilter.from : range.from)}" max="${esc(selectedDate)}"></label><label class="muted small">${en?"To":"Au"} <input id="nutrientDateTo" type="date" value="${esc(nutrientIntakeFilter.mode==="custom" && nutrientIntakeFilter.to ? nutrientIntakeFilter.to : range.to)}" max="${esc(selectedDate)}"></label></div><div class="nutrient-intake-groups" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px"><button type="button" class="secondary small" data-nutrient-group="macro" aria-pressed="${group==="macro"}">${en?"Macronutrients":"Macronutriments"}</button><button type="button" class="secondary small" data-nutrient-group="other" aria-pressed="${group==="other"}">${en?"Fiber, sugars & sodium":"Fibres, sucres et sodium"}</button></div><div class="nutrient-intake-scroll" role="region" tabindex="0" aria-label="${en ? "Nutrient intake table" : "Tableau des apports nutritionnels"}"><table class="nutrient-intake-table"><thead><tr><th>Date</th><th class="nutrient-meals-count">${en ? "Meals with data" : "Repas avec données"}</th>${labels.map(label => `<th class="nutrient-value">${label}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div><div class="nutrient-mobile-days">${mobileCards.join("")}</div><div class="nutrient-day-detail-host" aria-live="polite"></div></section>`;
   }
   function renderInsightsContent() {
     const __obsTotalStart = performance.now();
@@ -14250,10 +14252,10 @@ function formatSleepDuration(hours) {
 
   let glucoseChartPoints = [];
   function bindGlucoseObservationFilter() {
-    document.querySelectorAll(".glucose-observations-trend [data-glucose-point]").forEach(button => {
+    document.querySelectorAll(".glucose-observations-trend [data-glucose-point], .glucose-fullscreen-dialog [data-glucose-point]").forEach(button => {
       const show = () => {
         const point = glucoseChartPoints[Number(button.dataset.glucosePoint)];
-        const host = $(".glucose-observations-trend .glucose-measure-detail");
+        const host = button.closest(".glucose-observations-trend, .glucose-fullscreen-dialog")?.querySelector(".glucose-measure-detail");
         if (!point || !host) return;
         const en = window.ENERGIE_LOCALE === "en";
         const meal = point.mealId ? db.days?.[point.date]?.meals?.find(m=>m.id===point.mealId) : null;
@@ -14269,6 +14271,21 @@ function formatSleepDuration(hours) {
       };
       button.addEventListener("click",show);
       button.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();show();}});
+    });
+    $(".glucose-expand-chart")?.addEventListener("click", () => {
+      const source = $(".glucose-observations-trend");
+      if (!source) return;
+      const dialog = document.createElement("dialog");
+      dialog.className = "glucose-fullscreen-dialog professional-trend-dialog";
+      dialog.innerHTML = `<div class="professional-trend-dialog-head"><strong>🩸 ${esc(t("Évolution de la glycémie"))}</strong><button type="button" class="secondary" data-close-glucose-fullscreen>${esc(t("Fermer"))} ✕</button></div><p class="muted small">${window.ENERGIE_LOCALE==="en"?"Rotate your phone for a wider view. Tap a point to view its details.":"Tourne ton téléphone à l’horizontale pour agrandir le graphique. Touche un point pour voir ses détails."}</p><div class="glucose-fullscreen-scroll"></div><div class="glucose-measure-detail" hidden></div>`;
+      const chart = source.querySelector("svg")?.cloneNode(true);
+      if (!chart) return;
+      dialog.querySelector(".glucose-fullscreen-scroll").appendChild(chart);
+      document.body.appendChild(dialog);
+      dialog.querySelector("[data-close-glucose-fullscreen]").onclick = () => dialog.close();
+      dialog.addEventListener("close", () => dialog.remove(), {once:true});
+      dialog.showModal();
+      bindGlucoseObservationFilter();
     });
   }
   function glucoseObservationsHtml(filter = null) {
@@ -14354,7 +14371,7 @@ function formatSleepDuration(hours) {
     const graph='<div style="width:100%;overflow-x:auto"><svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Évolution des mesures de glycémie, jours récents à gauche" style="display:block;width:'+w+'px;max-width:none;height:auto">'+grid+labels+curve+dots+'<text x="8" y="12" fill="#657b6c" font-size="10">mmol/L</text></svg></div>';
     const last=visible.at(-1);
     const latest = 'Dernière mesure : ' + esc(last.date + " à " + last.time) + ' · ' + visible.length + ' mesure' + (visible.length>1?"s":"") + ' sur 30 jours';
-    return '<article class="card glucose-observations-trend" style="width:100%;box-sizing:border-box;margin:14px 0">' + title + '<p class="muted tiny">' + latest + '</p>' + graph + '<div class="glucose-measure-detail" hidden></div><p class="metrics-note">Chaque point représente une mesure enregistrée. Les mesures d’une même journée sont reliées par une ligne pleine; un pointillé discret relie le dernier point d’une journée au premier point de la suivante. Clique sur un point pour consulter la mesure et son repas associé, sans interprétation médicale ni données inventées.</p></article>';
+    return '<article class="card glucose-observations-trend" style="width:100%;box-sizing:border-box;margin:14px 0">' + title + '<p class="muted tiny">' + latest + '</p>' + graph + (window.Capacitor?.isNativePlatform?.() ? '<button type="button" class="secondary small glucose-expand-chart">↗ '+(window.ENERGIE_LOCALE==="en"?"Expand chart":"Agrandir le graphique")+'</button>' : '') + '<div class="glucose-measure-detail" hidden></div><p class="metrics-note">Chaque point représente une mesure enregistrée. Les mesures d’une même journée sont reliées par une ligne pleine; un pointillé discret relie le dernier point d’une journée au premier point de la suivante. Clique sur un point pour consulter la mesure et son repas associé, sans interprétation médicale ni données inventées.</p></article>';
   }
   function personalTrendsHtml() {
     const end = demoAnalysisContext()?.cutoff || todayKey(), profile = personalProfile(), unit = profile.weight?.unit || "kg";
