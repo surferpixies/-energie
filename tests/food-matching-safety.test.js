@@ -332,3 +332,61 @@ for (const locale of ['fr-CA','fr-FR']) {
  }
 }
 console.log('Repas multi-ingrédients : reconnaissance et conservation du total OK');
+
+
+// Matrice reproductible de repas composés. Les aliments qui ne sont pas
+// calculables sont rapportés, jamais transformés silencieusement en zéro.
+// Ne teste pas encore l'écriture ni la relecture Supabase.
+const matrixFs = require('node:fs');
+const matrixPath = require('node:path');
+const matrixPools = [
+ ['100 g carottes','150 g poulet','120 g spaghettis cuits','100 g tomates','100 g concombres'],
+ ['100 g brocoli','150 g filet de poulet cuit','120 g spaghettis cuits','100 g carottes','100 g tomates'],
+ ['100 g pommes','100 g carottes','100 g tomates','100 g concombres','100 g brocoli'],
+];
+const matrixFailures=[];
+const matrixSummary={tested:0,complete:0,notCalculable:0,missingTrace:0,incorrectTotal:0};
+const tolerance=1.1;
+for(const locale of ['fr-CA','fr-FR']){
+ global.ENERGIE_LOCALE=locale;
+ for(const pool of matrixPools){
+  for(let mask=1;mask<(1<<pool.length);mask++){
+   const ingredients=pool.filter((_,i)=>(mask&(1<<i))!==0);
+   if(ingredients.length<2)continue;
+   for(const separator of ['\\n',' + ']){
+    matrixSummary.tested++;
+    const individually=ingredients.map(input=>context.estimateNutritionFromText(input));
+    const result=context.estimateNutritionFromText(ingredients.join(separator));
+    const caseInfo={locale,ingredients,separator:separator==='\\n'?'newline':'plus'};
+    if(individually.some(x=>!x)||!result){
+      matrixSummary.notCalculable++;
+      matrixFailures.push({...caseInfo,reason:'not-calculable'});
+      continue;
+    }
+    const traceCount=result.trace?.items?.length;
+    if(traceCount!==ingredients.length){
+      matrixSummary.missingTrace++;
+      matrixFailures.push({...caseInfo,reason:'trace-count',actual:traceCount});
+      continue;
+    }
+    const expected=individually.reduce((total,x)=>total+Number(x.calories),0);
+    if(!Number.isFinite(expected)||!Number.isFinite(Number(result.calories))||Math.abs(result.calories-expected)>tolerance){
+      matrixSummary.incorrectTotal++;
+      matrixFailures.push({...caseInfo,reason:'wrong-total',expected,actual:result.calories});
+      continue;
+    }
+    matrixSummary.complete++;
+   }
+  }
+ }
+}
+const matrixReport={date:new Date().toISOString(),scope:'Calcul de production en memoire, sans sauvegarde',
+ summary:matrixSummary,failures:matrixFailures};
+if(process.env.NUTRITION_MEAL_REPORT){
+ const target=process.env.NUTRITION_MEAL_REPORT;
+ matrixFs.mkdirSync(matrixPath.dirname(target),{recursive:true});
+ matrixFs.writeFileSync(target,JSON.stringify(matrixReport,null,2));
+}
+console.log('Matrice repas : '+JSON.stringify({...matrixSummary,sampleFailures:matrixFailures.slice(0,10)}));
+// Le rapport est exploratoire pour les nouveaux repas : les échecs restent
+// visibles pour triage, tandis que les scénarios P0 ci-dessus restent bloquants.
