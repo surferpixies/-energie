@@ -2749,9 +2749,9 @@ function formatSleepDuration(hours) {
   function foodMatchForSegment(segment) {
     // Portion locale documentée : riz = 1 tasse cuite.
     // La tasse est une unité de volume; ne jamais généraliser sa masse.
-    if (/^\\s*\\d+(?:[.,]\\d+)?\\s*(?:cups?|tasses?)\\s+(?:cooked\\s+rice|riz\\s+cuit)\\s*$/i.test(segment)) {
+    if (/^\s*\d+(?:[.,]\d+)?\s*(?:cups?|tasses?)\s+(?:cooked\s+rice|riz\s+cuit)\s*$/i.test(segment)) {
       const rice = legacyFoodWithAlias("riz", "rice");
-      if (rice && /^1\\s+tasse\\s+cuite$/i.test(String(rice.portion || "")) &&
+      if (rice && /^1\s+tasse\s+cuite$/i.test(String(rice.portion || "")) &&
           nutritionScaleForSegment(segment, rice).quantityUsed) return rice;
     }
     // Avoir une masse en grammes avant de choisir la fiche évite de
