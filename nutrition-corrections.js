@@ -6,6 +6,18 @@
   // comme « fromage blanc » ne soient pas confondus avec « fromage ».
   const corrections = [
     {
+      // Portion indicative pour une assiette de pâtes ordinaire.
+      // Valeur générique, non attribuée à la FCÉN.
+      keys: ["sauce à la viande", "sauce a la viande", "sauce bolognaise", "sauce bolognese", "meat sauce", "bolognese sauce"],
+      calories: 190,
+      protein: 12,
+      carbs: 12,
+      fat: 10,
+      portion: "150 g",
+      gramsPerPortion: 150,
+      tags: ["sauce", "protéine"],
+    },
+    {
       keys: ["pain de seigle", "rye bread"],
       calories: 259,
       protein: 8.5,
