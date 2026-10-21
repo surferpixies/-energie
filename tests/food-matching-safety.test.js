@@ -552,6 +552,7 @@ if(process.env.NUTRITION_EVALUATION_REPORT){
  fs.mkdirSync(require('node:path').dirname(target),{recursive:true});
  fs.writeFileSync(target,JSON.stringify(evaluation,null,2));
 }
+console.log('EN_DIAGNOSTIC',JSON.stringify(evaluation.failures.filter(x=>x.locale==='en-CA').map(x=>({input:x.input, stripped:cnf.stripQuantity(x.input), official:cnf.find(x.input)?.cnfFoodId, guided:cnf.search(x.input,2).map(z=>({id:z.id,en:z.nameEn?.slice(0,65)})), legacy:context.FOOD_CANDIDATES.filter(z=>z.compareKey===context.comparableFoodText(x.input)).slice(0,2).map(z=>z.food.keys[0])}))));
 console.log('REALISTIC_EVALUATION',JSON.stringify({total:evaluation.total,passed:evaluation.passed,ratePercent:evaluation.ratePercent,failures:evaluation.failures}));
 assert.equal(evaluation.failures.filter(x=>x.family==='securite').length,0,'Aucun échec de sécurité toléré');
 assert.ok(evaluation.ratePercent>=90,'Cible minimale du jeu de contrôle: 90 %');
