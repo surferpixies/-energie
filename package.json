@@ -9,7 +9,8 @@
     "ios:sync": "npm run build:ios-web && npx cap sync ios",
     "ios:open": "npx cap open ios",
     "android:sync": "npm run build:ios-web && npx cap sync android",
-    "android:open": "npx cap open android"
+    "android:open": "npx cap open android",
+    "test:nutrition": "node tests/nutrition-catalog.test.cjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
