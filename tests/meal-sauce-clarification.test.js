@@ -12,7 +12,7 @@ const end = source.indexOf('  function nutritionFromInputs()', beginning);
 assert.ok(beginning > 0 && end > beginning);
 const dialogCode = source.slice(beginning, end);
 assert.match(dialogCode, /genericComposite/);
-assert.match(dialogCode, /item\.source === "energie-foods"/);
+assert.match(dialogCode, /normalizeFoodText/);
 assert.match(dialogCode, /mealClarifySauce/);
 assert.match(dialogCode, /description\?\.focus\(\)/);
 assert.match(dialogCode, /Tu veux préciser ce que contient ce plat/);
