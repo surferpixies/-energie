@@ -353,7 +353,7 @@ for(const locale of ['fr-CA','fr-FR']){
   for(let mask=1;mask<(1<<pool.length);mask++){
    const ingredients=pool.filter((_,i)=>(mask&(1<<i))!==0);
    if(ingredients.length<2)continue;
-   for(const separator of ['\\n',' + ']){
+   for(const separator of ['\n',' + ']){
     matrixSummary.tested++;
     const individually=ingredients.map(input=>context.estimateNutritionFromText(input));
     const result=context.estimateNutritionFromText(ingredients.join(separator));
