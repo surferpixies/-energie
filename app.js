@@ -10099,18 +10099,18 @@ function formatSleepDuration(hours) {
       const dueNow = today && !reading && (item.key==="fasting" ? now.getHours()>=5 && now.getHours()<12 : due && now >= due);
       const pulse = dueNow ? '<span class="energy-action-brain" aria-label="'+esc(t("Mesure à noter"))+'" style="display:inline-block;margin-right:5px">🧠</span>' : "";
       const time = reading?.time || (item.key==="fasting" ? (today ? now.toTimeString().slice(0,5) : "08:00") : (due ? due.toTimeString().slice(0,5) : now.toTimeString().slice(0,5)));
-      return '<div class="glucose-unified-row" style="display:grid;grid-template-columns:minmax(110px,1.3fr) minmax(70px,.7fr) minmax(100px,.8fr) auto;align-items:end;gap:7px;padding:5px 0;border-bottom:1px solid #e5ecdf">'
+      return '<div class="glucose-unified-row" style="display:grid;grid-template-columns:minmax(110px,1.3fr) minmax(70px,.7fr) minmax(100px,.8fr) auto;align-items:end;gap:7px;padding:3px 0;border-bottom:1px solid #e5ecdf">'
         +'<strong style="align-self:center">'+pulse+esc(item.label)+'</strong>'
-        +'<label style="margin:0"><small>'+esc(t("mmol/L"))+'</small><input data-glucose-row-value="'+esc(item.key)+'" aria-label="'+esc(item.label)+'" inputmode="decimal" type="text" placeholder="5,4" value="'+(reading ? esc(String(reading.value).replace(".",",")) : "")+'" '+(canEdit?"":"disabled")+' style="width:100%;height:38px;min-height:0;padding:5px 9px;box-sizing:border-box;font-size:.95rem"></label>'
-        +'<label style="margin:0"><small>'+esc(t("Heure"))+'</small><input data-glucose-row-time="'+esc(item.key)+'" aria-label="'+esc(t("Heure"))+' '+esc(item.label)+'" type="time" value="'+esc(time)+'" '+(canEdit?"":"disabled")+' style="width:100%;height:38px;min-height:0;padding:5px 9px;box-sizing:border-box;font-size:.95rem"></label>'
+        +'<label style="margin:0"><small>'+esc(t("mmol/L"))+'</small><input data-glucose-row-value="'+esc(item.key)+'" aria-label="'+esc(item.label)+'" inputmode="decimal" type="text" placeholder="5,4" value="'+(reading ? esc(String(reading.value).replace(".",",")) : "")+'" '+(canEdit?"":"disabled")+' style="width:100%;height:34px;min-height:0;padding:5px 9px;box-sizing:border-box;font-size:.95rem"></label>'
+        +'<label style="margin:0"><small>'+esc(t("Heure"))+'</small><input data-glucose-row-time="'+esc(item.key)+'" aria-label="'+esc(t("Heure"))+' '+esc(item.label)+'" type="time" value="'+esc(time)+'" '+(canEdit?"":"disabled")+' style="width:100%;height:34px;min-height:0;padding:5px 9px;box-sizing:border-box;font-size:.95rem"></label>'
         +(canEdit ? '<button type="button" class="secondary small" data-save-glucose-row="'+esc(item.key)+'">'+esc(t("Enregistrer"))+'</button>' : "")+'</div>';
     };
     const assigned=rows.map(slotHtml).join("");
     const extras=readings.filter(x=>!used.has(x.id));
-    return '<section class="card glucose-journal-card glucose-unified" style="grid-column:1/-1;width:100%;box-sizing:border-box;padding:9px 13px;margin:6px 0"><h3 style="margin:0 0 4px;font-size:1.08rem">🩸 '+t("Suivi de la glycémie")+'</h3><p class="muted tiny" style="margin:0 0 6px">'+t("Mesures manuelles en mmol/L. Aucune interprétation médicale automatique.")+'</p>'
+    return '<section class="card glucose-journal-card glucose-unified" style="grid-column:1/-1;width:100%;box-sizing:border-box;padding:7px 12px;margin:5px 0"><h3 style="margin:0 0 4px;font-size:1.08rem">🩸 '+t("Suivi de la glycémie")+'</h3><p class="muted tiny" style="margin:0 0 4px">'+t("Mesures manuelles en mmol/L. Aucune interprétation médicale automatique.")+'</p>'
       +'<div style="overflow-x:auto">'+assigned+'</div>'
       +(extras.length ? '<h4 style="margin:14px 0 5px">'+t("Mesures supplémentaires")+'</h4>'+extras.map(x=>'<div style="display:flex;align-items:center;gap:10px;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5ecdf"><span>'+esc(x.time||"")+' · '+esc(String(x.value).replace(".",","))+' mmol/L · '+esc(contexts[x.context]||t("Autre"))+'</span>'+(canEdit?'<button type="button" class="secondary small" data-delete-glucose="'+esc(x.id)+'">'+t("Retirer")+'</button>':"")+'</div>').join("") : "")
-      +(canEdit ? '<form id="glucoseEntryForm" style="margin-top:9px"><strong>'+t("Ajouter une mesure supplémentaire")+'</strong><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:9px;align-items:end;margin-top:6px"><label>'+t("Valeur (mmol/L)")+'<input id="glucoseValue" type="text" required inputmode="decimal" placeholder="5,4" style="width:100%;height:40px;min-height:0;padding:6px 10px;box-sizing:border-box;font-size:.95rem"></label><label>'+t("Heure")+'<input id="glucoseTime" type="time" required style="width:100%;height:40px;min-height:0;padding:6px 10px;box-sizing:border-box;font-size:.95rem" value="'+now.toTimeString().slice(0,5)+'"></label><label>'+t("Contexte")+'<select id="glucoseContext" style="width:100%;height:40px;min-height:0;padding:6px 10px;box-sizing:border-box;font-size:.95rem">'+Object.entries(contexts).map(([k,v])=>'<option value="'+k+'">'+esc(v)+'</option>').join("")+'</select></label></div><button class="secondary small" type="submit" style="margin-top:10px">'+t("Enregistrer la mesure")+'</button></form>' : "")
+      +(canEdit ? '<form id="glucoseEntryForm" style="margin-top:6px"><strong>'+t("Ajouter une mesure supplémentaire")+'</strong><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:9px;align-items:end;margin-top:6px"><label>'+t("Valeur (mmol/L)")+'<input id="glucoseValue" type="text" required inputmode="decimal" placeholder="5,4" style="width:100%;height:40px;min-height:0;padding:6px 10px;box-sizing:border-box;font-size:.95rem"></label><label>'+t("Heure")+'<input id="glucoseTime" type="time" required style="width:100%;height:40px;min-height:0;padding:6px 10px;box-sizing:border-box;font-size:.95rem" value="'+now.toTimeString().slice(0,5)+'"></label><label>'+t("Contexte")+'<select id="glucoseContext" style="width:100%;height:40px;min-height:0;padding:6px 10px;box-sizing:border-box;font-size:.95rem">'+Object.entries(contexts).map(([k,v])=>'<option value="'+k+'">'+esc(v)+'</option>').join("")+'</select></label></div><button class="secondary small" type="submit" style="margin-top:10px">'+t("Enregistrer la mesure")+'</button></form>' : "")
       +'<p id="glucoseStatus" role="status" class="muted tiny"></p></section>';
   }
   function bindGlucoseJournal() {
@@ -14284,7 +14284,7 @@ function formatSleepDuration(hours) {
     const end = selectedDate < todayKey() ? selectedDate : todayKey();
     const start = addDaysKey(end, -29);
     const points = Object.entries(db.days || {}).flatMap(([date, day]) =>
-      date >= start && date <= end ? (day.glucoseMeasurements || []).filter(x => Number.isFinite(Number(x.value)) && Number(x.value) > 0 && Number(x.value) < 40 && /^\d{2}:\d{2}$/.test(x.time || "")).map(x => ({date,time:x.time,value:Number(x.value),context:x.context,mealId:x.mealId,scheduledTime:x.scheduledTime})) : []
+      date >= start && date <= end ? (day.glucoseMeasurements || []).filter(x => Number.isFinite(Number(x.value)) && Number(x.value) > 0 && Number(x.value) < 40 && /^\d{2}:\d{2}$/.test(x.time || "")).map(x => ({date,time:x.time,value:Number(x.value),context:x.context,mealId:x.mealId,scheduledTime:x.scheduledTime,glucoseSlot:x.glucoseSlot})) : []
     ).sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time));
     const preferred = "all";
     const selected = ["all","fasting","scheduled","after","other"].includes(filter) ? filter : preferred;
@@ -14315,9 +14315,9 @@ function formatSleepDuration(hours) {
     const mealGroups = ["all","after"].includes(selected) ? visible.filter(p=>p.mealId || p.context==="after").map(mealGroup) : [];
     const slots = selected === "all" ? ["À jeun","Déjeuner","Dîner","Souper",...(mealGroups.includes("Collation") ? ["Collation"] : []),"Autres"] : selected === "after" ? ["Déjeuner","Dîner","Souper",...(mealGroups.includes("Collation") ? ["Collation"] : [])] : selected === "scheduled" ? [...new Set([...(db.settings.glucoseReminderTimes || []),...visible.map(p=>p.scheduledTime)].filter(Boolean))].sort() : ["Mesure"];
     const slot = p => selected === "all" ? (p.context === "fasting" && !p.mealId ? 0 : (p.mealId || p.context === "after") ? Math.max(1,slots.indexOf(mealGroup(p))) : slots.length-1) : selected === "scheduled" ? Math.max(0,slots.indexOf(p.scheduledTime)) : selected === "after" ? Math.max(0,slots.indexOf(mealGroup(p))) : 0;
-    const left=52,right=20,top=18,bottom=68,h=254;
-    const dayWidth = ["all","after"].includes(selected) ? slots.length*38+68 : Math.max(175,slots.length*47+28);
-    const slotX = (day,position) => ["all","after"].includes(selected) ? left+day*dayWidth+(dayWidth-(slots.length-1)*38)/2+position*38 : left+day*dayWidth+dayWidth/(slots.length+1)*(position+1);
+    const left=52,right=20,top=18,bottom=48,h=220;
+    const dayWidth = ["all","after"].includes(selected) ? Math.max(115,slots.length*24+36) : Math.max(115,slots.length*34+24);
+    const slotX = (day,position) => ["all","after"].includes(selected) ? left+day*dayWidth+(dayWidth-(slots.length-1)*24)/2+position*24 : left+day*dayWidth+dayWidth/(slots.length+1)*(position+1);
     const w=left+right+dayWidth*dates.length;
     const scaleY = v => top+(hi-v)/(hi-lo)*(h-top-bottom);
     const occupied = new Map();
@@ -14333,16 +14333,27 @@ function formatSleepDuration(hours) {
       return '<line x1="'+left+'" x2="'+(w-right)+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#dce7de"/><text x="'+(left-7)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" font-size="12" fill="#657b6c">'+esc(value.toFixed(1).replace(".",","))+'</text>';
     }).join("");
     glucoseChartPoints=coordinates;
-    const dots=coordinates.map((p,i)=>'<g data-glucose-point="'+i+'" role="button" tabindex="0" style="cursor:pointer" aria-label="'+esc(p.date+" "+p.time+" "+p.value+" mmol/L") +'"><line x1="'+p.x.toFixed(1)+'" x2="'+p.x.toFixed(1)+'" y1="'+(h-bottom)+'" y2="'+p.y.toFixed(1)+'" stroke="#399e67" stroke-width="4"/><circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="6" fill="#2e985f" stroke="#fff" stroke-width="2"/><circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="14" fill="transparent"><title>'+esc(p.date+" "+p.time+" · "+p.value+" mmol/L")+'</title></circle></g>').join("");
+    const contextLabel = point => {
+      if(point.context==="fasting")return t("À jeun");
+      if(point.glucoseSlot)return t("Après")+" "+t(point.glucoseSlot).toLowerCase();
+      if(point.mealId){const meal=(db.days?.[point.date]?.meals||[]).find(m=>m.id===point.mealId);if(meal)return t("Après")+" "+t(meal.type).toLowerCase();}
+      return point.context==="before"?t("Avant un repas"):point.context==="after"?t("Après un repas"):point.context==="bedtime"?t("Au coucher"):point.scheduledTime?point.scheduledTime:t("Autre");
+    };
+    const ordered = [...coordinates].sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+    const curve=ordered.length>1?'<polyline fill="none" stroke="#399e67" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round" points="'+ordered.map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ')+'"/>':"";
+    const dots=coordinates.map((p,i)=>{
+      const tooltip=p.date+" · "+p.time+" · "+contextLabel(p)+" · "+String(p.value).replace(".",",")+" mmol/L";
+      return '<g data-glucose-point="'+i+'" role="button" tabindex="0" style="cursor:pointer" aria-label="'+esc(tooltip)+'"><circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="6" fill="#2e985f" stroke="#fff" stroke-width="2"/><circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="15" fill="transparent"><title>'+esc(tooltip)+'</title></circle></g>';
+    }).join("");
     const labels=dates.map((date,day)=>{
       const x=left+day*dayWidth+dayWidth/2;
-      const names=slots.map((name,i)=>'<text x="'+(slotX(day,i)).toFixed(1)+'" y="'+(h-38)+'" text-anchor="middle" fill="#728679" font-size="10">'+esc(selected==="all"?({ "À jeun":"À jeun","Déjeuner":"Déj.","Dîner":"Dîn.","Souper":"Soup.","Collation":"Coll.","Autres":"Autres" }[name] || name):selected==="after"?["Déj.","Dîn.","Soup.","Coll."][i]:selected==="scheduled"?name:"")+'</text>').join("");
+      const names=selected==="scheduled"?slots.map((name,i)=>'<text x="'+slotX(day,i).toFixed(1)+'" y="'+(h-34)+'" text-anchor="middle" fill="#728679" font-size="10">'+esc(name)+'</text>').join(""):"";
       return names+'<text x="'+x.toFixed(1)+'" y="'+(h-13)+'" text-anchor="middle" fill="#526c59" font-weight="600" font-size="13">'+esc(date===todayKey()?"Aujourd’hui":date.slice(5))+'</text>';
     }).join("");
-    const graph='<div style="width:100%;overflow-x:auto"><svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Évolution des mesures de glycémie, jours récents à gauche" style="display:block;width:'+w+'px;max-width:none;height:auto">'+grid+labels+dots+'<text x="8" y="12" fill="#657b6c" font-size="10">mmol/L</text></svg></div>';
+    const graph='<div style="width:100%;overflow-x:auto"><svg viewBox="0 0 '+w+' '+h+'" role="img" aria-label="Évolution des mesures de glycémie, jours récents à gauche" style="display:block;width:'+w+'px;max-width:none;height:auto">'+grid+labels+curve+dots+'<text x="8" y="12" fill="#657b6c" font-size="10">mmol/L</text></svg></div>';
     const last=visible.at(-1);
     const latest = 'Dernière mesure : ' + esc(last.date + " à " + last.time) + ' · ' + visible.length + ' mesure' + (visible.length>1?"s":"") + ' sur 30 jours';
-    return '<article class="card glucose-observations-trend" style="width:100%;box-sizing:border-box;margin:14px 0">' + title + filters + '<p class="muted tiny">' + latest + '</p>' + graph + '<div class="glucose-measure-detail" hidden></div><p class="metrics-note">Chaque point représente une mesure enregistrée. Les contextes (à jeun, heures fixes et après les repas) peuvent varier. Clique sur une barre pour consulter la mesure et son repas associé, sans interprétation médicale ni données inventées.</p></article>';
+    return '<article class="card glucose-observations-trend" style="width:100%;box-sizing:border-box;margin:14px 0">' + title + filters + '<p class="muted tiny">' + latest + '</p>' + graph + '<div class="glucose-measure-detail" hidden></div><p class="metrics-note">Chaque point représente une mesure enregistrée. Les contextes (à jeun, heures fixes et après les repas) peuvent varier. Clique sur un point pour consulter la mesure et son repas associé, sans interprétation médicale ni données inventées.</p></article>';
   }
   function personalTrendsHtml() {
     const end = demoAnalysisContext()?.cutoff || todayKey(), profile = personalProfile(), unit = profile.weight?.unit || "kg";
