@@ -422,3 +422,19 @@ if(process.env.NUTRITION_MEAL_REPORT){
 console.log('Matrice repas : '+JSON.stringify({...matrixSummary,sampleFailures:matrixFailures.slice(0,10)}));
 // Le rapport est exploratoire pour les nouveaux repas : les échecs restent
 // visibles pour triage, tandis que les scénarios P0 ci-dessus restent bloquants.
+
+// Diagnostic non bloquant des cas P0 avant de définir les attentes exactes.
+const p0Cases=[
+ "1 bagel",
+ "30 g fromage à la crème",
+ "1 banane",
+ "1 c. à soupe beurre d'arachide",
+ "1 bagel + 30 g fromage à la crème + 1 banane + 1 c. à soupe beurre d'arachide"
+];
+for(const locale of ['fr-CA','fr-FR']){
+ global.ENERGIE_LOCALE=locale;
+ console.log('P0_NUTRITION_DIAGNOSTIC',JSON.stringify({locale,results:p0Cases.map(input=>{
+  const n=context.estimateNutritionFromText(input);
+  return {input,calories:n?.calories??null,source:n?.source??null,recognized:n?.trace?.items?.length??0,unrecognized:context.mealNutritionRecognition(input).unrecognized};
+ })}));
+}
