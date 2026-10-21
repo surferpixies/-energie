@@ -14286,6 +14286,11 @@ function formatSleepDuration(hours) {
       const chart = source.querySelector("svg")?.cloneNode(true);
       if (!chart) return;
       chart.querySelectorAll("[data-glucose-bound]").forEach(point => delete point.dataset.glucoseBound);
+      chart.removeAttribute("style");
+      chart.style.display = "block";
+      chart.style.width = Math.max(window.innerWidth * 1.6, 920) + "px";
+      chart.style.maxWidth = "none";
+      chart.style.height = "auto";
       dialog.querySelector(".glucose-fullscreen-scroll").appendChild(chart);
       document.body.appendChild(dialog);
       dialog.querySelector("[data-close-glucose-fullscreen]").onclick = () => dialog.close();
