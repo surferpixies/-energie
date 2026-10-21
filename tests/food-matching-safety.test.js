@@ -579,6 +579,7 @@ for(const locale of ['en-CA','en-US']){
  assert.equal(find('1 tbsp peanut butter').calories,95,locale+': 1 tbsp peanut butter');
  assert.equal(find('2 tbsp peanut butter').calories,190,locale+': 2 tbsp peanut butter');
  assert.equal(find('200 g cooked spaghetti').calories,316,locale+': cooked spaghetti weight');
+ assert.equal(find('1 cup cooked rice').calories,205);
  assert.ok(find('4 oz cooked chicken').calories>0,locale+': 4 oz cooked chicken');
  assert.ok(find('6 oz cooked salmon').calories>0,locale+': 6 oz cooked salmon');
  // La tasse de riz cuit reste à valider avec une portion officielle.
