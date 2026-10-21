@@ -2783,7 +2783,10 @@ function formatSleepDuration(hours) {
               .replace(/^(?:\\d+(?:[.,]\\d+)?|un|une|one|deux|two|trois|three|quatre|four|cinq|five|six|sept|seven|huit|eight|neuf|nine|dix|ten)\\s+/, '');
             return comparableFoodText(requestedFood) === comparableFoodText(alias);
           });
-      if (guard && !referenceNames.some(reference => guard(segment, reference))) return null;
+      // Strip a measured spoon serving before validating food identity.
+      // The portion itself is still validated/scaled by nutritionScaleForSegment.
+      const identityText = String(segment || "").replace(/^\s*(?:\d+(?:[.,]\d+)?|une?)\s+c\.?\s*[aà]\s*soupe\s+(?:de\s+)?/i, "");
+      if (guard && !referenceNames.some(reference => guard(identityText, reference))) return null;
       // Refuser « Bœuf, gras, cru » pour « bœuf haché ». Conserver une fiche
       // FCÉN/Ciqual authentiquement hachée; à défaut, repli Énergie explicite.
       if (wantsGroundBeef && !/\b(?:hache|hachee|ground|minced)\b/.test(name)) return null;
@@ -2910,8 +2913,16 @@ function formatSleepDuration(hours) {
     }
     return { scale: 1, quantityUsed: false };
   }
+  function normalizeCommonMealPhrasing(text) {
+    // Common French shorthand: a spoon without a type is assumed to be a
+    // tablespoon for the estimate. The original description stays untouched.
+    return String(text || "")
+      .replace(/\b(\d+(?:[.,]\d+)?|une?)\s+cuill[eè]re\s+(?=(?:de\s+)?beurre\s+d[’']?arachide\b)/gi,
+        "$1 c. à soupe de ")
+      .replace(/\b(bagels?)\s+(?=fromage\s+[aà]\s+la\s+cr[eè]me\b)/gi, "$1 + ");
+  }
   function mealNutritionRecognition(text) {
-    const value = String(text || "").trim();
+    const value = normalizeCommonMealPhrasing(text).trim();
     if (value.length > MEAL_DESCRIPTION_MAX_LENGTH) return { recognized: [], unrecognized: ["Description trop longue : 1 000 caractères maximum."] };
     const recognizedDish = mealCompositionAnalysis(value)?.dish;
     if (!value) return { recognized: [], unrecognized: [] };
@@ -2963,7 +2974,7 @@ function formatSleepDuration(hours) {
     // Une ligne contenant seulement une quantité complète l’ingrédient précédent.
     // Ex. « poulet / oignon / huile » puis « 1 cuillère à soupe » rattache la quantité à l’huile.
     const stitchedLines = [];
-    for (const rawLine of String(text || "").split(/\r?\n/)) {
+    for (const rawLine of normalizeCommonMealPhrasing(text).split(/\r?\n/)) {
       const line = rawLine.trim();
       if (!line) continue;
       const quantityOnly = mealQuantityOnlyFromText(line);
