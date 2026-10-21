@@ -346,7 +346,14 @@ for(const locale of ['fr-CA','fr-FR']) {
  assert.equal(cnf.find('150 g saumon fumé')?.cnfFoodId==='3183',false);
  assert.equal(cnf.find('150 g saumon cru')?.cnfFoodId==='3183',false);
 }
-console.log('DIAGNOSTIC_MORUE',JSON.stringify({find:cnf.find('150 g morue cuite')?.cnfFoodId,search:cnf.search('morue cuite',5),candidates:global.ENERGIE_CNF_CATALOG.filter(row=>/morue/i.test(row[1])&&/cuit|four|grill|bouill/i.test(row[1])).slice(0,20).map(row=>({id:row[0],name:row[1].slice(0,140),score:cnf.scoreRow(row,'150 g morue cuite'),allowed:cnf.isCandidateAllowed('150 g morue cuite',row[1])}))}));
+// Régression morue : référence cuite vérifiée et variétés distinctes.
+for(const locale of ['fr-CA','fr-FR']) {
+ global.ENERGIE_LOCALE=locale;
+ const cod=cnf.find('150 g morue cuite');
+ assert.equal(cod?.cnfFoodId,'3195',locale+': morue cuite');
+ assert.ok(context.estimateNutritionFromText('150 g morue cuite')?.calories>0);
+ assert.notEqual(cnf.find('150 g morue crue')?.cnfFoodId,'3195');
+}
 // Matrice reproductible de repas composés. Les aliments qui ne sont pas
 // calculables sont rapportés, jamais transformés silencieusement en zéro.
 // Ne teste pas encore l'écriture ni la relecture Supabase.
