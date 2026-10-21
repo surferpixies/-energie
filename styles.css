@@ -2215,3 +2215,57 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   }
   .glucose-journal-card.glucose-unified #glucoseEntryForm>div>label:last-child{grid-column:1/-1}
 }
+
+/* 3.56.280 — Compact mobile glucose rows and nutrient observation cards */
+@media(max-width:700px){
+  .glucose-journal-card.glucose-unified .glucose-unified-row{
+    display:grid!important;
+    grid-template-columns:minmax(0,0.9fr) minmax(0,1.25fr) 42px!important;
+    align-items:end!important;gap:5px!important;padding:7px 0!important;
+    overflow:visible!important
+  }
+  .glucose-journal-card.glucose-unified .glucose-unified-row>strong{
+    grid-column:1/-1!important;font-size:.92rem;line-height:1.25
+  }
+  .glucose-journal-card.glucose-unified .glucose-unified-row>label{grid-column:auto!important;min-width:0!important}
+  .glucose-journal-card.glucose-unified .glucose-unified-row>label small{font-size:.69rem;white-space:nowrap}
+  .glucose-journal-card.glucose-unified .glucose-unified-row input{
+    width:100%!important;min-width:0!important;max-width:100%!important;
+    height:38px!important;font-size:16px!important;padding:5px 6px!important
+  }
+  .glucose-journal-card.glucose-unified .glucose-unified-row>button{
+    grid-column:3!important;width:42px!important;min-width:0!important;
+    height:38px!important;max-width:42px!important;padding:0!important;
+    border-radius:12px!important;font-size:0!important;line-height:1!important
+  }
+  .glucose-journal-card.glucose-unified .glucose-unified-row>button:after{
+    content:"✓";font-size:19px;font-weight:800
+  }
+  .nutrient-intake-observations .nutrient-intake-scroll{display:none}
+  .nutrient-intake-observations .nutrient-mobile-days{display:grid;gap:8px;margin-top:13px}
+  .nutrient-intake-observations .nutrient-mobile-day{
+    padding:10px 12px;border:1px solid rgba(40,85,51,.13);
+    border-radius:14px;background:rgba(218,237,207,.18)
+  }
+  .nutrient-intake-observations .nutrient-mobile-day>button{font-weight:750}
+  .nutrient-intake-observations .nutrient-mobile-day>small{display:block;margin:3px 0 8px;color:#66796b}
+  .nutrient-intake-observations .nutrient-mobile-values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+  .nutrient-intake-observations .nutrient-mobile-values>span{min-width:0;padding:7px;background:rgba(218,237,207,.35);border-radius:9px}
+  .nutrient-intake-observations .nutrient-mobile-values small{display:block;font-size:.72rem;overflow-wrap:anywhere}
+  .nutrient-intake-observations .nutrient-mobile-values strong{display:block;font-size:.95rem;margin-top:3px}
+  .nutrient-intake-observations .nutrient-intake-filters{gap:7px}
+  .nutrient-intake-observations .nutrient-intake-filters>button{padding:8px 10px}
+  .nutrient-intake-observations .nutrient-intake-filters>label{min-width:0;flex:1 1 43%}
+  .nutrient-intake-observations .nutrient-intake-filters input{width:100%;min-width:0;box-sizing:border-box}
+  .nutrient-intake-observations .nutrient-intake-groups button{font-size:.85rem;padding:8px 10px}
+}
+@media(min-width:701px){.nutrient-intake-observations .nutrient-mobile-days{display:none}}
+.glucose-expand-chart{margin:12px 0}
+.glucose-fullscreen-dialog{width:min(98vw,1200px);max-width:98vw;max-height:96dvh;overflow:auto}
+.glucose-fullscreen-dialog .glucose-fullscreen-scroll{max-width:100%;overflow-x:auto;overflow-y:hidden;padding:8px 0}
+.glucose-fullscreen-dialog .glucose-fullscreen-scroll svg{width:max(900px,100%)!important;max-width:none!important;height:auto}
+.glucose-fullscreen-dialog .glucose-measure-detail{margin:12px 0}
+@media(orientation:landscape){
+  .glucose-fullscreen-dialog{width:98vw;max-height:94dvh}
+  .glucose-fullscreen-dialog .glucose-fullscreen-scroll svg{width:max(100%,1100px)!important}
+}
