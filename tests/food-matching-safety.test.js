@@ -558,6 +558,7 @@ for(const locale of ['fr-CA','fr-FR','en-CA','en-US']){
   failed:rows.filter(x=>!x.recognized).map(x=>x.input)};
 }
 console.log('EVERYDAY_INPUT_AUDIT',JSON.stringify(everydayReport.summary));
+assert.ok(everydayReport.rows.every(row=>row.recognized),'Un aliment du quotidien non reconnu : '+everydayReport.rows.filter(row=>!row.recognized).map(row=>row.locale+' '+row.input).join('; '));
 const evaluation={date:new Date().toISOString(),scope:'Jeu de contrôle déterministe, non représentatif; aucun intervalle de confiance',rows:[],byFamily:{}};
 for(const locale of ['fr-CA','fr-FR','en-CA','en-US']){
  global.ENERGIE_LOCALE=locale;
