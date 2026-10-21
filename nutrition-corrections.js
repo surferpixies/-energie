@@ -6,6 +6,28 @@
   // comme « fromage blanc » ne soient pas confondus avec « fromage ».
   const corrections = [
     {
+      // Hypothèse explicite pour une soupe non détaillée, à personnaliser.
+      keys: ["soupe", "soup"],
+      calories: 160,
+      protein: 5,
+      carbs: 24,
+      fat: 5,
+      portion: "2 tasses",
+      gramsPerPortion: 480,
+      tags: ["plat composé"],
+    },
+    {
+      // Portion indicative pour un ragoût maison non détaillé.
+      keys: ["ragoût", "ragout", "stew"],
+      calories: 350,
+      protein: 20,
+      carbs: 30,
+      fat: 16,
+      portion: "300 g",
+      gramsPerPortion: 300,
+      tags: ["plat composé"],
+    },
+    {
       // Portion indicative pour une assiette de pâtes ordinaire.
       // Valeur générique, non attribuée à la FCÉN.
       keys: ["sauce à la viande", "sauce a la viande", "sauce bolognaise", "sauce bolognese", "meat sauce", "bolognese sauce"],
