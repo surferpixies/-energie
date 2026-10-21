@@ -32,7 +32,16 @@ const day = { meals: [] };
 ctx.mr = { data: [row] };
 ctx.db = {};
 ctx.ensureDay = () => day;
-ctx.normalMeal = value => ({ ...value, nutrition: ctx.normalNutrition(value.nutrition) });
+// Exécuter également normalMeal de production, et non une imitation de test.
+const mealStart = source.indexOf('  function normalMeal(');
+const mealEnd = source.indexOf('  function normalFavorite(', mealStart);
+assert.ok(mealStart > normalizeEnd && mealEnd > mealStart);
+ctx.normalizeFeelingScores = () => ({});
+ctx.normalizedEatingReasonState = () => ({ reasons: [], other: '' });
+ctx.clamp = (value, low, high) => Math.min(high, Math.max(low, Number(value) || 0));
+ctx.uid = () => 'generated-test-id';
+ctx.todayKey = () => '2026-10-21';
+vm.runInContext(source.slice(mealStart, mealEnd), ctx);
 vm.runInContext(source.slice(begin, end), ctx);
 assert.equal(day.meals.length, 1);
 const restored = day.meals[0];
