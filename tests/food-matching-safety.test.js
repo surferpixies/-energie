@@ -614,3 +614,27 @@ if(process.env.NUTRITION_EVALUATION_REPORT){
 console.log('REALISTIC_EVALUATION',JSON.stringify({total:evaluation.total,passed:evaluation.passed,ratePercent:evaluation.ratePercent,failures:evaluation.failures}));
 assert.equal(evaluation.failures.filter(x=>x.family==='securite').length,0,'Aucun échec de sécurité toléré');
 assert.ok(evaluation.ratePercent>=90,'Cible minimale du jeu de contrôle: 90 %');
+
+
+// Contrat de sérialisation du Journal : la normalisation de production doit
+// conserver la trace des ingrédients et les valeurs nutritionnelles après JSON.
+// Le test ne remplace pas un véritable aller-retour dans Supabase.
+{
+ const normalization={};
+ vm.createContext(normalization);
+ const begin=source.indexOf('  function normalNutrition(');
+ const finish=source.indexOf('  function normalizeFeelingScores(',begin);
+ assert.ok(begin>=0&&finish>begin,'Fonction réelle normalNutrition introuvable');
+ vm.runInContext(source.slice(begin,finish),normalization);
+ const input=context.estimateNutritionFromText('1 bagel + 30 g fromage à la crème + 1 banane + 1 c. à soupe beurre d\'arachide');
+ assert.ok(input?.trace?.items?.length===4,'Le repas complet doit être reconnu avant sérialisation');
+ const stored=JSON.parse(JSON.stringify(normalization.normalNutrition(input)));
+ const loaded=normalization.normalNutrition(stored);
+ assert.equal(loaded.calories,511.5);
+ assert.equal(loaded.trace.items.length,4);
+ assert.equal(loaded.source,'mixed');
+ assert.ok(loaded.trace.items.every(item=>Number.isFinite(Number(item.calories))),'Calories de chaque ingrédient');
+ assert.match(source,/if \(payload\.nutrition != null\) throw error;/,
+  'La synchronisation ne doit pas retirer les calories en cas de schéma ancien');
+ console.log('NUTRITION_SERIALIZATION_CONTRACT',JSON.stringify({calories:loaded.calories,ingredients:loaded.trace.items.length,source:loaded.source}));
+}
