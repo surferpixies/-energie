@@ -4035,18 +4035,12 @@ function formatSleepDuration(hours) {
     else input.value = $("#nutritionCalories").value;
     updateMealCalorieRecognition();
     const partial = !manual && !$("#mealCalorieRecognitionNotice")?.hidden;
-    const nutritionSource = $("#mealNutritionSection")?.dataset.source || "";
-    const automaticStatus = partial
-      ? "Estimation automatique partielle · modifiable"
-      : nutritionSource === "cnf"
-        ? "Estimation FCÉN · modifiable"
-        : nutritionSource === "ciqual"
-          ? "Estimation Ciqual · modifiable"
-          : nutritionSource === "mixed"
-            ? "Estimation multi-sources · modifiable"
-          : "Estimation automatique · modifiable";
+    // Le lien « Comment cette estimation a-t-elle été calculée ? »
+    // affiche déjà les sources : ne pas les répéter à côté des calories.
+    // Garder seulement les avertissements utiles (partiel ou manuel).
     $("#mealCalorieStatus").textContent = manual ? t("Ajustées par vous")
-      : input.value !== "" ? t(automaticStatus) : t("Aucune estimation disponible · saisie facultative");
+      : partial ? t("Estimation partielle · des aliments sont à préciser")
+      : input.value === "" ? t("Aucune estimation disponible · saisie facultative") : "";
     $("#resetMealCalories").hidden = !manual;
 
     // Une ancienne sauvegarde ou une restauration de formulaire peut contenir
