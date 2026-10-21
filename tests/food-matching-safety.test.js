@@ -334,7 +334,18 @@ for (const locale of ['fr-CA','fr-FR']) {
 console.log('Repas multi-ingrédients : reconnaissance et conservation du total OK');
 
 
-console.log('DIAGNOSTIC_SAUMON',JSON.stringify(global.ENERGIE_CNF_CATALOG.filter(row=>/saumon/i.test(row[1])&&/cuit|grill|four|rôti/i.test(row[1])).slice(0,30).map(row=>({id:row[0],fr:row[1].slice(0,130),allowed:cnf.isCandidateAllowed('150 g saumon cuit',row[1]),score:cnf.scoreRow(row,'150 g saumon cuit')}))));
+// Saumon cuit : une référence officielle cuite, pas fumée/crue/en sauce.
+for(const locale of ['fr-CA','fr-FR']) {
+ global.ENERGIE_LOCALE=locale;
+ const salmon=cnf.find('150 g saumon cuit');
+ assert.equal(salmon?.cnfFoodId,'3183',locale+': saumon cuit');
+ assert.match(salmon.cnfNameFr,/saumon.*four ou grillé/);
+ const item=context.estimateNutritionFromText('150 g saumon cuit');
+ assert.ok(item?.calories>0,locale+': calories saumon');
+ assert.equal(item.trace?.items?.length,1);
+ assert.equal(cnf.find('150 g saumon fumé')?.cnfFoodId==='3183',false);
+ assert.equal(cnf.find('150 g saumon cru')?.cnfFoodId==='3183',false);
+}
 // Matrice reproductible de repas composés. Les aliments qui ne sont pas
 // calculables sont rapportés, jamais transformés silencieusement en zéro.
 // Ne teste pas encore l'écriture ni la relecture Supabase.
