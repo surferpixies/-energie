@@ -14,6 +14,11 @@ for (const term of ["yogourt", "confiture", "yogurt", "jam"]) {
  assert.ok(matches.length > 0, "Recherche guidée vide pour : " + term);
 }
 assert.equal(cnf.stripQuantity("1/2 tasse yogourt grec"), "yogourt grec");
+console.log("Greek yogurt diagnostic", JSON.stringify({
+  guided: cnf.search("1/2 tasse yogourt grec", 30).map(x => ({id:x.id,name:x.nameFr})),
+  automatic: cnf.find("1/2 tasse yogourt grec")?.cnfNameFr || null,
+  plainAutomatic: cnf.find("yogourt grec")?.cnfNameFr || null
+}));
 assert.ok(cnf.search("1/2 tasse yogourt grec", 30).length > 0);
 // A fraction of a cup is a measured volume, not one or two natural portions.
 {
