@@ -4020,6 +4020,8 @@ function formatSleepDuration(hours) {
     if (currentGuidedCnfNutrition()) {
       notice.hidden = true;
       list.innerHTML = "";
+      if ($("#mealCalorieRecognitionDialog")?.open)
+        $("#mealCalorieRecognitionDialog").close();
       return;
     }
     const recognition = mealNutritionRecognition($("#mealDescription")?.value || ""),
@@ -4027,6 +4029,8 @@ function formatSleepDuration(hours) {
     notice.hidden = mode === "manual" || !items.length;
     if (notice.hidden) {
       list.innerHTML = "";
+      if ($("#mealCalorieRecognitionDialog")?.open)
+        $("#mealCalorieRecognitionDialog").close();
       return;
     }
     // Ne pas confondre « aliment inconnu » et « unité non convertible ».
@@ -4082,6 +4086,7 @@ function formatSleepDuration(hours) {
     list.querySelectorAll?.("[data-try-guided]")?.forEach(button => {
       button.addEventListener("click", () => {
         const food = button.dataset.tryGuided || "";
+        $("#mealCalorieRecognitionDialog")?.close();
         openCnfGuidedMealEntry();
         mealCnfGuidedReplaceText = food;
         const search = $("#cnfGuidedSearch");
