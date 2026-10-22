@@ -483,6 +483,12 @@
     // départager des dizaines de fiches équivalentes.
     const queryMeta = searchQueryMeta(text);
     const preferred = preferredCommonFood(text);
+    // La référence nature 2 % est une sélection explicite pour un yogourt grec
+    // sans autre qualificatif; la fiche complète ne doit pas échouer au filtre
+    // générique de mots supplémentaires.
+    if (preferred && String(preferred[0]) === "7469" &&
+        /^(?:yogourt|yogurt|yaourt) grec$|^greek yogurt$/.test(stripQuantity(text)))
+      return remember(foodFromRow(preferred, text));
     if (preferred && Number.isFinite(scoreRow(preferred, text, {}, queryMeta))) {
       const normalizedText = normalize(text),
         chickenWithoutQuantity =
