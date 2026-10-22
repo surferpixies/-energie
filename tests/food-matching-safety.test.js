@@ -25,6 +25,23 @@ assert.ok(greekHalfCup, "Yogourt grec par défaut doit être sélectionné");
 assert.match(greekHalfCup.cnfNameFr, /grec.*2%.*nature/i);
 assert.equal(greekHalfCup.portion, "1 tasse", "La référence doit fournir une portion FCÉN documentée en tasse");
 
+// Toute fiche FCÉN possédant une portion en tasse documentée doit pouvoir
+// être divisée ou multipliée sans conversion approximative.
+{
+ const base = cnf.find("1 tasse cottage");
+ assert.ok(base && base.portion === "1 tasse");
+ for (const [input, expected] of [
+   ["1/4 tasse cottage", .25],
+   ["1/2 tasse cottage", .5],
+   ["3/4 tasse cottage", .75],
+   ["2 tasses cottage", 2]
+ ]) {
+   const parsed = global.ENERGIE_NUTRITION_PORTIONS || require("../nutrition-portion-engine.js");
+   const scaled = parsed.scaleForSegment(input, base);
+   assert.equal(scaled.scale, expected, input);
+   assert.equal(scaled.quantityUsed, true, input);
+ }
+}
 // A fraction of a cup is a measured volume, not one or two natural portions.
 {
  const source = require("node:fs").readFileSync(require.resolve("../app.js"), "utf8");
