@@ -3802,7 +3802,9 @@ function formatSleepDuration(hours) {
       button.onclick = () => selectCnfGuidedFood(button.dataset.cnfGuidedFood);
     });
   }
+  let mealCnfGuidedReplaceText = "";
   function openCnfGuidedMealEntry() {
+    mealCnfGuidedReplaceText = "";
     window.ENERGIE_CIQUAL_REFRESH_LABELS?.();
     if (!window.ENERGIE_CNF_SEARCH?.search) {
       alert("La recherche nutritionnelle n’est pas disponible pour le moment.");
@@ -3855,7 +3857,15 @@ function formatSleepDuration(hours) {
     const manual = former && previous.endsWith(former)
       ? previous.slice(0, -former.length).replace(/[\s,;]+$/, "").trim()
       : previous;
-    const mergedDescription = [manual, description].filter(Boolean).join("\n");
+    // En venant du lien "Chercher dans la FCÉN", remplacer uniquement
+    // l'ingrédient non reconnu, sans perdre les autres aliments du repas.
+    const target = normalizeFoodText(mealCnfGuidedReplaceText);
+    const retainedManual = target && mealCnfGuidedDraft.length
+      ? manual.split(/\s*[,;\n]\s*/).filter(part =>
+          normalizeFoodText(part) !== target).join(", ")
+      : manual;
+    mealCnfGuidedReplaceText = "";
+    const mergedDescription = [retainedManual, description].filter(Boolean).join("\n");
     setMealCnfItemsField(items);
     field.value = mergedDescription;
     field.dispatchEvent(new Event("input", { bubbles: true }));
@@ -4071,6 +4081,7 @@ function formatSleepDuration(hours) {
       button.addEventListener("click", () => {
         const food = button.dataset.tryGuided || "";
         openCnfGuidedMealEntry();
+        mealCnfGuidedReplaceText = food;
         const search = $("#cnfGuidedSearch");
         if (!search) return;
         const normalized = window.ENERGIE_CNF_SEARCH?.stripQuantity?.(food) || food;
