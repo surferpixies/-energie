@@ -13,6 +13,18 @@ for (const term of ["yogourt", "confiture", "yogurt", "jam"]) {
  const matches = cnf.search(term, 30);
  assert.ok(matches.length > 0, "Recherche guidée vide pour : " + term);
 }
+// A fraction of a cup is a measured volume, not one or two natural portions.
+{
+ const source = require("node:fs").readFileSync(require.resolve("../app.js"), "utf8");
+ const start = source.indexOf("  function mealQuantityNumber(");
+ const end = source.indexOf("  function nutritionScaleForSegment(", start);
+ const ctx = { normalizeFoodText: value => String(value).toLowerCase().replace(/[^a-z0-9]+/g," ").trim() };
+ require("node:vm").createContext(ctx);
+ require("node:vm").runInContext(source.slice(start,end), ctx);
+ const q = ctx.mealQuantityFromText("1/2 tasse yogourt grec");
+ assert.equal(q?.value, 0.5);
+ assert.equal(q?.unit, "cup");
+}
 assert.equal(cnf.isCandidateAllowed("beurre d'arachide", "Beurre, sans sel"),false);
 assert.equal(cnf.isCandidateAllowed("peanut butter", "Butter, unsalted"),false);
 assert.ok(cnf.search("beurre arachide",10).every(x=>/arachide|peanut/i.test(x.nameFr+" "+x.nameEn)));
