@@ -588,14 +588,22 @@
     const query = stripQuantity(text);
     const max = Math.max(1, Math.min(30, Number(limit) || 12));
     if (!query || query.length < 2) return [];
-    const queryMeta = searchQueryMeta(text);
+    // Recherche GUIDÉE : parcourir les fiches sans les filtres de
+    // correspondance automatique. La personne choisit elle-même la variante.
+    // Éviter les faux résultats en exigeant les termes cherchés, mais ne
+    // jamais exclure une fiche pour ses qualificatifs ou sa préparation.
+    const queryTokens = foodTokens(query).filter(Boolean);
     const preferred = preferredGuidedIds(query);
     const ranked = [];
     for (const row of catalog) {
-      let score = scoreRow(row, text, { allowPreparationChoice: true }, queryMeta);
-      if (!Number.isFinite(score)) continue;
-      if (hasUnrequestedQualifier(row, text)) score -= 140;
-      if (score >= 420) ranked.push({ row, score });
+      const meta = rowSearchMeta(row);
+      if (!queryTokens.every(token => meta.candidateTokens.includes(token))) continue;
+      const fr = meta.descriptor.fr, en = meta.descriptor.en;
+      const exact = fr === query || en === query;
+      const starts = fr.startsWith(query + " ") || en.startsWith(query + " ");
+      const score = (exact ? 3000 : starts ? 2000 : 1000)
+        - meta.candidateTokens.length * 2;
+      ranked.push({ row, score });
     }
     ranked.sort((a, b) => {
       const ai = preferred.indexOf(String(a.row?.[0] ?? ""));
