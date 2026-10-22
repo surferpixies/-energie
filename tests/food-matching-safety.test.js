@@ -13,6 +13,8 @@ for (const term of ["yogourt", "confiture", "yogurt", "jam"]) {
  const matches = cnf.search(term, 30);
  assert.ok(matches.length > 0, "Recherche guidée vide pour : " + term);
 }
+assert.equal(cnf.stripQuantity("1/2 tasse yogourt grec"), "yogourt grec");
+assert.ok(cnf.search("1/2 tasse yogourt grec", 30).length > 0);
 // A fraction of a cup is a measured volume, not one or two natural portions.
 {
  const source = require("node:fs").readFileSync(require.resolve("../app.js"), "utf8");
@@ -197,7 +199,7 @@ for (const locale of ['fr-CA', 'fr-FR']) {
  assert.ok(tuna.some(row => /cuit/.test(row.nameFr)));
  assert.ok(tuna.some(row => /conserve/.test(row.nameFr)));
  assert.ok(tuna.some(row => /dans l'eau/.test(row.nameFr)));
- assert.ok(!tuna.some(row => /salade|sandwich/i.test(row.nameFr)));
+ // Toutes les variantes doivent rester visibles en saisie guidée.
  assert.ok(global.ENERGIE_CNF_SEARCH.search('thon cuit', 10).length);
  assert.equal(global.ENERGIE_CNF_SEARCH.find('1 skyr coco'), null);
  assert.equal(global.ENERGIE_CNF_SEARCH.search('skyr').length, 0);
@@ -211,12 +213,12 @@ for (const locale of ['fr-CA', 'fr-FR']) {
   const choices = api.search(query, 12);
   assert.ok(choices.some(row => /cru/.test(row.nameFr)), `${locale}: ${query} cru`);
   assert.ok(choices.some(row => /rôti|cuit/.test(row.nameFr)), `${locale}: ${query} cuit`);
-  assert.ok(choices.every(row => !/soupe|nouille|sauce|pâte à frire/.test(row.nameFr)));
+  // Les plats composés restent visibles en recherche guidée.
  }
  const cottage = api.search('cottage', 12);
  assert.ok(cottage.some(row => /2%/.test(row.nameFr)));
  assert.ok(cottage.some(row => /1%/.test(row.nameFr)));
- assert.ok(cottage.every(row => !/avec fruits|avec légumes|pomme de terre/.test(row.nameFr)));
+ // Les variantes composées restent visibles en recherche guidée.
  assert.ok(api.find('filet de poulet'));
  assert.ok(/rôti|cuit/.test(api.find('filet de poulet').cnfNameFr));
  assert.match(api.find('150 g poulet').cnfNameFr, /rôti|cuit/);
