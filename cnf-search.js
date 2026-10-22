@@ -281,13 +281,26 @@
 
   function findPortion(row, kind) {
     const portions = Array.isArray(row?.[4]) ? row[4] : [];
-    const wanted = kind === "cup" ? /\b(?:250\s*ml|1\s*(?:tasse|cup))\b/
-      : kind === "tbsp" ? /\b(?:15\s*ml|1\s*(?:c\s*a\s*soupe|tbsp))\b/
-      : kind === "tsp" ? /\b(?:5\s*ml|1\s*(?:c\s*a\s*the|tsp))\b/
-      : null;
-    if (!wanted) return null;
-    return portions.find((p) => Number(p?.[0]) > 0 &&
-      wanted.test(normalize(`${p?.[1] || ""} ${p?.[2] || ""}`))) || null;
+    if (!["cup", "tbsp", "tsp", "ml"].includes(kind)) return null;
+    const millilitres = { cup: 250, tbsp: 15, tsp: 5, ml: 1 };
+    const parse = (text) => {
+      const value = normalize(text);
+      const decimal = v => Number(String(v).replace(",", "."));
+      const match = value.match(/(?:^|\s)(\d+(?:[.,]\d+)?)\s*(ml|millilitres?|tasses?|cups?|tbsp|tsp)(?:\s|$)/);
+      if (!match) return null;
+      const units = { ml: 1, millilitre: 1, millilitres: 1, tasse: 250, tasses: 250, cup: 250, cups: 250, tbsp: 15, tsp: 5 };
+      const volume = decimal(match[1]) * units[match[2]];
+      return volume > 0 ? volume : null;
+    };
+    // Les portions FCÉN ont une masse réelle en grammes et un volume
+    // documenté : calculer un rapport g/ml, jamais supposer 1 ml = 1 g.
+    for (const p of portions) {
+      const grams = Number(p?.[0]);
+      const volume = parse(p?.[1]) || parse(p?.[2]);
+      if (grams > 0 && volume > 0)
+        return { grams: grams * millilitres[kind] / volume, unit: kind };
+    }
+    return null;
   }
 
   function scaledNutrition(nutrition, grams) {
@@ -363,11 +376,12 @@
         ? countPortions.find(p => size ? normalize(p[1] + " " + p[2]).includes(size) : /\b(moyen|medium)\b/.test(normalize(p[1] + " " + p[2]))) || (!size ? countPortions[0] : null)
         : findPortion(row, kind);
       if (count != null && !selected) return null;
-      if (selected && Number(selected[0]) > 0) {
-        grams = Number(selected[0]);
+      if (selected && Number(selected.grams ?? selected[0]) > 0) {
+        grams = Number(selected.grams ?? selected[0]);
         portion = kind === "cup" ? "1 tasse"
           : kind === "tbsp" ? "1 c. à soupe"
           : kind === "tsp" ? "1 c. à thé"
+          : kind === "ml" ? "1 ml"
           : selected[1] || selected[2] || "1 portion";
       }
     }
