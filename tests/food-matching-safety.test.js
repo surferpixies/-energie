@@ -7,6 +7,12 @@ require('../ciqual-data.js');
 require('../ciqual-search.js');
 const ciqual = global.ENERGIE_CIQUAL_SEARCH;
 
+// La saisie guidée doit afficher les variantes du catalogue, même lorsque
+// la sélection automatique doit demander une clarification.
+for (const term of ["yogourt", "confiture", "yogurt", "jam"]) {
+ const matches = cnf.search(term, 30);
+ assert.ok(matches.length > 0, "Recherche guidée vide pour : " + term);
+}
 assert.equal(cnf.isCandidateAllowed("beurre d'arachide", "Beurre, sans sel"),false);
 assert.equal(cnf.isCandidateAllowed("peanut butter", "Butter, unsalted"),false);
 assert.ok(cnf.search("beurre arachide",10).every(x=>/arachide|peanut/i.test(x.nameFr+" "+x.nameEn)));
