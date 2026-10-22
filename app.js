@@ -3872,7 +3872,9 @@ function formatSleepDuration(hours) {
     mealFoodReview = { description: mergedDescription, acknowledgedGaps: true };
     $("#mealCalorieMode").value = "auto";
     mealNutritionManuallyEdited = false;
-    if (nutrition) fillNutritionInputs(nutrition);
+    const combinedNutrition = currentGuidedCnfNutrition();
+    if (combinedNutrition) fillNutritionInputs(combinedNutrition);
+    else if (!retainedManual && nutrition) fillNutritionInputs(nutrition);
     updateMealCompositionReview();
     updateMealCnfLinkedStatus();
     scheduleFormAutosave($("#mealForm"));
