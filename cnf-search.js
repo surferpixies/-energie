@@ -281,12 +281,13 @@
 
   function findPortion(row, kind) {
     const portions = Array.isArray(row?.[4]) ? row[4] : [];
-    const wanted = kind === "cup" ? /\b250 ml\b/
-      : kind === "tbsp" ? /\b15 ml\b/
-      : kind === "tsp" ? /\b5 ml\b/
+    const wanted = kind === "cup" ? /\b(?:250\s*ml|1\s*(?:tasse|cup))\b/
+      : kind === "tbsp" ? /\b(?:15\s*ml|1\s*(?:c\s*a\s*soupe|tbsp))\b/
+      : kind === "tsp" ? /\b(?:5\s*ml|1\s*(?:c\s*a\s*the|tsp))\b/
       : null;
     if (!wanted) return null;
-    return portions.find((p) => wanted.test(normalize(`${p?.[1] || ""} ${p?.[2] || ""}`))) || null;
+    return portions.find((p) => Number(p?.[0]) > 0 &&
+      wanted.test(normalize(`${p?.[1] || ""} ${p?.[2] || ""}`))) || null;
   }
 
   function scaledNutrition(nutrition, grams) {
