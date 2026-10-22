@@ -340,6 +340,17 @@ for(const locale of ['fr-CA','fr-FR']) {
 }
 console.log('St-Hubert : étiquette, comptes, grammes, repas complet, guidé et relecture OK');
 
+// Régression E2E : saisir simplement une demi-tasse de yogourt grec.
+for (const locale of ['fr-CA', 'fr-FR']) {
+ global.ENERGIE_LOCALE = locale;
+ context.window.ENERGIE_CNF_SEARCH = global.ENERGIE_CNF_SEARCH;
+ const whole = context.estimateNutritionFromText('1 tasse yogourt grec');
+ const half = context.estimateNutritionFromText('1/2 tasse yogourt grec');
+ assert.ok(whole && half, locale + ': yogourt grec doit se calculer');
+ assert.ok(half.calories > 0, locale + ': calories de yogourt grec manquantes');
+ assert.ok(Math.abs(half.calories * 2 - whole.calories) <= 0.2, locale + ': la demi-tasse ne vaut pas la moitié');
+ assert.equal(half.trace.items[0].source, 'cnf');
+}
 // Le guide doit donner un exemple qui fonctionne dans les deux référentiels.
 for (const locale of ['fr-CA', 'fr-FR']) {
  global.ENERGIE_LOCALE = locale;
