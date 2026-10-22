@@ -42,6 +42,17 @@ assert.equal(greekHalfCup.portion, "1 tasse", "La référence doit fournir une p
    assert.equal(scaled.quantityUsed, true, input);
  }
 }
+// Toute mesure doit utiliser la masse/volume documentée de la fiche FCÉN.
+for (const [name, amount] of [["yogourt grec", 1], ["cottage", 1]]) {
+ const cup = cnf.find("1 tasse " + name);
+ const halfCup = cnf.find("1/2 tasse " + name);
+ const ml = cnf.find("125 ml " + name);
+ assert.ok(cup && halfCup && ml, name + ": référence volumique FCÉN");
+ assert.equal(cup.portion, "1 tasse");
+ assert.equal(ml.portion, "1 ml");
+ assert.ok(Math.abs(halfCup.calories - cup.calories) < 0.01, name + ": fiche base conserve 1 tasse");
+ assert.ok(Math.abs(ml.calories * 125 - halfCup.calories * 0.5) < 0.2, name + ": conversion ml vers tasse");
+}
 // A fraction of a cup is a measured volume, not one or two natural portions.
 {
  const source = require("node:fs").readFileSync(require.resolve("../app.js"), "utf8");
