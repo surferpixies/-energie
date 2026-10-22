@@ -4077,7 +4077,7 @@ function formatSleepDuration(hours) {
             : "Aucune valeur calorique n’a pu être associée à cet élément.";
       return `<div class="meal-calorie-unrecognized-item"><span aria-hidden="true">?</span><div><strong>${esc(item)}</strong><small>${esc(message)}</small><button type="button" class="meal-try-guided" data-try-guided="${esc(item)}">${window.ENERGIE_LOCALE === "fr-FR" ? "Chercher dans Ciqual" : "Chercher dans la FCÉN"} →</button></div></div>`;
     }).join("");
-    list.querySelectorAll("[data-try-guided]").forEach(button => {
+    list.querySelectorAll?.("[data-try-guided]")?.forEach(button => {
       button.addEventListener("click", () => {
         const food = button.dataset.tryGuided || "";
         openCnfGuidedMealEntry();
