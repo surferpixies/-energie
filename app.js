@@ -2852,7 +2852,12 @@ function formatSleepDuration(hours) {
         cookedFishDefaults[cookedFishInput] === checked.cnfFoodId;
       const exactEnglishEquivalent = englishEquivalent &&
         referenceNames.some(reference => guard?.(englishEquivalent, reference));
-      if (guard && !knownPeanutButter && !knownCookedFish && !exactEnglishEquivalent &&
+      const knownPlainGreekYogurt =
+        String(checked.cnfFoodId || "") === "7469" &&
+        /^(?:yogourt|yogurt|yaourt) grec$|^greek yogurt$/.test(
+          window.ENERGIE_CNF_SEARCH?.stripQuantity?.(segment) || ""
+        );
+      if (guard && !knownPlainGreekYogurt && !knownPeanutButter && !knownCookedFish && !exactEnglishEquivalent &&
           !referenceNames.some(reference => guard(identityText, reference))) return null;
       // Refuser « Bœuf, gras, cru » pour « bœuf haché ». Conserver une fiche
       // FCÉN/Ciqual authentiquement hachée; à défaut, repli Énergie explicite.
