@@ -89,11 +89,11 @@
       nutritionSource:'ciqual',nutritionSourceLabel:'Anses — Ciqual 2025',cnfCatalogMatch:true}:null;
   }
   const preferred=()=>root.ENERGIE_LOCALE==='fr-FR'?'ciqual':'cnf';
-  const ciqual=Object.freeze({find,search:(text,limit=12)=>rank(text,Math.max(1,Math.min(30,Number(limit)||12)),true).map(publicRow),getById:id=>publicRow(byId.get(String(id))),nutritionForGrams});
+  const ciqual=Object.freeze({find,search:(text,limit=12)=>rank(text,limit===Infinity?Infinity:Math.max(1,Number(limit)||12),true).map(publicRow),getById:id=>publicRow(byId.get(String(id))),nutritionForGrams});
   const router=Object.freeze({...cnf,version:3,
     find:text=>preferred()==='ciqual'?(ciqual.find(text)||cnf.find(text)):(cnf.find(text)||ciqual.find(text)),
     search:(text,limit=12)=>{
-      const max=Math.max(1,Math.min(30,Number(limit)||12));
+      const max=limit===Infinity?Infinity:Math.max(1,Number(limit)||12);
       const a=preferred()==='ciqual'?ciqual:cnf,b=preferred()==='ciqual'?cnf:ciqual;
       const result=a.search(text,max);
       return result.length<max?result.concat(b.search(text,max)).slice(0,max):result;
