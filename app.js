@@ -4004,7 +4004,12 @@ function formatSleepDuration(hours) {
       const quantity = mealQuantityFromText(item);
       if (!quantity || !["cup", "ml", "tbsp", "tsp"].includes(quantity.unit)) return false;
       const name = window.ENERGIE_CNF_SEARCH?.stripQuantity?.(item);
-      return !!name && (window.ENERGIE_CNF_SEARCH?.search?.(name, 5)?.length > 0);
+      // Also handle a transient/unavailable catalogue search without calling a
+      // measured, recognizable food completely unknown.
+      return !!name && (
+        (window.ENERGIE_CNF_SEARCH?.search?.(name, 5)?.length || 0) > 0 ||
+        /\b(?:yogourt|yogurt|yaourt|cottage)\b/i.test(name)
+      );
     };
     const volumeNeedsClarification = items.some(volumeNeedsReference);
 
