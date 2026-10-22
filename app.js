@@ -2915,7 +2915,7 @@ function formatSleepDuration(hours) {
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[’']/g, " ");
-    const number = "(\\d+(?:[.,]\\d+)?|\\d+\\s*\\/\\s*\\d+)";
+    const number = "(\\d+\\s*\\/\\s*\\d+|\\d+(?:[.,]\\d+)?)";
     const unit = "(kg|kilogrammes?|oz|ounces?|g|grammes?|grams?|ml|millilitres?|l|litres?|tasses?|cups?|c\\.?\\s*a\\s*soupe|cuilleres?\\s*a\\s*soupe|tbsp|c\\.?\\s*a\\s*the|cuilleres?\\s*a\\s*the|tsp)";
     const match = raw.match(new RegExp(`${number}\\s*${unit}\\b`, "i"));
     return match ? normalizedMealQuantity(match[1], match[2]) : null;
@@ -2930,7 +2930,7 @@ function formatSleepDuration(hours) {
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[’']/g, " ")
       .trim(),
-      number = "(\\d+(?:[.,]\\d+)?|\\d+\\s*\\/\\s*\\d+)",
+      number = "(\\d+\\s*\\/\\s*\\d+|\\d+(?:[.,]\\d+)?)",
       unit = "(kg|kilogrammes?|oz|ounces?|g|grammes?|grams?|ml|millilitres?|l|litres?|tasses?|cups?|c\\.?\\s*a\\s*soupe|cuilleres?\\s*a\\s*soupe|tbsp|c\\.?\\s*a\\s*the|cuilleres?\\s*a\\s*the|tsp)";
     return new RegExp(`^${number}\\s*${unit}$`, "i").test(raw);
   }
