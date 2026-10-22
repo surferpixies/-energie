@@ -3829,10 +3829,19 @@ function formatSleepDuration(hours) {
     const items = mealCnfGuidedDraft.map((item) => ({ ...item })),
       description = guidedCnfDescription(items),
       nutrition = guidedCnfNutrition(items);
+    const field = $("#mealDescription");
+    const previous = field.value.trim();
+    const former = guidedCnfDescription(mealCnfItemsFromField());
+    // Conserver les aliments saisis librement. Si des fiches guidées existaient
+    // déjà, ne remplacer que leur segment, jamais les lignes manuelles.
+    const manual = former && previous.endsWith(former)
+      ? previous.slice(0, -former.length).replace(/[\\s,;]+$/, "").trim()
+      : previous;
+    const mergedDescription = [manual, description].filter(Boolean).join("\\n");
     setMealCnfItemsField(items);
-    $("#mealDescription").value = description;
-    $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
-    mealFoodReview = { description, acknowledgedGaps: true };
+    field.value = mergedDescription;
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+    mealFoodReview = { description: mergedDescription, acknowledgedGaps: true };
     $("#mealCalorieMode").value = "auto";
     mealNutritionManuallyEdited = false;
     if (nutrition) fillNutritionInputs(nutrition);
