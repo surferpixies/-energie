@@ -4000,10 +4000,20 @@ function formatSleepDuration(hours) {
       mealNaturalCountFromText(item) != null && /\\b(filets?|fillets?)\\b/.test(normalizeFoodText(item)));
     const preparationMissing = items.some(item => window.ENERGIE_CNF_SEARCH?.requiresClarification?.(item));
     const countNeedsWeight = items.some(weightGuidance);
+    const volumeNeedsReference = (item) => {
+      const quantity = mealQuantityFromText(item);
+      if (!quantity || !["cup", "ml", "tbsp", "tsp"].includes(quantity.unit)) return false;
+      const name = window.ENERGIE_CNF_SEARCH?.stripQuantity?.(item);
+      return !!name && (window.ENERGIE_CNF_SEARCH?.search?.(name, 5)?.length > 0);
+    };
+    const volumeNeedsClarification = items.some(volumeNeedsReference);
+
     notice.textContent = filetWeightMissing
       ? "ⓘ Indique le poids total des filets pour calculer le repas"
       : preparationMissing
       ? "ⓘ Précise cru/cuit ou choisis la préparation dans la saisie guidée"
+      : volumeNeedsClarification
+      ? "ⓘ Aliment trouvé · précise la variété et une quantité convertible"
       : countNeedsWeight
       ? "ⓘ Aliment trouvé · précise son poids total en grammes"
       : `ⓘ Estimation à préciser · ${items.length} élément${items.length > 1 ? "s" : ""} à vérifier`;
@@ -4013,6 +4023,8 @@ function formatSleepDuration(hours) {
         ? "Aliment reconnu. Pour des filets panés de marque, ajoute le nom du produit (ex. 4 filets de poulet panés St-Hubert). Sinon, indique leur poids total en grammes ou choisis une portion dans la saisie guidée."
         : window.ENERGIE_CNF_SEARCH?.requiresClarification?.(item)
           ? "Précise la préparation (cru, cuit, sec ou en conserve), puis la quantité, ou utilise la saisie guidée."
+          : volumeNeedsReference(item)
+            ? "Des aliments correspondants existent dans les référentiels. Choisis la variété dans la saisie guidée et une portion documentée, ou indique le poids total en grammes : Énergie ne doit pas inventer la conversion d’une tasse en grammes."
           : weightGuidance(item)
             ? "Aliment trouvé dans la FCÉN, mais le poids de chaque unité n'est pas connu. Indique le poids total en grammes (ex. 6 g amandes) ou utilise la saisie guidée."
             : "Aucune valeur calorique n’a pu être associée à cet élément.";
