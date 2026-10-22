@@ -2531,3 +2531,7 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   grid-template-columns:78px 108px 34px!important;column-gap:10px!important
  }
 }
+
+/* Android WebView : un ancien style cache le bouton malgre hidden=false. */
+#mealCalorieRecognitionNotice[hidden]{display:none !important}
+#mealCalorieRecognitionNotice:not([hidden]){display:block !important}
