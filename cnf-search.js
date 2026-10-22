@@ -586,7 +586,7 @@
 
   function search(text, limit = 12) {
     const query = stripQuantity(text);
-    const max = Math.max(1, Math.min(30, Number(limit) || 12));
+    const max = limit === Infinity ? Infinity : Math.max(1, Number(limit) || 12);
     if (!query || query.length < 2) return [];
     // Recherche GUIDÉE : parcourir les fiches sans les filtres de
     // correspondance automatique. La personne choisit elle-même la variante.
