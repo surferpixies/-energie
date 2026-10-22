@@ -3652,8 +3652,26 @@ function formatSleepDuration(hours) {
     const items = mealCnfItemsFromField();
     if (!items.length) return null;
     const current = $("#mealDescription")?.value.trim() || "";
-    if (current !== guidedCnfDescription(items)) return null;
-    return guidedCnfNutrition(items);
+    const guided = guidedCnfDescription(items);
+    if (!guided || (current !== guided && !current.endsWith("\n" + guided))) return null;
+    const official = guidedCnfNutrition(items);
+    if (!official) return null;
+    if (current === guided) return official;
+    const manualText = current.slice(0, -(guided.length + 1)).trim();
+    if (!manualText) return official;
+    // Conserver les références officielles exactes, et calculer les aliments
+    // libres séparément : aucune fiche FCÉN guidée n'est comptée deux fois.
+    const manual = estimateNutritionFromText(manualText);
+    if (!manual) return null;
+    const keys = ["calories", "protein", "carbs", "fat", "fiber", "sugars", "sodium"];
+    const combined = { ...official, source: "mixed", confidence: "medium",
+      basis: "Saisie libre + fiches FCÉN sélectionnées", estimated: true,
+      trace: { kind: "mixed", source: "mixed",
+        items: [...(manual.trace?.items || []), ...(official.trace?.items || [])] } };
+    for (const key of keys)
+      combined[key] = Number.isFinite(manual[key]) && Number.isFinite(official[key])
+        ? Math.round((manual[key] + official[key]) * 10) / 10 : null;
+    return combined;
   }
   function updateMealCnfLinkedStatus() {
     const status = $("#mealCnfLinkedStatus"),
@@ -17140,10 +17158,13 @@ function formatSleepDuration(hours) {
         time: $("#mealTime").value,
         description: $("#mealDescription").value.trim(),
         cnfItems:
-          $("#mealDescription").value.trim() ===
-          guidedCnfDescription(mealCnfItemsFromField())
-            ? mealCnfItemsFromField()
-            : [],
+          (() => {
+            const description = $("#mealDescription").value.trim();
+            const linked = mealCnfItemsFromField();
+            const guided = guidedCnfDescription(linked);
+            return guided && (description === guided || description.endsWith("\n" + guided))
+              ? linked : [];
+          })(),
         nutrition: nutritionFromInputs() ||
           (db.settings.autoNutritionEstimates !== false && !mealNutritionManuallyEdited
             ? estimateMealEditorNutrition($("#mealDescription").value.trim())
