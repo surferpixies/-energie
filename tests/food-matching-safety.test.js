@@ -362,6 +362,9 @@ for (const locale of ['fr-CA', 'fr-FR']) {
   assert.ok(portion, input);
   assert.ok(Math.abs(portion.calories - full.calories * ratio) < 1, input);
  }
+ const withDe = context.estimateNutritionFromText('1/2 tasse de cottage');
+ assert.ok(withDe, locale + ': 1/2 tasse de cottage');
+ assert.ok(Math.abs(withDe.calories - full.calories / 2) < 1, locale + ': demi-tasse de cottage');
  const meal = context.estimateNutritionFromText('laitue\nconcombres\n1/2 tasse cottage');
  assert.ok(meal, locale);
  assert.equal(meal.trace.items.length, 3);
