@@ -3766,7 +3766,7 @@ function formatSleepDuration(hours) {
       results.innerHTML = "";
       return;
     }
-    const matches = api?.search?.(text, 10) || [];
+    const matches = api?.search?.(text, Infinity) || [];
     results.innerHTML = matches.length
       ? matches
           .map(
