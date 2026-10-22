@@ -4065,8 +4065,23 @@ function formatSleepDuration(hours) {
           : weightGuidance(item)
             ? "Aliment trouvé dans la FCÉN, mais le poids de chaque unité n'est pas connu. Indique le poids total en grammes (ex. 6 g amandes) ou utilise la saisie guidée."
             : "Aucune valeur calorique n’a pu être associée à cet élément.";
-      return `<div class="meal-calorie-unrecognized-item"><span aria-hidden="true">?</span><div><strong>${esc(item)}</strong><small>${esc(message)}</small></div></div>`;
+      return `<div class="meal-calorie-unrecognized-item"><span aria-hidden="true">?</span><div><strong>${esc(item)}</strong><small>${esc(message)}</small><button type="button" class="meal-try-guided" data-try-guided="${esc(item)}">${window.ENERGIE_LOCALE === "fr-FR" ? "Chercher dans Ciqual" : "Chercher dans la FCÉN"} →</button></div></div>`;
     }).join("");
+    list.querySelectorAll("[data-try-guided]").forEach(button => {
+      button.addEventListener("click", () => {
+        const food = button.dataset.tryGuided || "";
+        openCnfGuidedMealEntry();
+        const search = $("#cnfGuidedSearch");
+        if (!search) return;
+        const normalized = window.ENERGIE_CNF_SEARCH?.stripQuantity?.(food) || food;
+        search.value = normalized;
+        renderCnfGuidedSearchResults(normalized);
+        if (!$("#cnfGuidedSearchResults")?.querySelector("[data-cnf-guided-food]")) {
+          search.value = normalized.split(/\\s+(?:de|des|aux|a)\\s+/)[0].replace(/s$/, "");
+          renderCnfGuidedSearchResults(search.value);
+        }
+      });
+    });
   }
   function openMealCalorieRecognition() {
     updateMealCalorieRecognition();
