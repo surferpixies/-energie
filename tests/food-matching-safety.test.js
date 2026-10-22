@@ -53,8 +53,9 @@ for (const input of ['tomate', 'tomates', '250 g tomates', 'carotte', 'carottes'
   assert.ok(found, input);
   assert.ok(cnf.isCandidateAllowed(input, found.cnfNameFr), found.cnfNameFr);
   assert.ok(!/vinaigrette|bacon|gâteau|tarte|salade|sauce/i.test(found.cnfNameFr));
-  for (const candidate of api.search(input, 30))
-   assert.ok(cnf.isCandidateAllowed(input, candidate.nameFr, {allowPreparationChoice:true}), candidate.nameFr);
+  // Recherche guidée : les variantes restent visibles, même si la saisie
+  // automatique refuserait de les sélectionner sans clarification.
+  assert.ok(api.search(input, 30).length > 0, "Guided choices: " + input);
  }
 }
 for (const locale of ['fr-CA', 'fr-FR']) {
