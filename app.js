@@ -3835,9 +3835,9 @@ function formatSleepDuration(hours) {
     // Conserver les aliments saisis librement. Si des fiches guidées existaient
     // déjà, ne remplacer que leur segment, jamais les lignes manuelles.
     const manual = former && previous.endsWith(former)
-      ? previous.slice(0, -former.length).replace(/[\\s,;]+$/, "").trim()
+      ? previous.slice(0, -former.length).replace(/[\s,;]+$/, "").trim()
       : previous;
-    const mergedDescription = [manual, description].filter(Boolean).join("\\n");
+    const mergedDescription = [manual, description].filter(Boolean).join("\n");
     setMealCnfItemsField(items);
     field.value = mergedDescription;
     field.dispatchEvent(new Event("input", { bubbles: true }));
@@ -17043,11 +17043,11 @@ function formatSleepDuration(hours) {
   $("#closeCnfGuidedMeal").onclick = () => $("#cnfGuidedMealDialog")?.close();
   $("#mealDescription").addEventListener("input", () => {
     const linked = mealCnfItemsFromField();
-    if (
-      linked.length &&
-      $("#mealDescription").value.trim() !== guidedCnfDescription(linked)
-    ) {
-      setMealCnfItemsField([]);
+    if (linked.length) {
+      const description = $("#mealDescription").value.trim();
+      const guided = guidedCnfDescription(linked);
+      if (description !== guided && !description.endsWith("\n" + guided))
+        setMealCnfItemsField([]);
     }
     scheduleAutomaticNutritionPreview();
   });
