@@ -20,6 +20,11 @@ console.log("Greek yogurt diagnostic", JSON.stringify({
   plainAutomatic: cnf.find("yogourt grec")?.cnfNameFr || null
 }));
 assert.ok(cnf.search("1/2 tasse yogourt grec", 30).length > 0);
+const greekHalfCup = cnf.find("1/2 tasse yogourt grec");
+assert.ok(greekHalfCup, "Yogourt grec par défaut doit être sélectionné");
+assert.match(greekHalfCup.cnfNameFr, /grec.*2%.*nature/i);
+assert.equal(greekHalfCup.portion, "1 tasse", "La référence doit fournir une portion FCÉN documentée en tasse");
+
 // A fraction of a cup is a measured volume, not one or two natural portions.
 {
  const source = require("node:fs").readFileSync(require.resolve("../app.js"), "utf8");
