@@ -34,7 +34,7 @@
   };
 
   function stripQuantity(text) {
-    return normalize(text)
+    return normalize(String(text || "").replace(/\b\d+\s*\/\s*\d+\s*(?=tasses?\b|cups?\b|g\b|ml\b)/gi, " "))
       .replace(/\b\d+(?:[.,]\d+)?\s*(?:kg|g|gramme|grammes|grams|ml|millilitre|millilitres|l|litre|litres|tasse|tasses|cup|cups|tbsp|tsp)\b/g, " ")
       // A natural count at the beginning is quantity, not part of the food name.
       .replace(/^(?:\d+(?:[.,]\d+)?|un|une|one|deux|two|trois|three|quatre|four|cinq|five|six|sept|seven|huit|eight|neuf|nine|dix|ten)\s+/, "")
