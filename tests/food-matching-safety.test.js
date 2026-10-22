@@ -53,6 +53,15 @@ for (const [name, amount] of [["yogourt grec", 1], ["cottage", 1]]) {
  assert.ok(Math.abs(halfCup.calories - cup.calories) < 0.01, name + ": fiche base conserve 1 tasse");
  assert.ok(Math.abs(ml.calories * 125 - halfCup.calories * 0.5) < 0.2, name + ": conversion ml vers tasse");
 }
+// Contrats du parcours mixte : le guidé ajoute une fiche sans supprimer
+// les autres aliments saisis et un échec propose un accès direct FCÉN.
+{
+ const app = require("node:fs").readFileSync(require.resolve("../app.js"), "utf8");
+ assert.match(app, /const mergedDescription = \[retainedManual, description\]/);
+ assert.match(app, /manualText = current\.slice/);
+ assert.match(app, /data-try-guided/);
+ assert.match(app, /mealCnfGuidedReplaceText = food/);
+}
 // A fraction of a cup is a measured volume, not one or two natural portions.
 {
  const source = require("node:fs").readFileSync(require.resolve("../app.js"), "utf8");
