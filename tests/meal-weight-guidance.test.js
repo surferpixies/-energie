@@ -8,13 +8,17 @@ assert.ok(start>0 && end>start);
 const notices = [];
 const notice = {hidden:false,textContent:''};
 const list = {innerHTML:''};
+const dialog = {open:false,close(){this.open=false;}};
+let missing = ['5 amandes'];
+let guided = false;
 const query = selector => selector==='#mealCalorieRecognitionNotice'?notice:
   selector==='#mealCalorieUnrecognizedList'?list:
+  selector==='#mealCalorieRecognitionDialog'?dialog:
   selector==='#mealCalorieMode'?{value:'auto'}:
   selector==='#mealDescription'?{value:'5 amandes'}:null;
 const ctx = {
- $:query, currentGuidedCnfNutrition:()=>false,
- mealNutritionRecognition:()=>({unrecognized:['5 amandes']}),
+ $:query, currentGuidedCnfNutrition:()=>guided,
+ mealNutritionRecognition:()=>({unrecognized:missing}),
  mealNaturalCountFromText:()=>5,
  mealQuantityFromText:()=>null,
  normalizeFoodText:s=>s.toLowerCase(),
@@ -34,4 +38,13 @@ assert.doesNotMatch(list.innerHTML,/Aucune valeur calorique/);
 ctx.window.ENERGIE_CNF_SEARCH.find=()=>null;
 ctx.updateMealCalorieRecognition();
 assert.match(list.innerHTML,/Aucune valeur calorique/);
+dialog.open = true;
+missing = [];
+ctx.updateMealCalorieRecognition();
+assert.equal(dialog.open,false,'La fenêtre doit fermer lorsqu’il ne reste aucun aliment inconnu');
+dialog.open = true;
+missing = ['5 amandes'];
+guided = true;
+ctx.updateMealCalorieRecognition();
+assert.equal(dialog.open,false,'La fenêtre doit fermer dès que la sélection FCÉN est résolue');
 console.log('CNF_COUNT_WEIGHT_GUIDANCE_OK');
