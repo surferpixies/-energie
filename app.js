@@ -4019,6 +4019,7 @@ function formatSleepDuration(hours) {
     if (!notice || !list) return;
     if (currentGuidedCnfNutrition()) {
       notice.hidden = true;
+      notice.style.display = "none";
       list.innerHTML = "";
       if ($("#mealCalorieRecognitionDialog")?.open)
         $("#mealCalorieRecognitionDialog").close();
@@ -4027,6 +4028,9 @@ function formatSleepDuration(hours) {
     const recognition = mealNutritionRecognition($("#mealDescription")?.value || ""),
       items = recognition.unrecognized;
     notice.hidden = mode === "manual" || !items.length;
+    // Certaines règles CSS mobiles masquent ce bouton malgré hidden=false.
+    // Forcer la visibilité effective comme pour le lien de détail calorique.
+    notice.style.display = notice.hidden ? "none" : "block";
     if (notice.hidden) {
       list.innerHTML = "";
       if ($("#mealCalorieRecognitionDialog")?.open)
