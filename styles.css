@@ -2538,3 +2538,6 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 
 /* Android WebView : afficher le lien FCÉN de chaque ingrédient non reconnu. */
 #mealCalorieRecognitionDialog .meal-calorie-unrecognized-item .meal-try-guided{display:inline-block !important;visibility:visible !important;opacity:1 !important;position:static !important;min-height:36px;margin-top:8px;padding:7px 10px;border:1px solid var(--accent);border-radius:8px;background:var(--surface);color:var(--accent-strong);font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
+
+/* Safari: masquer l’heure indicative pour une mesure sans heure. */
+.glucose-journal-card.glucose-unified input[type="time"]:required:invalid:not(:focus)::-webkit-datetime-edit{color:transparent!important}
