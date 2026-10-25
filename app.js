@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.318";
+  const APP_RELEASE = "3.56.320";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10337,7 +10337,7 @@ function formatSleepDuration(hours) {
     return '<section class="card glucose-journal-card glucose-unified" style="grid-column:1/-1;width:100%;box-sizing:border-box;padding:7px 12px;margin:5px 0"><h3 style="margin:0 0 4px;font-size:1.08rem">🩸 '+t("Suivi de la glycémie")+'</h3><p class="muted tiny" style="margin:0 0 4px">'+t("Mesures manuelles en mmol/L. Aucune interprétation médicale automatique.")+'</p>'
       +'<div style="overflow-x:auto">'+assigned+'</div>'
       +(extras.length ? '<h4 style="margin:14px 0 5px">'+t("Mesures supplémentaires")+'</h4>'+extras.map(x=>'<div class="glucose-extra-saved-row"><span>'+esc(x.time||"")+' · '+esc(String(x.value).replace(".",","))+' mmol/L · '+esc(contexts[x.context]||t("Autre"))+'</span>'+(canEdit?'<button type="button" class="secondary small" data-delete-glucose="'+esc(x.id)+'">'+t("Retirer")+'</button>':"")+'</div>').join("") : "")
-      +(canEdit ? '<form id="glucoseEntryForm" style="margin-top:6px"><strong>'+t("Ajouter une mesure supplémentaire")+'</strong><div class="glucose-unified-row glucose-extra-row"><label><small>'+t("mmol/L")+'</small><input id="glucoseValue" type="text" required inputmode="decimal" placeholder="5,4" aria-label="'+t("Valeur (mmol/L)")+'"></label><label><small>'+t("Heure")+'</small><input id="glucoseTime" type="time" required data-empty-time="true" value=""></label><button class="secondary small" type="submit" aria-label="'+t("Enregistrer la mesure")+'">'+t("Enregistrer la mesure")+'</button></div></form>' : "")
+      +(canEdit ? '<form id="glucoseEntryForm" style="margin-top:6px"><div class="glucose-unified-row glucose-extra-row"><strong class="glucose-extra-title">'+t("Ajouter une mesure supplémentaire")+'</strong><label><small>'+t("mmol/L")+'</small><input id="glucoseValue" type="text" required inputmode="decimal" placeholder="5,4" aria-label="'+t("Valeur (mmol/L)")+'"></label><label><small>'+t("Heure")+'</small><input id="glucoseTime" type="time" required data-empty-time="true" value=""></label><button class="secondary small" type="submit" aria-label="'+t("Enregistrer la mesure")+'">'+t("Enregistrer")+'</button></div></form>' : "")
       +'<p id="glucoseStatus" role="status" class="muted tiny"></p></section>';
   }
   function bindGlucoseJournal() {
