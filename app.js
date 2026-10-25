@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.310";
+  const APP_RELEASE = "3.56.315";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10325,7 +10325,7 @@ function formatSleepDuration(hours) {
       const due = meal && at(meal.time) ? new Date(at(meal.time).getTime()+Number(db.settings.glucoseMealDelay||120)*60000) : null;
       const dueNow = today && !reading && (item.key==="fasting" ? now.getHours()>=5 && now.getHours()<12 : due && now >= due);
       const pulse = dueNow ? '<span class="energy-action-brain" aria-label="'+esc(t("Mesure à noter"))+'" style="display:inline-block;margin-right:5px">🧠</span>' : "";
-      const time = reading?.time || (item.key==="fasting" ? (today ? now.toTimeString().slice(0,5) : "08:00") : (due ? due.toTimeString().slice(0,5) : now.toTimeString().slice(0,5)));
+      const time = reading?.time || "";
       return '<div class="glucose-unified-row" style="display:grid;grid-template-columns:minmax(110px,1.3fr) minmax(70px,.7fr) minmax(100px,.8fr) auto;align-items:end;gap:7px;padding:3px 0;border-bottom:1px solid #e5ecdf">'
         +'<strong style="align-self:center">'+pulse+esc(item.label)+'</strong>'
         +'<label style="margin:0"><small>'+esc(t("mmol/L"))+'</small><input data-glucose-row-value="'+esc(item.key)+'" aria-label="'+esc(item.label)+'" inputmode="decimal" type="text" placeholder="5,4" value="'+(reading ? esc(String(reading.value).replace(".",",")) : "")+'" '+(canEdit?"":"disabled")+' style="width:100%;height:34px;min-height:0;padding:5px 9px;box-sizing:border-box;font-size:.95rem"></label>'
@@ -10337,13 +10337,31 @@ function formatSleepDuration(hours) {
     return '<section class="card glucose-journal-card glucose-unified" style="grid-column:1/-1;width:100%;box-sizing:border-box;padding:7px 12px;margin:5px 0"><h3 style="margin:0 0 4px;font-size:1.08rem">🩸 '+t("Suivi de la glycémie")+'</h3><p class="muted tiny" style="margin:0 0 4px">'+t("Mesures manuelles en mmol/L. Aucune interprétation médicale automatique.")+'</p>'
       +'<div style="overflow-x:auto">'+assigned+'</div>'
       +(extras.length ? '<h4 style="margin:14px 0 5px">'+t("Mesures supplémentaires")+'</h4>'+extras.map(x=>'<div class="glucose-extra-saved-row"><span>'+esc(x.time||"")+' · '+esc(String(x.value).replace(".",","))+' mmol/L · '+esc(contexts[x.context]||t("Autre"))+'</span>'+(canEdit?'<button type="button" class="secondary small" data-delete-glucose="'+esc(x.id)+'">'+t("Retirer")+'</button>':"")+'</div>').join("") : "")
-      +(canEdit ? '<form id="glucoseEntryForm" style="margin-top:6px"><strong>'+t("Ajouter une mesure supplémentaire")+'</strong><div class="glucose-unified-row glucose-extra-row"><label><small>'+t("mmol/L")+'</small><input id="glucoseValue" type="text" required inputmode="decimal" placeholder="5,4" aria-label="'+t("Valeur (mmol/L)")+'"></label><label><small>'+t("Heure")+'</small><input id="glucoseTime" type="time" required value="'+now.toTimeString().slice(0,5)+'"></label><button class="secondary small" type="submit" aria-label="'+t("Enregistrer la mesure")+'">'+t("Enregistrer la mesure")+'</button></div></form>' : "")
+      +(canEdit ? '<form id="glucoseEntryForm" style="margin-top:6px"><strong>'+t("Ajouter une mesure supplémentaire")+'</strong><div class="glucose-unified-row glucose-extra-row"><label><small>'+t("mmol/L")+'</small><input id="glucoseValue" type="text" required inputmode="decimal" placeholder="5,4" aria-label="'+t("Valeur (mmol/L)")+'"></label><label><small>'+t("Heure")+'</small><input id="glucoseTime" type="time" required value=""></label><button class="secondary small" type="submit" aria-label="'+t("Enregistrer la mesure")+'">'+t("Enregistrer la mesure")+'</button></div></form>' : "")
       +'<p id="glucoseStatus" role="status" class="muted tiny"></p></section>';
   }
   function bindGlucoseJournal() {
     const status = $("#glucoseStatus");
     const invalid = () => {if(status)status.textContent=t("Entre une mesure valide en mmol/L.");};
     const parse = x => Number(String(x||"").trim().replace(",","."));
+    const setTimeOnGlucoseEntry = (valueInput, timeInput) => {
+      if (!valueInput || !timeInput) return;
+      let manuallyEdited = false;
+      timeInput.addEventListener("input", () => { manuallyEdited = true; });
+      valueInput.addEventListener("input", () => {
+        if (valueInput.value.trim() && !timeInput.value && !manuallyEdited) {
+          timeInput.value = new Date().toTimeString().slice(0, 5);
+        } else if (!valueInput.value.trim() && !manuallyEdited) {
+          timeInput.value = "";
+        }
+      });
+    };
+    document.querySelectorAll("[data-glucose-row-value]").forEach(valueInput => {
+      const timeInput = Array.from(document.querySelectorAll("[data-glucose-row-time]"))
+        .find(input => input.dataset.glucoseRowTime === valueInput.dataset.glucoseRowValue);
+      setTimeOnGlucoseEntry(valueInput, timeInput);
+    });
+    setTimeOnGlucoseEntry(document.getElementById("glucoseValue"), document.getElementById("glucoseTime"));
     $$("[data-save-glucose-row]").forEach(button=>button.onclick=()=>{
       if(professionalClientReadOnly()) return preventProfessionalClientEdit();
       const key=button.dataset.saveGlucoseRow;
