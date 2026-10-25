@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.316";
+  const APP_RELEASE = "3.56.317";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10329,7 +10329,7 @@ function formatSleepDuration(hours) {
       return '<div class="glucose-unified-row" style="display:grid;grid-template-columns:minmax(110px,1.3fr) minmax(70px,.7fr) minmax(100px,.8fr) auto;align-items:end;gap:7px;padding:3px 0;border-bottom:1px solid #e5ecdf">'
         +'<strong style="align-self:center">'+pulse+esc(item.label)+'</strong>'
         +'<label style="margin:0"><small>'+esc(t("mmol/L"))+'</small><input data-glucose-row-value="'+esc(item.key)+'" aria-label="'+esc(item.label)+'" inputmode="decimal" type="text" placeholder="5,4" value="'+(reading ? esc(String(reading.value).replace(".",",")) : "")+'" '+(canEdit?"":"disabled")+' style="width:100%;height:34px;min-height:0;padding:5px 9px;box-sizing:border-box;font-size:.95rem"></label>'
-        +'<label style="margin:0"><small>'+esc(t("Heure"))+'</small><input data-glucose-row-time="'+esc(item.key)+'" aria-label="'+esc(t("Heure"))+' '+esc(item.label)+'" type="time" required value="'+esc(time)+'" '+(canEdit?"":"disabled")+' style="width:100%;height:34px;min-height:0;padding:5px 9px;box-sizing:border-box;font-size:.95rem"></label>'
+        +'<label style="margin:0"><small>'+esc(t("Heure"))+'</small><input data-glucose-row-time="'+esc(item.key)+'" aria-label="'+esc(t("Heure"))+' '+esc(item.label)+'" type="time" required data-empty-time="'+(time?"false":"true")+'" value="'+esc(time)+'" '+(canEdit?"":"disabled")+' style="width:100%;height:34px;min-height:0;padding:5px 9px;box-sizing:border-box;font-size:.95rem"></label>'
         +(canEdit ? '<button type="button" class="secondary small" data-save-glucose-row="'+esc(item.key)+'">'+esc(t("Enregistrer"))+'</button>' : "")+'</div>';
     };
     const assigned=rows.map(slotHtml).join("");
@@ -10346,13 +10346,18 @@ function formatSleepDuration(hours) {
     const parse = x => Number(String(x||"").trim().replace(",","."));
     const setTimeOnGlucoseEntry = (valueInput, timeInput) => {
       if (!valueInput || !timeInput) return;
+      const updateEmptyTime = () => { timeInput.dataset.emptyTime = timeInput.value ? "false" : "true"; };
+      timeInput.addEventListener("change", updateEmptyTime);
+      timeInput.addEventListener("input", updateEmptyTime);
       let manuallyEdited = false;
       timeInput.addEventListener("input", () => { manuallyEdited = true; });
       valueInput.addEventListener("input", () => {
         if (valueInput.value.trim() && !timeInput.value && !manuallyEdited) {
           timeInput.value = new Date().toTimeString().slice(0, 5);
+          updateEmptyTime();
         } else if (!valueInput.value.trim() && !manuallyEdited) {
           timeInput.value = "";
+          updateEmptyTime();
         }
       });
     };
