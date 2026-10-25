@@ -2574,3 +2574,30 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
     column-gap:8px!important;
   }
 }
+
+/* Additional glucose measurement: same four columns as standard rows. */
+.glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row{
+  display:grid!important;
+  grid-template-columns:minmax(110px,1.3fr) minmax(70px,.7fr) minmax(100px,.8fr) auto!important;
+  align-items:end!important;gap:7px!important;padding:3px 0!important;
+}
+.glucose-journal-card.glucose-unified #glucoseEntryForm .glucose-extra-title{
+  grid-column:1!important;align-self:center!important;
+  font-size:inherit!important;line-height:1.2!important;
+}
+.glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>label{
+  grid-column:auto!important;min-width:0!important;width:100%!important;margin:0!important;
+}
+.glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>label input{
+  width:100%!important;height:34px!important;min-height:0!important;
+  padding:5px 9px!important;box-sizing:border-box!important;font-size:.95rem!important;
+}
+.glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>button{
+  grid-column:4!important;align-self:end!important;
+  width:auto!important;max-width:none!important;min-width:0!important;
+}
+@media(max-width:700px){
+  .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row{
+    grid-template-columns:minmax(90px,1.3fr) minmax(65px,.7fr) minmax(90px,.8fr) auto!important;
+  }
+}
