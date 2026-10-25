@@ -2544,3 +2544,6 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 
 /* Safari: masquer les chiffres indicatifs tant que le champ est vide. */
 .glucose-journal-card.glucose-unified input[data-empty-time="true"]:not(:focus)::-webkit-datetime-edit{opacity:0!important}
+
+/* Mesure supplementaire : meme affichage vide que les quatre mesures. */
+.glucose-journal-card.glucose-unified #glucoseTime[data-empty-time="true"]:not(:focus)::-webkit-datetime-edit{opacity:0!important}
