@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.320";
+  const APP_RELEASE = "3.56.321";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10346,7 +10346,10 @@ function formatSleepDuration(hours) {
     const parse = x => Number(String(x||"").trim().replace(",","."));
     const setTimeOnGlucoseEntry = (valueInput, timeInput) => {
       if (!valueInput || !timeInput) return;
-      const updateEmptyTime = () => { timeInput.dataset.emptyTime = timeInput.value ? "false" : "true"; };
+      const updateEmptyTime = () => {
+        timeInput.dataset.emptyTime = timeInput.value ? "false" : "true";
+        timeInput.disabled = !valueInput.value.trim() || valueInput.disabled;
+      };
       let manuallyEdited = false;
       timeInput.addEventListener("change", () => { manuallyEdited = true; updateEmptyTime(); });
       timeInput.addEventListener("input", () => { manuallyEdited = true; updateEmptyTime(); });
