@@ -2542,5 +2542,5 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 /* Safari: masquer l’heure indicative pour une mesure sans heure. */
 .glucose-journal-card.glucose-unified input[type="time"]:required:invalid:not(:focus)::-webkit-datetime-edit{color:transparent!important}
 
-/* Safari/WebKit: cacher les chiffres indicatifs des champs d'heure invalides. */
-.glucose-journal-card.glucose-unified input[type="time"]:required:invalid:not(:focus)::-webkit-datetime-edit{opacity:0!important}
+/* Safari: masquer les chiffres indicatifs tant que le champ est vide. */
+.glucose-journal-card.glucose-unified input[data-empty-time="true"]:not(:focus)::-webkit-datetime-edit{opacity:0!important}
