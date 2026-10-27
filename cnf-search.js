@@ -623,7 +623,12 @@
     const ranked = [];
     for (const row of catalog) {
       const meta = rowSearchMeta(row);
-      if (!queryTokens.every(token => meta.candidateTokens.includes(token))) continue;
+      // During typing, accept a prefix for the final word (e.g. "beurre d'ara"
+      // should already find "beurre d'arachide"). Earlier words stay exact.
+      if (!queryTokens.every((token, index) =>
+        index === queryTokens.length - 1
+          ? meta.candidateTokens.some(candidate => candidate.startsWith(token))
+          : meta.candidateTokens.includes(token))) continue;
       const fr = meta.descriptor.fr, en = meta.descriptor.en;
       const exact = fr === query || en === query;
       const starts = fr.startsWith(query + " ") || en.startsWith(query + " ");
