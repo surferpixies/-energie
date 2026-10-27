@@ -3628,7 +3628,7 @@ function formatSleepDuration(hours) {
         continue;
       }
       const food = window.ENERGIE_CNF_SEARCH?.getById?.(row.id);
-      if (!food) return { error: "Un aliment sélectionné n'est plus disponible dans le FCÉN." };
+      if (!food) return { error: "Un aliment sélectionné n'est plus disponible dans le référentiel nutritionnel." };
       const portion = food.portions?.find(p => String(p.id) === String(row.unit));
       const gramsPerUnit = row.unit === "g" ? 1 : Number(portion?.grams);
       const amount = row.quantity === "" || row.quantity == null ? NaN : Number(row.quantity);
@@ -4361,8 +4361,11 @@ function formatSleepDuration(hours) {
     }
     if (db.settings?.mealEntryMode === "guided") {
       const inline = inlineGuidedMealItems();
+      // Do not erase the existing nutrition of an untouched legacy free-text meal.
+      if (inline?.legacy) return;
       const nutrition = inline?.items?.every(item => item.grams != null)
         ? guidedCnfNutrition(inline.items) : null;
+      $("#mealCalorieMode").value = "auto";
       fillNutritionInputs(nutrition);
       updateMealCalorieEditor();
       return;
