@@ -2728,3 +2728,27 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   font-family:inherit!important;
  }
 }
+
+/* Profile feelings: compact layout and separate the action from selected tags. */
+.tracked-feelings-profile{
+ display:flex!important;flex-direction:column!important;align-items:stretch!important;
+ gap:12px!important;padding:16px!important;margin:10px 0!important;
+}
+.tracked-feelings-profile>h4{margin:0!important;line-height:1.25!important}
+.tracked-feelings-profile>.feeling-valence-symptom{
+ display:flex!important;flex-direction:column!important;align-items:stretch!important;
+ gap:12px!important;margin:0!important;padding:16px!important;
+ min-height:0!important;height:auto!important;
+}
+.tracked-feelings-profile>.feeling-valence-symptom>.feeling-valence-title{margin:0!important}
+.tracked-feelings-profile>.feeling-valence-symptom>p{margin:0!important}
+.tracked-feelings-profile>.feeling-valence-symptom>.tracked-feelings-summary{
+ margin:0!important;display:flex!important;gap:8px!important;
+}
+.tracked-feelings-profile #editTrackedFeelings{
+ align-self:flex-start!important;width:auto!important;max-width:100%!important;
+ margin-top:6px!important;padding:10px 16px!important;
+}
+@media(max-width:560px){
+ .tracked-feelings-profile #editTrackedFeelings{width:100%!important;align-self:stretch!important}
+}
