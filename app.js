@@ -3520,6 +3520,7 @@ function formatSleepDuration(hours) {
     if (!root) return;
     const guided = db.settings?.mealEntryMode === "guided";
     const required = db.settings?.mealQuantityRequired === true;
+    const readOnly = $("#mealForm")?.dataset.inlineReadOnly === "true";
     root.hidden = !guided;
     const description = $("#mealDescription");
     if (description) {
@@ -3528,6 +3529,7 @@ function formatSleepDuration(hours) {
     }
     const limit = $("#mealDescriptionLimit");
     if (limit) limit.hidden = guided;
+    if (guided && $("#mealCnfLinkedStatus")) $("#mealCnfLinkedStatus").hidden = true;
     const legacyButton = $("#openCnfGuidedEntry");
     if (legacyButton) legacyButton.hidden = guided || !guidedEntryEnabled();
     if (!guided) return;
@@ -3547,6 +3549,7 @@ function formatSleepDuration(hours) {
           '<button type="button" data-inline-remove="' + index + '" aria-label="Retirer cet aliment">−</button></div>';
       }).join('') +
       '<button type="button" id="mealInlineAdd" class="secondary">＋ Ajouter un aliment</button>';
+    root.querySelectorAll("input, select, button").forEach(el => { el.disabled = readOnly; });
     root.querySelector("#mealInlineAdd").onclick = () => {
       inlineGuidedRows.push({ id: null, query: "", quantity: null, unit: "g" });
       renderInlineGuidedMeal();
@@ -3659,6 +3662,7 @@ function formatSleepDuration(hours) {
     return String(Math.round(n * 10) / 10).replace(".", ",");
   }
   function guidedCnfItemCalories(item) {
+    if (!(Number(item?.grams) > 0)) return null;
     const nutrition = window.ENERGIE_CNF_SEARCH?.nutritionForGrams?.(
       item?.cnfFoodId,
       item?.grams,
@@ -3683,7 +3687,7 @@ function formatSleepDuration(hours) {
       note = $("#mealGuidedEntryRequirement");
     if (!field) return;
     const guidedMode = db.settings?.mealEntryMode === "guided";
-    const required = (guidedMode || guidedCnfEntryRequired()) && !formReadOnly;
+    const required = !guidedMode && guidedCnfEntryRequired() && !formReadOnly;
     field.readOnly = required;
     field.classList.toggle("is-guided-only", required);
     field.placeholder = required
@@ -3695,7 +3699,7 @@ function formatSleepDuration(hours) {
     if (note) note.textContent = guidedMode
       ? t(`Mode saisie guidée : recherche tes aliments dans ${reference}.`)
       : t(`La saisie guidée ${reference} est obligatoire dans tes préférences.`);
-    if (note) note.hidden = !required;
+    if (note) note.hidden = guidedMode || !required;
   }
   function guidedCnfFoodText(item) {
     const name = String(item?.nameFr || "aliment")
@@ -3796,7 +3800,7 @@ function formatSleepDuration(hours) {
   function updateMealCnfLinkedStatus() {
     const status = $("#mealCnfLinkedStatus"),
       items = mealCnfItemsFromField(),
-      calories = Number(guidedCnfNutrition(items)?.calories);
+      calories = guidedCnfNutrition(items)?.calories;
     if (!status) return;
     status.hidden = !items.length;
     const strong = status.querySelector("strong");
@@ -3810,7 +3814,7 @@ function formatSleepDuration(hours) {
       count = $("#cnfGuidedItemCount"),
       finish = $("#finishCnfGuidedMeal"),
       totalNutrition = guidedCnfNutrition(mealCnfGuidedDraft),
-      totalCalories = Number(totalNutrition?.calories);
+      totalCalories = totalNutrition?.calories;
     if (!list || !count || !finish) return;
     count.textContent = `${mealCnfGuidedDraft.length} ${window.ENERGIE_LOCALE === "en" ? (mealCnfGuidedDraft.length === 1 ? "food" : "foods") : `aliment${mealCnfGuidedDraft.length !== 1 ? "s" : ""}`}${caloriesVisible() && Number.isFinite(totalCalories) ? ` · ${Math.round(totalCalories)} kcal` : ""}`;
     finish.disabled = !mealCnfGuidedDraft.length;
@@ -16486,6 +16490,7 @@ function formatSleepDuration(hours) {
       quantity: item.quantity ?? (item.grams && item.unitKind === "g" ? item.grams : null), unit: item.unitKind || "g",
     }));
     if (!inlineGuidedRows.length) inlineGuidedRows = [{ id: null, query: "", quantity: null, unit: "g" }];
+    $("#mealForm").dataset.inlineReadOnly = readOnly ? "true" : "false";
     renderInlineGuidedMeal();
     if (!$("#mealDescription").dataset.brainGuideBound) {
       $("#mealDescription").dataset.brainGuideBound = "true";
