@@ -2685,3 +2685,20 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   letter-spacing:0!important;overflow:hidden!important;
  }
 }
+
+/* Desktop glucose: share the exact same grid and control styling across all rows. */
+@media(min-width:701px){
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row{
+  grid-template-columns:minmax(110px,1.3fr) minmax(70px,.7fr) minmax(100px,.8fr) auto!important;
+  gap:7px!important;padding:3px 0!important;
+ }
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>label input{
+  height:34px!important;min-height:0!important;padding:5px 9px!important;
+  box-sizing:border-box!important;font-size:.95rem!important;
+ }
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>button{
+  width:auto!important;min-height:0!important;max-width:none!important;
+  padding:7px 12px!important;font-size:inherit!important;
+  font-weight:inherit!important;letter-spacing:normal!important;
+ }
+}
