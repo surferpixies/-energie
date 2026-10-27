@@ -3520,6 +3520,7 @@ function formatSleepDuration(hours) {
     if (!root) return;
     const guided = db.settings?.mealEntryMode === "guided";
     const required = db.settings?.mealQuantityRequired === true;
+    const reference = window.ENERGIE_LOCALE === "fr-FR" ? "Ciqual" : "FCÉN";
     const readOnly = $("#mealForm")?.dataset.inlineReadOnly === "true";
     root.hidden = !guided;
     const description = $("#mealDescription");
@@ -3540,7 +3541,7 @@ function formatSleepDuration(hours) {
         const food = row.id ? window.ENERGIE_CNF_SEARCH?.getById?.(row.id) : null;
         const options = food?.portions?.filter(p => Number(p.grams) > 0) || [];
         return '<div class="meal-inline-row" data-inline-row="' + index + '">' +
-          '<div class="meal-inline-food"><input type="search" data-inline-search="' + index + '" placeholder="Rechercher dans le FCÉN" value="' + esc(row.query || '') + '" autocomplete="off">' +
+          '<div class="meal-inline-food"><input type="search" data-inline-search="' + index + '" placeholder="Rechercher dans ' + reference + '" value="' + esc(row.query || '') + '" autocomplete="off">' +
           '<div class="meal-inline-results" data-inline-results="' + index + '" hidden></div></div>' +
           (required ? '<div class="meal-inline-amount"><input type="number" min="0.01" step="any" data-inline-qty="' + index + '" value="' + esc(String(row.quantity ?? '')) + '" placeholder="Quantité">' +
             '<select data-inline-unit="' + index + '">' +
@@ -3553,6 +3554,7 @@ function formatSleepDuration(hours) {
     root.querySelector("#mealInlineAdd").onclick = () => {
       inlineGuidedRows.push({ id: null, query: "", quantity: null, unit: "g" });
       renderInlineGuidedMeal();
+      root.querySelector('[data-inline-search="' + (inlineGuidedRows.length - 1) + '"]')?.focus();
     };
     root.querySelectorAll("[data-inline-remove]").forEach(button => button.onclick = () => {
       inlineGuidedRows.splice(Number(button.dataset.inlineRemove), 1);
@@ -3566,6 +3568,8 @@ function formatSleepDuration(hours) {
         const row = inlineGuidedRows[index];
         row.query = input.value;
         row.id = null;
+        row.entryId = null;
+        scheduleAutomaticNutritionPreview();
         const results = root.querySelector('[data-inline-results="' + index + '"]');
         const query = input.value.trim();
         const foods = query.length >= 2 ? (window.ENERGIE_CNF_SEARCH?.search?.(query, Infinity) || []) : [];
@@ -3601,7 +3605,7 @@ function formatSleepDuration(hours) {
     const items = [];
     for (const row of inlineGuidedRows) {
       if (!row.id) {
-        if (String(row.query || "").trim()) return { error: "Sélectionne un aliment dans les résultats FCÉN." };
+        if (String(row.query || "").trim()) return { error: "Sélectionne un aliment dans les résultats du référentiel nutritionnel." };
         continue;
       }
       const food = window.ENERGIE_CNF_SEARCH?.getById?.(row.id);
@@ -3807,7 +3811,7 @@ function formatSleepDuration(hours) {
       items = mealCnfItemsFromField(),
       calories = guidedCnfNutrition(items)?.calories;
     if (!status) return;
-    status.hidden = !items.length;
+    status.hidden = db.settings?.mealEntryMode === "guided" || !items.length;
     const strong = status.querySelector("strong");
     if (strong)
       strong.textContent = items.length
