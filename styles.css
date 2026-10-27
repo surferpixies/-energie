@@ -2712,3 +2712,19 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   line-height:normal!important;
  }
 }
+
+/* Desktop glucose: compact green checkmarks instead of Save text. */
+@media(min-width:701px){
+ .glucose-journal-card.glucose-unified .glucose-unified-row>button,
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>button{
+  width:38px!important;min-width:38px!important;max-width:38px!important;
+  height:36px!important;min-height:36px!important;max-height:36px!important;
+  padding:0!important;font-size:0!important;line-height:1!important;
+  border-radius:10px!important;justify-self:start!important;
+ }
+ .glucose-journal-card.glucose-unified .glucose-unified-row>button::after,
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>button::after{
+  content:"✓";font-size:20px!important;font-weight:800!important;
+  font-family:inherit!important;
+ }
+}
