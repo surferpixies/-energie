@@ -3482,6 +3482,10 @@ function formatSleepDuration(hours) {
     if (!$("#mealCnfItems")) {
       form.insertAdjacentHTML("afterbegin", '<input type="hidden" id="mealCnfItems" value="">');
     }
+    if (!$("#mealInlineGuided")) {
+      const description = $("#mealDescription");
+      description?.insertAdjacentHTML("beforebegin", '<div id="mealInlineGuided" class="meal-inline-guided" hidden></div>');
+    }
     const hint = form.querySelector(".meal-precision-hint"),
       composer = form.querySelector(".meal-description-composer"),
       toolbar = form.querySelector(".meal-description-toolbar");
@@ -3509,6 +3513,77 @@ function formatSleepDuration(hours) {
     }
   }
 
+  // Inline meal composer: separate from the legacy FCÉN modal.
+  let inlineGuidedRows = [];
+  function renderInlineGuidedMeal() {
+    const root = $("#mealInlineGuided");
+    if (!root) return;
+    const guided = db.settings?.mealEntryMode === "guided";
+    const required = db.settings?.mealQuantityRequired === true;
+    root.hidden = !guided;
+    const description = $("#mealDescription");
+    if (description) {
+      description.hidden = guided;
+      description.required = !guided;
+    }
+    const limit = $("#mealDescriptionLimit");
+    if (limit) limit.hidden = guided;
+    const legacyButton = $("#openCnfGuidedEntry");
+    if (legacyButton && guided) legacyButton.hidden = true;
+    if (!guided) return;
+    root.innerHTML = '<div class="meal-inline-header"><strong>Aliment</strong>' +
+      (required ? '<strong>Quantité</strong>' : '') + '</div>' +
+      inlineGuidedRows.map((row, index) => {
+        const food = row.id ? window.ENERGIE_CNF_SEARCH?.getById?.(row.id) : null;
+        const options = food?.portions?.filter(p => Number(p.grams) > 0) || [];
+        return '<div class="meal-inline-row" data-inline-row="' + index + '">' +
+          '<div class="meal-inline-food"><input type="search" data-inline-search="' + index + '" placeholder="Rechercher dans le FCÉN" value="' + esc(row.query || '') + '" autocomplete="off">' +
+          '<div class="meal-inline-results" data-inline-results="' + index + '" hidden></div></div>' +
+          (required ? '<div class="meal-inline-amount"><input type="number" min="0.01" step="any" data-inline-qty="' + index + '" value="' + esc(String(row.quantity ?? '')) + '" placeholder="Quantité">' +
+            '<select data-inline-unit="' + index + '">' +
+            options.map(p => '<option value="' + esc(String(p.id)) + '" data-grams="' + Number(p.grams) + '"' + (row.unit === String(p.id) ? ' selected' : '') + '>' + esc(p.labelFr) + '</option>').join('') +
+            '<option value="g" data-grams="1"' + (row.unit === 'g' ? ' selected' : '') + '>g</option></select></div>' : '') +
+          '<button type="button" data-inline-remove="' + index + '" aria-label="Retirer cet aliment">−</button></div>';
+      }).join('') +
+      '<button type="button" id="mealInlineAdd" class="secondary">＋ Ajouter un aliment</button>';
+    root.querySelector("#mealInlineAdd").onclick = () => {
+      inlineGuidedRows.push({ id: null, query: "", quantity: null, unit: "g" });
+      renderInlineGuidedMeal();
+    };
+    root.querySelectorAll("[data-inline-remove]").forEach(button => button.onclick = () => {
+      inlineGuidedRows.splice(Number(button.dataset.inlineRemove), 1);
+      if (!inlineGuidedRows.length) inlineGuidedRows.push({ id: null, query: "", quantity: null, unit: "g" });
+      renderInlineGuidedMeal();
+    });
+    root.querySelectorAll("[data-inline-search]").forEach(input => {
+      const index = Number(input.dataset.inlineSearch);
+      input.addEventListener("input", () => {
+        const row = inlineGuidedRows[index];
+        row.query = input.value;
+        row.id = null;
+        const results = root.querySelector('[data-inline-results="' + index + '"]');
+        const query = input.value.trim();
+        const foods = query.length >= 2 ? (window.ENERGIE_CNF_SEARCH?.search?.(query, Infinity) || []) : [];
+        results.hidden = query.length < 2;
+        results.innerHTML = foods.map(food => '<button type="button" data-food-id="' + esc(String(food.id)) + '">' + esc(food.nameFr || food.nameEn || '') + '</button>').join('') || '<small>Aucun aliment trouvé.</small>';
+        results.querySelectorAll("[data-food-id]").forEach(button => button.onclick = () => {
+          const food = window.ENERGIE_CNF_SEARCH?.getById?.(button.dataset.foodId);
+          if (!food) return;
+          row.id = String(food.id);
+          row.query = food.nameFr || food.nameEn || '';
+          row.unit = food.portions?.find(p => Number(p.grams) > 0)?.id || 'g';
+          row.quantity = required ? (row.unit === 'g' ? 100 : 1) : null;
+          renderInlineGuidedMeal();
+        });
+      });
+    });
+    root.querySelectorAll("[data-inline-qty]").forEach(input => input.oninput = () => {
+      inlineGuidedRows[Number(input.dataset.inlineQty)].quantity = input.value;
+    });
+    root.querySelectorAll("[data-inline-unit]").forEach(input => input.onchange = () => {
+      inlineGuidedRows[Number(input.dataset.inlineUnit)].unit = input.value;
+    });
+  }
   function mealCnfItemsFromField() {
     try {
       const raw = JSON.parse($("#mealCnfItems")?.value || "[]");
@@ -16370,6 +16445,12 @@ function formatSleepDuration(hours) {
     $("#mealTime").value = m?.time || new Date().toTimeString().slice(0, 5);
     $("#mealDescription").value = m?.description || "";
     setMealCnfItemsField(m?.cnfItems || []);
+    inlineGuidedRows = (m?.cnfItems || []).map(item => ({
+      id: String(item.cnfFoodId), query: item.nameFr || "",
+      quantity: item.quantity ?? null, unit: item.unitKind || "g",
+    }));
+    if (!inlineGuidedRows.length) inlineGuidedRows = [{ id: null, query: "", quantity: null, unit: "g" }];
+    renderInlineGuidedMeal();
     if (!$("#mealDescription").dataset.brainGuideBound) {
       $("#mealDescription").dataset.brainGuideBound = "true";
       $("#mealDescription").addEventListener("input", updateMealEntryBrainGuide);
