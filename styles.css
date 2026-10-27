@@ -2633,7 +2633,7 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 
 /* Guided FCÉN dropdown must escape the meal composer card when opening upward. */
 .meal-description-composer:has(.meal-inline-guided:not([hidden])) { overflow: visible; }
-.meal-description-composer:has(.meal-inline-guided:not([hidden])) .meal-inline-guided { position: relative; z-index: 30; }
+.meal-description-composer:has(.meal-inline-guided:not([hidden])) .meal-inline-guided { position: relative; z-index: auto; }
 
 
 /* Inline FCÉN: keep food, quantity, unit and remove control inside the meal card. */
