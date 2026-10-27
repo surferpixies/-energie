@@ -3562,10 +3562,43 @@ function formatSleepDuration(hours) {
         return;
       }
       inlineGuidedRows.push({ id: null, query: "", quantity: null, unit: "g" });
-      // Append just the new row by reusing the existing renderer for now;
-      // existing selections remain in the model.
-      renderInlineGuidedMeal();
-      root.querySelector('[data-inline-search="' + (inlineGuidedRows.length - 1) + '"]')?.focus();
+      // Preserve all existing inputs and their focus/scroll state. The new
+      // empty row needs only a search field until a food is selected.
+      const index = inlineGuidedRows.length - 1;
+      const newRow = document.createElement("div");
+      newRow.className = "meal-inline-row";
+      newRow.dataset.inlineRow = String(index);
+      newRow.innerHTML = '<div class="meal-inline-food"><input type="search" data-inline-search="' + index +
+        '" placeholder="Rechercher dans ' + reference +
+        '" autocomplete="off"><div class="meal-inline-results" data-inline-results="' + index +
+        '" hidden></div></div>' +
+        (required ? '<div class="meal-inline-amount"><input type="number" min="0.01" step="any" data-inline-qty="' +
+          index + '" placeholder="Quantité"><select data-inline-unit="' + index +
+          '"><option value="g" data-grams="1">g</option></select></div>' : '') +
+        '<button type="button" data-inline-remove="' + index + '" aria-label="Retirer cet aliment">−</button>';
+      root.querySelector("#mealInlineAdd").before(newRow);
+      // Attach the same handlers as a regular row without rebuilding the
+      // composer. This will be consolidated with the row event handlers.
+      newRow.querySelector('[data-inline-remove]').onclick = () => {
+        inlineGuidedRows.splice(index, 1);
+        scheduleAutomaticNutritionPreview();
+        renderInlineGuidedMeal();
+      };
+      newRow.querySelector('[data-inline-search]').addEventListener("input", () => {
+        // Search handlers are currently wired during the full render.
+        // Rebuild once when the user starts typing into the newly added row.
+        const currentQuery = newRow.querySelector('[data-inline-search]').value;
+        inlineGuidedRows[index].query = currentQuery;
+        renderInlineGuidedMeal();
+        const search = root.querySelector('[data-inline-search="' + index + '"]');
+        search?.focus();
+        if (search) search.dispatchEvent(new Event("input", { bubbles: true }));
+      }, { once: true });
+      newRow.querySelector('[data-inline-qty]')?.addEventListener("input", event => {
+        inlineGuidedRows[index].quantity = event.target.value;
+        scheduleAutomaticNutritionPreview();
+      });
+      newRow.querySelector('[data-inline-search]')?.focus();
     };
     root.querySelectorAll("[data-inline-remove]").forEach(button => button.onclick = () => {
       inlineGuidedRows.splice(Number(button.dataset.inlineRemove), 1);
