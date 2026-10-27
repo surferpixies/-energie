@@ -3646,7 +3646,10 @@ function formatSleepDuration(hours) {
         row.quantity = null;
       }
       row.unit = input.value;
-      renderInlineGuidedMeal();
+      // Only the quantity value changes here. Keep the existing row and
+      // focused select mounted instead of rebuilding every food input.
+      const quantityInput = root.querySelector('[data-inline-qty="' + input.dataset.inlineUnit + '"]');
+      if (quantityInput) quantityInput.value = row.quantity ?? "";
       scheduleAutomaticNutritionPreview();
     });
   }
