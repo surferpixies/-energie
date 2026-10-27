@@ -3608,6 +3608,12 @@ function formatSleepDuration(hours) {
         const query = input.value.trim();
         const foods = query.length >= 2 ? (window.ENERGIE_CNF_SEARCH?.search?.(query, Infinity) || []) : [];
         results.hidden = query.length < 2;
+        // Place the dropdown above the food field when the lower part of
+        // the viewport (including the sticky save bar) has too little room.
+        const inputBounds = input.getBoundingClientRect();
+        const roomBelow = window.innerHeight - inputBounds.bottom - 115;
+        const roomAbove = inputBounds.top - 12;
+        results.classList.toggle("opens-up", roomBelow < 280 && roomAbove > roomBelow);
         // Show every FCÉN result, but append in batches to avoid freezing mobile devices.
         let shown = 0;
         const appendResults = () => {
