@@ -2630,3 +2630,7 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 @media (max-width: 700px) {
   .meal-inline-results { max-height: min(38vh, 300px); }
 }
+
+/* Guided FCÉN dropdown must escape the meal composer card when opening upward. */
+.meal-description-composer:has(.meal-inline-guided:not([hidden])) { overflow: visible; }
+.meal-description-composer:has(.meal-inline-guided:not([hidden])) .meal-inline-guided { position: relative; z-index: 30; }
