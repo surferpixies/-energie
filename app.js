@@ -3555,7 +3555,15 @@ function formatSleepDuration(hours) {
       '<button type="button" id="mealInlineAdd" class="secondary">＋ Ajouter un aliment</button>';
     root.querySelectorAll("input, select, button").forEach(el => { el.disabled = readOnly; });
     root.querySelector("#mealInlineAdd").onclick = () => {
+      // Reuse an existing empty row instead of accumulating blank rows.
+      const emptyIndex = inlineGuidedRows.findIndex(row => !row.id && !String(row.query || "").trim());
+      if (emptyIndex !== -1) {
+        root.querySelector('[data-inline-search="' + emptyIndex + '"]')?.focus();
+        return;
+      }
       inlineGuidedRows.push({ id: null, query: "", quantity: null, unit: "g" });
+      // Append just the new row by reusing the existing renderer for now;
+      // existing selections remain in the model.
       renderInlineGuidedMeal();
       root.querySelector('[data-inline-search="' + (inlineGuidedRows.length - 1) + '"]')?.focus();
     };
