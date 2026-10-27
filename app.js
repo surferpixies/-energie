@@ -3529,8 +3529,9 @@ function formatSleepDuration(hours) {
     const limit = $("#mealDescriptionLimit");
     if (limit) limit.hidden = guided;
     const legacyButton = $("#openCnfGuidedEntry");
-    if (legacyButton && guided) legacyButton.hidden = true;
+    if (legacyButton) legacyButton.hidden = guided || !guidedEntryEnabled();
     if (!guided) return;
+    root.classList.toggle("without-quantity", !required);
     root.innerHTML = '<div class="meal-inline-header"><strong>Aliment</strong>' +
       (required ? '<strong>Quantité</strong>' : '') + '</div>' +
       inlineGuidedRows.map((row, index) => {
@@ -3582,6 +3583,8 @@ function formatSleepDuration(hours) {
     });
     root.querySelectorAll("[data-inline-unit]").forEach(input => input.onchange = () => {
       inlineGuidedRows[Number(input.dataset.inlineUnit)].unit = input.value;
+      inlineGuidedRows[Number(input.dataset.inlineUnit)].quantity = input.value === "g" ? "100" : "1";
+      renderInlineGuidedMeal();
     });
   }
   function inlineGuidedMealItems() {
@@ -3686,7 +3689,7 @@ function formatSleepDuration(hours) {
     field.placeholder = required
       ? "Utilise la saisie guidée FCÉN ci-dessous pour ajouter les aliments."
       : "Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli";
-    if (button) { button.hidden = !guidedMode && !guidedEntryEnabled(); button.classList.toggle("is-required", required); }
+    if (button) { button.hidden = guidedMode || !guidedEntryEnabled(); button.classList.toggle("is-required", required); }
     const reference = window.ENERGIE_LOCALE === "fr-FR" ? "Ciqual" : "FCÉN";
     if (required) field.placeholder = t(`Utilise la saisie guidée ${reference} ci-dessous pour ajouter les aliments.`);
     if (note) note.textContent = guidedMode
@@ -16480,7 +16483,7 @@ function formatSleepDuration(hours) {
     setMealCnfItemsField(m?.cnfItems || []);
     inlineGuidedRows = (m?.cnfItems || []).map(item => ({
       id: String(item.cnfFoodId), query: item.nameFr || "",
-      quantity: item.quantity ?? null, unit: item.unitKind || "g",
+      quantity: item.quantity ?? (item.grams && item.unitKind === "g" ? item.grams : null), unit: item.unitKind || "g",
     }));
     if (!inlineGuidedRows.length) inlineGuidedRows = [{ id: null, query: "", quantity: null, unit: "g" }];
     renderInlineGuidedMeal();
@@ -16564,6 +16567,7 @@ function formatSleepDuration(hours) {
     $("#mealPhoto").value = "";
     showPhotoPreview();
     applyGuidedCnfMealEntryPreference(readOnly);
+    renderInlineGuidedMeal();
     setDemoDetailReadOnly("#mealForm", readOnly);
     if (!m && d.formDrafts?.["mealForm:nouveau"]) {
       delete d.formDrafts["mealForm:nouveau"];
