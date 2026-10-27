@@ -3595,7 +3595,12 @@ function formatSleepDuration(hours) {
             esc(food.nameFr || food.nameEn || '') + '</button>').join(""));
         };
         results.innerHTML = foods.length ? "" : '<small>Aucun aliment trouvé.</small>';
+        results.scrollTop = 0;
         appendResults();
+        // If the panel fits more than 40 items, fill its visible area
+        // immediately instead of requiring a scroll that cannot happen.
+        while (shown < foods.length && results.clientHeight > 0 &&
+          results.scrollHeight <= results.clientHeight) appendResults();
         results.onscroll = () => {
           if (results.scrollTop + results.clientHeight >= results.scrollHeight - 100 && shown < foods.length)
             appendResults();
