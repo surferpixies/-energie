@@ -3702,10 +3702,10 @@ function formatSleepDuration(hours) {
       return [];
     }
   }
-  function setMealCnfItemsField(items = []) {
+  function setMealCnfItemsField(items = [], { updateStatus = true } = {}) {
     const field = $("#mealCnfItems");
     if (field) field.value = JSON.stringify(Array.isArray(items) ? items : []);
-    updateMealCnfLinkedStatus();
+    if (updateStatus) updateMealCnfLinkedStatus();
   }
   function guidedCnfNumber(value) {
     const n = Number(value);
@@ -4041,8 +4041,7 @@ function formatSleepDuration(hours) {
   function finishCnfGuidedMealEntry() {
     if (!mealCnfGuidedDraft.length) return;
     const items = mealCnfGuidedDraft.map((item) => ({ ...item })),
-      description = guidedCnfDescription(items),
-      nutrition = guidedCnfNutrition(items);
+      description = guidedCnfDescription(items);
     const field = $("#mealDescription");
     const previous = field.value.trim();
     const former = guidedCnfDescription(mealCnfItemsFromField());
@@ -4060,7 +4059,7 @@ function formatSleepDuration(hours) {
       : manual;
     mealCnfGuidedReplaceText = "";
     const mergedDescription = [retainedManual, description].filter(Boolean).join("\n");
-    setMealCnfItemsField(items);
+    setMealCnfItemsField(items, { updateStatus: false });
     field.value = mergedDescription;
     field.dispatchEvent(new Event("input", { bubbles: true }));
     mealFoodReview = { description: mergedDescription, acknowledgedGaps: true };
@@ -4068,7 +4067,10 @@ function formatSleepDuration(hours) {
     mealNutritionManuallyEdited = false;
     const combinedNutrition = currentGuidedCnfNutrition();
     if (combinedNutrition) fillNutritionInputs(combinedNutrition);
-    else if (!retainedManual && nutrition) fillNutritionInputs(nutrition);
+    else if (!retainedManual) {
+      const nutrition = guidedCnfNutrition(items);
+      if (nutrition) fillNutritionInputs(nutrition);
+    }
     updateMealCompositionReview();
     updateMealCnfLinkedStatus();
     scheduleFormAutosave($("#mealForm"));
