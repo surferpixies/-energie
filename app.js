@@ -3593,8 +3593,23 @@ function formatSleepDuration(hours) {
       scheduleAutomaticNutritionPreview();
     });
     root.querySelectorAll("[data-inline-unit]").forEach(input => input.onchange = () => {
-      inlineGuidedRows[Number(input.dataset.inlineUnit)].unit = input.value;
-      inlineGuidedRows[Number(input.dataset.inlineUnit)].quantity = input.value === "g" ? "100" : "1";
+      const row = inlineGuidedRows[Number(input.dataset.inlineUnit)];
+      const food = window.ENERGIE_CNF_SEARCH?.getById?.(row.id);
+      const gramsFor = unit => unit === "g" ? 1 :
+        Number(food?.portions?.find(p => String(p.id) === String(unit))?.grams);
+      const oldGramsPerUnit = gramsFor(row.unit);
+      const newGramsPerUnit = gramsFor(input.value);
+      const previousQuantity = Number(row.quantity);
+      // Preserve the food amount when switching units; never silently reset it.
+      if (row.quantity !== "" && row.quantity != null &&
+          Number.isFinite(previousQuantity) && previousQuantity > 0 &&
+          Number.isFinite(oldGramsPerUnit) && oldGramsPerUnit > 0 &&
+          Number.isFinite(newGramsPerUnit) && newGramsPerUnit > 0) {
+        row.quantity = Number((previousQuantity * oldGramsPerUnit / newGramsPerUnit).toFixed(3));
+      } else {
+        row.quantity = null;
+      }
+      row.unit = input.value;
       renderInlineGuidedMeal();
       scheduleAutomaticNutritionPreview();
     });
@@ -3615,7 +3630,10 @@ function formatSleepDuration(hours) {
       const amount = row.quantity === "" || row.quantity == null ? NaN : Number(row.quantity);
       if (requireQuantity && (!Number.isFinite(amount) || amount <= 0 || !Number.isFinite(gramsPerUnit) || gramsPerUnit <= 0))
         return { error: "Indique une quantité valide pour chaque aliment." };
-      const grams = requireQuantity ? Math.max(1, Math.round(amount * gramsPerUnit)) : null;
+      const calculatedGrams = amount * gramsPerUnit;
+      if (requireQuantity && (!Number.isFinite(calculatedGrams) || calculatedGrams <= 0))
+        return { error: "La quantité sélectionnée ne peut pas être convertie en grammes." };
+      const grams = requireQuantity ? Math.max(1, Math.round(calculatedGrams)) : null;
       items.push({
         entryId: row.entryId || uid(), cnfFoodId: String(food.id),
         nameFr: food.nameFr || "", nameEn: food.nameEn || "",
