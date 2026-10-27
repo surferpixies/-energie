@@ -8796,7 +8796,7 @@ function formatSleepDuration(hours) {
       if (!tags.length) return "";
       return `<details class="tracked-feelings-group" ${tags.some((tag) => selected.has(tag.id)) ? "open" : ""}><summary><span>${category.emoji} ${esc(t(category.label))}</span><small>${tags.filter((tag) => selected.has(tag.id)).length}/${tags.length}</small></summary><div>${tags.map((tag) => `<label><input type="checkbox" data-tracked-feeling="${tag.id}" ${selected.has(tag.id) ? "checked" : ""}><span>${tag.emoji} ${esc(t(tag.label))}</span></label>`).join("")}</div></details>`;
     }).join("");
-    return `${fixedPositiveFeelingsHtml()}<section class="feeling-valence-panel feeling-valence-symptom"><strong class="feeling-valence-title">🌦️ Inconforts à suivre</strong>${groups}</section>`;
+    return `<section class="feeling-valence-panel feeling-valence-symptom"><strong class="feeling-valence-title">🌦️ Inconforts à suivre</strong>${groups}</section>`;
   }
   function updateTrackedFeelingsDialogCount() {
     const count = $$('[data-tracked-feeling]:checked').length,
