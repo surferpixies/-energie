@@ -56,6 +56,35 @@
   const originalMarkup = dialog.innerHTML;
   button.addEventListener('click', () => {
     dialog.innerHTML = originalMarkup;
+    const guidedMode = (() => {
+      try {
+        const settings = JSON.parse(localStorage.getItem('energie_data') || '{}')?.settings;
+        return settings?.mealEntryMode === 'guided';
+      } catch (_) { return false; }
+    })();
+    // Prefer the current form mode when available; avoid relying on persisted key names.
+    const inlineGuided = document.getElementById('mealInlineGuided');
+    const isGuided = inlineGuided ? !inlineGuided.hidden : guidedMode;
+    if (isGuided) {
+      const quantityEnabled = !!document.querySelector('#mealInlineGuided .meal-inline-amount:not([hidden])');
+      const card = dialog.querySelector('.meal-entry-guide-card');
+      const intro = card?.querySelector(':scope > p');
+      if (intro) intro.textContent = english
+        ? 'Find each food in the nutrition database and select the matching result. Add foods one at a time.'
+        : 'Recherche chaque aliment dans le référentiel nutritionnel et sélectionne le bon résultat. Ajoute les aliments un à un.';
+      const writeSection = card?.querySelector(':scope > section');
+      if (writeSection) writeSection.innerHTML = english
+        ? '<h3>🔎 Choose your foods</h3><p>Tap “Search for a food”, type a name and choose the food and preparation that match what you ate. Use “+ Add a food” to add another row, or − to remove one.</p>'
+        : '<h3>🔎 Choisir les aliments</h3><p>Clique sur « Rechercher un aliment », écris son nom et sélectionne la fiche et la préparation qui correspondent à ton repas. Utilise « + Ajouter un aliment » pour une autre ligne ou − pour en retirer une.</p>';
+      const quantities = card?.querySelector('details[open]');
+      if (quantities) {
+        quantities.open = true;
+        quantities.innerHTML = english
+          ? '<summary>How quantities work</summary><p>' + (quantityEnabled ? 'For each food, enter the amount and choose one of the available units. For example, a quantity of 1 with the unit “2 large eggs” means two eggs. Changing the amount updates the nutrition estimate.' : 'Quantities are disabled in your preferences. You only need to select the foods; no amount or unit is required. Without quantities, a precise calorie estimate may not be available.') + '</p>'
+          : '<summary>Comment fonctionnent les quantités ?</summary><p>' + (quantityEnabled ? 'Pour chaque aliment, indique le nombre et choisis une unité proposée. Par exemple, une quantité de 1 avec l’unité « 2 gros œufs » représente deux œufs. Modifier le nombre ajuste l’estimation nutritionnelle.' : 'Les quantités sont désactivées dans tes préférences. Sélectionne simplement les aliments, sans nombre ni unité. Sans quantités, une estimation précise des calories peut ne pas être disponible.') + '</p>';
+      }
+      card?.querySelectorAll('[data-guided-ui]').forEach(el => el.remove());
+    }
     if (document.body.classList.contains('professional-hide-guided-options')) {
       dialog.querySelectorAll('[data-guided-ui]').forEach(section => section.remove());
       const intro = dialog.querySelector('.meal-entry-guide-card > p');
