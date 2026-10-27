@@ -8787,7 +8787,7 @@ function formatSleepDuration(hours) {
   }
   function trackedFeelingsProfileHtml() {
     const tags = trackedFeelingIds().map((id) => FEELING_TAGS.find((tag) => tag.id === id)).filter(Boolean);
-    return `<div class="tracked-feelings-profile"><h4>Mes ressentis</h4>${fixedPositiveFeelingsHtml()}<section class="feeling-valence-panel feeling-valence-symptom"><strong class="feeling-valence-title">🌦️ Inconforts à suivre</strong><p class="muted small">Choisis les inconforts que tu souhaites voir lors de tes saisies.</p>${tags.length ? `<div class="tracked-feelings-summary">${tags.map((tag) => `<span>${tag.emoji} ${esc(t(tag.label))}</span>`).join("")}</div>` : '<p class="muted small">Aucun inconfort sélectionné.</p>'}<button type="button" class="secondary" id="editTrackedFeelings">Modifier mes inconforts suivis</button></section></div>`;
+    return `<div class="tracked-feelings-profile"><h4>Mes ressentis</h4><section class="feeling-valence-panel feeling-valence-symptom"><strong class="feeling-valence-title">🌦️ Inconforts à suivre</strong><p class="muted small">Choisis les inconforts que tu souhaites voir lors de tes saisies.</p>${tags.length ? `<div class="tracked-feelings-summary">${tags.map((tag) => `<span>${tag.emoji} ${esc(t(tag.label))}</span>`).join("")}</div>` : '<p class="muted small">Aucun inconfort sélectionné.</p>'}<button type="button" class="secondary" id="editTrackedFeelings">Modifier mes inconforts suivis</button></section></div>`;
   }
   function trackedFeelingsChooserHtml(selectedIds = []) {
     const selected = new Set(selectedIds);
