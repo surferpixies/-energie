@@ -3577,23 +3577,13 @@ function formatSleepDuration(hours) {
           '"><option value="g" data-grams="1">g</option></select></div>' : '') +
         '<button type="button" data-inline-remove="' + index + '" aria-label="Retirer cet aliment">−</button>';
       root.querySelector("#mealInlineAdd").before(newRow);
-      // Attach the same handlers as a regular row without rebuilding the
-      // composer. This will be consolidated with the row event handlers.
+      // Bind the existing search behavior directly, without a full rerender.
       newRow.querySelector('[data-inline-remove]').onclick = () => {
         inlineGuidedRows.splice(index, 1);
         scheduleAutomaticNutritionPreview();
         renderInlineGuidedMeal();
       };
-      newRow.querySelector('[data-inline-search]').addEventListener("input", () => {
-        // Search handlers are currently wired during the full render.
-        // Rebuild once when the user starts typing into the newly added row.
-        const currentQuery = newRow.querySelector('[data-inline-search]').value;
-        inlineGuidedRows[index].query = currentQuery;
-        renderInlineGuidedMeal();
-        const search = root.querySelector('[data-inline-search="' + index + '"]');
-        search?.focus();
-        if (search) search.dispatchEvent(new Event("input", { bubbles: true }));
-      }, { once: true });
+      bindInlineGuidedSearch(newRow.querySelector('[data-inline-search]'));
       newRow.querySelector('[data-inline-qty]')?.addEventListener("input", event => {
         inlineGuidedRows[index].quantity = event.target.value;
         scheduleAutomaticNutritionPreview();
@@ -3606,7 +3596,7 @@ function formatSleepDuration(hours) {
       if (!inlineGuidedRows.length) inlineGuidedRows.push({ id: null, query: "", quantity: null, unit: "g" });
       renderInlineGuidedMeal();
     });
-    root.querySelectorAll("[data-inline-search]").forEach(input => {
+    function bindInlineGuidedSearch(input) {
       const index = Number(input.dataset.inlineSearch);
       input.addEventListener("input", () => {
         const row = inlineGuidedRows[index];
@@ -3656,7 +3646,8 @@ function formatSleepDuration(hours) {
           scheduleAutomaticNutritionPreview();
         };
       });
-    });
+    }
+    root.querySelectorAll("[data-inline-search]").forEach(bindInlineGuidedSearch);
     root.querySelectorAll("[data-inline-qty]").forEach(input => input.oninput = () => {
       inlineGuidedRows[Number(input.dataset.inlineQty)].quantity = input.value;
       scheduleAutomaticNutritionPreview();
