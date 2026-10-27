@@ -588,6 +588,7 @@
         stepsTracking: false,
         stepsGoal: 8000,
         glucoseTracking: false,
+        glucoseReminders: false,
         glucoseMode: "free",
         glucoseReminderTimes: ["08:00", "12:00", "20:00"],
         glucoseMealDelay: 120,
@@ -1949,6 +1950,7 @@ function formatSleepDuration(hours) {
                 professionalOptionChoices: window.EnergieProfessionalOptions.cleanChoices(preferenceSettings.professionalOptionChoices),
                 waterGoal: Number(preferenceSettings.waterGoal) || 8,
                 glucoseTracking: preferenceSettings.glucoseTracking === true,
+                glucoseReminders: preferenceSettings.glucoseReminders === true,
                 glucoseMode: ["scheduled","meals"].includes(preferenceSettings.glucoseMode) ? preferenceSettings.glucoseMode : "free",
                 glucoseMealDelay: [60,90,120].includes(Number(preferenceSettings.glucoseMealDelay)) ? Number(preferenceSettings.glucoseMealDelay) : 120,
                 glucoseMealTypes: (preferenceSettings.glucoseMealTypes || []).filter(x => ["Déjeuner","Dîner","Souper"].includes(x)),
@@ -2273,7 +2275,7 @@ function formatSleepDuration(hours) {
       db.settings.professionalOptionChoices = window.EnergieProfessionalOptions.mergeChoices(db.settings.professionalOptionChoices, pref.professionalOptionChoices);
       if (Number(pref.waterGoal) > 0) db.settings.waterGoal = Math.round(Number(pref.waterGoal));
       if (["detailed", "summary", "consultation"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
-      ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","nutrientIntakeTracking","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals","glucoseTracking"].forEach((key) => {
+      ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","nutrientIntakeTracking","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals","glucoseTracking","glucoseReminders"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
       });
       if (["free","guided"].includes(pref.mealEntryMode)) db.settings.mealEntryMode = pref.mealEntryMode;
@@ -9800,6 +9802,35 @@ function formatSleepDuration(hours) {
       console.warn("Planification notifications iOS", error);
     }
   }
+  function glucoseReminderItems() {
+    if (!db.settings.glucoseTracking || !db.settings.glucoseReminders || db.settings.demoMode) return [];
+    const now = Date.now(), delay = Number(db.settings.glucoseMealDelay || 120) * 60000;
+    return Object.entries(db.days || {}).flatMap(([date, day]) =>
+      (day.meals || []).filter(meal => ["Déjeuner","Dîner","Souper"].includes(meal.type))
+        .filter(meal => /^\\d{2}:\\d{2}$/.test(meal.time || ""))
+        .filter(meal => !(day.glucoseMeasurements || []).some(x => x.mealId === meal.id || x.glucoseSlot === meal.type))
+        .map(meal => ({meal, due: new Date(date + "T" + meal.time + ":00").getTime() + delay}))
+        .filter(item => item.due > now && item.due < now + 30 * 86400000)
+    );
+  }
+  async function syncNativeGlucoseNotifications() {
+    const plugin = nativeLocalNotifications();
+    if (!plugin) return;
+    try {
+      const pending = await plugin.getPending();
+      const ours = (pending?.notifications || []).filter(x => x?.extra?.energieKind === "glucose");
+      if (ours.length) await plugin.cancel({notifications: ours.map(x => ({id:x.id}))});
+      if (!db.settings.glucoseReminders || !(await nativeFeelingPermission(false))) return;
+      const notifications = glucoseReminderItems().slice(0,40).map(({meal,due}) => ({
+        id: nativeFeelingNotificationId("glucose:" + meal.id),
+        title: "🩸 " + t("Suivi de la glycémie"),
+        body: t("C'est le moment de noter ta glycémie après ton repas."),
+        schedule: {at:new Date(due)},
+        extra: {energieKind:"glucose",mealId:meal.id,mealDate:meal.date}
+      }));
+      if (notifications.length) await plugin.schedule({notifications});
+    } catch(error) { console.warn("Notifications glycémie",error); }
+  }
   async function requestFeelingNotifications() {
     const nativePlugin = nativeLocalNotifications();
     if (nativePlugin) {
@@ -9841,6 +9872,7 @@ function formatSleepDuration(hours) {
     clearTimeout(notificationTimer);
     if (nativeLocalNotifications()) {
       void syncNativeFeelingNotifications();
+      void syncNativeGlucoseNotifications();
       return;
     }
     notifyDueFeelings();
@@ -10553,7 +10585,7 @@ function formatSleepDuration(hours) {
     return `<section class="card glucose-profile-card"><div class="glucose-profile-head"><h3>🩸 ${t("Suivi de la glycémie")}</h3></div>
       <p class="muted small">${t("Mesures manuelles en mmol/L. Aucune interprétation médicale automatique.")}</p>
       <label class="toggle-row"><span><strong>${t("Activer le suivi de la glycémie")}</strong></span><input type="checkbox" id="glucoseTrackingEnabled" ${db.settings.glucoseTracking ? "checked" : ""}></label>
-      ${db.settings.glucoseTracking ? `<label class="settings-row"><span>${t("Délai après le début du repas")}</span><select id="glucoseMealDelay">${[30,60,90,120,150,180].map(n=>`<option value="${n}" ${Number(db.settings.glucoseMealDelay || 120) === n ? "selected" : ""}>${n} min</option>`).join("")}</select></label><p class="muted tiny">${t("Le délai est calculé à partir de l’heure de début du repas enregistrée dans le Journal. Les notifications automatiques ne sont pas encore activées.")}</p>` : ""}</section>`;
+      ${db.settings.glucoseTracking ? `<label class="toggle-row"><span><strong>${t("Rappels de glycémie après les repas")}</strong></span><input type="checkbox" id="glucoseRemindersEnabled" ${db.settings.glucoseReminders === true ? "checked" : ""}></label><label class="settings-row"><span>${t("Délai après le début du repas")}</span><select id="glucoseMealDelay">${[30,60,90,120,150,180].map(n=>`<option value="${n}" ${Number(db.settings.glucoseMealDelay || 120) === n ? "selected" : ""}>${n} min</option>`).join("")}</select></label><p class="muted tiny">${t("Le délai est calculé à partir de l’heure de début du repas enregistrée dans le Journal. Active les rappels pour recevoir une notification après le délai choisi.")}</p>` : ""}</section>`;
   }
 
   function glucoseJournalHtml(d) {
@@ -15495,7 +15527,17 @@ function formatSleepDuration(hours) {
     });
     $("#glucoseTrackingEnabled")?.addEventListener("change", event => { db.settings.glucoseTracking = event.target.checked; persistProfilePreference("glycemie"); renderProfile(); });
     $("#glucoseMode")?.addEventListener("change", event => { db.settings.glucoseMode = event.target.value; persistProfilePreference("glycemie-mode"); renderProfile(); });
-    $("#glucoseMealDelay")?.addEventListener("change", event => { db.settings.glucoseMealDelay = Number(event.target.value); persistProfilePreference("glycemie-delai-repas"); });
+    $("#glucoseRemindersEnabled")?.addEventListener("change", async event => {
+      db.settings.glucoseReminders = event.target.checked;
+      if (event.target.checked && !(await requestFeelingNotifications())) {
+        db.settings.glucoseReminders = false;
+        event.target.checked = false;
+        alert(t("Autorise les notifications dans les réglages de ton appareil."));
+      }
+      persistProfilePreference("rappels-glycemie");
+      scheduleFeelingChecks();
+    });
+    $("#glucoseMealDelay")?.addEventListener("change", event => { db.settings.glucoseMealDelay = Number(event.target.value); persistProfilePreference("glycemie-delai-repas"); scheduleFeelingChecks(); });
     $$("[data-glucose-meal]").forEach(input => input.addEventListener("change", () => { db.settings.glucoseMealTypes = $$("[data-glucose-meal]:checked").map(el => el.dataset.glucoseMeal); persistProfilePreference("glycemie-repas"); }));
     $("#glucoseCount")?.addEventListener("change", event => { const count=Number(event.target.value); const arr=db.settings.glucoseReminderTimes || []; db.settings.glucoseReminderTimes=Array.from({length:count},(_,i)=>arr[i] || ["08:00","10:00","12:00","16:00","20:00","22:00"][i]); persistProfilePreference("glycemie-heures"); renderProfile(); });
     $$("[data-glucose-time]").forEach(input => input.addEventListener("change", event => { const arr=[...(db.settings.glucoseReminderTimes || [])]; arr[Number(event.target.dataset.glucoseTime)]=event.target.value; db.settings.glucoseReminderTimes=arr; persistProfilePreference("glycemie-heures"); }));
