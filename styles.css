@@ -2663,3 +2663,15 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
    grid-template-columns:minmax(0,1fr) 30px;
  }
 }
+
+
+/* Web: align additional glucose reading with the four standard columns. */
+@media(min-width:701px){
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row{
+  grid-template-columns:minmax(0,1.8fr) minmax(0,1fr) minmax(0,1.15fr) minmax(0,.78fr)!important;
+  column-gap:12px!important;
+ }
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>button{
+  width:100%!important;box-sizing:border-box!important;
+ }
+}
