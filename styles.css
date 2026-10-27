@@ -2673,5 +2673,6 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
  }
  .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>button{
   width:100%!important;box-sizing:border-box!important;
+  font-size:.92rem!important;padding:9px 12px!important;min-height:42px!important;
  }
 }
