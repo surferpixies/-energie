@@ -3569,8 +3569,7 @@ function formatSleepDuration(hours) {
       newRow.className = "meal-inline-row";
       newRow.dataset.inlineRow = String(index);
       newRow.innerHTML = '<div class="meal-inline-food"><input type="search" data-inline-search="' + index +
-        '" placeholder="Rechercher dans ' + reference +
-        '" autocomplete="off"><div class="meal-inline-results" data-inline-results="' + index +
+        '" placeholder="Rechercher un aliment" autocomplete="off"><div class="meal-inline-results" data-inline-results="' + index +
         '" hidden></div></div>' +
         (required ? '<div class="meal-inline-amount"><input type="number" min="0.01" step="any" data-inline-qty="' +
           index + '" placeholder="Quantité"><select data-inline-unit="' + index +
