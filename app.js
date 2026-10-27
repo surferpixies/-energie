@@ -3535,7 +3535,11 @@ function formatSleepDuration(hours) {
     if (legacyButton) legacyButton.hidden = guided || !guidedEntryEnabled();
     if (!guided) return;
     root.classList.toggle("without-quantity", !required);
-    root.innerHTML = '<div class="meal-inline-header"><strong>Aliment</strong>' +
+    const existingMeal = ensureDay(db, selectedDate).meals.find(m => m.id === $("#mealId")?.value);
+    const legacyMeal = existingMeal && !(existingMeal.cnfItems || []).length && !!existingMeal.description?.trim();
+    root.innerHTML = (legacyMeal
+      ? '<p class="meal-inline-legacy-note">Ce repas a été enregistré en saisie libre. Sa description et ses valeurs nutritionnelles seront conservées tant que tu ne sélectionnes pas de nouvel aliment.</p>'
+      : '') + '<div class="meal-inline-header"><strong>Aliment</strong>' +
       (required ? '<strong>Quantité</strong>' : '') + '</div>' +
       inlineGuidedRows.map((row, index) => {
         const food = row.id ? window.ENERGIE_CNF_SEARCH?.getById?.(row.id) : null;
@@ -3643,7 +3647,11 @@ function formatSleepDuration(hours) {
         gramsPerUnit: requireQuantity ? gramsPerUnit : null,
       });
     }
-    return items.length ? { items } : { error: "Ajoute au moins un aliment FCÉN." };
+    if (items.length) return { items };
+    const existing = ensureDay(db, selectedDate).meals.find(m => m.id === $("#mealId")?.value);
+    if (existing && !(existing.cnfItems || []).length && existing.description?.trim())
+      return { legacy: true };
+    return { error: "Ajoute au moins un aliment FCÉN." };
   }
   function inlineGuidedMealDescription(items) {
     return items.map(item => item.grams
@@ -17407,16 +17415,19 @@ function formatSleepDuration(hours) {
         description: $("#mealDescription").value.trim(),
         cnfItems:
           (() => {
+            if (inlineResult?.legacy) return old?.cnfItems || [];
             const description = $("#mealDescription").value.trim();
             const linked = mealCnfItemsFromField();
             const guided = guidedCnfDescription(linked);
             return inlineResult?.items || (guided && (description === guided || description.endsWith("\n" + guided))
               ? linked : []);
           })(),
-        nutrition: inlineResult?.items
-          ? (inlineResult.items.every(item => item.grams != null)
-              ? guidedCnfNutrition(inlineResult.items)
-              : null)
+        nutrition: inlineResult?.legacy
+          ? old?.nutrition || null
+          : inlineResult?.items
+            ? (inlineResult.items.every(item => item.grams != null)
+                ? guidedCnfNutrition(inlineResult.items)
+                : null)
           : nutritionFromInputs() ||
             (db.settings.autoNutritionEstimates !== false && !mealNutritionManuallyEdited
               ? estimateMealEditorNutrition($("#mealDescription").value.trim())
