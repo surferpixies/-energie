@@ -3893,7 +3893,14 @@ function formatSleepDuration(hours) {
       results = $("#cnfGuidedSearchResults"),
       editor = $("#cnfGuidedFoodEditor");
     if (search) search.value = "";
-    if (results) results.innerHTML = "";
+    // Drop the previous search dataset too: a late scroll event must never
+    // append results from an earlier food search or another meal.
+    cnfGuidedSearchMatches = [];
+    cnfGuidedSearchShown = 0;
+    if (results) {
+      results.innerHTML = "";
+      results.scrollTop = 0;
+    }
     if (editor) editor.hidden = true;
     if (focus) setTimeout(() => search?.focus(), 30);
   }
