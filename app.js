@@ -15580,7 +15580,7 @@ function formatSleepDuration(hours) {
     toggleSetting("#settingSeasonalIcons", "seasonalIcons");
     toggleSetting("#settingRecognizedElements", "showRecognizedElements");
     toggleSetting("#settingSummaryHideCompletedMeals", "summaryHideCompletedMeals");
-    $(`input[name="mealEntryMode"]`).forEach(control => control.addEventListener("change", event => { if (!event.target.checked) return; const guided = event.target.value === "guided"; db.settings.mealEntryMode = guided ? "guided" : "free"; const quantityRow = $("#mealQuantityRequiredRow"); if (quantityRow) quantityRow.style.display = guided ? "" : "none"; persistProfilePreference("parametre-mealEntryMode"); }));
+    document.querySelectorAll(`input[name="mealEntryMode"]`).forEach(control => control.addEventListener("change", event => { if (!event.target.checked) return; const guided = event.target.value === "guided"; db.settings.mealEntryMode = guided ? "guided" : "free"; const quantityRow = $("#mealQuantityRequiredRow"); if (quantityRow) quantityRow.style.display = guided ? "" : "none"; persistProfilePreference("parametre-mealEntryMode"); }));
     toggleSetting("#settingMealQuantityRequired", "mealQuantityRequired");
     toggleSetting("#settingForceGuidedCnf", "forceGuidedCnfMealEntry");
     toggleSetting("#settingShowCnfGuidedEntry", "showCnfGuidedEntry");
