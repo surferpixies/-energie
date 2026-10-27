@@ -3763,7 +3763,7 @@ function formatSleepDuration(hours) {
   function guidedCnfDescription(items = mealCnfItemsFromField()) {
     return (items || []).map(guidedCnfFoodText).filter(Boolean).join(", ");
   }
-  function guidedCnfNutrition(items = mealCnfItemsFromField()) {
+  function guidedCnfNutrition(items = mealCnfItemsFromField(), { includeTrace = true } = {}) {
     const api = window.ENERGIE_CNF_SEARCH;
     if (!api?.nutritionForGrams || !items?.length || items.some(item => !(Number(item.grams) > 0))) return null;
     const nutrientKeys = [
@@ -3802,7 +3802,7 @@ function formatSleepDuration(hours) {
       confidence: "high",
       basis: `${matched} aliment${matched !== 1 ? "s" : ""} lié${matched !== 1 ? "s" : ""} aux fiches nutritionnelles · quantités saisies`,
       estimated: true,
-      trace: {
+      ...(includeTrace ? { trace: {
         kind: "guided-cnf",
         source: guidedSource,
         items: items.map((item) => {
@@ -3820,7 +3820,7 @@ function formatSleepDuration(hours) {
             calories: nutrition?.calories ?? null,
           };
         }),
-      },
+      }} : {}),
     };
   }
   function currentGuidedCnfNutrition() {
@@ -3864,7 +3864,7 @@ function formatSleepDuration(hours) {
     const list = $("#cnfGuidedItems"),
       count = $("#cnfGuidedItemCount"),
       finish = $("#finishCnfGuidedMeal"),
-      totalNutrition = guidedCnfNutrition(mealCnfGuidedDraft),
+      totalNutrition = guidedCnfNutrition(mealCnfGuidedDraft, { includeTrace: false }),
       totalCalories = totalNutrition?.calories;
     if (!list || !count || !finish) return;
     count.textContent = `${mealCnfGuidedDraft.length} ${window.ENERGIE_LOCALE === "en" ? (mealCnfGuidedDraft.length === 1 ? "food" : "foods") : `aliment${mealCnfGuidedDraft.length !== 1 ? "s" : ""}`}${caloriesVisible() && Number.isFinite(totalCalories) ? ` · ${Math.round(totalCalories)} kcal` : ""}`;
