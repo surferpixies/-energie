@@ -2676,3 +2676,12 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   font-size:.92rem!important;padding:9px 12px!important;min-height:42px!important;
  }
 }
+
+/* Match the additional glucose save button to standard row buttons. */
+@media(min-width:701px){
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>button{
+  font-size:.82rem!important;font-weight:700!important;
+  padding:7px 8px!important;white-space:nowrap!important;
+  letter-spacing:0!important;overflow:hidden!important;
+ }
+}
