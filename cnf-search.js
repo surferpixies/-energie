@@ -632,7 +632,17 @@
       const fr = meta.descriptor.fr, en = meta.descriptor.en;
       const exact = fr === query || en === query;
       const starts = fr.startsWith(query + " ") || en.startsWith(query + " ");
-      const score = (exact ? 3000 : starts ? 2000 : 1000)
+      // Prioritize foods whose names BEGIN with the typed food, including
+      // partial final words. A biscuit containing peanut butter must not
+      // appear before peanut butter itself.
+      const beginsWithQuery = [fr, en].some(label => {
+        const words = foodTokens(label);
+        return queryTokens.every((token, index) =>
+          index === queryTokens.length - 1
+            ? words[index]?.startsWith(token)
+            : words[index] === token);
+      });
+      const score = (exact ? 4000 : beginsWithQuery ? 3000 : starts ? 2000 : 1000)
         - meta.candidateTokens.length * 2;
       ranked.push({ row, score });
     }
