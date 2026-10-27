@@ -3578,8 +3578,24 @@ function formatSleepDuration(hours) {
         const query = input.value.trim();
         const foods = query.length >= 2 ? (window.ENERGIE_CNF_SEARCH?.search?.(query, Infinity) || []) : [];
         results.hidden = query.length < 2;
-        results.innerHTML = foods.map(food => '<button type="button" data-food-id="' + esc(String(food.id)) + '">' + esc(food.nameFr || food.nameEn || '') + '</button>').join('') || '<small>Aucun aliment trouvé.</small>';
-        results.querySelectorAll("[data-food-id]").forEach(button => button.onclick = () => {
+        // Show every FCÉN result, but append in batches to avoid freezing mobile devices.
+        let shown = 0;
+        const appendResults = () => {
+          const batch = foods.slice(shown, shown + 40);
+          shown += batch.length;
+          results.insertAdjacentHTML("beforeend", batch.map(food =>
+            '<button type="button" data-food-id="' + esc(String(food.id)) + '">' +
+            esc(food.nameFr || food.nameEn || '') + '</button>').join(""));
+        };
+        results.innerHTML = foods.length ? "" : '<small>Aucun aliment trouvé.</small>';
+        appendResults();
+        results.onscroll = () => {
+          if (results.scrollTop + results.clientHeight >= results.scrollHeight - 100 && shown < foods.length)
+            appendResults();
+        };
+        results.onclick = event => {
+          const button = event.target.closest("[data-food-id]");
+          if (!button || !results.contains(button)) return;
           const food = window.ENERGIE_CNF_SEARCH?.getById?.(button.dataset.foodId);
           if (!food) return;
           row.id = String(food.id);
@@ -3589,7 +3605,7 @@ function formatSleepDuration(hours) {
           row.quantity = required ? (row.unit === 'g' ? 100 : 1) : null;
           renderInlineGuidedMeal();
           scheduleAutomaticNutritionPreview();
-        });
+        };
       });
     });
     root.querySelectorAll("[data-inline-qty]").forEach(input => input.oninput = () => {
