@@ -3529,7 +3529,7 @@ function formatSleepDuration(hours) {
     }
     const limit = $("#mealDescriptionLimit");
     if (limit) limit.hidden = guided;
-    if (guided && $("#mealCnfLinkedStatus")) $("#mealCnfLinkedStatus").hidden = true;
+    if ($("#mealCnfLinkedStatus")) $("#mealCnfLinkedStatus").hidden = guided || !mealCnfItemsFromField().length;
     const legacyButton = $("#openCnfGuidedEntry");
     if (legacyButton) legacyButton.hidden = guided || !guidedEntryEnabled();
     if (!guided) return;
@@ -3556,6 +3556,7 @@ function formatSleepDuration(hours) {
     };
     root.querySelectorAll("[data-inline-remove]").forEach(button => button.onclick = () => {
       inlineGuidedRows.splice(Number(button.dataset.inlineRemove), 1);
+      scheduleAutomaticNutritionPreview();
       if (!inlineGuidedRows.length) inlineGuidedRows.push({ id: null, query: "", quantity: null, unit: "g" });
       renderInlineGuidedMeal();
     });
@@ -3574,20 +3575,24 @@ function formatSleepDuration(hours) {
           const food = window.ENERGIE_CNF_SEARCH?.getById?.(button.dataset.foodId);
           if (!food) return;
           row.id = String(food.id);
+          row.entryId = null;
           row.query = food.nameFr || food.nameEn || '';
           row.unit = food.portions?.find(p => Number(p.grams) > 0)?.id || 'g';
           row.quantity = required ? (row.unit === 'g' ? 100 : 1) : null;
           renderInlineGuidedMeal();
+          scheduleAutomaticNutritionPreview();
         });
       });
     });
     root.querySelectorAll("[data-inline-qty]").forEach(input => input.oninput = () => {
       inlineGuidedRows[Number(input.dataset.inlineQty)].quantity = input.value;
+      scheduleAutomaticNutritionPreview();
     });
     root.querySelectorAll("[data-inline-unit]").forEach(input => input.onchange = () => {
       inlineGuidedRows[Number(input.dataset.inlineUnit)].unit = input.value;
       inlineGuidedRows[Number(input.dataset.inlineUnit)].quantity = input.value === "g" ? "100" : "1";
       renderInlineGuidedMeal();
+      scheduleAutomaticNutritionPreview();
     });
   }
   function inlineGuidedMealItems() {
@@ -3603,12 +3608,12 @@ function formatSleepDuration(hours) {
       if (!food) return { error: "Un aliment sélectionné n'est plus disponible dans le FCÉN." };
       const portion = food.portions?.find(p => String(p.id) === String(row.unit));
       const gramsPerUnit = row.unit === "g" ? 1 : Number(portion?.grams);
-      const amount = Number(row.quantity);
+      const amount = row.quantity === "" || row.quantity == null ? NaN : Number(row.quantity);
       if (requireQuantity && (!Number.isFinite(amount) || amount <= 0 || !Number.isFinite(gramsPerUnit) || gramsPerUnit <= 0))
         return { error: "Indique une quantité valide pour chaque aliment." };
       const grams = requireQuantity ? Math.max(1, Math.round(amount * gramsPerUnit)) : null;
       items.push({
-        entryId: uid(), cnfFoodId: String(food.id),
+        entryId: row.entryId || uid(), cnfFoodId: String(food.id),
         nameFr: food.nameFr || "", nameEn: food.nameEn || "",
         grams, quantity: requireQuantity ? amount : null,
         unitKind: requireQuantity ? String(row.unit) : "",
@@ -4322,6 +4327,14 @@ function formatSleepDuration(hours) {
     if (tooLong) {
       updateMealCompositionReview();
       fillNutritionInputs(null, "Raccourcis la description à 1 000 caractères pour relancer l’estimation.");
+      return;
+    }
+    if (db.settings?.mealEntryMode === "guided") {
+      const inline = inlineGuidedMealItems();
+      const nutrition = inline?.items?.every(item => item.grams != null)
+        ? guidedCnfNutrition(inline.items) : null;
+      fillNutritionInputs(nutrition);
+      updateMealCalorieEditor();
       return;
     }
     const guidedNutrition = currentGuidedCnfNutrition();
@@ -16486,7 +16499,7 @@ function formatSleepDuration(hours) {
     $("#mealDescription").value = m?.description || "";
     setMealCnfItemsField(m?.cnfItems || []);
     inlineGuidedRows = (m?.cnfItems || []).map(item => ({
-      id: String(item.cnfFoodId), query: item.nameFr || "",
+      id: String(item.cnfFoodId), entryId: item.entryId, query: item.nameFr || item.nameEn || "",
       quantity: item.quantity ?? (item.grams && item.unitKind === "g" ? item.grams : null), unit: item.unitKind || "g",
     }));
     if (!inlineGuidedRows.length) inlineGuidedRows = [{ id: null, query: "", quantity: null, unit: "g" }];
