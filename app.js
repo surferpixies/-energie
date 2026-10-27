@@ -9807,7 +9807,7 @@ function formatSleepDuration(hours) {
     const now = Date.now(), delay = Number(db.settings.glucoseMealDelay || 120) * 60000;
     return Object.entries(db.days || {}).flatMap(([date, day]) =>
       (day.meals || []).filter(meal => ["Déjeuner","Dîner","Souper"].includes(meal.type))
-        .filter(meal => /^\\d{2}:\\d{2}$/.test(meal.time || ""))
+        .filter(meal => /^\d{2}:\d{2}$/.test(meal.time || ""))
         .filter(meal => !(day.glucoseMeasurements || []).some(x => x.mealId === meal.id || x.glucoseSlot === meal.type))
         .map(meal => ({meal, due: new Date(date + "T" + meal.time + ":00").getTime() + delay}))
         .filter(item => item.due > now && item.due < now + 30 * 86400000)
