@@ -2634,3 +2634,18 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 /* Guided FCÉN dropdown must escape the meal composer card when opening upward. */
 .meal-description-composer:has(.meal-inline-guided:not([hidden])) { overflow: visible; }
 .meal-description-composer:has(.meal-inline-guided:not([hidden])) .meal-inline-guided { position: relative; z-index: 30; }
+
+
+/* Inline FCÉN: keep food, quantity, unit and remove control inside the meal card. */
+.meal-inline-guided,.meal-inline-row,.meal-inline-amount{min-width:0;max-width:100%;box-sizing:border-box}
+.meal-inline-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 34px;align-items:start;gap:8px}
+.meal-inline-food,.meal-inline-amount{width:100%;min-width:0}
+.meal-inline-amount{display:grid;grid-template-columns:minmax(0,38fr) minmax(0,62fr);gap:5px}
+.meal-inline-food>input,.meal-inline-amount>input,.meal-inline-amount>select{width:100%;max-width:100%;min-width:0}
+.meal-inline-row>button{width:34px;min-width:0;max-width:34px;box-sizing:border-box}
+.meal-inline-food>input{overflow:hidden;text-overflow:ellipsis}
+@media(max-width:560px){
+ .meal-inline-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 30px;gap:5px}
+ .meal-inline-amount{gap:4px}
+ .meal-inline-row>button{width:30px;max-width:30px;padding-inline:0}
+}
