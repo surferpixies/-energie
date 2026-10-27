@@ -16518,10 +16518,12 @@ function formatSleepDuration(hours) {
     $("#mealOptionalTitle").textContent = "Détails nutritionnels";
     $("#mealNutritionSection").hidden = !nutritionVisibleToViewer();
     const automaticNutrition = db.settings.autoNutritionEstimates !== false;
+    const guidedWithoutQuantity = db.settings?.mealEntryMode === "guided" &&
+      (m?.cnfItems || []).some(item => !(Number(item.grams) > 0));
     $("#mealCalorieMode").value = "auto";
     $("#mealCalories").setCustomValidity("");
     fillNutritionInputs(
-      m?.nutrition
+      guidedWithoutQuantity ? null : m?.nutrition
         ? normalNutrition({
             ...(automaticNutrition
               ? estimateNutritionFromText(m.description || "")
@@ -17371,10 +17373,14 @@ function formatSleepDuration(hours) {
             return inlineResult?.items || (guided && (description === guided || description.endsWith("\n" + guided))
               ? linked : []);
           })(),
-        nutrition: nutritionFromInputs() ||
-          (db.settings.autoNutritionEstimates !== false && !mealNutritionManuallyEdited
-            ? estimateMealEditorNutrition($("#mealDescription").value.trim())
-            : null),
+        nutrition: inlineResult?.items
+          ? (inlineResult.items.every(item => item.grams != null)
+              ? guidedCnfNutrition(inlineResult.items)
+              : null)
+          : nutritionFromInputs() ||
+            (db.settings.autoNutritionEstimates !== false && !mealNutritionManuallyEdited
+              ? estimateMealEditorNutrition($("#mealDescription").value.trim())
+              : null),
         foodReview:
           mealFoodReview?.description === $("#mealDescription").value.trim()
             ? { ...mealFoodReview }
