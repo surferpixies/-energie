@@ -857,14 +857,14 @@ function formatSleepDuration(hours) {
       )
         .map((item) => {
           const grams = Number(item?.grams);
-          if (!item?.cnfFoodId || !Number.isFinite(grams) || grams <= 0)
+          if (!item?.cnfFoodId)
             return null;
           return {
             entryId: item.entryId || uid(),
             cnfFoodId: String(item.cnfFoodId),
             nameFr: String(item.nameFr || ""),
             nameEn: String(item.nameEn || ""),
-            grams: Math.max(1, Math.round(grams)),
+            grams: Number.isFinite(grams) && grams > 0 ? Math.max(1, Math.round(grams)) : null,
             quantity: Number(item.quantity) > 0 ? Number(item.quantity) : null,
             unitKind: String(item.unitKind || "g"),
             unitLabel: String(item.unitLabel || "g"),
@@ -3584,6 +3584,39 @@ function formatSleepDuration(hours) {
       inlineGuidedRows[Number(input.dataset.inlineUnit)].unit = input.value;
     });
   }
+  function inlineGuidedMealItems() {
+    if (db.settings?.mealEntryMode !== "guided") return null;
+    const requireQuantity = db.settings?.mealQuantityRequired === true;
+    const items = [];
+    for (const row of inlineGuidedRows) {
+      if (!row.id) {
+        if (String(row.query || "").trim()) return { error: "Sélectionne un aliment dans les résultats FCÉN." };
+        continue;
+      }
+      const food = window.ENERGIE_CNF_SEARCH?.getById?.(row.id);
+      if (!food) return { error: "Un aliment sélectionné n'est plus disponible dans le FCÉN." };
+      const portion = food.portions?.find(p => String(p.id) === String(row.unit));
+      const gramsPerUnit = row.unit === "g" ? 1 : Number(portion?.grams);
+      const amount = Number(row.quantity);
+      if (requireQuantity && (!Number.isFinite(amount) || amount <= 0 || !Number.isFinite(gramsPerUnit) || gramsPerUnit <= 0))
+        return { error: "Indique une quantité valide pour chaque aliment." };
+      const grams = requireQuantity ? Math.max(1, Math.round(amount * gramsPerUnit)) : null;
+      items.push({
+        entryId: uid(), cnfFoodId: String(food.id),
+        nameFr: food.nameFr || "", nameEn: food.nameEn || "",
+        grams, quantity: requireQuantity ? amount : null,
+        unitKind: requireQuantity ? String(row.unit) : "",
+        unitLabel: requireQuantity ? (portion?.labelFr || "g") : "",
+        gramsPerUnit: requireQuantity ? gramsPerUnit : null,
+      });
+    }
+    return items.length ? { items } : { error: "Ajoute au moins un aliment FCÉN." };
+  }
+  function inlineGuidedMealDescription(items) {
+    return items.map(item => item.grams
+      ? guidedCnfFoodText(item)
+      : String(item.nameFr || item.nameEn || "Aliment")).join(", ");
+  }
   function mealCnfItemsFromField() {
     try {
       const raw = JSON.parse($("#mealCnfItems")?.value || "[]");
@@ -3591,14 +3624,14 @@ function formatSleepDuration(hours) {
         ? raw
             .map((item) => {
               const grams = Number(item?.grams);
-              if (!item?.cnfFoodId || !Number.isFinite(grams) || grams <= 0)
+              if (!item?.cnfFoodId)
                 return null;
               return {
                 entryId: item.entryId || uid(),
                 cnfFoodId: String(item.cnfFoodId),
                 nameFr: String(item.nameFr || ""),
                 nameEn: String(item.nameEn || ""),
-                grams: Math.max(1, Math.round(grams)),
+                grams: Number.isFinite(grams) && grams > 0 ? Math.max(1, Math.round(grams)) : null,
                 quantity: Number(item.quantity) > 0 ? Number(item.quantity) : null,
                 unitKind: String(item.unitKind || "g"),
                 unitLabel: String(item.unitLabel || "g"),
@@ -3667,14 +3700,14 @@ function formatSleepDuration(hours) {
       .replace(/\s+/g, " ")
       .trim()
       .toLocaleLowerCase("fr-CA");
-    return `${guidedCnfNumber(item?.grams)} g ${name}`;
+    return Number(item?.grams) > 0 ? `${guidedCnfNumber(item.grams)} g ${name}` : name;
   }
   function guidedCnfDescription(items = mealCnfItemsFromField()) {
     return (items || []).map(guidedCnfFoodText).filter(Boolean).join(", ");
   }
   function guidedCnfNutrition(items = mealCnfItemsFromField()) {
     const api = window.ENERGIE_CNF_SEARCH;
-    if (!api?.nutritionForGrams || !items?.length) return null;
+    if (!api?.nutritionForGrams || !items?.length || items.some(item => !(Number(item.grams) > 0))) return null;
     const nutrientKeys = [
       "calories",
       "protein",
@@ -17278,7 +17311,21 @@ function formatSleepDuration(hours) {
   $("#mealForm").onsubmit = (e) => {
     if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     e.preventDefault();
-    if (guidedCnfEntryRequired() && !currentGuidedCnfNutrition()) {
+    const inlineResult = inlineGuidedMealItems();
+    if (inlineResult?.error) {
+      alert(inlineResult.error);
+      return;
+    }
+    if (inlineResult?.items) {
+      const items = inlineResult.items;
+      $("#mealDescription").value = inlineGuidedMealDescription(items);
+      setMealCnfItemsField(items);
+      const nutrition = items.every(item => item.grams != null) ? guidedCnfNutrition(items) : null;
+      fillNutritionInputs(nutrition);
+      $("#mealCalorieMode").value = "auto";
+      mealNutritionManuallyEdited = false;
+    }
+    if (!inlineResult && guidedCnfEntryRequired() && !currentGuidedCnfNutrition()) {
       alert("La saisie guidée FCÉN est obligatoire dans tes préférences. Ajoute les aliments avec le lien FCÉN avant d’enregistrer.");
       openCnfGuidedMealEntry();
       return;
@@ -17317,8 +17364,8 @@ function formatSleepDuration(hours) {
             const description = $("#mealDescription").value.trim();
             const linked = mealCnfItemsFromField();
             const guided = guidedCnfDescription(linked);
-            return guided && (description === guided || description.endsWith("\n" + guided))
-              ? linked : [];
+            return inlineResult?.items || (guided && (description === guided || description.endsWith("\n" + guided))
+              ? linked : []);
           })(),
         nutrition: nutritionFromInputs() ||
           (db.settings.autoNutritionEstimates !== false && !mealNutritionManuallyEdited
