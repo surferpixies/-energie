@@ -16613,6 +16613,9 @@ function formatSleepDuration(hours) {
     $("#mealOptionalTitle").textContent = "Détails nutritionnels";
     $("#mealNutritionSection").hidden = !nutritionVisibleToViewer();
     const automaticNutrition = db.settings.autoNutritionEstimates !== false;
+    const reopeningEstimate = m?.nutrition && automaticNutrition
+      ? estimateNutritionFromText(m.description || "")
+      : null;
     const guidedWithoutQuantity = db.settings?.mealEntryMode === "guided" &&
       (m?.cnfItems || []).some(item => !(Number(item.grams) > 0));
     $("#mealCalorieMode").value = "auto";
@@ -16620,24 +16623,22 @@ function formatSleepDuration(hours) {
     fillNutritionInputs(
       guidedWithoutQuantity ? null : m?.nutrition
         ? normalNutrition({
-            ...(automaticNutrition
-              ? estimateNutritionFromText(m.description || "")
-              : {}),
+            ...(reopeningEstimate || {}),
             ...m.nutrition,
             fiber:
               m.nutrition.fiber ??
               (automaticNutrition
-                ? estimateNutritionFromText(m.description || "")?.fiber
+                ? reopeningEstimate?.fiber
                 : null),
             sugars:
               m.nutrition.sugars ??
               (automaticNutrition
-                ? estimateNutritionFromText(m.description || "")?.sugars
+                ? reopeningEstimate?.sugars
                 : null),
             sodium:
               m.nutrition.sodium ??
               (automaticNutrition
-                ? estimateNutritionFromText(m.description || "")?.sodium
+                ? reopeningEstimate?.sodium
                 : null),
           })
         : null,
