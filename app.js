@@ -3571,16 +3571,19 @@ function formatSleepDuration(hours) {
       button = $("#openCnfGuidedEntry"),
       note = $("#mealGuidedEntryRequirement");
     if (!field) return;
-    const required = guidedCnfEntryRequired() && !formReadOnly;
+    const guidedMode = db.settings?.mealEntryMode === "guided";
+    const required = (guidedMode || guidedCnfEntryRequired()) && !formReadOnly;
     field.readOnly = required;
     field.classList.toggle("is-guided-only", required);
     field.placeholder = required
       ? "Utilise la saisie guidée FCÉN ci-dessous pour ajouter les aliments."
       : "Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli";
-    if (button) { button.hidden = !guidedEntryEnabled(); button.classList.toggle("is-required", required); }
+    if (button) { button.hidden = !guidedMode && !guidedEntryEnabled(); button.classList.toggle("is-required", required); }
     const reference = window.ENERGIE_LOCALE === "fr-FR" ? "Ciqual" : "FCÉN";
     if (required) field.placeholder = t(`Utilise la saisie guidée ${reference} ci-dessous pour ajouter les aliments.`);
-    if (note) note.textContent = t(`La saisie guidée ${reference} est obligatoire dans tes préférences.`);
+    if (note) note.textContent = guidedMode
+      ? t(`Mode saisie guidée : recherche tes aliments dans ${reference}.`)
+      : t(`La saisie guidée ${reference} est obligatoire dans tes préférences.`);
     if (note) note.hidden = !required;
   }
   function guidedCnfFoodText(item) {
