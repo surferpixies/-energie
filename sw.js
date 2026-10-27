@@ -1,16 +1,12 @@
-// Énergie v3.56.199 — les URL versionnées identifient les fichiers à renouveler.
-const CACHE_NAME = "energie-runtime-v2";
+// Énergie v3.56.329 — les URL versionnées identifient les fichiers à renouveler.
+const CACHE_NAME = "energie-runtime-v3";
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", event => {
   event.waitUntil((async () => {
-    const target = await caches.open(CACHE_NAME);
+    // Discard outdated cached application files on this deployment.
     for (const name of await caches.keys()) {
-      if (name === CACHE_NAME || !name.startsWith("energie-runtime-")) continue;
-      const old = await caches.open(name);
-      for (const request of await old.keys()) {
-        if (!await target.match(request)) await target.put(request, await old.match(request));
-      }
-      await caches.delete(name);
+      if (name !== CACHE_NAME && name.startsWith("energie-runtime-"))
+        await caches.delete(name);
     }
     await self.clients.claim();
   })());
