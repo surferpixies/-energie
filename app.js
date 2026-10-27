@@ -3878,15 +3878,15 @@ function formatSleepDuration(hours) {
           return `<article class="cnf-guided-item"><div><strong>${esc((window.ENERGIE_LOCALE === "en" && item.nameEn) || item.nameFr || "Food")}</strong><small>${esc(qty)}</small></div>${caloriesVisible() && calories != null ? `<span class="cnf-guided-item-kcal">${calories} kcal</span>` : ""}<button type="button" data-remove-cnf-guided="${esc(item.entryId)}" aria-label="Retirer ${esc((window.ENERGIE_LOCALE === "en" && item.nameEn) || item.nameFr || "this food")}">×</button></article>`;
         }).join("")
       : '<p class="cnf-guided-empty">Aucun aliment ajouté pour l’instant.</p>';
-    $$("[data-remove-cnf-guided]").forEach((button) => {
-      button.onclick = () => {
-        mealCnfGuidedDraft = mealCnfGuidedDraft.filter(
-          (item) => item.entryId !== button.dataset.removeCnfGuided,
-        );
-        renderCnfGuidedBasket();
-      };
-    });
   }
+  $("#cnfGuidedItems")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-remove-cnf-guided]");
+    if (!button) return;
+    mealCnfGuidedDraft = mealCnfGuidedDraft.filter(
+      (item) => item.entryId !== button.dataset.removeCnfGuided,
+    );
+    renderCnfGuidedBasket();
+  });
   function resetCnfGuidedFoodEditor({ focus = true } = {}) {
     mealCnfGuidedSelected = null;
     const search = $("#cnfGuidedSearch"),
