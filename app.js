@@ -3544,7 +3544,7 @@ function formatSleepDuration(hours) {
         const food = row.id ? window.ENERGIE_CNF_SEARCH?.getById?.(row.id) : null;
         const options = food?.portions?.filter(p => Number(p.grams) > 0) || [];
         return '<div class="meal-inline-row" data-inline-row="' + index + '">' +
-          '<div class="meal-inline-food"><input type="search" data-inline-search="' + index + '" placeholder="Rechercher dans ' + reference + '" value="' + esc(row.query || '') + '" autocomplete="off">' +
+          '<div class="meal-inline-food"><input type="search" data-inline-search="' + index + '" placeholder="Rechercher un aliment" value="' + esc(row.query || '') + '" autocomplete="off">' +
           '<div class="meal-inline-results" data-inline-results="' + index + '" hidden></div></div>' +
           (required ? '<div class="meal-inline-amount"><input type="number" min="0.01" step="any" data-inline-qty="' + index + '" value="' + esc(String(row.quantity ?? '')) + '" placeholder="Quantité">' +
             '<select data-inline-unit="' + index + '">' +
