@@ -3603,6 +3603,10 @@ function formatSleepDuration(hours) {
           row.unit = food.portions?.find(p => Number(p.grams) > 0)?.id || 'g';
           row.quantity = required ? (row.unit === 'g' ? 100 : 1) : null;
           renderInlineGuidedMeal();
+          // Keep the next action close: quantity if enabled, otherwise the
+          // add-food button. Avoid making the user tap again on mobile.
+          if (required) root.querySelector('[data-inline-qty="' + index + '"]')?.focus();
+          else root.querySelector("#mealInlineAdd")?.focus();
           scheduleAutomaticNutritionPreview();
         };
       });
