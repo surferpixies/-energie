@@ -2605,3 +2605,22 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 /* Afficher la quantité selon le radio sélectionné, sans dépendre des événements JS du Profil. */
 .meal-entry-mode-settings #mealQuantityRequiredRow { display: none !important; }
 .meal-entry-mode-settings:has(input[name="mealEntryMode"][value="guided"]:checked) #mealQuantityRequiredRow { display: grid !important; }
+
+
+/* Inline FCÉN meal entry, isolated from the legacy guided dialog. */
+.meal-inline-guided[hidden] { display: none !important; }
+.meal-inline-guided { display: grid; gap: 10px; margin: 8px 0 14px; }
+.meal-inline-header { display: flex; gap: 12px; font-size: .82rem; color: var(--muted); }
+.meal-inline-header strong:first-child { flex: 1; }
+.meal-inline-header strong:nth-child(2) { flex: 1; }
+.meal-inline-row { display: flex; align-items: start; gap: 8px; }
+.meal-inline-food { position: relative; flex: 1 1 0; min-width: 0; }
+.meal-inline-food > input { width: 100%; box-sizing: border-box; }
+.meal-inline-amount { flex: 1 1 0; min-width: 0; display: flex; gap: 5px; }
+.meal-inline-amount > input { width: 38%; min-width: 0; box-sizing: border-box; }
+.meal-inline-amount > select { width: 62%; min-width: 0; box-sizing: border-box; }
+.meal-inline-row > button { flex: 0 0 34px; }
+.meal-inline-results { position: absolute; z-index: 20; left: 0; right: 0; max-height: 240px; overflow-y: auto; background: var(--surface, white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 5px 16px #0002; }
+.meal-inline-results[hidden] { display: none; }
+.meal-inline-results button { display: block; width: 100%; padding: 9px; text-align: left; border: 0; border-bottom: 1px solid var(--border); background: transparent; font-size: .86rem; }
+.meal-inline-results button:hover { background: var(--surface-secondary, #f2f4f6); }
