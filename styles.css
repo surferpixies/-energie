@@ -2601,3 +2601,7 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
     grid-template-columns:minmax(90px,1.3fr) minmax(65px,.7fr) minmax(90px,.8fr) auto!important;
   }
 }
+
+/* Afficher la quantité selon le radio sélectionné, sans dépendre des événements JS du Profil. */
+.meal-entry-mode-settings #mealQuantityRequiredRow { display: none !important; }
+.meal-entry-mode-settings:has(input[name="mealEntryMode"][value="guided"]:checked) #mealQuantityRequiredRow { display: grid !important; }
