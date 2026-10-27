@@ -3660,26 +3660,13 @@ function formatSleepDuration(hours) {
     });
     root.querySelectorAll("[data-inline-unit]").forEach(input => input.onchange = () => {
       const row = inlineGuidedRows[Number(input.dataset.inlineUnit)];
-      const food = window.ENERGIE_CNF_SEARCH?.getById?.(row.id);
-      const gramsFor = unit => unit === "g" ? 1 :
-        Number(food?.portions?.find(p => String(p.id) === String(unit))?.grams);
-      const oldGramsPerUnit = gramsFor(row.unit);
-      const newGramsPerUnit = gramsFor(input.value);
-      const previousQuantity = Number(row.quantity);
-      // Preserve the food amount when switching units; never silently reset it.
-      if (row.quantity !== "" && row.quantity != null &&
-          Number.isFinite(previousQuantity) && previousQuantity > 0 &&
-          Number.isFinite(oldGramsPerUnit) && oldGramsPerUnit > 0 &&
-          Number.isFinite(newGramsPerUnit) && newGramsPerUnit > 0) {
-        row.quantity = Number((previousQuantity * oldGramsPerUnit / newGramsPerUnit).toFixed(3));
-      } else {
-        row.quantity = null;
-      }
+      // Selecting a different portion means choosing that portion, not
+      // preserving the previous gram weight behind an unexpected fraction.
+      // E.g. "2 oeufs larges" with quantity 1 represents two eggs.
       row.unit = input.value;
-      // Only the quantity value changes here. Keep the existing row and
-      // focused select mounted instead of rebuilding every food input.
+      row.quantity = 1;
       const quantityInput = root.querySelector('[data-inline-qty="' + input.dataset.inlineUnit + '"]');
-      if (quantityInput) quantityInput.value = row.quantity ?? "";
+      if (quantityInput) quantityInput.value = "1";
       scheduleAutomaticNutritionPreview();
     });
   }
