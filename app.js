@@ -3522,24 +3522,23 @@ function formatSleepDuration(hours) {
     const required = db.settings?.mealQuantityRequired === true;
     const reference = window.ENERGIE_LOCALE === "fr-FR" ? "Ciqual" : "FCÉN";
     const readOnly = $("#mealForm")?.dataset.inlineReadOnly === "true";
-    root.hidden = !guided;
+    const existingMeal = ensureDay(db, selectedDate).meals.find(m => m.id === $("#mealId")?.value);
+    const legacyMeal = !!(existingMeal && !(existingMeal.cnfItems || []).length && existingMeal.description?.trim());
+    const useInline = guided && !legacyMeal;
+    root.hidden = !useInline;
     const description = $("#mealDescription");
     if (description) {
-      description.hidden = guided;
-      description.required = !guided;
+      description.hidden = useInline;
+      description.required = !useInline;
     }
     const limit = $("#mealDescriptionLimit");
-    if (limit) limit.hidden = guided;
+    if (limit) limit.hidden = useInline;
     if ($("#mealCnfLinkedStatus")) $("#mealCnfLinkedStatus").hidden = guided || !mealCnfItemsFromField().length;
     const legacyButton = $("#openCnfGuidedEntry");
     if (legacyButton) legacyButton.hidden = guided || !guidedEntryEnabled();
-    if (!guided) return;
+    if (!useInline) return;
     root.classList.toggle("without-quantity", !required);
-    const existingMeal = ensureDay(db, selectedDate).meals.find(m => m.id === $("#mealId")?.value);
-    const legacyMeal = existingMeal && !(existingMeal.cnfItems || []).length && !!existingMeal.description?.trim();
-    root.innerHTML = (legacyMeal
-      ? '<p class="meal-inline-legacy-note">Ce repas a été enregistré en saisie libre. Sa description et ses valeurs nutritionnelles seront conservées tant que tu ne sélectionnes pas de nouvel aliment.</p>'
-      : '') + '<div class="meal-inline-header"><strong>Aliment</strong>' +
+    root.innerHTML = '<div class="meal-inline-header"><strong>Aliment</strong>' +
       (required ? '<strong>Quantité</strong>' : '') + '</div>' +
       inlineGuidedRows.map((row, index) => {
         const food = row.id ? window.ENERGIE_CNF_SEARCH?.getById?.(row.id) : null;
