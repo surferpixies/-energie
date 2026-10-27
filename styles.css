@@ -2702,3 +2702,13 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   font-weight:inherit!important;letter-spacing:normal!important;
  }
 }
+
+/* Match extra glucose save button typography to the standard save buttons. */
+@media(min-width:701px){
+ .glucose-journal-card.glucose-unified #glucoseEntryForm>div.glucose-extra-row>button{
+  font-family:inherit!important;
+  font-size:inherit!important;
+  font-weight:700!important;
+  line-height:normal!important;
+ }
+}
