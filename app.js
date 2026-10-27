@@ -3955,28 +3955,47 @@ function formatSleepDuration(hours) {
     $("#cnfGuidedFoodEditor").hidden = false;
     updateCnfGuidedGramHint();
   }
+  let cnfGuidedSearchMatches = [];
+  let cnfGuidedSearchShown = 0;
+  const CNF_GUIDED_BATCH_SIZE = 40;
+  function appendCnfGuidedSearchBatch() {
+    const results = $("#cnfGuidedSearchResults");
+    if (!results || cnfGuidedSearchShown >= cnfGuidedSearchMatches.length) return;
+    const next = cnfGuidedSearchMatches.slice(cnfGuidedSearchShown, cnfGuidedSearchShown + CNF_GUIDED_BATCH_SIZE);
+    cnfGuidedSearchShown += next.length;
+    results.insertAdjacentHTML("beforeend", next.map(food =>
+      `<button type="button" class="cnf-guided-result" data-cnf-guided-food="${esc(food.id)}"><span>🍽️</span><span><strong>${esc((window.ENERGIE_LOCALE === "en" && food.nameEn) || food.nameFr)}</strong>${(window.ENERGIE_LOCALE === "en" ? food.nameFr : food.nameEn) ? `<small>${esc(window.ENERGIE_LOCALE === "en" ? food.nameFr : food.nameEn)}</small>` : ""}</span><b aria-hidden="true">›</b></button>`
+    ).join(""));
+  }
   function renderCnfGuidedSearchResults(query) {
     const results = $("#cnfGuidedSearchResults"),
       api = window.ENERGIE_CNF_SEARCH;
     if (!results) return;
     const text = String(query || "").trim();
-    if (text.length < 2) {
-      results.innerHTML = "";
+    cnfGuidedSearchMatches = text.length >= 2 ? (api?.search?.(text, Infinity) || []) : [];
+    cnfGuidedSearchShown = 0;
+    results.innerHTML = "";
+    results.scrollTop = 0;
+    if (text.length < 2) return;
+    if (!cnfGuidedSearchMatches.length) {
+      results.innerHTML = '<p class="cnf-guided-empty">Aucun aliment trouvé dans les référentiels. Essaie un terme plus simple ou précise la préparation.</p>';
       return;
     }
-    const matches = api?.search?.(text, Infinity) || [];
-    results.innerHTML = matches.length
-      ? matches
-          .map(
-            (food) =>
-              `<button type="button" class="cnf-guided-result" data-cnf-guided-food="${esc(food.id)}"><span>🍽️</span><span><strong>${esc((window.ENERGIE_LOCALE === "en" && food.nameEn) || food.nameFr)}</strong>${(window.ENERGIE_LOCALE === "en" ? food.nameFr : food.nameEn) ? `<small>${esc(window.ENERGIE_LOCALE === "en" ? food.nameFr : food.nameEn)}</small>` : ""}</span><b aria-hidden="true">›</b></button>`,
-          )
-          .join("")
-      : '<p class="cnf-guided-empty">Aucun aliment trouvé dans les référentiels. Essaie un terme plus simple ou précise la préparation.</p>';
-    $$("[data-cnf-guided-food]").forEach((button) => {
-      button.onclick = () => selectCnfGuidedFood(button.dataset.cnfGuidedFood);
-    });
+    appendCnfGuidedSearchBatch();
+    // Fill tall result panels without waiting for a scroll event.
+    while (cnfGuidedSearchShown < cnfGuidedSearchMatches.length &&
+      results.scrollHeight <= results.clientHeight && results.clientHeight > 0) {
+      appendCnfGuidedSearchBatch();
+    }
   }
+  $("#cnfGuidedSearchResults")?.addEventListener("scroll", (event) => {
+    const el = event.currentTarget;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 160) appendCnfGuidedSearchBatch();
+  });
+  $("#cnfGuidedSearchResults")?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-cnf-guided-food]");
+    if (button) selectCnfGuidedFood(button.dataset.cnfGuidedFood);
+  });
   let mealCnfGuidedReplaceText = "";
   function openCnfGuidedMealEntry() {
     mealCnfGuidedReplaceText = "";
