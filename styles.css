@@ -2621,6 +2621,7 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .meal-inline-amount > select { width: 62%; min-width: 0; box-sizing: border-box; }
 .meal-inline-row > button { flex: 0 0 34px; }
 .meal-inline-results { position: absolute; z-index: 20; left: 0; right: 0; max-height: min(55vh, 520px); overflow-y: auto; background: var(--surface, white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 5px 16px #0002; }
+.meal-inline-results.opens-up { top: auto; bottom: calc(100% + 6px); max-height: min(55vh, 520px); }
 .meal-inline-results[hidden] { display: none; }
 .meal-inline-results button { display: block; width: 100%; padding: 9px; text-align: left; border: 0; border-bottom: 1px solid var(--border); background: transparent; font-size: .86rem; }
 .meal-inline-results button:hover { background: var(--surface-secondary, #f2f4f6); }
