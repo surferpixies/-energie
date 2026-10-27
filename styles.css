@@ -2649,3 +2649,17 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
  .meal-inline-amount{gap:4px}
  .meal-inline-row>button{width:30px;max-width:30px;padding-inline:0}
 }
+
+
+/* FCÉN without quantities: use the full available row width. */
+.meal-inline-row:not(:has(.meal-inline-amount:not([hidden]))) {
+  grid-template-columns:minmax(0,1fr) 34px;
+}
+.meal-inline-row:not(:has(.meal-inline-amount:not([hidden]))) .meal-inline-food {
+  width:100%;
+}
+@media(max-width:560px){
+ .meal-inline-row:not(:has(.meal-inline-amount:not([hidden]))) {
+   grid-template-columns:minmax(0,1fr) 30px;
+ }
+}
