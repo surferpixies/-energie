@@ -11516,7 +11516,7 @@ function formatSleepDuration(hours) {
   }
   function brainFoodFavoritesHtml() {
     return brainFoodFavorites.length
-      ? brainFoodFavorites.map(f => '<div class="brain-food-favorite"><div><strong>' + esc(f.alias) + '</strong><p class="muted tiny">' + esc(f.name_fr || f.name_en || f.cnf_food_id) + '</p></div><div class="favorite-actions"><button type="button" class="secondary small" data-food-alias-edit="' + esc(f.id) + '">Renommer</button><button type="button" class="secondary small" data-food-alias-delete="' + esc(f.id) + '">Supprimer</button></div></div>').join("")
+      ? brainFoodFavorites.map(f => '<div class="brain-food-favorite"><div><strong>' + esc(f.alias) + '</strong><p class="muted tiny">' + esc(f.name_fr || f.name_en || f.cnf_food_id) + '</p></div><div class="favorite-actions"><button type="button" class="secondary small" data-food-alias-edit="' + esc(f.id) + '">Renommer</button><button type="button" class="secondary small brain-alias-remove" data-food-alias-delete="' + esc(f.id) + '" aria-label="Supprimer cet aliment favori" title="Supprimer">×</button></div></div>').join("")
       : (brainFoodFavoritesUser !== session?.user?.id ? '<p class="muted small">Chargement des aliments favoris…</p>' : '<p class="muted small">Aucun aliment personnalisé pour le moment.</p>');
   }
   function bindBrainFoodFavorites() {
