@@ -3658,7 +3658,11 @@ function formatSleepDuration(hours) {
           shown += batch.length;
           results.insertAdjacentHTML("beforeend", batch.map(food =>
             '<button type="button" data-food-id="' + esc(String(food.id)) + '">' +
-            esc(personalFoodAlias(food.id)?.alias ? personalFoodAlias(food.id).alias + ' · ' + (food.nameFr || food.nameEn || '') : (food.nameFr || food.nameEn || '')) + '</button>').join(""));
+            (personalFoodAlias(food.id)?.alias
+              ? '<strong class="meal-inline-alias">' + esc(personalFoodAlias(food.id).alias) + '</strong> · ' + esc(food.nameFr || food.nameEn || '')
+              : food.customFavorite?.alias
+                ? '<strong class="meal-inline-alias">' + esc(food.customFavorite.alias) + '</strong>'
+                : esc(food.nameFr || food.nameEn || '')) + '</button>').join(""));
         };
         results.innerHTML = foods.length ? "" : '<small>Aucun aliment trouvé.</small>';
         results.scrollTop = 0;
