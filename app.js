@@ -16272,7 +16272,7 @@ function formatSleepDuration(hours) {
     const favoriteItems = Array.isArray(favorite.cnfItems) ? favorite.cnfItems.map(item => ({ ...item, entryId: uid() })) : [];
     setMealCnfItemsField(favoriteItems);
     inlineGuidedRows = favoriteItems.map(item => ({
-      id: String(item.cnfFoodId), entryId: item.entryId,
+      id: String(item.cnfFoodId), entryId: item.entryId, customFavorite: String(item.cnfFoodId).startsWith("CUSTOM:") ? { alias: item.nameFr, calories_per_100g: item.customNutrition?.calories ?? null, protein_per_100g: item.customNutrition?.protein ?? null, carbs_per_100g: item.customNutrition?.carbs ?? null, fat_per_100g: item.customNutrition?.fat ?? null } : null,
       query: item.nameFr || item.nameEn || "",
       quantity: item.quantity ?? (item.grams && item.unitKind === "g" ? item.grams : null),
       unit: item.unitKind || "g",
@@ -16819,7 +16819,7 @@ function formatSleepDuration(hours) {
     $("#mealDescription").value = m?.description || "";
     setMealCnfItemsField(m?.cnfItems || []);
     inlineGuidedRows = (m?.cnfItems || []).map(item => ({
-      id: String(item.cnfFoodId), entryId: item.entryId, query: item.nameFr || item.nameEn || "",
+      id: String(item.cnfFoodId), entryId: item.entryId, customFavorite: String(item.cnfFoodId).startsWith("CUSTOM:") ? { alias: item.nameFr, calories_per_100g: item.customNutrition?.calories ?? null, protein_per_100g: item.customNutrition?.protein ?? null, carbs_per_100g: item.customNutrition?.carbs ?? null, fat_per_100g: item.customNutrition?.fat ?? null } : null, query: item.nameFr || item.nameEn || "",
       quantity: item.quantity ?? (item.grams && item.unitKind === "g" ? item.grams : null), unit: item.unitKind || "g",
     }));
     if (!inlineGuidedRows.length) inlineGuidedRows = [{ id: null, query: "", quantity: null, unit: "g" }];
