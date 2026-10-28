@@ -2871,3 +2871,6 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .meal-alias-link { appearance: none; border: 0; background: transparent; color: #299b4b; text-decoration: underline; text-underline-offset: 3px; font: inherit; font-weight: 650; cursor: pointer; padding: 0; display: inline; }
 .meal-alias-link:hover { color: #187637; }
 .meal-precision-hint[hidden] { display: none !important; }
+
+/* Distinguish a user's saved food alias from the FCÉN name in guided search. */
+.meal-inline-results .meal-inline-alias { color: #208447; font-weight: 750; }
