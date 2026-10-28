@@ -18752,6 +18752,7 @@ function formatSleepDuration(hours) {
           "Balaye l’écran horizontalement pour passer rapidement d’une section à l’autre.",
         ],
         appHints: [
+          "Dans le Cerveau, crée des noms personnalisés pour tes aliments favoris : tu pourras les réutiliser dans tes prochaines saisies de repas.",
           "Le Cerveau compare plusieurs journées pour repérer des habitudes; il ne tire jamais de conclusion à partir d’une seule entrée.",
           "Le Profil regroupe tes préférences, tes favoris, la langue, les notifications et les options de confidentialité.",
           "Plus ton journal est complet — repas, sommeil, hydratation, activité et ressentis — plus les tendances deviennent utiles.",
@@ -18814,6 +18815,7 @@ function formatSleepDuration(hours) {
           "Balayez l’écran horizontalement pour passer rapidement d’une section à l’autre.",
         ],
         appHints: [
+          "Dans le Cerveau, créez des noms personnalisés pour vos aliments favoris afin de simplifier vos prochaines saisies de repas.",
           "Le Cerveau compare plusieurs journées pour repérer des habitudes ; il ne tire jamais de conclusion à partir d’une seule entrée.",
           "Le Profil regroupe vos préférences, vos favoris, la langue, les notifications et les options de confidentialité.",
           "Plus votre journal est complet — repas, sommeil, hydratation, activité et ressentis — plus les tendances deviennent utiles.",
@@ -18861,6 +18863,7 @@ function formatSleepDuration(hours) {
           "Swipe horizontally to move quickly between app sections.",
         ],
         appHints: [
+          "In the Brain, give your favorite foods custom names to reuse them in future meal entries.",
           "The Brain compares several days to identify patterns; it never draws a conclusion from a single entry.",
           "Profile brings together your preferences, favorites, language, notifications, and privacy options.",
           "The more complete your journal is — meals, sleep, hydration, activity, and symptoms — the more useful your trends become.",
