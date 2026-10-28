@@ -3527,7 +3527,7 @@ function formatSleepDuration(hours) {
   function searchFoodsWithPersonalAliases(query) {
     const standard = window.ENERGIE_CNF_SEARCH?.search?.(query, Infinity) || [];
     if (!session?.user?.id || brainFoodFavoritesUser !== session.user.id) return standard;
-    const normalize = value => String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase().trim();
+    const normalize = value => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase().trim();
     const needle = normalize(query);
     const matches = brainFoodFavorites.filter(f => normalize(f.alias).includes(needle))
       .map(f => window.ENERGIE_CNF_SEARCH?.getById?.(f.cnf_food_id)).filter(Boolean);
