@@ -4322,7 +4322,7 @@ function formatSleepDuration(hours) {
     notice.hidden = mode === "manual" || !items.length;
     // Certaines règles CSS mobiles masquent ce bouton malgré hidden=false.
     // Forcer la visibilité effective comme pour le lien de détail calorique.
-    notice.style.display = notice.hidden ? "none" : "block";
+    if (notice.style) notice.style.display = notice.hidden ? "none" : "block";
     if (notice.hidden) {
       list.innerHTML = "";
       if ($("#mealCalorieRecognitionDialog")?.open)
