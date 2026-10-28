@@ -3491,6 +3491,18 @@ function formatSleepDuration(hours) {
       const description = $("#mealDescription");
       description?.insertAdjacentHTML("beforebegin", '<div id="mealInlineGuided" class="meal-inline-guided" hidden></div>');
     }
+    if (!$("#mealGuidedAliasTip")) {
+      $("#mealInlineGuided")?.insertAdjacentHTML("afterend", '<p id="mealGuidedAliasTip" class="muted small" hidden>Pour simplifier la saisie, <button type="button" id="openBrainFoodAliases" class="meal-alias-link">crée tes propres noms pour tes aliments favoris</button> dans le Cerveau.</p>');
+    }
+    $("#openBrainFoodAliases")?.addEventListener("click", () => {
+      $("#mealDialog")?.close();
+      $("#mealForm")?.closest("dialog")?.close();
+      currentView = "brain";
+      render();
+      const memory = document.querySelector(".brain-food-memory");
+      memory?.scrollIntoView({ behavior: "smooth", block: "start" });
+      memory?.querySelector("details")?.setAttribute("open", "");
+    });
     const hint = form.querySelector(".meal-precision-hint"),
       composer = form.querySelector(".meal-description-composer"),
       toolbar = form.querySelector(".meal-description-toolbar");
@@ -3547,6 +3559,10 @@ function formatSleepDuration(hours) {
     const legacyMeal = !!(existingMeal && !(existingMeal.cnfItems || []).length && existingMeal.description?.trim());
     const useInline = guided && !legacyMeal;
     root.hidden = !useInline;
+    const precisionHint = $("#mealForm")?.querySelector(".meal-precision-hint");
+    if (precisionHint) precisionHint.hidden = useInline;
+    const aliasTip = $("#mealGuidedAliasTip");
+    if (aliasTip) aliasTip.hidden = !useInline;
     const description = $("#mealDescription");
     if (description) {
       description.hidden = useInline;
