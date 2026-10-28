@@ -2864,3 +2864,10 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
  .brain-learning-hero .brain-summary-grid{grid-column:1 / -1;grid-row:3}
 }
 @media(min-width:701px) and (max-width:780px){.brain-learning-hero h2{white-space:normal}}
+
+/* Guided meal entry: discreet shortcut to personal food aliases. */
+#mealGuidedAliasTip { margin: 10px 0; line-height: 1.5; }
+#mealGuidedAliasTip[hidden] { display: none !important; }
+.meal-alias-link { appearance: none; border: 0; background: transparent; color: #299b4b; text-decoration: underline; text-underline-offset: 3px; font: inherit; font-weight: 650; cursor: pointer; padding: 0; display: inline; }
+.meal-alias-link:hover { color: #187637; }
+.meal-precision-hint[hidden] { display: none !important; }

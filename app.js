@@ -3491,6 +3491,18 @@ function formatSleepDuration(hours) {
       const description = $("#mealDescription");
       description?.insertAdjacentHTML("beforebegin", '<div id="mealInlineGuided" class="meal-inline-guided" hidden></div>');
     }
+    if (!$("#mealGuidedAliasTip")) {
+      $("#mealInlineGuided")?.insertAdjacentHTML("afterend", '<p id="mealGuidedAliasTip" class="muted small" hidden>Pour simplifier la saisie, <button type="button" id="openBrainFoodAliases" class="meal-alias-link">crée tes propres noms pour tes aliments favoris</button> dans le Cerveau.</p>');
+    }
+    $("#openBrainFoodAliases")?.addEventListener("click", () => {
+      $("#mealDialog")?.close();
+      $("#mealForm")?.closest("dialog")?.close();
+      currentView = "brain";
+      render();
+      const memory = document.querySelector(".brain-food-memory");
+      memory?.scrollIntoView({ behavior: "smooth", block: "start" });
+      memory?.querySelector("details")?.setAttribute("open", "");
+    });
     const hint = form.querySelector(".meal-precision-hint"),
       composer = form.querySelector(".meal-description-composer"),
       toolbar = form.querySelector(".meal-description-toolbar");
@@ -3530,7 +3542,9 @@ function formatSleepDuration(hours) {
     const normalize = value => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase().trim();
     const needle = normalize(query);
     const matches = brainFoodFavorites.filter(f => normalize(f.alias).includes(needle))
-      .map(f => window.ENERGIE_CNF_SEARCH?.getById?.(f.cnf_food_id)).filter(Boolean);
+      .map(f => f.food_source === "custom"
+        ? { id: "CUSTOM:" + f.custom_food_id, nameFr: f.alias, nameEn: f.alias, portions: [{ id: "g", grams: 1, labelFr: "g" }], customFavorite: f }
+        : window.ENERGIE_CNF_SEARCH?.getById?.(f.cnf_food_id)).filter(Boolean);
     const ids = new Set(matches.map(f => String(f.id)));
     return [...matches, ...standard.filter(f => !ids.has(String(f.id)))];
   }
@@ -3545,6 +3559,10 @@ function formatSleepDuration(hours) {
     const legacyMeal = !!(existingMeal && !(existingMeal.cnfItems || []).length && existingMeal.description?.trim());
     const useInline = guided && !legacyMeal;
     root.hidden = !useInline;
+    const precisionHint = $("#mealForm")?.querySelector(".meal-precision-hint");
+    if (precisionHint) precisionHint.hidden = useInline;
+    const aliasTip = $("#mealGuidedAliasTip");
+    if (aliasTip) aliasTip.hidden = !useInline;
     const description = $("#mealDescription");
     if (description) {
       description.hidden = useInline;
@@ -3560,7 +3578,7 @@ function formatSleepDuration(hours) {
     root.innerHTML = '<div class="meal-inline-header"><strong>Aliment</strong>' +
       (required ? '<strong>Quantité</strong>' : '') + '</div>' +
       inlineGuidedRows.map((row, index) => {
-        const food = row.id ? window.ENERGIE_CNF_SEARCH?.getById?.(row.id) : null;
+        const food = row.id ? (String(row.id).startsWith("CUSTOM:") ? { portions: [{ id: "g", grams: 1, labelFr: "g" }] } : window.ENERGIE_CNF_SEARCH?.getById?.(row.id)) : null;
         const options = food?.portions?.filter(p => Number(p.grams) > 0) || [];
         return '<div class="meal-inline-row" data-inline-row="' + index + '">' +
           '<div class="meal-inline-food"><input type="search" data-inline-search="' + index + '" placeholder="Rechercher un aliment" value="' + esc(row.query || '') + '" autocomplete="off">' +
@@ -3621,6 +3639,7 @@ function formatSleepDuration(hours) {
         row.query = input.value;
         row.id = null;
         row.entryId = null;
+        row.customFavorite = null;
         scheduleAutomaticNutritionPreview();
         const results = root.querySelector('[data-inline-results="' + index + '"]');
         const query = input.value.trim();
@@ -3655,10 +3674,11 @@ function formatSleepDuration(hours) {
         results.onclick = event => {
           const button = event.target.closest("[data-food-id]");
           if (!button || !results.contains(button)) return;
-          const food = window.ENERGIE_CNF_SEARCH?.getById?.(button.dataset.foodId);
+          const food = foods.find(f => String(f.id) === button.dataset.foodId);
           if (!food) return;
           row.id = String(food.id);
           row.entryId = null;
+          row.customFavorite = food.customFavorite || null;
           row.query = food.nameFr || food.nameEn || '';
           row.unit = food.portions?.find(p => Number(p.grams) > 0)?.id || 'g';
           row.quantity = required ? (row.unit === 'g' ? 100 : 1) : null;
@@ -3698,8 +3718,11 @@ function formatSleepDuration(hours) {
         if (String(row.query || "").trim()) return { error: "Sélectionne un aliment dans les résultats du référentiel nutritionnel." };
         continue;
       }
-      const food = window.ENERGIE_CNF_SEARCH?.getById?.(row.id);
-      if (!food) return { error: "Un aliment sélectionné n'est plus disponible dans le référentiel nutritionnel." };
+      const custom = String(row.id).startsWith("CUSTOM:")
+        ? (row.customFavorite || brainFoodFavorites.find(f => "CUSTOM:" + f.custom_food_id === row.id)) : null;
+      const food = custom ? { id: row.id, nameFr: custom.alias, nameEn: custom.alias, portions: [{ id: "g", grams: 1, labelFr: "g" }] }
+        : window.ENERGIE_CNF_SEARCH?.getById?.(row.id);
+      if (!food) return { error: "Un aliment sélectionné n'est plus disponible." };
       const portion = food.portions?.find(p => String(p.id) === String(row.unit));
       const gramsPerUnit = row.unit === "g" ? 1 : Number(portion?.grams);
       const amount = row.quantity === "" || row.quantity == null ? NaN : Number(row.quantity);
@@ -3716,13 +3739,14 @@ function formatSleepDuration(hours) {
         unitKind: requireQuantity ? String(row.unit) : "",
         unitLabel: requireQuantity ? (portion?.labelFr || "g") : "",
         gramsPerUnit: requireQuantity ? gramsPerUnit : null,
+        ...(custom ? { customNutrition: { calories: custom.calories_per_100g, protein: custom.protein_per_100g, carbs: custom.carbs_per_100g, fat: custom.fat_per_100g } } : {}),
       });
     }
     if (items.length) return { items };
     const existing = ensureDay(db, selectedDate).meals.find(m => m.id === $("#mealId")?.value);
     if (existing && !(existing.cnfItems || []).length && existing.description?.trim())
       return { legacy: true };
-    return { error: "Ajoute au moins un aliment FCÉN." };
+    return { error: "Ajoute au moins un aliment." };
   }
   function inlineGuidedMealDescription(items) {
     return items.map(item => item.grams
@@ -3741,6 +3765,7 @@ function formatSleepDuration(hours) {
               return {
                 entryId: item.entryId || uid(),
                 cnfFoodId: String(item.cnfFoodId),
+                ...(String(item.cnfFoodId).startsWith("CUSTOM:") && item.customNutrition ? { customNutrition: item.customNutrition } : {}),
                 nameFr: String(item.nameFr || ""),
                 nameEn: String(item.nameEn || ""),
                 grams: Number.isFinite(grams) && grams > 0 ? Math.max(1, Math.round(grams)) : null,
@@ -3833,8 +3858,17 @@ function formatSleepDuration(hours) {
     const total = Object.fromEntries(nutrientKeys.map((key) => [key, 0]));
     const missing = new Set();
     let matched = 0;
+    const nutritionForItem = (item, grams = item.grams) => {
+      if (!String(item.cnfFoodId).startsWith("CUSTOM:")) return api.nutritionForGrams(item.cnfFoodId, grams);
+      if (!item.customNutrition) return null;
+      const factor = Number(grams) / 100;
+      return Object.fromEntries(["calories", "protein", "carbs", "fat"].map(key => {
+        const raw = item.customNutrition[key];
+        return [key, raw == null || raw === "" ? null : Number(raw) * factor];
+      }));
+    };
     for (const item of items) {
-      const nutrition = api.nutritionForGrams(item.cnfFoodId, item.grams);
+      const nutrition = nutritionForItem(item);
       if (!nutrition) continue;
       matched += 1;
       nutrientKeys.forEach((key) => {
@@ -3847,22 +3881,22 @@ function formatSleepDuration(hours) {
     nutrientKeys.forEach((key) => {
       total[key] = missing.has(key) ? null : Math.round(total[key] * 10) / 10;
     });
-    const sourceForItem = item => String(item.cnfFoodId).startsWith("PRODUCT:") ? "product-label"
+    const sourceForItem = item => String(item.cnfFoodId).startsWith("CUSTOM:") ? "custom" : String(item.cnfFoodId).startsWith("PRODUCT:") ? "product-label"
       : String(item.cnfFoodId).startsWith("CIQUAL:") ? "ciqual" : "cnf";
     const sources = new Set(items.map(sourceForItem));
     const guidedSource = sources.size === 1 ? [...sources][0] : "mixed";
     return {
       ...total,
       source: guidedSource,
-      confidence: "high",
+      confidence: sources.has("custom") ? "user-provided" : "high",
       basis: `${matched} aliment${matched !== 1 ? "s" : ""} lié${matched !== 1 ? "s" : ""} aux fiches nutritionnelles · quantités saisies`,
       estimated: true,
       ...(includeTrace ? { trace: {
         kind: "guided-cnf",
         source: guidedSource,
         items: items.map((item) => {
-          const nutrition = api.nutritionForGrams(item.cnfFoodId, item.grams);
-          const reference = api.nutritionForGrams(item.cnfFoodId, 100);
+          const nutrition = nutritionForItem(item);
+          const reference = nutritionForItem(item, 100);
           return {
             source: sourceForItem(item),
             cnfFoodId: String(item.cnfFoodId),
@@ -4277,7 +4311,7 @@ function formatSleepDuration(hours) {
     if (!notice || !list) return;
     if (currentGuidedCnfNutrition()) {
       notice.hidden = true;
-      notice.style.display = "none";
+      if (notice.style) notice.style.display = "none";
       list.innerHTML = "";
       if ($("#mealCalorieRecognitionDialog")?.open)
         $("#mealCalorieRecognitionDialog").close();
@@ -4288,7 +4322,7 @@ function formatSleepDuration(hours) {
     notice.hidden = mode === "manual" || !items.length;
     // Certaines règles CSS mobiles masquent ce bouton malgré hidden=false.
     // Forcer la visibilité effective comme pour le lien de détail calorique.
-    notice.style.display = notice.hidden ? "none" : "block";
+    if (notice.style) notice.style.display = notice.hidden ? "none" : "block";
     if (notice.hidden) {
       list.innerHTML = "";
       if ($("#mealCalorieRecognitionDialog")?.open)
@@ -11516,7 +11550,7 @@ function formatSleepDuration(hours) {
   }
   function brainFoodFavoritesHtml() {
     return brainFoodFavorites.length
-      ? brainFoodFavorites.map(f => '<div class="brain-food-favorite"><div><strong>' + esc(f.alias) + '</strong><p class="muted tiny">' + esc(f.name_fr || f.name_en || f.cnf_food_id) + '</p></div><div class="favorite-actions"><button type="button" class="secondary small" data-food-alias-edit="' + esc(f.id) + '">Renommer</button><button type="button" class="secondary small brain-alias-remove" data-food-alias-delete="' + esc(f.id) + '" aria-label="Supprimer cet aliment favori" title="Supprimer">×</button></div></div>').join("")
+      ? brainFoodFavorites.map(f => '<div class="brain-food-favorite"><div><strong>' + esc(f.alias) + '</strong><p class="muted tiny">' + esc(f.food_source === 'custom' ? 'Aliment personnalisé · hors FCÉN' : (f.name_fr || f.name_en || f.cnf_food_id)) + '</p></div><div class="favorite-actions"><button type="button" class="secondary small" data-food-alias-edit="' + esc(f.id) + '">Renommer</button><button type="button" class="secondary small brain-alias-remove" data-food-alias-delete="' + esc(f.id) + '" aria-label="Supprimer cet aliment favori" title="Supprimer">×</button></div></div>').join("")
       : (brainFoodFavoritesUser !== session?.user?.id ? '<p class="muted small">Chargement des aliments favoris…</p>' : '<p class="muted small">Aucun aliment personnalisé pour le moment.</p>');
   }
   function bindBrainFoodFavorites() {
@@ -11549,11 +11583,27 @@ function formatSleepDuration(hours) {
       if (!chosen || !client || !session?.user?.id || !alias.value.trim()) return;
       status.textContent = "Enregistrement…";
       const record = { user_id: session.user.id, cnf_food_id: String(chosen.id), alias: alias.value.trim(), name_fr: chosen.nameFr || "", name_en: chosen.nameEn || "", updated_at: new Date().toISOString() };
-      const { error } = await client.from("favorite_foods").upsert(record, { onConflict: "user_id,cnf_food_id" });
+      const existing = brainFoodFavorites.find(f => f.cnf_food_id === record.cnf_food_id);
+      const { error } = existing ? await client.from("favorite_foods").update(record).eq("id", existing.id).eq("user_id", session.user.id) : await client.from("favorite_foods").insert(record);
       if (error) { status.textContent = "Impossible d’enregistrer. Vérifie que la migration Supabase a été exécutée."; console.warn(error); return; }
       brainFoodFavoritesUser = null;
       status.textContent = "Aliment enregistré !";
       await loadBrainFoodFavorites();
+    };
+    const customForm = $("#brainCustomFoodForm");
+    if (customForm) customForm.onsubmit = async e => {
+      e.preventDefault();
+      if (!client || !session?.user?.id) return;
+      const values = new FormData(customForm);
+      const name = String(values.get("name") || "").trim();
+      if (!name) return;
+      const number = key => { const v = String(values.get(key) || "").trim(); return v === "" ? null : Number(v); };
+      const record = { user_id: session.user.id, food_source: "custom", custom_food_id: crypto.randomUUID(), cnf_food_id: null, alias: name, custom_food_name: name, name_fr: name, calories_per_100g: number("calories"), protein_per_100g: number("protein"), carbs_per_100g: number("carbs"), fat_per_100g: number("fat") };
+      status.textContent = "Enregistrement…";
+      const { error } = await client.from("favorite_foods").insert(record);
+      if (error) { console.warn(error); status.textContent = "Enregistrement impossible. Vérifie la migration Supabase."; return; }
+      customForm.reset(); status.textContent = "Aliment personnalisé enregistré !";
+      brainFoodFavoritesUser = null; await loadBrainFoodFavorites();
     };
     document.querySelectorAll("[data-food-alias-edit]").forEach(button => button.onclick = async () => {
       const food = brainFoodFavorites.find(f => f.id === button.dataset.foodAliasEdit);
@@ -11563,6 +11613,39 @@ function formatSleepDuration(hours) {
       const { error } = await client.from("favorite_foods").update({ alias: next, updated_at: new Date().toISOString() }).eq("id", food.id).eq("user_id", session.user.id);
       if (error) { alert("Impossible de renommer cet aliment."); return; }
       brainFoodFavoritesUser = null; await loadBrainFoodFavorites();
+    });
+    document.querySelectorAll("[data-food-alias-edit]").forEach(button => {
+      if (button.dataset.customEditBound) return;
+      const food = brainFoodFavorites.find(f => f.id === button.dataset.foodAliasEdit);
+      if (food?.food_source !== "custom") return;
+      button.dataset.customEditBound = "true";
+      button.onclick = async () => {
+        const name = prompt("Nom de ton aliment personnalisé", food.alias)?.trim();
+        if (!name) return;
+        const { error } = await client.from("favorite_foods").update({ alias: name, custom_food_name: name, name_fr: name, updated_at: new Date().toISOString() }).eq("id", food.id).eq("user_id", session.user.id);
+        if (error) { alert("Impossible de modifier cet aliment."); return; }
+        brainFoodFavoritesUser = null; await loadBrainFoodFavorites();
+      };
+    });
+    document.querySelectorAll("[data-food-alias-edit]").forEach(button => {
+      const food = brainFoodFavorites.find(f => f.id === button.dataset.foodAliasEdit);
+      if (food?.food_source !== "custom") return;
+      button.onclick = async () => {
+        const name = prompt("Nom de ton aliment personnalisé", food.alias)?.trim();
+        if (!name) return;
+        const fields = [ ["calories_per_100g", "Calories"], ["protein_per_100g", "Protéines"], ["carbs_per_100g", "Glucides"], ["fat_per_100g", "Lipides"] ];
+        const changes = { alias: name, name_fr: name, custom_food_name: name, updated_at: new Date().toISOString() };
+        for (const [key, label] of fields) {
+          const input = prompt(label + " par 100 g (vide = non renseigné)", food[key] ?? "");
+          if (input === null) return;
+          const value = input.trim().replace(",", ".");
+          if (value !== "" && (!Number.isFinite(Number(value)) || Number(value) < 0)) { alert("Valeur invalide pour " + label.toLowerCase()); return; }
+          changes[key] = value === "" ? null : Number(value);
+        }
+        const { error } = await client.from("favorite_foods").update(changes).eq("id", food.id).eq("user_id", session.user.id);
+        if (error) { console.warn(error); alert("Impossible de modifier cet aliment."); return; }
+        brainFoodFavoritesUser = null; await loadBrainFoodFavorites();
+      };
     });
     document.querySelectorAll("[data-food-alias-delete]").forEach(button => button.onclick = async () => {
       const food = brainFoodFavorites.find(f => f.id === button.dataset.foodAliasDelete);
@@ -14568,7 +14651,7 @@ function formatSleepDuration(hours) {
       : delta < 0 ? "Ton journal contient moins d’informations que la semaine précédente."
       : "La couverture de ton journal est stable d’une semaine à l’autre.";
     const supplementary = data ? `<div class="brain-knowledge-stack">${db.settings?.showEatingReasons !== false ? brainEatingReasonsHtml(data, data.mealTotal) : ""}<section><h3>${tr("Données alimentaires reconnaissables")}</h3><p class="muted small">${tr("Aliments reconnus dans les entrées des 60 derniers jours.")}</p><div class="brain-nutrition-grid">${brainNutritionCoverage(t("Protéines"), data.counts.protein, data.mealTotal, "🥚")}${brainNutritionCoverage(t("Fibres"), data.counts.fiber, data.mealTotal, "🌾")}${brainNutritionCoverage(t("Glucides"), data.counts.carbs, data.mealTotal, "🍞")}${brainNutritionCoverage(t("Sucres estimables"), data.counts.sugars, data.mealTotal, "🍓")}${brainNutritionCoverage(t("Sodium estimable"), data.counts.sodium, data.mealTotal, "🧂")}</div><p class="muted tiny">${tr("Ces valeurs décrivent la reconnaissance des données, pas la suffisance des apports.")}</p></section><section><h3>${tr("Aliments fréquents")}</h3>${data.foods.length ? `<div class="brain-favorites">${data.foods.map(([name, count]) => `<div class="brain-food"><strong>${esc(name)}</strong><span>${count}</span></div>`).join("")}</div>` : `<p class="muted small">${tr("Les aliments reconnus apparaîtront ici au fil de tes entrées.")}</p>`}</section><section><h3>${tr("Suppléments")}</h3>${data.supplements.length ? `<div class="brain-supplement-grid">${data.supplements.map(item => `<div class="brain-supplement-row"><span>${supplementIcon(item.name)}</span><div><strong>${esc(item.name)}</strong><small>${item.taken}/${item.total} · ${item.percent}%</small></div></div>`).join("")}</div>` : `<p class="muted small">${tr("Aucun supplément n’est configuré dans Profil.")}</p>`}</section></div>` : "";
-    $("#app").innerHTML = `${analysisDateNavigatorHtml()}<section class="hero brain-hero brain-learning-hero"><p class="eyebrow">🧠 ${tr("Cerveau")}</p><h2>${tr("Ton journal en bref")}</h2><div class="brain-confidence"><div class="brain-ring" style="--p:${learning.score}"><strong>${learning.score}%</strong></div><div><strong>${tr("Couverture du journal")}</strong><p class="muted small">${learning.first ? `${esc(dates(learning.first))} – ${esc(dates(learning.anchor))}` : tr("Ton portrait commence avec ta première entrée.")}</p></div></div><div class="brain-summary-grid"><div class="brain-stat"><strong>${learning.documentedDays}/${learning.days}</strong><small>${tr("journées documentées")}</small></div><div class="brain-stat"><strong>${learning.mealTotal}</strong><small>${tr("repas et collations")}</small></div><div class="brain-stat"><strong>${learning.after}/${learning.mealTotal}</strong><small>${tr("ressentis après")}</small></div></div></section><div class="stack"><section class="card brain-food-memory"><h2>🧠 ${tr("Ma mémoire alimentaire")}</h2><p class="muted small">Apprends à Énergie les noms de tes aliments habituels et retrouve tes repas préférés.</p><div class="brain-memory-grid"><details class="brain-memory-block" open><summary>⭐ Aliments favoris</summary><p class="muted small">Choisis un aliment précis dans le FCÉN et donne-lui ton propre nom.</p><label for="brainFoodSearch">Rechercher dans le FCÉN</label><input id="brainFoodSearch" type="search" placeholder="Ex. beurre d’arachide" autocomplete="off"><div id="brainFoodSearchResults" class="meal-inline-results" hidden></div><form id="brainFoodAliasForm" hidden><p id="brainFoodSelected" class="muted small"></p><label for="brainFoodAlias">Mon nom personnalisé</label><input id="brainFoodAlias" maxlength="100" required placeholder="Ex. beurre de pinottte"><button class="primary" type="submit">Enregistrer cet aliment</button></form><p id="brainFoodStatus" role="status" class="muted small"></p><div class="stack">${brainFoodFavoritesHtml()}</div></div><details class="brain-memory-block"><summary>🍽️ Repas favoris <small>(${db.favorites.length})</small></summary><p class="muted small">Tes repas déjà enregistrés restent disponibles et modifiables ici.</p><div class="stack profile-favorites-list">${renderFavoriteList(db.favorites, false)}</div></details></div></section><section class="card"><h2>🍽️ ${tr("Les repas et leurs ressentis")}</h2><p class="muted small">${tr("Le cœur de ce que le Cerveau apprend de toi.")}</p><div class="brain-coverage-list">${learning.types.map(item => metric(mealIcon(item.type), item.type, item.count, item.total, "Journées avec ce repas consigné")).join("")}${metric("🙂", "Ressentis avant", learning.before, learning.mealTotal, "Repas et collations avec un ressenti avant")}${metric("🧠", "Ressentis après", learning.after, learning.mealTotal, "Repas et collations avec un ressenti après")}</div><p class="muted tiny brain-coverage-note">${tr("Les trois repas principaux servent de repères de saisie. Une entrée absente ne signifie pas que tu n’as pas mangé. Les collations sont facultatives.")}</p></section><section class="card"><h2>🌱 ${tr("Au fil des semaines")}</h2><p class="muted small">${tr("Comment ton journal se documente, semaine après semaine.")}</p><div class="brain-week-chart" role="list">${learning.weeks.map(week => `<div class="brain-week" role="listitem"><strong>${week.days ? `${week.score}%` : "—"}</strong><div class="brain-week-track"><i style="height:${week.score}%"></i></div><span>${esc(dates(week.from))}</span><small>${tr(week.days ? week.partial ? "Semaine partielle" : "Semaine entière" : "Sans données")}</small></div>`).join("")}</div><p class="muted small">${tr(trend)}</p><p class="muted tiny">${tr("Les semaines partielles sont indiquées. La comparaison porte sur les deux dernières semaines complètes.")}</p></section><section class="card brain-context-card"><h2>${tr("Ce qui ajoute du contexte")}</h2><div class="brain-coverage-list">${metric("😴", "Sommeil", learning.sleep, learning.days, "Journées avec sommeil consigné")}${metric("💧", "Hydratation", learning.water, learning.days, "Journées avec eau consignée")}${learning.stepsEnabled ? metric("👟", "Pas", learning.steps, learning.days, "Journées avec pas consignés") : ""}</div><p class="muted small brain-activity-note">🏃 ${tr("Journées avec une activité consignée")} : ${learning.activities}/${learning.days}. ${tr("Les activités enrichissent le contexte sans diminuer la couverture lorsqu’il n’y en a pas.")}</p></section></div>`;
+    $("#app").innerHTML = `${analysisDateNavigatorHtml()}<section class="hero brain-hero brain-learning-hero"><p class="eyebrow">🧠 ${tr("Cerveau")}</p><h2>${tr("Ton journal en bref")}</h2><div class="brain-confidence"><div class="brain-ring" style="--p:${learning.score}"><strong>${learning.score}%</strong></div><div><strong>${tr("Couverture du journal")}</strong><p class="muted small">${learning.first ? `${esc(dates(learning.first))} – ${esc(dates(learning.anchor))}` : tr("Ton portrait commence avec ta première entrée.")}</p></div></div><div class="brain-summary-grid"><div class="brain-stat"><strong>${learning.documentedDays}/${learning.days}</strong><small>${tr("journées documentées")}</small></div><div class="brain-stat"><strong>${learning.mealTotal}</strong><small>${tr("repas et collations")}</small></div><div class="brain-stat"><strong>${learning.after}/${learning.mealTotal}</strong><small>${tr("ressentis après")}</small></div></div></section><div class="stack"><section class="card brain-food-memory"><h2>🧠 ${tr("Ma mémoire alimentaire")}</h2><p class="muted small">Apprends à Énergie les noms de tes aliments habituels et retrouve tes repas préférés.</p><div class="brain-memory-grid"><details class="brain-memory-block" open><summary>⭐ Aliments favoris</summary><p class="muted small">Choisis un aliment précis dans le FCÉN et donne-lui ton propre nom.</p><label for="brainFoodSearch">Rechercher dans le FCÉN</label><input id="brainFoodSearch" type="search" placeholder="Ex. beurre d’arachide" autocomplete="off"><div id="brainFoodSearchResults" class="meal-inline-results" hidden></div><details class="brain-custom-food"><summary>+ Créer un aliment personnalisé (sans FCÉN)</summary><form id="brainCustomFoodForm"><label>Nom<input name="name" required maxlength="100"></label><label>Calories / 100 g<input name="calories" type="number" min="0" step="any"></label><label>Protéines / 100 g<input name="protein" type="number" min="0" step="any"></label><label>Glucides / 100 g<input name="carbs" type="number" min="0" step="any"></label><label>Lipides / 100 g<input name="fat" type="number" min="0" step="any"></label><button type="submit" class="primary">Enregistrer</button></form></details><form id="brainFoodAliasForm" hidden><p id="brainFoodSelected" class="muted small"></p><label for="brainFoodAlias">Mon nom personnalisé</label><input id="brainFoodAlias" maxlength="100" required placeholder="Ex. beurre de pinottte"><button class="primary" type="submit">Enregistrer cet aliment</button></form><p id="brainFoodStatus" role="status" class="muted small"></p><div class="stack">${brainFoodFavoritesHtml()}</div></div><details class="brain-memory-block"><summary>🍽️ Repas favoris <small>(${db.favorites.length})</small></summary><p class="muted small">Tes repas déjà enregistrés restent disponibles et modifiables ici.</p><div class="stack profile-favorites-list">${renderFavoriteList(db.favorites, false)}</div></details></div></section><section class="card"><h2>🍽️ ${tr("Les repas et leurs ressentis")}</h2><p class="muted small">${tr("Le cœur de ce que le Cerveau apprend de toi.")}</p><div class="brain-coverage-list">${learning.types.map(item => metric(mealIcon(item.type), item.type, item.count, item.total, "Journées avec ce repas consigné")).join("")}${metric("🙂", "Ressentis avant", learning.before, learning.mealTotal, "Repas et collations avec un ressenti avant")}${metric("🧠", "Ressentis après", learning.after, learning.mealTotal, "Repas et collations avec un ressenti après")}</div><p class="muted tiny brain-coverage-note">${tr("Les trois repas principaux servent de repères de saisie. Une entrée absente ne signifie pas que tu n’as pas mangé. Les collations sont facultatives.")}</p></section><section class="card"><h2>🌱 ${tr("Au fil des semaines")}</h2><p class="muted small">${tr("Comment ton journal se documente, semaine après semaine.")}</p><div class="brain-week-chart" role="list">${learning.weeks.map(week => `<div class="brain-week" role="listitem"><strong>${week.days ? `${week.score}%` : "—"}</strong><div class="brain-week-track"><i style="height:${week.score}%"></i></div><span>${esc(dates(week.from))}</span><small>${tr(week.days ? week.partial ? "Semaine partielle" : "Semaine entière" : "Sans données")}</small></div>`).join("")}</div><p class="muted small">${tr(trend)}</p><p class="muted tiny">${tr("Les semaines partielles sont indiquées. La comparaison porte sur les deux dernières semaines complètes.")}</p></section><section class="card brain-context-card"><h2>${tr("Ce qui ajoute du contexte")}</h2><div class="brain-coverage-list">${metric("😴", "Sommeil", learning.sleep, learning.days, "Journées avec sommeil consigné")}${metric("💧", "Hydratation", learning.water, learning.days, "Journées avec eau consignée")}${learning.stepsEnabled ? metric("👟", "Pas", learning.steps, learning.days, "Journées avec pas consignés") : ""}</div><p class="muted small brain-activity-note">🏃 ${tr("Journées avec une activité consignée")} : ${learning.activities}/${learning.days}. ${tr("Les activités enrichissent le contexte sans diminuer la couverture lorsqu’il n’y en a pas.")}</p></section></div>`;
     bindAnalysisDateNavigator();
     bindFavoriteActions();
     bindBrainFoodFavorites();
@@ -16205,7 +16288,7 @@ function formatSleepDuration(hours) {
     const favoriteItems = Array.isArray(favorite.cnfItems) ? favorite.cnfItems.map(item => ({ ...item, entryId: uid() })) : [];
     setMealCnfItemsField(favoriteItems);
     inlineGuidedRows = favoriteItems.map(item => ({
-      id: String(item.cnfFoodId), entryId: item.entryId,
+      id: String(item.cnfFoodId), entryId: item.entryId, customFavorite: String(item.cnfFoodId).startsWith("CUSTOM:") ? { alias: item.nameFr, calories_per_100g: item.customNutrition?.calories ?? null, protein_per_100g: item.customNutrition?.protein ?? null, carbs_per_100g: item.customNutrition?.carbs ?? null, fat_per_100g: item.customNutrition?.fat ?? null } : null,
       query: item.nameFr || item.nameEn || "",
       quantity: item.quantity ?? (item.grams && item.unitKind === "g" ? item.grams : null),
       unit: item.unitKind || "g",
@@ -16752,7 +16835,7 @@ function formatSleepDuration(hours) {
     $("#mealDescription").value = m?.description || "";
     setMealCnfItemsField(m?.cnfItems || []);
     inlineGuidedRows = (m?.cnfItems || []).map(item => ({
-      id: String(item.cnfFoodId), entryId: item.entryId, query: item.nameFr || item.nameEn || "",
+      id: String(item.cnfFoodId), entryId: item.entryId, customFavorite: String(item.cnfFoodId).startsWith("CUSTOM:") ? { alias: item.nameFr, calories_per_100g: item.customNutrition?.calories ?? null, protein_per_100g: item.customNutrition?.protein ?? null, carbs_per_100g: item.customNutrition?.carbs ?? null, fat_per_100g: item.customNutrition?.fat ?? null } : null, query: item.nameFr || item.nameEn || "",
       quantity: item.quantity ?? (item.grams && item.unitKind === "g" ? item.grams : null), unit: item.unitKind || "g",
     }));
     if (!inlineGuidedRows.length) inlineGuidedRows = [{ id: null, query: "", quantity: null, unit: "g" }];
