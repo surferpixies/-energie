@@ -152,6 +152,7 @@
     "Favoris, méthodes de saisie et options des repas": "Favorites, entry methods and meal options",
 
     "Ce que j’apprends de toi": "What I’m learning about you",
+    "Ton journal en bref": "Your journal at a glance",
     "Tes repas et tes ressentis construisent le portrait de tes habitudes. Les autres suivis ajoutent du contexte.": "Your meals and how you feel build a picture of your habits. Other tracking adds context.",
     "Couverture du journal": "Journal coverage",
     "Ton portrait commence avec ta première entrée.": "Your picture begins with your first entry.",
