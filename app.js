@@ -11555,7 +11555,7 @@ function formatSleepDuration(hours) {
       status.textContent = "Aliment enregistré !";
       await loadBrainFoodFavorites();
     };
-    $("[data-food-alias-edit]").forEach(button => button.onclick = async () => {
+    document.querySelectorAll("[data-food-alias-edit]").forEach(button => button.onclick = async () => {
       const food = brainFoodFavorites.find(f => f.id === button.dataset.foodAliasEdit);
       if (!food || !client || !session?.user?.id) return;
       const next = prompt("Nouveau nom personnel", food.alias)?.trim();
@@ -11564,7 +11564,7 @@ function formatSleepDuration(hours) {
       if (error) { alert("Impossible de renommer cet aliment."); return; }
       brainFoodFavoritesUser = null; await loadBrainFoodFavorites();
     });
-    $("[data-food-alias-delete]").forEach(button => button.onclick = async () => {
+    document.querySelectorAll("[data-food-alias-delete]").forEach(button => button.onclick = async () => {
       const food = brainFoodFavorites.find(f => f.id === button.dataset.foodAliasDelete);
       if (!food || !client || !session?.user?.id || !confirm('Supprimer « ' + food.alias + ' » de tes aliments favoris ?')) return;
       const { error } = await client.from("favorite_foods").delete().eq("id", food.id).eq("user_id", session.user.id);
