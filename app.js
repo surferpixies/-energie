@@ -3520,6 +3520,20 @@ function formatSleepDuration(hours) {
 
   // Inline meal composer: separate from the legacy FCÉN modal.
   let inlineGuidedRows = [];
+  function personalFoodAlias(foodId) {
+    if (!session?.user?.id || brainFoodFavoritesUser !== session.user.id) return null;
+    return brainFoodFavorites.find(f => String(f.cnf_food_id) === String(foodId)) || null;
+  }
+  function searchFoodsWithPersonalAliases(query) {
+    const standard = window.ENERGIE_CNF_SEARCH?.search?.(query, Infinity) || [];
+    if (!session?.user?.id || brainFoodFavoritesUser !== session.user.id) return standard;
+    const normalize = value => String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase().trim();
+    const needle = normalize(query);
+    const matches = brainFoodFavorites.filter(f => normalize(f.alias).includes(needle))
+      .map(f => window.ENERGIE_CNF_SEARCH?.getById?.(f.cnf_food_id)).filter(Boolean);
+    const ids = new Set(matches.map(f => String(f.id)));
+    return [...matches, ...standard.filter(f => !ids.has(String(f.id)))];
+  }
   function renderInlineGuidedMeal() {
     const root = $("#mealInlineGuided");
     if (!root) return;
@@ -3610,7 +3624,7 @@ function formatSleepDuration(hours) {
         scheduleAutomaticNutritionPreview();
         const results = root.querySelector('[data-inline-results="' + index + '"]');
         const query = input.value.trim();
-        const foods = query.length >= 2 ? (window.ENERGIE_CNF_SEARCH?.search?.(query, Infinity) || []) : [];
+        const foods = query.length >= 2 ? searchFoodsWithPersonalAliases(query) : [];
         results.hidden = query.length < 2;
         // Place the dropdown above the food field when the lower part of
         // the viewport (including the sticky save bar) has too little room.
@@ -3625,7 +3639,7 @@ function formatSleepDuration(hours) {
           shown += batch.length;
           results.insertAdjacentHTML("beforeend", batch.map(food =>
             '<button type="button" data-food-id="' + esc(String(food.id)) + '">' +
-            esc(food.nameFr || food.nameEn || '') + '</button>').join(""));
+            esc(personalFoodAlias(food.id)?.alias ? personalFoodAlias(food.id).alias + ' · ' + (food.nameFr || food.nameEn || '') : (food.nameFr || food.nameEn || '')) + '</button>').join(""));
         };
         results.innerHTML = foods.length ? "" : '<small>Aucun aliment trouvé.</small>';
         results.scrollTop = 0;
@@ -3657,6 +3671,7 @@ function formatSleepDuration(hours) {
         };
       });
     }
+    if (session?.user?.id && brainFoodFavoritesUser !== session.user.id) void loadBrainFoodFavorites();
     root.querySelectorAll("[data-inline-search]").forEach(bindInlineGuidedSearch);
     root.querySelectorAll("[data-inline-qty]").forEach(input => input.oninput = () => {
       inlineGuidedRows[Number(input.dataset.inlineQty)].quantity = input.value;
