@@ -642,7 +642,18 @@
             ? words[index]?.startsWith(token)
             : words[index] === token);
       });
-      const score = (exact ? 4000 : beginsWithQuery ? 3000 : starts ? 2000 : 1000)
+      // A French search must favor an explicit match in the French food name
+      // over a generic French label matched only through its English translation.
+      const frenchWords = foodTokens(fr);
+      const frenchMatch = queryTokens.every((token, index) =>
+        index === queryTokens.length - 1
+          ? frenchWords.some(word => word.startsWith(token))
+          : frenchWords.includes(token));
+      const frenchBegins = queryTokens.every((token, index) =>
+        index === queryTokens.length - 1
+          ? frenchWords[index]?.startsWith(token)
+          : frenchWords[index] === token);
+      const score = (exact ? 5000 : frenchBegins ? 4500 : frenchMatch ? 3500 : beginsWithQuery ? 3000 : starts ? 2000 : 1000)
         - meta.candidateTokens.length * 2;
       ranked.push({ row, score });
     }
