@@ -4311,7 +4311,7 @@ function formatSleepDuration(hours) {
     if (!notice || !list) return;
     if (currentGuidedCnfNutrition()) {
       notice.hidden = true;
-      notice.style.display = "none";
+      if (notice.style) notice.style.display = "none";
       list.innerHTML = "";
       if ($("#mealCalorieRecognitionDialog")?.open)
         $("#mealCalorieRecognitionDialog").close();
