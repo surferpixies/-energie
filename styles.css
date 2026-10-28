@@ -2832,3 +2832,18 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 /* Même croix de suppression que les repas favoris. */
 .brain-food-memory .brain-food-favorite .favorite-actions .brain-alias-remove{background:transparent!important;color:var(--muted)!important;border:0!important;border-radius:0!important;width:28px!important;min-width:28px!important;height:28px!important;min-height:28px!important;font-size:1.35rem!important;font-weight:600!important;box-shadow:none!important;padding:0!important}
 .brain-food-memory .brain-food-favorite .favorite-actions .brain-alias-remove:hover{color:#bd3434!important;background:transparent!important}
+
+/* Cerveau : résumé du journal en bandeau, sans grand bloc vertical. */
+@media(min-width:701px){
+ .hero.brain-learning-hero{display:grid!important;grid-template-columns:minmax(150px,1.1fr) minmax(180px,1.1fr) minmax(350px,2.6fr);align-items:center;column-gap:18px;row-gap:2px;padding:12px 18px!important}
+ .brain-learning-hero .eyebrow{grid-column:1;grid-row:1;font-size:.65rem!important;margin:0!important}
+ .brain-learning-hero h2{grid-column:1;grid-row:2;font-size:clamp(1.05rem,1.55vw,1.4rem)!important;margin:0!important}
+ .brain-learning-hero .brain-confidence{grid-column:2;grid-row:1 / span 2;margin:0!important;grid-template-columns:44px minmax(0,1fr);gap:8px}
+ .brain-learning-hero .brain-ring{width:44px;height:44px}
+ .brain-learning-hero .brain-ring strong{font-size:.82rem}
+ .brain-learning-hero .brain-summary-grid{grid-column:3;grid-row:1 / span 2;margin:0!important;gap:6px}
+ .brain-learning-hero .brain-stat{padding:6px 4px!important}
+ .brain-learning-hero .brain-stat strong{font-size:1rem!important}
+ .brain-learning-hero .brain-stat small{font-size:.65rem!important}
+}
+@media(min-width:701px) and (max-width:950px){.hero.brain-learning-hero{grid-template-columns:1fr 1fr;row-gap:8px}.brain-learning-hero .brain-summary-grid{grid-column:1 / -1;grid-row:3}}
