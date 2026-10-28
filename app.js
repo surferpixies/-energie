@@ -914,6 +914,7 @@ function formatSleepDuration(hours) {
       type: f.type || "Repas",
       description: f.description || "",
       notes: f.notes || "",
+      cnfItems: Array.isArray(f.cnfItems) ? f.cnfItems.filter(item => item?.cnfFoodId).map(item => ({ ...item })) : [],
       usageCount: Number(f.usageCount ?? f.usage_count ?? 0) || 0,
       createdAt: f.createdAt || f.created_at || new Date().toISOString(),
       updatedAt: f.updatedAt || f.updated_at || new Date().toISOString(),
@@ -2104,6 +2105,7 @@ function formatSleepDuration(hours) {
               meal_type: f.type,
               description: f.description,
               notes: f.notes || null,
+              cnf_items: f.cnfItems || [],
               usage_count: f.usageCount || 0,
               created_at: f.createdAt,
               updated_at: f.updatedAt,
@@ -2410,6 +2412,7 @@ function formatSleepDuration(hours) {
         type: r.meal_type,
         description: r.description,
         notes: r.notes,
+        cnfItems: r.cnf_items,
         usageCount: r.usage_count,
         createdAt: r.created_at,
         updatedAt: r.updated_at,
@@ -16107,6 +16110,16 @@ function formatSleepDuration(hours) {
     $("#mealDescription").value = favorite.description;
     $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
     $("#mealNotes").value = favorite.notes || "";
+    const favoriteItems = Array.isArray(favorite.cnfItems) ? favorite.cnfItems.map(item => ({ ...item, entryId: uid() })) : [];
+    setMealCnfItemsField(favoriteItems);
+    inlineGuidedRows = favoriteItems.map(item => ({
+      id: String(item.cnfFoodId), entryId: item.entryId,
+      query: item.nameFr || item.nameEn || "",
+      quantity: item.quantity ?? (item.grams && item.unitKind === "g" ? item.grams : null),
+      unit: item.unitKind || "g",
+    }));
+    if (!inlineGuidedRows.length) inlineGuidedRows = [{ id: null, query: "", quantity: null, unit: "g" }];
+    renderInlineGuidedMeal();
     $("#favoriteMealSelect").value = favorite.id;
     setMealFavoriteToggle(true, favorite.id);
     favorite.usageCount = (favorite.usageCount || 0) + 1;
@@ -17174,6 +17187,7 @@ function formatSleepDuration(hours) {
       type: m.type,
       description: m.description,
       notes: m.notes,
+      cnfItems: m.cnfItems,
     });
     db.favorites.push(f);
     setFavoriteChanged(f);
@@ -17605,6 +17619,7 @@ function formatSleepDuration(hours) {
         savedFavorite.name = $("#mealFavoriteName")?.value.trim() || savedMeal.description.slice(0, 45);
         savedFavorite.description = savedMeal.description;
         savedFavorite.notes = savedMeal.notes || "";
+        savedFavorite.cnfItems = (savedMeal.cnfItems || []).map(item => ({ ...item }));
         savedFavorite.type = savedMeal.type;
         savedFavorite.updatedAt = new Date().toISOString();
         setFavoriteChanged(savedFavorite);
@@ -17614,6 +17629,7 @@ function formatSleepDuration(hours) {
           type: savedMeal.type,
           description: savedMeal.description,
           notes: savedMeal.notes,
+          cnfItems: savedMeal.cnfItems,
         });
         db.favorites.push(favorite);
         setFavoriteChanged(favorite);
