@@ -3702,8 +3702,11 @@ function formatSleepDuration(hours) {
         if (String(row.query || "").trim()) return { error: "Sélectionne un aliment dans les résultats du référentiel nutritionnel." };
         continue;
       }
-      const food = window.ENERGIE_CNF_SEARCH?.getById?.(row.id);
-      if (!food) return { error: "Un aliment sélectionné n'est plus disponible dans le référentiel nutritionnel." };
+      const custom = String(row.id).startsWith("CUSTOM:")
+        ? (row.customFavorite || brainFoodFavorites.find(f => "CUSTOM:" + f.custom_food_id === row.id)) : null;
+      const food = custom ? { id: row.id, nameFr: custom.alias, nameEn: custom.alias, portions: [{ id: "g", grams: 1, labelFr: "g" }] }
+        : window.ENERGIE_CNF_SEARCH?.getById?.(row.id);
+      if (!food) return { error: "Un aliment sélectionné n'est plus disponible." };
       const portion = food.portions?.find(p => String(p.id) === String(row.unit));
       const gramsPerUnit = row.unit === "g" ? 1 : Number(portion?.grams);
       const amount = row.quantity === "" || row.quantity == null ? NaN : Number(row.quantity);
@@ -3720,13 +3723,14 @@ function formatSleepDuration(hours) {
         unitKind: requireQuantity ? String(row.unit) : "",
         unitLabel: requireQuantity ? (portion?.labelFr || "g") : "",
         gramsPerUnit: requireQuantity ? gramsPerUnit : null,
+        ...(custom ? { customNutrition: { calories: custom.calories_per_100g, protein: custom.protein_per_100g, carbs: custom.carbs_per_100g, fat: custom.fat_per_100g } } : {}),
       });
     }
     if (items.length) return { items };
     const existing = ensureDay(db, selectedDate).meals.find(m => m.id === $("#mealId")?.value);
     if (existing && !(existing.cnfItems || []).length && existing.description?.trim())
       return { legacy: true };
-    return { error: "Ajoute au moins un aliment FCÉN." };
+    return { error: "Ajoute au moins un aliment." };
   }
   function inlineGuidedMealDescription(items) {
     return items.map(item => item.grams
@@ -3745,6 +3749,7 @@ function formatSleepDuration(hours) {
               return {
                 entryId: item.entryId || uid(),
                 cnfFoodId: String(item.cnfFoodId),
+                ...(String(item.cnfFoodId).startsWith("CUSTOM:") && item.customNutrition ? { customNutrition: item.customNutrition } : {}),
                 nameFr: String(item.nameFr || ""),
                 nameEn: String(item.nameEn || ""),
                 grams: Number.isFinite(grams) && grams > 0 ? Math.max(1, Math.round(grams)) : null,
@@ -3837,8 +3842,17 @@ function formatSleepDuration(hours) {
     const total = Object.fromEntries(nutrientKeys.map((key) => [key, 0]));
     const missing = new Set();
     let matched = 0;
+    const nutritionForItem = (item, grams = item.grams) => {
+      if (!String(item.cnfFoodId).startsWith("CUSTOM:")) return api.nutritionForGrams(item.cnfFoodId, grams);
+      if (!item.customNutrition) return null;
+      const factor = Number(grams) / 100;
+      return Object.fromEntries(["calories", "protein", "carbs", "fat"].map(key => {
+        const raw = item.customNutrition[key];
+        return [key, raw == null || raw === "" ? null : Number(raw) * factor];
+      }));
+    };
     for (const item of items) {
-      const nutrition = api.nutritionForGrams(item.cnfFoodId, item.grams);
+      const nutrition = nutritionForItem(item);
       if (!nutrition) continue;
       matched += 1;
       nutrientKeys.forEach((key) => {
@@ -3851,22 +3865,22 @@ function formatSleepDuration(hours) {
     nutrientKeys.forEach((key) => {
       total[key] = missing.has(key) ? null : Math.round(total[key] * 10) / 10;
     });
-    const sourceForItem = item => String(item.cnfFoodId).startsWith("PRODUCT:") ? "product-label"
+    const sourceForItem = item => String(item.cnfFoodId).startsWith("CUSTOM:") ? "custom" : String(item.cnfFoodId).startsWith("PRODUCT:") ? "product-label"
       : String(item.cnfFoodId).startsWith("CIQUAL:") ? "ciqual" : "cnf";
     const sources = new Set(items.map(sourceForItem));
     const guidedSource = sources.size === 1 ? [...sources][0] : "mixed";
     return {
       ...total,
       source: guidedSource,
-      confidence: "high",
+      confidence: sources.has("custom") ? "user-provided" : "high",
       basis: `${matched} aliment${matched !== 1 ? "s" : ""} lié${matched !== 1 ? "s" : ""} aux fiches nutritionnelles · quantités saisies`,
       estimated: true,
       ...(includeTrace ? { trace: {
         kind: "guided-cnf",
         source: guidedSource,
         items: items.map((item) => {
-          const nutrition = api.nutritionForGrams(item.cnfFoodId, item.grams);
-          const reference = api.nutritionForGrams(item.cnfFoodId, 100);
+          const nutrition = nutritionForItem(item);
+          const reference = nutritionForItem(item, 100);
           return {
             source: sourceForItem(item),
             cnfFoodId: String(item.cnfFoodId),
