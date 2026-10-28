@@ -2803,3 +2803,21 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .brain-food-memory [data-food-alias-edit]{background:#2fa74e!important;color:#fff!important;border-color:#2fa74e!important}
 .brain-food-memory [data-food-alias-delete]{background:#bd3434!important;color:#fff!important;border-color:#bd3434!important}
 @media(max-width:560px){.brain-food-memory .brain-food-favorite{grid-template-columns:minmax(0,1fr);gap:10px}.brain-food-memory .brain-food-favorite .favorite-actions{width:100%;grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Cerveau : bandeau synthétique réellement compact sur grand écran. */
+@media(min-width:701px){
+ .hero.brain-learning-hero{padding:14px 20px!important;border-radius:22px}
+ .brain-learning-hero .eyebrow{font-size:.72rem!important;margin-bottom:2px!important}
+ .brain-learning-hero h2{font-size:clamp(1.3rem,2vw,1.7rem)!important;margin-bottom:4px!important}
+ .brain-learning-hero>p:not(.eyebrow){font-size:.82rem!important;line-height:1.25!important;max-width:none}
+ .brain-learning-hero .brain-confidence{grid-template-columns:48px minmax(0,1fr);gap:9px;margin-top:8px}
+ .brain-learning-hero .brain-ring{width:48px;height:48px}
+ .brain-learning-hero .brain-ring::before{inset:6px}
+ .brain-learning-hero .brain-ring strong{font-size:.95rem}
+ .brain-learning-hero .brain-confidence>div:last-child>strong{font-size:.85rem}
+ .brain-learning-hero .brain-confidence>div:last-child p{font-size:.73rem}
+ .brain-learning-hero .brain-summary-grid{margin-top:8px;gap:7px}
+ .brain-learning-hero .brain-stat{padding:6px 8px;border-radius:10px}
+ .brain-learning-hero .brain-stat strong{font-size:1.15rem}
+ .brain-learning-hero .brain-stat small{font-size:.7rem}
+}
