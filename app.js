@@ -11484,12 +11484,16 @@ function formatSleepDuration(hours) {
   // Personal food aliases are stored per account; the official catalog is never modified.
   let brainFoodFavorites = [];
   let brainFoodFavoritesUser = null;
+  let brainFoodFavoritesLoading = false;
   async function loadBrainFoodFavorites() {
     if (!client || !session?.user?.id) { brainFoodFavorites = []; brainFoodFavoritesUser = null; return; }
     const userId = session.user.id;
-    if (brainFoodFavoritesUser === userId) return;
-    const { data, error } = await client.from("favorite_foods").select("*").eq("user_id", userId).order("created_at", { ascending: false });
-    if (error) { console.warn("Aliments favoris", error); return; }
+    if (brainFoodFavoritesUser === userId || brainFoodFavoritesLoading) return;
+    brainFoodFavoritesLoading = true;
+    let data, error;
+    try { ({ data, error } = await client.from("favorite_foods").select("*").eq("user_id", userId).order("created_at", { ascending: false })); }
+    finally { brainFoodFavoritesLoading = false; }
+    if (error) { console.warn("Aliments favoris", error); brainFoodFavoritesUser = userId; return; }
     if (session?.user?.id !== userId) return;
     brainFoodFavorites = data || [];
     brainFoodFavoritesUser = userId;
