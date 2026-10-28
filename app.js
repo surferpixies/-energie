@@ -11516,7 +11516,7 @@ function formatSleepDuration(hours) {
   }
   function brainFoodFavoritesHtml() {
     return brainFoodFavorites.length
-      ? brainFoodFavorites.map(f => '<div class="brain-food-favorite"><div><strong>' + esc(f.alias) + '</strong><p class="muted tiny">' + esc(f.name_fr || f.name_en || f.cnf_food_id) + '</p></div><div class="favorite-actions"><button type="button" class="secondary small" data-food-alias-edit="' + esc(f.id) + '">Renommer</button><button type="button" class="secondary small brain-alias-remove" data-food-alias-delete="' + esc(f.id) + '" aria-label="Supprimer cet aliment favori" title="Supprimer">×</button></div></div>').join("")
+      ? brainFoodFavorites.map(f => '<div class="brain-food-favorite"><div><strong>' + esc(f.alias) + '</strong><p class="muted tiny">' + esc(f.food_source === 'custom' ? 'Aliment personnalisé · hors FCÉN' : (f.name_fr || f.name_en || f.cnf_food_id)) + '</p></div><div class="favorite-actions"><button type="button" class="secondary small" data-food-alias-edit="' + esc(f.id) + '">Renommer</button><button type="button" class="secondary small brain-alias-remove" data-food-alias-delete="' + esc(f.id) + '" aria-label="Supprimer cet aliment favori" title="Supprimer">×</button></div></div>').join("")
       : (brainFoodFavoritesUser !== session?.user?.id ? '<p class="muted small">Chargement des aliments favoris…</p>' : '<p class="muted small">Aucun aliment personnalisé pour le moment.</p>');
   }
   function bindBrainFoodFavorites() {
@@ -11579,6 +11579,19 @@ function formatSleepDuration(hours) {
       const { error } = await client.from("favorite_foods").update({ alias: next, updated_at: new Date().toISOString() }).eq("id", food.id).eq("user_id", session.user.id);
       if (error) { alert("Impossible de renommer cet aliment."); return; }
       brainFoodFavoritesUser = null; await loadBrainFoodFavorites();
+    });
+    document.querySelectorAll("[data-food-alias-edit]").forEach(button => {
+      if (button.dataset.customEditBound) return;
+      const food = brainFoodFavorites.find(f => f.id === button.dataset.foodAliasEdit);
+      if (food?.food_source !== "custom") return;
+      button.dataset.customEditBound = "true";
+      button.onclick = async () => {
+        const name = prompt("Nom de ton aliment personnalisé", food.alias)?.trim();
+        if (!name) return;
+        const { error } = await client.from("favorite_foods").update({ alias: name, custom_food_name: name, name_fr: name, updated_at: new Date().toISOString() }).eq("id", food.id).eq("user_id", session.user.id);
+        if (error) { alert("Impossible de modifier cet aliment."); return; }
+        brainFoodFavoritesUser = null; await loadBrainFoodFavorites();
+      };
     });
     document.querySelectorAll("[data-food-alias-delete]").forEach(button => button.onclick = async () => {
       const food = brainFoodFavorites.find(f => f.id === button.dataset.foodAliasDelete);
