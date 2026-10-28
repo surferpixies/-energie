@@ -2795,3 +2795,11 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .brain-learning-hero .brain-stat strong{font-size:clamp(1.15rem,2.5vw,1.55rem)}
 .brain-learning-hero .brain-stat small{font-size:.8rem;line-height:1.2}
 @media(max-width:600px){.hero.brain-learning-hero{padding:18px 16px!important}.brain-learning-hero .brain-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.brain-learning-hero .brain-stat{padding:8px 3px}.brain-learning-hero .brain-stat small{font-size:.72rem}}
+
+/* Cerveau : actions des favoris alimentaires alignées et sémantiques. */
+.brain-food-memory .brain-food-favorite{display:grid;grid-template-columns:minmax(0,1fr) 150px;align-items:start;gap:18px}
+.brain-food-memory .brain-food-favorite .favorite-actions{display:grid;grid-template-columns:1fr;gap:8px;width:150px;align-self:start}
+.brain-food-memory .brain-food-favorite .favorite-actions button{width:100%;margin:0!important;min-height:40px;text-align:center;justify-content:center}
+.brain-food-memory [data-food-alias-edit]{background:#2fa74e!important;color:#fff!important;border-color:#2fa74e!important}
+.brain-food-memory [data-food-alias-delete]{background:#bd3434!important;color:#fff!important;border-color:#bd3434!important}
+@media(max-width:560px){.brain-food-memory .brain-food-favorite{grid-template-columns:minmax(0,1fr);gap:10px}.brain-food-memory .brain-food-favorite .favorite-actions{width:100%;grid-template-columns:repeat(2,minmax(0,1fr))}}
