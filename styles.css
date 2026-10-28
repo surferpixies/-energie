@@ -2778,3 +2778,20 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .brain-food-memory .profile-favorites-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}
 .brain-food-memory .favorite-card{min-width:0;max-width:100%;box-sizing:border-box}
 @media(max-width:650px){.brain-food-memory .profile-favorites-list{grid-template-columns:minmax(0,1fr)}}
+
+/* Cerveau : portrait d'ouverture compact, sans perdre les indicateurs. */
+.hero.brain-learning-hero{padding:22px 26px!important;min-height:0!important}
+.brain-learning-hero .eyebrow{margin:0 0 4px!important;font-size:.85rem}
+.brain-learning-hero h2{font-size:clamp(1.45rem,3vw,2.15rem)!important;line-height:1.12!important;margin:0 0 6px!important}
+.brain-learning-hero>p:not(.eyebrow){font-size:.95rem!important;line-height:1.35!important;margin:0!important;max-width:72ch}
+.brain-learning-hero .brain-confidence{grid-template-columns:64px minmax(0,1fr);gap:12px;margin-top:12px}
+.brain-learning-hero .brain-ring{width:64px;height:64px}
+.brain-learning-hero .brain-ring::before{inset:8px}
+.brain-learning-hero .brain-ring strong{font-size:1.2rem}
+.brain-learning-hero .brain-confidence>div:last-child>strong{font-size:1rem}
+.brain-learning-hero .brain-confidence>div:last-child p{margin:2px 0 0}
+.brain-learning-hero .brain-summary-grid{gap:8px;margin-top:12px}
+.brain-learning-hero .brain-stat{padding:9px 8px;border-radius:12px}
+.brain-learning-hero .brain-stat strong{font-size:clamp(1.15rem,2.5vw,1.55rem)}
+.brain-learning-hero .brain-stat small{font-size:.8rem;line-height:1.2}
+@media(max-width:600px){.hero.brain-learning-hero{padding:18px 16px!important}.brain-learning-hero .brain-summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.brain-learning-hero .brain-stat{padding:8px 3px}.brain-learning-hero .brain-stat small{font-size:.72rem}}
