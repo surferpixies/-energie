@@ -3530,7 +3530,9 @@ function formatSleepDuration(hours) {
     const normalize = value => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase().trim();
     const needle = normalize(query);
     const matches = brainFoodFavorites.filter(f => normalize(f.alias).includes(needle))
-      .map(f => window.ENERGIE_CNF_SEARCH?.getById?.(f.cnf_food_id)).filter(Boolean);
+      .map(f => f.food_source === "custom"
+        ? { id: "CUSTOM:" + f.custom_food_id, nameFr: f.alias, nameEn: f.alias, portions: [{ id: "g", grams: 1, labelFr: "g" }], customFavorite: f }
+        : window.ENERGIE_CNF_SEARCH?.getById?.(f.cnf_food_id)).filter(Boolean);
     const ids = new Set(matches.map(f => String(f.id)));
     return [...matches, ...standard.filter(f => !ids.has(String(f.id)))];
   }
@@ -3560,7 +3562,7 @@ function formatSleepDuration(hours) {
     root.innerHTML = '<div class="meal-inline-header"><strong>Aliment</strong>' +
       (required ? '<strong>Quantité</strong>' : '') + '</div>' +
       inlineGuidedRows.map((row, index) => {
-        const food = row.id ? window.ENERGIE_CNF_SEARCH?.getById?.(row.id) : null;
+        const food = row.id ? (String(row.id).startsWith("CUSTOM:") ? { portions: [{ id: "g", grams: 1, labelFr: "g" }] } : window.ENERGIE_CNF_SEARCH?.getById?.(row.id)) : null;
         const options = food?.portions?.filter(p => Number(p.grams) > 0) || [];
         return '<div class="meal-inline-row" data-inline-row="' + index + '">' +
           '<div class="meal-inline-food"><input type="search" data-inline-search="' + index + '" placeholder="Rechercher un aliment" value="' + esc(row.query || '') + '" autocomplete="off">' +
@@ -3621,6 +3623,7 @@ function formatSleepDuration(hours) {
         row.query = input.value;
         row.id = null;
         row.entryId = null;
+        row.customFavorite = null;
         scheduleAutomaticNutritionPreview();
         const results = root.querySelector('[data-inline-results="' + index + '"]');
         const query = input.value.trim();
@@ -3655,10 +3658,11 @@ function formatSleepDuration(hours) {
         results.onclick = event => {
           const button = event.target.closest("[data-food-id]");
           if (!button || !results.contains(button)) return;
-          const food = window.ENERGIE_CNF_SEARCH?.getById?.(button.dataset.foodId);
+          const food = foods.find(f => String(f.id) === button.dataset.foodId);
           if (!food) return;
           row.id = String(food.id);
           row.entryId = null;
+          row.customFavorite = food.customFavorite || null;
           row.query = food.nameFr || food.nameEn || '';
           row.unit = food.portions?.find(p => Number(p.grams) > 0)?.id || 'g';
           row.quantity = required ? (row.unit === 'g' ? 100 : 1) : null;
