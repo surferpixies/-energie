@@ -11593,6 +11593,26 @@ function formatSleepDuration(hours) {
         brainFoodFavoritesUser = null; await loadBrainFoodFavorites();
       };
     });
+    document.querySelectorAll("[data-food-alias-edit]").forEach(button => {
+      const food = brainFoodFavorites.find(f => f.id === button.dataset.foodAliasEdit);
+      if (food?.food_source !== "custom") return;
+      button.onclick = async () => {
+        const name = prompt("Nom de ton aliment personnalisé", food.alias)?.trim();
+        if (!name) return;
+        const fields = [ ["calories_per_100g", "Calories"], ["protein_per_100g", "Protéines"], ["carbs_per_100g", "Glucides"], ["fat_per_100g", "Lipides"] ];
+        const changes = { alias: name, name_fr: name, custom_food_name: name, updated_at: new Date().toISOString() };
+        for (const [key, label] of fields) {
+          const input = prompt(label + " par 100 g (vide = non renseigné)", food[key] ?? "");
+          if (input === null) return;
+          const value = input.trim().replace(",", ".");
+          if (value !== "" && (!Number.isFinite(Number(value)) || Number(value) < 0)) { alert("Valeur invalide pour " + label.toLowerCase()); return; }
+          changes[key] = value === "" ? null : Number(value);
+        }
+        const { error } = await client.from("favorite_foods").update(changes).eq("id", food.id).eq("user_id", session.user.id);
+        if (error) { console.warn(error); alert("Impossible de modifier cet aliment."); return; }
+        brainFoodFavoritesUser = null; await loadBrainFoodFavorites();
+      };
+    });
     document.querySelectorAll("[data-food-alias-delete]").forEach(button => button.onclick = async () => {
       const food = brainFoodFavorites.find(f => f.id === button.dataset.foodAliasDelete);
       if (!food || !client || !session?.user?.id || !confirm('Supprimer « ' + food.alias + ' » de tes aliments favoris ?')) return;
