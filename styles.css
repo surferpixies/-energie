@@ -2768,3 +2768,13 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .brain-food-memory .brain-food-favorite .favorite-actions{display:flex;gap:6px;flex-wrap:wrap}
 .brain-food-memory .profile-favorites-list{margin-top:12px}
 @media(max-width:560px){.brain-food-memory .brain-memory-block{padding:12px}.brain-food-memory .brain-food-favorite{flex-direction:column}}
+
+/* Mémoire alimentaire : sections empilées et repliables, sans colonnes décalées. */
+.brain-food-memory .brain-memory-grid{display:flex;flex-direction:column;gap:14px}
+.brain-food-memory details.brain-memory-block{width:100%;box-sizing:border-box}
+.brain-food-memory details.brain-memory-block>summary{cursor:pointer;font-size:1.15em;font-weight:750;color:var(--text,#173b29);list-style:revert;padding:4px 0}
+.brain-food-memory details.brain-memory-block>summary::marker{color:var(--text,#173b29)}
+.brain-food-memory details.brain-memory-block[open]>summary{margin-bottom:14px}
+.brain-food-memory .profile-favorites-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}
+.brain-food-memory .favorite-card{min-width:0;max-width:100%;box-sizing:border-box}
+@media(max-width:650px){.brain-food-memory .profile-favorites-list{grid-template-columns:minmax(0,1fr)}}
