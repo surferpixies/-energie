@@ -618,17 +618,19 @@
     // correspondance automatique. La personne choisit elle-même la variante.
     // Éviter les faux résultats en exigeant les termes cherchés, mais ne
     // jamais exclure une fiche pour ses qualificatifs ou sa préparation.
-    const queryTokens = foodTokens(query).filter(Boolean);
+    const literalTokens = value => normalize(value).split(' ').filter(Boolean).map(word => word.length > 3 && word.endsWith('s') ? word.slice(0, -1) : word);
+    const queryTokens = literalTokens(query);
     const preferred = preferredGuidedIds(query);
     const ranked = [];
     for (const row of catalog) {
       const meta = rowSearchMeta(row);
+      const literalCandidates = literalTokens(String(row?.[1] || '') + ' ' + String(row?.[2] || ''));
       // During typing, accept a prefix for the final word (e.g. "beurre d'ara"
       // should already find "beurre d'arachide"). Earlier words stay exact.
       if (!queryTokens.every((token, index) =>
         index === queryTokens.length - 1
-          ? meta.candidateTokens.some(candidate => candidate.startsWith(token))
-          : meta.candidateTokens.includes(token))) continue;
+          ? literalCandidates.some(candidate => candidate.startsWith(token))
+          : literalCandidates.includes(token))) continue;
       const fr = meta.descriptor.fr, en = meta.descriptor.en;
       const exact = fr === query || en === query;
       const starts = fr.startsWith(query + " ") || en.startsWith(query + " ");
@@ -636,7 +638,7 @@
       // partial final words. A biscuit containing peanut butter must not
       // appear before peanut butter itself.
       const beginsWithQuery = [fr, en].some(label => {
-        const words = foodTokens(label);
+        const words = literalTokens(label);
         return queryTokens.every((token, index) =>
           index === queryTokens.length - 1
             ? words[index]?.startsWith(token)
@@ -644,7 +646,7 @@
       });
       // A French search must favor an explicit match in the French food name
       // over a generic French label matched only through its English translation.
-      const frenchWords = foodTokens(fr);
+      const frenchWords = literalTokens(fr);
       const frenchMatch = queryTokens.every((token, index) =>
         index === queryTokens.length - 1
           ? frenchWords.some(word => word.startsWith(token))
