@@ -2821,3 +2821,10 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
  .brain-learning-hero .brain-stat strong{font-size:1.15rem}
  .brain-learning-hero .brain-stat small{font-size:.7rem}
 }
+
+/* Favoris du Cerveau : Renommer compact et suppression en croix adjacente. */
+.brain-food-memory .brain-food-favorite{grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px}
+.brain-food-memory .brain-food-favorite .favorite-actions{display:flex;flex-direction:row;align-items:center;justify-content:flex-end;gap:7px;width:auto}
+.brain-food-memory .brain-food-favorite .favorite-actions [data-food-alias-edit]{width:auto;min-height:30px;padding:5px 11px;font-size:.76rem}
+.brain-food-memory .brain-food-favorite .favorite-actions .brain-alias-remove{display:inline-flex;align-items:center;justify-content:center;width:28px;min-width:28px;height:28px;min-height:28px;padding:0!important;border-radius:50%;font-size:1.15rem;line-height:1}
+@media(max-width:560px){.brain-food-memory .brain-food-favorite{grid-template-columns:minmax(0,1fr) auto;gap:8px}.brain-food-memory .brain-food-favorite .favorite-actions{width:auto;display:flex;gap:6px}}
