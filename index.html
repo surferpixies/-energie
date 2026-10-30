@@ -762,6 +762,14 @@
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
   <script src="app.js?v=3.56.363-alias-highlight"></script>
+  <script>
+    // iPhone: hide the native gray keyboard accessory toolbar (arrows / Done).
+    // The Capacitor Keyboard plugin is synced into iOS by npm run ios:sync.
+    if (window.Capacitor?.getPlatform?.() === 'ios') {
+      window.Capacitor.Plugins?.Keyboard?.setAccessoryBarVisible({ isVisible: false })
+        .catch(error => console.warn('iOS keyboard accessory bar:', error));
+    }
+  </script>
   <script src="meal-entry-guide.js?v=3.56.345"></script>
 </body>
 </html>
