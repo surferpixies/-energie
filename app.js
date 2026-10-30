@@ -17734,8 +17734,10 @@ function formatSleepDuration(hours) {
     const dialog = document.createElement("dialog");
     dialog.id = "mealFavoriteSuggestionDialog";
     dialog.className = "meal-favorite-suggestion-dialog";
-    dialog.innerHTML = '<div class="meal-favorite-suggestion-content"><h2>⭐ Simplifie tes prochains repas !</h2><p>Enregistre ce repas dans tes favoris pour le retrouver et le saisir plus rapidement la prochaine fois.</p><p>Tu peux aussi utiliser l’étoile ⭐ dans un repas pour l’ajouter ou le retirer de tes favoris à tout moment.</p><label class="meal-favorite-suggestion-optout"><input type="checkbox" id="hideMealFavoriteSuggestion"> Ne plus afficher cette suggestion</label><div class="meal-favorite-suggestion-actions"><button type="button" class="secondary" id="skipMealFavoriteSuggestion">Non merci</button><button type="button" class="primary" id="acceptMealFavoriteSuggestion">⭐ Oui, ajouter</button></div></div>';
+    dialog.innerHTML = '<div class="meal-favorite-suggestion-content"><h2>⭐ Simplifie tes prochains repas !</h2><p>Enregistre ce repas dans tes favoris pour le retrouver et le saisir plus rapidement la prochaine fois.</p><p>Tu peux aussi utiliser l’étoile ⭐ dans un repas pour l’ajouter ou le retirer de tes favoris à tout moment.</p><label class="meal-favorite-suggestion-name" for="suggestedMealFavoriteName"><span><strong>Nom du favori</strong></span><input type="text" id="suggestedMealFavoriteName" maxlength="80" autocomplete="off" required></label><label class="meal-favorite-suggestion-optout"><input type="checkbox" id="hideMealFavoriteSuggestion"> Ne plus afficher cette suggestion</label><div class="meal-favorite-suggestion-actions"><button type="button" class="secondary" id="skipMealFavoriteSuggestion">Non merci</button><button type="button" class="primary" id="acceptMealFavoriteSuggestion">⭐ Oui, ajouter</button></div></div>';
     document.body.appendChild(dialog);
+    const favoriteNameInput = dialog.querySelector("#suggestedMealFavoriteName");
+    if (favoriteNameInput) favoriteNameInput.value = meal.description.trim().slice(0, 45);
     const dismiss = () => {
       if (dialog.querySelector("#hideMealFavoriteSuggestion")?.checked) {
         db.settings.hideFavoriteSuggestion = true;
@@ -17747,9 +17749,11 @@ function formatSleepDuration(hours) {
     };
     dialog.querySelector("#skipMealFavoriteSuggestion").onclick = dismiss;
     dialog.querySelector("#acceptMealFavoriteSuggestion").onclick = () => {
+      const favoriteName = favoriteNameInput?.value.trim();
+      if (!favoriteName) { favoriteNameInput?.focus(); return; }
       if (!favoriteForMeal(meal)) {
         const favorite = normalFavorite({
-          name: meal.description.slice(0, 45), type: meal.type,
+          name: favoriteName, type: meal.type,
           description: meal.description, notes: meal.notes, cnfItems: meal.cnfItems
         });
         db.favorites.push(favorite);
