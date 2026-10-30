@@ -11683,6 +11683,7 @@ function formatSleepDuration(hours) {
         items.sort((a, b) => order === "az" ? a.data.name.localeCompare(b.data.name, "fr") :
           order === "za" ? b.data.name.localeCompare(a.data.name, "fr") :
           order === "frequent" ? (b.data.count - a.data.count || a.index - b.index) :
+          order === "recent" ? (b.data.created - a.data.created || a.index - b.index) :
           a.index - b.index);
         items.forEach(item => {
           item.node.hidden = !normalize(item.data.name + " " + item.data.description).includes(query);
@@ -11696,11 +11697,13 @@ function formatSleepDuration(hours) {
     setup("brainFoodFavoriteList", "brainFoodFavoriteFilter", "brainFoodFavoriteSort", ".brain-food-favorite", node => ({
       name: node.querySelector("strong")?.textContent || "",
       description: node.querySelector("p")?.textContent || "",
+      created: Date.parse(brainFoodFavorites.find(f => String(f.id) === node.querySelector("[data-food-alias-edit]")?.dataset.foodAliasEdit)?.created_at || 0) || 0,
       count: 0
     }));
     setup("brainMealFavoriteList", "brainMealFavoriteFilter", "brainMealFavoriteSort", ".favorite-card", node => ({
       name: node.querySelector("h3")?.textContent || "",
       description: node.querySelector("p")?.textContent || "",
+      created: Date.parse(db.favorites.find(f => String(f.id) === node.querySelector("[data-rename-favorite]")?.dataset.renameFavorite)?.createdAt || 0) || 0,
       count: Number((node.querySelector("small.muted")?.textContent || "").match(/\d+/)?.[0] || 0)
     }));
   }
