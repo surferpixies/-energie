@@ -2932,6 +2932,8 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   margin-bottom: 16px;
 }
 #mealQuickFillBar[hidden] { display: none !important; }
+/* Respect hidden on individual shortcut buttons, even when the bar uses flex layout. */
+#mealQuickFillBar > button[hidden] { display: none !important; }
 #mealQuickFillBar > button {
   width: auto;
   min-width: 0;
