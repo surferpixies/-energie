@@ -4869,7 +4869,7 @@ function formatSleepDuration(hours) {
           m.description?.trim() &&
           m.time <= justSavedMeal.time,
       )
-      .sort((a, b) => a.time.localeCompare(b.time));
+      .sort((a, b) => String(a?.time || "").localeCompare(String(b?.time || "")));
     if (!meals.length) return null;
     const profiles = meals.map(recommendationMealProfile);
     const saved =
@@ -7942,7 +7942,7 @@ function formatSleepDuration(hours) {
   function mealTypeSummary(meals, type) {
     const list = meals
       .filter((m) => m.type === type)
-      .sort((a, b) => a.time.localeCompare(b.time));
+      .sort((a, b) => String(a?.time || "").localeCompare(String(b?.time || "")));
     return type === "Collation" ? list : list.slice(0, 1);
   }
   function journalCountedMeals(meals = []) {
@@ -8114,7 +8114,7 @@ function formatSleepDuration(hours) {
     const d = ensureDay(db, selectedDate),
       snacks = d.meals
         .filter((m) => m.type === "Collation")
-        .sort((a, b) => a.time.localeCompare(b.time)),
+        .sort((a, b) => String(a?.time || "").localeCompare(String(b?.time || ""))),
       list = $("#snackManagerList"),
       recentList = $("#recentSnackList"),
       addSelected = $("#addSelectedSnack"),
@@ -10621,7 +10621,7 @@ function formatSleepDuration(hours) {
 
   function openQuickFeelingChooser(meals = []) {
     const choices = $("#quickFeelingChoices"),
-      sorted = [...meals].sort((a, b) => b.time.localeCompare(a.time));
+      sorted = [...meals].sort((a, b) => String(b?.time || "").localeCompare(String(a?.time || "")));
     choices.innerHTML = sorted.length
       ? sorted.map((meal) => `<button type="button" class="secondary quick-feeling-choice" data-summary-feeling-meal="${esc(meal.id)}"><span aria-hidden="true">${meal.feeling ? "✏️" : "😊"}</span><span><strong>Après ${mealTypeHtml(meal.type)}</strong><small>${esc(meal.time)} · ${meal.feeling ? "Modifier les ressentis" : "Ajouter les ressentis"}</small></span><b aria-hidden="true">›</b></button>`).join("")
       : '<p class="muted small">Aucun repas n’est encore enregistré cette journée. Tu peux tout de même ajouter un ressenti hors repas.</p>';
@@ -10743,7 +10743,7 @@ function formatSleepDuration(hours) {
   function renderToday() {
     const d = ensureDay(db, selectedDate),
       goal = db.settings.waterGoal || 8,
-      meals = [...d.meals].sort((a, b) => a.time.localeCompare(b.time)),
+      meals = [...d.meals].sort((a, b) => String(a?.time || "").localeCompare(String(b?.time || ""))),
       activity = activitySummary(d);
     const hasDocumentedFeelings = meals.some(
         (meal) =>
@@ -11131,7 +11131,7 @@ function formatSleepDuration(hours) {
         if (cutoff && occurrenceDate < cutoff) return;
         const dayMeals = (byDate[meal.date] || [])
           .slice()
-          .sort((a, b) => a.time.localeCompare(b.time));
+          .sort((a, b) => String(a?.time || "").localeCompare(String(b?.time || "")));
         const mealIndex = dayMeals.findIndex((x) => x.id === meal.id);
         const priorMeals =
           mealIndex >= 0
@@ -11431,7 +11431,7 @@ function formatSleepDuration(hours) {
   }
   function renderHistoryDay(date, meals, open = false) {
     const stats = { ...periodStats(meals), ...dayContext(date) },
-      sorted = [...meals].sort((a, b) => a.time.localeCompare(b.time));
+      sorted = [...meals].sort((a, b) => String(a?.time || "").localeCompare(String(b?.time || "")));
     return `<details class="timeline-day" ${open ? "open" : ""}><summary><div class="timeline-marker"></div><div class="timeline-summary"><strong>${esc(relativeDayLabel(date))}</strong>${miniStatsHtml(stats, "day", meals)}</div><span class="timeline-chevron">›</span></summary><div class="timeline-day-body"><section class="daily-summary"><div><span class="eyebrow">Résumé de la journée</span><p>${esc(dayInsight(meals))}</p></div>${summaryTiles(stats, "day", meals)}</section><div class="stack timeline-meals">${sorted.map((m) => mealCard(m)).join("")}</div></div></details>`;
   }
   function renderHistoryWeek(key, meals, open = false) {
@@ -18238,7 +18238,7 @@ function formatSleepDuration(hours) {
     return (
       ensureDay(db, key)
         .meals.filter((x) => x.type === type)
-        .sort((a, b) => a.time.localeCompare(b.time))[0] || null
+        .sort((a, b) => String(a?.time || "").localeCompare(String(b?.time || "")))[0] || null
     );
   }
   $("#copyPreviousMealQuick").onclick = () => {
