@@ -632,7 +632,7 @@
         seasonalIcons: true,
         showRecognizedElements: true,
         forceGuidedCnfMealEntry: false,
-        mealEntryMode: "guided",
+        mealEntryMode: "free",
         mealQuantityRequired: true,
         showEatingReasons: true,
         futureMealPlanning: false,
