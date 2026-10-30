@@ -633,6 +633,7 @@
         showRecognizedElements: true,
         forceGuidedCnfMealEntry: false,
         mealEntryMode: "free",
+        hideFavoriteSuggestion: false,
         mealQuantityRequired: true,
         showEatingReasons: true,
         futureMealPlanning: false,
@@ -1966,6 +1967,7 @@ function formatSleepDuration(hours) {
                 macroTracking: preferenceSettings.macroTracking !== false,
                 autoNutritionEstimates: preferenceSettings.autoNutritionEstimates !== false,
                 generalRecommendations: preferenceSettings.generalRecommendations !== false,
+                hideFavoriteSuggestion: preferenceSettings.hideFavoriteSuggestion === true,
                 showSources: preferenceSettings.showSources !== false,
                 professionalSupport: preferenceSettings.professionalSupport === true,
                 shareMealPhotosWithProfessional: preferenceSettings.shareMealPhotosWithProfessional === true,
@@ -2277,7 +2279,7 @@ function formatSleepDuration(hours) {
       db.settings.professionalOptionChoices = window.EnergieProfessionalOptions.mergeChoices(db.settings.professionalOptionChoices, pref.professionalOptionChoices);
       if (Number(pref.waterGoal) > 0) db.settings.waterGoal = Math.round(Number(pref.waterGoal));
       if (["detailed", "summary", "consultation"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
-      ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","nutrientIntakeTracking","macroTracking","autoNutritionEstimates","generalRecommendations","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals","glucoseTracking","glucoseReminders"].forEach((key) => {
+      ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","nutrientIntakeTracking","macroTracking","autoNutritionEstimates","generalRecommendations","hideFavoriteSuggestion","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals","glucoseTracking","glucoseReminders"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
       });
       if (["free","guided"].includes(pref.mealEntryMode)) db.settings.mealEntryMode = pref.mealEntryMode;
@@ -14692,7 +14694,7 @@ function formatSleepDuration(hours) {
       : delta < 0 ? "Ton journal contient moins d’informations que la semaine précédente."
       : "La couverture de ton journal est stable d’une semaine à l’autre.";
     const supplementary = data ? `<div class="brain-knowledge-stack">${db.settings?.showEatingReasons !== false ? brainEatingReasonsHtml(data, data.mealTotal) : ""}<section><h3>${tr("Données alimentaires reconnaissables")}</h3><p class="muted small">${tr("Aliments reconnus dans les entrées des 60 derniers jours.")}</p><div class="brain-nutrition-grid">${brainNutritionCoverage(t("Protéines"), data.counts.protein, data.mealTotal, "🥚")}${brainNutritionCoverage(t("Fibres"), data.counts.fiber, data.mealTotal, "🌾")}${brainNutritionCoverage(t("Glucides"), data.counts.carbs, data.mealTotal, "🍞")}${brainNutritionCoverage(t("Sucres estimables"), data.counts.sugars, data.mealTotal, "🍓")}${brainNutritionCoverage(t("Sodium estimable"), data.counts.sodium, data.mealTotal, "🧂")}</div><p class="muted tiny">${tr("Ces valeurs décrivent la reconnaissance des données, pas la suffisance des apports.")}</p></section><section><h3>${tr("Aliments fréquents")}</h3>${data.foods.length ? `<div class="brain-favorites">${data.foods.map(([name, count]) => `<div class="brain-food"><strong>${esc(name)}</strong><span>${count}</span></div>`).join("")}</div>` : `<p class="muted small">${tr("Les aliments reconnus apparaîtront ici au fil de tes entrées.")}</p>`}</section><section><h3>${tr("Suppléments")}</h3>${data.supplements.length ? `<div class="brain-supplement-grid">${data.supplements.map(item => `<div class="brain-supplement-row"><span>${supplementIcon(item.name)}</span><div><strong>${esc(item.name)}</strong><small>${item.taken}/${item.total} · ${item.percent}%</small></div></div>`).join("")}</div>` : `<p class="muted small">${tr("Aucun supplément n’est configuré dans Profil.")}</p>`}</section></div>` : "";
-    $("#app").innerHTML = `${analysisDateNavigatorHtml()}<section class="hero brain-hero brain-learning-hero"><p class="eyebrow">🧠 ${tr("Cerveau")}</p><h2>${tr("Ton journal en bref")}</h2><div class="brain-confidence"><div class="brain-ring" style="--p:${learning.score}"><strong>${learning.score}%</strong></div><div><strong>${tr("Couverture du journal")}</strong><p class="muted small">${learning.first ? `${esc(dates(learning.first))} – ${esc(dates(learning.anchor))}` : tr("Ton portrait commence avec ta première entrée.")}</p></div></div><div class="brain-summary-grid"><div class="brain-stat"><strong>${learning.documentedDays}/${learning.days}</strong><small>${tr("journées documentées")}</small></div><div class="brain-stat"><strong>${learning.mealTotal}</strong><small>${tr("repas et collations")}</small></div><div class="brain-stat"><strong>${learning.after}/${learning.mealTotal}</strong><small>${tr("ressentis après")}</small></div></div></section><div class="stack"><section class="card brain-food-memory"><h2>🧠 ${tr("Ma mémoire alimentaire")}</h2><p class="muted small">Apprends à Énergie les noms de tes aliments habituels et retrouve tes repas préférés.</p><div class="brain-memory-grid"><details class="brain-memory-block"><summary>⭐ Aliments favoris <small>(${brainFoodFavorites.length})</small></summary><p class="muted small">Choisis un aliment précis dans le FCÉN et donne-lui ton propre nom. Ce nom pourra ensuite être utilisé pour simplifier toutes tes prochaines saisies de repas.</p><label for="brainFoodSearch">Rechercher dans le FCÉN</label><input id="brainFoodSearch" type="search" placeholder="Ex. beurre d’arachide" autocomplete="off"><div id="brainFoodSearchResults" class="meal-inline-results" hidden></div><details class="brain-custom-food"><summary>+ Créer un aliment personnalisé (sans FCÉN)</summary><form id="brainCustomFoodForm"><label>Nom<input name="name" required maxlength="100"></label><label>Calories / 100 g<input name="calories" type="number" min="0" step="any"></label><label>Protéines / 100 g<input name="protein" type="number" min="0" step="any"></label><label>Glucides / 100 g<input name="carbs" type="number" min="0" step="any"></label><label>Lipides / 100 g<input name="fat" type="number" min="0" step="any"></label><button type="submit" class="primary">Enregistrer</button></form></details><form id="brainFoodAliasForm" hidden><p id="brainFoodSelected" class="muted small"></p><label for="brainFoodAlias">Mon nom personnalisé</label><input id="brainFoodAlias" maxlength="100" required placeholder="Ex. beurre de pinottte"><button class="primary" type="submit">Enregistrer cet aliment</button></form><p id="brainFoodStatus" role="status" class="muted small"></p><div class="brain-favorites-controls"><input type="search" id="brainFoodFavoriteFilter" placeholder="Rechercher dans mes aliments favoris…" aria-label="Rechercher dans les aliments favoris"><select id="brainFoodFavoriteSort" aria-label="Trier les aliments favoris"><option value="az">Nom A à Z</option><option value="za">Nom Z à A</option><option value="recent">Plus récents</option></select></div><div class="stack" id="brainFoodFavoriteList">${brainFoodFavoritesHtml()}</div></div><details class="brain-memory-block"><summary>🍽️ Repas favoris <small>(${db.favorites.length})</small></summary><p class="muted small">Tes repas déjà enregistrés restent disponibles et modifiables ici.</p><div class="brain-favorites-controls"><input type="search" id="brainMealFavoriteFilter" placeholder="Rechercher dans mes repas favoris…" aria-label="Rechercher dans les repas favoris"><select id="brainMealFavoriteSort" aria-label="Trier les repas favoris"><option value="frequent">Plus utilisés</option><option value="az">Nom A à Z</option><option value="za">Nom Z à A</option><option value="recent">Plus récents</option></select></div><div class="stack profile-favorites-list" id="brainMealFavoriteList">${renderFavoriteList(db.favorites, false)}</div></details></div></section><section class="card"><h2>🍽️ ${tr("Les repas et leurs ressentis")}</h2><p class="muted small">${tr("Le cœur de ce que le Cerveau apprend de toi.")}</p><div class="brain-coverage-list">${learning.types.map(item => metric(mealIcon(item.type), item.type, item.count, item.total, "Journées avec ce repas consigné")).join("")}${metric("🙂", "Ressentis avant", learning.before, learning.mealTotal, "Repas et collations avec un ressenti avant")}${metric("🧠", "Ressentis après", learning.after, learning.mealTotal, "Repas et collations avec un ressenti après")}</div><p class="muted tiny brain-coverage-note">${tr("Les trois repas principaux servent de repères de saisie. Une entrée absente ne signifie pas que tu n’as pas mangé. Les collations sont facultatives.")}</p></section><section class="card"><h2>🌱 ${tr("Au fil des semaines")}</h2><p class="muted small">${tr("Comment ton journal se documente, semaine après semaine.")}</p><div class="brain-week-chart" role="list">${learning.weeks.map(week => `<div class="brain-week" role="listitem"><strong>${week.days ? `${week.score}%` : "—"}</strong><div class="brain-week-track"><i style="height:${week.score}%"></i></div><span>${esc(dates(week.from))}</span><small>${tr(week.days ? week.partial ? "Semaine partielle" : "Semaine entière" : "Sans données")}</small></div>`).join("")}</div><p class="muted small">${tr(trend)}</p><p class="muted tiny">${tr("Les semaines partielles sont indiquées. La comparaison porte sur les deux dernières semaines complètes.")}</p></section><section class="card brain-context-card"><h2>${tr("Ce qui ajoute du contexte")}</h2><div class="brain-coverage-list">${metric("😴", "Sommeil", learning.sleep, learning.days, "Journées avec sommeil consigné")}${metric("💧", "Hydratation", learning.water, learning.days, "Journées avec eau consignée")}${learning.stepsEnabled ? metric("👟", "Pas", learning.steps, learning.days, "Journées avec pas consignés") : ""}</div><p class="muted small brain-activity-note">🏃 ${tr("Journées avec une activité consignée")} : ${learning.activities}/${learning.days}. ${tr("Les activités enrichissent le contexte sans diminuer la couverture lorsqu’il n’y en a pas.")}</p></section></div>`;
+    $("#app").innerHTML = `${analysisDateNavigatorHtml()}<section class="hero brain-hero brain-learning-hero"><p class="eyebrow">🧠 ${tr("Cerveau")}</p><h2>${tr("Ton journal en bref")}</h2><div class="brain-confidence"><div class="brain-ring" style="--p:${learning.score}"><strong>${learning.score}%</strong></div><div><strong>${tr("Couverture du journal")}</strong><p class="muted small">${learning.first ? `${esc(dates(learning.first))} – ${esc(dates(learning.anchor))}` : tr("Ton portrait commence avec ta première entrée.")}</p></div></div><div class="brain-summary-grid"><div class="brain-stat"><strong>${learning.documentedDays}/${learning.days}</strong><small>${tr("journées documentées")}</small></div><div class="brain-stat"><strong>${learning.mealTotal}</strong><small>${tr("repas et collations")}</small></div><div class="brain-stat"><strong>${learning.after}/${learning.mealTotal}</strong><small>${tr("ressentis après")}</small></div></div></section><div class="stack"><section class="card brain-food-memory"><h2>🧠 ${tr("Ma mémoire alimentaire")}</h2><p class="muted small">Apprends à Énergie les noms de tes aliments habituels et retrouve tes repas préférés.</p><div class="brain-memory-grid"><details class="brain-memory-block"><summary>⭐ Aliments favoris <small>(${brainFoodFavorites.length})</small></summary><p class="muted small">Choisis un aliment précis dans le FCÉN et donne-lui ton propre nom. Ce nom pourra ensuite être utilisé pour simplifier toutes tes prochaines saisies de repas.</p><label for="brainFoodSearch">Rechercher dans le FCÉN</label><input id="brainFoodSearch" type="search" placeholder="Ex. beurre d’arachide" autocomplete="off"><div id="brainFoodSearchResults" class="meal-inline-results" hidden></div><details class="brain-custom-food"><summary>+ Créer un aliment personnalisé (sans FCÉN)</summary><form id="brainCustomFoodForm"><label>Nom<input name="name" required maxlength="100"></label><label>Calories / 100 g<input name="calories" type="number" min="0" step="any"></label><label>Protéines / 100 g<input name="protein" type="number" min="0" step="any"></label><label>Glucides / 100 g<input name="carbs" type="number" min="0" step="any"></label><label>Lipides / 100 g<input name="fat" type="number" min="0" step="any"></label><button type="submit" class="primary">Enregistrer</button></form></details><form id="brainFoodAliasForm" hidden><p id="brainFoodSelected" class="muted small"></p><label for="brainFoodAlias">Mon nom personnalisé</label><input id="brainFoodAlias" maxlength="100" required placeholder="Ex. beurre de pinottte"><button class="primary" type="submit">Enregistrer cet aliment</button></form><p id="brainFoodStatus" role="status" class="muted small"></p><div class="brain-favorites-controls"><input type="search" id="brainFoodFavoriteFilter" placeholder="Rechercher dans mes aliments favoris…" aria-label="Rechercher dans les aliments favoris"><select id="brainFoodFavoriteSort" aria-label="Trier les aliments favoris"><option value="az">Nom A à Z</option><option value="za">Nom Z à A</option><option value="recent">Plus récents</option></select></div><div class="stack" id="brainFoodFavoriteList">${brainFoodFavoritesHtml()}</div></div><details class="brain-memory-block"><summary>🍽️ Repas favoris <small>(${db.favorites.length})</small></summary><p class="muted small">Tes repas déjà enregistrés restent disponibles et modifiables ici.</p><div class="brain-favorites-controls"><input type="search" id="brainMealFavoriteFilter" placeholder="Rechercher dans mes repas favoris…" aria-label="Rechercher dans les repas favoris"><select id="brainMealFavoriteSort" aria-label="Trier les repas favoris"><option value="az">Nom A à Z</option><option value="frequent">Plus utilisés</option><option value="za">Nom Z à A</option><option value="recent">Plus récents</option></select></div><div class="stack profile-favorites-list" id="brainMealFavoriteList">${renderFavoriteList(db.favorites, false)}</div></details></div></section><section class="card"><h2>🍽️ ${tr("Les repas et leurs ressentis")}</h2><p class="muted small">${tr("Le cœur de ce que le Cerveau apprend de toi.")}</p><div class="brain-coverage-list">${learning.types.map(item => metric(mealIcon(item.type), item.type, item.count, item.total, "Journées avec ce repas consigné")).join("")}${metric("🙂", "Ressentis avant", learning.before, learning.mealTotal, "Repas et collations avec un ressenti avant")}${metric("🧠", "Ressentis après", learning.after, learning.mealTotal, "Repas et collations avec un ressenti après")}</div><p class="muted tiny brain-coverage-note">${tr("Les trois repas principaux servent de repères de saisie. Une entrée absente ne signifie pas que tu n’as pas mangé. Les collations sont facultatives.")}</p></section><section class="card"><h2>🌱 ${tr("Au fil des semaines")}</h2><p class="muted small">${tr("Comment ton journal se documente, semaine après semaine.")}</p><div class="brain-week-chart" role="list">${learning.weeks.map(week => `<div class="brain-week" role="listitem"><strong>${week.days ? `${week.score}%` : "—"}</strong><div class="brain-week-track"><i style="height:${week.score}%"></i></div><span>${esc(dates(week.from))}</span><small>${tr(week.days ? week.partial ? "Semaine partielle" : "Semaine entière" : "Sans données")}</small></div>`).join("")}</div><p class="muted small">${tr(trend)}</p><p class="muted tiny">${tr("Les semaines partielles sont indiquées. La comparaison porte sur les deux dernières semaines complètes.")}</p></section><section class="card brain-context-card"><h2>${tr("Ce qui ajoute du contexte")}</h2><div class="brain-coverage-list">${metric("😴", "Sommeil", learning.sleep, learning.days, "Journées avec sommeil consigné")}${metric("💧", "Hydratation", learning.water, learning.days, "Journées avec eau consignée")}${learning.stepsEnabled ? metric("👟", "Pas", learning.steps, learning.days, "Journées avec pas consignés") : ""}</div><p class="muted small brain-activity-note">🏃 ${tr("Journées avec une activité consignée")} : ${learning.activities}/${learning.days}. ${tr("Les activités enrichissent le contexte sans diminuer la couverture lorsqu’il n’y en a pas.")}</p></section></div>`;
     bindAnalysisDateNavigator();
     bindFavoriteActions();
     bindBrainFoodFavorites();
@@ -16352,7 +16354,7 @@ function formatSleepDuration(hours) {
     const normalize = value => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr").trim();
     const apply = () => {
       const query = normalize(search?.value);
-      const order = sort?.value || "frequent";
+      const order = sort?.value || "az";
       const matches = favorites.filter(f => normalize(f.name + " " + f.description).includes(query));
       matches.sort((a, b) => order === "az" ? a.name.localeCompare(b.name, "fr") :
         order === "za" ? b.name.localeCompare(a.name, "fr") :
@@ -16370,7 +16372,7 @@ function formatSleepDuration(hours) {
       });
     };
     if (search) { search.value = ""; search.oninput = apply; }
-    if (sort) { sort.value = "frequent"; sort.onchange = apply; }
+    if (sort) { sort.value = "az"; sort.onchange = apply; }
     apply();
   }
   function normalizedMealDescription(value) {
@@ -17723,6 +17725,39 @@ function formatSleepDuration(hours) {
   $("#beforeFeelingDialog").addEventListener("close", () =>
     updateMealFeelingsOverview(),
   );
+  function offerMealFavoriteSuggestion(meal) {
+    if (!meal || db.settings.hideFavoriteSuggestion === true || professionalClientReadOnly()) return;
+    document.getElementById("mealFavoriteSuggestionDialog")?.remove();
+    const dialog = document.createElement("dialog");
+    dialog.id = "mealFavoriteSuggestionDialog";
+    dialog.className = "meal-favorite-suggestion-dialog";
+    dialog.innerHTML = '<div class="meal-favorite-suggestion-content"><h2>⭐ Simplifie tes prochains repas !</h2><p>Enregistre ce repas dans tes favoris pour le retrouver et le saisir plus rapidement la prochaine fois.</p><p>Tu peux aussi utiliser l’étoile ⭐ dans un repas pour l’ajouter ou le retirer de tes favoris à tout moment.</p><label class="meal-favorite-suggestion-optout"><input type="checkbox" id="hideMealFavoriteSuggestion"> Ne plus afficher cette suggestion</label><div class="meal-favorite-suggestion-actions"><button type="button" class="secondary" id="skipMealFavoriteSuggestion">Non merci</button><button type="button" class="primary" id="acceptMealFavoriteSuggestion">⭐ Oui, ajouter</button></div></div>';
+    document.body.appendChild(dialog);
+    const dismiss = () => {
+      if (dialog.querySelector("#hideMealFavoriteSuggestion")?.checked) {
+        db.settings.hideFavoriteSuggestion = true;
+        saveLocal("preference-favoris");
+        setDayChanged(todayKey());
+      }
+      dialog.close();
+      dialog.remove();
+    };
+    dialog.querySelector("#skipMealFavoriteSuggestion").onclick = dismiss;
+    dialog.querySelector("#acceptMealFavoriteSuggestion").onclick = () => {
+      if (!favoriteForMeal(meal)) {
+        const favorite = normalFavorite({
+          name: meal.description.slice(0, 45), type: meal.type,
+          description: meal.description, notes: meal.notes, cnfItems: meal.cnfItems
+        });
+        db.favorites.push(favorite);
+        setFavoriteChanged(favorite);
+      }
+      dismiss();
+      render();
+    };
+    dialog.addEventListener("cancel", event => { event.preventDefault(); dismiss(); });
+    dialog.showModal();
+  }
   $("#mealForm").onsubmit = (e) => {
     if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     e.preventDefault();
@@ -17836,6 +17871,7 @@ function formatSleepDuration(hours) {
       enqueue({ kind: "deleteMealPhotos", id: savedMeal.id, date: savedMeal.date, photoPaths: [...removedMealPhotoPaths] });
       removedMealPhotoPaths = new Set();
     }
+    const isNewMeal = !old;
     const favoriteButton = $("#mealFavoriteToggle"),
       wantsFavorite = favoriteButton.getAttribute("aria-pressed") === "true",
       favoriteId = favoriteButton.dataset.favoriteId,
@@ -17868,9 +17904,11 @@ function formatSleepDuration(hours) {
     } catch (memoryError) {
       console.warn("Mémoire alimentaire", memoryError);
     }
+    const shouldSuggestFavorite = isNewMeal && !wantsFavorite && !favoriteId && !favoriteForMeal(savedMeal) && !!savedMeal.description.trim() && db.settings.hideFavoriteSuggestion !== true;
     $("#mealDialog").close();
     render();
-    if (recommendation)
+    if (shouldSuggestFavorite) setTimeout(() => offerMealFavoriteSuggestion(savedMeal), 320);
+    if (recommendation && !shouldSuggestFavorite)
       setTimeout(
         () => showMealRecommendation(recommendation, selectedDate),
         280,
