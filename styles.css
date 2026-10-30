@@ -2900,3 +2900,24 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .brain-favorites-controls + #favoriteQuickList {
   margin-top: 16px;
 }
+
+
+/* Discover meal favorites after a successful new entry. */
+.meal-favorite-suggestion-dialog {
+  width: min(92vw, 480px);
+  max-height: min(85vh, 680px);
+  border: 1px solid #dce8d5;
+  border-radius: 22px;
+  padding: 0;
+  color: #173b28;
+  background: #fff;
+  box-shadow: 0 24px 75px rgba(0,0,0,.18);
+}
+.meal-favorite-suggestion-dialog::backdrop { background: rgba(16,36,25,.42); }
+.meal-favorite-suggestion-content { padding: clamp(20px, 5vw, 32px); }
+.meal-favorite-suggestion-content h2 { margin: 0 0 16px; font-size: 1.45rem; }
+.meal-favorite-suggestion-content p { margin: 0 0 14px; line-height: 1.5; }
+.meal-favorite-suggestion-optout { display: flex; align-items: center; gap: 10px; margin: 22px 0; font-size: .95rem; }
+.meal-favorite-suggestion-optout input { width: 18px; height: 18px; flex: 0 0 auto; }
+.meal-favorite-suggestion-actions { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
+.meal-favorite-suggestion-actions button { flex: 1 1 150px; }
