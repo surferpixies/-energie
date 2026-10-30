@@ -2921,3 +2921,33 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .meal-favorite-suggestion-optout input { width: 18px; height: 18px; flex: 0 0 auto; }
 .meal-favorite-suggestion-actions { display: flex; gap: 12px; justify-content: flex-end; flex-wrap: wrap; }
 .meal-favorite-suggestion-actions button { flex: 1 1 150px; }
+
+
+/* Meal entry: compact shortcuts together, beverage at far right. */
+#mealQuickFillBar {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+#mealQuickFillBar[hidden] { display: none !important; }
+#mealQuickFillBar > button {
+  width: auto;
+  min-width: 0;
+  flex: 1 1 130px;
+  margin: 0;
+}
+#mealQuickFillBar > #openMealBeverage {
+  flex: 0 1 auto;
+  margin-left: auto;
+  padding: 9px 14px;
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+#mealQuickFillBar > #openMealBeverage strong { white-space: nowrap; }
+@media (max-width: 680px) {
+  #mealQuickFillBar { gap: 8px; }
+  #mealQuickFillBar > button { flex: 1 1 42%; }
+  #mealQuickFillBar > #openMealBeverage { flex: 1 1 42%; margin-left: auto; }
+}
