@@ -16520,6 +16520,8 @@ function formatSleepDuration(hours) {
     if (previousButton) previousButton.hidden = isSnack || value === "Souper";
     if (previousLabel) previousLabel.textContent = value === "Déjeuner" ? "Déjeuner d’hier" : value === "Dîner" ? "Souper d’hier" : "Souper précédent";
     if (previousIcon) previousIcon.textContent = value === "Déjeuner" ? "🍳" : "🍱";
+    const beverageIcon = $("#openMealBeverage span[aria-hidden]");
+    if (beverageIcon) beverageIcon.textContent = value === "Déjeuner" ? "☕" : value === "Dîner" ? "💧" : value === "Souper" ? "🍷" : "🥤";
     populateFavoriteSelect(value);
     $("#favoriteMealSelect").value = "";
     populateFavoriteQuickPicks(value);
