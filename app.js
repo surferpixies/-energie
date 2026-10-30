@@ -16878,7 +16878,8 @@ function formatSleepDuration(hours) {
         : "Ajouter un repas";
     $("#mealId").value = m?.id || "";
     const deleteButton = $("#deleteCurrentMeal");
-    deleteButton.hidden = !m || readOnly;
+    deleteButton.hidden = readOnly;
+    deleteButton.textContent = m ? "Supprimer" : "Effacer la saisie";
     deleteButton.onclick = m
       ? () => {
           if (confirm(`Supprimer « ${m.description} »?`)) {
@@ -16887,7 +16888,16 @@ function formatSleepDuration(hours) {
             render();
           }
         }
-      : null;
+      : () => {
+          // Un repas non enregistré n’existe pas encore dans le Journal : effacer son brouillon.
+          $("#mealDescription").value = "";
+          $("#mealNotes").value = "";
+          setMealCnfItemsField([]);
+          inlineGuidedRows = [{ id: null, query: "", quantity: null, unit: "g" }];
+          $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
+          $("#mealDialog").close();
+          render();
+        };
     updateMealDialogType(type);
     $("#mealTime").value = m?.time || new Date().toTimeString().slice(0, 5);
     $("#mealDescription").value = m?.description || "";
