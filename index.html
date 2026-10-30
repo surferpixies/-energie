@@ -767,7 +767,7 @@
     // The Capacitor Keyboard plugin is synced into iOS by npm run ios:sync.
     if (window.Capacitor?.getPlatform?.() === 'ios') {
       window.Capacitor.Plugins?.Keyboard?.setAccessoryBarVisible({ isVisible: false })
-        .catch(error => console.warn('iOS keyboard accessory bar:', error));
+        ?.catch(error => console.warn('iOS keyboard accessory bar:', error));
     }
   </script>
   <script src="meal-entry-guide.js?v=3.56.345"></script>
