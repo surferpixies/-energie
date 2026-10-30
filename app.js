@@ -11554,7 +11554,7 @@ function formatSleepDuration(hours) {
   }
   function brainFoodFavoritesHtml() {
     return brainFoodFavorites.length
-      ? brainFoodFavorites.map(f => '<div class="brain-food-favorite"><div><strong>' + esc(f.alias) + '</strong><p class="muted tiny">' + esc(f.food_source === 'custom' ? 'Aliment personnalisé · hors FCÉN' : (f.name_fr || f.name_en || f.cnf_food_id)) + '</p></div><div class="favorite-actions"><button type="button" class="secondary small" data-food-alias-edit="' + esc(f.id) + '">Renommer</button><button type="button" class="secondary small brain-alias-remove" data-food-alias-delete="' + esc(f.id) + '" aria-label="Supprimer cet aliment favori" title="Supprimer">×</button></div></div>').join("")
+      ? brainFoodFavorites.map(f => '<div class="brain-food-favorite"><div><strong>' + esc(f.alias) + '</strong><p class="muted tiny">' + esc(f.food_source === 'custom' ? 'Aliment personnalisé · hors FCÉN' : (f.name_fr || f.name_en || f.cnf_food_id)) + '</p></div><div class="favorite-actions"><button type="button" class="favorite-rename" data-food-alias-edit="' + esc(f.id) + '" aria-label="Renommer ' + esc(f.alias) + '" title="Renommer cet aliment favori"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button><button type="button" class="secondary small brain-alias-remove" data-food-alias-delete="' + esc(f.id) + '" aria-label="Supprimer cet aliment favori" title="Supprimer">×</button></div></div>').join("")
       : (brainFoodFavoritesUser !== session?.user?.id ? '<p class="muted small">Chargement des aliments favoris…</p>' : '<p class="muted small">Aucun aliment personnalisé pour le moment.</p>');
   }
   function bindBrainFoodFavorites() {
