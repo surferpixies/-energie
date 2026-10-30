@@ -16341,23 +16341,34 @@ function formatSleepDuration(hours) {
     setFavoriteChanged(favorite);
   }
   function populateFavoriteQuickPicks(type) {
-    const section = $("#favoriteQuickSection"),
-      list = $("#favoriteQuickList"),
-      favorites = favoritesForType(type).slice(0, 8);
+    const section = $("#favoriteQuickSection"), list = $("#favoriteQuickList");
+    const search = $("#favoriteQuickSearch"), sort = $("#favoriteQuickSort");
     if (!section || !list) return;
+    const favorites = favoritesForType(type);
     section.hidden = !favorites.length;
-    list.innerHTML = favorites
-      .map((f) => `<button type="button" class="meal-quick-pick" data-quick-favorite="${f.id}" title="${esc(f.description)}"><span>${mealIcon(f.type, f.description)}</span><strong>${esc(f.name)}</strong></button>`)
-      .join("");
-    $$('[data-quick-favorite]').forEach(
-      (button) =>
-        (button.onclick = () => {
-          const favorite = db.favorites.find((f) => f.id === button.dataset.quickFavorite);
+    const normalize = value => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr").trim();
+    const apply = () => {
+      const query = normalize(search?.value);
+      const order = sort?.value || "frequent";
+      const matches = favorites.filter(f => normalize(f.name + " " + f.description).includes(query));
+      matches.sort((a, b) => order === "az" ? a.name.localeCompare(b.name, "fr") :
+        order === "za" ? b.name.localeCompare(a.name, "fr") :
+        order === "recent" ? (Date.parse(b.createdAt || b.updatedAt || 0) - Date.parse(a.createdAt || a.updatedAt || 0)) :
+        ((b.usageCount || 0) - (a.usageCount || 0)));
+      list.innerHTML = matches.length ? matches.map(f =>
+        `<button type="button" class="meal-quick-pick" data-quick-favorite="${esc(f.id)}" title="${esc(f.description)}"><span>${mealIcon(f.type, f.description)}</span><strong>${esc(f.name)}</strong></button>`
+      ).join("") : '<p class="muted small">Aucun repas favori correspondant.</p>';
+      list.querySelectorAll("[data-quick-favorite]").forEach(button => {
+        button.onclick = () => {
+          const favorite = db.favorites.find(f => f.id === button.dataset.quickFavorite);
           applyFavoriteToMealForm(favorite);
-          $$('[data-quick-favorite]').forEach((x) => x.classList.toggle("active", x === button));
           $("#mealQuickFillDialog")?.close();
-        }),
-    );
+        };
+      });
+    };
+    if (search) { search.value = ""; search.oninput = apply; }
+    if (sort) { sort.value = "frequent"; sort.onchange = apply; }
+    apply();
   }
   function normalizedMealDescription(value) {
     return String(value || "")
