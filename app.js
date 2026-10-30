@@ -16517,7 +16517,7 @@ function formatSleepDuration(hours) {
     // Pour une collation, on garde la barre mais on masque seulement le raccourci
     // « repas précédent », qui est spécifique aux repas principaux.
     if (quickBar) quickBar.hidden = !(mainMeal || isSnack);
-    if (previousButton) previousButton.hidden = isSnack;
+    if (previousButton) previousButton.hidden = isSnack || value === "Souper";
     if (previousLabel) previousLabel.textContent = value === "Déjeuner" ? "Déjeuner d’hier" : value === "Dîner" ? "Souper d’hier" : "Souper précédent";
     if (previousIcon) previousIcon.textContent = value === "Déjeuner" ? "🍳" : "🍱";
     populateFavoriteSelect(value);
