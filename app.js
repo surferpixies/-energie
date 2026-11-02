@@ -699,7 +699,7 @@ function formatSleepDuration(hours) {
     d.formDrafts =
       d.formDrafts && typeof d.formDrafts === "object" ? d.formDrafts : {};
     d.water = Number(d.water) || 0;
-    d.glucoseMeasurements = (Array.isArray(d.glucoseMeasurements) ? d.glucoseMeasurements : []).filter(x => x && Number.isFinite(Number(x.value)) && Number(x.value)>0 && Number(x.value)<40 && /^\d{2}:\d{2}$/.test(x.time || "")).map(x => ({id: String(x.id || uid()), value: Number(x.value), time: x.time, context: ["fasting","before","after","bedtime","other"].includes(x.context) ? x.context : "other",...(typeof x.scheduledTime === "string" ? {scheduledTime:x.scheduledTime} : {}),...(typeof x.mealId === "string" ? {mealId:x.mealId} : {})}));
+    d.glucoseMeasurements = (Array.isArray(d.glucoseMeasurements) ? d.glucoseMeasurements : []).filter(x => x && Number.isFinite(Number(x.value)) && Number(x.value)>0 && Number(x.value)<40 && /^\d{2}:\d{2}$/.test(x.time || "")).map(x => ({id: String(x.id || uid()), value: Number(x.value), time: x.time, context: ["fasting","before","after","bedtime","other"].includes(x.context) ? x.context : "other",...(typeof x.scheduledTime === "string" ? {scheduledTime:x.scheduledTime} : {}),...(typeof x.mealId === "string" ? {mealId:x.mealId} : {}),...(typeof x.glucoseSlot === "string" ? {glucoseSlot:x.glucoseSlot} : {})}));
     d.beverages = (Array.isArray(d.beverages) ? d.beverages : [])
       .map((item) => normalBeverage(item, key))
       .filter(Boolean);
@@ -2340,6 +2340,14 @@ function formatSleepDuration(hours) {
         if (!d.sleepComment && r.sleep_comment) d.sleepComment = r.sleep_comment;
         if (!d.sleepStartTime && r.supplements?.sleepTiming?.start) d.sleepStartTime = r.supplements.sleepTiming.start;
         if (!d.sleepEndTime && r.supplements?.sleepTiming?.end) d.sleepEndTime = r.supplements.sleepTiming.end;
+        // When a local day looks newer (e.g. a meal was edited), don't hide
+        // glucose readings already saved in Supabase. Avoid overriding a pending
+        // local day operation, including an intentional deletion.
+        if (!(d.glucoseMeasurements || []).length &&
+            Array.isArray(r.supplements?.glucoseMeasurements) &&
+            !outbox().some(op => op.kind === "day" && op.date === r.log_date)) {
+          d.glucoseMeasurements = r.supplements.glucoseMeasurements;
+        }
         if (!(Number(d.water) > 0) && Number(r.water) > 0) d.water = Number(r.water);
         if (!(d.beverages || []).length && Array.isArray(r.supplements?.beverages))
           d.beverages = r.supplements.beverages
