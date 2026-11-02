@@ -46,13 +46,18 @@ BEGIN
 
   -- Old first, new last: on equal/unversioned timestamps, the incoming entry wins.
   FOR entry IN
-    SELECT value FROM pg_catalog.jsonb_array_elements(
+    SELECT value FROM (
+      SELECT 0 AS source_order, ordinality AS row_order, value
+      FROM pg_catalog.jsonb_array_elements(
       CASE WHEN jsonb_typeof(original -> 'glucoseMeasurements') = 'array'
-        THEN original -> 'glucoseMeasurements' ELSE '[]'::jsonb END)
-    UNION ALL
-    SELECT value FROM pg_catalog.jsonb_array_elements(
+        THEN original -> 'glucoseMeasurements' ELSE '[]'::jsonb END) WITH ORDINALITY
+      UNION ALL
+      SELECT 1 AS source_order, ordinality AS row_order, value
+      FROM pg_catalog.jsonb_array_elements(
       CASE WHEN jsonb_typeof(requested -> 'glucoseMeasurements') = 'array'
-        THEN requested -> 'glucoseMeasurements' ELSE '[]'::jsonb END)
+        THEN requested -> 'glucoseMeasurements' ELSE '[]'::jsonb END) WITH ORDINALITY
+    ) ordered_entries
+    ORDER BY source_order, row_order
   LOOP
     item_id := entry ->> 'id';
     IF item_id IS NULL OR item_id = '' THEN CONTINUE; END IF;
