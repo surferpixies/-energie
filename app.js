@@ -2064,7 +2064,7 @@ function formatSleepDuration(hours) {
             )
           ) {
             // Do not silently drop new data and report a successful sync.
-            if (hasPersonalData) throw error;
+            if (hasPersonalData || (dayPayload.supplements?.glucoseMeasurements || []).length || Object.keys(dayPayload.supplements?.glucoseTombstones || {}).length) throw error;
             delete dayPayload.sleep_tags;
             delete dayPayload.sleep_comment;
             delete dayPayload.supplements;
