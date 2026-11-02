@@ -2035,12 +2035,12 @@ function formatSleepDuration(hours) {
           let hasPersonalData = Object.keys(dayPayload.supplements.personalProfile).length > 0 || !!dayPayload.supplements.weightMeasurement;
           {
             const { data: latest, error: readError } = await client.from("daily_logs")
-              .select("supplements").eq("user_id", session.user.id).eq("log_date", op.date).maybeSingle();
+              .select("supplements,updated_at").eq("user_id", session.user.id).eq("log_date", op.date).maybeSingle();
             if (readError && (hasPersonalData || !/(supplements|schema cache|column)/i.test(readError.message || ""))) throw readError;
             dayPayload.supplements.personalProfile = Metrics.mergeProfile(dayPayload.supplements.personalProfile, latest?.supplements?.personalProfile);
             dayPayload.supplements.weightMeasurement = Metrics.mergeWeight(dayPayload.supplements.weightMeasurement, latest?.supplements?.weightMeasurement);
             hasPersonalData = Object.keys(dayPayload.supplements.personalProfile).length > 0 || !!dayPayload.supplements.weightMeasurement;
-          }
+
           const mergedGlucose = mergeGlucoseRecords(
             dayPayload.supplements.glucoseMeasurements,
             latest?.supplements?.glucoseMeasurements,
@@ -2053,6 +2053,7 @@ function formatSleepDuration(hours) {
           dayPayload.supplements.glucoseTombstones = mergedGlucose.tombstones;
           d.glucoseMeasurements = mergedGlucose.readings;
           d.glucoseTombstones = mergedGlucose.tombstones;
+          }
           let { error } = await client
             .from("daily_logs")
             .upsert(dayPayload, { onConflict: "user_id,log_date" });
