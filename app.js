@@ -1910,29 +1910,30 @@ function formatSleepDuration(hours) {
       }
     }
   }
-  function mergeGlucoseRecords(localRows, remoteRows, localDeleted, remoteDeleted, localAt, remoteAt) {
-    // Per-record timestamps plus tombstones prevent deleted entries from reappearing.
-    // Legacy entries inherit the day timestamp only for conflict resolution.
-    const deleted = { ...(remoteDeleted || {}), ...(localDeleted || {}) };
+  function mergeGlucoseRecords(localRows, remoteRows, localDeleted, remoteDeleted) {
+    // Unversioned legacy readings cannot outrank timestamped edits.
+    // Prefer cloud for equal/unknown timestamps; retain distinct offline additions.
+    const timestamp = value => {
+      const ms = Date.parse(value || "");
+      return Number.isFinite(ms) ? ms : 0;
+    };
+    const deleted = { ...(localDeleted || {}) };
     for (const [id, at] of Object.entries(remoteDeleted || {})) {
-      if (Date.parse(at) > Date.parse(deleted[id] || "")) deleted[id] = at;
+      if (timestamp(at) >= timestamp(deleted[id])) deleted[id] = at;
     }
     const rows = new Map();
-    for (const [entries, dayAt, preferOnTie] of [[localRows, localAt, false], [remoteRows, remoteAt, true]]) {
+    for (const entries of [localRows, remoteRows]) {
       for (const item of Array.isArray(entries) ? entries : []) {
         if (!item?.id) continue;
-        const at = item.updatedAt || dayAt || "";
-        const previous = rows.get(String(item.id));
-        if (!previous || Date.parse(at) > Date.parse(previous.at) ||
-            (preferOnTie && Date.parse(at) === Date.parse(previous.at))) {
-          rows.set(String(item.id), { value: item, at });
-        }
+        const id = String(item.id), previous = rows.get(id);
+        if (!previous || timestamp(item.updatedAt) >= timestamp(previous.updatedAt))
+          rows.set(id, item);
       }
     }
     return {
       readings: [...rows.entries()]
-        .filter(([id, entry]) => !(Date.parse(deleted[id] || "") >= Date.parse(entry.at)))
-        .map(([, entry]) => entry.value),
+        .filter(([id, item]) => !(deleted[id] && timestamp(deleted[id]) >= timestamp(item.updatedAt)))
+        .map(([, item]) => item),
       tombstones: deleted,
     };
   }
@@ -2046,8 +2047,6 @@ function formatSleepDuration(hours) {
             latest?.supplements?.glucoseMeasurements,
             dayPayload.supplements.glucoseTombstones,
             latest?.supplements?.glucoseTombstones,
-            d.updatedAt,
-            latest?.updated_at
           );
           dayPayload.supplements.glucoseMeasurements = mergedGlucose.readings;
           dayPayload.supplements.glucoseTombstones = mergedGlucose.tombstones;
@@ -2340,7 +2339,6 @@ function formatSleepDuration(hours) {
       const glucoseMerged = mergeGlucoseRecords(
         d.glucoseMeasurements, r.supplements?.glucoseMeasurements,
         d.glucoseTombstones, r.supplements?.glucoseTombstones,
-        d.updatedAt, r.updated_at
       );
       d.glucoseMeasurements = glucoseMerged.readings;
       d.glucoseTombstones = glucoseMerged.tombstones;
