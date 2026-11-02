@@ -678,7 +678,6 @@ function formatSleepDuration(hours) {
         stepsGoal: null,
         beverages: [],
         glucoseMeasurements: [],
-        glucoseTombstones: {},
         activities: [],
         meals: [],
         observations: [],
@@ -700,8 +699,7 @@ function formatSleepDuration(hours) {
     d.formDrafts =
       d.formDrafts && typeof d.formDrafts === "object" ? d.formDrafts : {};
     d.water = Number(d.water) || 0;
-    d.glucoseTombstones = d.glucoseTombstones && typeof d.glucoseTombstones === "object" && !Array.isArray(d.glucoseTombstones) ? d.glucoseTombstones : {};
-    d.glucoseMeasurements = (Array.isArray(d.glucoseMeasurements) ? d.glucoseMeasurements : []).filter(x => x && Number.isFinite(Number(x.value)) && Number(x.value)>0 && Number(x.value)<40 && /^\d{2}:\d{2}$/.test(x.time || "")).map(x => ({id: String(x.id || uid()), value: Number(x.value), time: x.time, context: ["fasting","before","after","bedtime","other"].includes(x.context) ? x.context : "other",...(typeof x.scheduledTime === "string" ? {scheduledTime:x.scheduledTime} : {}),...(typeof x.mealId === "string" ? {mealId:x.mealId} : {}),...(typeof x.glucoseSlot === "string" && ["Déjeuner","Dîner","Souper"].includes(x.glucoseSlot) ? {glucoseSlot:x.glucoseSlot} : {}),...(typeof x.updatedAt === "string" ? {updatedAt:x.updatedAt} : {})}));
+    d.glucoseMeasurements = (Array.isArray(d.glucoseMeasurements) ? d.glucoseMeasurements : []).filter(x => x && Number.isFinite(Number(x.value)) && Number(x.value)>0 && Number(x.value)<40 && /^\d{2}:\d{2}$/.test(x.time || "")).map(x => ({id: String(x.id || uid()), value: Number(x.value), time: x.time, context: ["fasting","before","after","bedtime","other"].includes(x.context) ? x.context : "other",...(typeof x.scheduledTime === "string" ? {scheduledTime:x.scheduledTime} : {}),...(typeof x.mealId === "string" ? {mealId:x.mealId} : {}),...(typeof x.glucoseSlot === "string" ? {glucoseSlot:x.glucoseSlot} : {})}));
     d.beverages = (Array.isArray(d.beverages) ? d.beverages : [])
       .map((item) => normalBeverage(item, key))
       .filter(Boolean);
@@ -1910,33 +1908,6 @@ function formatSleepDuration(hours) {
       }
     }
   }
-  function mergeGlucoseRecords(localRows, remoteRows, localDeleted, remoteDeleted) {
-    // Unversioned legacy readings cannot outrank timestamped edits.
-    // Prefer cloud for equal/unknown timestamps; retain distinct offline additions.
-    const timestamp = value => {
-      const ms = Date.parse(value || "");
-      return Number.isFinite(ms) ? ms : 0;
-    };
-    const deleted = { ...(localDeleted || {}) };
-    for (const [id, at] of Object.entries(remoteDeleted || {})) {
-      if (timestamp(at) >= timestamp(deleted[id])) deleted[id] = at;
-    }
-    const rows = new Map();
-    for (const entries of [localRows, remoteRows]) {
-      for (const item of Array.isArray(entries) ? entries : []) {
-        if (!item?.id) continue;
-        const id = String(item.id), previous = rows.get(id);
-        if (!previous || timestamp(item.updatedAt) >= timestamp(previous.updatedAt))
-          rows.set(id, item);
-      }
-    }
-    return {
-      readings: [...rows.entries()]
-        .filter(([id, item]) => !(deleted[id] && timestamp(deleted[id]) >= timestamp(item.updatedAt)))
-        .map(([, item]) => item),
-      tombstones: deleted,
-    };
-  }
   async function syncNowPass() {
     if (accountDeletionBusy) return;
     const syncOwnerId = session?.user?.id;
@@ -1967,7 +1938,6 @@ function formatSleepDuration(hours) {
               taken: d.supplementsTaken || [],
               beverages: d.beverages || [],
               glucoseMeasurements: d.glucoseMeasurements || [],
-              glucoseTombstones: d.glucoseTombstones || {},
               steps: d.steps,
               stepsSource: d.stepsSource || null,
               stepsGoal: d.stepsGoal,
@@ -2036,22 +2006,11 @@ function formatSleepDuration(hours) {
           let hasPersonalData = Object.keys(dayPayload.supplements.personalProfile).length > 0 || !!dayPayload.supplements.weightMeasurement;
           {
             const { data: latest, error: readError } = await client.from("daily_logs")
-              .select("supplements,updated_at").eq("user_id", session.user.id).eq("log_date", op.date).maybeSingle();
+              .select("supplements").eq("user_id", session.user.id).eq("log_date", op.date).maybeSingle();
             if (readError && (hasPersonalData || !/(supplements|schema cache|column)/i.test(readError.message || ""))) throw readError;
             dayPayload.supplements.personalProfile = Metrics.mergeProfile(dayPayload.supplements.personalProfile, latest?.supplements?.personalProfile);
             dayPayload.supplements.weightMeasurement = Metrics.mergeWeight(dayPayload.supplements.weightMeasurement, latest?.supplements?.weightMeasurement);
             hasPersonalData = Object.keys(dayPayload.supplements.personalProfile).length > 0 || !!dayPayload.supplements.weightMeasurement;
-
-          const mergedGlucose = mergeGlucoseRecords(
-            dayPayload.supplements.glucoseMeasurements,
-            latest?.supplements?.glucoseMeasurements,
-            dayPayload.supplements.glucoseTombstones,
-            latest?.supplements?.glucoseTombstones,
-          );
-          dayPayload.supplements.glucoseMeasurements = mergedGlucose.readings;
-          dayPayload.supplements.glucoseTombstones = mergedGlucose.tombstones;
-          d.glucoseMeasurements = mergedGlucose.readings;
-          d.glucoseTombstones = mergedGlucose.tombstones;
           }
           let { error } = await client
             .from("daily_logs")
@@ -2063,7 +2022,7 @@ function formatSleepDuration(hours) {
             )
           ) {
             // Do not silently drop new data and report a successful sync.
-            if (hasPersonalData || (dayPayload.supplements?.glucoseMeasurements || []).length || Object.keys(dayPayload.supplements?.glucoseTombstones || {}).length) throw error;
+            if (hasPersonalData) throw error;
             delete dayPayload.sleep_tags;
             delete dayPayload.sleep_comment;
             delete dayPayload.supplements;
@@ -2336,12 +2295,6 @@ function formatSleepDuration(hours) {
       db.settings.personalProfile = Metrics.mergeProfile(db.settings.personalProfile, r.supplements?.personalProfile);
       const d = ensureDay(db, r.log_date);
       d.weightMeasurement = Metrics.mergeWeight(d.weightMeasurement, r.supplements?.weightMeasurement);
-      const glucoseMerged = mergeGlucoseRecords(
-        d.glucoseMeasurements, r.supplements?.glucoseMeasurements,
-        d.glucoseTombstones, r.supplements?.glucoseTombstones,
-      );
-      d.glucoseMeasurements = glucoseMerged.readings;
-      d.glucoseTombstones = glucoseMerged.tombstones;
       const remoteIsNewer = !d.updatedAt || new Date(r.updated_at) >= new Date(d.updatedAt);
       if (remoteIsNewer) {
         d.sleepHours = r.sleep_hours;
@@ -2350,7 +2303,7 @@ function formatSleepDuration(hours) {
         if (typeof r.supplements?.sleepTiming?.start === "string") d.sleepStartTime = r.supplements.sleepTiming.start;
         if (typeof r.supplements?.sleepTiming?.end === "string") d.sleepEndTime = r.supplements.sleepTiming.end;
         d.water = r.water || 0;
-        // Glucose is merged independently above.
+        d.glucoseMeasurements = Array.isArray(r.supplements?.glucoseMeasurements) ? r.supplements.glucoseMeasurements : [];
         d.beverages = (Array.isArray(r.supplements?.beverages) ? r.supplements.beverages : [])
           .map((item) => normalBeverage(item, r.log_date))
           .filter(Boolean);
@@ -2387,6 +2340,14 @@ function formatSleepDuration(hours) {
         if (!d.sleepComment && r.sleep_comment) d.sleepComment = r.sleep_comment;
         if (!d.sleepStartTime && r.supplements?.sleepTiming?.start) d.sleepStartTime = r.supplements.sleepTiming.start;
         if (!d.sleepEndTime && r.supplements?.sleepTiming?.end) d.sleepEndTime = r.supplements.sleepTiming.end;
+        // When a local day looks newer (e.g. a meal was edited), don't hide
+        // glucose readings already saved in Supabase. Avoid overriding a pending
+        // local day operation, including an intentional deletion.
+        if (!(d.glucoseMeasurements || []).length &&
+            Array.isArray(r.supplements?.glucoseMeasurements) &&
+            !outbox().some(op => op.kind === "day" && op.date === r.log_date)) {
+          d.glucoseMeasurements = r.supplements.glucoseMeasurements;
+        }
         if (!(Number(d.water) > 0) && Number(r.water) > 0) d.water = Number(r.water);
         if (!(d.beverages || []).length && Array.isArray(r.supplements?.beverages))
           d.beverages = r.supplements.beverages
@@ -10766,8 +10727,8 @@ function formatSleepDuration(hours) {
       const day=ensureDay(db,selectedDate);
       const meal=key==="fasting" ? null : (day.meals||[]).find(m=>m.type===key);
       const old=(day.glucoseMeasurements||[]).find(x=>key==="fasting" ? x.context==="fasting"&&!x.mealId : (meal&&x.mealId===meal.id)||x.glucoseSlot===key);
-      if(old){old.value=value;old.time=time;old.updatedAt=new Date().toISOString();if(key!=="fasting"){old.glucoseSlot=key;old.context="after";if(meal)old.mealId=meal.id;}}
-      else (day.glucoseMeasurements ||= []).push({id:uid(),value,time,updatedAt:new Date().toISOString(),context:key==="fasting"?"fasting":"after",...(key==="fasting"?{}:{glucoseSlot:key,...(meal?{mealId:meal.id}:{})})});
+      if(old){old.value=value;old.time=time;if(key!=="fasting"){old.glucoseSlot=key;old.context="after";if(meal)old.mealId=meal.id;}}
+      else (day.glucoseMeasurements ||= []).push({id:uid(),value,time,context:key==="fasting"?"fasting":"after",...(key==="fasting"?{}:{glucoseSlot:key,...(meal?{mealId:meal.id}:{})})});
       day.updatedAt=new Date().toISOString();saveLocal("glycemie-tableau");setDayChanged(selectedDate);render();
     });
     $("#glucoseEntryForm")?.addEventListener("submit",event=>{
@@ -10776,14 +10737,12 @@ function formatSleepDuration(hours) {
       const value=parse($("#glucoseValue")?.value),time=$("#glucoseTime")?.value;
       if(!Number.isFinite(value)||value<=0||value>=40||!/^\d{2}:\d{2}$/.test(time||""))return invalid();
       const day=ensureDay(db,selectedDate);
-      (day.glucoseMeasurements ||= []).push({id:uid(),value,time,updatedAt:new Date().toISOString(),context:"other"});
+      (day.glucoseMeasurements ||= []).push({id:uid(),value,time,context:"other"});
       day.updatedAt=new Date().toISOString();saveLocal("glycemie-supplementaire");setDayChanged(selectedDate);render();
     });
     $$("[data-delete-glucose]").forEach(btn=>btn.onclick=()=>{
       if(professionalClientReadOnly())return preventProfessionalClientEdit();
       const day=ensureDay(db,selectedDate);
-      day.glucoseTombstones ||= {};
-      day.glucoseTombstones[btn.dataset.deleteGlucose]=new Date().toISOString();
       day.glucoseMeasurements=(day.glucoseMeasurements||[]).filter(x=>x.id!==btn.dataset.deleteGlucose);
       day.updatedAt=new Date().toISOString();saveLocal("glycemie-retirer");setDayChanged(selectedDate);render();
     });
@@ -16889,8 +16848,8 @@ function formatSleepDuration(hours) {
       const d = ensureDay(db, selectedDate);
       const previous = d.glucoseMeasurements.find(x => x.mealId === meal.id);
       const measuredAt = $("#mealGlucoseTime")?.value || new Date().toTimeString().slice(0,5);
-      if (previous) { previous.value = value; previous.time = measuredAt; previous.updatedAt = new Date().toISOString(); }
-      else d.glucoseMeasurements.push({id:uid(),value,time:measuredAt,updatedAt:new Date().toISOString(),context:"after",mealId:meal.id});
+      if (previous) { previous.value = value; previous.time = measuredAt; }
+      else d.glucoseMeasurements.push({id:uid(),value,time:measuredAt,context:"after",mealId:meal.id});
       d.updatedAt = new Date().toISOString();
       saveLocal("glycemie-apres-repas"); setDayChanged(selectedDate);
       $("#mealDialog").addEventListener("close", () => render(), {once:true});
