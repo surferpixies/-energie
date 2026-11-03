@@ -8091,6 +8091,19 @@ function formatSleepDuration(hours) {
       return false;
     }
   }
+  function soloManualQuickSnackCaloriesEnabled() {
+    return !professionalBetaMode && !clientProfessionalLink?.id &&
+      db.settings?.mealEntryMode !== "guided" &&
+      db.settings?.manualCaloriesInFreeEntry === true &&
+      caloriesVisible();
+  }
+  function updateQuickSnackCaloriesUi() {
+    const row = $("#quickSnackCaloriesRow"), input = $("#quickSnackCalories");
+    if (!row || !input) return;
+    const enabled = soloManualQuickSnackCaloriesEnabled();
+    row.hidden = !enabled;
+    input.disabled = !enabled;
+  }
   function snackCaloriesLabel(meal) {
     if (!caloriesVisible()) return "";
     const nutrition = normalNutrition(meal?.nutrition) ||
@@ -8098,13 +8111,30 @@ function formatSleepDuration(hours) {
         ? observationNutritionEstimate(meal?.description || "") : null);
     const value = Number(nutrition?.calories);
     return Number.isFinite(value) && value >= 0
-      ? `≈ ${Math.round(value)} kcal`
+      ? `${nutrition?.caloriesManual === true ? "" : "≈ "}${Math.round(value)} kcal`
       : "";
   }
   function saveQuickSnack() {
     if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     const description = $("#quickSnackDescription").value.trim();
     if (!description) return;
+    const manualMode = soloManualQuickSnackCaloriesEnabled();
+    const calorieInput = $("#quickSnackCalories");
+    const rawCalories = manualMode ? calorieInput?.value.trim() || "" : "";
+    const manualValue = rawCalories === "" ? null : Number(rawCalories);
+    if (manualMode && rawCalories !== "" &&
+        (!Number.isFinite(manualValue) || manualValue < 0)) {
+      calorieInput?.setCustomValidity("Entre un nombre de calories positif ou laisse le champ vide.");
+      calorieInput?.reportValidity();
+      return;
+    }
+    calorieInput?.setCustomValidity("");
+    const nutrition = manualMode
+      ? (manualValue == null ? null : {
+          calories: manualValue, caloriesManual: true, estimated: false,
+          source: "manual", confidence: "high",
+        })
+      : (db.settings.autoNutritionEstimates !== false ? estimateNutritionFromText(description) : null);
     const now = new Date(),
       meal = normalMeal({
         date: selectedDate,
@@ -8112,7 +8142,7 @@ function formatSleepDuration(hours) {
         time: now.toTimeString().slice(0, 5),
         description,
         notes: "",
-        nutrition: db.settings.autoNutritionEstimates !== false ? estimateNutritionFromText(description) : null,
+        nutrition,
         feelingsBefore: {},
         feelingsBeforeQuality: null,
         feeling: null,
@@ -8150,6 +8180,9 @@ function formatSleepDuration(hours) {
     quickSnackPhotoData = [];
     quickSnackAnalyzedPhotos = new Set();
     $("#quickSnackDescription").value = "";
+    $("#quickSnackCalories").value = "";
+    $("#quickSnackCalories").setCustomValidity("");
+    updateQuickSnackCaloriesUi();
     $("#quickSnackPhoto").value = "";
     setQuickSnackAiStatus("Vérifie toujours la description proposée.");
     updateQuickSnackUi();
@@ -8194,6 +8227,7 @@ function formatSleepDuration(hours) {
       addRecentSnack(source);
     };
     $("#quickSnackDescription").oninput = updateQuickSnackUi;
+    $("#quickSnackCalories").oninput = () => $("#quickSnackCalories").setCustomValidity("");
     $("#quickSnackPhoto").onchange = async (event) => {
       const file = event.target.files[0];
       if (!file) return;
