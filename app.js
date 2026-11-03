@@ -916,6 +916,7 @@ function formatSleepDuration(hours) {
       type: f.type || "Repas",
       description: f.description || "",
       notes: f.notes || "",
+      manualCalories: f.manualCalories == null && f.manual_calories == null ? null : (Number.isFinite(Number(f.manualCalories ?? f.manual_calories)) && Number(f.manualCalories ?? f.manual_calories) >= 0 ? Number(f.manualCalories ?? f.manual_calories) : null),
       cnfItems: Array.isArray(f.cnfItems) ? f.cnfItems.filter(item => item?.cnfFoodId).map(item => ({ ...item })) : [],
       usageCount: Number(f.usageCount ?? f.usage_count ?? 0) || 0,
       createdAt: f.createdAt || f.created_at || new Date().toISOString(),
@@ -2109,6 +2110,7 @@ function formatSleepDuration(hours) {
               meal_type: f.type,
               description: f.description,
               notes: f.notes || null,
+              manual_calories: f.manualCalories,
               cnf_items: f.cnfItems || [],
               usage_count: f.usageCount || 0,
               created_at: f.createdAt,
@@ -2425,6 +2427,7 @@ function formatSleepDuration(hours) {
         type: r.meal_type,
         description: r.description,
         notes: r.notes,
+        manualCalories: r.manual_calories,
         cnfItems: r.cnf_items,
         usageCount: r.usage_count,
         createdAt: r.created_at,
@@ -16351,6 +16354,11 @@ function formatSleepDuration(hours) {
     }));
     if (!inlineGuidedRows.length) inlineGuidedRows = [{ id: null, query: "", quantity: null, unit: "g" }];
     renderInlineGuidedMeal();
+    if (!professionalBetaMode && !clientProfessionalLink?.id && db.settings?.manualCaloriesInFreeEntry === true && favorite.manualCalories != null) {
+      $("#mealCalorieMode").value = "manual";
+      $("#mealCalories").value = String(favorite.manualCalories);
+      updateMealCalorieEditor();
+    }
     $("#favoriteMealSelect").value = favorite.id;
     setMealFavoriteToggle(true, favorite.id);
     favorite.usageCount = (favorite.usageCount || 0) + 1;
@@ -17447,6 +17455,7 @@ function formatSleepDuration(hours) {
       type: m.type,
       description: m.description,
       notes: m.notes,
+      manualCalories: m.nutrition?.caloriesManual === true ? m.nutrition.calories : null,
       cnfItems: m.cnfItems,
     });
     db.favorites.push(f);
@@ -17781,7 +17790,8 @@ function formatSleepDuration(hours) {
       if (!favoriteForMeal(meal)) {
         const favorite = normalFavorite({
           name: favoriteName, type: meal.type,
-          description: meal.description, notes: meal.notes, cnfItems: meal.cnfItems
+          description: meal.description, notes: meal.notes, cnfItems: meal.cnfItems,
+          manualCalories: meal.nutrition?.caloriesManual === true ? meal.nutrition.calories : null
         });
         db.favorites.push(favorite);
         setFavoriteChanged(favorite);
@@ -17917,6 +17927,7 @@ function formatSleepDuration(hours) {
         savedFavorite.name = $("#mealFavoriteName")?.value.trim() || savedMeal.description.slice(0, 45);
         savedFavorite.description = savedMeal.description;
         savedFavorite.notes = savedMeal.notes || "";
+        savedFavorite.manualCalories = savedMeal.nutrition?.caloriesManual === true ? savedMeal.nutrition.calories : null;
         savedFavorite.cnfItems = (savedMeal.cnfItems || []).map(item => ({ ...item }));
         savedFavorite.type = savedMeal.type;
         savedFavorite.updatedAt = new Date().toISOString();
@@ -17927,6 +17938,7 @@ function formatSleepDuration(hours) {
           type: savedMeal.type,
           description: savedMeal.description,
           notes: savedMeal.notes,
+          manualCalories: savedMeal.nutrition?.caloriesManual === true ? savedMeal.nutrition.calories : null,
           cnfItems: savedMeal.cnfItems,
         });
         db.favorites.push(favorite);
