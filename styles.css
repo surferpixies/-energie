@@ -3000,3 +3000,37 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   padding: 0;
   accent-color: var(--accent);
 }
+
+/* Close control for the Solo goals questionnaire. */
+.solo-goals-dialog .solo-goals-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.solo-goals-dialog .solo-goals-dialog-header h2 {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+.solo-goals-dialog .solo-goals-dialog-close {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.solo-goals-dialog .solo-goals-dialog-close:hover,
+.solo-goals-dialog .solo-goals-dialog-close:focus-visible {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  color: var(--text);
+}
