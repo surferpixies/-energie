@@ -3064,3 +3064,31 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
     white-space: nowrap;
   }
 }
+
+/* Optional manual calories in Solo quick snack entry. */
+.quick-snack-calories-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+.quick-snack-calories-row[hidden] { display: none !important; }
+.quick-snack-calories-row > label {
+  font-size: .84rem;
+  font-weight: 750;
+}
+.quick-snack-calories-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.quick-snack-calories-input input {
+  width: 110px;
+  min-width: 0;
+  padding: 9px 11px;
+}
+.quick-snack-calories-input span {
+  color: var(--muted);
+  font-size: .83rem;
+}
