@@ -15436,16 +15436,12 @@ function formatSleepDuration(hours) {
     dialog.querySelectorAll("[data-solo-goal]").forEach(control => {
       control.checked = selected.has(control.dataset.soloGoal);
     });
-    const method = db.settings?.mealEntryMode === "guided" ? "guided"
-      : db.settings?.manualCaloriesInFreeEntry === true ? "manual" : "free";
+    const method = db.settings?.mealEntryMode === "guided" ? "guided" : "free";
     const methodControl = dialog.querySelector('[name="soloMealMethod"][value="' + method + '"]');
     if (methodControl) methodControl.checked = true;
-    const syncMethod = () => {
-      const calories = dialog.querySelector('[data-solo-goal="calories"]')?.checked === true;
-      const methods = dialog.querySelector("#soloMealMethodChoices");
-      if (methods) methods.hidden = !calories;
-    };
-    syncMethod();
+    const manualCalories = dialog.querySelector("#soloManualCalories");
+    if (manualCalories) manualCalories.checked = db.settings?.manualCaloriesInFreeEntry === true;
+    syncSoloCalorieMethodOptions(dialog);
     dialog.showModal();
   }
   function maybeShowSoloGoalsWelcome() {
@@ -15469,11 +15465,12 @@ function formatSleepDuration(hours) {
     const selected = new Set([...dialog.querySelectorAll("[data-solo-goal]:checked")].map(input => input.dataset.soloGoal));
     const method = dialog.querySelector('[name="soloMealMethod"]:checked')?.value || "free";
     const calories = selected.has("calories");
+    const manualCalories = dialog.querySelector("#soloManualCalories")?.checked === true;
     db.settings.soloGoals = SOLO_GOALS.map(goal => goal.id).filter(id => selected.has(id));
     db.settings.soloGoalsConfigured = true;
     db.settings.hideCalories = !calories;
-    db.settings.mealEntryMode = calories && method === "guided" ? "guided" : "free";
-    db.settings.manualCaloriesInFreeEntry = calories && method === "manual";
+    db.settings.mealEntryMode = method === "guided" ? "guided" : "free";
+    db.settings.manualCaloriesInFreeEntry = calories && method === "free" && manualCalories;
     if (db.settings.mealEntryMode === "free") db.settings.forceGuidedCnfMealEntry = false;
     db.settings.showEatingReasons = selected.has("reasons");
     db.settings.glucoseTracking = selected.has("glucose");
@@ -15486,11 +15483,16 @@ function formatSleepDuration(hours) {
   }
   function soloMealMethodChoicesHtml() {
     return `<fieldset id="soloMealMethodChoices" class="solo-meal-method-choices">
-      <legend>Comment veux-tu saisir tes calories ?</legend>
-      <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="manual"><span>Saisie libre avec calories manuelles</span></label>
-      <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="guided"><span>Saisie guidée</span></label>
-      <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="free"><span>Saisie libre simple</span></label>
+      <legend>Comment veux-tu noter tes repas ?</legend>
+      <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="free"><span>Saisie libre</span></label>
+      <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="guided"><span>Saisie guidée (recherche d'aliments)</span></label>
     </fieldset>`;
+  }
+  function syncSoloCalorieMethodOptions(dialog) {
+    const calories = dialog.querySelector('[data-solo-goal="calories"]')?.checked === true;
+    const free = dialog.querySelector('[name="soloMealMethod"]:checked')?.value !== "guided";
+    const manualChoice = dialog.querySelector("#soloManualCaloriesChoice");
+    if (manualChoice) manualChoice.hidden = !calories || !free;
   }
   function mountSoloGoalsInProfile() {
     if (!soloGoalsAvailable()) return;
@@ -15505,9 +15507,11 @@ function formatSleepDuration(hours) {
             <h2>🎯 En quoi souhaitez-vous qu'Énergie vous aide ?</h2>
             <button type="button" class="solo-goals-dialog-close" id="closeSoloGoals" aria-label="Fermer le questionnaire" title="Fermer">✕</button>
           </div>
-          <p class="muted small">Choisis ce qui t'intéresse. Plusieurs réponses sont possibles.</p>
+          <p class="muted small">Choisis comment noter tes repas, puis ce que tu souhaites suivre.</p>
+          ${soloMealMethodChoicesHtml()}
+          <p class="solo-goals-section-intro">Qu'aimerais-tu suivre dans Énergie ? Plusieurs choix sont possibles.</p>
           <div class="solo-goals-list">
-            ${SOLO_GOALS.map(goal => `<label class="toggle-row"><span><strong>${esc(goal.label)}</strong><small>${esc(goal.hint)}</small></span><input type="checkbox" data-solo-goal="${goal.id}"></label>${goal.id === "calories" ? soloMealMethodChoicesHtml() : ""}`).join("")}
+            ${SOLO_GOALS.map(goal => `<label class="toggle-row"><span><strong>${esc(goal.label)}</strong><small>${esc(goal.hint)}</small></span><input type="checkbox" data-solo-goal="${goal.id}"></label>${goal.id === "calories" ? '<label class="solo-meal-method-option solo-manual-calories-choice" id="soloManualCaloriesChoice"><input type="checkbox" id="soloManualCalories"><span>Je veux entrer les calories moi-même (saisie libre)</span></label>' : ""}`).join("")}
           </div>
           <p class="muted small" style="margin-top:12px">Les choix de poids, sommeil, hydratation et ressentis indiquent tes centres d'intérêt ; ils ne suppriment aucune donnée et ne modifient pas les autorisations de ton appareil.</p>
           <p class="muted small">Tu peux modifier tes choix en tout temps au sommet du Profil.</p>
@@ -15522,10 +15526,9 @@ function formatSleepDuration(hours) {
       event.preventDefault();
       saveSoloGoalsQuestionnaire(dialog);
     });
-    dialog?.querySelector('[data-solo-goal="calories"]')?.addEventListener("change", () => {
-      const methods = dialog.querySelector("#soloMealMethodChoices");
-      if (methods) methods.hidden = !dialog.querySelector('[data-solo-goal="calories"]').checked;
-    });
+    dialog?.querySelector('[data-solo-goal="calories"]')?.addEventListener("change", () => syncSoloCalorieMethodOptions(dialog));
+    dialog?.querySelectorAll('[name="soloMealMethod"]').forEach(control =>
+      control.addEventListener("change", () => syncSoloCalorieMethodOptions(dialog)));
   }
 
   function renderProfile() {
