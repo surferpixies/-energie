@@ -15480,9 +15480,8 @@ function formatSleepDuration(hours) {
   }
   function maybeShowSoloGoalsWelcome() {
     if (!soloGoalsAvailable() || db.settings.soloGoalsConfigured === true) return;
-    // Les comptes déjà inscrits ne voient pas un nouveau questionnaire imposé.
-    const accountCreated = Date.parse(session.user?.created_at || "");
-    if (!Number.isFinite(accountCreated) || accountCreated < Date.parse("2026-11-03T00:00:00Z")) return;
+    // Présenter les objectifs aussi aux comptes Solo existants, une seule fois
+    // tant que les préférences n'ont pas été enregistrées.
     if (soloGoalsAutoPromptedFor === session.user.id) return;
     if (document.querySelector("dialog[open]")) {
       // Respecte le parcours de bienvenue déjà affiché, puis propose les objectifs.
