@@ -3055,12 +3055,12 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .solo-goals-dialog .solo-manual-calories-choice[hidden] {
   display: none !important;
 }
-@media (min-width: 1000px) {
+@media (min-width: 900px) {
   .solo-goals-dialog {
-    width: min(96vw, 1040px) !important;
+    width: min(92vw, 780px) !important;
   }
   .solo-goals-dialog .solo-goals-dialog-header h2 {
-    font-size: clamp(1.2rem, 2vw, 1.6rem);
+    font-size: 1.15rem;
     white-space: nowrap;
   }
 }
