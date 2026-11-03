@@ -15485,7 +15485,7 @@ function formatSleepDuration(hours) {
     return `<fieldset id="soloMealMethodChoices" class="solo-meal-method-choices">
       <legend>Comment veux-tu noter tes repas ?</legend>
       <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="free"><span>Saisie libre</span></label>
-      <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="guided"><span>Saisie guidée (recherche d'aliments)</span></label>
+      <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="guided"><span>Saisie guidée (Utilisation du Fichier Canadien des Éléments Nutritionnels (FCÉN))</span></label>
     </fieldset>`;
   }
   function syncSoloCalorieMethodOptions(dialog) {
