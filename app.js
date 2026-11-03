@@ -7347,6 +7347,7 @@ function formatSleepDuration(hours) {
     selectedDate = todayKey();
     render();
     setTimeout(() => openTrackedFeelingsDialog(true), 180);
+    setTimeout(maybeShowSoloGoalsWelcome, 500);
   }
   function startDemoMode(profileId = "marie") {
     try {
@@ -15410,14 +15411,17 @@ function formatSleepDuration(hours) {
     return !!session && !professionalBetaMode && !clientProfessionalLink?.id && !db.settings?.demoMode;
   }
   function selectedSoloGoals() {
-    if (Array.isArray(db.settings?.soloGoals))
-      return db.settings.soloGoals.filter(id => SOLO_GOALS.some(goal => goal.id === id));
-    const selected = ["meals", "feelings", "weight", "sleep", "water"];
-    if (!db.settings?.hideCalories) selected.push("calories");
-    if (db.settings?.showEatingReasons !== false) selected.push("reasons");
-    if (db.settings?.glucoseTracking === true) selected.push("glucose");
-    if (db.settings?.stepsTracking === true) selected.push("steps");
-    return selected;
+    const saved = Array.isArray(db.settings?.soloGoals)
+      ? db.settings.soloGoals : ["meals", "feelings", "weight", "sleep", "water"];
+    const selected = new Set(saved);
+    const linked = [
+      ["calories", db.settings?.hideCalories !== true],
+      ["reasons", db.settings?.showEatingReasons !== false],
+      ["glucose", db.settings?.glucoseTracking === true],
+      ["steps", db.settings?.stepsTracking === true],
+    ];
+    linked.forEach(([id, enabled]) => enabled ? selected.add(id) : selected.delete(id));
+    return [...selected].filter(id => SOLO_GOALS.some(goal => goal.id === id));
   }
   function showSoloGoalsQuestionnaire() {
     if (!soloGoalsAvailable() || currentView !== "profile") return;
@@ -15436,7 +15440,6 @@ function formatSleepDuration(hours) {
       const methods = dialog.querySelector("#soloMealMethodChoices");
       if (methods) methods.hidden = !calories;
     };
-    dialog.querySelector('[data-solo-goal="calories"]')?.addEventListener("change", syncMethod, { once: true });
     syncMethod();
     dialog.showModal();
   }
@@ -15445,7 +15448,12 @@ function formatSleepDuration(hours) {
     // Les comptes déjà inscrits ne voient pas un nouveau questionnaire imposé.
     const accountCreated = Date.parse(session.user?.created_at || "");
     if (!Number.isFinite(accountCreated) || accountCreated < Date.parse("2026-11-03T00:00:00Z")) return;
-    if (soloGoalsAutoPromptedFor === session.user.id || document.querySelector("dialog[open]")) return;
+    if (soloGoalsAutoPromptedFor === session.user.id) return;
+    if (document.querySelector("dialog[open]")) {
+      // Respecte le parcours de bienvenue déjà affiché, puis propose les objectifs.
+      document.addEventListener("close", () => setTimeout(maybeShowSoloGoalsWelcome, 180), { capture: true, once: true });
+      return;
+    }
     soloGoalsAutoPromptedFor = session.user.id;
     currentView = "profile";
     render();
