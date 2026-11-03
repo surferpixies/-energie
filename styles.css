@@ -3034,3 +3034,33 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   background: color-mix(in srgb, var(--accent) 10%, var(--surface));
   color: var(--text);
 }
+
+/* Solo onboarding: meal entry mode is independent of calorie tracking. */
+.solo-goals-dialog .solo-meal-method-choices {
+  margin: 14px 0 16px;
+}
+.solo-goals-dialog .solo-goals-section-intro {
+  margin: 12px 0 4px;
+  font-size: .85rem;
+  color: var(--muted);
+  font-weight: 650;
+}
+.solo-goals-dialog .solo-manual-calories-choice {
+  margin: 0 0 6px 14px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  background: var(--bg);
+}
+.solo-goals-dialog .solo-manual-calories-choice[hidden] {
+  display: none !important;
+}
+@media (min-width: 1000px) {
+  .solo-goals-dialog {
+    width: min(96vw, 1040px) !important;
+  }
+  .solo-goals-dialog .solo-goals-dialog-header h2 {
+    font-size: clamp(1.2rem, 2vw, 1.6rem);
+    white-space: nowrap;
+  }
+}
