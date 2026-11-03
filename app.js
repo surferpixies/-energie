@@ -15402,7 +15402,6 @@ function formatSleepDuration(hours) {
 
   // Le questionnaire configure des préférences existantes, sans affecter l'espace Pro.
   const SOLO_GOALS = [
-    { id: "meals", label: "Noter simplement mes repas", hint: "Sans peser ni détailler chaque ingrédient" },
     { id: "calories", label: "Suivre mes calories", hint: "Avec la méthode de saisie de mon choix" },
     { id: "reasons", label: "Comprendre mes raisons de manger", hint: "Faim, envies et émotions" },
     { id: "feelings", label: "Observer mes ressentis", hint: "Digestion, énergie et humeur" },
@@ -15418,7 +15417,7 @@ function formatSleepDuration(hours) {
   }
   function selectedSoloGoals() {
     const saved = Array.isArray(db.settings?.soloGoals)
-      ? db.settings.soloGoals : ["meals", "feelings", "weight", "sleep", "water"];
+      ? db.settings.soloGoals : ["feelings", "weight", "sleep", "water"];
     const selected = new Set(saved);
     const linked = [
       ["calories", db.settings?.hideCalories !== true],
@@ -15502,7 +15501,10 @@ function formatSleepDuration(hours) {
     document.body.insertAdjacentHTML("beforeend", `
       <dialog id="soloGoalsDialog" class="solo-goals-dialog" style="width:min(94vw,550px);max-height:85vh;overflow:auto;border:1px solid var(--border,#ddd);border-radius:16px;padding:20px;">
         <form id="soloGoalsForm">
-          <h2>🎯 En quoi souhaitez-vous qu'Énergie vous aide ?</h2>
+          <div class="solo-goals-dialog-header">
+            <h2>🎯 En quoi souhaitez-vous qu'Énergie vous aide ?</h2>
+            <button type="button" class="solo-goals-dialog-close" id="closeSoloGoals" aria-label="Fermer le questionnaire" title="Fermer">✕</button>
+          </div>
           <p class="muted small">Choisis ce qui t'intéresse. Plusieurs réponses sont possibles.</p>
           <div class="solo-goals-list">
             ${SOLO_GOALS.map(goal => `<label class="toggle-row"><span><strong>${esc(goal.label)}</strong><small>${esc(goal.hint)}</small></span><input type="checkbox" data-solo-goal="${goal.id}"></label>${goal.id === "calories" ? soloMealMethodChoicesHtml() : ""}`).join("")}
@@ -15515,6 +15517,7 @@ function formatSleepDuration(hours) {
     `);
     const dialog = $("#soloGoalsDialog");
     dialog?.querySelector("#cancelSoloGoals")?.addEventListener("click", () => dialog.close());
+    dialog?.querySelector("#closeSoloGoals")?.addEventListener("click", () => dialog.close());
     dialog?.querySelector("#soloGoalsForm")?.addEventListener("submit", event => {
       event.preventDefault();
       saveSoloGoalsQuestionnaire(dialog);
