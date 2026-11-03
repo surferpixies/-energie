@@ -15479,23 +15479,27 @@ function formatSleepDuration(hours) {
     dialog.close();
     render();
   }
+  function soloMealMethodChoicesHtml() {
+    return `<fieldset id="soloMealMethodChoices" class="solo-meal-method-choices">
+      <legend>Comment veux-tu saisir tes calories ?</legend>
+      <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="manual"><span>Saisie libre avec calories manuelles</span></label>
+      <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="guided"><span>Saisie guidée</span></label>
+      <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="free"><span>Saisie libre simple</span></label>
+    </fieldset>`;
+  }
   function mountSoloGoalsInProfile() {
     if (!soloGoalsAvailable()) return;
     $("#app .stack")?.insertAdjacentHTML("afterbegin",
       '<section class="card solo-goals-profile-card"><h3>🎯 Mes objectifs Énergie</h3><p class="muted small">Adapte Énergie à ce que tu souhaites suivre. Tu pourras changer tes choix à tout moment.</p><button type="button" class="primary" id="openSoloGoals">Modifier mes objectifs</button></section>');
-    $("#app")?.insertAdjacentHTML("beforeend", `
+    $("#openSoloGoals")?.addEventListener("click", showSoloGoalsQuestionnaire);
+    if (document.getElementById("soloGoalsDialog")) return;
+    document.body.insertAdjacentHTML("beforeend", `
       <dialog id="soloGoalsDialog" class="solo-goals-dialog" style="width:min(94vw,550px);max-height:85vh;overflow:auto;border:1px solid var(--border,#ddd);border-radius:16px;padding:20px;">
         <form id="soloGoalsForm">
           <h2>🎯 En quoi souhaitez-vous qu'Énergie vous aide ?</h2>
           <p class="muted small">Choisis ce qui t'intéresse. Plusieurs réponses sont possibles.</p>
           <div class="solo-goals-list">
-            ${SOLO_GOALS.map(goal => `<label class="toggle-row"><span><strong>${esc(goal.label)}</strong><small>${esc(goal.hint)}</small></span><input type="checkbox" data-solo-goal="${goal.id}"></label>`).join("")}
-          </div>
-          <div id="soloMealMethodChoices" style="margin-top:12px">
-            <h3>Comment veux-tu saisir tes calories ?</h3>
-            <label class="toggle-row"><span><strong>Saisie libre avec calories manuelles</strong><small>Décris ton repas et indique les kcal toi-même</small></span><input type="radio" name="soloMealMethod" value="manual"></label>
-            <label class="toggle-row"><span><strong>Saisie guidée</strong><small>Recherche dans le catalogue nutritionnel, facultative</small></span><input type="radio" name="soloMealMethod" value="guided"></label>
-            <label class="toggle-row"><span><strong>Saisie libre simple</strong><small>Tu pourras toujours ajuster les calories d'un repas</small></span><input type="radio" name="soloMealMethod" value="free"></label>
+            ${SOLO_GOALS.map(goal => `<label class="toggle-row"><span><strong>${esc(goal.label)}</strong><small>${esc(goal.hint)}</small></span><input type="checkbox" data-solo-goal="${goal.id}"></label>${goal.id === "calories" ? soloMealMethodChoicesHtml() : ""}`).join("")}
           </div>
           <p class="muted small" style="margin-top:12px">Les choix de poids, sommeil, hydratation et ressentis indiquent tes centres d'intérêt ; ils ne suppriment aucune donnée et ne modifient pas les autorisations de ton appareil.</p>
           <p class="muted small">Tu peux modifier tes choix en tout temps au sommet du Profil.</p>
@@ -15503,7 +15507,6 @@ function formatSleepDuration(hours) {
         </form>
       </dialog>
     `);
-    $("#openSoloGoals")?.addEventListener("click", showSoloGoalsQuestionnaire);
     const dialog = $("#soloGoalsDialog");
     dialog?.querySelector("#cancelSoloGoals")?.addEventListener("click", () => dialog.close());
     dialog?.querySelector("#soloGoalsForm")?.addEventListener("submit", event => {
