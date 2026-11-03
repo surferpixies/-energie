@@ -15436,14 +15436,14 @@ function formatSleepDuration(hours) {
 
   // Le questionnaire configure des préférences existantes, sans affecter l'espace Pro.
   const SOLO_GOALS = [
-    { id: "calories", label: "Suivre mes calories", hint: "Avec la méthode de saisie de mon choix" },
-    { id: "reasons", label: "Comprendre mes raisons de manger", hint: "Faim, envies et émotions" },
-    { id: "feelings", label: "Observer mes ressentis", hint: "Digestion, énergie et humeur" },
-    { id: "weight", label: "Suivre mon poids", hint: "Retrouver mes mesures dans Observations" },
-    { id: "glucose", label: "Suivre ma glycémie", hint: "Retrouver mes mesures dans Observations" },
-    { id: "steps", label: "Suivre mon activité physique", hint: "Pas et activités quotidiennes" },
-    { id: "sleep", label: "Observer mon sommeil", hint: "Durée et habitudes de sommeil" },
-    { id: "water", label: "Suivre mon hydratation", hint: "Eau et boissons" },
+    { id: "calories", icon: "🔥", label: "Suivre mes calories", hint: "Avec la méthode de saisie de mon choix" },
+    { id: "reasons", icon: "🧠", label: "Comprendre mes raisons de manger", hint: "Faim, envies et émotions" },
+    { id: "feelings", icon: "🌿", label: "Observer mes ressentis", hint: "Digestion, énergie et humeur" },
+    { id: "weight", icon: "⚖️", label: "Suivre mon poids", hint: "Retrouver mes mesures dans Observations" },
+    { id: "glucose", icon: "🩸", label: "Suivre ma glycémie", hint: "Retrouver mes mesures dans Observations" },
+    { id: "steps", icon: "👟", label: "Suivre mon activité physique", hint: "Pas et activités quotidiennes" },
+    { id: "sleep", icon: "🌙", label: "Observer mon sommeil", hint: "Durée et habitudes de sommeil" },
+    { id: "water", icon: "💧", label: "Suivre mon hydratation", hint: "Eau et boissons" },
   ];
   let soloGoalsAutoPromptedFor = "";
   const SOLO_GOALS_INTRO_VERSION = "2026-11-03-solo-launch";
@@ -15530,8 +15530,8 @@ function formatSleepDuration(hours) {
   function soloMealMethodChoicesHtml() {
     return `<fieldset id="soloMealMethodChoices" class="solo-meal-method-choices">
       <legend>Comment veux-tu noter tes repas ?</legend>
-      <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="free"><span>Saisie libre</span></label>
-      <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="guided"><span>Saisie guidée (Utilisation du Fichier Canadien des Éléments Nutritionnels (FCÉN))</span></label>
+      <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="free"><span><span class="solo-meal-method-icon" aria-hidden="true">✍️</span> Saisie libre</span></label>
+      <label class="solo-meal-method-option"><input type="radio" name="soloMealMethod" value="guided"><span><span class="solo-meal-method-icon" aria-hidden="true">🔎</span> Saisie guidée (Utilisation du Fichier Canadien des Éléments Nutritionnels (FCÉN))</span></label>
     </fieldset>`;
   }
   function syncSoloCalorieMethodOptions(dialog) {
@@ -15557,7 +15557,7 @@ function formatSleepDuration(hours) {
           ${soloMealMethodChoicesHtml()}
           <p class="solo-goals-section-intro">Qu'aimerais-tu suivre dans Énergie ? Plusieurs choix sont possibles.</p>
           <div class="solo-goals-list">
-            ${SOLO_GOALS.map(goal => `<label class="toggle-row"><span><strong>${esc(goal.label)}</strong><small>${esc(goal.hint)}</small></span><input type="checkbox" data-solo-goal="${goal.id}"></label>${goal.id === "calories" ? '<label class="solo-meal-method-option solo-manual-calories-choice" id="soloManualCaloriesChoice"><input type="checkbox" id="soloManualCalories"><span>Je veux entrer les calories moi-même (saisie libre)</span></label>' : ""}`).join("")}
+            ${SOLO_GOALS.map(goal => `<label class="toggle-row"><span class="solo-goal-copy"><span class="solo-goal-icon" aria-hidden="true">${goal.icon}</span><span class="solo-goal-text"><strong>${esc(goal.label)}</strong><small>${esc(goal.hint)}</small></span></span><input type="checkbox" data-solo-goal="${goal.id}"></label>${goal.id === "calories" ? '<label class="solo-meal-method-option solo-manual-calories-choice" id="soloManualCaloriesChoice"><input type="checkbox" id="soloManualCalories"><span>Je veux entrer les calories moi-même (saisie libre)</span></label>' : ""}`).join("")}
           </div>
           <p class="muted small" style="margin-top:12px">Les choix de poids, sommeil, hydratation et ressentis indiquent tes centres d'intérêt ; ils ne suppriment aucune donnée et ne modifient pas les autorisations de ton appareil.</p>
           <p class="muted small">Tu peux modifier tes choix en tout temps au sommet du Profil.</p>
