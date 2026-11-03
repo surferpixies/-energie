@@ -2953,3 +2953,16 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   #mealQuickFillBar > button { flex: 1 1 42%; }
   #mealQuickFillBar > #openMealBeverage { flex: 1 1 42%; margin-left: auto; }
 }
+
+/* Solo goals questionnaire: dialogs default to transparent in the shared UI.
+   Give this standalone dialog its own opaque surface and readable copy. */
+.solo-goals-dialog {
+  background: var(--surface);
+  color: var(--text);
+  opacity: 1;
+}
+.solo-goals-dialog .muted,
+.solo-goals-dialog .toggle-row small {
+  color: var(--muted);
+  opacity: 1;
+}
