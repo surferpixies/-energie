@@ -15300,7 +15300,7 @@ function formatSleepDuration(hours) {
     ];
     const grouped = new Map(buckets.map((bucket) => [bucket.key, []]));
     for (const card of cards) {
-      if (card.matches(".profile-account-card,.pilot-mode-profile-card,.profile-creator-card")) continue;
+      if (card.matches(".profile-account-card,.pilot-mode-profile-card,.profile-creator-card,.solo-goals-profile-card")) continue;
       // Les identifiants ne changent pas lorsque la langue de l'app change.
       const bucket = buckets.find((item) => card.matches(item.selectors) || card.querySelector(item.selectors));
       grouped.get(bucket?.key || "appearance").push(card);
