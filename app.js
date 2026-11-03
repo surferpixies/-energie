@@ -15446,6 +15446,18 @@ function formatSleepDuration(hours) {
     { id: "water", label: "Suivre mon hydratation", hint: "Eau et boissons" },
   ];
   let soloGoalsAutoPromptedFor = "";
+  const SOLO_GOALS_INTRO_VERSION = "2026-11-03-solo-launch";
+  function soloGoalsIntroKey() {
+    return `energieSoloGoalsIntro:${session?.user?.id || "anonymous"}:${SOLO_GOALS_INTRO_VERSION}`;
+  }
+  function soloGoalsIntroSeen() {
+    try { return localStorage.getItem(soloGoalsIntroKey()) === "1"; }
+    catch (_) { return false; }
+  }
+  function markSoloGoalsIntroSeen() {
+    try { localStorage.setItem(soloGoalsIntroKey(), "1"); }
+    catch (_) { /* Quota local : éviter de bloquer le questionnaire. */ }
+  }
   function soloGoalsAvailable() {
     return !!session && !professionalBetaMode && !clientProfessionalLink?.id && !db.settings?.demoMode;
   }
@@ -15479,10 +15491,10 @@ function formatSleepDuration(hours) {
     dialog.showModal();
   }
   function maybeShowSoloGoalsWelcome() {
-    if (!soloGoalsAvailable() || db.settings.soloGoalsConfigured === true) return;
-    // Présenter les objectifs aussi aux comptes Solo existants, une seule fois
-    // tant que les préférences n'ont pas été enregistrées.
-    if (soloGoalsAutoPromptedFor === session.user.id) return;
+    if (!soloGoalsAvailable()) return;
+    // Présentation unique pour tous les comptes Solo, même déjà configurés.
+    // La fermeture du dialogue suffit à ne pas le réafficher à chaque démarrage.
+    if (soloGoalsAutoPromptedFor === session.user.id || soloGoalsIntroSeen()) return;
     if (document.querySelector("dialog[open]")) {
       // Respecte le parcours de bienvenue déjà affiché, puis propose les objectifs.
       document.addEventListener("close", () => setTimeout(maybeShowSoloGoalsWelcome, 180), { capture: true, once: true });
@@ -15492,6 +15504,7 @@ function formatSleepDuration(hours) {
     currentView = "profile";
     render();
     showSoloGoalsQuestionnaire();
+    if ($("#soloGoalsDialog")?.open) markSoloGoalsIntroSeen();
   }
   function saveSoloGoalsQuestionnaire(dialog) {
     if (!soloGoalsAvailable()) return;
