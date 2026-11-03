@@ -4445,7 +4445,13 @@ function formatSleepDuration(hours) {
     $("#mealCalorieStatus").textContent = manual ? t("Ajustées par vous")
       : partial ? t("Estimation partielle · des aliments sont à préciser")
       : input.value === "" ? t("Aucune estimation disponible · saisie facultative") : "";
-    $("#resetMealCalories").hidden = !manual;
+    // En saisie libre avec calories manuelles (Solo), le retour à une
+    // estimation automatique ne fait pas partie du parcours choisi.
+    const soloManualCaloriePreference = !professionalBetaMode &&
+      !clientProfessionalLink?.id &&
+      db.settings?.mealEntryMode !== "guided" &&
+      db.settings?.manualCaloriesInFreeEntry === true;
+    $("#resetMealCalories").hidden = !manual || soloManualCaloriePreference;
 
     // Une ancienne sauvegarde ou une restauration de formulaire peut contenir
     // les valeurs nutritionnelles sans la trace détaillée. La reconstruire
