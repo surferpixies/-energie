@@ -15446,7 +15446,9 @@ function formatSleepDuration(hours) {
     { id: "water", icon: "💧", label: "Suivre mon hydratation", hint: "Eau et boissons" },
   ];
   let soloGoalsAutoPromptedFor = "";
-  const SOLO_GOALS_INTRO_VERSION = "2026-11-03-solo-launch";
+  // Nouveau cycle d'annonce iOS : le premier affichage pouvait être manqué au lancement.
+  const SOLO_GOALS_INTRO_VERSION = window.Capacitor?.getPlatform?.() === "ios"
+    ? "2026-11-03-solo-ios-retry" : "2026-11-03-solo-launch";
   function soloGoalsIntroKey() {
     return `energieSoloGoalsIntro:${session?.user?.id || "anonymous"}:${SOLO_GOALS_INTRO_VERSION}`;
   }
@@ -15500,11 +15502,14 @@ function formatSleepDuration(hours) {
       document.addEventListener("close", () => setTimeout(maybeShowSoloGoalsWelcome, 180), { capture: true, once: true });
       return;
     }
-    soloGoalsAutoPromptedFor = session.user.id;
     currentView = "profile";
     render();
     showSoloGoalsQuestionnaire();
-    if ($("#soloGoalsDialog")?.open) markSoloGoalsIntroSeen();
+    if ($("#soloGoalsDialog")?.open) {
+      soloGoalsAutoPromptedFor = session.user.id;
+      // Ne compter la présentation qu'après fermeture volontaire, pas dès l'ouverture.
+      // Cela évite qu'un dialogue masqué par le cycle de vie iOS soit perdu.
+    }
   }
   function saveSoloGoalsQuestionnaire(dialog) {
     if (!soloGoalsAvailable()) return;
@@ -15566,6 +15571,9 @@ function formatSleepDuration(hours) {
       </dialog>
     `);
     const dialog = $("#soloGoalsDialog");
+    dialog?.addEventListener("close", () => {
+      if (soloGoalsAutoPromptedFor === session?.user?.id) markSoloGoalsIntroSeen();
+    });
     dialog?.querySelector("#cancelSoloGoals")?.addEventListener("click", () => dialog.close());
     dialog?.querySelector("#closeSoloGoals")?.addEventListener("click", () => dialog.close());
     dialog?.querySelector("#soloGoalsForm")?.addEventListener("submit", event => {
@@ -19650,8 +19658,14 @@ function formatSleepDuration(hours) {
       if (nextSession) prepareLocalJournalForSession(nextSession);
       else if (previousUserId) clearLocalJournalAfterSignOut();
       session = nextSession;
-      if (nextSession) loadDemoAccess().then(() => render());
-      else { hasDemoAccess = false; hasProfessionalBetaAccess = false; clientProfessionalLink = null; }
+      if (nextSession) {
+        loadDemoAccess().then(() => {
+          render();
+          // Certaines sessions iOS sont restaurées après le premier rendu.
+          if (window.Capacitor?.getPlatform?.() === "ios")
+            setTimeout(maybeShowSoloGoalsWelcome, 500);
+        });
+      } else { hasDemoAccess = false; hasProfessionalBetaAccess = false; clientProfessionalLink = null; }
       updateSyncBadge();
       if (event === "PASSWORD_RECOVERY")
         setTimeout(() => $("#passwordDialog").showModal(), 0);
