@@ -3092,3 +3092,34 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   color: var(--muted);
   font-size: .83rem;
 }
+
+/* Solo goal icons: compact, aligned and legible on all screen sizes. */
+.solo-goals-dialog .solo-goal-copy {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.solo-goals-dialog .solo-goal-icon {
+  flex: 0 0 25px;
+  width: 25px;
+  font-size: 1.12rem;
+  text-align: center;
+  line-height: 1.2;
+}
+.solo-goals-dialog .solo-goal-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.solo-goals-dialog .solo-meal-method-icon {
+  display: inline-block;
+  width: 1.5em;
+  margin-right: 2px;
+  text-align: center;
+}
+.solo-goals-dialog .solo-meal-method-option > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
