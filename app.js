@@ -634,6 +634,8 @@
         forceGuidedCnfMealEntry: false,
         mealEntryMode: "free",
         manualCaloriesInFreeEntry: false,
+        soloGoalsConfigured: false,
+        soloGoals: null,
         hideFavoriteSuggestion: false,
         mealQuantityRequired: true,
         showEatingReasons: true,
@@ -1982,6 +1984,8 @@ function formatSleepDuration(hours) {
                 forceGuidedCnfMealEntry: preferenceSettings.forceGuidedCnfMealEntry === true,
                 mealEntryMode: preferenceSettings.mealEntryMode === "guided" ? "guided" : "free",
                 manualCaloriesInFreeEntry: preferenceSettings.manualCaloriesInFreeEntry === true,
+                soloGoalsConfigured: preferenceSettings.soloGoalsConfigured === true,
+                soloGoals: Array.isArray(preferenceSettings.soloGoals) ? preferenceSettings.soloGoals : null,
                 mealQuantityRequired: preferenceSettings.mealQuantityRequired === true,
                 showEatingReasons: preferenceSettings.showEatingReasons !== false,
                 futureMealPlanning: preferenceSettings.futureMealPlanning === true,
@@ -2289,6 +2293,8 @@ function formatSleepDuration(hours) {
       if (["free","guided"].includes(pref.mealEntryMode)) db.settings.mealEntryMode = pref.mealEntryMode;
       if (typeof pref.mealQuantityRequired === "boolean") db.settings.mealQuantityRequired = pref.mealQuantityRequired;
       if (typeof pref.manualCaloriesInFreeEntry === "boolean") db.settings.manualCaloriesInFreeEntry = pref.manualCaloriesInFreeEntry;
+      if (typeof pref.soloGoalsConfigured === "boolean") db.settings.soloGoalsConfigured = pref.soloGoalsConfigured;
+      if (Array.isArray(pref.soloGoals)) db.settings.soloGoals = pref.soloGoals.filter(x => SOLO_GOALS.some(goal => goal.id === x));
       if (["free","scheduled","meals"].includes(pref.glucoseMode)) db.settings.glucoseMode = pref.glucoseMode;
       if (Array.isArray(pref.glucoseReminderTimes)) db.settings.glucoseReminderTimes = pref.glucoseReminderTimes.filter(x => /^\d{2}:\d{2}$/.test(x)).slice(0,6);
       if ([60,90,120].includes(Number(pref.glucoseMealDelay))) db.settings.glucoseMealDelay = Number(pref.glucoseMealDelay);
@@ -15386,6 +15392,122 @@ function formatSleepDuration(hours) {
     }
   }
 
+
+  // Le questionnaire configure des préférences existantes, sans affecter l'espace Pro.
+  const SOLO_GOALS = [
+    { id: "meals", label: "Noter simplement mes repas", hint: "Sans peser ni détailler chaque ingrédient" },
+    { id: "calories", label: "Suivre mes calories", hint: "Avec la méthode de saisie de mon choix" },
+    { id: "reasons", label: "Comprendre mes raisons de manger", hint: "Faim, envies et émotions" },
+    { id: "feelings", label: "Observer mes ressentis", hint: "Digestion, énergie et humeur" },
+    { id: "weight", label: "Suivre mon poids", hint: "Retrouver mes mesures dans Observations" },
+    { id: "glucose", label: "Suivre ma glycémie", hint: "Retrouver mes mesures dans Observations" },
+    { id: "steps", label: "Suivre mon activité physique", hint: "Pas et activités quotidiennes" },
+    { id: "sleep", label: "Observer mon sommeil", hint: "Durée et habitudes de sommeil" },
+    { id: "water", label: "Suivre mon hydratation", hint: "Eau et boissons" },
+  ];
+  let soloGoalsAutoPromptedFor = "";
+  function soloGoalsAvailable() {
+    return !!session && !professionalBetaMode && !clientProfessionalLink?.id && !db.settings?.demoMode;
+  }
+  function selectedSoloGoals() {
+    if (Array.isArray(db.settings?.soloGoals))
+      return db.settings.soloGoals.filter(id => SOLO_GOALS.some(goal => goal.id === id));
+    const selected = ["meals", "feelings", "weight", "sleep", "water"];
+    if (!db.settings?.hideCalories) selected.push("calories");
+    if (db.settings?.showEatingReasons !== false) selected.push("reasons");
+    if (db.settings?.glucoseTracking === true) selected.push("glucose");
+    if (db.settings?.stepsTracking === true) selected.push("steps");
+    return selected;
+  }
+  function showSoloGoalsQuestionnaire() {
+    if (!soloGoalsAvailable() || currentView !== "profile") return;
+    const dialog = $("#soloGoalsDialog");
+    if (!dialog || dialog.open) return;
+    const selected = new Set(selectedSoloGoals());
+    dialog.querySelectorAll("[data-solo-goal]").forEach(control => {
+      control.checked = selected.has(control.dataset.soloGoal);
+    });
+    const method = db.settings?.mealEntryMode === "guided" ? "guided"
+      : db.settings?.manualCaloriesInFreeEntry === true ? "manual" : "free";
+    const methodControl = dialog.querySelector('[name="soloMealMethod"][value="' + method + '"]');
+    if (methodControl) methodControl.checked = true;
+    const syncMethod = () => {
+      const calories = dialog.querySelector('[data-solo-goal="calories"]')?.checked === true;
+      const methods = dialog.querySelector("#soloMealMethodChoices");
+      if (methods) methods.hidden = !calories;
+    };
+    dialog.querySelector('[data-solo-goal="calories"]')?.addEventListener("change", syncMethod, { once: true });
+    syncMethod();
+    dialog.showModal();
+  }
+  function maybeShowSoloGoalsWelcome() {
+    if (!soloGoalsAvailable() || db.settings.soloGoalsConfigured === true) return;
+    // Les comptes déjà inscrits ne voient pas un nouveau questionnaire imposé.
+    const accountCreated = Date.parse(session.user?.created_at || "");
+    if (!Number.isFinite(accountCreated) || accountCreated < Date.parse("2026-11-03T00:00:00Z")) return;
+    if (soloGoalsAutoPromptedFor === session.user.id || document.querySelector("dialog[open]")) return;
+    soloGoalsAutoPromptedFor = session.user.id;
+    currentView = "profile";
+    render();
+    showSoloGoalsQuestionnaire();
+  }
+  function saveSoloGoalsQuestionnaire(dialog) {
+    if (!soloGoalsAvailable()) return;
+    const selected = new Set([...dialog.querySelectorAll("[data-solo-goal]:checked")].map(input => input.dataset.soloGoal));
+    const method = dialog.querySelector('[name="soloMealMethod"]:checked')?.value || "free";
+    const calories = selected.has("calories");
+    db.settings.soloGoals = SOLO_GOALS.map(goal => goal.id).filter(id => selected.has(id));
+    db.settings.soloGoalsConfigured = true;
+    db.settings.hideCalories = !calories;
+    db.settings.mealEntryMode = calories && method === "guided" ? "guided" : "free";
+    db.settings.manualCaloriesInFreeEntry = calories && method === "manual";
+    if (db.settings.mealEntryMode === "free") db.settings.forceGuidedCnfMealEntry = false;
+    db.settings.showEatingReasons = selected.has("reasons");
+    db.settings.glucoseTracking = selected.has("glucose");
+    db.settings.stepsTracking = selected.has("steps");
+    // Ressentis, poids, sommeil et hydratation restent accessibles ; aucun
+    // rappel ni permission Apple Health/Health Connect n'est activé ici.
+    persistProfilePreference("objectifs-solo");
+    dialog.close();
+    render();
+  }
+  function mountSoloGoalsInProfile() {
+    if (!soloGoalsAvailable()) return;
+    $("#app .stack")?.insertAdjacentHTML("afterbegin",
+      '<section class="card solo-goals-profile-card"><h3>🎯 Mes objectifs Énergie</h3><p class="muted small">Adapte Énergie à ce que tu souhaites suivre. Tu pourras changer tes choix à tout moment.</p><button type="button" class="primary" id="openSoloGoals">Modifier mes objectifs</button></section>');
+    $("#app")?.insertAdjacentHTML("beforeend", `
+      <dialog id="soloGoalsDialog" class="solo-goals-dialog" style="width:min(94vw,550px);max-height:85vh;overflow:auto;border:1px solid var(--border,#ddd);border-radius:16px;padding:20px;">
+        <form id="soloGoalsForm">
+          <h2>🎯 En quoi souhaitez-vous qu'Énergie vous aide ?</h2>
+          <p class="muted small">Choisis ce qui t'intéresse. Plusieurs réponses sont possibles.</p>
+          <div class="solo-goals-list">
+            ${SOLO_GOALS.map(goal => `<label class="toggle-row"><span><strong>${esc(goal.label)}</strong><small>${esc(goal.hint)}</small></span><input type="checkbox" data-solo-goal="${goal.id}"></label>`).join("")}
+          </div>
+          <div id="soloMealMethodChoices" style="margin-top:12px">
+            <h3>Comment veux-tu saisir tes calories ?</h3>
+            <label class="toggle-row"><span><strong>Saisie libre avec calories manuelles</strong><small>Décris ton repas et indique les kcal toi-même</small></span><input type="radio" name="soloMealMethod" value="manual"></label>
+            <label class="toggle-row"><span><strong>Saisie guidée</strong><small>Recherche dans le catalogue nutritionnel, facultative</small></span><input type="radio" name="soloMealMethod" value="guided"></label>
+            <label class="toggle-row"><span><strong>Saisie libre simple</strong><small>Tu pourras toujours ajuster les calories d'un repas</small></span><input type="radio" name="soloMealMethod" value="free"></label>
+          </div>
+          <p class="muted small" style="margin-top:12px">Les choix de poids, sommeil, hydratation et ressentis indiquent tes centres d'intérêt ; ils ne suppriment aucune donnée et ne modifient pas les autorisations de ton appareil.</p>
+          <p class="muted small">Tu peux modifier tes choix en tout temps au sommet du Profil.</p>
+          <div class="dialog-actions"><button type="button" class="secondary" id="cancelSoloGoals">Plus tard</button><button type="submit" class="primary">Enregistrer mes préférences</button></div>
+        </form>
+      </dialog>
+    `);
+    $("#openSoloGoals")?.addEventListener("click", showSoloGoalsQuestionnaire);
+    const dialog = $("#soloGoalsDialog");
+    dialog?.querySelector("#cancelSoloGoals")?.addEventListener("click", () => dialog.close());
+    dialog?.querySelector("#soloGoalsForm")?.addEventListener("submit", event => {
+      event.preventDefault();
+      saveSoloGoalsQuestionnaire(dialog);
+    });
+    dialog?.querySelector('[data-solo-goal="calories"]')?.addEventListener("change", () => {
+      const methods = dialog.querySelector("#soloMealMethodChoices");
+      if (methods) methods.hidden = !dialog.querySelector('[data-solo-goal="calories"]').checked;
+    });
+  }
+
   function renderProfile() {
     flushPersonalProfile?.();
     flushPersonalProfile = null;
@@ -15409,6 +15531,7 @@ function formatSleepDuration(hours) {
         : `<div class="notice info-notice profile-calorie-notice"><strong>${t("Calories estimées, sans objectif")}</strong><p>${t("Seul le total calorique est affiché en haut du Journal, avec sa tendance dans Observations. Les autres chiffres nutritionnels restent masqués.")}</p></div>`;
     $("#app").innerHTML =
       `<section class="hero"><p class="eyebrow">Profil et préférences</p><h2>${session ? esc(accountDisplayName("Mon profil")) : "Protège ton historique"}</h2><p>${session ? "La synchronisation Supabase est active." : "La copie locale seule peut disparaître si tu changes d’appareil ou désinstalles Énergie."}</p></section><div class="stack"><section class="card profile-account-card">${session ? `<div class="profile-account-name"><label for="profileDisplayNameInput">Nom</label><div class="profile-account-name-edit"><input id="profileDisplayNameInput" type="text" autocomplete="name" maxlength="100" value="${esc(profileDisplayName)}" placeholder="Inscris ton prénom et ton nom"><button class="secondary small" id="saveDisplayName" type="button">Enregistrer</button></div><p id="profileDisplayNameStatus" class="muted tiny"></p>${avatarManager.editorHtml()}</div><div class="settings-row profile-account-email"><div><h3>Compte connecté</h3><p class="muted small">${esc(session.user.email)}</p></div><button class="secondary" id="syncNow">Synchroniser</button></div>${hasProfessionalBetaAccess ? `<div class="profile-use-mode profile-spaces-compact"><strong>Espaces</strong><div class="profile-space-actions"><button type="button" id="usePersonalMode" class="secondary profile-space-button ${professionalBetaMode ? "" : "is-active"}">👤 ${window.ENERGIE_LOCALE === "en" ? "My personal space" : "Mon espace personnel"}</button><button type="button" id="useProfessionalMode" class="secondary profile-space-button ${professionalBetaMode ? "is-active" : ""}">🩺 ${window.ENERGIE_LOCALE === "en" ? "Professional workspace" : "Espace professionnel"}</button></div></div>` : ""}${window.Capacitor?.getPlatform?.() === "android" ? "" : `<div class="apple-link-card"><div><strong>Connexion Apple</strong><p class="muted small">${hasAppleIdentity() ? (window.ENERGIE_LOCALE === "en" ? "✓ Your Apple ID is linked to this Énergie account." : "✓ Ton identifiant Apple est associé à ce compte Énergie.") : (window.ENERGIE_LOCALE === "en" ? "Link Apple to this account before using Sign in with Apple." : "Associe Apple à ce compte avant d’utiliser « Se connecter avec Apple ».")}</p></div>${hasAppleIdentity() ? "" : `<button type="button" class="apple-auth-button" id="linkAppleIdentity"><b aria-hidden="true"></b> Associer mon compte Apple</button><p id="appleIdentityMessage" class="muted tiny" aria-live="polite"></p>`}</div>`}<button class="danger" id="signOut">Se déconnecter</button>` : `<h3>Sauvegarde en ligne</h3><p class="muted">Connecte-toi afin que les repas et favoris soient enregistrés dans Supabase.</p><button class="primary" id="signIn">Se connecter</button>`}</section><section class="card seasonal-setting-card"><h3>🎉 Ambiance saisonnière</h3><p class="muted small">De petites décorations changent selon la date consultée, les saisons et certains moments de l’année.</p><label class="toggle-row"><span><strong>Icônes saisonnières</strong><small>Affiche une petite icône près de la date dans le Journal</small></span><input id="settingSeasonalIcons" type="checkbox" ${db.settings.seasonalIcons !== false ? "checked" : ""}></label></section><section class="card recognized-elements-setting-card"><h3>🔎 ${t("Éléments reconnus")}</h3><p class="muted small">${t("Cette petite carte résume ce qu’Énergie reconnaît dans la description du repas. Tu peux la masquer pour alléger la saisie sans désactiver l’analyse du repas ni les estimations nutritionnelles.")}</p><label class="toggle-row"><span><strong>${t("Afficher « Éléments reconnus »")}</strong><small>${t("Affiche la carte sous la description du repas")}</small></span><input id="settingRecognizedElements" type="checkbox" ${db.settings.showRecognizedElements !== false ? "checked" : ""}></label></section><section class="card journal-summary-setting-card"><h3>🗓️ Journal sommaire</h3><p class="muted small">Choisis comment les repas complétés s’affichent dans le Journal en mode sommaire.</p><label class="toggle-row"><span><strong>Masquer les repas complétés</strong><small>Un repas disparaît du sommaire lorsqu’il contient le repas, le ressenti avant et le ressenti après. La carte Collation reste toujours visible.</small></span><input id="settingSummaryHideCompletedMeals" type="checkbox" ${db.settings.summaryHideCompletedMeals !== false ? "checked" : ""}></label></section><section class="card meal-entry-mode-settings"><h3>🍽️ Mode de saisie des repas</h3><p class="muted small">Choisis comment tu souhaites décrire tes repas.</p><label class="toggle-row"><span><strong>Saisie libre</strong><small>Décrire le repas dans un champ texte.</small></span><input type="radio" name="mealEntryMode" value="free" ${db.settings.mealEntryMode !== "guided" && db.settings.manualCaloriesInFreeEntry !== true ? "checked" : ""}></label>${!professionalBetaMode && !clientProfessionalLink?.id ? `<label class="toggle-row"><span><strong>Saisie libre avec calories manuelles</strong><small>Décris ton repas et inscris toi-même les calories, sans recherche FCÉN ni quantités obligatoires.</small></span><input type="radio" name="mealEntryMode" value="free-manual" ${db.settings.mealEntryMode !== "guided" && db.settings.manualCaloriesInFreeEntry === true ? "checked" : ""}></label>` : ""}<label class="toggle-row"><span><strong>Saisie guidée</strong><small>Rechercher les aliments et, au besoin, indiquer leurs quantités.</small></span><input type="radio" name="mealEntryMode" value="guided" ${db.settings.mealEntryMode === "guided" ? "checked" : ""}></label><label id="mealQuantityRequiredRow" class="toggle-row" style="${db.settings.mealEntryMode === "guided" ? "" : "display:none"}"><span><strong>Forcer la saisie de quantité</strong><small>Lorsque désactivé, seuls les aliments seront demandés.</small></span><input id="settingMealQuantityRequired" type="checkbox" ${db.settings.mealQuantityRequired === true ? "checked" : ""}></label><label class="toggle-row"><span><strong>⭐ Suggestions de favoris</strong><small>Proposer d’enregistrer mes nouveaux repas dans les favoris pour simplifier mes prochaines saisies. Tu peux réactiver cette suggestion ici à tout moment.</small></span><input id="settingFavoriteSuggestions" type="checkbox" ${db.settings.hideFavoriteSuggestion !== true ? "checked" : ""}></label></section><section class="card guided-entry-settings"><h3>📚 Saisie guidée FCÉN / Ciqual</h3><p class="muted small">Choisis si le lien de saisie guidée apparaît dans le repas. Le FCÉN est proposé en français Canada et en anglais; Ciqual en français France. Les deux bases restent utilisées pour la reconnaissance des aliments.</p><label class="toggle-row"><span><strong>🇨🇦 Afficher la saisie guidée FCÉN</strong><small>Santé Canada · français Canada et anglais</small></span><input id="settingShowCnfGuidedEntry" type="checkbox" ${db.settings.showCnfGuidedEntry !== false ? "checked" : ""}></label><label class="toggle-row"><span><strong>🇫🇷 Afficher la saisie guidée Ciqual</strong><small>Anses · français France</small></span><input id="settingShowCiqualGuidedEntry" type="checkbox" ${db.settings.showCiqualGuidedEntry !== false ? "checked" : ""}></label><label class="toggle-row"><span><strong>Rendre la saisie guidée obligatoire</strong><small>Lorsque le lien est affiché, ajoute les aliments avec la saisie guidée plutôt qu’en tapant une description libre.</small></span><input id="settingForceGuidedCnf" type="checkbox" ${db.settings.forceGuidedCnfMealEntry === true ? "checked" : ""}></label></section><section class="card eating-reasons-setting-card"><h3>💭 ${t("Raisons de manger")}</h3><p class="muted small">La question « Qu’est-ce qui t’a amené à manger? » est facultative. Tu peux la masquer pour alléger la saisie des repas.</p><label class="toggle-row"><span><strong>Afficher « Qu’est-ce qui t’a amené à manger? »</strong><small>Si elle est masquée, la carte correspondante n’apparaît pas non plus dans Observations</small></span><input id="settingEatingReasons" type="checkbox" ${db.settings.showEatingReasons !== false ? "checked" : ""}></label></section><section class="card future-meal-planning-setting-card"><h3>📅 ${t("Planification des repas")}</h3><p class="muted small">${t("Optionnel · utile si tu souhaites préparer ton journal à l’avance.")}</p><label class="toggle-row"><span><strong>${t("Permettre la saisie de repas à l’avance")}</strong><small>${t("Autorise la navigation et la saisie jusqu’à 2 jours dans le futur. Cette limite est fixe à 2 jours.")}</small></span><input id="settingFutureMealPlanning" type="checkbox" ${db.settings.futureMealPlanning === true ? "checked" : ""}></label><p class="muted tiny">${t("Les repas planifiés restent enregistrés, mais ne participent pas aux Observations ni à l’apprentissage d’Énergie avant la date prévue.")}</p></section><section class="card"><h3>Observations et recommandations</h3><p class="muted small">Tu gardes le contrôle sur ce qui apparaît dans les observations.</p><label class="toggle-row"><span><strong>Insights personnels</strong><small>Tendances calculées à partir de ton historique</small></span><input id="settingInsights" type="checkbox" ${db.settings.insightsEnabled ? "checked" : ""}></label><label class="toggle-row"><span><strong>Estimation nutritionnelle</strong><small>Affiche par défaut les calories, protéines, glucides, lipides, fibres, sucres et sodium disponibles. Tout reste modifiable et approximatif.</small></span><input id="settingMacros" type="checkbox" ${db.settings.macroTracking ? "checked" : ""}></label><label class="toggle-row setting-dependent ${db.settings.macroTracking ? "" : "is-disabled"}"><span><strong>Détecter automatiquement les estimations nutritionnelles</strong><small>Préremplit les valeurs reconnues; elles restent toujours modifiables.</small></span><input id="settingAutoNutrition" type="checkbox" ${db.settings.autoNutritionEstimates !== false ? "checked" : ""} ${db.settings.macroTracking ? "" : "disabled"}></label><label class="toggle-row"><span><strong>Observations nutritionnelles</strong><small>Estimations prudentes selon les descriptions saisies</small></span><input id="settingNutrition" type="checkbox" ${db.settings.nutritionObservations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Suggestions générales</strong><small>Conseils facultatifs et non moralisateurs</small></span><input id="settingRecommendations" type="checkbox" ${db.settings.generalRecommendations ? "checked" : ""}></label><label class="toggle-row"><span><strong>Afficher les sources</strong><small>Ajoute « Pourquoi je vois ceci? » aux cartes</small></span><input id="settingSources" type="checkbox" ${db.settings.showSources ? "checked" : ""}></label></section><section class="card"><div class="settings-row"><div><h3>Suppléments</h3><p class="muted small">Ajoute ceux que tu prends et ils apparaîtront cochés par défaut dans le journal.</p></div></div><div class="supplement-input-row"><input id="supplementNameInput" type="text" placeholder="Ex. Vitamine D3" autocomplete="one-time-code"><button class="secondary small" id="addSupplement" type="button">Ajouter</button></div>${supplements.length ? `<div class="supplement-chip-row">${supplements.map((name) => `<span class="supplement-chip">${esc(name)} <button type="button" data-delete-supplement="${esc(name)}" aria-label="Supprimer ${esc(name)}">×</button></span>`).join("")}</div>` : `<p class="muted small supplement-empty">Aucun supplément ajouté pour le moment.</p>`}</section><section class="card professional-setting-card"><div class="professional-setting-title"><span>👩‍⚕️</span><div><h3>Accompagnement professionnel</h3><p class="muted small">Prépare des sujets à apporter lors de tes rendez-vous.</p></div></div><label class="toggle-row"><span><strong>Préparer mes rendez-vous</strong><small>Affiche dans le Tableau une section « À discuter avec votre professionnel »</small></span><input id="settingProfessionalSupport" type="checkbox" ${db.settings.professionalSupport ? "checked" : ""}></label><p class="muted tiny professional-privacy">Aucune donnée n’est partagée automatiquement. Tu gardes le contrôle de ton journal en tout temps.</p></section><section class="card"><div class="settings-row"><div><h3>Message d’information</h3><p class="muted small">Revoir les limites et l’utilisation prévue de l’application</p></div><button class="secondary" id="showWelcomeAgain">Afficher</button></div></section><section class="card"><h3>😊 ${t("Ressenti")}</h3><p class="muted small">Choisis si et quand l’application te rappelle de noter ton ressenti après un repas.</p><p class="muted tiny feeling-importance-note">🧠 ${t("Les ressentis sont la base des observations d’Énergie. Les noter après les repas aide à comparer ce qui change réellement dans le temps.")}</p><div id="feelingReminderOptions" class="feeling-settings"><p class="settings-label">Repas concernés</p><div class="settings-check-grid">${feelingMealOptionsHtml()}</div><label>Délai après le repas<select id="feelingDelay"><option value="0.5" ${Number(db.settings.feelingDelayHours) === 0.5 ? "selected" : ""}>30 minutes</option><option value="1" ${Number(db.settings.feelingDelayHours) === 1 ? "selected" : ""}>1 heure</option><option value="2" ${Number(db.settings.feelingDelayHours) === 2 ? "selected" : ""}>2 heures</option></select></label><label class="toggle-row"><span><strong>Rappels de ressenti</strong></span><input id="settingFeelingReminders" type="checkbox" ${db.settings.feelingReminders !== false ? "checked" : ""}></label><p class="muted tiny">Active ou désactive les notifications sur ton appareil mobile.</p>${nativeLocalNotifications() ? `<p class="muted tiny">Sur mobile, les rappels peuvent apparaître même lorsque Énergie n’est pas ouverte, si les notifications sont autorisées.</p>` : ""}</div></section><section class="card"><div class="settings-row"><div><h3>💧 Objectif d'eau</h3><p class="muted small">Nombre de gouttes affichées – 1 goutte d’eau = 500 ml d’eau</p></div><input id="waterGoal" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${db.settings.waterGoal || 8}" style="width:80px"></div></section>${labScenarioCardsHtml()}${db.settings.demoMode ? `<section class="card demo-profile-card"><div class="settings-row"><div><h3>🧪 Mode démo actif · lecture seule</h3><p class="muted small">Tu explores 180 jours de données fictives de ${esc(activeDemoProfile().name)}.</p></div><span class="demo-pill">${esc(activeDemoProfile().name)}</span></div><div class="dialog-actions"><button class="secondary" id="replayDemoTour">Revoir la visite</button><button class="primary" id="leaveDemoProfile">Revenir à mon journal</button></div></section>` : ``}<details class="card profile-backup-panel"><summary><span><strong>Données et sauvegarde</strong><small>Options avancées · ${backups} copie(s) locale(s)</small></span><span aria-hidden="true">›</span></summary><div class="profile-backup-content"><p class="muted small">Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.</p><div class="dialog-actions"><button class="secondary" id="exportData">Exporter JSON</button><button class="secondary" id="importData">Importer JSON</button></div></div></details></div>`;
+    mountSoloGoalsInProfile();
     // Association Google visible uniquement dans le Profil Android.
     if (session && window.Capacitor?.getPlatform?.() === "android") {
       const accountCard = $(".profile-account-card");
@@ -19475,6 +19598,7 @@ function formatSleepDuration(hours) {
     }
     render();
     setTimeout(showExperienceLaunchIfNeeded, 120);
+    setTimeout(maybeShowSoloGoalsWelcome, 850);
   }
   // Le service worker demeure réservé au site Web. Le conteneur Capacitor
   // distribue déjà ses fichiers localement et n'utilise pas un protocole HTTP.
