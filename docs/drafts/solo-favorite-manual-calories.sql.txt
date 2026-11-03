@@ -1,0 +1,5 @@
+-- Énergie Solo : conserver les calories manuelles des repas favoris.
+-- Non destructif. À exécuter dans Supabase SQL Editor AVANT de fusionner la PR.
+ALTER TABLE public.favorite_meals
+  ADD COLUMN IF NOT EXISTS manual_calories numeric
+  CHECK (manual_calories IS NULL OR manual_calories >= 0);
