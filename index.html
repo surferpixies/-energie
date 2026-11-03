@@ -305,6 +305,10 @@
             <small id="quickSnackAiStatus" role="status" aria-live="polite">La photo est ajoutée sans analyse. L’IA est facultative.</small>
           </div>
         </div>
+        <div id="quickSnackCaloriesRow" class="quick-snack-calories-row" hidden>
+          <label for="quickSnackCalories">Calories (saisie manuelle facultative)</label>
+          <div class="quick-snack-calories-input"><input id="quickSnackCalories" type="number" min="0" step="any" inputmode="decimal" placeholder="Ex. 150" disabled><span>kcal</span></div>
+        </div>
         <div id="quickSnackPhotoPreview" class="quick-snack-photo-preview" hidden><div id="quickSnackPhotoList" class="meal-photo-preview-list"></div><button type="button" id="removeQuickSnackPhoto" class="text-button small">Tout retirer</button></div>
         <button type="button" class="primary" id="saveQuickSnack" disabled>Ajouter la collation</button>
       </section>
