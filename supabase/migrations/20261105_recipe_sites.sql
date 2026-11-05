@@ -7,8 +7,8 @@ create table if not exists public.recipe_sites (
   status text not null default 'testing' check (status in ('working','testing','blocked')),
   updated_at timestamptz not null default now(),
   constraint recipe_sites_domain_format check (
-    domain = lower(domain) and domain !~ '^www\\.'
-    and domain ~ '^[a-z0-9-]+(\\.[a-z0-9-]+)+$'
+    domain = lower(domain) and domain !~ '^www\.'
+    and domain ~ '^[a-z0-9-]+(\.[a-z0-9-]+)+$'
     and length(domain) <= 253
   ),
   constraint recipe_sites_display_name_length check (length(btrim(display_name)) between 1 and 100)
