@@ -9,13 +9,10 @@ const headers = {
 const response = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers });
 
-// Domaines de recettes pris en charge (leur accessibilité reste dépendante du site).
+// Ricardo uniquement pour la première version de l'importateur.
 // La liste blanche empêche de transformer l'importateur en proxy vers des adresses privées.
 const allowedHosts = new Set([
   "www.ricardocuisine.com", "ricardocuisine.com",
-  "www.recettes.qc.ca", "recettes.qc.ca",
-  "www.iga.ca", "iga.ca",
-  "www.zeste.ca", "zeste.ca",
 ]);
 function validateUrl(raw: unknown): URL {
   if (typeof raw !== "string" || raw.length > 2048) throw new Error("invalid-url");
