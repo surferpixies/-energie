@@ -4019,8 +4019,14 @@ function formatSleepDuration(hours) {
     importedRecipe = null;
     try {
       const { data, error } = await client.functions.invoke("import-recipe", {body:{url}});
-      if (error || !data?.recipe?.title || !Array.isArray(data.recipe.ingredients))
-        throw new Error("recipe-unavailable");
+      if (error) {
+        let details = {};
+        try { details = await error.context?.json?.() || {}; } catch (_) { /* old function response */ }
+        const code = details.error || "recipe-unavailable";
+        throw new Error(code + (details.siteStatus ? ":" + details.siteStatus : ""));
+      }
+      if (!data?.recipe?.title || !Array.isArray(data.recipe.ingredients))
+        throw new Error("recipe-structured-data-missing");
       if (!soloRecipeImportEnabled() || !$("#recipeImportDialog")?.open) return;
       importedRecipe = {...data.recipe, sourceUrl: url};
       $("#recipeImportPortions").value = "1";
@@ -4029,7 +4035,17 @@ function formatSleepDuration(hours) {
       $("#recipeImportPreview").hidden = false;
     } catch (error) {
       console.warn("Importation de recette", error);
-      status.textContent = "Impossible d’extraire cette recette. Le site peut bloquer la lecture ou ne pas fournir les ingrédients structurés.";
+      const reason = String(error?.message || "");
+      if (reason.includes("recipe-site-http-error:403") || reason.includes("recipe-site-http-error:429"))
+        status.textContent = "Ce site bloque actuellement la lecture automatisée de la recette (accès refusé).";
+      else if (reason.includes("recipe-site-http-error"))
+        status.textContent = "Le site de recettes a retourné une erreur (" + (reason.split(":")[1] || "HTTP") + ").";
+      else if (reason.includes("recipe-structured-data-missing"))
+        status.textContent = "La page est accessible, mais son format de recette n’est pas reconnu.";
+      else if (reason.includes("recipe-site-connection-failed"))
+        status.textContent = "Connexion au site impossible depuis Supabase. Essaie de nouveau plus tard.";
+      else
+        status.textContent = "Impossible d’extraire cette recette. Vérifie l’adresse ou réessaie.";
     } finally { button.disabled = false; }
   }
   function applyRecipeToMeal() {
