@@ -3853,6 +3853,18 @@ function formatSleepDuration(hours) {
       return '<a class="muted small" href="' + esc(url.href) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">🔗 Voir la recette originale</a>';
     } catch (_) { return ""; }
   }
+  function refreshRecipeSourceLinks() {
+    const mealLink = $("#mealRecipeSourceLink");
+    if (mealLink) {
+      mealLink.innerHTML = recipeSourceLinkHtml($("#mealDescription")?.value);
+      mealLink.hidden = !mealLink.innerHTML;
+    }
+    const importLink = $("#recipeImportSourceLink");
+    if (importLink) {
+      importLink.innerHTML = recipeSourceLinkHtml($("#recipeImportText")?.value);
+      importLink.hidden = !importLink.innerHTML;
+    }
+  }
   function recipeDisplayName(description) {
     return recipeSourceLinkHtml(description) ? String(description || "").split("\n")[0] : String(description || "");
   }
@@ -3900,6 +3912,7 @@ function formatSleepDuration(hours) {
       description += "\n• " + scaled;
     }
     $("#recipeImportText").value = description + suffix;
+    refreshRecipeSourceLinks();
     $("#recipeImportYield").textContent = total
       ? "Recette : " + recipeAmountText(total) + " portions · Quantités calculées pour " + recipeAmountText(portions) + " portion(s)."
       : "Rendement non reconnu : quantités originales conservées, modifiables.";
@@ -3978,6 +3991,7 @@ function formatSleepDuration(hours) {
     if (field.value.trim() && !confirm("Remplacer la description actuelle du repas par la recette importée ?")) return;
     field.value = text;
     field.dispatchEvent(new Event("input", {bubbles:true}));
+    refreshRecipeSourceLinks();
     if (calorieText && (!$("#mealCalories").value.trim() ||
         confirm("Remplacer les calories actuelles du repas par celles de la recette ?"))) {
       $("#mealCalories").value = calorieText;
@@ -16692,6 +16706,7 @@ function formatSleepDuration(hours) {
     if (!favorite) return;
     $("#mealDescription").value = favorite.description;
     $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
+    refreshRecipeSourceLinks();
     $("#mealNotes").value = favorite.notes || "";
     const favoriteItems = Array.isArray(favorite.cnfItems) ? favorite.cnfItems.map(item => ({ ...item, entryId: uid() })) : [];
     setMealCnfItemsField(favoriteItems);
@@ -17372,6 +17387,7 @@ function formatSleepDuration(hours) {
       delete d.formDrafts["mealForm:nouveau"];
       saveLocal("nettoyage-brouillon-repas-legacy");
     }
+    refreshRecipeSourceLinks();
     $("#mealDialog").showModal();
     // Sur iPhone, la synchronisation peut avoir déjà remplacé la copie locale
     // par un chemin Supabase. Résoudre l’URL signée dès l’ouverture évite que
@@ -18036,6 +18052,8 @@ function formatSleepDuration(hours) {
   $("#closeRecipeImport").onclick = () => $("#recipeImportDialog").close();
   $("#fetchRecipeImport").onclick = fetchRecipeForMeal;
   $("#recipeImportPortions").addEventListener("input", () => { buildRecipeImportDescription(); updateRecipeImportCalories(); });
+  $("#mealDescription").addEventListener("input", refreshRecipeSourceLinks);
+  $("#recipeImportText").addEventListener("input", refreshRecipeSourceLinks);
   $("#applyRecipeImport").onclick = applyRecipeToMeal;
   $("#cnfGuidedSearch").addEventListener("input", (event) => {
     clearTimeout(mealCnfGuidedSearchTimer);
