@@ -3932,18 +3932,18 @@ function formatSleepDuration(hours) {
   }
   function recipeReadableQuantity(amount, suffix, originalFraction) {
     const rest = String(suffix);
-    const unitMatch = rest.match(/^(\\s*)(kg|kilogrammes?|cl|centilitres?|litres?|l|grammes?|g|millilitres?|ml|(?:cuillères?|c\\.)\\s*à\\s*(?:soupe|table)|tasses?|verres?|pincées?|paquets?|sachets?)\\b/i);
+    const unitMatch = rest.match(/^(\s*)(kg|kilogrammes?|cl|centilitres?|litres?|l|grammes?|g|millilitres?|ml|(?:cuillères?|c\.)\s*à\s*(?:soupe|table)|tasses?|verres?|pincées?|paquets?|sachets?)\b/i);
     if (!unitMatch) return {label: recipeScaledQuantityLabel(amount, originalFraction), suffix:rest};
     const unit = unitMatch[2].toLowerCase();
     let value = amount, unitText = unitMatch[2], restAfter = rest.slice(unitMatch[0].length);
     if (/^(?:kg|kilogramme)/.test(unit) && value < 1) { value *= 1000; unitText = "g"; }
     else if (/^(?:cl|centilitre)/.test(unit) && value < 10) { value *= 10; unitText = "ml"; }
     else if (/^(?:l|litre)/.test(unit) && value < 1) { value *= 1000; unitText = "ml"; }
-    else if (/^(?:cuillère|c\\.)/.test(unit) && value < 1) {
+    else if (/^(?:cuillère|c\.)/.test(unit) && value < 1) {
       value *= 3; unitText = "c. à thé";
     }
     const measurable = /^(?:g|gramme|ml|millilitre)/i.test(unitText);
-    const preferFraction = !measurable && (/^(?:tasse|verre|pincée|paquet|sachet|c\\.)/.test(unitText.toLowerCase()) || originalFraction);
+    const preferFraction = !measurable && (/^(?:tasse|verre|pincée|paquet|sachet|c\.)/.test(unitText.toLowerCase()) || originalFraction);
     let label;
     if (measurable) label = recipeAmountText(Math.round(value * (value >= 10 ? 1 : 10)) / (value >= 10 ? 1 : 10));
     else if (preferFraction) label = recipeReadableFraction(value) || recipeAmountText(value);
