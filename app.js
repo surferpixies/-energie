@@ -3849,7 +3849,7 @@ function formatSleepDuration(hours) {
     if (!match) return "";
     try {
       const url = new URL(match[1]);
-      if (!["ricardocuisine.com", "www.ricardocuisine.com", "recettes.qc.ca", "www.recettes.qc.ca"].includes(url.hostname)) return "";
+      if (url.protocol !== "https:" || url.username || url.password) return "";
       return '<a class="muted small" href="' + esc(url.href) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">🔗 Voir la recette originale</a>';
     } catch (_) { return ""; }
   }
@@ -3999,8 +3999,42 @@ function formatSleepDuration(hours) {
     $("#recipeImportUrl").value = "";
     $("#recipeImportStatus").textContent = "";
     $("#recipeImportPreview").hidden = true;
+    $("#recipePasteFields").hidden = true;
+    $("#showRecipePaste").textContent = "Coller les ingrédients à la place";
+    $("#recipePasteTitle").value = "";
+    $("#recipePasteYield").value = "";
+    $("#recipePasteIngredients").value = "";
     $("#recipeImportPortions").value = "1";
     dialog.showModal();
+  }
+  function toggleRecipePaste() {
+    const fields = $("#recipePasteFields");
+    fields.hidden = !fields.hidden;
+    $("#showRecipePaste").textContent = fields.hidden ? "Coller les ingrédients à la place" : "Masquer la saisie des ingrédients";
+    if (!fields.hidden) $("#recipePasteTitle")?.focus();
+  }
+  function preparePastedRecipe() {
+    if (!soloRecipeImportEnabled()) return;
+    const title = $("#recipePasteTitle").value.trim();
+    const total = Number($("#recipePasteYield").value);
+    const ingredients = $("#recipePasteIngredients").value.split(/\r?\n/)
+      .map(line => line.trim().replace(/^[•\-*]\s*/, "")).filter(Boolean).slice(0,75);
+    if (!title || title.length > 140 || !Number.isInteger(total) || total < 1 || total > 100 || !ingredients.length) {
+      $("#recipeImportStatus").textContent = "Indique le nom, le nombre de portions de la recette et au moins un ingrédient.";
+      return;
+    }
+    const sourceUrl = $("#recipeImportUrl").value.trim();
+    let validUrl = "";
+    try {
+      const parsed = new URL(sourceUrl);
+      if (parsed.protocol === "https:" && !parsed.username && !parsed.password) validUrl = parsed.href;
+    } catch (_) { /* Le lien est facultatif en saisie manuelle. */ }
+    importedRecipe = {title, recipeYield: total + " portions", ingredients, caloriesPerServing: null, sourceUrl: validUrl};
+    $("#recipeImportPortions").value = "1";
+    $("#recipeImportPreview").hidden = false;
+    buildRecipeImportDescription();
+    updateRecipeImportCalories();
+    $("#recipeImportStatus").textContent = "Ingrédients prêts : vérifie les quantités ajustées à ta portion.";
   }
   async function fetchRecipeForMeal() {
     if (!soloRecipeImportEnabled() || !client) return;
@@ -4035,6 +4069,8 @@ function formatSleepDuration(hours) {
       $("#recipeImportPreview").hidden = false;
     } catch (error) {
       console.warn("Importation de recette", error);
+      $("#recipePasteFields").hidden = false;
+      $("#showRecipePaste").textContent = "Masquer la saisie des ingrédients";
       const reason = String(error?.message || "");
       if (reason.includes("invalid-or-unsupported-url"))
         status.textContent = "Ce site de recettes n’est pas encore pris en charge par Énergie.";
@@ -18129,6 +18165,8 @@ function formatSleepDuration(hours) {
   $("#openRecipeImport").onclick = openRecipeImportDialog;
   $("#closeRecipeImport").onclick = () => $("#recipeImportDialog").close();
   $("#fetchRecipeImport").onclick = fetchRecipeForMeal;
+  $("#showRecipePaste").onclick = toggleRecipePaste;
+  $("#preparePastedRecipe").onclick = preparePastedRecipe;
   $("#recipeImportPortions").addEventListener("input", () => { buildRecipeImportDescription(); updateRecipeImportCalories(); });
   $("#mealDescription").addEventListener("input", refreshRecipeSourceLinks);
   $("#recipeImportText").addEventListener("input", refreshRecipeSourceLinks);
