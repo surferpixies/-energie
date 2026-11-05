@@ -3123,3 +3123,20 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+
+/* Importation de recettes Web : uniquement visible en saisie libre Solo. */
+.meal-recipe-import-entry[hidden], .meal-cnf-guided-entry[hidden] { display:none !important; }
+.meal-recipe-import-entry .meal-cnf-guided-icon { font-size:20px; }
+.recipe-import-dialog {
+  width:min(94vw,520px);max-width:520px;max-height:85vh;
+  border:1px solid var(--border);border-radius:18px;padding:0;
+  background:var(--surface);color:var(--text);
+}
+.recipe-import-dialog::backdrop { background:rgba(0,0,0,.48); }
+.recipe-import-card { display:flex;flex-direction:column;gap:10px;padding:18px;max-height:85vh;overflow-y:auto; }
+.recipe-import-card input,.recipe-import-card textarea { width:100%;max-width:100%;box-sizing:border-box; }
+.recipe-import-card label { font-weight:600; }
+#recipeImportPreview:not([hidden]) { display:flex;flex-direction:column;gap:9px; }
+#recipeImportPreview[hidden] { display:none!important; }
+#recipeImportStatus:empty { display:none; }
