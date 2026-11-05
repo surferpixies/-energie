@@ -3899,18 +3899,50 @@ function formatSleepDuration(hours) {
   function recipeAmountText(amount) {
     return String(Math.round(amount * 100) / 100).replace(".", ",");
   }
+  function recipeScaledQuantityLabel(value, useFraction) {
+    if (useFraction) {
+      for (let denominator = 1; denominator <= 96; denominator++) {
+        let numerator = Math.round(value * denominator);
+        if (Math.abs(numerator / denominator - value) > 0.0000001) continue;
+        const gcd = (a, b) => b ? gcd(b, a % b) : a;
+        const common = gcd(numerator, denominator);
+        numerator /= common;
+        denominator /= common;
+        const whole = Math.floor(numerator / denominator);
+        const remainder = numerator % denominator;
+        return remainder ? (whole ? whole + " " + remainder + "/" + denominator : remainder + "/" + denominator) : String(whole);
+      }
+    }
+    return recipeAmountText(value);
+  }
+  function scaleRecipeQuantityPrefix(input, factor) {
+    const match = String(input).match(/^(\s*)(\d+(?:[.,]\d+)?(?:\s+\d+\/\d+|\s*[¼½¾⅓⅔⅛⅜⅝⅞])?|\d+\/\d+|[¼½¾⅓⅔⅛⅜⅝⅞])(?=\s|$|[),;])/);
+    if (!match) return String(input);
+    const raw = match[2];
+    const fractions = {"¼": .25, "½": .5, "¾": .75, "⅓": 1/3, "⅔": 2/3, "⅛": .125, "⅜": .375, "⅝": .625, "⅞": .875};
+    const fraction = raw.includes("/") || /[¼½¾⅓⅔⅛⅜⅝⅞]/.test(raw);
+    let amount;
+    if (raw.includes("/")) {
+      const parts = raw.trim().split(/\s+/);
+      const ratio = parts.pop().split("/").map(Number);
+      if (!ratio[1]) return String(input);
+      amount = (parts.length ? Number(parts[0]) : 0) + ratio[0] / ratio[1];
+    } else if (/[¼½¾⅓⅔⅛⅜⅝⅞]/.test(raw)) {
+      const parts = raw.match(/^(\d+)?\s*([¼½¾⅓⅔⅛⅜⅝⅞])$/);
+      if (!parts) return String(input);
+      amount = (Number(parts[1]) || 0) + fractions[parts[2]];
+    } else amount = Number(raw.replace(",", "."));
+    if (!Number.isFinite(amount)) return String(input);
+    return match[1] + recipeScaledQuantityLabel(amount * factor, fraction) + String(input).slice(match[0].length);
+  }
   function scaleRecipeIngredient(line, factor) {
     if (!Number.isFinite(factor) || factor <= 0 || factor === 1) return String(line);
-    const fractions = {"¼": .25, "½": .5, "¾": .75, "⅓": 1/3, "⅔": 2/3, "⅛": .125, "⅜": .375, "⅝": .625, "⅞": .875};
-    let raw = String(line), normalized = raw.replace(/^(\s*)([¼½¾⅓⅔⅛⅜⅝⅞])/, (_m, ws, f) => ws + String(fractions[f]));
-    const match = normalized.match(/^(\s*)(\d+(?:[.,]\d+)?)(?:\s+(\d+)\/(\d+))?(?:\s*([¼½¾⅓⅔⅛⅜⅝⅞]))?(?:\s*\/\s*(\d+))?/);
-    if (!match) return raw; // « au goût », « une pincée » : laisser tel quel.
-    let number = Number(match[2].replace(",", "."));
-    if (match[3] && Number(match[4]) > 0) number += Number(match[3]) / Number(match[4]);
-    if (match[5]) number += fractions[match[5]];
-    if (match[6] && Number(match[6]) > 0 && !match[3] && !match[5]) number /= Number(match[6]);
-    if (!Number.isFinite(number)) return raw;
-    return match[1] + recipeAmountText(number * factor) + normalized.slice(match[0].length);
+    const scaled = scaleRecipeQuantityPrefix(String(line), factor);
+    // Ajuster aussi l'équivalence entre parenthèses : « 60 ml (1/4 tasse) ».
+    return scaled.replace(/\(([^()]*)\)/g, (whole, inner) => {
+      if (!/^\s*(?:\d|[¼½¾⅓⅔⅛⅜⅝⅞])/.test(inner)) return whole;
+      return "(" + scaleRecipeQuantityPrefix(inner, factor) + ")";
+    });
   }
   let recipeImportMeta = "";
   function recipeImportDescriptionForSave() {
