@@ -3594,7 +3594,7 @@ function formatSleepDuration(hours) {
     if (limit) limit.hidden = useInline;
     if ($("#mealCnfLinkedStatus")) $("#mealCnfLinkedStatus").hidden = guided || !mealCnfItemsFromField().length;
     const legacyButton = $("#openCnfGuidedEntry");
-    if (legacyButton) legacyButton.hidden = guided || !guidedEntryEnabled();
+    if (legacyButton) legacyButton.hidden = soloRecipeImportEnabled() || guided || !guidedEntryEnabled();
     if (!useInline) return;
     root.classList.toggle("without-quantity", !required);
     root.innerHTML = '<div class="meal-inline-header"><strong>Aliment</strong>' +
@@ -3838,6 +3838,98 @@ function formatSleepDuration(hours) {
   function guidedCnfEntryRequired() {
     return guidedEntryEnabled() && db.settings?.forceGuidedCnfMealEntry === true;
   }
+  function soloRecipeImportEnabled() {
+    return !!session && !professionalBetaMode && !clientProfessionalLink?.id &&
+      !db.settings?.demoMode && db.settings?.mealEntryMode !== "guided" &&
+      !guidedCnfEntryRequired();
+  }
+  let importedRecipe = null;
+  function updateRecipeImportCalories() {
+    const field = $("#recipeImportCalories"), info = $("#recipeImportCalorieInfo");
+    if (!field || !info) return;
+    const perServing = importedRecipe?.caloriesPerServing;
+    const portions = Number($("#recipeImportPortions")?.value);
+    if (perServing != null && Number.isFinite(portions) && portions > 0 && portions <= 20) {
+      field.value = String(Math.round(perServing * portions * 10) / 10);
+      info.textContent = "Calories indiquées par le site pour une portion, ajustées selon la quantité choisie. Vérifie avant d’enregistrer.";
+    } else {
+      field.value = "";
+      info.textContent = "Aucune donnée calorique fiable trouvée : tu peux laisser ce champ vide.";
+    }
+  }
+  function openRecipeImportDialog() {
+    if (!soloRecipeImportEnabled() || $("#mealForm")?.dataset.inlineReadOnly === "true") return;
+    const dialog = $("#recipeImportDialog");
+    if (!dialog) return;
+    importedRecipe = null;
+    $("#recipeImportUrl").value = "";
+    $("#recipeImportStatus").textContent = "";
+    $("#recipeImportPreview").hidden = true;
+    $("#recipeImportPortions").value = "1";
+    dialog.showModal();
+  }
+  async function fetchRecipeForMeal() {
+    if (!soloRecipeImportEnabled() || !client) return;
+    const button = $("#fetchRecipeImport"), status = $("#recipeImportStatus");
+    const url = $("#recipeImportUrl").value.trim();
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== "https:") throw new Error("url");
+    } catch (_) {
+      status.textContent = "Colle une adresse https:// valide.";
+      return;
+    }
+    button.disabled = true;
+    status.textContent = "Lecture de la recette…";
+    $("#recipeImportPreview").hidden = true;
+    importedRecipe = null;
+    try {
+      const { data, error } = await client.functions.invoke("import-recipe", {body:{url}});
+      if (error || !data?.recipe?.title || !Array.isArray(data.recipe.ingredients))
+        throw new Error("recipe-unavailable");
+      if (!soloRecipeImportEnabled() || !$("#recipeImportDialog")?.open) return;
+      importedRecipe = data.recipe;
+      const yieldText = String(importedRecipe.recipeYield || "").trim();
+      const proposed = [String(importedRecipe.title).trim(), ...importedRecipe.ingredients.map(String)];
+      let description = proposed[0];
+      for (const ingredient of proposed.slice(1)) {
+        if (description.length + ingredient.length + 3 > 975) break;
+        description += "\n• " + ingredient;
+      }
+      $("#recipeImportText").value = description;
+      $("#recipeImportYield").textContent = yieldText ? "Recette complète : " + yieldText : "Rendement non indiqué; portion à vérifier.";
+      $("#recipeImportPortions").value = "1";
+      updateRecipeImportCalories();
+      $("#recipeImportPreview").hidden = false;
+      status.textContent = "Recette trouvée. Vérifie et modifie le texte au besoin.";
+    } catch (_) {
+      status.textContent = "Impossible d’extraire cette recette. Pour l’instant, essaie un lien Ricardo ou Recettes du Québec contenant une recette structurée.";
+    } finally { button.disabled = false; }
+  }
+  function applyRecipeToMeal() {
+    if (!soloRecipeImportEnabled() || !importedRecipe || $("#mealForm")?.dataset.inlineReadOnly === "true") return;
+    const field = $("#mealDescription"), text = $("#recipeImportText").value.trim();
+    const portions = Number($("#recipeImportPortions").value);
+    if (!text || text.length > 1000 || !Number.isFinite(portions) || portions <= 0 || portions > 20) {
+      $("#recipeImportStatus").textContent = "Vérifie le texte et le nombre de portions.";
+      return;
+    }
+    if (field.value.trim() && !confirm("Remplacer la description actuelle du repas par la recette importée ?")) return;
+    field.value = text;
+    field.dispatchEvent(new Event("input", {bubbles:true}));
+    const calorieText = $("#recipeImportCalories").value.trim();
+    const calories = calorieText ? Metrics.number(calorieText) : null;
+    if (calorieText && (calories == null || calories < 0 || calories > 10000)) {
+      $("#recipeImportStatus").textContent = "Vérifie les calories ou laisse le champ vide.";
+      return;
+    }
+    if (calorieText && (!$("#mealCalories").value.trim() ||
+        confirm("Remplacer les calories actuelles du repas par celles de la recette ?"))) {
+      $("#mealCalories").value = calorieText;
+      $("#mealCalories").dispatchEvent(new Event("input", {bubbles:true}));
+    }
+    $("#recipeImportDialog").close();
+  }
   function applyGuidedCnfMealEntryPreference(formReadOnly = false) {
     const field = $("#mealDescription"),
       button = $("#openCnfGuidedEntry"),
@@ -3850,7 +3942,9 @@ function formatSleepDuration(hours) {
     field.placeholder = required
       ? "Utilise la saisie guidée FCÉN ci-dessous pour ajouter les aliments."
       : "Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli";
-    if (button) { button.hidden = guidedMode || !guidedEntryEnabled(); button.classList.toggle("is-required", required); }
+    const recipeButton = $("#openRecipeImport");
+    if (recipeButton) recipeButton.hidden = !soloRecipeImportEnabled() || formReadOnly;
+    if (button) { button.hidden = soloRecipeImportEnabled() || guidedMode || !guidedEntryEnabled(); button.classList.toggle("is-required", required); }
     const reference = window.ENERGIE_LOCALE === "fr-FR" ? "Ciqual" : "FCÉN";
     if (required) field.placeholder = t(`Utilise la saisie guidée ${reference} ci-dessous pour ajouter les aliments.`);
     if (note) note.textContent = guidedMode
@@ -17883,6 +17977,11 @@ function formatSleepDuration(hours) {
   window.ENERGIE_CIQUAL_REFRESH_LABELS?.();
   $("#estimateMealNutrition").onclick = estimateCurrentMealNutrition;
   $("#openCnfGuidedEntry").onclick = openCnfGuidedMealEntry;
+  $("#openRecipeImport").onclick = openRecipeImportDialog;
+  $("#closeRecipeImport").onclick = () => $("#recipeImportDialog").close();
+  $("#fetchRecipeImport").onclick = fetchRecipeForMeal;
+  $("#recipeImportPortions").addEventListener("input", updateRecipeImportCalories);
+  $("#applyRecipeImport").onclick = applyRecipeToMeal;
   $("#cnfGuidedSearch").addEventListener("input", (event) => {
     clearTimeout(mealCnfGuidedSearchTimer);
     const value = event.target.value;
