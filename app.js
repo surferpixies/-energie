@@ -3844,6 +3844,52 @@ function formatSleepDuration(hours) {
       !guidedCnfEntryRequired();
   }
   let importedRecipe = null;
+  function recipeYieldCount(value) {
+    const match = String(value || "").match(/(?:^|\\b)(\\d+(?:[.,]\\d+)?)\\s*(?:portions?|personnes?|servings?)(?:\\b|$)/i);
+    return match ? Number(match[1].replace(",", ".")) : null;
+  }
+  function recipeAmountText(amount) {
+    return String(Math.round(amount * 100) / 100).replace(".", ",");
+  }
+  function scaleRecipeIngredient(line, factor) {
+    if (!Number.isFinite(factor) || factor <= 0 || factor === 1) return String(line);
+    const fractions = {"¼": .25, "½": .5, "¾": .75, "⅓": 1/3, "⅔": 2/3, "⅛": .125, "⅜": .375, "⅝": .625, "⅞": .875};
+    let raw = String(line), normalized = raw.replace(/^(\\s*)([¼½¾⅓⅔⅛⅜⅝⅞])/, (_m, ws, f) => ws + String(fractions[f]));
+    const match = normalized.match(/^(\\s*)(\\d+(?:[.,]\\d+)?)(?:\\s+(\\d+)\\/(\\d+))?(?:\\s*([¼½¾⅓⅔⅛⅜⅝⅞]))?(?:\\s*\\/\\s*(\\d+))?/);
+    if (!match) return raw; // « au goût », « une pincée » : laisser tel quel.
+    let number = Number(match[2].replace(",", "."));
+    if (match[3] && Number(match[4]) > 0) number += Number(match[3]) / Number(match[4]);
+    if (match[5]) number += fractions[match[5]];
+    if (match[6] && Number(match[6]) > 0 && !match[3] && !match[5]) number /= Number(match[6]);
+    if (!Number.isFinite(number)) return raw;
+    return match[1] + recipeAmountText(number * factor) + normalized.slice(match[0].length);
+  }
+  function buildRecipeImportDescription() {
+    if (!importedRecipe) return;
+    const portions = Number($("#recipeImportPortions")?.value);
+    const total = recipeYieldCount(importedRecipe.recipeYield);
+    const factor = total && portions > 0 && Number.isFinite(portions) ? portions / total : 1;
+    const title = String(importedRecipe.title || "").trim();
+    const source = String(importedRecipe.sourceUrl || $("#recipeImportUrl")?.value || "").trim();
+    const suffix = (total && Number.isFinite(portions) && portions > 0
+      ? "\\nPortion consommée : " + recipeAmountText(portions) + " sur " + recipeAmountText(total)
+      : "\\nPortion consommée : " + recipeAmountText(portions) + " (rendement à vérifier)") +
+      (source ? "\\nRecette originale : " + source : "");
+    const maxLength = 1000 - suffix.length;
+    let description = title, omitted = 0;
+    for (const ingredient of importedRecipe.ingredients || []) {
+      const scaled = scaleRecipeIngredient(ingredient, factor);
+      if (description.length + scaled.length + 3 > maxLength) { omitted++; continue; }
+      description += "\\n• " + scaled;
+    }
+    $("#recipeImportText").value = description + suffix;
+    $("#recipeImportYield").textContent = total
+      ? "Recette : " + recipeAmountText(total) + " portions · Quantités calculées pour " + recipeAmountText(portions) + " portion(s)."
+      : "Rendement non reconnu : quantités originales conservées, modifiables.";
+    $("#recipeImportStatus").textContent = omitted
+      ? "Recette trouvée, mais certains ingrédients ont été omis faute de place. Vérifie le texte."
+      : "Quantités proposées selon tes portions. Tu peux corriger le texte au besoin.";
+  }
   function updateRecipeImportCalories() {
     const field = $("#recipeImportCalories"), info = $("#recipeImportCalorieInfo");
     if (!field || !info) return;
@@ -3888,23 +3934,14 @@ function formatSleepDuration(hours) {
       if (error || !data?.recipe?.title || !Array.isArray(data.recipe.ingredients))
         throw new Error("recipe-unavailable");
       if (!soloRecipeImportEnabled() || !$("#recipeImportDialog")?.open) return;
-      importedRecipe = data.recipe;
-      const yieldText = String(importedRecipe.recipeYield || "").trim();
-      const proposed = [String(importedRecipe.title).trim(), ...importedRecipe.ingredients.map(String)];
-      let description = proposed[0] + (yieldText ? "\nRecette complète : " + yieldText : "");
-      let omitted = 0;
-      for (const ingredient of proposed.slice(1)) {
-        if (description.length + ingredient.length + 3 > 920) { omitted++; continue; }
-        description += "\n• " + ingredient;
-      }
-      $("#recipeImportText").value = description;
-      $("#recipeImportYield").textContent = yieldText ? "Recette complète : " + yieldText : "Rendement non indiqué; portion à vérifier.";
+      importedRecipe = {...data.recipe, sourceUrl: url};
       $("#recipeImportPortions").value = "1";
+      buildRecipeImportDescription();
       updateRecipeImportCalories();
       $("#recipeImportPreview").hidden = false;
-      status.textContent = omitted ? "Recette trouvée. Certains ingrédients dépassent la limite de 1 000 caractères et ont été omis : vérifie le texte." : "Recette trouvée. Vérifie et modifie le texte au besoin.";
-    } catch (_) {
-      status.textContent = "Impossible d’extraire cette recette. Pour l’instant, essaie un lien Ricardo ou Recettes du Québec contenant une recette structurée.";
+    } catch (error) {
+      console.warn("Importation de recette", error);
+      status.textContent = "Impossible d’extraire cette recette. Le site peut bloquer la lecture ou ne pas fournir les ingrédients structurés.";
     } finally { button.disabled = false; }
   }
   function applyRecipeToMeal() {
@@ -3915,12 +3952,6 @@ function formatSleepDuration(hours) {
       $("#recipeImportStatus").textContent = "Vérifie le texte et le nombre de portions.";
       return;
     }
-    const portionLine = "Portion consommée : " + String(portions).replace(".", ",") + " portion(s).";
-    const finalText = text + (text.includes("Portion consommée :") ? "" : "\n" + portionLine);
-    if (finalText.length > 1000) {
-      $("#recipeImportStatus").textContent = "Raccourcis légèrement le texte pour préciser la portion consommée.";
-      return;
-    }
     const calorieText = $("#recipeImportCalories").value.trim();
     const calories = calorieText ? Metrics.number(calorieText) : null;
     if (calorieText && (calories == null || calories < 0 || calories > 10000)) {
@@ -3928,7 +3959,7 @@ function formatSleepDuration(hours) {
       return;
     }
     if (field.value.trim() && !confirm("Remplacer la description actuelle du repas par la recette importée ?")) return;
-    field.value = finalText;
+    field.value = text;
     field.dispatchEvent(new Event("input", {bubbles:true}));
     if (calorieText && (!$("#mealCalories").value.trim() ||
         confirm("Remplacer les calories actuelles du repas par celles de la recette ?"))) {
@@ -17987,7 +18018,7 @@ function formatSleepDuration(hours) {
   $("#openRecipeImport").onclick = openRecipeImportDialog;
   $("#closeRecipeImport").onclick = () => $("#recipeImportDialog").close();
   $("#fetchRecipeImport").onclick = fetchRecipeForMeal;
-  $("#recipeImportPortions").addEventListener("input", updateRecipeImportCalories);
+  $("#recipeImportPortions").addEventListener("input", () => { buildRecipeImportDescription(); updateRecipeImportCalories(); });
   $("#applyRecipeImport").onclick = applyRecipeToMeal;
   $("#cnfGuidedSearch").addEventListener("input", (event) => {
     clearTimeout(mealCnfGuidedSearchTimer);
