@@ -4042,6 +4042,8 @@ function formatSleepDuration(hours) {
         status.textContent = "Ce site bloque actuellement la lecture automatisée de la recette (accès refusé).";
       else if (reason.includes("recipe-site-http-error"))
         status.textContent = "Le site de recettes a retourné une erreur (" + (reason.split(":")[1] || "HTTP") + ").";
+      else if (reason.includes("recipe-redirected-to-listing"))
+        status.textContent = "IGA renvoie sa page générale de recettes au lieu de la recette demandée. Essaie un autre lien ou copie les ingrédients manuellement.";
       else if (reason.includes("recipe-structured-data-missing"))
         status.textContent = "La page est accessible, mais son format de recette n’est pas reconnu.";
       else if (reason.includes("recipe-site-connection-failed"))
