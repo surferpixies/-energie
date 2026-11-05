@@ -4038,8 +4038,20 @@ function formatSleepDuration(hours) {
         /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(site.domain) &&
         typeof site.name === "string" && ["working","testing"].includes(site.status));
       label.replaceChildren();
-      const working = recipeSites.filter(site => site.status === "working");
-      const testing = recipeSites.filter(site => site.status === "testing");
+      // Plusieurs domaines d'un même éditeur (ex. marmiton.fr / marmiton.org)
+      // ne doivent produire qu'un seul lien visible, tout en restant tous autorisés.
+      const shownNames = new Set();
+      const uniqueSites = status => recipeSites
+        .filter(site => site.status === status)
+        .sort((a,b) => Number(b.domain.endsWith(".fr")) - Number(a.domain.endsWith(".fr")))
+        .filter(site => {
+          const name = site.name.trim().toLocaleLowerCase("fr");
+          if (!name || shownNames.has(name)) return false;
+          shownNames.add(name);
+          return true;
+        });
+      const working = uniqueSites("working");
+      const testing = uniqueSites("testing");
       for (const [heading, sites] of [["Sites confirmés : ",working],["En test : ",testing]]) {
         if (!sites.length) continue;
         if (label.childNodes.length) label.append(" ");
