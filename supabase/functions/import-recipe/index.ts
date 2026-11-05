@@ -34,8 +34,8 @@ function findRecipe(node: unknown, depth = 0): Record<string, unknown> | null {
   }
   const value = node as Record<string, unknown>;
   const type = value["@type"];
-  if ((typeof type === "string" && /(?:^|:)Recipe$/i.test(type)) ||
-      (Array.isArray(type) && type.some(v => typeof v === "string" && /(?:^|:)Recipe$/i.test(v)))) return value;
+  if ((typeof type === "string" && /(?:^|[:/])Recipe$/i.test(type)) ||
+      (Array.isArray(type) && type.some(v => typeof v === "string" && /(?:^|[:/])Recipe$/i.test(v)))) return value;
   for (const key of ["@graph", "mainEntity", "itemListElement", "hasPart"]) {
     const found = findRecipe(value[key], depth + 1);
     if (found) return found;
@@ -87,12 +87,20 @@ Deno.serve(async (request) => {
   try { target = validateUrl((await request.json()).url); }
   catch (_) { return response(400, {error:"invalid-or-unsupported-url"}); }
   try {
-    const upstream = await fetch(target, {
-      redirect: "manual",
-      signal: AbortSignal.timeout(10000),
-      headers: {"Accept": "text/html,application/xhtml+xml", "User-Agent": "EnergieRecipeImporter/1.0"},
-    });
-    if (!upstream.ok || upstream.status >= 300) return response(422,{error:"recipe-not-accessible"});
+    let current = target;
+    let upstream: Response | null = null;
+    for (let hop = 0; hop < 3; hop++) {
+      upstream = await fetch(current, {
+        redirect: "manual",
+        signal: AbortSignal.timeout(10000),
+        headers: {"Accept": "text/html,application/xhtml+xml", "User-Agent": "EnergieRecipeImporter/1.0"},
+      });
+      if (![301,302,303,307,308].includes(upstream.status)) break;
+      const destination = upstream.headers.get("location");
+      if (!destination) return response(422, {error:"recipe-not-accessible"});
+      current = validateUrl(new URL(destination, current).toString());
+    }
+    if (!upstream?.ok) return response(422,{error:"recipe-not-accessible"});
     const contentType = upstream.headers.get("content-type") || "";
     if (!/text\/html|application\/xhtml\+xml/i.test(contentType)) return response(422,{error:"unsupported-content"});
     if (Number(upstream.headers.get("content-length") || 0) > 1500000) return response(422,{error:"page-too-large"});
