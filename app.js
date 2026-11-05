@@ -3845,7 +3845,7 @@ function formatSleepDuration(hours) {
   }
   let importedRecipe = null;
   function recipeYieldCount(value) {
-    const match = String(value || "").match(/(?:^|\\b)(\\d+(?:[.,]\\d+)?)\\s*(?:portions?|personnes?|servings?)(?:\\b|$)/i);
+    const match = String(value || "").match(/(?:^|\b)(\d+(?:[.,]\d+)?)\s*(?:portions?|personnes?|servings?)(?:\b|$)/i);
     return match ? Number(match[1].replace(",", ".")) : null;
   }
   function recipeAmountText(amount) {
@@ -3854,8 +3854,8 @@ function formatSleepDuration(hours) {
   function scaleRecipeIngredient(line, factor) {
     if (!Number.isFinite(factor) || factor <= 0 || factor === 1) return String(line);
     const fractions = {"¼": .25, "½": .5, "¾": .75, "⅓": 1/3, "⅔": 2/3, "⅛": .125, "⅜": .375, "⅝": .625, "⅞": .875};
-    let raw = String(line), normalized = raw.replace(/^(\\s*)([¼½¾⅓⅔⅛⅜⅝⅞])/, (_m, ws, f) => ws + String(fractions[f]));
-    const match = normalized.match(/^(\\s*)(\\d+(?:[.,]\\d+)?)(?:\\s+(\\d+)\\/(\\d+))?(?:\\s*([¼½¾⅓⅔⅛⅜⅝⅞]))?(?:\\s*\\/\\s*(\\d+))?/);
+    let raw = String(line), normalized = raw.replace(/^(\s*)([¼½¾⅓⅔⅛⅜⅝⅞])/, (_m, ws, f) => ws + String(fractions[f]));
+    const match = normalized.match(/^(\s*)(\d+(?:[.,]\d+)?)(?:\s+(\d+)\/(\d+))?(?:\s*([¼½¾⅓⅔⅛⅜⅝⅞]))?(?:\s*\/\s*(\d+))?/);
     if (!match) return raw; // « au goût », « une pincée » : laisser tel quel.
     let number = Number(match[2].replace(",", "."));
     if (match[3] && Number(match[4]) > 0) number += Number(match[3]) / Number(match[4]);
@@ -3872,15 +3872,15 @@ function formatSleepDuration(hours) {
     const title = String(importedRecipe.title || "").trim();
     const source = String(importedRecipe.sourceUrl || $("#recipeImportUrl")?.value || "").trim();
     const suffix = (total && Number.isFinite(portions) && portions > 0
-      ? "\\nPortion consommée : " + recipeAmountText(portions) + " sur " + recipeAmountText(total)
-      : "\\nPortion consommée : " + recipeAmountText(portions) + " (rendement à vérifier)") +
-      (source ? "\\nRecette originale : " + source : "");
+      ? "\nPortion consommée : " + recipeAmountText(portions) + " sur " + recipeAmountText(total)
+      : "\nPortion consommée : " + recipeAmountText(portions) + " (rendement à vérifier)") +
+      (source ? "\nRecette originale : " + source : "");
     const maxLength = 1000 - suffix.length;
     let description = title, omitted = 0;
     for (const ingredient of importedRecipe.ingredients || []) {
       const scaled = scaleRecipeIngredient(ingredient, factor);
       if (description.length + scaled.length + 3 > maxLength) { omitted++; continue; }
-      description += "\\n• " + scaled;
+      description += "\n• " + scaled;
     }
     $("#recipeImportText").value = description + suffix;
     $("#recipeImportYield").textContent = total
