@@ -4058,7 +4058,7 @@ function formatSleepDuration(hours) {
         });
       const working = uniqueSites("working");
       const testing = uniqueSites("testing");
-      for (const [heading, sites] of [["Sites confirmés : ",working],["En test : ",testing]]) {
+      for (const [heading, sites] of [["📖 Sites de recettes compatibles : ",working],["En test : ",testing]]) {
         if (!sites.length) continue;
         if (label.childNodes.length) label.append(" ");
         const strong = document.createElement("strong");
