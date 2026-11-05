@@ -3844,6 +3844,23 @@ function formatSleepDuration(hours) {
       !guidedCnfEntryRequired();
   }
   let importedRecipe = null;
+  function recipeSourceLinkHtml(description) {
+    const match = String(description || "").match(/(?:^|\n)Recette originale : (https:\/\/[^\s]+)/);
+    if (!match) return "";
+    try {
+      const url = new URL(match[1]);
+      if (!["ricardocuisine.com", "www.ricardocuisine.com", "recettes.qc.ca", "www.recettes.qc.ca"].includes(url.hostname)) return "";
+      return '<a class="muted small" href="' + esc(url.href) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">🔗 Voir la recette originale</a>';
+    } catch (_) { return ""; }
+  }
+  function recipeDisplayName(description) {
+    return recipeSourceLinkHtml(description) ? String(description || "").split("\n")[0] : String(description || "");
+  }
+  function recipePortionSummary(description) {
+    if (!recipeSourceLinkHtml(description)) return "";
+    const match = String(description || "").match(/(?:^|\n)(Portion consommée : [^\n]+)/);
+    return match ? '<span class="muted small">' + esc(match[1]) + '</span>' : "";
+  }
   function recipeYieldCount(value) {
     const match = String(value || "").match(/(?:^|\b)(\d+(?:[.,]\d+)?)\s*(?:portions?|personnes?|servings?)(?:\b|$)/i);
     return match ? Number(match[1].replace(",", ".")) : null;
@@ -8044,7 +8061,7 @@ function formatSleepDuration(hours) {
       !!m.feeling,
       true,
     );
-    return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${(m.photos?.[0]?.url || m.photos?.[0]?.local || m.photoUrl || m.photoLocal) ? `<img src="${esc(m.photos?.[0]?.url || m.photos?.[0]?.local || m.photoUrl || m.photoLocal)}" alt="">` : mealIcon(m.type, m.description)}</div><div class="meal-card-body"><h3 translate="no">${esc(m.description)}</h3><div class="meal-meta">${esc(m.time)} · ${mealTypeHtml(m.type)}${opts.showDate ? ` · ${esc(formatDate(m.date))}` : ""}</div>${nutritionVisibleToViewer() && m.nutrition ? `<div class="meal-macros">≈ ${esc(nutritionText(m.nutrition))}</div>` : ""}${feelingPreview}<div class="meal-footer">${beforeCount ? `<span class="chip">Avant · ${beforeCount}</span>` : ""}${feelingEligible && !readOnly ? `<button class="meal-feeling-inline ${feeling ? "is-set" : "is-empty"}" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? `Après · ${afterCount}` : "Ressenti après"}</button>` : ""}</div>${visibleChanges ? `<div class="meal-card-feeling-changes">${visibleChanges}</div>` : ""}</div>${readOnly ? "" : `<div class="meal-actions">${feelingEligible ? `<button class="feeling-meal" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? "😊" : "＋😊"}</button>` : ""}<button class="favorite-meal ${favorite ? "is-favorite" : ""}" data-favorite="${m.id}" title="${favorite ? "Retirer des favoris" : "Ajouter aux favoris"}">${favorite ? "★" : "☆"}</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div>`}</article>`;
+    return `<article class="card meal-card" data-meal="${m.id}" data-date="${m.date}"><div class="meal-thumb">${(m.photos?.[0]?.url || m.photos?.[0]?.local || m.photoUrl || m.photoLocal) ? `<img src="${esc(m.photos?.[0]?.url || m.photos?.[0]?.local || m.photoUrl || m.photoLocal)}" alt="">` : mealIcon(m.type, m.description)}</div><div class="meal-card-body"><h3 translate="no">${esc(recipeDisplayName(m.description))}</h3>${recipePortionSummary(m.description)}${recipeSourceLinkHtml(m.description)}<div class="meal-meta">${esc(m.time)} · ${mealTypeHtml(m.type)}${opts.showDate ? ` · ${esc(formatDate(m.date))}` : ""}</div>${nutritionVisibleToViewer() && m.nutrition ? `<div class="meal-macros">≈ ${esc(nutritionText(m.nutrition))}</div>` : ""}${feelingPreview}<div class="meal-footer">${beforeCount ? `<span class="chip">Avant · ${beforeCount}</span>` : ""}${feelingEligible && !readOnly ? `<button class="meal-feeling-inline ${feeling ? "is-set" : "is-empty"}" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? `Après · ${afterCount}` : "Ressenti après"}</button>` : ""}</div>${visibleChanges ? `<div class="meal-card-feeling-changes">${visibleChanges}</div>` : ""}</div>${readOnly ? "" : `<div class="meal-actions">${feelingEligible ? `<button class="feeling-meal" data-feeling="${m.id}" title="${feeling ? "Modifier les ressentis après" : "Ajouter les ressentis après"}">${feeling ? "😊" : "＋😊"}</button>` : ""}<button class="favorite-meal ${favorite ? "is-favorite" : ""}" data-favorite="${m.id}" title="${favorite ? "Retirer des favoris" : "Ajouter aux favoris"}">${favorite ? "★" : "☆"}</button><button class="delete-meal" data-delete="${m.id}" title="Supprimer">×</button></div>`}</article>`;
   }
   function bindMealCards() {
     $$("[data-meal]").forEach(
@@ -11860,7 +11877,7 @@ function formatSleepDuration(hours) {
           .sort((a, b) => b.usageCount - a.usageCount)
           .map(
             (f) =>
-              `<article class="card favorite-card"><div class="favorite-icon">${mealIcon(f.type, f.description)}</div><div><div class="favorite-title-row"><h3>${esc(f.name)}</h3><button type="button" class="favorite-rename" data-rename-favorite="${esc(f.id)}" aria-label="Renommer ${esc(f.name)}" title="Renommer le favori"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button></div><form class="favorite-name-editor" data-favorite-editor="${esc(f.id)}" hidden><label class="favorite-name-label" for="favorite-name-${esc(f.id)}"><span><strong>Nommer ce favori</strong><small>Facultatif · affiché dans les favoris</small></span><input id="favorite-name-${esc(f.id)}" name="favorite-name" type="text" maxlength="60" autocomplete="off" autocapitalize="sentences" value="${esc(f.name)}"></label><div class="favorite-name-editor-actions"><button type="submit" class="primary small">Enregistrer</button><button type="button" class="small secondary" data-cancel-favorite-edit="${esc(f.id)}">Annuler</button></div></form><p>${esc(f.description)}</p><small class="muted">Utilisé ${f.usageCount || 0} fois</small></div><div class="favorite-actions">${showUse ? `<button class="primary small" data-use-favorite="${esc(f.id)}">Utiliser</button>` : ""}<button class="delete-meal" data-delete-favorite="${esc(f.id)}">×</button></div></article>`,
+              `<article class="card favorite-card"><div class="favorite-icon">${mealIcon(f.type, f.description)}</div><div><div class="favorite-title-row"><h3>${esc(f.name)}</h3><button type="button" class="favorite-rename" data-rename-favorite="${esc(f.id)}" aria-label="Renommer ${esc(f.name)}" title="Renommer le favori"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button></div><form class="favorite-name-editor" data-favorite-editor="${esc(f.id)}" hidden><label class="favorite-name-label" for="favorite-name-${esc(f.id)}"><span><strong>Nommer ce favori</strong><small>Facultatif · affiché dans les favoris</small></span><input id="favorite-name-${esc(f.id)}" name="favorite-name" type="text" maxlength="60" autocomplete="off" autocapitalize="sentences" value="${esc(f.name)}"></label><div class="favorite-name-editor-actions"><button type="submit" class="primary small">Enregistrer</button><button type="button" class="small secondary" data-cancel-favorite-edit="${esc(f.id)}">Annuler</button></div></form><p>${esc(recipeDisplayName(f.description))}</p>${recipePortionSummary(f.description)}${recipeSourceLinkHtml(f.description)}<small class="muted">Utilisé ${f.usageCount || 0} fois</small></div><div class="favorite-actions">${showUse ? `<button class="primary small" data-use-favorite="${esc(f.id)}">Utiliser</button>` : ""}<button class="delete-meal" data-delete-favorite="${esc(f.id)}">×</button></div></article>`,
           )
           .join("")
       : `<section class="card empty"><div class="food-art">⭐</div><p>Ajoute un repas existant à tes favoris avec l’étoile.</p></section>`;
