@@ -49,6 +49,34 @@ function findRecipe(node: unknown, depth = 0): Record<string, unknown> | null {
   }
   return null;
 }
+function decodeRecipeEntities(value: string): string {
+  return value.replace(/&(?:nbsp|amp|quot|apos|lt|gt|#39|#x27|#(\d+)|#x([0-9a-f]+));/gi,
+    (found, decimal, hex) => {
+      const named: Record<string, string> = {nbsp:" ", amp:"&", quot:'"', apos:"'", lt:"<", gt:">", "#39":"'", "#x27":"'"};
+      const key = found.slice(1,-1).toLowerCase();
+      if (named[key]) return named[key];
+      const code = decimal ? Number(decimal) : hex ? parseInt(hex,16) : NaN;
+      return Number.isFinite(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : found;
+    });
+}
+function htmlRecipeText(value: string): string {
+  return decodeRecipeEntities(value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim());
+}
+// Secours pour les sites qui utilisent les microdonnées HTML plutôt que JSON-LD.
+function parseRecipeMicrodata(html: string) {
+  const ingredientMatches = [...html.matchAll(/<([a-z][a-z0-9]*)\b([^>]*\bitemprop\s*=\s*["']?recipeIngredient["']?[^>]*)>([\s\S]*?)<\/\1\s*>/gi)];
+  const ingredients = ingredientMatches.map(m => {
+    const content = m[2].match(/\bcontent\s*=\s*["']([^"']+)["']/i);
+    return htmlRecipeText(content?.[1] || m[3]);
+  }).filter(Boolean).slice(0,75);
+  if (!ingredients.length) return null;
+  const nameMatch = html.match(/<meta\b[^>]*\bproperty\s*=\s*["']og:title["'][^>]*\bcontent\s*=\s*["']([^"']+)["']/i)
+    || html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
+  const title = nameMatch ? htmlRecipeText(nameMatch[1]).replace(/\s*[\|\-]\s*IGA.*$/i,"").slice(0,140) : "";
+  if (!title) return null;
+  const yieldMatch = html.match(/<[^>]*\bitemprop\s*=\s*["']?recipeYield["']?[^>]*>([\s\S]*?)<\//i);
+  return {title, ingredients, recipeYield: yieldMatch ? htmlRecipeText(yieldMatch[1]) : "", caloriesPerServing: null, calorieSource:null};
+}
 function parseRecipe(html: string) {
   const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
     .filter(m => /\btype\s*=\s*["']?application\/ld\+json\b/i.test(m[1]));
@@ -117,7 +145,7 @@ Deno.serve(async (request) => {
     if (Number(upstream.headers.get("content-length") || 0) > 1500000) return response(422,{error:"page-too-large"});
     const html = await upstream.text();
     if (html.length > 1500000) return response(422,{error:"page-too-large"});
-    const recipe = parseRecipe(html);
+    const recipe = parseRecipe(html) || parseRecipeMicrodata(html);
     return recipe ? response(200, {recipe}) : response(422,{error:"recipe-structured-data-missing"});
   } catch (error) {
     console.warn("import-recipe fetch failed", String(error).slice(0, 250));
