@@ -276,6 +276,17 @@
       <input id="recipeImportUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://www.ricardocuisine.com/recettes/..." />
       <button type="button" id="fetchRecipeImport" class="secondary">Lire la recette</button>
       <p id="recipeImportStatus" class="muted small" role="status" aria-live="polite"></p>
+      <button type="button" class="secondary" id="showRecipePaste">Coller les ingrédients à la place</button>
+      <div id="recipePasteFields" hidden>
+        <p class="muted small">Si le site refuse l'importation, copie la liste des ingrédients depuis la page. Énergie ajustera les quantités.</p>
+        <label for="recipePasteTitle">Nom de la recette</label>
+        <input id="recipePasteTitle" type="text" maxlength="140" placeholder="Ex. Spaghetti-boulettes" />
+        <label for="recipePasteYield">Nombre de portions de la recette complète</label>
+        <input id="recipePasteYield" type="number" min="1" max="100" step="1" placeholder="Ex. 4" />
+        <label for="recipePasteIngredients">Ingrédients (une ligne par ingrédient)</label>
+        <textarea id="recipePasteIngredients" rows="6" placeholder="500 g de boeuf haché&#10;1 tasse de chapelure&#10;..."></textarea>
+        <button type="button" class="secondary" id="preparePastedRecipe">Préparer ma recette</button>
+      </div>
       <div id="recipeImportPreview" hidden>
         <p id="recipeImportYield" class="muted small"></p>
         <label for="recipeImportPortions">Portions consommées</label>
@@ -790,7 +801,7 @@
   <script src="journal-consultation.js?v=3.56.199"></script>
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
-  <script src="app.js?v=3.56.384-iga-listing-diagnostic"></script>
+  <script src="app.js?v=3.56.385-recipe-manual-fallback"></script>
   <script>
     // iPhone: hide the native gray keyboard accessory toolbar (arrows / Done).
     // The Capacitor Keyboard plugin is synced into iOS by npm run ios:sync.
