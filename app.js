@@ -3990,6 +3990,46 @@ function formatSleepDuration(hours) {
       info.textContent = "Aucune donnée calorique fiable trouvée : tu peux laisser ce champ vide.";
     }
   }
+  let recipeSites = [];
+  async function loadRecipeSites() {
+    const label = $("#recipeSupportedSites");
+    if (!client || !label) return false;
+    label.textContent = "Chargement des sites compatibles…";
+    try {
+      const {data, error} = await client.functions.invoke("import-recipe", {method:"GET"});
+      if (error || !Array.isArray(data?.sites)) throw error || new Error("recipe-sites-missing");
+      recipeSites = data.sites.filter(site => typeof site.domain === "string" &&
+        /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(site.domain) &&
+        typeof site.name === "string" && ["working","testing"].includes(site.status));
+      label.replaceChildren();
+      const working = recipeSites.filter(site => site.status === "working");
+      const testing = recipeSites.filter(site => site.status === "testing");
+      for (const [heading, sites] of [["Sites confirmés : ",working],["En test : ",testing]]) {
+        if (!sites.length) continue;
+        if (label.childNodes.length) label.append(" ");
+        const strong = document.createElement("strong");
+        strong.textContent = heading;
+        label.append(strong);
+        sites.forEach((site,index) => {
+          if (index) label.append(", ");
+          const link = document.createElement("a");
+          link.href = "https://www." + site.domain + "/";
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = site.name;
+          label.append(link);
+        });
+        label.append(".");
+      }
+      if (!recipeSites.length) label.textContent = "Aucun site de recettes disponible pour le moment.";
+      return true;
+    } catch (error) {
+      console.warn("Liste des sites de recettes", error);
+      recipeSites = [];
+      label.textContent = "Liste des sites momentanément indisponible. Réessaie plus tard.";
+      return false;
+    }
+  }
   function openRecipeImportDialog() {
     if (!soloRecipeImportEnabled() || $("#mealForm")?.dataset.inlineReadOnly === "true") return;
     const dialog = $("#recipeImportDialog");
@@ -4001,16 +4041,27 @@ function formatSleepDuration(hours) {
     $("#recipeImportPreview").hidden = true;
     $("#recipeImportPortions").value = "1";
     dialog.showModal();
+    void loadRecipeSites();
   }
   async function fetchRecipeForMeal() {
     if (!soloRecipeImportEnabled() || !client) return;
     const button = $("#fetchRecipeImport"), status = $("#recipeImportStatus");
     const url = $("#recipeImportUrl").value.trim();
+    let host = "";
     try {
       const parsed = new URL(url);
-      if (parsed.protocol !== "https:" || !["ricardocuisine.com", "www.ricardocuisine.com", "marmiton.org", "www.marmiton.org", "marmiton.fr", "www.marmiton.fr"].includes(parsed.hostname.toLowerCase())) throw new Error("url");
+      if (parsed.protocol !== "https:" || parsed.port || parsed.username || parsed.password) throw new Error("url");
+      host = parsed.hostname.toLowerCase();
     } catch (_) {
-      status.textContent = "Pour le moment, seules les recettes Ricardo et Marmiton (en test) sont acceptées.";
+      status.textContent = "Colle une adresse https:// valide.";
+      return;
+    }
+    if (!recipeSites.length && !(await loadRecipeSites())) {
+      status.textContent = "Liste des sites autorisés indisponible. Réessaie plus tard.";
+      return;
+    }
+    if (!recipeSites.some(site => host === site.domain || host === "www." + site.domain)) {
+      status.textContent = "Ce site n’est pas encore autorisé. Consulte la liste des sites compatibles ci-dessus.";
       return;
     }
     button.disabled = true;
