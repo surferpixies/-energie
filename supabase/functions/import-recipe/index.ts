@@ -15,6 +15,7 @@ const allowedHosts = new Set([
   "www.ricardocuisine.com", "ricardocuisine.com",
   "www.recettes.qc.ca", "recettes.qc.ca",
   "www.iga.ca", "iga.ca",
+  "www.zeste.ca", "zeste.ca",
 ]);
 function validateUrl(raw: unknown): URL {
   if (typeof raw !== "string" || raw.length > 2048) throw new Error("invalid-url");
