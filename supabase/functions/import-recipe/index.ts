@@ -145,6 +145,16 @@ Deno.serve(async (request) => {
     if (Number(upstream.headers.get("content-length") || 0) > 1500000) return response(422,{error:"page-too-large"});
     const html = await upstream.text();
     if (html.length > 1500000) return response(422,{error:"page-too-large"});
+    // IGA peut renvoyer sa page générale même pour un lien vers une recette.
+    // Ne jamais traiter cette page comme une fiche recette.
+    if (target.hostname.endsWith("iga.ca") && target.pathname.startsWith("/fr/recettes/")) {
+      const canonical = html.match(/<link\b[^>]*\brel\s*=\s*["']canonical["'][^>]*\bhref\s*=\s*["']([^"']+)["']/i);
+      const canonicalPath = canonical ? (() => {
+        try { return new URL(canonical[1], current).pathname.replace(/\/$/, ""); } catch (_) { return ""; }
+      })() : "";
+      if (current.pathname.replace(/\/$/, "") === "/fr/recettes" || canonicalPath === "/fr/recettes")
+        return response(422, {error: "recipe-redirected-to-listing"});
+    }
     const recipe = parseRecipe(html) || parseRecipeMicrodata(html);
     return recipe ? response(200, {recipe}) : response(422,{error:"recipe-structured-data-missing"});
   } catch (error) {
