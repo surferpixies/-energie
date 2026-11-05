@@ -3853,15 +3853,34 @@ function formatSleepDuration(hours) {
       return '<a class="muted small" href="' + esc(url.href) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">🔗 Voir la recette originale</a>';
     } catch (_) { return ""; }
   }
+  function recipeVisibleDescription(raw) {
+    const lines = String(raw || "").split("\n");
+    const meta = lines.filter(line => /^\s*(?:Portion consommée :|Recette originale : https:\/\/)/.test(line));
+    return {description: lines.filter(line => !meta.includes(line)).join("\n").trim(), meta: meta.join("\n")};
+  }
+  function setMealRecipeDescription(raw) {
+    const field = $("#mealDescription");
+    if (!field) return;
+    const parts = recipeVisibleDescription(raw);
+    field.value = parts.description;
+    field.dataset.recipeMeta = parts.meta;
+    refreshRecipeSourceLinks();
+  }
+  function mealRecipeDescriptionForSave() {
+    const field = $("#mealDescription");
+    const visible = field?.value.trim() || "";
+    const meta = field?.dataset.recipeMeta || "";
+    return meta ? visible + "\n" + meta : visible;
+  }
   function refreshRecipeSourceLinks() {
     const mealLink = $("#mealRecipeSourceLink");
     if (mealLink) {
-      mealLink.innerHTML = recipeSourceLinkHtml($("#mealDescription")?.value);
+      mealLink.innerHTML = recipeSourceLinkHtml(mealRecipeDescriptionForSave());
       mealLink.hidden = !mealLink.innerHTML;
     }
     const importLink = $("#recipeImportSourceLink");
     if (importLink) {
-      importLink.innerHTML = recipeSourceLinkHtml($("#recipeImportText")?.value);
+      importLink.innerHTML = recipeSourceLinkHtml(recipeImportDescriptionForSave());
       importLink.hidden = !importLink.innerHTML;
     }
   }
@@ -3893,6 +3912,11 @@ function formatSleepDuration(hours) {
     if (!Number.isFinite(number)) return raw;
     return match[1] + recipeAmountText(number * factor) + normalized.slice(match[0].length);
   }
+  let recipeImportMeta = "";
+  function recipeImportDescriptionForSave() {
+    const visible = $("#recipeImportText")?.value.trim() || "";
+    return recipeImportMeta ? visible + "\n" + recipeImportMeta : visible;
+  }
   function buildRecipeImportDescription() {
     if (!importedRecipe) return;
     const portions = Number($("#recipeImportPortions")?.value);
@@ -3911,7 +3935,8 @@ function formatSleepDuration(hours) {
       if (description.length + scaled.length + 3 > maxLength) { omitted++; continue; }
       description += "\n• " + scaled;
     }
-    $("#recipeImportText").value = description + suffix;
+    recipeImportMeta = suffix.trim();
+    $("#recipeImportText").value = description;
     refreshRecipeSourceLinks();
     $("#recipeImportYield").textContent = total
       ? "Recette : " + recipeAmountText(total) + " portions · Quantités calculées pour " + recipeAmountText(portions) + " portion(s)."
@@ -3938,6 +3963,7 @@ function formatSleepDuration(hours) {
     const dialog = $("#recipeImportDialog");
     if (!dialog) return;
     importedRecipe = null;
+    recipeImportMeta = "";
     $("#recipeImportUrl").value = "";
     $("#recipeImportStatus").textContent = "";
     $("#recipeImportPreview").hidden = true;
@@ -3976,7 +4002,7 @@ function formatSleepDuration(hours) {
   }
   function applyRecipeToMeal() {
     if (!soloRecipeImportEnabled() || !importedRecipe || $("#mealForm")?.dataset.inlineReadOnly === "true") return;
-    const field = $("#mealDescription"), text = $("#recipeImportText").value.trim();
+    const field = $("#mealDescription"), text = recipeImportDescriptionForSave();
     const portions = Number($("#recipeImportPortions").value);
     if (!text || text.length > 1000 || !Number.isFinite(portions) || portions <= 0 || portions > 20) {
       $("#recipeImportStatus").textContent = "Vérifie le texte et le nombre de portions.";
@@ -3989,7 +4015,7 @@ function formatSleepDuration(hours) {
       return;
     }
     if (field.value.trim() && !confirm("Remplacer la description actuelle du repas par la recette importée ?")) return;
-    field.value = text;
+    setMealRecipeDescription(text);
     field.dispatchEvent(new Event("input", {bubbles:true}));
     refreshRecipeSourceLinks();
     if (calorieText && (!$("#mealCalories").value.trim() ||
@@ -16704,7 +16730,7 @@ function formatSleepDuration(hours) {
   }
   function applyFavoriteToMealForm(favorite) {
     if (!favorite) return;
-    $("#mealDescription").value = favorite.description;
+    setMealRecipeDescription(favorite.description);
     $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
     refreshRecipeSourceLinks();
     $("#mealNotes").value = favorite.notes || "";
@@ -17283,7 +17309,7 @@ function formatSleepDuration(hours) {
         };
     updateMealDialogType(type);
     $("#mealTime").value = m?.time || new Date().toTimeString().slice(0, 5);
-    $("#mealDescription").value = m?.description || "";
+    setMealRecipeDescription(m?.description || "");
     setMealCnfItemsField(m?.cnfItems || []);
     inlineGuidedRows = (m?.cnfItems || []).map(item => ({
       id: String(item.cnfFoodId), entryId: item.entryId, customFavorite: String(item.cnfFoodId).startsWith("CUSTOM:") ? { alias: item.nameFr, calories_per_100g: item.customNutrition?.calories ?? null, protein_per_100g: item.customNutrition?.protein ?? null, carbs_per_100g: item.customNutrition?.carbs ?? null, fat_per_100g: item.customNutrition?.fat ?? null } : null, query: item.nameFr || item.nameEn || "",
@@ -18224,7 +18250,7 @@ function formatSleepDuration(hours) {
         date: selectedDate,
         type: $("#mealType").value,
         time: $("#mealTime").value,
-        description: $("#mealDescription").value.trim(),
+        description: mealRecipeDescriptionForSave(),
         cnfItems:
           (() => {
             if (inlineResult?.legacy) return old?.cnfItems || [];
