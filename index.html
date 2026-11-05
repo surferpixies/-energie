@@ -15,7 +15,7 @@
     html,body{margin:0;background:#eef8e7;}
     #splashScreen{position:fixed;inset:0;background:#eef8e7;}
   </style>
-  <link rel="stylesheet" href="styles.css?v=3.56.375-android-webview-refresh">
+  <link rel="stylesheet" href="styles.css?v=3.56.376-recipe-web-import">
   <link rel="stylesheet" href="meal-entry-guide.css?v=3.56.199">
   <link rel="stylesheet" href="display-preferences.css?v=3.56.199">
   <link rel="stylesheet" href="journal-consultation.css?v=3.56.199">
@@ -170,6 +170,7 @@
           <textarea id="mealDescription" maxlength="1000" aria-describedby="mealDescriptionLimit" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli" required></textarea>
           <small id="mealDescriptionLimit" class="muted tiny">Description du repas · 1 000 caractères maximum</small>
           <p id="mealGuidedEntryRequirement" class="meal-guided-entry-requirement" hidden>La saisie guidée FCÉN est obligatoire dans tes préférences.</p>
+          <button type="button" id="openRecipeImport" class="meal-cnf-guided-entry meal-recipe-import-entry" hidden><span class="meal-cnf-guided-icon" aria-hidden="true">🔗</span><span><strong>Importer une recette</strong><small>À partir d’un site Web</small></span><b aria-hidden="true">›</b></button>
           <button type="button" id="openCnfGuidedEntry" class="meal-cnf-guided-entry"><span class="meal-cnf-guided-icon" aria-hidden="true">🇨🇦</span><span><strong>Saisie guidée FCÉN</strong><small>Santé Canada</small></span><b aria-hidden="true">›</b></button>
           <div class="meal-description-toolbar">
             <div class="meal-composer-actions">
@@ -265,6 +266,27 @@
     </form>
   </dialog>
 
+  <dialog id="recipeImportDialog" class="recipe-import-dialog">
+    <section class="dialog-card recipe-import-card">
+      <div class="dialog-header"><div><p class="eyebrow">Saisie libre</p><h2>🔗 Importer une recette</h2></div><button type="button" id="closeRecipeImport" class="icon-button" aria-label="Fermer">✕</button></div>
+      <p class="muted small">Colle le lien d'une recette. On récupère les ingrédients et les quantités, sans inventer de calories.</p>
+      <label for="recipeImportUrl">Lien Web de la recette</label>
+      <input id="recipeImportUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://www.ricardocuisine.com/recettes/..." />
+      <button type="button" id="fetchRecipeImport" class="secondary">Lire la recette</button>
+      <p id="recipeImportStatus" class="muted small" role="status" aria-live="polite"></p>
+      <div id="recipeImportPreview" hidden>
+        <p id="recipeImportYield" class="muted small"></p>
+        <label for="recipeImportPortions">Portions consommées</label>
+        <input id="recipeImportPortions" type="number" min="0.25" max="20" step="0.25" value="1" />
+        <label for="recipeImportText">Texte proposé (modifiable)</label>
+        <textarea id="recipeImportText" rows="6" maxlength="1000"></textarea>
+        <label for="recipeImportCalories">Calories (facultatif)</label>
+        <input id="recipeImportCalories" inputmode="decimal" type="text" placeholder="Aucune donnée disponible" />
+        <p id="recipeImportCalorieInfo" class="muted small"></p>
+        <button type="button" id="applyRecipeImport" class="primary">Utiliser dans mon repas</button>
+      </div>
+    </section>
+  </dialog>
   <dialog id="quickMealTypeDialog" class="quick-journal-dialog">
     <section class="dialog-card quick-journal-dialog-card">
       <div class="dialog-header"><div><p class="eyebrow">Ajout rapide</p><h2>Choisir le repas</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
@@ -765,7 +787,7 @@
   <script src="journal-consultation.js?v=3.56.199"></script>
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
-  <script src="app.js?v=3.56.375-android-webview-refresh"></script>
+  <script src="app.js?v=3.56.376-recipe-web-import"></script>
   <script>
     // iPhone: hide the native gray keyboard accessory toolbar (arrows / Done).
     // The Capacitor Keyboard plugin is synced into iOS by npm run ios:sync.
