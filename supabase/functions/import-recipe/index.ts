@@ -9,10 +9,11 @@ const headers = {
 const response = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers });
 
-// Ricardo uniquement pour la première version de l'importateur.
+// Ricardo confirmé et Marmiton en phase de test.
 // La liste blanche empêche de transformer l'importateur en proxy vers des adresses privées.
 const allowedHosts = new Set([
   "www.ricardocuisine.com", "ricardocuisine.com",
+  "www.marmiton.org", "marmiton.org", "www.marmiton.fr", "marmiton.fr",
 ]);
 function validateUrl(raw: unknown): URL {
   if (typeof raw !== "string" || raw.length > 2048) throw new Error("invalid-url");
