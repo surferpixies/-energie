@@ -114,12 +114,12 @@ Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, {status: 204, headers});
   if (!["GET", "POST"].includes(request.method)) return response(405, {error: "method-not-allowed"});
   const bearer = request.headers.get("authorization") || "";
-  if (!/^Bearer\\s+\\S+$/i.test(bearer)) return response(401, {error: "authentication-required"});
+  if (!/^Bearer\s+\S+$/i.test(bearer)) return response(401, {error: "authentication-required"});
   const server = Deno.env.get("SUPABASE_URL");
   const secret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!server || !secret) return response(503, {error: "service-unavailable"});
   const admin = createClient(server, secret, {auth: {persistSession:false,autoRefreshToken:false}});
-  const {data, error} = await admin.auth.getUser(bearer.replace(/^Bearer\\s+/i, ""));
+  const {data, error} = await admin.auth.getUser(bearer.replace(/^Bearer\s+/i, ""));
   if (error || !data.user) return response(401, {error: "authentication-required"});
   const {data: rows, error: settingsError} = await admin.from("recipe_sites")
     .select("domain,display_name,status,enabled");
@@ -128,7 +128,7 @@ Deno.serve(async (request) => {
     return response(503, {error: "recipe-sites-settings-unavailable"});
   }
   const sites = (rows as RecipeSite[]).filter(site =>
-    /^[a-z0-9-]+(?:\\.[a-z0-9-]+)+$/.test(site.domain));
+    /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(site.domain));
   if (request.method === "GET") {
     return response(200, {sites: sites.filter(site => site.enabled && site.status !== "blocked")
       .map(({domain, display_name, status}) => ({domain, name: display_name, status}))});
