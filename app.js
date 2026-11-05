@@ -3893,8 +3893,13 @@ function formatSleepDuration(hours) {
     return match ? '<span class="muted small">' + esc(match[1]) + '</span>' : "";
   }
   function recipeYieldCount(value) {
-    const match = String(value || "").match(/(?:^|\b)(\d+(?:[.,]\d+)?)\s*(?:portions?|personnes?|servings?)(?:\b|$)/i);
-    return match ? Number(match[1].replace(",", ".")) : null;
+    const label = String(value || "").trim();
+    // Les sites anglophones renvoient parfois seulement "4" ou "Serves 4".
+    const match = label.match(/(?:^|\b)(\d+(?:[.,]\d+)?)\s*(?:portions?|personnes?|servings?)(?:\b|$)/i)
+      || label.match(/\bserves?\s+(\d+(?:[.,]\d+)?)(?:\b|$)/i)
+      || label.match(/^(\d+(?:[.,]\d+)?)$/);
+    const count = match ? Number(match[1].replace(",", ".")) : null;
+    return count !== null && count > 0 && count <= 100 ? count : null;
   }
   function recipeAmountText(amount) {
     return String(Math.round(amount * 100) / 100).replace(".", ",");
@@ -3932,7 +3937,7 @@ function formatSleepDuration(hours) {
   }
   function recipeReadableQuantity(amount, suffix, originalFraction) {
     const rest = String(suffix);
-    const unitMatch = rest.match(/^(\s*)(kg|kilogrammes?|cl|centilitres?|litres?|l|grammes?|g|millilitres?|ml|(?:cuillères?|c\.)\s*à\s*(?:soupe|table)|tasses?|verres?|pincées?|paquets?|sachets?)\b/i);
+    const unitMatch = rest.match(/^(\s*)(kg|kilogrammes?|cl|centilitres?|litres?|l|grammes?|g|millilitres?|ml|(?:cuillères?|c\.)\s*à\s*(?:soupe|table)|tbsp|tsp|tablespoons?|teaspoons?|cups?|oz|lbs?|tasses?|verres?|pincées?|paquets?|sachets?)\b/i);
     if (!unitMatch) return {label: recipeScaledQuantityLabel(amount, originalFraction), suffix:rest};
     const unit = unitMatch[2].toLowerCase();
     let value = amount, unitText = unitMatch[2], restAfter = rest.slice(unitMatch[0].length);
@@ -3943,7 +3948,7 @@ function formatSleepDuration(hours) {
       value *= 3; unitText = "c. à thé";
     }
     const measurable = /^(?:g|gramme|ml|millilitre)/i.test(unitText);
-    const preferFraction = !measurable && (/^(?:tasse|verre|pincée|paquet|sachet|c\.)/.test(unitText.toLowerCase()) || originalFraction);
+    const preferFraction = !measurable && (/^(?:tasse|verre|pincée|paquet|sachet|c\.|tbsp|tsp|tablespoon|teaspoon|cup|oz|lb)/.test(unitText.toLowerCase()) || originalFraction);
     let label;
     if (measurable) label = recipeAmountText(Math.round(value * (value >= 10 ? 1 : 10)) / (value >= 10 ? 1 : 10));
     else if (preferFraction) label = recipeReadableFraction(value) || recipeAmountText(value);
@@ -3951,7 +3956,7 @@ function formatSleepDuration(hours) {
     return {label, suffix:unitMatch[1] + unitText + restAfter};
   }
   function scaleRecipeQuantityPrefix(input, factor) {
-    const match = String(input).match(/^(\s*)(\d+(?:[.,]\d+)?(?:\s+\d+\/\d+|\s*[¼½¾⅓⅔⅛⅜⅝⅞])?|\d+\/\d+|[¼½¾⅓⅔⅛⅜⅝⅞])(?=\s|$|[),;])/);
+    const match = String(input).match(/^(\s*)(\d+(?:[.,]\d+)?(?:\s+\d+\/\d+|\s*[¼½¾⅓⅔⅛⅜⅝⅞])?|\d+\/\d+|[¼½¾⅓⅔⅛⅜⅝⅞])(?=\s|$|[),;]|(?:kg|g|ml|cl|l|tbsp|tsp|cups?|oz|lbs?)\b)/);
     if (!match) return String(input);
     const raw = match[2];
     const fractions = {"¼": .25, "½": .5, "¾": .75, "⅓": 1/3, "⅔": 2/3, "⅛": .125, "⅜": .375, "⅝": .625, "⅞": .875};
@@ -4030,7 +4035,7 @@ function formatSleepDuration(hours) {
   async function loadRecipeSites() {
     const label = $("#recipeSupportedSites");
     if (!client || !label) return false;
-    label.textContent = "Chargement des sites compatibles…";
+    // Conserver la liste déjà visible pendant le rafraîchissement Supabase.
     try {
       const {data, error} = await client.functions.invoke("import-recipe", {method:"GET"});
       if (error || !Array.isArray(data?.sites)) throw error || new Error("recipe-sites-missing");
@@ -4044,6 +4049,7 @@ function formatSleepDuration(hours) {
       const uniqueSites = status => recipeSites
         .filter(site => site.status === status)
         .sort((a,b) => Number(b.domain.endsWith(".fr")) - Number(a.domain.endsWith(".fr")))
+        .sort((a,b) => a.name.trim().localeCompare(b.name.trim(), "fr", {sensitivity:"base"}))
         .filter(site => {
           const name = site.name.trim().toLocaleLowerCase("fr");
           if (!name || shownNames.has(name)) return false;
