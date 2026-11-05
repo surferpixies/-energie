@@ -4008,9 +4008,9 @@ function formatSleepDuration(hours) {
     const url = $("#recipeImportUrl").value.trim();
     try {
       const parsed = new URL(url);
-      if (parsed.protocol !== "https:" || !["ricardocuisine.com", "www.ricardocuisine.com"].includes(parsed.hostname.toLowerCase())) throw new Error("url");
+      if (parsed.protocol !== "https:" || !["ricardocuisine.com", "www.ricardocuisine.com", "marmiton.org", "www.marmiton.org", "marmiton.fr", "www.marmiton.fr"].includes(parsed.hostname.toLowerCase())) throw new Error("url");
     } catch (_) {
-      status.textContent = "Pour le moment, seules les recettes Ricardo sont compatibles.";
+      status.textContent = "Pour le moment, seules les recettes Ricardo et Marmiton (en test) sont acceptées.";
       return;
     }
     button.disabled = true;
