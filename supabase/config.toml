@@ -1,3 +1,7 @@
 [functions.delete-account]
 # Le handler valide le JWT auprès d'Auth avec getUser(), même avec les nouvelles clés publishable.
 verify_jwt = false
+
+[functions.import-recipe]
+# Authentification validée dans la fonction via getUser().
+verify_jwt = false
