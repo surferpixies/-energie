@@ -270,8 +270,8 @@
   <dialog id="recipeImportDialog" class="recipe-import-dialog">
     <section class="dialog-card recipe-import-card">
       <div class="dialog-header"><div><p class="eyebrow">Saisie libre</p><h2>🔗 Importer une recette</h2></div><button type="button" id="closeRecipeImport" class="icon-button" aria-label="Fermer">✕</button></div>
-      <p class="muted small">Colle le lien d’une recette d’un site autorisé. Énergie récupère les ingrédients et leurs quantités, sans inventer de calories.</p>
-      <p id="recipeSupportedSites" class="muted small recipe-supported-sites"><strong>Sites confirmés : </strong><a href="https://www.ricardocuisine.com/recettes" target="_blank" rel="noopener noreferrer">Ricardo</a>, <a href="https://www.marmiton.fr/" target="_blank" rel="noopener noreferrer">Marmiton</a>.</p>
+      <p class="muted small">Colle le lien d’une recette d’un site compatible. Énergie récupère les ingrédients et leurs quantités, sans inventer de calories.</p>
+      <p id="recipeSupportedSites" class="muted small recipe-supported-sites"><strong>📖 Sites de recettes compatibles : </strong><a href="https://www.marmiton.fr/" target="_blank" rel="noopener noreferrer">Marmiton</a>, <a href="https://www.ricardocuisine.com/recettes" target="_blank" rel="noopener noreferrer">Ricardo</a>.</p>
       <label for="recipeImportUrl">Lien Web de la recette</label>
       <input id="recipeImportUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://www.ricardocuisine.com/recettes/..." />
       <button type="button" id="fetchRecipeImport" class="secondary">Lire la recette</button>
@@ -790,7 +790,7 @@
   <script src="journal-consultation.js?v=3.56.199"></script>
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
-  <script src="app.js?v=3.56.392-english-recipe-portions"></script>
+  <script src="app.js?v=3.56.393-recipe-copy"></script>
   <script>
     // iPhone: hide the native gray keyboard accessory toolbar (arrows / Done).
     // The Capacitor Keyboard plugin is synced into iOS by npm run ios:sync.
