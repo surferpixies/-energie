@@ -4088,28 +4088,6 @@ function formatSleepDuration(hours) {
         label.append(chips);
       }
       return true;
-        });
-      const working = uniqueSites("working");
-      const testing = uniqueSites("testing");
-      for (const [heading, sites] of [["📖 Sites de recettes compatibles : ",working],["En test : ",testing]]) {
-        if (!sites.length) continue;
-        if (label.childNodes.length) label.append(" ");
-        const strong = document.createElement("strong");
-        strong.textContent = heading;
-        label.append(strong);
-        sites.forEach((site,index) => {
-          if (index) label.append(", ");
-          const link = document.createElement("a");
-          link.href = "https://www." + site.domain + "/";
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          link.textContent = site.name;
-          label.append(link);
-        });
-        label.append(".");
-      }
-      if (!recipeSites.length) label.textContent = "Aucun site de recettes disponible pour le moment.";
-      return true;
     } catch (error) {
       console.warn("Liste des sites de recettes", error);
       recipeSites = [];
