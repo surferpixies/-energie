@@ -36,26 +36,36 @@ function findRecipe(node: unknown, depth = 0): Record<string, unknown> | null {
   const type = value["@type"];
   if ((typeof type === "string" && /(?:^|[:/])Recipe$/i.test(type)) ||
       (Array.isArray(type) && type.some(v => typeof v === "string" && /(?:^|[:/])Recipe$/i.test(v)))) return value;
-  for (const key of ["@graph", "mainEntity", "itemListElement", "hasPart"]) {
+  for (const key of ["@graph", "mainEntity", "itemListElement", "hasPart", "mainEntityOfPage"]) {
     const found = findRecipe(value[key], depth + 1);
     if (found) return found;
+  }
+  for (const child of Object.values(value)) {
+    if (child && typeof child === "object") {
+      const found = findRecipe(child, depth + 1);
+      if (found) return found;
+    }
   }
   return null;
 }
 function parseRecipe(html: string) {
-  const scripts = [...html.matchAll(/<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script\s*>/gi)];
+  const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi)]
+    .filter(m => /\btype\s*=\s*["']?application\/ld\+json\b/i.test(m[1]));
   let recipe: Record<string, unknown> | null = null;
   for (const script of scripts) {
-    try { recipe = findRecipe(JSON.parse(script[1].trim().replace(/^<!--|-->$/g,""))); }
+    try { recipe = findRecipe(JSON.parse(script[2].trim().replace(/^<!--|-->$/g,""))); }
     catch (_) { continue; }
     if (recipe) break;
   }
   if (!recipe) return null;
   const title = text(recipe.name).slice(0, 140);
-  const ingredients = (Array.isArray(recipe.recipeIngredient) ? recipe.recipeIngredient : [])
+  const ingredientValues = recipe.recipeIngredient || recipe.ingredients;
+  const ingredients = (Array.isArray(ingredientValues) ? ingredientValues : typeof ingredientValues === "string" ? [ingredientValues] : [])
     .map(text).filter(Boolean).slice(0, 75);
   if (!title || !ingredients.length) return null;
-  const recipeYield = Array.isArray(recipe.recipeYield) ? recipe.recipeYield.map(text).find(Boolean) || "" : text(recipe.recipeYield);
+  const yieldValue = recipe.recipeYield;
+  const recipeYield = Array.isArray(yieldValue) ? yieldValue.map(text).find(Boolean) || ""
+    : yieldValue && typeof yieldValue === "object" ? text((yieldValue as Record<string, unknown>).value) + " portions" : text(yieldValue);
   const nutrition = recipe.nutrition && typeof recipe.nutrition === "object" && !Array.isArray(recipe.nutrition)
     ? recipe.nutrition as Record<string, unknown> : null;
   const caloriesLabel = text(nutrition?.calories);
@@ -97,10 +107,10 @@ Deno.serve(async (request) => {
       });
       if (![301,302,303,307,308].includes(upstream.status)) break;
       const destination = upstream.headers.get("location");
-      if (!destination) return response(422, {error:"recipe-not-accessible"});
+      if (!destination) return response(422, {error:"recipe-redirect-missing"});
       current = validateUrl(new URL(destination, current).toString());
     }
-    if (!upstream?.ok) return response(422,{error:"recipe-not-accessible"});
+    if (!upstream?.ok) return response(422,{error:"recipe-site-http-error", siteStatus: upstream?.status || null});
     const contentType = upstream.headers.get("content-type") || "";
     if (!/text\/html|application\/xhtml\+xml/i.test(contentType)) return response(422,{error:"unsupported-content"});
     if (Number(upstream.headers.get("content-length") || 0) > 1500000) return response(422,{error:"page-too-large"});
@@ -108,5 +118,8 @@ Deno.serve(async (request) => {
     if (html.length > 1500000) return response(422,{error:"page-too-large"});
     const recipe = parseRecipe(html);
     return recipe ? response(200, {recipe}) : response(422,{error:"recipe-structured-data-missing"});
-  } catch (_) { return response(422, {error:"recipe-not-accessible"}); }
+  } catch (error) {
+    console.warn("import-recipe fetch failed", String(error).slice(0, 250));
+    return response(422, {error:"recipe-site-connection-failed"});
+  }
 });
