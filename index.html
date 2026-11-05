@@ -270,23 +270,12 @@
   <dialog id="recipeImportDialog" class="recipe-import-dialog">
     <section class="dialog-card recipe-import-card">
       <div class="dialog-header"><div><p class="eyebrow">Saisie libre</p><h2>🔗 Importer une recette</h2></div><button type="button" id="closeRecipeImport" class="icon-button" aria-label="Fermer">✕</button></div>
-      <p class="muted small">Colle le lien d'une recette. On récupère les ingrédients et les quantités, sans inventer de calories.</p>
-      <p class="muted small recipe-supported-sites"><strong>Site testé et fonctionnel :</strong> <a href="https://www.ricardocuisine.com/recettes" target="_blank" rel="noopener noreferrer">Ricardo</a>. Les autres sites peuvent ne pas fonctionner pour le moment.</p>
+      <p class="muted small">Colle le lien d’une recette Ricardo. Énergie récupère les ingrédients et leurs quantités, sans inventer de calories.</p>
+      <p class="muted small recipe-supported-sites"><strong>Site compatible actuellement :</strong> <a href="https://www.ricardocuisine.com/recettes" target="_blank" rel="noopener noreferrer">Ricardo</a>.</p>
       <label for="recipeImportUrl">Lien Web de la recette</label>
       <input id="recipeImportUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://www.ricardocuisine.com/recettes/..." />
       <button type="button" id="fetchRecipeImport" class="secondary">Lire la recette</button>
       <p id="recipeImportStatus" class="muted small" role="status" aria-live="polite"></p>
-      <button type="button" class="secondary" id="showRecipePaste">Coller les ingrédients à la place</button>
-      <div id="recipePasteFields" hidden>
-        <p class="muted small">Si le site refuse l'importation, copie la liste des ingrédients depuis la page. Énergie ajustera les quantités.</p>
-        <label for="recipePasteTitle">Nom de la recette</label>
-        <input id="recipePasteTitle" type="text" maxlength="140" placeholder="Ex. Spaghetti-boulettes" />
-        <label for="recipePasteYield">Nombre de portions de la recette complète</label>
-        <input id="recipePasteYield" type="number" min="1" max="100" step="1" placeholder="Ex. 4" />
-        <label for="recipePasteIngredients">Ingrédients (une ligne par ingrédient)</label>
-        <textarea id="recipePasteIngredients" rows="6" placeholder="500 g de boeuf haché&#10;1 tasse de chapelure&#10;..."></textarea>
-        <button type="button" class="secondary" id="preparePastedRecipe">Préparer ma recette</button>
-      </div>
       <div id="recipeImportPreview" hidden>
         <p id="recipeImportYield" class="muted small"></p>
         <label for="recipeImportPortions">Portions consommées</label>
@@ -801,7 +790,7 @@
   <script src="journal-consultation.js?v=3.56.199"></script>
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
-  <script src="app.js?v=3.56.385-recipe-manual-fallback"></script>
+  <script src="app.js?v=3.56.386-ricardo-only"></script>
   <script>
     // iPhone: hide the native gray keyboard accessory toolbar (arrows / Done).
     // The Capacitor Keyboard plugin is synced into iOS by npm run ios:sync.
