@@ -3,23 +3,23 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const headers = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Content-Type": "application/json",
 };
 const response = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers });
 
-// Ricardo confirmé et Marmiton en phase de test.
-// La liste blanche empêche de transformer l'importateur en proxy vers des adresses privées.
-const allowedHosts = new Set([
-  "www.ricardocuisine.com", "ricardocuisine.com",
-  "www.marmiton.org", "marmiton.org", "www.marmiton.fr", "marmiton.fr",
-]);
-function validateUrl(raw: unknown): URL {
+// Liste de domaines chargée depuis public.recipe_sites; jamais depuis l'utilisateur.
+type RecipeSite = {domain: string; display_name: string; status: string; enabled: boolean};
+function validateUrl(raw: unknown, sites: RecipeSite[]): URL {
   if (typeof raw !== "string" || raw.length > 2048) throw new Error("invalid-url");
   const url = new URL(raw);
+  const host = url.hostname.toLowerCase();
   if (url.protocol !== "https:" || url.port || url.username || url.password ||
-      !allowedHosts.has(url.hostname.toLowerCase())) throw new Error("unsupported-domain");
+      !sites.some(site => site.enabled && site.status !== "blocked" &&
+        (host === site.domain || host === "www." + site.domain))) {
+    throw new Error("unsupported-domain");
+  }
   return url;
 }
 function text(value: unknown): string {
@@ -112,17 +112,29 @@ function parseRecipe(html: string) {
 }
 Deno.serve(async (request) => {
   if (request.method === "OPTIONS") return new Response(null, {status: 204, headers});
-  if (request.method !== "POST") return response(405, {error: "method-not-allowed"});
+  if (!["GET", "POST"].includes(request.method)) return response(405, {error: "method-not-allowed"});
   const bearer = request.headers.get("authorization") || "";
-  if (!/^Bearer\s+\S+$/i.test(bearer)) return response(401, {error: "authentication-required"});
+  if (!/^Bearer\\s+\\S+$/i.test(bearer)) return response(401, {error: "authentication-required"});
   const server = Deno.env.get("SUPABASE_URL");
   const secret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!server || !secret) return response(503, {error: "service-unavailable"});
   const admin = createClient(server, secret, {auth: {persistSession:false,autoRefreshToken:false}});
-  const {data, error} = await admin.auth.getUser(bearer.replace(/^Bearer\s+/i, ""));
+  const {data, error} = await admin.auth.getUser(bearer.replace(/^Bearer\\s+/i, ""));
   if (error || !data.user) return response(401, {error: "authentication-required"});
+  const {data: rows, error: settingsError} = await admin.from("recipe_sites")
+    .select("domain,display_name,status,enabled");
+  if (settingsError || !rows) {
+    console.error("Recipe sites settings unavailable", settingsError?.message || "missing rows");
+    return response(503, {error: "recipe-sites-settings-unavailable"});
+  }
+  const sites = (rows as RecipeSite[]).filter(site =>
+    /^[a-z0-9-]+(?:\\.[a-z0-9-]+)+$/.test(site.domain));
+  if (request.method === "GET") {
+    return response(200, {sites: sites.filter(site => site.enabled && site.status !== "blocked")
+      .map(({domain, display_name, status}) => ({domain, name: display_name, status}))});
+  }
   let target: URL;
-  try { target = validateUrl((await request.json()).url); }
+  try { target = validateUrl((await request.json()).url, sites); }
   catch (_) { return response(400, {error:"invalid-or-unsupported-url"}); }
   try {
     let current = target;
@@ -136,7 +148,7 @@ Deno.serve(async (request) => {
       if (![301,302,303,307,308].includes(upstream.status)) break;
       const destination = upstream.headers.get("location");
       if (!destination) return response(422, {error:"recipe-redirect-missing"});
-      current = validateUrl(new URL(destination, current).toString());
+      current = validateUrl(new URL(destination, current).toString(), sites);
     }
     if (!upstream?.ok) return response(422,{error:"recipe-site-http-error", siteStatus: upstream?.status || null});
     const contentType = upstream.headers.get("content-type") || "";
