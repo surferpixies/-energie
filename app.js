@@ -4036,7 +4036,9 @@ function formatSleepDuration(hours) {
     } catch (error) {
       console.warn("Importation de recette", error);
       const reason = String(error?.message || "");
-      if (reason.includes("recipe-site-http-error:403") || reason.includes("recipe-site-http-error:429"))
+      if (reason.includes("invalid-or-unsupported-url"))
+        status.textContent = "Ce site de recettes n’est pas encore pris en charge par Énergie.";
+      else if (reason.includes("recipe-site-http-error:403") || reason.includes("recipe-site-http-error:429"))
         status.textContent = "Ce site bloque actuellement la lecture automatisée de la recette (accès refusé).";
       else if (reason.includes("recipe-site-http-error"))
         status.textContent = "Le site de recettes a retourné une erreur (" + (reason.split(":")[1] || "HTTP") + ").";
