@@ -4042,19 +4042,52 @@ function formatSleepDuration(hours) {
       recipeSites = data.sites.filter(site => typeof site.domain === "string" &&
         /^[a-z0-9-]+(?:\.[a-z0-9-]+)+$/.test(site.domain) &&
         typeof site.name === "string" && ["working","testing"].includes(site.status));
-      label.replaceChildren();
-      // Plusieurs domaines d'un même éditeur (ex. marmiton.fr / marmiton.org)
-      // ne doivent produire qu'un seul lien visible, tout en restant tous autorisés.
+      // Plusieurs domaines du même éditeur ne produisent qu'une seule pastille.
       const shownNames = new Set();
-      const uniqueSites = status => recipeSites
-        .filter(site => site.status === status)
-        .sort((a,b) => Number(b.domain.endsWith(".fr")) - Number(a.domain.endsWith(".fr")))
-        .sort((a,b) => a.name.trim().localeCompare(b.name.trim(), "fr", {sensitivity:"base"}))
+      const compatibleSites = recipeSites
+        .filter(site => site.status === "working")
+        .sort((a,b) => a.name.trim().localeCompare(b.name.trim(), "fr", {sensitivity:"base"})
+          || Number(b.domain.endsWith(".fr")) - Number(a.domain.endsWith(".fr")))
         .filter(site => {
           const name = site.name.trim().toLocaleLowerCase("fr");
           if (!name || shownNames.has(name)) return false;
           shownNames.add(name);
           return true;
+        });
+      if (!compatibleSites.length) {
+        label.textContent = "Aucun site de recettes compatible pour le moment.";
+      } else {
+        label.replaceChildren();
+        const title = document.createElement("strong");
+        title.className = "recipe-sites-title";
+        title.textContent = "📖 Sites de recettes compatibles";
+        label.append(title);
+        const chips = document.createElement("div");
+        chips.className = "recipe-sites-chips";
+        const siteIcon = name => {
+          const key = name.trim().toLocaleLowerCase("fr");
+          if (key.includes("bbc") || key.includes("good food")) return "🍲";
+          if (key.includes("food network")) return "🍽️";
+          if (key.includes("marmiton")) return "🥘";
+          if (key.includes("metro")) return "🛒";
+          if (key.includes("ricardo")) return "👨‍🍳";
+          return "📚";
+        };
+        for (const site of compatibleSites) {
+          const link = document.createElement("a");
+          link.className = "recipe-site-chip";
+          link.href = "https://www." + site.domain + "/";
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          const icon = document.createElement("span");
+          icon.setAttribute("aria-hidden", "true");
+          icon.textContent = siteIcon(site.name);
+          link.append(icon, document.createTextNode(site.name));
+          chips.append(link);
+        }
+        label.append(chips);
+      }
+      return true;
         });
       const working = uniqueSites("working");
       const testing = uniqueSites("testing");
