@@ -3915,6 +3915,41 @@ function formatSleepDuration(hours) {
     }
     return recipeAmountText(value);
   }
+  function recipeReadableFraction(value) {
+    const denominators = [2, 3, 4, 6, 8, 12, 16];
+    if (value <= 0 || value >= 20) return null;
+    for (const denominator of denominators) {
+      const numerator = Math.round(value * denominator);
+      if (numerator < 1) continue;
+      if (Math.abs(numerator / denominator - value) > 0.012) continue;
+      const gcd = (a, b) => b ? gcd(b, a % b) : a;
+      const common = gcd(numerator, denominator);
+      const n = numerator / common, d = denominator / common;
+      const whole = Math.floor(n / d), remainder = n % d;
+      return remainder ? (whole ? whole + " " + remainder + "/" + d : remainder + "/" + d) : String(whole);
+    }
+    return null;
+  }
+  function recipeReadableQuantity(amount, suffix, originalFraction) {
+    const rest = String(suffix);
+    const unitMatch = rest.match(/^(\\s*)(kg|kilogrammes?|cl|centilitres?|litres?|l|grammes?|g|millilitres?|ml|(?:cuillères?|c\\.)\\s*à\\s*(?:soupe|table)|tasses?|verres?|pincées?|paquets?|sachets?)\\b/i);
+    if (!unitMatch) return {label: recipeScaledQuantityLabel(amount, originalFraction), suffix:rest};
+    const unit = unitMatch[2].toLowerCase();
+    let value = amount, unitText = unitMatch[2], restAfter = rest.slice(unitMatch[0].length);
+    if (/^(?:kg|kilogramme)/.test(unit) && value < 1) { value *= 1000; unitText = "g"; }
+    else if (/^(?:cl|centilitre)/.test(unit) && value < 10) { value *= 10; unitText = "ml"; }
+    else if (/^(?:l|litre)/.test(unit) && value < 1) { value *= 1000; unitText = "ml"; }
+    else if (/^(?:cuillère|c\\.)/.test(unit) && value < 1) {
+      value *= 3; unitText = "c. à thé";
+    }
+    const measurable = /^(?:g|gramme|ml|millilitre)/i.test(unitText);
+    const preferFraction = !measurable && (/^(?:tasse|verre|pincée|paquet|sachet|c\\.)/.test(unitText.toLowerCase()) || originalFraction);
+    let label;
+    if (measurable) label = recipeAmountText(Math.round(value * (value >= 10 ? 1 : 10)) / (value >= 10 ? 1 : 10));
+    else if (preferFraction) label = recipeReadableFraction(value) || recipeAmountText(value);
+    else label = recipeAmountText(value);
+    return {label, suffix:unitMatch[1] + unitText + restAfter};
+  }
   function scaleRecipeQuantityPrefix(input, factor) {
     const match = String(input).match(/^(\s*)(\d+(?:[.,]\d+)?(?:\s+\d+\/\d+|\s*[¼½¾⅓⅔⅛⅜⅝⅞])?|\d+\/\d+|[¼½¾⅓⅔⅛⅜⅝⅞])(?=\s|$|[),;])/);
     if (!match) return String(input);
@@ -3933,7 +3968,8 @@ function formatSleepDuration(hours) {
       amount = (Number(parts[1]) || 0) + fractions[parts[2]];
     } else amount = Number(raw.replace(",", "."));
     if (!Number.isFinite(amount)) return String(input);
-    return match[1] + recipeScaledQuantityLabel(amount * factor, fraction) + String(input).slice(match[0].length);
+    const formatted = recipeReadableQuantity(amount * factor, String(input).slice(match[0].length), fraction);
+    return match[1] + formatted.label + formatted.suffix;
   }
   function scaleRecipeIngredient(line, factor) {
     if (!Number.isFinite(factor) || factor <= 0 || factor === 1) return String(line);
