@@ -74,3 +74,88 @@
 .consultation-event--observation h3{font-size:.9rem}
 .consultation-event--observation p{font-size:.82rem;margin:6px 0}
 @media(max-width:480px){.consultation-meal-feelings{padding:10px 12px}.consultation-meal-footer{padding:0 16px 12px}}
+
+
+/* v3.56.399 — Ma journée : fil chronologique plus dense.
+   Limité à .journal-consultation, sans impact sur Sommaire / Détaillée. */
+.journal-consultation{gap:10px}
+.journal-consultation .consultation-event{
+  border-radius:16px;
+  box-shadow:none;
+}
+.journal-consultation .consultation-event-heading{gap:8px;margin-bottom:3px}
+.journal-consultation .consultation-event-heading h3{font-size:.88rem;line-height:1.3}
+.journal-consultation .consultation-event-heading time{font-size:.77rem}
+.journal-consultation .consultation-event p{margin:4px 0;line-height:1.35}
+.journal-consultation .consultation-entry-open{
+  margin-top:5px;
+  min-height:28px;
+  display:inline-flex;
+  align-items:center;
+}
+.journal-consultation .consultation-event--beverage,
+.journal-consultation .consultation-event--activity,
+.journal-consultation .consultation-event--sleep,
+.journal-consultation .consultation-event--observation{
+  padding:9px 12px;
+  border-left-width:3px;
+}
+.journal-consultation .consultation-event--beverage .consultation-event-heading,
+.journal-consultation .consultation-event--activity .consultation-event-heading,
+.journal-consultation .consultation-event--sleep .consultation-event-heading{
+  margin-bottom:2px;
+}
+.journal-consultation .consultation-hydration{
+  padding:10px 12px;
+  margin:0;
+}
+.journal-consultation .consultation-hydration .water-row{
+  margin:5px 0 0;
+  gap:2px;
+}
+.journal-consultation .consultation-hydration .drop{
+  min-width:30px;
+  min-height:34px;
+  font-size:1.22rem;
+}
+.journal-consultation .consultation-hydration p{
+  margin:3px 0 0;
+  font-size:.74rem;
+}
+.journal-consultation .consultation-event--meal{
+  padding:0;
+  overflow:hidden;
+}
+.journal-consultation .consultation-meal-header{
+  padding:10px 13px;
+  gap:8px;
+}
+.journal-consultation .consultation-meal-header h2{font-size:1rem;line-height:1.25}
+.journal-consultation .consultation-meal-header time{font-size:.77rem}
+.journal-consultation .consultation-meal-sections{gap:7px;padding:9px}
+.journal-consultation .consultation-meal-content,
+.journal-consultation .consultation-meal-feelings{
+  padding:9px 11px;
+  border-radius:12px;
+}
+.journal-consultation .consultation-meal-content .consultation-event-heading,
+.journal-consultation .consultation-meal-feelings .consultation-event-heading{margin-bottom:5px}
+.journal-consultation .consultation-meal-feelings .meal-feeling-simple-item{margin:2px 9px 2px 0}
+.journal-consultation .consultation-meal-footer{padding:0 12px 9px}
+.journal-consultation .consultation-meal-footer .consultation-entry-open{min-height:28px}
+.journal-consultation .consultation-event .consultation-note{
+  margin-top:7px;
+  padding-top:7px;
+  line-height:1.4;
+}
+@media(max-width:480px){
+  .journal-consultation{gap:8px}
+  .journal-consultation .consultation-event--beverage,
+  .journal-consultation .consultation-event--activity,
+  .journal-consultation .consultation-event--sleep,
+  .journal-consultation .consultation-event--observation{padding:8px 10px}
+  .journal-consultation .consultation-meal-header{padding:9px 11px}
+  .journal-consultation .consultation-meal-sections{padding:7px;gap:6px}
+  .journal-consultation .consultation-meal-content,
+  .journal-consultation .consultation-meal-feelings{padding:8px 10px}
+}
