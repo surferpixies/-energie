@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.356";
+  const APP_RELEASE = "3.56.396";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -374,6 +374,8 @@
     missingBeforeContinuation = "summary",
     notificationTimer = null;
   let hasDemoAccess = false;
+  // Énergie Solo: code Pro conservé mais désactivé dans la version publique.
+  const PROFESSIONAL_MODE_ENABLED = false;
   let hasProfessionalBetaAccess = false;
   let profileDisplayName = "";
   let profileAccountType = "personal";
@@ -429,7 +431,7 @@
     return db.settings?.hideCalories !== true;
   }
   function nutritionVisibleToViewer() {
-    return !!professionalDemoMode || !!professionalBetaMode;
+    return PROFESSIONAL_MODE_ENABLED && (!!professionalDemoMode || !!professionalBetaMode);
   }
   function isProfessionalWorkspace() {
     return !!professionalBetaMode;
@@ -443,7 +445,7 @@
     return true;
   }
   function hasClientProfessionalFollowup() {
-    return !!clientProfessionalLink && !professionalBetaMode && !db.settings?.demoMode;
+    return PROFESSIONAL_MODE_ENABLED && !!clientProfessionalLink && !professionalBetaMode && !db.settings?.demoMode;
   }
   function clientSharedProfessionalNotes() {
     if (!hasClientProfessionalFollowup()) return [];
@@ -5902,7 +5904,7 @@ function formatSleepDuration(hours) {
   async function saveAccountProfile(displayName, accountType = profileAccountType) {
     if (!client || !session) return false;
     const cleanName = String(displayName || "").trim().replace(/\s+/g, " ").slice(0, 100);
-    const cleanType = accountType === "professional" ? "professional" : "personal";
+    const cleanType = PROFESSIONAL_MODE_ENABLED && accountType === "professional" ? "professional" : "personal";
     if (!cleanName) throw new Error("Entre ton nom.");
     // Modifier une fiche existante sans risquer de réinitialiser les préférences photo.
     const changes = {
@@ -5924,6 +5926,15 @@ function formatSleepDuration(hours) {
   }
   let professionalBetaStateGeneration = 0;
   async function loadProfessionalBetaState() {
+    if (!PROFESSIONAL_MODE_ENABLED) {
+      ++professionalBetaStateGeneration;
+      hasProfessionalBetaAccess = false;
+      professionalClientLinks = [];
+      clientProfessionalLink = null;
+      professionalNotesCache = [];
+      professionalTrackingPlanCache = null;
+      return;
+    }
     const generation = ++professionalBetaStateGeneration, ownerId = session?.user?.id;
     if (!client || !ownerId) {
       professionalClientLinks = [];
@@ -6177,6 +6188,7 @@ function formatSleepDuration(hours) {
     if (session?.user?.id === owner && list.isConnected) list.innerHTML = professionalInlineClientsHtml();
   }
   function professionalBetaProfileHtml() {
+    if (!PROFESSIONAL_MODE_ENABLED) return "";
     if (!session) return "";
     if (hasProfessionalBetaAccess) {
       const active = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
@@ -6190,6 +6202,7 @@ function formatSleepDuration(hours) {
   }
   let professionalClientOptions = null, professionalOptionsAvailable = false, professionalWorkspaceGeneration = 0;
   function currentProfessionalOptionPolicy() {
+    if (!PROFESSIONAL_MODE_ENABLED) return null;
     if (db.settings?.demoMode) return null;
     if (professionalBetaMode) return professionalActiveClient ? professionalClientOptions : null;
     const cache = window.EnergieProfessionalOptions.raw(db.settings).professionalOptionPolicy;
@@ -6415,7 +6428,7 @@ function formatSleepDuration(hours) {
     render();
   }
   async function startProfessionalBeta(requestedClientId = null) {
-    if (!hasProfessionalBetaAccess || !session) return;
+    if (!PROFESSIONAL_MODE_ENABLED || !hasProfessionalBetaAccess || !session) return;
     try { localStorage.setItem("energie_usage_mode", "professional"); } catch (_) {}
     await loadProfessionalBetaState();
     const active = professionalClientLinks.filter((link) => link.status === "active" && link.client_user_id);
@@ -12738,7 +12751,7 @@ function formatSleepDuration(hours) {
     return { since, strength, habit, suggestion };
   }
   function professionalDiscussionHtml(meals) {
-    if (!db.settings.professionalSupport) return "";
+    if (!PROFESSIONAL_MODE_ENABLED || !db.settings.professionalSupport) return "";
     const subjects = [];
     const text = (m) => (m.description || "").toLowerCase();
     const mains = meals.filter((m) =>
@@ -15691,7 +15704,7 @@ function formatSleepDuration(hours) {
       {key: "calories", icon: "⚖️", title: "Calories et objectifs", description: "Affichage, estimations et cible calorique", selectors: ".calorie-balance-profile-card"},
       {key: "tracking", icon: "💧", title: "Suivi quotidien", description: "Hydratation, pas, glycémie, Santé, ressentis et suppléments", selectors: ".steps-profile-card,.glucose-profile-card,.apple-health-profile-card,#waterGoal,#settingFeelingReminders,#supplementNameInput"},
       {key: "observations", icon: "👁️", title: "Observations", description: "Tendances, analyses et suggestions", selectors: "#settingInsights,#settingNutrition,#settingRecommendations,.professional-setting-card"},
-      {key: "sharing", icon: "🔒", title: "Confidentialité et partage", description: "Photos, accès professionnel et sauvegarde", selectors: ".profile-avatar-settings-card,.meal-photo-settings-card,.profile-backup-panel"},
+      {key: "sharing", icon: "🔒", title: "Confidentialité et sauvegarde", description: "Photos et sauvegardes", selectors: ".profile-avatar-settings-card,.meal-photo-settings-card,.profile-backup-panel"},
       {key: "appearance", icon: "🎨", title: "Apparence", description: "Langue, thème et présentation du journal", selectors: ".seasonal-setting-card,.journal-summary-setting-card,#languageSettingCard,.profile-theme-settings-card"},
       {key: "help", icon: "🌱", title: "Découvrir Énergie", description: "Guide, informations et scénarios de démonstration", selectors: ".energy-guide-profile-card,#showWelcomeAgain"},
     ];
@@ -15992,7 +16005,7 @@ function formatSleepDuration(hours) {
     professionalSettingsSection?.insertAdjacentHTML("afterend", professionalBetaHtml);
     if (hasProfessionalBetaAccess) void refreshInlineProfessionalClientAvatars().catch(error => console.warn("Avatars clients :", error));
     const photoSettingsAnchor = $(".professional-beta-entry,.professional-client-link-card") || professionalSettingsSection;
-    photoSettingsAnchor?.insertAdjacentHTML("afterend", `<section class="card meal-photo-settings-card"><h3>📷 Photos des repas</h3><p class="muted small">Jusqu’à 3 photos peuvent être ajoutées à un repas. Une photo ajoutée est conservée automatiquement; tu peux la retirer manuellement du repas si tu ne souhaites plus la garder.</p><label class="toggle-row"><span><strong>Partager mes photos avec mon professionnel</strong><small>Autorisation distincte, utilisée lorsqu’un professionnel sera lié à ton compte.</small></span><input id="settingShareMealPhotos" type="checkbox" ${db.settings.shareMealPhotosWithProfessional === true ? "checked" : ""}></label><p class="muted tiny">L’analyse par l’IA reste facultative et n’est lancée que lorsque tu choisis « Analyser avec l’IA ».</p></section>`);
+    photoSettingsAnchor?.insertAdjacentHTML("afterend", `<section class="card meal-photo-settings-card"><h3>📷 Photos des repas</h3><p class="muted small">Jusqu’à 3 photos peuvent être ajoutées à un repas. Une photo ajoutée est conservée automatiquement; tu peux la retirer manuellement du repas si tu ne souhaites plus la garder.</p><p class="muted tiny">L’analyse par l’IA reste facultative et n’est lancée que lorsque tu choisis « Analyser avec l’IA ».</p></section>`);
     const welcomeInfoSection = $("#showWelcomeAgain")?.closest("section.card");
     welcomeInfoSection?.insertAdjacentHTML("afterend", `<section class="card energy-guide-profile-card"><div class="settings-row"><div><span class="energy-guide-profile-icon" aria-hidden="true">🌱</span><span><h3>${t("Découvrir Énergie")}</h3><p class="muted small">${t("Un petit tour des principales fonctions de l’application.")}</p></span></div><button class="secondary" id="openEnergyGuide" type="button">${t("Voir le guide")}</button></div></section>`);
     const energyGuideButton = $("#openEnergyGuide");
@@ -16081,6 +16094,10 @@ function formatSleepDuration(hours) {
 
     if (!professionalBetaMode) window.EnergieProfessionalOptions.hideControls($("#app"), currentProfessionalOptionPolicy());
 
+    // Nettoyage des sections Pro avant le regroupement en accordéons.
+    if (!PROFESSIONAL_MODE_ENABLED) {
+      document.querySelectorAll(".professional-setting-card,.professional-beta-entry,.professional-client-link-card,.professional-discussion").forEach(el => el.remove());
+    }
     // Build the visual Profile groups NOW, before any later binding can interrupt renderProfile().
     enhanceProfileWithAccordions();
     if (window.Capacitor?.isNativePlatform?.() !== true) {
@@ -16150,7 +16167,7 @@ function formatSleepDuration(hours) {
 
     bindPersonalProfile();
     if (session && !professionalBetaMode && !db.settings.demoMode) {
-      $("#app .stack")?.insertAdjacentHTML("beforeend", `<section class="card profile-privacy-card" aria-labelledby="profilePrivacyTitle"><div class="profile-privacy-heading"><span aria-hidden="true">🔒</span><h3 id="profilePrivacyTitle">${esc(t("Confidentialité de tes données"))}</h3></div><h4>${esc(t("Ce qui est conservé"))}</h4><p>${esc(t("Énergie conserve une copie locale de ton journal sur ton appareil. Lorsque tu es connecté, tes repas, ressentis, sommeil, hydratation, activités, poids et renseignements de profil enregistrés sont synchronisés dans la base de données associée à ton compte. Les photos synchronisées sont conservées dans un espace de stockage distinct."))}</p><h4>${esc(t("Ce que ton professionnel peut consulter"))}</h4><p>${esc(t("Un professionnel que tu autorises en acceptant son invitation peut consulter ton journal, les renseignements de profil utilisés pour le suivi et les tendances qui en découlent. Il ne peut pas modifier tes entrées du journal, mais peut ajouter des notes de suivi. Les photos de repas et ta photo de profil nécessitent chacune une autorisation distincte. Tu peux retirer son accès sans supprimer ton compte ni ton journal."))}</p><h4>${esc(t("Analyse photo facultative"))}</h4><p>${esc(t("Une photo est transmise au service d’analyse par l’IA seulement lorsque tu choisis « Analyser avec l’IA ». Ajouter une photo à ton repas ne déclenche pas cette analyse."))}</p><h4>${esc(t("Suppression définitive"))}</h4><p>${esc(t("Après ta confirmation, la suppression efface ton compte Énergie, les données qui lui sont associées, ses photos et ses liens de suivi. La copie locale sur cet appareil est effacée lorsque le serveur confirme la suppression. Cette action est irréversible : tu ne pourras pas récupérer ton compte ou ton journal dans Énergie. Exporte ton journal avant de continuer si tu souhaites en garder une copie."))}</p><p class="profile-privacy-retention">${esc(t("Les données d’Apple Santé restent intactes. La suppression ne retire pas les copies déjà exportées ou conservées hors d’Énergie. Des copies peuvent subsister temporairement dans les sauvegardes de l’hébergeur, selon sa durée de rétention; elles ne constituent pas une option de récupération de ton compte."))}</p></section><section class="profile-delete-account"><button type="button" id="deleteOwnAccount" class="profile-delete-account-button" ${accountDeletionBusy ? "disabled" : ""}>${esc(t("Supprimer mon compte"))}</button><p id="deleteOwnAccountStatus" class="muted small" role="status" aria-live="polite"></p></section>`);
+      $("#app .stack")?.insertAdjacentHTML("beforeend", `<section class="card profile-privacy-card" aria-labelledby="profilePrivacyTitle"><div class="profile-privacy-heading"><span aria-hidden="true">🔒</span><h3 id="profilePrivacyTitle">${esc(t("Confidentialité de tes données"))}</h3></div><h4>${esc(t("Ce qui est conservé"))}</h4><p>${esc(t("Énergie conserve une copie locale de ton journal sur ton appareil. Lorsque tu es connecté, tes repas, ressentis, sommeil, hydratation, activités, poids et renseignements de profil enregistrés sont synchronisés dans la base de données associée à ton compte. Les photos synchronisées sont conservées dans un espace de stockage distinct."))}</p><h4>${esc(t("Analyse photo facultative"))}</h4><p>${esc(t("Une photo est transmise au service d’analyse par l’IA seulement lorsque tu choisis « Analyser avec l’IA ». Ajouter une photo à ton repas ne déclenche pas cette analyse."))}</p><h4>${esc(t("Suppression définitive"))}</h4><p>${esc(t("Après ta confirmation, la suppression efface ton compte Énergie, les données qui lui sont associées, ses photos et ses liens de suivi. La copie locale sur cet appareil est effacée lorsque le serveur confirme la suppression. Cette action est irréversible : tu ne pourras pas récupérer ton compte ou ton journal dans Énergie. Exporte ton journal avant de continuer si tu souhaites en garder une copie."))}</p><p class="profile-privacy-retention">${esc(t("Les données d’Apple Santé restent intactes. La suppression ne retire pas les copies déjà exportées ou conservées hors d’Énergie. Des copies peuvent subsister temporairement dans les sauvegardes de l’hébergeur, selon sa durée de rétention; elles ne constituent pas une option de récupération de ton compte."))}</p></section><section class="profile-delete-account"><button type="button" id="deleteOwnAccount" class="profile-delete-account-button" ${accountDeletionBusy ? "disabled" : ""}>${esc(t("Supprimer mon compte"))}</button><p id="deleteOwnAccountStatus" class="muted small" role="status" aria-live="polite"></p></section>`);
       $("#deleteOwnAccount")?.addEventListener("click", deleteOwnAccount);
     }
     $("#app .stack")?.insertAdjacentHTML(
@@ -19214,7 +19231,7 @@ function formatSleepDuration(hours) {
       password = $("#authPassword").value,
       confirm = $("#authPasswordConfirm").value,
       signupName = $("#authDisplayName")?.value.trim() || "",
-      signupAccountType = document.querySelector('input[name="authAccountType"]:checked')?.value === "professional" ? "professional" : "personal",
+      signupAccountType = PROFESSIONAL_MODE_ENABLED && document.querySelector('input[name="authAccountType"]:checked')?.value === "professional" ? "professional" : "personal",
       msg = $("#authMessage");
     msg.textContent = authMode === "signup" ? "Création du compte…" : "Connexion…";
     if (password.length < 8) {
@@ -19938,12 +19955,15 @@ function formatSleepDuration(hours) {
         console.info("Accès privé non configuré:", error.message);
       } else {
         hasDemoAccess = data?.has_demo_access === true;
-        hasProfessionalBetaAccess = data?.professional_beta_access === true;
+        hasProfessionalBetaAccess = PROFESSIONAL_MODE_ENABLED && data?.professional_beta_access === true;
         profileDisplayName = String(data?.display_name || "").trim();
-        profileAccountType = data?.account_type === "professional" ? "professional" : "personal";
+        profileAccountType = PROFESSIONAL_MODE_ENABLED && data?.account_type === "professional" ? "professional" : "personal";
       }
       if (DEMO_ACCESS_FOR_ALL_ACCOUNTS) hasDemoAccess = true;
       await loadProfessionalBetaState();
+      if (!PROFESSIONAL_MODE_ENABLED) {
+        try { localStorage.setItem("energie_usage_mode", "personal"); } catch (_) {}
+      }
       await backfillDisplayNameFromIdentity();
       await avatarManager.loadOwn();
       try {

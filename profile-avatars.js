@@ -133,10 +133,9 @@
       if (!currentUserId()) return "";
       return `<section class="card profile-avatar-settings-card">
         <h3>📷 Photo de profil</h3>
-        <p class="muted small">Tu décides où ta photo apparaît. Les deux autorisations sont indépendantes.</p>
+        <p class="muted small">Tu décides si ta photo apparaît dans ton journal Énergie.</p>
         <label class="toggle-row"><span><strong>Afficher ma photo</strong><small>Dans l’en-tête de mon journal Énergie.</small></span><input type="checkbox" id="settingShowProfileAvatar" ${showSelf ? "checked" : ""}></label>
-        <label class="toggle-row"><span><strong>Autoriser mes professionnels à voir ma photo</strong><small>Dans leur liste de clients et le bandeau de ton dossier, uniquement si le partage est actif.</small></span><input type="checkbox" id="settingShareProfileAvatar" ${shareWithProfessionals ? "checked" : ""}></label>
-        <p class="muted tiny">Désactivés par défaut. Sinon, seules tes initiales sont affichées.</p>
+        <p class="muted tiny">Désactivé par défaut. Sinon, seules tes initiales sont affichées.</p>
       </section>`;
     }
 
