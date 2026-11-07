@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.404";
+  const APP_RELEASE = "3.56.405";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -749,6 +749,7 @@ function formatSleepDuration(hours) {
       caffeinated: !!item.caffeinated,
       createdAt: item.createdAt || new Date().toISOString(),
       updatedAt: item.updatedAt || new Date().toISOString(),
+      ...(item.mealId ? { mealId: String(item.mealId) } : {}),
     };
   }
   function normalNutrition(n) {
@@ -913,11 +914,49 @@ function formatSleepDuration(hours) {
           : null,
     };
   }
+  const FAVORITE_MEAL_TYPES = ["Déjeuner", "Dîner", "Souper", "Collation"];
+  function favoriteMealTypeOptions(f = {}) {
+    const supplied = Array.isArray(f.mealTypes) ? f.mealTypes : Array.isArray(f.meal_types) ? f.meal_types : null;
+    const original = f.type || f.meal_type || "Déjeuner";
+    const legacy = original === "Dîner" || original === "Souper" ? ["Dîner", "Souper"] : [original];
+    const types = [...new Set((supplied?.length ? supplied : legacy).filter(type => FAVORITE_MEAL_TYPES.includes(type)))];
+    return types.length ? types : ["Déjeuner"];
+  }
+  function favoriteBeverageData(input) {
+    if (!input || typeof input !== "object") return null;
+    const type = BEVERAGE_TYPES.find(item => item.id === input.type);
+    const amountMl = Number(input.amountMl);
+    return type && Number.isFinite(amountMl) && amountMl > 0 && amountMl <= 5000
+      ? { type: type.id, amountMl: Math.round(amountMl) } : null;
+  }
+  function favoriteMealTypeFields(selected = []) {
+    return '<fieldset class="favorite-meal-type-fieldset"><legend>Utiliser ce favori pour</legend><div class="favorite-meal-type-options">' +
+      FAVORITE_MEAL_TYPES.map(type => '<label><input type="checkbox" name="mealTypes" value="' + esc(type) + '" ' + (selected.includes(type) ? "checked" : "") + '> ' + esc(type) + '</label>').join("") +
+      '</div></fieldset>';
+  }
+  function favoriteBeverageFields(selected = null) {
+    const options = '<option value="">Aucune boisson</option>' + BEVERAGE_TYPES.map(type =>
+      '<option value="' + esc(type.id) + '" ' + (selected?.type === type.id ? "selected" : "") + '>' + type.icon + ' ' + esc(type.label) + '</option>').join("");
+    return '<div class="favorite-beverage-fields"><label>Boisson (facultatif)<select name="beverageType">' + options +
+      '</select></label><label>Quantité (ml)<input type="number" name="beverageMl" min="1" max="5000" step="1" inputmode="numeric" value="' +
+      (selected?.amountMl ?? "") + '" placeholder="250"></label></div>';
+  }
+  function favoriteBeverageFromForm(fields) {
+    const type = String(fields.get("beverageType") || "").trim();
+    if (!type) return null;
+    return favoriteBeverageData({ type, amountMl: fields.get("beverageMl") });
+  }
+  function favoriteMealApplies(favorite, type) {
+    return !type || favoriteMealTypeOptions(favorite).includes(type);
+  }
   function normalFavorite(f = {}) {
+    const mealTypes = favoriteMealTypeOptions(f);
     return {
       id: f.id || uid(),
       name: f.name || f.description || "Mon repas",
-      type: f.type || "Repas",
+      type: mealTypes.includes(f.type) ? f.type : mealTypes[0],
+      mealTypes,
+      beverage: favoriteBeverageData(f.beverage),
       description: f.description || "",
       notes: f.notes || "",
       manualCalories: f.manualCalories == null && f.manual_calories == null ? null : (Number.isFinite(Number(f.manualCalories ?? f.manual_calories)) && Number(f.manualCalories ?? f.manual_calories) >= 0 ? Number(f.manualCalories ?? f.manual_calories) : null),
@@ -2114,6 +2153,8 @@ function formatSleepDuration(hours) {
               user_id: session.user.id,
               name: f.name,
               meal_type: f.type,
+              meal_types: favoriteMealTypeOptions(f),
+              beverage: favoriteBeverageData(f.beverage),
               description: f.description,
               notes: f.notes || null,
               manual_calories: f.manualCalories,
@@ -2436,6 +2477,8 @@ function formatSleepDuration(hours) {
         id: r.id,
         name: r.name,
         type: r.meal_type,
+        mealTypes: r.meal_types,
+        beverage: r.beverage,
         description: r.description,
         notes: r.notes,
         manualCalories: r.manual_calories,
@@ -12101,10 +12144,10 @@ function formatSleepDuration(hours) {
           .sort((a, b) => b.usageCount - a.usageCount)
           .map(
             (f) =>
-              `<article class="card favorite-card"><div class="favorite-icon">${mealIcon(f.type, f.description)}</div><div><div class="favorite-title-row"><h3>${esc(f.name)}</h3><button type="button" class="favorite-rename" data-rename-favorite="${esc(f.id)}" aria-label="Renommer ${esc(f.name)}" title="Renommer le favori"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button></div><form class="favorite-name-editor" data-favorite-editor="${esc(f.id)}" hidden><label class="favorite-name-label" for="favorite-name-${esc(f.id)}"><span><strong>Nommer ce favori</strong><small>Facultatif · affiché dans les favoris</small></span><input id="favorite-name-${esc(f.id)}" name="favorite-name" type="text" maxlength="60" autocomplete="off" autocapitalize="sentences" value="${esc(f.name)}"></label><div class="favorite-name-editor-actions"><button type="submit" class="primary small">Enregistrer</button><button type="button" class="small secondary" data-cancel-favorite-edit="${esc(f.id)}">Annuler</button></div></form><p>${esc(recipeDisplayName(f.description))}</p><div class="favorite-recipe-details">${recipePortionSummary(f.description)}${recipeSourceLinkHtml(f.description)}</div><small class="muted favorite-usage-count">Utilisé ${f.usageCount || 0} fois</small></div><div class="favorite-actions">${showUse ? `<button class="primary small" data-use-favorite="${esc(f.id)}">Utiliser</button>` : ""}<button class="delete-meal" data-delete-favorite="${esc(f.id)}">×</button></div></article>`,
+              `<article class="card favorite-card"><div class="favorite-icon">${mealIcon(f.type, f.description)}</div><div><div class="favorite-title-row"><h3>${esc(f.name)}</h3><button type="button" class="favorite-rename" data-rename-favorite="${esc(f.id)}" aria-label="Modifier ${esc(f.name)}" title="Modifier le favori"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button></div><form class="favorite-name-editor" data-favorite-editor="${esc(f.id)}" hidden><label class="favorite-name-label" for="favorite-name-${esc(f.id)}"><span><strong>Nommer ce favori</strong><small>Facultatif · affiché dans les favoris</small></span><input id="favorite-name-${esc(f.id)}" name="favorite-name" type="text" maxlength="60" autocomplete="off" autocapitalize="sentences" value="${esc(f.name)}"></label>${favoriteMealTypeFields(favoriteMealTypeOptions(f))}${favoriteBeverageFields(f.beverage)}<p class="favorite-edit-error" role="alert" hidden></p><div class="favorite-name-editor-actions"><button type="submit" class="primary small">Enregistrer</button><button type="button" class="small secondary" data-cancel-favorite-edit="${esc(f.id)}">Annuler</button></div></form><p>${esc(recipeDisplayName(f.description))}</p><div class="favorite-meal-tags">${favoriteMealTypeOptions(f).map(type => `<span>${esc(type)}</span>`).join("")}${f.beverage ? `<span>${beverageType(f.beverage.type).icon} ${esc(beverageType(f.beverage.type).label)} · ${f.beverage.amountMl} ml</span>` : ""}</div><div class="favorite-recipe-details">${recipePortionSummary(f.description)}${recipeSourceLinkHtml(f.description)}</div><small class="muted favorite-usage-count">Utilisé ${f.usageCount || 0} fois</small></div><div class="favorite-actions">${showUse ? `<button class="primary small" data-use-favorite="${esc(f.id)}">Utiliser</button>` : ""}<button class="delete-meal" data-delete-favorite="${esc(f.id)}">×</button></div></article>`,
           )
           .join("")
-      : `<section class="card empty"><div class="food-art">⭐</div><p>Ajoute un repas existant à tes favoris avec l’étoile.</p></section>`;
+      : `<section class="card empty"><div class="food-art">⭐</div><p>Crée un favori ici ou ajoute un repas depuis le Journal.</p></section>`;
   }
   function bindBrainFavoritesControls() {
     const normalize = value => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("fr").trim();
@@ -12161,27 +12204,36 @@ function formatSleepDuration(hours) {
       form.querySelector('[name="name"]').focus();
     };
     cancel.onclick = reset;
+    form.querySelector('[name="beverageType"]')?.addEventListener("change", event => {
+      const type = BEVERAGE_TYPES.find(item => item.id === event.target.value);
+      const amount = form.querySelector('[name="beverageMl"]');
+      if (amount && type && !amount.value) amount.value = String(type.amount);
+    });
     form.onsubmit = event => {
       event.preventDefault();
       if (professionalClientReadOnly()) return;
       const fields = new FormData(form);
       const name = String(fields.get("name") || "").trim();
       const description = String(fields.get("description") || "").trim();
-      const type = String(fields.get("type") || "Déjeuner");
+      const mealTypes = FAVORITE_MEAL_TYPES.filter(type => fields.getAll("mealTypes").includes(type));
+      const type = mealTypes[0] || "Déjeuner";
+      const beverageTypeId = String(fields.get("beverageType") || "");
+      const beverage = favoriteBeverageFromForm(fields);
       const rawCalories = String(fields.get("calories") || "").trim();
       const calories = rawCalories === "" ? null : Number(rawCalories);
       const error = form.querySelector(".brain-favorite-create-error");
       let message = "";
       if (!name || !description) message = "Indique un nom et une description.";
-      else if (!["Déjeuner", "Dîner", "Souper", "Collation"].includes(type)) message = "Choisis un type de repas.";
+      else if (!mealTypes.length) message = "Choisis au moins un moment pour utiliser ce favori.";
+      else if (beverageTypeId && !beverage) message = "Indique une quantité valide pour la boisson (1 à 5 000 ml).";
       else if (calories !== null && (!Number.isFinite(calories) || calories < 0 || calories > 100000)) message = "Vérifie le nombre de calories.";
-      else if (db.favorites.some(f => f.type === type && normalizedMealDescription(f.description).toLocaleLowerCase("fr-CA") === normalizedMealDescription(description).toLocaleLowerCase("fr-CA"))) message = "Ce repas existe déjà dans tes favoris.";
+      else if (db.favorites.some(f => mealTypes.some(type => favoriteMealApplies(f,type)) && normalizedMealDescription(f.description).toLocaleLowerCase("fr-CA") === normalizedMealDescription(description).toLocaleLowerCase("fr-CA"))) message = "Ce repas existe déjà dans tes favoris.";
       if (message) {
         error.textContent = message;
         error.hidden = false;
         return;
       }
-      const favorite = normalFavorite({ name, type, description, manualCalories: calories });
+      const favorite = normalFavorite({ name, type, mealTypes, beverage, description, manualCalories: calories });
       db.favorites.push(favorite);
       setFavoriteChanged(favorite);
       render();
@@ -12220,8 +12272,24 @@ function formatSleepDuration(hours) {
         if (!f) return;
         const value = form.querySelector("input")?.value.trim() || "";
         const name = value || f.description.slice(0, 45) || "Mon repas";
-        if (name !== f.name) {
+        const fields = new FormData(form);
+        const mealTypes = FAVORITE_MEAL_TYPES.filter(type => fields.getAll("mealTypes").includes(type));
+        const beverageTypeId = String(fields.get("beverageType") || "");
+        const beverage = favoriteBeverageFromForm(fields);
+        const error = form.querySelector(".favorite-edit-error");
+        const message = !mealTypes.length
+          ? "Choisis au moins un moment pour ce favori."
+          : beverageTypeId && !beverage ? "Indique une quantité valide pour la boisson." : "";
+        if (message) {
+          if (error) { error.hidden = false; error.textContent = message; }
+          return;
+        }
+        if (name !== f.name || JSON.stringify(mealTypes) !== JSON.stringify(favoriteMealTypeOptions(f))
+          || JSON.stringify(beverage) !== JSON.stringify(f.beverage)) {
           f.name = name;
+          f.mealTypes = mealTypes;
+          f.type = mealTypes.includes(f.type) ? f.type : mealTypes[0];
+          f.beverage = beverage;
           f.updatedAt = new Date().toISOString();
           setFavoriteChanged(f);
         }
@@ -15174,7 +15242,7 @@ function formatSleepDuration(hours) {
       : delta < 0 ? "Ton journal contient moins d’informations que la semaine précédente."
       : "La couverture de ton journal est stable d’une semaine à l’autre.";
     const supplementary = data ? `<div class="brain-knowledge-stack">${db.settings?.showEatingReasons !== false ? brainEatingReasonsHtml(data, data.mealTotal) : ""}<section><h3>${tr("Données alimentaires reconnaissables")}</h3><p class="muted small">${tr("Aliments reconnus dans les entrées des 60 derniers jours.")}</p><div class="brain-nutrition-grid">${brainNutritionCoverage(t("Protéines"), data.counts.protein, data.mealTotal, "🥚")}${brainNutritionCoverage(t("Fibres"), data.counts.fiber, data.mealTotal, "🌾")}${brainNutritionCoverage(t("Glucides"), data.counts.carbs, data.mealTotal, "🍞")}${brainNutritionCoverage(t("Sucres estimables"), data.counts.sugars, data.mealTotal, "🍓")}${brainNutritionCoverage(t("Sodium estimable"), data.counts.sodium, data.mealTotal, "🧂")}</div><p class="muted tiny">${tr("Ces valeurs décrivent la reconnaissance des données, pas la suffisance des apports.")}</p></section><section><h3>${tr("Aliments fréquents")}</h3>${data.foods.length ? `<div class="brain-favorites">${data.foods.map(([name, count]) => `<div class="brain-food"><strong>${esc(name)}</strong><span>${count}</span></div>`).join("")}</div>` : `<p class="muted small">${tr("Les aliments reconnus apparaîtront ici au fil de tes entrées.")}</p>`}</section><section><h3>${tr("Suppléments")}</h3>${data.supplements.length ? `<div class="brain-supplement-grid">${data.supplements.map(item => `<div class="brain-supplement-row"><span>${supplementIcon(item.name)}</span><div><strong>${esc(item.name)}</strong><small>${item.taken}/${item.total} · ${item.percent}%</small></div></div>`).join("")}</div>` : `<p class="muted small">${tr("Aucun supplément n’est configuré dans Profil.")}</p>`}</section></div>` : "";
-    $("#app").innerHTML = `${analysisDateNavigatorHtml()}<section class="hero brain-hero brain-learning-hero"><p class="eyebrow">🧠 ${tr("Cerveau")}</p><h2>${tr("Ton journal en bref")}</h2><div class="brain-confidence"><div class="brain-ring" style="--p:${learning.score}"><strong>${learning.score}%</strong></div><div><strong>${tr("Couverture du journal")}</strong><p class="muted small">${learning.first ? `${esc(dates(learning.first))} – ${esc(dates(learning.anchor))}` : tr("Ton portrait commence avec ta première entrée.")}</p></div></div><div class="brain-summary-grid"><div class="brain-stat"><strong>${learning.documentedDays}/${learning.days}</strong><small>${tr("journées documentées")}</small></div><div class="brain-stat"><strong>${learning.mealTotal}</strong><small>${tr("repas et collations")}</small></div><div class="brain-stat"><strong>${learning.after}/${learning.mealTotal}</strong><small>${tr("ressentis après")}</small></div></div></section><div class="stack"><section class="card brain-food-memory"><h2>🧠 ${tr("Ma mémoire alimentaire")}</h2><p class="muted small">Apprends à Énergie les noms de tes aliments habituels et retrouve tes repas préférés.</p><div class="brain-memory-grid"><details class="brain-memory-block"><summary>⭐ Aliments favoris <small>(${brainFoodFavorites.length})</small></summary><p class="muted small">Choisis un aliment précis dans le FCÉN et donne-lui ton propre nom. Ce nom pourra ensuite être utilisé pour simplifier toutes tes prochaines saisies de repas.</p><label for="brainFoodSearch">Rechercher dans le FCÉN</label><input id="brainFoodSearch" type="search" placeholder="Ex. beurre d’arachide" autocomplete="off"><div id="brainFoodSearchResults" class="meal-inline-results" hidden></div><details class="brain-custom-food"><summary>+ Créer un aliment personnalisé (sans FCÉN)</summary><form id="brainCustomFoodForm"><label>Nom<input name="name" required maxlength="100"></label><label>Calories / 100 g<input name="calories" type="number" min="0" step="any"></label><label>Protéines / 100 g<input name="protein" type="number" min="0" step="any"></label><label>Glucides / 100 g<input name="carbs" type="number" min="0" step="any"></label><label>Lipides / 100 g<input name="fat" type="number" min="0" step="any"></label><button type="submit" class="primary">Enregistrer</button></form></details><form id="brainFoodAliasForm" hidden><p id="brainFoodSelected" class="muted small"></p><label for="brainFoodAlias">Mon nom personnalisé</label><input id="brainFoodAlias" maxlength="100" required placeholder="Ex. beurre de pinottte"><button class="primary" type="submit">Enregistrer cet aliment</button></form><p id="brainFoodStatus" role="status" class="muted small"></p><div class="brain-favorites-controls"><input type="search" id="brainFoodFavoriteFilter" placeholder="Rechercher dans mes aliments favoris…" aria-label="Rechercher dans les aliments favoris"><select id="brainFoodFavoriteSort" aria-label="Trier les aliments favoris"><option value="az">Nom A à Z</option><option value="za">Nom Z à A</option><option value="recent">Plus récents</option></select></div><div class="stack" id="brainFoodFavoriteList">${brainFoodFavoritesHtml()}</div></div><details class="brain-memory-block" id="brainMealFavoritesBlock"><summary>🍽️ Repas favoris <small>(${db.favorites.length})</small></summary><p class="muted small">Crée un favori directement ici ou retrouve tes repas enregistrés.</p><button type="button" class="secondary small brain-favorite-create-button" id="brainCreateMealFavorite">＋ Créer un favori</button><form id="brainCreateMealFavoriteForm" class="brain-create-meal-favorite" hidden><h3>Nouveau repas favori</h3><label>Nom du favori <input name="name" type="text" maxlength="60" required placeholder="Ex. Mon déjeuner habituel"></label><label>Type de repas <select name="type"><option value="Déjeuner">Déjeuner</option><option value="Dîner">Dîner</option><option value="Souper">Souper</option><option value="Collation">Collation</option></select></label><label>Description du repas <textarea name="description" rows="3" maxlength="2500" required placeholder="Ex. 2 rôties, 1 banane, café…"></textarea></label><label>Calories (facultatif) <input name="calories" type="number" min="0" max="100000" step="1" inputmode="numeric" placeholder="Ex. 350"></label><p class="muted small">Les calories sont facultatives. Aucune estimation automatique n’est imposée.</p><p class="brain-favorite-create-error" role="alert" hidden></p><div class="brain-favorite-create-actions"><button type="submit" class="primary small">Enregistrer le favori</button><button type="button" class="secondary small" id="brainCancelMealFavorite">Annuler</button></div></form><div class="brain-favorites-controls"><input type="search" id="brainMealFavoriteFilter" placeholder="Rechercher dans mes repas favoris…" aria-label="Rechercher dans les repas favoris"><select id="brainMealFavoriteSort" aria-label="Trier les repas favoris"><option value="az">Nom A à Z</option><option value="frequent">Plus utilisés</option><option value="za">Nom Z à A</option><option value="recent">Plus récents</option></select></div><div class="stack profile-favorites-list" id="brainMealFavoriteList">${renderFavoriteList(db.favorites, false)}</div></details></div></section><section class="card"><h2>🍽️ ${tr("Les repas et leurs ressentis")}</h2><p class="muted small">${tr("Le cœur de ce que le Cerveau apprend de toi.")}</p><div class="brain-coverage-list">${learning.types.map(item => metric(mealIcon(item.type), item.type, item.count, item.total, "Journées avec ce repas consigné")).join("")}${metric("🙂", "Ressentis avant", learning.before, learning.mealTotal, "Repas et collations avec un ressenti avant")}${metric("🧠", "Ressentis après", learning.after, learning.mealTotal, "Repas et collations avec un ressenti après")}</div><p class="muted tiny brain-coverage-note">${tr("Les trois repas principaux servent de repères de saisie. Une entrée absente ne signifie pas que tu n’as pas mangé. Les collations sont facultatives.")}</p></section><section class="card"><h2>🌱 ${tr("Au fil des semaines")}</h2><p class="muted small">${tr("Comment ton journal se documente, semaine après semaine.")}</p><div class="brain-week-chart" role="list">${learning.weeks.map(week => `<div class="brain-week" role="listitem"><strong>${week.days ? `${week.score}%` : "—"}</strong><div class="brain-week-track"><i style="height:${week.score}%"></i></div><span>${esc(dates(week.from))}</span><small>${tr(week.days ? week.partial ? "Semaine partielle" : "Semaine entière" : "Sans données")}</small></div>`).join("")}</div><p class="muted small">${tr(trend)}</p><p class="muted tiny">${tr("Les semaines partielles sont indiquées. La comparaison porte sur les deux dernières semaines complètes.")}</p></section><section class="card brain-context-card"><h2>${tr("Ce qui ajoute du contexte")}</h2><div class="brain-coverage-list">${metric("😴", "Sommeil", learning.sleep, learning.days, "Journées avec sommeil consigné")}${metric("💧", "Hydratation", learning.water, learning.days, "Journées avec eau consignée")}${learning.stepsEnabled ? metric("👟", "Pas", learning.steps, learning.days, "Journées avec pas consignés") : ""}</div><p class="muted small brain-activity-note">🏃 ${tr("Journées avec une activité consignée")} : ${learning.activities}/${learning.days}. ${tr("Les activités enrichissent le contexte sans diminuer la couverture lorsqu’il n’y en a pas.")}</p></section></div>`;
+    $("#app").innerHTML = `${analysisDateNavigatorHtml()}<section class="hero brain-hero brain-learning-hero"><p class="eyebrow">🧠 ${tr("Cerveau")}</p><h2>${tr("Ton journal en bref")}</h2><div class="brain-confidence"><div class="brain-ring" style="--p:${learning.score}"><strong>${learning.score}%</strong></div><div><strong>${tr("Couverture du journal")}</strong><p class="muted small">${learning.first ? `${esc(dates(learning.first))} – ${esc(dates(learning.anchor))}` : tr("Ton portrait commence avec ta première entrée.")}</p></div></div><div class="brain-summary-grid"><div class="brain-stat"><strong>${learning.documentedDays}/${learning.days}</strong><small>${tr("journées documentées")}</small></div><div class="brain-stat"><strong>${learning.mealTotal}</strong><small>${tr("repas et collations")}</small></div><div class="brain-stat"><strong>${learning.after}/${learning.mealTotal}</strong><small>${tr("ressentis après")}</small></div></div></section><div class="stack"><section class="card brain-food-memory"><h2>🧠 ${tr("Ma mémoire alimentaire")}</h2><p class="muted small">Apprends à Énergie les noms de tes aliments habituels et retrouve tes repas préférés.</p><div class="brain-memory-grid"><details class="brain-memory-block"><summary>⭐ Aliments favoris <small>(${brainFoodFavorites.length})</small></summary><p class="muted small">Choisis un aliment précis dans le FCÉN et donne-lui ton propre nom. Ce nom pourra ensuite être utilisé pour simplifier toutes tes prochaines saisies de repas.</p><label for="brainFoodSearch">Rechercher dans le FCÉN</label><input id="brainFoodSearch" type="search" placeholder="Ex. beurre d’arachide" autocomplete="off"><div id="brainFoodSearchResults" class="meal-inline-results" hidden></div><details class="brain-custom-food"><summary>+ Créer un aliment personnalisé (sans FCÉN)</summary><form id="brainCustomFoodForm"><label>Nom<input name="name" required maxlength="100"></label><label>Calories / 100 g<input name="calories" type="number" min="0" step="any"></label><label>Protéines / 100 g<input name="protein" type="number" min="0" step="any"></label><label>Glucides / 100 g<input name="carbs" type="number" min="0" step="any"></label><label>Lipides / 100 g<input name="fat" type="number" min="0" step="any"></label><button type="submit" class="primary">Enregistrer</button></form></details><form id="brainFoodAliasForm" hidden><p id="brainFoodSelected" class="muted small"></p><label for="brainFoodAlias">Mon nom personnalisé</label><input id="brainFoodAlias" maxlength="100" required placeholder="Ex. beurre de pinottte"><button class="primary" type="submit">Enregistrer cet aliment</button></form><p id="brainFoodStatus" role="status" class="muted small"></p><div class="brain-favorites-controls"><input type="search" id="brainFoodFavoriteFilter" placeholder="Rechercher dans mes aliments favoris…" aria-label="Rechercher dans les aliments favoris"><select id="brainFoodFavoriteSort" aria-label="Trier les aliments favoris"><option value="az">Nom A à Z</option><option value="za">Nom Z à A</option><option value="recent">Plus récents</option></select></div><div class="stack" id="brainFoodFavoriteList">${brainFoodFavoritesHtml()}</div></div><details class="brain-memory-block" id="brainMealFavoritesBlock"><summary>🍽️ Repas favoris <small>(${db.favorites.length})</small></summary><p class="muted small">Crée un favori directement ici ou retrouve tes repas enregistrés.</p><button type="button" class="secondary small brain-favorite-create-button" id="brainCreateMealFavorite">＋ Créer un favori</button><form id="brainCreateMealFavoriteForm" class="brain-create-meal-favorite" hidden><h3>Nouveau repas favori</h3><label>Nom du favori <input name="name" type="text" maxlength="60" required placeholder="Ex. Mon déjeuner habituel"></label>${favoriteMealTypeFields(["Dîner", "Souper"])}<label>Description du repas <textarea name="description" rows="3" maxlength="2500" required placeholder="Ex. 2 rôties, 1 banane, café…"></textarea></label><label>Calories (facultatif) <input name="calories" type="number" min="0" max="100000" step="1" inputmode="numeric" placeholder="Ex. 350"></label>${favoriteBeverageFields()}<p class="muted small">Les calories sont facultatives. Aucune estimation automatique n’est imposée.</p><p class="brain-favorite-create-error" role="alert" hidden></p><div class="brain-favorite-create-actions"><button type="submit" class="primary small">Enregistrer le favori</button><button type="button" class="secondary small" id="brainCancelMealFavorite">Annuler</button></div></form><div class="brain-favorites-controls"><input type="search" id="brainMealFavoriteFilter" placeholder="Rechercher dans mes repas favoris…" aria-label="Rechercher dans les repas favoris"><select id="brainMealFavoriteSort" aria-label="Trier les repas favoris"><option value="az">Nom A à Z</option><option value="frequent">Plus utilisés</option><option value="za">Nom Z à A</option><option value="recent">Plus récents</option></select></div><div class="stack profile-favorites-list" id="brainMealFavoriteList">${renderFavoriteList(db.favorites, false)}</div></details></div></section><section class="card"><h2>🍽️ ${tr("Les repas et leurs ressentis")}</h2><p class="muted small">${tr("Le cœur de ce que le Cerveau apprend de toi.")}</p><div class="brain-coverage-list">${learning.types.map(item => metric(mealIcon(item.type), item.type, item.count, item.total, "Journées avec ce repas consigné")).join("")}${metric("🙂", "Ressentis avant", learning.before, learning.mealTotal, "Repas et collations avec un ressenti avant")}${metric("🧠", "Ressentis après", learning.after, learning.mealTotal, "Repas et collations avec un ressenti après")}</div><p class="muted tiny brain-coverage-note">${tr("Les trois repas principaux servent de repères de saisie. Une entrée absente ne signifie pas que tu n’as pas mangé. Les collations sont facultatives.")}</p></section><section class="card"><h2>🌱 ${tr("Au fil des semaines")}</h2><p class="muted small">${tr("Comment ton journal se documente, semaine après semaine.")}</p><div class="brain-week-chart" role="list">${learning.weeks.map(week => `<div class="brain-week" role="listitem"><strong>${week.days ? `${week.score}%` : "—"}</strong><div class="brain-week-track"><i style="height:${week.score}%"></i></div><span>${esc(dates(week.from))}</span><small>${tr(week.days ? week.partial ? "Semaine partielle" : "Semaine entière" : "Sans données")}</small></div>`).join("")}</div><p class="muted small">${tr(trend)}</p><p class="muted tiny">${tr("Les semaines partielles sont indiquées. La comparaison porte sur les deux dernières semaines complètes.")}</p></section><section class="card brain-context-card"><h2>${tr("Ce qui ajoute du contexte")}</h2><div class="brain-coverage-list">${metric("😴", "Sommeil", learning.sleep, learning.days, "Journées avec sommeil consigné")}${metric("💧", "Hydratation", learning.water, learning.days, "Journées avec eau consignée")}${learning.stepsEnabled ? metric("👟", "Pas", learning.steps, learning.days, "Journées avec pas consignés") : ""}</div><p class="muted small brain-activity-note">🏃 ${tr("Journées avec une activité consignée")} : ${learning.activities}/${learning.days}. ${tr("Les activités enrichissent le contexte sans diminuer la couverture lorsqu’il n’y en a pas.")}</p></section></div>`;
     bindAnalysisDateNavigator();
     bindFavoriteActions();
     bindBrainCreateMealFavorite();
@@ -16894,25 +16962,18 @@ function formatSleepDuration(hours) {
     $("#barcodeDialog")?.close();
   }
 
-  function favoriteMealTypesFor(type) {
-    if (type === "Dîner" || type === "Souper")
-      return new Set(["Dîner", "Souper"]);
-    return new Set([type]);
-  }
   function favoriteForMeal(meal) {
     if (!meal) return null;
-    const description = normalizedMealDescription(meal.description).toLocaleLowerCase("fr-CA"),
-      accepted = favoriteMealTypesFor(meal.type);
+    const description = normalizedMealDescription(meal.description).toLocaleLowerCase("fr-CA");
     return db.favorites.find(
       (f) =>
-        accepted.has(f.type) &&
+        favoriteMealApplies(f, meal.type) &&
         normalizedMealDescription(f.description).toLocaleLowerCase("fr-CA") === description,
     ) || null;
   }
   function favoritesForType(type) {
-    const accepted = favoriteMealTypesFor(type);
     return [...db.favorites]
-      .filter((f) => !type || accepted.has(f.type))
+      .filter((f) => favoriteMealApplies(f, type))
       .sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
   }
   function populateFavoriteSelect(type) {
@@ -16984,6 +17045,7 @@ function formatSleepDuration(hours) {
       $("#mealCalories").value = String(favorite.manualCalories);
       updateMealCalorieEditor();
     }
+    $("#mealDialog").dataset.favoriteBeverage = JSON.stringify(favorite.beverage || null);
     $("#favoriteMealSelect").value = favorite.id;
     setMealFavoriteToggle(true, favorite.id);
     favorite.usageCount = (favorite.usageCount || 0) + 1;
@@ -17494,6 +17556,7 @@ function formatSleepDuration(hours) {
   }
 
   function openMeal(id = null, presetType = null, forceReadOnly = false) {
+    $("#mealDialog").dataset.favoriteBeverage = "";
     clearTimeout(mealNutritionPreviewTimer);
     mealPhotoAiSegments.clear();
     applyMealCompositionLocale();
@@ -18092,8 +18155,9 @@ function formatSleepDuration(hours) {
   function useFavorite(id) {
     const f = db.favorites.find((x) => x.id === id);
     if (!f) return;
-    openMeal(null, f.type);
-    $("#mealType").value = f.type;
+    const type = favoriteMealTypeOptions(f)[0];
+    openMeal(null, type);
+    $("#mealType").value = type;
     applyFavoriteToMealForm(f);
   }
 
@@ -18544,6 +18608,26 @@ function formatSleepDuration(hours) {
     }
     savedMeal.recommendation = recommendation || null;
     setMealChanged(savedMeal);
+    // Ajoute la boisson enregistrée dans le favori seulement lors de la création
+    // du repas, jamais lors de l'ouverture du favori ou de la modification du repas.
+    const pendingFavoriteBeverage = !old
+      ? (() => { try { return favoriteBeverageData(JSON.parse($("#mealDialog").dataset.favoriteBeverage || "null")); } catch (_) { return null; } })()
+      : null;
+    if (pendingFavoriteBeverage && !d.beverages.some(item => item.mealId === savedMeal.id)) {
+      const type = beverageType(pendingFavoriteBeverage.type);
+      const beverage = normalBeverage({
+        ...pendingFavoriteBeverage, time: savedMeal.time, date: selectedDate,
+        mealId: savedMeal.id, caffeinated: !!type.caffeine,
+      }, selectedDate);
+      if (beverage) {
+        d.beverages.push(beverage);
+        if (["water", "sparkling_water"].includes(beverage.type)) {
+          d.water = Math.max(0, Math.min(Number(db.settings.waterGoal) || 8,
+            (Number(d.water) || 0) + beverage.amountMl / 500));
+        }
+        setDayChanged(selectedDate);
+      }
+    }
     if (removedMealPhotoPaths.size) {
       enqueue({ kind: "deleteMealPhotos", id: savedMeal.id, date: savedMeal.date, photoPaths: [...removedMealPhotoPaths] });
       removedMealPhotoPaths = new Set();
@@ -18562,7 +18646,9 @@ function formatSleepDuration(hours) {
         savedFavorite.notes = savedMeal.notes || "";
         savedFavorite.manualCalories = savedMeal.nutrition?.caloriesManual === true ? savedMeal.nutrition.calories : null;
         savedFavorite.cnfItems = (savedMeal.cnfItems || []).map(item => ({ ...item }));
-        savedFavorite.type = savedMeal.type;
+        if (!favoriteMealTypeOptions(savedFavorite).includes(savedMeal.type))
+          savedFavorite.mealTypes = [...favoriteMealTypeOptions(savedFavorite), savedMeal.type];
+        savedFavorite.type = favoriteMealTypeOptions(savedFavorite)[0];
         savedFavorite.updatedAt = new Date().toISOString();
         setFavoriteChanged(savedFavorite);
       } else {

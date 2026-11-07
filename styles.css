@@ -3184,3 +3184,82 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .brain-favorite-create-actions{display:flex;gap:9px;flex-wrap:wrap}
 .brain-favorite-create-actions button{min-height:40px}
 @media(max-width:480px){.brain-create-meal-favorite{padding:11px}.brain-favorite-create-actions button{flex:1 1 140px}}
+
+/* Énergie 3.56.405 — moments multiples et boissons des favoris de repas. */
+.favorite-meal-type-fieldset{
+  min-width:0;
+  margin:2px 0;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+}
+.favorite-meal-type-fieldset legend{
+  padding:0 5px;
+  font-size:.81rem;
+  font-weight:750;
+  color:var(--text);
+}
+.favorite-meal-type-options{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px 12px;
+}
+.favorite-meal-type-options label{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:.81rem;
+  font-weight:600;
+}
+.favorite-meal-type-options input[type=checkbox]{
+  width:17px;
+  height:17px;
+  flex:0 0 17px;
+}
+.favorite-beverage-fields{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(110px,.65fr);
+  align-items:end;
+  gap:9px;
+}
+.favorite-beverage-fields label{
+  display:grid;
+  gap:5px;
+  font-size:.81rem;
+  font-weight:700;
+}
+.favorite-beverage-fields input,
+.favorite-beverage-fields select{
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--bg);
+  color:var(--text);
+}
+.favorite-meal-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin:6px 0;
+}
+.favorite-meal-tags span{
+  padding:3px 7px;
+  border-radius:999px;
+  background:color-mix(in srgb,var(--accent) 9%,var(--surface2));
+  color:var(--text);
+  font-size:.66rem;
+  font-weight:700;
+}
+.favorite-name-editor .favorite-edit-error{
+  margin:0;
+  font-size:.78rem;
+  color:#ae3b3b;
+}
+.favorite-name-editor .favorite-edit-error[hidden]{display:none}
+@media(max-width:420px){
+  .favorite-beverage-fields{grid-template-columns:minmax(0,1fr) minmax(95px,.65fr)}
+  .favorite-meal-type-options{gap:7px 4px}
+}
