@@ -334,3 +334,58 @@
   .journal-consultation .consultation-meal-content,
   .journal-consultation .consultation-meal-feelings{padding:6px 8px}
 }
+
+/* Énergie 3.56.402 — « Voir ou modifier » à côté de l'heure/durée dans Ma journée. */
+.journal-consultation .consultation-meal-header,
+.journal-consultation .consultation-event-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.journal-consultation .consultation-meal-header > h2,
+.journal-consultation .consultation-event-heading > h3{
+  flex:1 1 auto;
+  min-width:0;
+}
+.journal-consultation .journey-header-actions{
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:clamp(10px,2vw,20px);
+  flex:0 0 auto;
+  min-width:0;
+}
+.journal-consultation .journey-header-actions > time,
+.journal-consultation .journey-header-actions > strong{
+  white-space:nowrap;
+  font-size:.76rem;
+  font-weight:750;
+  color:var(--muted);
+}
+.journal-consultation .journey-header-actions > .consultation-entry-open{
+  display:inline-flex;
+  align-items:center;
+  flex:0 0 auto;
+  min-height:34px;
+  margin:0;
+  padding:0;
+  font-size:.72rem;
+  line-height:1.2;
+  font-weight:750;
+  white-space:nowrap;
+  text-align:right;
+}
+.journal-consultation .consultation-meal-footer:empty{display:none}
+.journal-consultation .consultation-meal-footer{padding-top:0}
+.journal-consultation .consultation-meal-footer:has(> :only-child.glucose-meal-inline-note){padding-top:0}
+@media(max-width:540px){
+  .journal-consultation .journey-header-actions{gap:7px}
+  .journal-consultation .journey-header-actions > .consultation-entry-open{
+    max-width:78px;
+    white-space:normal;
+    text-align:right;
+  }
+  .journal-consultation .consultation-meal-header,
+  .journal-consultation .consultation-event-heading{gap:6px}
+}
