@@ -3263,3 +3263,9 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   .favorite-beverage-fields{grid-template-columns:minmax(0,1fr) minmax(95px,.65fr)}
   .favorite-meal-type-options{gap:7px 4px}
 }
+
+/* Énergie 3.56.408 — carte de vocation, au début du profil solo. */
+.energy-purpose-profile-card{display:grid;gap:10px;border:1px solid rgba(40,100,55,.12);background:linear-gradient(135deg,rgba(232,248,222,.75),var(--surface));}
+.energy-purpose-profile-card h3{margin:0;font-size:1.12rem;letter-spacing:-.02em;}
+.energy-purpose-profile-card p{margin:0;line-height:1.55;}
+.energy-purpose-profile-card .muted{color:var(--muted);}
