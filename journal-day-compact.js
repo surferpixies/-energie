@@ -1,7 +1,28 @@
 /* Énergie 3.56.401 — affichage condensé exclusivement pour Ma journée. */
 (() => {
   'use strict';
+  function moveEditLinks() {
+    document.querySelectorAll('.journal-consultation .consultation-event').forEach(card => {
+      if (card.dataset.journeyActionMoved === '1') return;
+      const header = card.matches('.consultation-event--meal')
+        ? card.querySelector('.consultation-meal-header')
+        : card.querySelector(':scope > .consultation-event-heading');
+      const action = card.matches('.consultation-event--meal')
+        ? card.querySelector(':scope > .consultation-meal-footer > .consultation-entry-open')
+        : card.querySelector(':scope > .consultation-entry-open');
+      if (!header || !action) return;
+      // Déplace le bouton réel afin de conserver ses gestionnaires d'événements.
+      const right = document.createElement('span');
+      right.className = 'journey-header-actions';
+      const clock = header.querySelector(':scope > time, :scope > strong');
+      if (clock) right.appendChild(clock);
+      right.appendChild(action);
+      header.appendChild(right);
+      card.dataset.journeyActionMoved = '1';
+    });
+  }
   function enhance() {
+    moveEditLinks();
     document.querySelectorAll('.journal-consultation .consultation-event--meal').forEach(card => {
       if (card.dataset.journeyEnhanced === '1') return;
       const title = card.querySelector('.consultation-meal-header h2');
@@ -31,7 +52,7 @@
     enhance();
     const root = document.querySelector('main') || document.body;
     const observer = new MutationObserver(changes => {
-      if (changes.some(change => [...change.addedNodes].some(node => node.nodeType === 1 && (node.matches?.('.consultation-event--meal') || node.querySelector?.('.consultation-event--meal'))))) enhance();
+      if (changes.some(change => [...change.addedNodes].some(node => node.nodeType === 1 && (node.matches?.('.journal-consultation, .consultation-event') || node.querySelector?.('.consultation-event'))))) enhance();
     });
     observer.observe(root, {childList:true, subtree:true});
   }
