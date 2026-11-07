@@ -389,3 +389,42 @@
   .journal-consultation .consultation-meal-header,
   .journal-consultation .consultation-event-heading{gap:6px}
 }
+
+/* Énergie 3.56.403 — hydratation sur une ligne et action des pas harmonisée. */
+.journal-consultation .consultation-hydration h3{
+  display:flex;
+  align-items:baseline;
+  flex-wrap:wrap;
+  column-gap:5px;
+  row-gap:0;
+  font-size:.9rem;
+  line-height:1.25;
+}
+.journal-consultation .consultation-hydration h3 small{
+  font-size:.7rem;
+  color:var(--muted);
+  font-weight:650;
+}
+.journal-consultation > .steps-journal-button{
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:10px;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:color-mix(in srgb,#c1ddc8 12%,var(--surface));
+}
+.journal-consultation > .steps-journal-button .journey-steps-action{
+  display:inline-block;
+  font-size:.72rem;
+  font-weight:750;
+  color:var(--accent);
+  text-align:right;
+  white-space:nowrap;
+}
+@media(max-width:420px){
+  .journal-consultation > .steps-journal-button .journey-steps-action{
+    max-width:75px;
+    white-space:normal;
+    line-height:1.2;
+  }
+}
