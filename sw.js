@@ -1,5 +1,5 @@
-// Énergie v3.56.329 — les URL versionnées identifient les fichiers à renouveler.
-const CACHE_NAME = "energie-runtime-v3";
+// Énergie v3.56.400 — les URL versionnées identifient les fichiers à renouveler.
+const CACHE_NAME = "energie-runtime-v4";
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", event => {
   event.waitUntil((async () => {
