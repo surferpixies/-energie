@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.408";
+  const APP_RELEASE = "3.56.409";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -16140,7 +16140,7 @@ function formatSleepDuration(hours) {
     mountSoloGoalsInProfile();
     if (soloGoalsAvailable()) {
       const stack = $("#app .stack");
-      const purposeCard = '<section class="card energy-purpose-profile-card" aria-labelledby="energyPurposeTitle"><h3 id="energyPurposeTitle">🌱 Pourquoi Énergie ?</h3><p>Énergie est d’abord un journal pour mieux comprendre ce que tu manges et les liens possibles avec tes ressentis, tes symptômes et ton bien-être.</p><p class="muted small">Le suivi des calories est disponible si tu le souhaites, mais ce n’est pas la raison d’être première d’Énergie.</p></section>';
+      const purposeCard = '<section class="card energy-purpose-profile-card" aria-labelledby="energyPurposeTitle"><h3 id="energyPurposeTitle">🌱 Pourquoi Énergie ?</h3><p>Énergie t’aide à mieux comprendre ton corps et tes habitudes au quotidien, en réunissant au même endroit ton alimentation, tes ressentis et tes observations comme le poids, l’activité physique, le sommeil et la glycémie.</p><p>L’objectif est de t’aider à reconnaître des tendances et des liens possibles entre ces différents éléments.</p><p class="muted small">Le suivi des calories est également disponible, selon tes besoins, mais il ne constitue pas l’objectif principal d’Énergie. L’idée est avant tout de simplifier la saisie des repas et le suivi de ton quotidien, sans rendre l’expérience inutilement compliquée.</p></section>';
       const goals = stack?.querySelector(".solo-goals-profile-card");
       if (goals) goals.insertAdjacentHTML("beforebegin", purposeCard);
       else stack?.insertAdjacentHTML("afterbegin", purposeCard);
