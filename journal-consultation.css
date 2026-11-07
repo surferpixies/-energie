@@ -231,3 +231,106 @@
     min-height:30px;
   }
 }
+
+/* Énergie 3.56.401 — Ma journée : vraie vue condensée et catégories douces. */
+.journal-consultation{gap:8px}
+.journal-consultation .consultation-event{box-shadow:none;border-radius:16px}
+.journal-consultation .consultation-event--meal{
+  background:color-mix(in srgb,var(--accent) 6%,var(--surface));
+  border-left-color:color-mix(in srgb,var(--accent) 65%,var(--border));
+}
+.journal-consultation .consultation-event--meal .consultation-meal-header{
+  background:color-mix(in srgb,var(--accent) 13%,var(--surface2));
+  padding:9px 12px;
+}
+.journal-consultation .consultation-event--snack{
+  background:color-mix(in srgb,#eeb889 12%,var(--surface));
+  border-left-color:#c69269;
+}
+.journal-consultation .consultation-event--snack .consultation-meal-header{
+  background:color-mix(in srgb,#eeb889 20%,var(--surface));
+}
+.journal-consultation .consultation-event--meal .consultation-meal-header h2{font-size:.96rem;line-height:1.2}
+.journal-consultation .consultation-meal-sections{gap:5px;padding:8px}
+.journal-consultation .consultation-meal-content,
+.journal-consultation .consultation-meal-feelings{padding:7px 10px;border-radius:11px}
+.journal-consultation .consultation-meal-content{background:color-mix(in srgb,var(--surface) 85%,transparent)}
+.journal-consultation .consultation-meal-content .consultation-event-heading,
+.journal-consultation .consultation-meal-feelings .consultation-event-heading{margin-bottom:3px}
+.journal-consultation .consultation-meal-content .consultation-event-heading h3,
+.journal-consultation .consultation-meal-feelings .consultation-event-heading h3{font-size:.81rem}
+.journal-consultation .consultation-meal-feelings--empty{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:7px;
+  padding:5px 10px;
+  min-height:0;
+  background:transparent;
+  border-color:color-mix(in srgb,var(--border) 65%,transparent);
+}
+.journal-consultation .consultation-meal-feelings--empty .consultation-event-heading,
+.journal-consultation .consultation-meal-feelings--empty p{margin:0;line-height:1.2}
+.journal-consultation .consultation-meal-feelings--empty p{font-size:.73rem}
+.journal-consultation .consultation-meal-content .journey-meal-description{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  overflow:hidden;
+  white-space:normal;
+  margin:3px 0 0;
+  font-size:.83rem;
+  line-height:1.32;
+}
+.journal-consultation .journey-meal-expanded .journey-meal-description{
+  display:block;
+  overflow:visible;
+  -webkit-line-clamp:unset;
+  line-clamp:unset;
+  white-space:pre-line;
+}
+.journal-consultation .journey-meal-expand{
+  display:inline-flex;
+  align-items:center;
+  border:0;
+  background:transparent;
+  color:var(--accent);
+  padding:5px 0;
+  min-height:30px;
+  font:inherit;
+  font-weight:750;
+  font-size:.73rem;
+  cursor:pointer;
+}
+.journal-consultation .consultation-meal-footer{padding:0 11px 7px}
+.journal-consultation .consultation-meal-footer .consultation-entry-open{min-height:28px}
+.journal-consultation .consultation-event--beverage{
+  background:color-mix(in srgb,#e7cfae 16%,var(--surface));
+  border-left-color:color-mix(in srgb,#b98a4b 55%,var(--border));
+  padding:7px 11px;
+}
+.journal-consultation .consultation-event--sleep{
+  background:color-mix(in srgb,#f3dfac 17%,var(--surface));
+  border-left-color:color-mix(in srgb,#cda64c 55%,var(--border));
+  padding:8px 11px;
+}
+.journal-consultation .consultation-event--activity,
+.journal-consultation .consultation-event--observation{
+  background:color-mix(in srgb,#c1ddc8 12%,var(--surface));
+  padding:8px 11px;
+}
+.journal-consultation .consultation-hydration{
+  background:color-mix(in srgb,#94d7f4 13%,var(--surface));
+  border-left:3px solid color-mix(in srgb,#3aa7d8 65%,var(--border));
+  padding:8px 11px;
+}
+.journal-consultation .consultation-hydration .water-row{margin:2px 0 0;gap:0}
+.journal-consultation .consultation-hydration .drop{min-width:30px;min-height:34px;font-size:1.1rem}
+.journal-consultation .consultation-hydration p{margin:0;font-size:.69rem;line-height:1.2}
+@media(max-width:480px){
+  .journal-consultation .consultation-meal-header{padding:8px 10px}
+  .journal-consultation .consultation-meal-sections{gap:5px;padding:6px}
+  .journal-consultation .consultation-meal-content,
+  .journal-consultation .consultation-meal-feelings{padding:6px 8px}
+}
