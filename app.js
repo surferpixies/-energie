@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.402";
+  const APP_RELEASE = "3.56.403";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10797,7 +10797,7 @@ function formatSleepDuration(hours) {
   function consultationHydrationHtml(day) {
     const goal = Math.max(1, Math.min(30, Number(db.settings.waterGoal) || 8));
     const water = Number(day.water) || 0;
-    return `<section class="card consultation-hydration"><div class="row"><h3>💧 ${esc(t("Hydratation"))}</h3><strong>${water}/${goal}</strong></div><div class="water-row">${Array.from({length:goal}, (_, i) => `<button type="button" class="drop ${i < water ? "filled" : ""}" data-water="${i + 1}" aria-label="${(i + 1) * 500} ml">💧</button>`).join("")}</div><p class="muted small">${esc(t("Une goutte = 500 ml"))}</p></section>`;
+    return `<section class="card consultation-hydration"><div class="row"><h3>💧 <small>(500 ml)</small> ${esc(t("Boissons et hydratation"))}</h3><strong>${water}/${goal}</strong></div><div class="water-row">${Array.from({length:goal}, (_, i) => `<button type="button" class="drop ${i < water ? "filled" : ""}" data-water="${i + 1}" aria-label="${(i + 1) * 500} ml">💧</button>`).join("")}</div></section>`;
   }
   function journalConsultationHtml(day) {
     const sleepTags = (day.sleepTags || []).map(sleepMarker).filter(Boolean).map(marker => `${marker.icon} ${esc(t(marker.label))}`).join(" · ");
@@ -10806,7 +10806,7 @@ function formatSleepDuration(hours) {
       kind: "glucose", glucose: x, at: new Date(selectedDate + "T" + x.time + ":00").toISOString()
     }));
     const chronologicalEvents = [...events, ...glucoseEvents].sort((x,y) => new Date(x.at || 0) - new Date(y.at || 0));
-    return `<div class="journal-consultation"><article class="card consultation-event consultation-event--sleep"><div class="consultation-event-heading"><h3>🌙 ${esc(t("Sommeil de la nuit dernière"))}</h3><strong>${day.sleepHours != null ? esc(formatSleepDuration(day.sleepHours)) : esc(t("Non consigné"))}</strong></div><div class="consultation-sleep-times">${day.sleepStartTime ? `<span>${esc(t("Coucher"))} ${esc(day.sleepStartTime)}</span>` : ""}${day.sleepEndTime ? `<span>${esc(t("Réveil"))} ${esc(day.sleepEndTime)}</span>` : ""}</div>${sleepTags || day.sleepComment ? `<details class="consultation-sleep-details"><summary>${esc(t("Détails"))}</summary>${sleepTags ? `<p>${sleepTags}</p>` : ""}${day.sleepComment ? `<p translate="no">${esc(day.sleepComment)}</p>` : ""}</details>` : ""}<button type="button" class="consultation-entry-open edit-sleep">${esc(t(professionalClientReadOnly() ? "Voir les détails" : "Voir ou modifier"))}</button></article>${chronologicalEvents.map(journalConsultationEventHtml).join("") || `<p class="muted small">${esc(t("Aucune entrée pour cette journée."))}</p>`}${consultationHydrationHtml(day)}${stepsProgressHtml(day)}</div>`;
+    return `<div class="journal-consultation"><article class="card consultation-event consultation-event--sleep"><div class="consultation-event-heading"><h3>🌙 ${esc(t("Sommeil de la nuit dernière"))}</h3><strong>${day.sleepHours != null ? esc(formatSleepDuration(day.sleepHours)) : esc(t("Non consigné"))}</strong></div><div class="consultation-sleep-times">${day.sleepStartTime ? `<span>${esc(t("Coucher"))} ${esc(day.sleepStartTime)}</span>` : ""}${day.sleepEndTime ? `<span>${esc(t("Réveil"))} ${esc(day.sleepEndTime)}</span>` : ""}</div>${sleepTags || day.sleepComment ? `<details class="consultation-sleep-details"><summary>${esc(t("Détails"))}</summary>${sleepTags ? `<p>${sleepTags}</p>` : ""}${day.sleepComment ? `<p translate="no">${esc(day.sleepComment)}</p>` : ""}</details>` : ""}<button type="button" class="consultation-entry-open edit-sleep">${esc(t(professionalClientReadOnly() ? "Voir les détails" : "Voir ou modifier"))}</button></article>${chronologicalEvents.map(journalConsultationEventHtml).join("") || `<p class="muted small">${esc(t("Aucune entrée pour cette journée."))}</p>`}${consultationHydrationHtml(day)}${stepsProgressHtml(day, false, true)}</div>`;
   }
 
   function bindJournalConsultation() {
@@ -10831,13 +10831,13 @@ function formatSleepDuration(hours) {
       : Math.max(100, Number(db.settings?.stepsGoal) || 8000);
   }
 
-  function stepsProgressHtml(day, compact = false) {
+  function stepsProgressHtml(day, compact = false, consultation = false) {
     if (db.settings?.stepsTracking !== true) return "";
     const steps = day?.steps != null && Number.isFinite(Number(day.steps)) ? Math.max(0, Number(day.steps)) : null,
       goal = stepsGoalForDay(day),
       pct = steps == null ? 0 : Math.min(100, Math.round((steps / goal) * 100)),
       label = steps == null ? "Ajouter mes pas" : `${steps.toLocaleString("fr-CA")} / ${goal.toLocaleString("fr-CA")} ${window.ENERGIE_LOCALE === "en" ? "steps" : "pas"}`;
-    return `<button type="button" class="steps-journal-button edit-steps ${compact ? "journal-summary-steps" : ""}" aria-label="${steps == null ? "Ajouter le nombre de pas" : `Modifier les pas, ${label}`}"><span class="steps-journal-icon" aria-hidden="true">👟</span><span><small>${steps == null || steps === 0 ? "Pas aujourd’hui" : "Mes pas aujourd’hui"}</small><strong>${label}</strong><i class="steps-journal-progress"><b style="width:${pct}%"></b></i></span><em aria-hidden="true">›</em></button>`;
+    return `<button type="button" class="steps-journal-button edit-steps ${compact ? "journal-summary-steps" : ""}" aria-label="${steps == null ? "Ajouter le nombre de pas" : `Modifier les pas, ${label}`}"><span class="steps-journal-icon" aria-hidden="true">👟</span><span><small>${steps == null || steps === 0 ? "Pas aujourd’hui" : "Mes pas aujourd’hui"}</small><strong>${label}</strong><i class="steps-journal-progress"><b style="width:${pct}%"></b></i></span>${consultation ? `<span class="journey-steps-action" aria-hidden="true">${esc(t("Voir ou modifier"))}</span>` : `<em aria-hidden="true">›</em>`}</button>`;
   }
 
   function openSteps() {
