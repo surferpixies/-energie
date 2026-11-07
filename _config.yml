@@ -1,0 +1,32 @@
+# Énergie — seuls les fichiers de l'application Web doivent être publiés.
+# Les fichiers techniques restent dans Git mais ne font pas partie du site.
+exclude:
+  - README.md
+  - README.txt
+  - README_*.md
+  - AGENTS.md
+  - COPILOT.md
+  - MEMORY.md
+  - PRODUCT-VISION.md
+  - PROJECT_CONTEXT.md
+  - "*.sql"
+  - "*.bak"
+  - "*_SETUP.md"
+  - "*.log"
+  - android
+  - ios
+  - scripts
+  - tests
+  - docs
+  - supabase
+  - .github
+  - .gitignore
+  - package.json
+  - package-lock.json
+  - capacitor.config.ts
+  - tsconfig.json
+  - "*.sh"
+  - "*.py"
+  - "*.ts"
+  - "*.yml"
+  - "*.yaml"
