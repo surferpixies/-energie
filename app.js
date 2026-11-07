@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.404";
+  const APP_RELEASE = "3.56.405";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -749,6 +749,7 @@ function formatSleepDuration(hours) {
       caffeinated: !!item.caffeinated,
       createdAt: item.createdAt || new Date().toISOString(),
       updatedAt: item.updatedAt || new Date().toISOString(),
+      ...(item.mealId ? { mealId: String(item.mealId) } : {}),
     };
   }
   function normalNutrition(n) {
@@ -913,11 +914,49 @@ function formatSleepDuration(hours) {
           : null,
     };
   }
+  const FAVORITE_MEAL_TYPES = ["Déjeuner", "Dîner", "Souper", "Collation"];
+  function favoriteMealTypeOptions(f = {}) {
+    const supplied = Array.isArray(f.mealTypes) ? f.mealTypes : Array.isArray(f.meal_types) ? f.meal_types : null;
+    const original = f.type || f.meal_type || "Déjeuner";
+    const legacy = original === "Dîner" || original === "Souper" ? ["Dîner", "Souper"] : [original];
+    const types = [...new Set((supplied?.length ? supplied : legacy).filter(type => FAVORITE_MEAL_TYPES.includes(type)))];
+    return types.length ? types : ["Déjeuner"];
+  }
+  function favoriteBeverageData(input) {
+    if (!input || typeof input !== "object") return null;
+    const type = BEVERAGE_TYPES.find(item => item.id === input.type);
+    const amountMl = Number(input.amountMl);
+    return type && Number.isFinite(amountMl) && amountMl > 0 && amountMl <= 5000
+      ? { type: type.id, amountMl: Math.round(amountMl) } : null;
+  }
+  function favoriteMealTypeFields(selected = []) {
+    return '<fieldset class="favorite-meal-type-fieldset"><legend>Utiliser ce favori pour</legend><div class="favorite-meal-type-options">' +
+      FAVORITE_MEAL_TYPES.map(type => '<label><input type="checkbox" name="mealTypes" value="' + esc(type) + '" ' + (selected.includes(type) ? "checked" : "") + '> ' + esc(type) + '</label>').join("") +
+      '</div></fieldset>';
+  }
+  function favoriteBeverageFields(selected = null) {
+    const options = '<option value="">Aucune boisson</option>' + BEVERAGE_TYPES.map(type =>
+      '<option value="' + esc(type.id) + '" ' + (selected?.type === type.id ? "selected" : "") + '>' + type.icon + ' ' + esc(type.label) + '</option>').join("");
+    return '<div class="favorite-beverage-fields"><label>Boisson (facultatif)<select name="beverageType">' + options +
+      '</select></label><label>Quantité (ml)<input type="number" name="beverageMl" min="1" max="5000" step="1" inputmode="numeric" value="' +
+      (selected?.amountMl ?? "") + '" placeholder="250"></label></div>';
+  }
+  function favoriteBeverageFromForm(fields) {
+    const type = String(fields.get("beverageType") || "").trim();
+    if (!type) return null;
+    return favoriteBeverageData({ type, amountMl: fields.get("beverageMl") });
+  }
+  function favoriteMealApplies(favorite, type) {
+    return !type || favoriteMealTypeOptions(favorite).includes(type);
+  }
   function normalFavorite(f = {}) {
+    const mealTypes = favoriteMealTypeOptions(f);
     return {
       id: f.id || uid(),
       name: f.name || f.description || "Mon repas",
-      type: f.type || "Repas",
+      type: mealTypes.includes(f.type) ? f.type : mealTypes[0],
+      mealTypes,
+      beverage: favoriteBeverageData(f.beverage),
       description: f.description || "",
       notes: f.notes || "",
       manualCalories: f.manualCalories == null && f.manual_calories == null ? null : (Number.isFinite(Number(f.manualCalories ?? f.manual_calories)) && Number(f.manualCalories ?? f.manual_calories) >= 0 ? Number(f.manualCalories ?? f.manual_calories) : null),
@@ -2114,6 +2153,8 @@ function formatSleepDuration(hours) {
               user_id: session.user.id,
               name: f.name,
               meal_type: f.type,
+              meal_types: favoriteMealTypeOptions(f),
+              beverage: favoriteBeverageData(f.beverage),
               description: f.description,
               notes: f.notes || null,
               manual_calories: f.manualCalories,
@@ -2436,6 +2477,8 @@ function formatSleepDuration(hours) {
         id: r.id,
         name: r.name,
         type: r.meal_type,
+        mealTypes: r.meal_types,
+        beverage: r.beverage,
         description: r.description,
         notes: r.notes,
         manualCalories: r.manual_calories,
@@ -16894,25 +16937,18 @@ function formatSleepDuration(hours) {
     $("#barcodeDialog")?.close();
   }
 
-  function favoriteMealTypesFor(type) {
-    if (type === "Dîner" || type === "Souper")
-      return new Set(["Dîner", "Souper"]);
-    return new Set([type]);
-  }
   function favoriteForMeal(meal) {
     if (!meal) return null;
-    const description = normalizedMealDescription(meal.description).toLocaleLowerCase("fr-CA"),
-      accepted = favoriteMealTypesFor(meal.type);
+    const description = normalizedMealDescription(meal.description).toLocaleLowerCase("fr-CA");
     return db.favorites.find(
       (f) =>
-        accepted.has(f.type) &&
+        favoriteMealApplies(f, meal.type) &&
         normalizedMealDescription(f.description).toLocaleLowerCase("fr-CA") === description,
     ) || null;
   }
   function favoritesForType(type) {
-    const accepted = favoriteMealTypesFor(type);
     return [...db.favorites]
-      .filter((f) => !type || accepted.has(f.type))
+      .filter((f) => favoriteMealApplies(f, type))
       .sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0));
   }
   function populateFavoriteSelect(type) {
@@ -16984,6 +17020,7 @@ function formatSleepDuration(hours) {
       $("#mealCalories").value = String(favorite.manualCalories);
       updateMealCalorieEditor();
     }
+    $("#mealDialog").dataset.favoriteBeverage = JSON.stringify(favorite.beverage || null);
     $("#favoriteMealSelect").value = favorite.id;
     setMealFavoriteToggle(true, favorite.id);
     favorite.usageCount = (favorite.usageCount || 0) + 1;
@@ -17494,6 +17531,7 @@ function formatSleepDuration(hours) {
   }
 
   function openMeal(id = null, presetType = null, forceReadOnly = false) {
+    $("#mealDialog").dataset.favoriteBeverage = "";
     clearTimeout(mealNutritionPreviewTimer);
     mealPhotoAiSegments.clear();
     applyMealCompositionLocale();
@@ -18092,8 +18130,9 @@ function formatSleepDuration(hours) {
   function useFavorite(id) {
     const f = db.favorites.find((x) => x.id === id);
     if (!f) return;
-    openMeal(null, f.type);
-    $("#mealType").value = f.type;
+    const type = favoriteMealTypeOptions(f)[0];
+    openMeal(null, type);
+    $("#mealType").value = type;
     applyFavoriteToMealForm(f);
   }
 
@@ -18544,6 +18583,26 @@ function formatSleepDuration(hours) {
     }
     savedMeal.recommendation = recommendation || null;
     setMealChanged(savedMeal);
+    // Ajoute la boisson enregistrée dans le favori seulement lors de la création
+    // du repas, jamais lors de l'ouverture du favori ou de la modification du repas.
+    const pendingFavoriteBeverage = !old
+      ? (() => { try { return favoriteBeverageData(JSON.parse($("#mealDialog").dataset.favoriteBeverage || "null")); } catch (_) { return null; } })()
+      : null;
+    if (pendingFavoriteBeverage && !d.beverages.some(item => item.mealId === savedMeal.id)) {
+      const type = beverageType(pendingFavoriteBeverage.type);
+      const beverage = normalBeverage({
+        ...pendingFavoriteBeverage, time: savedMeal.time, date: selectedDate,
+        mealId: savedMeal.id, caffeinated: !!type.caffeine,
+      }, selectedDate);
+      if (beverage) {
+        d.beverages.push(beverage);
+        if (["water", "sparkling_water"].includes(beverage.type)) {
+          d.water = Math.max(0, Math.min(Number(db.settings.waterGoal) || 8,
+            (Number(d.water) || 0) + beverage.amountMl / 500));
+        }
+        setDayChanged(selectedDate);
+      }
+    }
     if (removedMealPhotoPaths.size) {
       enqueue({ kind: "deleteMealPhotos", id: savedMeal.id, date: savedMeal.date, photoPaths: [...removedMealPhotoPaths] });
       removedMealPhotoPaths = new Set();
@@ -18562,7 +18621,9 @@ function formatSleepDuration(hours) {
         savedFavorite.notes = savedMeal.notes || "";
         savedFavorite.manualCalories = savedMeal.nutrition?.caloriesManual === true ? savedMeal.nutrition.calories : null;
         savedFavorite.cnfItems = (savedMeal.cnfItems || []).map(item => ({ ...item }));
-        savedFavorite.type = savedMeal.type;
+        if (!favoriteMealTypeOptions(savedFavorite).includes(savedMeal.type))
+          savedFavorite.mealTypes = [...favoriteMealTypeOptions(savedFavorite), savedMeal.type];
+        savedFavorite.type = favoriteMealTypeOptions(savedFavorite)[0];
         savedFavorite.updatedAt = new Date().toISOString();
         setFavoriteChanged(savedFavorite);
       } else {
