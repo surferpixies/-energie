@@ -10706,7 +10706,7 @@ function formatSleepDuration(hours) {
   }
 
   function journalViewOptionsHtml() {
-    return `<nav class="journal-view-options" aria-label="${esc(t("Vue du journal"))}">${[["summary", "Sommaire"], ["detailed", "Détaillée"], ["consultation", "Consultation"]].map(([mode, label]) => `<button type="button" data-journal-view="${mode}" aria-pressed="${journalViewMode() === mode}">${esc(t(label))}</button>`).join("")}</nav>`;
+    return `<nav class="journal-view-options" aria-label="${esc(t("Vue du journal"))}">${[["summary", "Sommaire"], ["detailed", "Détaillée"], ["consultation", "Ma journée"]].map(([mode, label]) => `<button type="button" data-journal-view="${mode}" aria-pressed="${journalViewMode() === mode}">${esc(t(label))}</button>`).join("")}</nav>`;
   }
 
   function consultationTimeHtml(at) {
