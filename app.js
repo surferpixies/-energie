@@ -2288,7 +2288,10 @@ function formatSleepDuration(hours) {
       const pref = remoteProfilePreferences;
       db.settings.professionalOptionChoices = window.EnergieProfessionalOptions.mergeChoices(db.settings.professionalOptionChoices, pref.professionalOptionChoices);
       if (Number(pref.waterGoal) > 0) db.settings.waterGoal = Math.round(Number(pref.waterGoal));
-      if (["detailed", "summary", "consultation"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
+      // Tant qu’une nouvelle vue locale attend la synchronisation, ne pas la remplacer
+      // par l’ancienne préférence conservée sur le serveur.
+      const pendingJournalView = outbox().some(op => op.kind === "day" && (!op._ownerUserId || op._ownerUserId === session?.user?.id));
+      if (!pendingJournalView && ["detailed", "summary", "consultation"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
       ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","nutrientIntakeTracking","macroTracking","autoNutritionEstimates","generalRecommendations","hideFavoriteSuggestion","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals","glucoseTracking","glucoseReminders"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
       });
@@ -11252,7 +11255,7 @@ function formatSleepDuration(hours) {
         const mode = ["summary", "consultation"].includes(button.dataset.journalView) ? button.dataset.journalView : "detailed";
         if (journalViewMode() === mode) return;
         db.settings.journalViewMode = mode;
-        saveLocal("journal-view-mode");
+        persistProfilePreference("journal-view-mode");
         render();
       };
     });
