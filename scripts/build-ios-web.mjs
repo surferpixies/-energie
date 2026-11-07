@@ -12,6 +12,7 @@ const runtimeFiles = [
   "professional-options.js",
   "meal-entry-guide.js",
   "journal-consultation.js",
+  "journal-day-compact.js",
   "journal-consultation.css",
   "display-preferences.css",
   "meal-entry-guide.css",
