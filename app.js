@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.406";
+  const APP_RELEASE = "3.56.407";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -4222,22 +4222,36 @@ function formatSleepDuration(hours) {
   function applyRecipeToMeal() {
     if (!soloRecipeImportEnabled() || !importedRecipe || (recipeImportTarget === "meal" && $("#mealForm")?.dataset.inlineReadOnly === "true")) return;
     const favoriteForm = recipeImportTarget === "favorite" ? $("#brainCreateMealFavoriteForm") : null;
-    if (recipeImportTarget === "favorite" && (!favoriteForm || favoriteForm.hidden)) return;
+    if (recipeImportTarget === "favorite" && !favoriteForm) {
+      const status = $("#recipeImportStatus");
+      if (status) { status.textContent = "Le formulaire de favori n’est plus disponible. Rouvre Créer un favori et réessaie."; status.scrollIntoView({block:"nearest"}); }
+      return;
+    }
     const field = favoriteForm ? favoriteForm.querySelector('[name="description"]') : $("#mealDescription");
     const text = recipeImportDescriptionForSave();
     const portions = Number($("#recipeImportPortions").value);
     if (!text || text.length > 1000 || !Number.isFinite(portions) || portions <= 0 || portions > 20) {
       $("#recipeImportStatus").textContent = "Vérifie le texte et le nombre de portions.";
+      $("#recipeImportStatus").scrollIntoView({block:"nearest"});
       return;
     }
     const calorieText = $("#recipeImportCalories").value.trim();
     const calories = calorieText ? Metrics.number(calorieText) : null;
     if (calorieText && (calories == null || calories < 0 || calories > 10000)) {
       $("#recipeImportStatus").textContent = "Vérifie les calories ou laisse le champ vide.";
+      $("#recipeImportStatus").scrollIntoView({block:"nearest"});
       return;
     }
     if (favoriteForm) {
-      if (field.value.trim() && !confirm("Remplacer la description actuelle du favori par la recette importée ?")) return;
+      // The Brain panel can re-render while the import modal is open. Reopen its
+      // fresh form instead of silently discarding the imported recipe.
+      if (!favoriteForm.hidden && field.value.trim() &&
+          !confirm("Remplacer la description actuelle du favori par la recette importée ?")) return;
+      favoriteForm.hidden = false;
+      const createButton = $("#brainCreateMealFavorite");
+      if (createButton) createButton.hidden = true;
+      const favoritesBlock = $("#brainMealFavoritesBlock");
+      if (favoritesBlock) favoritesBlock.open = true;
       field.value = text;
       field.dispatchEvent(new Event("input", {bubbles:true}));
       const name = favoriteForm.querySelector('[name="name"]');
