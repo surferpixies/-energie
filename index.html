@@ -135,6 +135,12 @@
           <p id="mealQuickFillEmpty" class="muted small" hidden>Aucun choix disponible pour ce type de repas.</p>
         </section>
       </dialog>
+      <div id="mealQuickFillBar" class="meal-quick-fill-bar">
+        <button type="button" id="copyPreviousMealQuick"><span id="copyPreviousMealIcon" aria-hidden="true">🍱</span><span id="copyPreviousMealLabel">Repas d’hier</span></button>
+        <button type="button" id="openFavoriteQuickFill"><span aria-hidden="true">⭐</span><span>Favoris</span></button>
+        <button type="button" id="openRecentQuickFill"><span aria-hidden="true">🕒</span><span>Récents</span></button>
+      <button type="button" id="openMealBeverage" class="meal-inline-beverage-button"><span aria-hidden="true">☕</span><strong>+ boisson</strong></button>
+      </div>
       <div class="meal-description-field">
         <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><div class="meal-description-help-actions"><button type="button" id="openMealEntryGuide" class="text-button meal-entry-guide-link" aria-haspopup="dialog" aria-controls="mealEntryGuideDialog" data-i18n-skip>Guide pour entrer mon repas</button><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div></div>
         <label id="mealFavoriteNameWrap" class="meal-favorite-name-wrap" for="mealFavoriteName" hidden>
@@ -164,12 +170,6 @@
           <div><button type="button" id="useMealAiSuggestion" class="secondary small">Utiliser</button><button type="button" id="dismissMealAiSuggestion" class="text-button small">Ignorer</button></div>
         </div>
         <div id="photoPreviewWrap" class="photo-preview-wrap meal-photo-preview" hidden><div id="photoPreviewList" class="meal-photo-preview-list"></div></div>
-      </div>
-      <div id="mealQuickFillBar" class="meal-quick-fill-bar">
-        <button type="button" id="copyPreviousMealQuick"><span id="copyPreviousMealIcon" aria-hidden="true">🍱</span><span id="copyPreviousMealLabel">Repas d’hier</span></button>
-        <button type="button" id="openFavoriteQuickFill"><span aria-hidden="true">⭐</span><span>Favoris</span></button>
-        <button type="button" id="openRecentQuickFill"><span aria-hidden="true">🕒</span><span>Récents</span></button>
-      <button type="button" id="openMealBeverage" class="meal-inline-beverage-button"><span aria-hidden="true">☕</span><strong>+ boisson</strong></button>
       </div>
       <section class="meal-calorie-editor meal-calorie-inline" aria-labelledby="mealCaloriesLabel">
         <label id="mealCaloriesLabel" for="mealCalories">Calories estimées</label>
