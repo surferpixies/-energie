@@ -15,7 +15,7 @@
     html,body{margin:0;background:#eef8e7;}
     #splashScreen{position:fixed;inset:0;background:#eef8e7;}
   </style>
-  <link rel="stylesheet" href="styles.css?v=3.56.429-ai-inline">
+  <link rel="stylesheet" href="styles.css?v=3.56.431-calorie-compact">
   <link rel="stylesheet" href="meal-entry-guide.css?v=3.56.199">
   <link rel="stylesheet" href="display-preferences.css?v=3.56.199">
   <link rel="stylesheet" href="journal-consultation.css?v=3.56.403">
@@ -138,9 +138,10 @@
       <section class="meal-calorie-editor meal-calorie-inline" aria-labelledby="mealCaloriesLabel">
         <label id="mealCaloriesLabel" for="mealCalories">Calories estimées</label>
         <input id="mealCalorieMode" type="hidden" value="auto">
-        <div class="meal-calorie-ai-action"><button type="button" id="searchMealCaloriesAi" class="secondary small" title="Google en priorité, estimation IA au besoin" hidden>✨ Estimer avec l’IA</button><p id="mealAiCaloriesStatus" class="muted small" role="status" aria-live="polite"></p></div>
+        <div class="meal-calorie-ai-action"><button type="button" id="searchMealCaloriesAi" class="secondary small" title="Google en priorité, estimation IA au besoin" hidden>✨ Estimer avec l’IA</button></div>
         <input id="mealCalories" type="text" inputmode="decimal" autocomplete="one-time-code" placeholder="—" aria-describedby="mealCalorieStatus">
         <span class="meal-calorie-unit">kcal</span>
+        <p id="mealAiCaloriesStatus" class="muted small" role="status" aria-live="polite"></p>
         <small id="mealCalorieStatus" role="status">Aucune estimation disponible · saisie facultative</small>
         <button type="button" class="text-button" id="resetMealCalories" hidden>Auto</button>
         <button type="button" id="mealCalorieRecognitionNotice" class="meal-calorie-recognition-notice" hidden>ⓘ Estimation partielle · éléments à vérifier</button>
@@ -791,7 +792,7 @@
   <script src="journal-consultation.js?v=3.56.199"></script>
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
-  <script src="app.js?v=3.56.430-ai-dedupe"></script>
+  <script src="app.js?v=3.56.431-calorie-compact"></script>
   <script>
     // iPhone: hide the native gray keyboard accessory toolbar (arrows / Done).
     // The Capacitor Keyboard plugin is synced into iOS by npm run ios:sync.
