@@ -4,7 +4,7 @@
   const APP_KEY = "energieRepasDB";
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
-  const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
+  const BARCODE_CACHE_KEY = "energieBarcodeProductsV3";
   const CURRENT_VERSION = 93;
   const APP_RELEASE = "3.56.420";
   const Metrics = window.EnergieMetrics;
@@ -17151,6 +17151,7 @@ function formatSleepDuration(hours) {
       base = barcodeLastProduct.nutritionPer100g;
     if (base && Number.isFinite(grams) && grams > 0)
       barcodeLastProduct.nutrition = scaleNutritionPer100g(base, grams);
+    else if (base) return;
     const preview = $("#barcodeNutritionPreview");
     if (preview && nutritionVisibleToViewer() && barcodeLastProduct.nutrition) {
       preview.hidden = false;
@@ -17163,9 +17164,9 @@ function formatSleepDuration(hours) {
     const portionWrap = $("#barcodePortionWrap"),
       portionInput = $("#barcodePortionGrams");
     if (portionWrap && portionInput) {
-      const suggested = product.servingGrams || 100;
-      portionInput.value = String(Math.round(suggested));
-      portionWrap.hidden = !nutritionVisibleToViewer() || !product.nutritionPer100g;
+      const suggested = product.servingGrams;
+      portionInput.value = suggested ? String(Math.round(suggested)) : "";
+      portionWrap.hidden = !nutritionVisibleToViewer() || !product.nutritionPer100g || !suggested;
     }
     const result = $("#barcodeResult"),
       name = $("#barcodeProductName"),
@@ -17188,7 +17189,8 @@ function formatSleepDuration(hours) {
       image.hidden = true;
       image.removeAttribute("src");
     }
-    if (product.nutritionPer100g) updateBarcodePortion();
+    // Respecter les calories par portion publiées, sans les écraser par un calcul au 100 g.
+    if (product.nutritionPer100g && !product.nutrition) updateBarcodePortion();
     if (nutritionVisibleToViewer() && product.nutrition) {
       preview.hidden = false;
       preview.innerHTML = `<strong>≈ ${esc(nutritionText(product.nutrition))}</strong><small>${esc(product.nutrition.basis || "portion indiquée")} · modifiable après l’ajout</small>`;
@@ -17221,16 +17223,9 @@ function formatSleepDuration(hours) {
         p = data?.product;
       if (data?.status === 1 && p) {
         const perServing = p.nutriments || {},
-          hasServing = [
-            perServing["energy-kcal_serving"],
-            perServing.proteins_serving,
-            perServing.carbohydrates_serving,
-            perServing.fat_serving,
-            perServing.fiber_serving,
-            perServing.sugars_serving,
-            perServing.sodium_serving,
-          ].some((v) => Number.isFinite(Number(v))),
-          suffix = hasServing ? "_serving" : "_100g";
+          hasServing = Number.isFinite(Number(perServing["energy-kcal_serving"])) &&
+            perServing["energy-kcal_serving"] != null &&
+            perServing["energy-kcal_serving"] !== "";
         const per100 = normalNutrition({
             calories: perServing["energy-kcal_100g"],
             protein: perServing.proteins_100g,
@@ -17244,7 +17239,7 @@ function formatSleepDuration(hours) {
             basis: "pour 100 g",
             estimated: true,
           }),
-          servingGrams = parseServingGrams(p.serving_size) || 100;
+          servingGrams = parseServingGrams(p.serving_size);
         const product = {
           name: (
             p.product_name_fr ||
@@ -17256,25 +17251,23 @@ function formatSleepDuration(hours) {
           image: p.image_front_small_url || p.image_front_url || "",
           servingGrams,
           nutritionPer100g: per100,
-          nutrition: per100
-            ? scaleNutritionPer100g(per100, servingGrams)
-            : normalNutrition({
-                calories: perServing[`energy-kcal${suffix}`],
-                protein: perServing[`proteins${suffix}`],
-                carbs: perServing[`carbohydrates${suffix}`],
-                fat: perServing[`fat${suffix}`],
-                fiber: perServing[`fiber${suffix}`],
-                sugars: perServing[`sugars${suffix}`],
-                sodium: Number(perServing[`sodium${suffix}`]) * 1000,
+          nutrition: hasServing
+            ? normalNutrition({
+                calories: perServing["energy-kcal_serving"],
+                protein: perServing.proteins_serving,
+                carbs: perServing.carbohydrates_serving,
+                fat: perServing.fat_serving,
+                fiber: perServing.fiber_serving,
+                sugars: perServing.sugars_serving,
+                sodium: perServing.sodium_serving == null ? null : Number(perServing.sodium_serving) * 1000,
                 source: "barcode",
-                confidence: hasServing ? "high" : "medium",
-                basis: hasServing
-                  ? p.serving_size
-                    ? `portion ${p.serving_size}`
-                    : "portion indiquée"
-                  : "pour 100 g",
-                estimated: !hasServing,
-              }),
+                confidence: "high",
+                basis: p.serving_size ? `portion ${p.serving_size}` : "portion indiquée",
+                estimated: true,
+              })
+            : per100 && servingGrams
+              ? scaleNutritionPer100g(per100, servingGrams)
+              : null,
         };
         if (product.name) {
           saveBarcodeCache(code, product);
@@ -18731,11 +18724,31 @@ function formatSleepDuration(hours) {
       $("#barcodeProductName").focus();
       return;
     }
+    const previousDescription = $("#mealDescription")?.value.trim() || "";
+    const previousNutrition = barcodeTargetInputId === "mealDescription" ? nutritionFromInputs() : null;
     appendScannedFood(name);
-    if (barcodeTargetInputId === "mealDescription" && barcodeLastProduct?.nutrition)
-      fillNutritionInputs(
-        mergeNutrition(nutritionFromInputs(), barcodeLastProduct.nutrition),
-      );
+    if (barcodeTargetInputId === "mealDescription" && barcodeLastProduct?.nutrition) {
+      // Un scan vérifié est prioritaire à l'estimation textuelle du nom du produit.
+      // Ne pas additionner l'estimation automatique préexistante au scan.
+      clearTimeout(mealNutritionPreviewTimer);
+      const alreadyEnteredCalories = $("#mealCalorieMode")?.value === "manual" &&
+        String($("#mealCalories")?.value || "").trim() !== "";
+      const previousBarcode = previousDescription && previousNutrition?.source === "barcode";
+      const scanned = previousBarcode
+        ? mergeNutrition(previousNutrition, barcodeLastProduct.nutrition)
+        : barcodeLastProduct.nutrition;
+      mealNutritionManuallyEdited = true;
+      if (!alreadyEnteredCalories || previousBarcode) {
+        $("#mealCalorieMode").value = "manual";
+        $("#mealCalories").value = String(scanned.calories ?? "");
+      }
+      fillNutritionInputs(scanned);
+      const section = $("#mealNutritionSection");
+      if (section && !previousBarcode) {
+        section.dataset.source = "barcode";
+        section.dataset.basis = scanned.basis || "portion indiquée";
+      }
+    }
     if (barcodeLastCode)
       saveBarcodeCache(barcodeLastCode, {
         name,
