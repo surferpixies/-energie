@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.417";
+  const APP_RELEASE = "3.56.418";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -4721,7 +4721,7 @@ function formatSleepDuration(hours) {
     };
     return normalNutrition({
       calories: get("#nutritionCalories"),
-      caloriesManual: $("#mealCalorieMode")?.value === "manual" && $("#mealNutritionSection")?.dataset.source !== "ai-unverified",
+      caloriesManual: $("#mealCalorieMode")?.value === "manual" && !["ai-unverified", "web-unconfirmed"].includes($("#mealNutritionSection")?.dataset.source),
       protein: get("#nutritionProtein"),
       carbs: get("#nutritionCarbs"),
       fat: get("#nutritionFat"),
@@ -4894,9 +4894,7 @@ function formatSleepDuration(hours) {
     if (!enabled) return;
     const status = $("#mealAiCaloriesStatus");
     if (status && !pendingAiCalorieSuggestion)
-      status.textContent = db.settings?.offerAiCaloriesPerMeal === true
-        ? "Tu souhaites une estimation ? Elle sera effectuée seulement si tu cliques. La description sera transmise à Google Gemini."
-        : "Estimation sur demande. La description sera transmise à Google Gemini et le résultat restera approximatif.";
+      status.textContent = "Recherche Web d’abord; estimation IA si aucune valeur exploitable. Sur demande seulement.";
   }
   async function requestMealAiCalorieEstimate() {
     const panel = $("#mealAiCaloriesPilot"), button = $("#estimateMealCaloriesAi"),
@@ -4995,16 +4993,26 @@ function formatSleepDuration(hours) {
       widget.srcdoc = html || "";
       $("#mealAiGroundedResult").hidden = false;
       const report = String(data?.report || "");
-      // Si une source officielle ne fournit pas les calories, ne pas s'arrêter à NON VERIFIE.
-      // La seconde requête est une estimation IA séparée et son coût/quota est distinct.
-      const needsEstimate = /TOTAL\\s*:\\s*NON[\\s-]?VERIFI[ÉE]/i.test(report) ||
-        !/TOTAL\\s*:\\s*[\\d\\s,.]+\\s*kcal/i.test(report) ||
-        data?.searchPerformed !== true || !(Array.isArray(data?.sources) && data.sources.length);
-      if (!needsEstimate) {
-        status.textContent = "Valeur trouvée sur le Web. Vérifie la source avant de la saisir; aucun chiffre n'a été enregistré.";
+      // Un total "publié" n'est proposé que si Google confirme une recherche
+      // et retourne au moins une référence cliquable. Le lien reste à vérifier.
+      const reportedTotal = report.match(/^TOTAL:\\s*([\\d\\s.,]+)\\s*kcal\\s*$/im);
+      const webKcal = reportedTotal
+        ? Number(reportedTotal[1].replace(/\\s/g, "").replace(",", "."))
+        : NaN;
+      const hasWebReferences = data?.searchPerformed === true &&
+        Array.isArray(data?.sources) && data.sources.length > 0;
+      if (hasWebReferences && Number.isInteger(webKcal) && webKcal >= 20 && webKcal <= 3500) {
+        pendingAiCalorieSuggestion = { kcal: webKcal, description, source: "web-unconfirmed" };
+        $("#mealAiCaloriesResult").textContent = `${webKcal} kcal · valeur trouvée sur le Web`;
+        $("#mealAiCaloriesAssumptions").textContent =
+          "Vérifie que le lien correspond au produit, aux quantités et au pays. Source suggérée par Google, non validée indépendamment par Énergie.";
+        $("#mealAiCaloriesProposal").hidden = false;
+        status.textContent = "Valeur publiée trouvée : consulte la source avant de l'utiliser.";
         return;
       }
-      status.textContent = "Aucune valeur publiée suffisamment vérifiable. Estimation IA en cours…";
+      status.textContent = "Aucune valeur publiée exploitable. Estimation IA en cours…";
+      // Une seule demande de l'utilisateur, avec repli IA transparent.
+      // Les deux appels peuvent être facturés et décomptent chacun du quota.
       const { data: estimate, error: estimateError } = await client.functions.invoke("estimate-meal-calories", {
         body: { description, locale: "fr-CA" },
       });
@@ -5015,17 +5023,17 @@ function formatSleepDuration(hours) {
       }
       const kcal = estimate?.kcal;
       if (!Number.isInteger(kcal) || kcal < 20 || kcal > 3500) {
-        status.textContent = "Ni valeur publiée vérifiable ni estimation suffisamment plausible. Précise les ingrédients ou saisis les calories manuellement.";
+        status.textContent = "Aucune valeur fiable ni estimation suffisamment plausible. Précise les ingrédients ou saisis les calories manuellement.";
         return;
       }
-      pendingAiCalorieSuggestion = { kcal, description };
-      $("#mealAiCaloriesResult").textContent = `≈ ${kcal} kcal · estimation IA non vérifiée`;
+      pendingAiCalorieSuggestion = { kcal, description, source: "ai-unverified" };
+      $("#mealAiCaloriesResult").textContent = `≈ ${kcal} kcal · estimation IA`;
       const assumptions = Array.isArray(estimate?.assumptions) ? estimate.assumptions.slice(0, 3) : [];
       $("#mealAiCaloriesAssumptions").textContent =
         [String(estimate?.explanation || ""), ...assumptions].filter(Boolean).join(" · ").slice(0, 500) +
-        " · La recette et ses portions peuvent différer. Ce n'est pas une valeur officielle Ricardo.";
+        " · Valeur approximative : ce n'est pas une information nutritionnelle officielle.";
       $("#mealAiCaloriesProposal").hidden = false;
-      status.textContent = "Aucune calorie publiée retrouvée : estimation IA proposée, à confirmer. Deux appels Gemini ont été utilisés.";
+      status.textContent = "Aucune valeur publiée fiable retrouvée. Voici une estimation IA à confirmer.";
     } catch (error) {
       console.warn("Recherche Gemini avec Google indisponible", error);
       let diagnostic = "";
@@ -5069,9 +5077,9 @@ function formatSleepDuration(hours) {
     $("#mealCalories").value = String(suggestion.kcal);
     const section = $("#mealNutritionSection");
     if (section) {
-      section.dataset.source = "ai-unverified";
+      section.dataset.source = suggestion.source === "web-unconfirmed" ? "web-unconfirmed" : "ai-unverified";
       section.dataset.confidence = "low";
-      section.dataset.basis = "Estimation IA à confirmer";
+      section.dataset.basis = suggestion.source === "web-unconfirmed" ? "Valeur Web à vérifier" : "Estimation IA à confirmer";
       section.dataset.estimated = "true";
     }
     updateMealCalorieEditor();
@@ -5093,7 +5101,7 @@ function formatSleepDuration(hours) {
     // Le lien « Comment cette estimation a-t-elle été calculée ? »
     // affiche déjà les sources : ne pas les répéter à côté des calories.
     // Garder seulement les avertissements utiles (partiel ou manuel).
-    $("#mealCalorieStatus").textContent = manual ? ($("#mealNutritionSection")?.dataset.source === "ai-unverified" ? "Estimation IA approximative · modifiable" : t("Ajustées par vous"))
+    $("#mealCalorieStatus").textContent = manual ? (["ai-unverified", "web-unconfirmed"].includes($("#mealNutritionSection")?.dataset.source) ? "Calories proposées · modifiables" : t("Ajustées par vous"))
       : partial ? t("Estimation partielle · des aliments sont à préciser")
       : input.value === "" ? t("Aucune estimation disponible · saisie facultative") : "";
     // En saisie libre avec calories manuelles (Solo), le retour à une
@@ -17931,7 +17939,7 @@ function formatSleepDuration(hours) {
     $("#mealCaloriesLabel").textContent = soloManualCalories ? "Calories (saisie manuelle facultative)" : "Calories estimées";
     // Initialise le champ avant de lire le repas : aucune valeur du repas
     // précédent ne doit se retrouver dans une nouvelle saisie libre.
-    $("#mealCalories").value = soloManualCalories && (m?.nutrition?.caloriesManual || m?.nutrition?.source === "ai-unverified")
+    $("#mealCalories").value = soloManualCalories && (m?.nutrition?.caloriesManual || ["ai-unverified", "web-unconfirmed"].includes(m?.nutrition?.source))
       ? String(m.nutrition.calories ?? "") : "";
     $("#mealCalorieMode").value = soloManualCalories ? "manual" : "auto";
     $("#mealCalories").setCustomValidity("");
