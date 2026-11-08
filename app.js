@@ -4995,9 +4995,9 @@ function formatSleepDuration(hours) {
       const report = String(data?.report || "");
       // Un total "publié" n'est proposé que si Google confirme une recherche
       // et retourne au moins une référence cliquable. Le lien reste à vérifier.
-      const reportedTotal = report.match(/^TOTAL:\\s*([\\d\\s.,]+)\\s*kcal\\s*$/im);
+      const reportedTotal = report.match(/^TOTAL:\s*([\d\s.,]+)\s*kcal\s*$/im);
       const webKcal = reportedTotal
-        ? Number(reportedTotal[1].replace(/\\s/g, "").replace(",", "."))
+        ? Number(reportedTotal[1].replace(/\s/g, "").replace(",", "."))
         : NaN;
       const hasWebReferences = data?.searchPerformed === true &&
         Array.isArray(data?.sources) && data.sources.length > 0;
