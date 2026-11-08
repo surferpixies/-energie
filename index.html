@@ -144,6 +144,16 @@
         <button type="button" class="text-button" id="resetMealCalories" hidden>Auto</button>
         <button type="button" id="mealCalorieRecognitionNotice" class="meal-calorie-recognition-notice" hidden>ⓘ Estimation partielle · éléments à vérifier</button>
       </section>
+      <div id="mealAiCaloriesPilot" class="meal-ai-calories-pilot" hidden>
+        <button type="button" id="estimateMealCaloriesAi" class="secondary small">✨ Estimer les calories avec l’IA</button>
+        <p id="mealAiCaloriesStatus" class="muted small" role="status" aria-live="polite">Estimation facultative, approximative et modifiable. L’analyse n’est lancée que sur demande.</p>
+        <div id="mealAiCaloriesProposal" hidden>
+          <strong id="mealAiCaloriesResult"></strong>
+          <p id="mealAiCaloriesAssumptions" class="muted small"></p>
+          <button type="button" id="applyMealAiCalories" class="secondary small">Utiliser cette estimation</button>
+          <button type="button" id="dismissMealAiCalories" class="text-button">Ignorer</button>
+        </div>
+      </div>
       <dialog id="mealCalorieRecognitionDialog" class="meal-calorie-recognition-dialog">
         <section class="dialog-card meal-calorie-recognition-card">
           <div class="dialog-header"><div><p class="eyebrow">Calories estimées</p><h2>Éléments non reconnus</h2></div><button type="button" class="icon-button close-dialog" aria-label="Fermer">✕</button></div>
@@ -775,7 +785,7 @@
   <script src="journal-consultation.js?v=3.56.199"></script>
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
-  <script src="app.js?v=3.56.412-meal-example"></script>
+  <script src="app.js?v=3.56.413-calorie-pilot"></script>
   <script>
     // iPhone: hide the native gray keyboard accessory toolbar (arrows / Done).
     // The Capacitor Keyboard plugin is synced into iOS by npm run ios:sync.
