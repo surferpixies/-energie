@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.415";
+  const APP_RELEASE = "3.56.416";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -4997,7 +4997,32 @@ function formatSleepDuration(hours) {
         : "Aucune recherche Google confirmée par l'API. Réponse non vérifiée.";
     } catch (error) {
       console.warn("Recherche Gemini avec Google indisponible", error);
-      status.textContent = "Recherche indisponible ou quota atteint. Aucune donnée du repas n'a été modifiée.";
+      let diagnostic = "";
+      let code = 0;
+      try {
+        code = Number(error?.context?.status || 0);
+        const response = error?.context;
+        if (response?.clone) {
+          const details = await response.clone().json();
+          diagnostic = String(details?.error || "");
+        }
+      } catch (_) { /* The function may not be deployed or returned no JSON. */ }
+      status.textContent =
+        diagnostic === "model-unavailable"
+          ? "Gemini 2.5 Flash-Lite n'est pas accessible avec ce projet Google (404). Aucun frais engagé."
+          : diagnostic === "quota-or-billing"
+            ? "Google refuse la recherche Web : quota ou facturation requis (429). Aucun repas modifié."
+            : diagnostic === "quota-unavailable"
+              ? "Le quota pilote Supabase est indisponible. Vérifie la fonction SQL."
+              : diagnostic === "daily-limit"
+                ? "La limite quotidienne d'essais IA a été atteinte."
+                : code === 404
+                  ? "La fonction Supabase de recherche est introuvable (404). Vérifie son déploiement."
+                  : code === 401 || code === 403
+                    ? "Accès refusé à la fonction Supabase : vérifie la session et le réglage JWT."
+                    : code === 502
+                      ? "Gemini ou la recherche Google a refusé l'appel (502). Regarde les logs Supabase."
+                      : "Recherche indisponible (HTTP " + (code || "inconnu") + "). Consulte les logs Supabase.";
     } finally { btn.disabled = false; }
   }
   function applyMealAiCalorieSuggestion() {
