@@ -5038,17 +5038,21 @@ function formatSleepDuration(hours) {
       $("#mealAiGroundedReport").textContent = String(data?.report || "Aucun résultat.").slice(0, 2500);
       const sourcesBox = $("#mealAiGroundedSources");
       sourcesBox.replaceChildren();
+      const shownSourceHosts = new Set();
       for (const entry of Array.isArray(data?.sources) ? data.sources.slice(0, 8) : []) {
         let uri;
         try {
           uri = new URL(entry.url);
           if (uri.protocol !== "https:") continue;
         } catch (_) { continue; }
+        const host = uri.hostname.toLowerCase().replace(/^www\./, "");
+        if (shownSourceHosts.has(host)) continue;
+        shownSourceHosts.add(host);
         const line = document.createElement("p"), link = document.createElement("a");
         link.href = uri.href;
         link.target = "_blank";
         link.rel = "noopener noreferrer";
-        link.textContent = String(entry.title || uri.hostname).slice(0, 120);
+        link.textContent = String(entry.title || host).slice(0, 120);
         line.appendChild(link);
         sourcesBox.appendChild(line);
       }
