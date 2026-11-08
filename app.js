@@ -4904,7 +4904,7 @@ function formatSleepDuration(hours) {
     button.disabled = aiCallProtection.caloriesPending || completed;
     button.title = completed ? "Estimation déjà réalisée. Modifie le repas pour recommencer." : "Google en priorité, estimation IA au besoin";
     const status = $("#mealAiCaloriesStatus");
-    if (completed && status && !aiCallProtection.caloriesPending) status.textContent = "Déjà estimé · modifie le repas pour recommencer";
+    if (completed && status && !aiCallProtection.caloriesPending) status.textContent = "✓ Déjà estimé · modifie le repas pour relancer";
     else if (status?.textContent.startsWith("Déjà estimé")) status.textContent = "";
   }
   const CALORIE_AI_COOLDOWN_MS = 20000;
