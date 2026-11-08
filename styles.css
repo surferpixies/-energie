@@ -3390,3 +3390,34 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
     font-size:.68rem!important;
   }
 }
+
+/* Énergie 3.56.434 — calorie card adapts to manual vs IA mode. */
+.meal-calorie-editor.meal-calorie-inline {
+  box-sizing:border-box!important;
+  width:fit-content!important;
+  max-width:100%!important;
+  min-width:0!important;
+  padding:12px 16px!important;
+  margin:10px 0 12px!important;
+  grid-template-columns:minmax(112px,160px) max-content!important;
+  column-gap:10px!important;
+  row-gap:7px!important;
+}
+.meal-calorie-inline .meal-calorie-ai-action:has(#searchMealCaloriesAi[hidden]) {display:none!important}
+.meal-calorie-inline #mealCaloriesLabel {grid-column:1/-1!important;grid-row:1!important}
+.meal-calorie-inline #mealCalories {grid-column:1!important;grid-row:2!important;width:140px!important;max-width:100%!important}
+.meal-calorie-inline .meal-calorie-unit {grid-column:2!important;grid-row:2!important}
+.meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) {
+  grid-template-columns:max-content minmax(92px,124px) max-content!important;
+}
+.meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) .meal-calorie-ai-action {grid-column:1!important;grid-row:2!important;display:block!important}
+.meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) #mealCalories {grid-column:2!important;grid-row:2!important;width:124px!important}
+.meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) .meal-calorie-unit {grid-column:3!important;grid-row:2!important}
+.meal-calorie-inline #mealAiCaloriesStatus {grid-column:1/-1!important;grid-row:3!important}
+.meal-calorie-inline #mealCalorieStatus {grid-column:1/-1!important;grid-row:4!important}
+@media(max-width:440px) {
+  .meal-calorie-editor.meal-calorie-inline {padding:10px 12px!important;column-gap:7px!important}
+  .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) {grid-template-columns:max-content minmax(68px,88px) max-content!important}
+  .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) #mealCalories {width:88px!important}
+  .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) #searchMealCaloriesAi {font-size:.68rem!important;padding:7px 9px!important}
+}
