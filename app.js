@@ -4886,10 +4886,10 @@ function formatSleepDuration(hours) {
     const panel = $("#mealAiCaloriesPilot"), button = $("#estimateMealCaloriesAi");
     if (!panel || !button) return;
     const enabled = window.ENERGIE_CONFIG?.calorieAiPilotEnabled === true &&
+      new URLSearchParams(window.location.search).get("calorie-ai-pilot") === "1" &&
       !!session && !db.settings?.demoMode && !professionalBetaMode &&
       !clientProfessionalLink?.id && caloriesVisible() &&
-      db.settings?.mealEntryMode !== "guided" &&
-      db.settings?.calorieEntryPreference === "ai";
+      db.settings?.mealEntryMode !== "guided";
     panel.hidden = !enabled;
     if (!enabled) return;
     const status = $("#mealAiCaloriesStatus");
@@ -4952,6 +4952,8 @@ function formatSleepDuration(hours) {
       $("#mealAiCaloriesStatus").textContent = "Des calories ont été saisies entre-temps : aucune valeur remplacée.";
       return;
     }
+    clearTimeout(mealNutritionPreviewTimer);
+    mealNutritionManuallyEdited = true;
     $("#mealCalorieMode").value = "manual";
     $("#mealCalories").value = String(suggestion.kcal);
     const section = $("#mealNutritionSection");
