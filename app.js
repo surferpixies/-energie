@@ -17161,8 +17161,7 @@ function formatSleepDuration(hours) {
   }
   function updateBarcodePortion() {
     if (!barcodeLastProduct) return;
-    const grams = Number($("#barcodePortionGrams")?.value),
-      base = barcodeLastProduct.nutritionPer100g;
+    const grams = Number($("#barcodePortionGrams")?.value);
     // Seules les calories déclarées pour la portion validée sont proposées.
     // Toute quantité différente doit être renseignée manuellement.
     if (!barcodeLastProduct || grams !== barcodeLastProduct.servingGrams) {
@@ -17173,7 +17172,7 @@ function formatSleepDuration(hours) {
     if (preview && nutritionVisibleToViewer() && barcodeLastProduct.nutrition) {
       preview.hidden = false;
       preview.innerHTML = `<strong>≈ ${esc(nutritionText(barcodeLastProduct.nutrition))}</strong><small>${esc(barcodeLastProduct.nutrition.basis || "portion indiquée")} · modifiable après l’ajout</small>`;
-    }
+    } else if (preview) preview.hidden = true;
   }
   function showBarcodeProduct(product, code, found = true) {
     barcodeLastCode = code;
@@ -17257,8 +17256,7 @@ function formatSleepDuration(hours) {
             confidence: "high",
             basis: "pour 100 g",
             estimated: true,
-          }),
-          checkedPortion = servingGrams != null;
+          });
         const product = {
           name: (
             p.product_name_fr ||
