@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.410";
+  const APP_RELEASE = "3.56.411";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -3259,24 +3259,28 @@ function formatSleepDuration(hours) {
       "fr-CA": {
         labels: { protein: "Protéines", fat: "Lipides", fiber: "Fibres", carbs: "Glucides", carbs_low: "Peu de glucides", dairy: "Laitiers", soy: "Soya", gluten: "Gluten", eggs: "Œufs", nuts: "Noix" },
         status: { confirmed: "confirmé", probable: "probable", possible: "possible", missing: "à préciser" },
-        hint: "Pour améliorer l’estimation des calories, ajoute les quantités quand tu les connais : 150 g de poulet, 1 tasse de riz, 1 tasse de brocoli. C’est facultatif.", recognized: "Éléments reconnus", written: "Selon les ingrédients écrits", usual: "Composition habituelle — la recette peut varier", recognizedSuffix: "reconnu", usually: "Habituellement", kept: "Description conservée telle quelle", complete: "Préciser le repas", continue: "Continuer ainsi",
+        hint: "Décris ton repas naturellement. Si tu connais les quantités ou la portion, précise-les. Au restaurant, indique le nom du resto et du plat (ex. 2 McDouble chez McDonald’s) : ça aidera à mieux estimer les calories. L’estimation par IA est en préparation; les calories peuvent toujours être saisies manuellement.", recognized: "Éléments reconnus", written: "Selon les ingrédients écrits", usual: "Composition habituelle — la recette peut varier", recognizedSuffix: "reconnu", usually: "Habituellement", kept: "Description conservée telle quelle", complete: "Préciser le repas", continue: "Continuer ainsi",
       },
       "fr-FR": {
         labels: { protein: "Protéines", fat: "Lipides", fiber: "Fibres", carbs: "Glucides", carbs_low: "Peu de glucides", dairy: "Laitiers", soy: "Soja", gluten: "Gluten", eggs: "Œufs", nuts: "Noix" },
         status: { confirmed: "confirmé", probable: "probable", possible: "possible", missing: "à préciser" },
-        hint: "Pour améliorer l’estimation des calories, ajoute les quantités quand tu les connais : 150 g de poulet, 1 tasse de riz, 1 tasse de brocoli. C’est facultatif.", recognized: "Éléments reconnus", written: "Selon les ingrédients indiqués", usual: "Composition habituelle — la recette peut varier", recognizedSuffix: "reconnu", usually: "Habituellement", kept: "Description conservée telle quelle", complete: "Préciser le repas", continue: "Continuer ainsi",
+        hint: "Décris ton repas naturellement. Si tu connais les quantités ou la portion, précise-les. Au restaurant, indique le nom du resto et du plat (ex. 2 McDouble chez McDonald’s) : ça aidera à mieux estimer les calories. L’estimation par IA est en préparation; les calories peuvent toujours être saisies manuellement.", recognized: "Éléments reconnus", written: "Selon les ingrédients indiqués", usual: "Composition habituelle — la recette peut varier", recognizedSuffix: "reconnu", usually: "Habituellement", kept: "Description conservée telle quelle", complete: "Préciser le repas", continue: "Continuer ainsi",
       },
       en: {
         labels: { protein: "Protein", fat: "Fat", fiber: "Fiber", carbs: "Carbs", carbs_low: "Low carbs", dairy: "Dairy", soy: "Soy", gluten: "Gluten", eggs: "Eggs", nuts: "Nuts" },
         status: { confirmed: "confirmed", probable: "probable", possible: "possible", missing: "needs details" },
-        hint: "For a better calorie estimate, add quantities when you know them: 150 g chicken, 1 cup rice, 1 cup broccoli. This is optional.", recognized: "Recognized elements", written: "Based on the ingredients entered", usual: "Typical composition — recipes may vary", recognizedSuffix: "recognized", usually: "Usually", kept: "Description kept as entered", complete: "Add meal details", continue: "Continue as is",
+        hint: "Describe your meal naturally. Include portions when you know them. At a restaurant, name the restaurant and dish (e.g. 2 McDoubles at McDonald’s) to help improve calorie estimates. AI calorie estimates are coming soon; you can still enter calories manually.", recognized: "Recognized elements", written: "Based on the ingredients entered", usual: "Typical composition — recipes may vary", recognizedSuffix: "recognized", usually: "Usually", kept: "Description kept as entered", complete: "Add meal details", continue: "Continue as is",
       },
     };
     return packs[window.ENERGIE_LOCALE || "fr-CA"] || packs["fr-CA"];
   }
   function applyMealCompositionLocale() {
     const ui = mealCompositionUi(), hint = $("#mealPrecisionHintText"), complete = $("#completeMealDescription"), keep = $("#keepMealDescription");
-    if (hint) hint.textContent = ui.hint;
+    if (hint) hint.textContent = caloriesVisible()
+      ? ui.hint
+      : (window.ENERGIE_LOCALE === "en"
+        ? "Describe your meal naturally. You can include portions, ingredients and the restaurant or dish name. AI can suggest a description from a photo if you request it; calorie tracking remains optional."
+        : "Décris ton repas naturellement. Tu peux préciser les portions, les ingrédients et le nom du restaurant ou du plat. L’IA peut suggérer une description à partir d’une photo si tu le demandes; le suivi des calories reste facultatif.");
     if (complete) complete.textContent = ui.complete;
     if (keep) keep.textContent = ui.continue;
   }
