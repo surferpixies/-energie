@@ -140,3 +140,123 @@ html[data-theme="dark"] .meal-entry-stage-card {
   }
   #mealForm .meal-calorie-inline input[type="text"] { width:3.5rem; }
 }
+
+/* v3.56.435 — véritable barre compacte pour calories, avec ou sans IA. */
+#mealForm .meal-entry-stage-card {
+  align-content:start;
+  gap:.48rem;
+}
+#mealForm .meal-entry-stage-card .meal-calorie-editor.meal-calorie-inline {
+  display:grid!important;
+  box-sizing:border-box!important;
+  width:fit-content!important;
+  max-width:100%!important;
+  min-height:0!important;
+  grid-template-columns:max-content minmax(88px,110px) max-content!important;
+  grid-auto-rows:auto!important;
+  align-items:center!important;
+  justify-content:start!important;
+  column-gap:9px!important;
+  row-gap:3px!important;
+  padding:8px 12px!important;
+  margin:0!important;
+  border-radius:12px!important;
+}
+#mealForm .meal-calorie-inline #mealCaloriesLabel {
+  grid-column:1!important;
+  grid-row:1!important;
+  margin:0!important;
+  white-space:nowrap;
+  font-size:.78rem!important;
+}
+#mealForm .meal-calorie-inline .meal-calorie-ai-action:has(#searchMealCaloriesAi[hidden]) {
+  display:none!important;
+}
+#mealForm .meal-calorie-inline #mealCalories {
+  grid-column:2!important;
+  grid-row:1!important;
+  box-sizing:border-box;
+  width:100%!important;
+  max-width:110px!important;
+  height:34px!important;
+  min-height:34px!important;
+  padding:4px 9px!important;
+}
+#mealForm .meal-calorie-inline .meal-calorie-unit {
+  grid-column:3!important;
+  grid-row:1!important;
+}
+#mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) {
+  grid-template-columns:max-content max-content minmax(88px,110px) max-content!important;
+}
+#mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) .meal-calorie-ai-action {
+  grid-column:2!important;
+  grid-row:1!important;
+  display:block!important;
+  margin:0!important;
+}
+#mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) #mealCalories {
+  grid-column:3!important;
+}
+#mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) .meal-calorie-unit {
+  grid-column:4!important;
+}
+#mealForm .meal-calorie-inline #searchMealCaloriesAi {
+  min-height:34px!important;
+  padding:6px 10px!important;
+  font-size:.72rem!important;
+}
+#mealForm .meal-calorie-inline #mealAiCaloriesStatus,
+#mealForm .meal-calorie-inline #mealCalorieStatus {
+  grid-column:1/-1!important;
+  grid-row:auto!important;
+  margin:0!important;
+  line-height:1.2!important;
+  font-size:.64rem!important;
+}
+#mealForm .meal-calorie-inline #mealAiCaloriesStatus:empty,
+#mealForm .meal-calorie-inline #mealCalorieStatus:empty {
+  display:none!important;
+}
+#mealForm #mealAiCaloriesPilot[hidden],
+#mealForm #mealCalorieTargetGauge[hidden] {
+  display:none!important;
+}
+#mealForm .meal-entry-stage-card .meal-calorie-target-gauge {
+  margin:0!important;
+  padding:0!important;
+}
+@media(max-width:700px) {
+  #mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) {
+    grid-template-columns:max-content minmax(76px,108px) max-content!important;
+  }
+  #mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) #mealCaloriesLabel {
+    grid-column:1/-1!important;
+    grid-row:1!important;
+  }
+  #mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) .meal-calorie-ai-action {
+    grid-column:1!important;
+    grid-row:2!important;
+  }
+  #mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) #mealCalories {
+    grid-column:2!important;
+    grid-row:2!important;
+  }
+  #mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) .meal-calorie-unit {
+    grid-column:3!important;
+    grid-row:2!important;
+  }
+}
+@media(max-width:420px) {
+  #mealForm .meal-entry-stage-card .meal-calorie-editor.meal-calorie-inline {
+    padding:7px 9px!important;
+    column-gap:7px!important;
+  }
+  #mealForm .meal-calorie-inline #mealCaloriesLabel {
+    font-size:.71rem!important;
+  }
+  #mealForm .meal-calorie-inline #searchMealCaloriesAi {
+    padding:6px 8px!important;
+    font-size:.66rem!important;
+  }
+}
