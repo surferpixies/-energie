@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.413";
+  const APP_RELEASE = "3.56.415";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -4944,6 +4944,61 @@ function formatSleepDuration(hours) {
       console.warn("Estimation IA calories indisponible", error);
       status.textContent = "Estimation IA indisponible ou quota atteint. La saisie manuelle reste possible.";
     } finally { button.disabled = false; }
+  }
+  async function searchMealAiGroundedCalories() {
+    const panel = $("#mealAiCaloriesPilot"), btn = $("#searchMealCaloriesAi"),
+      status = $("#mealAiCaloriesStatus"), description = $("#mealDescription")?.value.trim() || "";
+    if (!panel || panel.hidden || !btn || !status || !session || !client) return;
+    if ($("#mealAiCaloriesConsent")?.checked !== true) {
+      status.textContent = "Coche d'abord le consentement à l'envoi de cette description à Google.";
+      return;
+    }
+    if (description.length < 3 || description.length > 1000) {
+      status.textContent = "Décris ton repas avant de lancer une recherche.";
+      return;
+    }
+    btn.disabled = true;
+    $("#mealAiGroundedResult").hidden = true;
+    status.textContent = "Recherche Google en cours avec Gemini 2.5 Flash-Lite…";
+    try {
+      const { data, error } = await client.functions.invoke("grounded-calorie-pilot", {
+        body: { description },
+      });
+      if (error) throw error;
+      if (!$("#mealDialog")?.open || $("#mealDescription")?.value.trim() !== description) {
+        status.textContent = "Le repas a changé; résultat ignoré.";
+        return;
+      }
+      $("#mealAiGroundedReport").textContent = String(data?.report || "Aucun résultat.").slice(0, 2500);
+      const sourcesBox = $("#mealAiGroundedSources");
+      sourcesBox.replaceChildren();
+      for (const entry of Array.isArray(data?.sources) ? data.sources.slice(0, 8) : []) {
+        let uri;
+        try {
+          uri = new URL(entry.url);
+          if (uri.protocol !== "https:") continue;
+        } catch (_) { continue; }
+        const line = document.createElement("p"), link = document.createElement("a");
+        link.href = uri.href;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = String(entry.title || uri.hostname).slice(0, 120);
+        line.appendChild(link);
+        sourcesBox.appendChild(line);
+      }
+      const widget = $("#mealAiGoogleSearchWidget");
+      const html = String(data?.googleSearchWidget || "");
+      // Contenu Google isolé dans une iframe sandbox, jamais dans le DOM principal.
+      widget.hidden = !html;
+      widget.srcdoc = html || "";
+      $("#mealAiGroundedResult").hidden = false;
+      status.textContent = data?.searchPerformed
+        ? "Recherche effectuée. Vérifie les sources : aucun chiffre n'a été enregistré."
+        : "Aucune recherche Google confirmée par l'API. Réponse non vérifiée.";
+    } catch (error) {
+      console.warn("Recherche Gemini avec Google indisponible", error);
+      status.textContent = "Recherche indisponible ou quota atteint. Aucune donnée du repas n'a été modifiée.";
+    } finally { btn.disabled = false; }
   }
   function applyMealAiCalorieSuggestion() {
     const suggestion = pendingAiCalorieSuggestion;
@@ -17857,6 +17912,7 @@ function formatSleepDuration(hours) {
     pendingAiCalorieSuggestion = null;
     if ($("#mealAiCaloriesConsent")) $("#mealAiCaloriesConsent").checked = false;
     if ($("#mealAiCaloriesProposal")) $("#mealAiCaloriesProposal").hidden = true;
+    if ($("#mealAiGroundedResult")) $("#mealAiGroundedResult").hidden = true;
     refreshMealAiCaloriesPilot();
     updateMealCalorieEditor();
     updateMealCalorieTargetGauge();
@@ -18594,6 +18650,7 @@ function formatSleepDuration(hours) {
     updateMealCalorieEditor();
   });
   $("#estimateMealCaloriesAi")?.addEventListener("click", requestMealAiCalorieEstimate);
+  $("#searchMealCaloriesAi")?.addEventListener("click", searchMealAiGroundedCalories);
   $("#applyMealAiCalories")?.addEventListener("click", applyMealAiCalorieSuggestion);
   $("#dismissMealAiCalories")?.addEventListener("click", () => {
     pendingAiCalorieSuggestion = null;
