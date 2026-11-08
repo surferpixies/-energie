@@ -3278,3 +3278,9 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .meal-ai-calories-pilot #mealAiCaloriesStatus:empty{display:none}
 .meal-ai-calories-pilot #mealAiCaloriesStatus:not(:empty){font-size:.7rem;margin:2px 0 4px}
 @media(max-width:440px){.meal-calorie-inline{grid-template-columns:auto minmax(50px,76px) auto auto auto}.meal-calorie-inline #searchMealCaloriesAi{padding:4px 7px;font-size:.68rem}}
+
+/* 2026-11-07: allow the calorie AI button to size to its text. */
+.meal-calorie-inline{grid-template-columns:max-content minmax(62px,104px) max-content max-content max-content;justify-content:start;align-items:center}
+.meal-calorie-inline #searchMealCaloriesAi{width:max-content!important;max-width:100%;min-width:0;justify-self:start;align-self:center;padding:7px 12px;white-space:nowrap;font-size:.75rem;font-weight:700;line-height:1.2;min-height:36px}
+.meal-calorie-inline #mealCalorieStatus{grid-column:1/-1}
+@media(max-width:620px){.meal-calorie-inline{grid-template-columns:max-content minmax(58px,85px) max-content;column-gap:6px}.meal-calorie-inline #searchMealCaloriesAi{grid-column:1/-1;grid-row:auto;width:max-content!important;justify-self:start;padding:7px 11px}}
