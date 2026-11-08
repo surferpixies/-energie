@@ -4882,6 +4882,14 @@ function formatSleepDuration(hours) {
 
   // Pilote calories IA : aucun appel automatique et désactivé jusqu'au déploiement Supabase.
   let pendingAiCalorieSuggestion = null;
+  // Les boutons ne permettent ni appels concurrents ni rafales successives.
+  // La limite quotidienne reste appliquée par la fonction Supabase.
+  const aiCallProtection = { caloriesPending: false, photoPending: false, caloriesAt: 0, photoAt: 0 };
+  const CALORIE_AI_COOLDOWN_MS = 20000;
+  const PHOTO_AI_COOLDOWN_MS = 30000;
+  function aiCooldownSeconds(lastAt, duration) {
+    return Math.max(0, Math.ceil((duration - (Date.now() - lastAt)) / 1000));
+  }
   function refreshMealAiCaloriesPilot() {
     const panel = $("#mealAiCaloriesPilot"), button = $("#searchMealCaloriesAi");
     if (!panel || !button) return;
@@ -4913,6 +4921,14 @@ function formatSleepDuration(hours) {
       status.textContent = "Des calories sont déjà renseignées. Tu peux les modifier directement, sans appel IA.";
       return;
     }
+    if (aiCallProtection.caloriesPending) return;
+    const remaining = aiCooldownSeconds(aiCallProtection.caloriesAt, CALORIE_AI_COOLDOWN_MS);
+    if (remaining) {
+      status.textContent = `Attends ${remaining} s avant une nouvelle estimation.`;
+      return;
+    }
+    aiCallProtection.caloriesPending = true;
+    aiCallProtection.caloriesAt = Date.now();
     button.disabled = true;
     pendingAiCalorieSuggestion = null;
     $("#mealAiCaloriesProposal").hidden = true;
@@ -4941,7 +4957,10 @@ function formatSleepDuration(hours) {
     } catch (error) {
       console.warn("Estimation IA calories indisponible", error);
       status.textContent = "Estimation IA indisponible ou quota atteint. La saisie manuelle reste possible.";
-    } finally { button.disabled = false; }
+    } finally {
+      aiCallProtection.caloriesPending = false;
+      button.disabled = false;
+    }
   }
   async function searchMealAiGroundedCalories() {
     const panel = $("#mealAiCaloriesPilot"), btn = $("#searchMealCaloriesAi"),
@@ -4955,6 +4974,17 @@ function formatSleepDuration(hours) {
       status.textContent = "Décris ton repas avant de lancer une recherche.";
       return;
     }
+    if (aiCallProtection.caloriesPending) {
+      status.textContent = "Recherche déjà en cours…";
+      return;
+    }
+    const remaining = aiCooldownSeconds(aiCallProtection.caloriesAt, CALORIE_AI_COOLDOWN_MS);
+    if (remaining) {
+      status.textContent = `Attends ${remaining} s avant une nouvelle estimation.`;
+      return;
+    }
+    aiCallProtection.caloriesPending = true;
+    aiCallProtection.caloriesAt = Date.now();
     btn.disabled = true;
     $("#mealAiGroundedResult").hidden = true;
     pendingAiCalorieSuggestion = null;
@@ -5084,7 +5114,10 @@ function formatSleepDuration(hours) {
                     : code === 502
                       ? "Gemini ou la recherche Google a refusé l'appel (502). Regarde les logs Supabase."
                       : "Recherche indisponible (HTTP " + (code || "inconnu") + "). Consulte les logs Supabase.";
-    } finally { btn.disabled = false; }
+    } finally {
+      aiCallProtection.caloriesPending = false;
+      btn.disabled = false;
+    }
   }
   function applyMealAiCalorieSuggestion() {
     const suggestion = pendingAiCalorieSuggestion;
@@ -18096,6 +18129,7 @@ function formatSleepDuration(hours) {
 
     $$('[data-analyze-meal-photo]').forEach((button) => {
       button.onclick = async () => {
+        if (aiCallProtection.photoPending) return;
         const photo =
           mealPhotoDrafts[Number(button.dataset.analyzeMealPhoto)];
 
@@ -18399,6 +18433,18 @@ function formatSleepDuration(hours) {
       setMealAiPhotoStatus("Connecte-toi pour utiliser l’analyse de photo par IA.", "error");
       return false;
     }
+    if (aiCallProtection.photoPending) {
+      setMealAiPhotoStatus("Une analyse photo est déjà en cours…", "loading");
+      return false;
+    }
+    const remaining = aiCooldownSeconds(aiCallProtection.photoAt, PHOTO_AI_COOLDOWN_MS);
+    if (remaining) {
+      setMealAiPhotoStatus(`Attends ${remaining} s avant une nouvelle analyse photo.`, "error");
+      return false;
+    }
+    aiCallProtection.photoPending = true;
+    aiCallProtection.photoAt = Date.now();
+    document.querySelectorAll("[data-analyze-meal-photo], #analyzePreviewPhoto").forEach(button => { button.disabled = true; });
     setMealAiPhotoStatus("Analyse de la photo en cours…", "loading");
     hideMealAiSuggestion();
     try {
@@ -18440,6 +18486,9 @@ function formatSleepDuration(hours) {
       console.warn("Analyse IA de la photo impossible", error);
       setMealAiPhotoStatus("Analyse IA indisponible. Ta photo est quand même conservée.", "error");
       return false;
+    } finally {
+      aiCallProtection.photoPending = false;
+      document.querySelectorAll("[data-analyze-meal-photo], #analyzePreviewPhoto").forEach(button => { button.disabled = false; });
     }
   }
   function createFavoriteFromMeal(m) {
