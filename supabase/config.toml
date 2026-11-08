@@ -9,3 +9,7 @@ verify_jwt = false
 [functions.estimate-meal-calories]
 # JWT vérifié dans le handler via auth.getUser(); quota réservé via service_role.
 verify_jwt = false
+
+[functions.grounded-calorie-pilot]
+# getUser valide la session avant toute recherche Google.
+verify_jwt = false
