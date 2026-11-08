@@ -18742,11 +18742,25 @@ function formatSleepDuration(hours) {
         $("#mealCalorieMode").value = "manual";
         $("#mealCalories").value = String(scanned.calories ?? "");
       }
-      fillNutritionInputs(scanned);
-      const section = $("#mealNutritionSection");
-      if (section && !previousBarcode) {
-        section.dataset.source = "barcode";
-        section.dataset.basis = scanned.basis || "portion indiquée";
+      if (alreadyEnteredCalories && !previousBarcode) {
+        // Respecter une valeur saisie par la personne : ne pas changer sa provenance.
+        fillNutritionInputs(previousNutrition);
+      } else {
+        fillNutritionInputs(scanned);
+        const section = $("#mealNutritionSection");
+        if (section && !previousBarcode) {
+          section.dataset.source = "barcode";
+          section.dataset.basis = scanned.basis || "portion indiquée";
+        }
+      }
+    } else if (barcodeTargetInputId === "mealDescription" && !barcodeLastProduct?.nutrition) {
+      // Sans portion exploitable, ne pas inventer les calories à partir du nom du produit.
+      clearTimeout(mealNutritionPreviewTimer);
+      mealNutritionManuallyEdited = true;
+      if (!previousDescription && !String($("#mealCalories")?.value || "").trim()) {
+        $("#mealCalorieMode").value = "manual";
+        $("#mealCalories").value = "";
+        fillNutritionInputs(null, "Calories indisponibles pour cette portion. Vérifie l'étiquette et inscris la valeur au besoin.");
       }
     }
     if (barcodeLastCode)
