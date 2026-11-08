@@ -428,3 +428,27 @@
     line-height:1.2;
   }
 }
+
+/* v3.56.437 — cumul calorique après chaque prise alimentaire. */
+.journal-consultation .consultation-calorie-progress {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:4px 14px;
+  margin:-3px 6px 4px;
+  padding:5px 10px;
+  border-left:2px solid color-mix(in srgb,var(--accent) 40%,transparent);
+  color:var(--muted);
+  font-size:.71rem;
+  line-height:1.25;
+}
+.journal-consultation .consultation-calorie-progress strong {
+  color:var(--text);
+  font-size:.75rem;
+}
+.journal-consultation .consultation-calorie-progress small {
+  color:var(--muted);
+  font-size:.65rem;
+  font-weight:500;
+}
