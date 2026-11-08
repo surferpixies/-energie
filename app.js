@@ -5073,7 +5073,8 @@ function formatSleepDuration(hours) {
         $("#mealAiCaloriesAssumptions").textContent =
           "Vérifie que le lien correspond au produit, aux quantités et au pays. Source suggérée par Google, non validée indépendamment par Énergie.";
         completedCalorieAiInputs.add(calorieAiInputSignature(description));
-        applyMealAiCalorieSuggestion();
+        $("#mealAiCaloriesProposal").hidden = false;
+        status.textContent = "Valeur trouvée sur le Web, non vérifiée : confirme le plat et la portion dans la source avant de l’utiliser.";
         refreshCalorieAiInputState();
         return;
       }
@@ -5122,7 +5123,8 @@ function formatSleepDuration(hours) {
         [String(estimate?.explanation || ""), ...assumptions].filter(Boolean).join(" · ").slice(0, 500) +
         " · Valeur approximative : ce n'est pas une information nutritionnelle officielle.";
       completedCalorieAiInputs.add(calorieAiInputSignature(description));
-      applyMealAiCalorieSuggestion();
+      $("#mealAiCaloriesProposal").hidden = false;
+      status.textContent = "Estimation IA non vérifiée : confirme les ingrédients et la portion avant de l’utiliser.";
       refreshCalorieAiInputState();
     } catch (error) {
       console.warn("Recherche Gemini avec Google indisponible", error);
