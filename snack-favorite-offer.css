@@ -2,13 +2,13 @@
 .snack-favorite-saved-offer {
   position: fixed;
   z-index: 12000;
-  left: max(12px, env(safe-area-inset-left));
-  right: max(12px, env(safe-area-inset-right));
-  bottom: max(14px, env(safe-area-inset-bottom));
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   width: min(460px, calc(100vw - 24px));
-  max-height: min(75dvh, 580px);
+  max-height: min(calc(100dvh - 32px), 580px);
   overflow-y: auto;
-  margin: 0 auto;
+  margin: 0;
   box-sizing: border-box;
   padding: 18px;
   background: var(--surface, #fffef9);
