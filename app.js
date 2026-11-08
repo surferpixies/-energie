@@ -4,7 +4,7 @@
   const APP_KEY = "energieRepasDB";
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
-  const BARCODE_CACHE_KEY = "energieBarcodeProductsV4";
+  const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
   const CURRENT_VERSION = 93;
   const APP_RELEASE = "3.56.420";
   const Metrics = window.EnergieMetrics;
@@ -495,6 +495,7 @@
     barcodeTargetInputId = "mealDescription";
   let selectedRecentSnackId = null;
   let quickSnackPhotoData = [];
+  let quickSnackFromBarcode = false;
   let quickSnackAnalyzedPhotos = new Set();
 
   function normalizeSupplements(value) {
@@ -8805,6 +8806,8 @@ function formatSleepDuration(hours) {
     }
     $("#snackManagerDialog").close();
     render();
+    if (!favoriteForMeal(meal) && db.settings.hideFavoriteSuggestion !== true)
+      setTimeout(() => offerMealFavoriteSuggestion(meal), 320);
   }
   function setQuickSnackAiStatus(message, state = "") {
     const el = $("#quickSnackAiStatus");
@@ -8899,7 +8902,7 @@ function formatSleepDuration(hours) {
           calories: manualValue, caloriesManual: true, estimated: false,
           source: "manual", confidence: "high",
         })
-      : (db.settings.autoNutritionEstimates !== false ? estimateNutritionFromText(description) : null);
+      : (!quickSnackFromBarcode && db.settings.autoNutritionEstimates !== false ? estimateNutritionFromText(description) : null);
     const now = new Date(),
       meal = normalMeal({
         date: selectedDate,
@@ -8930,6 +8933,8 @@ function formatSleepDuration(hours) {
     }
     $("#snackManagerDialog").close();
     render();
+    if (!favoriteForMeal(meal) && db.settings.hideFavoriteSuggestion !== true)
+      setTimeout(() => offerMealFavoriteSuggestion(meal), 320);
   }
   function openSnackManager() {
     if (professionalClientReadOnly()) return preventProfessionalClientEdit();
@@ -8943,6 +8948,7 @@ function formatSleepDuration(hours) {
       recentSnacks = recentUniqueSnacks();
     selectedRecentSnackId = null;
     quickSnackPhotoData = [];
+    quickSnackFromBarcode = false;
     quickSnackAnalyzedPhotos = new Set();
     $("#quickSnackDescription").value = "";
     $("#quickSnackCalories").value = "";
@@ -8991,7 +8997,7 @@ function formatSleepDuration(hours) {
       );
       addRecentSnack(source);
     };
-    $("#quickSnackDescription").oninput = updateQuickSnackUi;
+    $("#quickSnackDescription").oninput = () => { quickSnackFromBarcode = false; updateQuickSnackUi(); };
     $("#quickSnackCalories").oninput = () => $("#quickSnackCalories").setCustomValidity("");
     $("#quickSnackPhoto").onchange = async (event) => {
       const file = event.target.files[0];
@@ -17195,16 +17201,12 @@ function formatSleepDuration(hours) {
     name.value = product.name || "";
     brand.textContent = product.brand || "";
     const showCalorieAdvice = caloriesVisible();
-    badge.textContent = !found ? "Produit inconnu"
-      : !showCalorieAdvice || product.nutrition?.calories != null ? "Produit reconnu"
-      : "Calories à vérifier";
+    badge.textContent = found ? "Produit reconnu" : "Produit inconnu";
     help.textContent = !found
       ? "Écris simplement le nom que tu veux ajouter au repas."
       : !showCalorieAdvice
         ? "Tu peux simplifier ou modifier le nom avant de l'ajouter."
-        : product.nutrition?.calories != null
-          ? "Calories issues d'une portion renseignée et cohérente dans Open Food Facts. Compare-les quand même à l'emballage."
-          : "Calories non fiables ou portion absente dans Open Food Facts. Vérifie l'emballage et entre les calories manuellement après l'ajout.";
+        : "Le scanner ajoute seulement le nom du produit. Vérifie l'étiquette et inscris les calories manuellement.";
     if (product.image) {
       image.src = product.image;
       image.hidden = false;
@@ -17214,10 +17216,7 @@ function formatSleepDuration(hours) {
     }
     // Respecter les calories par portion publiées, sans les écraser par un calcul au 100 g.
     // En l'absence d'une portion confirmée, aucune conversion au 100 g par défaut.
-    if (nutritionVisibleToViewer() && product.nutrition) {
-      preview.hidden = false;
-      preview.innerHTML = `<strong>≈ ${esc(nutritionText(product.nutrition))}</strong><small>${esc(product.nutrition.basis || "portion indiquée")} · modifiable après l’ajout</small>`;
-    } else preview.hidden = true;
+    preview.hidden = true;
     setTimeout(() => name.focus(), 80);
   }
   async function lookupBarcode(code) {
@@ -17237,7 +17236,7 @@ function formatSleepDuration(hours) {
       return;
     }
     try {
-      const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=code,product_name,product_name_fr,product_name_en,brands,image_front_small_url,image_front_url,serving_size,nutriments`;
+      const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=code,product_name,product_name_fr,product_name_en,brands,image_front_small_url,image_front_url`;
       const response = await fetch(url, {
         headers: { Accept: "application/json" },
       });
@@ -17245,49 +17244,11 @@ function formatSleepDuration(hours) {
       const data = await response.json(),
         p = data?.product;
       if (data?.status === 1 && p) {
-        const perServing = p.nutriments || {},
-          servingGrams = parseServingGrams(p.serving_size),
-          checkedCalories = verifiedBarcodeServingCalories(perServing, servingGrams),
-          hasServing = checkedCalories != null;
-        const per100 = normalNutrition({
-            calories: perServing["energy-kcal_100g"],
-            protein: perServing.proteins_100g,
-            carbs: perServing.carbohydrates_100g,
-            fat: perServing.fat_100g,
-            fiber: perServing.fiber_100g,
-            sugars: perServing.sugars_100g,
-            sodium: Number(perServing.sodium_100g) * 1000,
-            source: "barcode",
-            confidence: "high",
-            basis: "pour 100 g",
-            estimated: true,
-          });
+        // Code-barres = identification. Aucune calorie n'est importée.
         const product = {
-          name: (
-            p.product_name_fr ||
-            p.product_name ||
-            p.product_name_en ||
-            ""
-          ).trim(),
+          name: (p.product_name_fr || p.product_name || p.product_name_en || "").trim(),
           brand: (p.brands || "").split(",")[0].trim(),
           image: p.image_front_small_url || p.image_front_url || "",
-          servingGrams,
-          nutritionPer100g: per100,
-          nutrition: hasServing
-            ? normalNutrition({
-                calories: checkedCalories,
-                protein: perServing.proteins_serving,
-                carbs: perServing.carbohydrates_serving,
-                fat: perServing.fat_serving,
-                fiber: perServing.fiber_serving,
-                sugars: perServing.sugars_serving,
-                sodium: perServing.sodium_serving == null ? null : Number(perServing.sodium_serving) * 1000,
-                source: "barcode",
-                confidence: "high",
-                basis: p.serving_size ? `portion ${p.serving_size}` : "portion indiquée",
-                estimated: true,
-              })
-            : null,
         };
         if (product.name) {
           saveBarcodeCache(code, product);
@@ -18744,58 +18705,28 @@ function formatSleepDuration(hours) {
       $("#barcodeProductName").focus();
       return;
     }
-    const previousDescription = $("#mealDescription")?.value.trim() || "";
-    const previousNutrition = barcodeTargetInputId === "mealDescription" ? nutritionFromInputs() : null;
+    const isMeal = barcodeTargetInputId === "mealDescription";
+    const hadManualCalories = isMeal &&
+      $("#mealCalorieMode")?.value === "manual" &&
+      String($("#mealCalories")?.value || "").trim() !== "";
     appendScannedFood(name);
-    if (barcodeTargetInputId === "mealDescription" && barcodeLastProduct?.nutrition) {
-      // Un scan vérifié est prioritaire à l'estimation textuelle du nom du produit.
-      // Ne pas additionner l'estimation automatique préexistante au scan.
-      clearTimeout(mealNutritionPreviewTimer);
-      const alreadyEnteredCalories = $("#mealCalorieMode")?.value === "manual" &&
-        String($("#mealCalories")?.value || "").trim() !== "";
-      const previousBarcode = previousDescription && previousNutrition?.source === "barcode";
-      const scanned = previousBarcode
-        ? mergeNutrition(previousNutrition, barcodeLastProduct.nutrition)
-        : barcodeLastProduct.nutrition;
-      mealNutritionManuallyEdited = true;
-      if (!alreadyEnteredCalories || previousBarcode) {
-        $("#mealCalorieMode").value = "manual";
-        $("#mealCalories").value = String(scanned.calories ?? "");
-      }
-      if (alreadyEnteredCalories && !previousBarcode) {
-        // Respecter une valeur saisie par la personne : ne pas changer sa provenance.
-        fillNutritionInputs(previousNutrition);
-      } else {
-        fillNutritionInputs(scanned);
-        const section = $("#mealNutritionSection");
-        if (section && !previousBarcode) {
-          section.dataset.source = "barcode";
-          section.dataset.basis = scanned.basis || "portion indiquée";
-        }
-      }
-    } else if (barcodeTargetInputId === "mealDescription" && !barcodeLastProduct?.nutrition) {
-      // Sans portion exploitable, ne pas inventer les calories à partir du nom du produit.
+    if (isMeal) {
       clearTimeout(mealNutritionPreviewTimer);
       mealNutritionManuallyEdited = true;
-      if (!previousDescription && !String($("#mealCalories")?.value || "").trim()) {
+      // Le scan ne remplit jamais les calories; préserver une saisie manuelle existante.
+      if (!hadManualCalories) {
         $("#mealCalorieMode").value = "manual";
         $("#mealCalories").value = "";
-        fillNutritionInputs(null, "Calories indisponibles pour cette portion. Vérifie l'étiquette et inscris la valeur au besoin.");
+        fillNutritionInputs(null);
       }
+    } else if (barcodeTargetInputId === "quickSnackDescription") {
+      quickSnackFromBarcode = true;
     }
     if (barcodeLastCode)
       saveBarcodeCache(barcodeLastCode, {
         name,
         brand: $("#barcodeBrand").textContent.trim(),
-        image: $("#barcodeProductImage").hidden
-          ? ""
-          : $("#barcodeProductImage").src,
-        nutrition: barcodeLastProduct?.nutrition || null,
-        nutritionPer100g: barcodeLastProduct?.nutritionPer100g || null,
-        servingGrams:
-          Number($("#barcodePortionGrams")?.value) ||
-          barcodeLastProduct?.servingGrams ||
-          null,
+        image: $("#barcodeProductImage").hidden ? "" : $("#barcodeProductImage").src,
       });
     closeBarcodeScanner();
     $(`#${barcodeTargetInputId}`)?.focus();
