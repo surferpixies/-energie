@@ -1,0 +1,26 @@
+/* Proposition de favori de collation : indépendante des dialogues natifs. */
+.snack-favorite-saved-offer {
+  position: fixed;
+  z-index: 12000;
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  width: min(460px, calc(100vw - 24px));
+  max-height: min(75dvh, 580px);
+  overflow-y: auto;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 18px;
+  background: var(--surface, #fffef9);
+  color: var(--text, #183c27);
+  border: 1px solid var(--border, #d5e2d1);
+  border-radius: 18px;
+  box-shadow: 0 14px 48px rgba(0,0,0,.25);
+  display: grid;
+  gap: 12px;
+}
+.snack-favorite-saved-offer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.snack-favorite-saved-offer-head strong { font-size: 1.02rem; line-height: 1.4; }
+.snack-favorite-saved-offer label { font-size: .88rem; }
+.snack-favorite-saved-offer #snackSavedFavoriteName { width: 100%; min-width: 0; box-sizing: border-box; }
+.snack-favorite-saved-offer .meal-favorite-suggestion-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
