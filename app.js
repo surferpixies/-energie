@@ -4885,6 +4885,28 @@ function formatSleepDuration(hours) {
   // Les boutons ne permettent ni appels concurrents ni rafales successives.
   // La limite quotidienne reste appliquée par la fonction Supabase.
   const aiCallProtection = { caloriesPending: false, photoPending: false, caloriesAt: 0, photoAt: 0 };
+  // Reuse successes while input remains unchanged; never store the photo itself.
+  const completedCalorieAiInputs = new Set();
+  const completedPhotoAiInputs = new Set();
+  function calorieAiInputSignature(description = $("#mealDescription")?.value || "") {
+    return [session?.user?.id || "", selectedDate, $("#mealId")?.value || "new", String(description).trim()].join("|");
+  }
+  function photoAiInputSignature(imageData) {
+    let hash = 2166136261;
+    const data = String(imageData || "");
+    for (let i = 0; i < data.length; i++) hash = Math.imul(hash ^ data.charCodeAt(i), 16777619);
+    return data.length + ":" + (hash >>> 0).toString(16);
+  }
+  function refreshCalorieAiInputState() {
+    const button = $("#searchMealCaloriesAi");
+    if (!button || button.hidden) return;
+    const completed = completedCalorieAiInputs.has(calorieAiInputSignature());
+    button.disabled = aiCallProtection.caloriesPending || completed;
+    button.title = completed ? "Estimation déjà réalisée. Modifie le repas pour recommencer." : "Google en priorité, estimation IA au besoin";
+    const status = $("#mealAiCaloriesStatus");
+    if (completed && status && !aiCallProtection.caloriesPending) status.textContent = "Déjà estimé · modifie le repas pour recommencer";
+    else if (status?.textContent.startsWith("Déjà estimé")) status.textContent = "";
+  }
   const CALORIE_AI_COOLDOWN_MS = 20000;
   const PHOTO_AI_COOLDOWN_MS = 30000;
   function aiCooldownSeconds(lastAt, duration) {
@@ -4903,6 +4925,7 @@ function formatSleepDuration(hours) {
     if (!enabled) return;
     const status = $("#mealAiCaloriesStatus");
     if (status && !pendingAiCalorieSuggestion) status.textContent = "";
+    refreshCalorieAiInputState();
   }
   async function requestMealAiCalorieEstimate() {
     const panel = $("#mealAiCaloriesPilot"), button = $("#estimateMealCaloriesAi"),
@@ -4919,6 +4942,10 @@ function formatSleepDuration(hours) {
     // Ne pas payer un appel pour remplacer des calories déjà renseignées manuellement.
     if ($("#mealCalorieMode")?.value === "manual" && String($("#mealCalories")?.value || "").trim() !== "") {
       status.textContent = "Des calories sont déjà renseignées. Tu peux les modifier directement, sans appel IA.";
+      return;
+    }
+    if (completedCalorieAiInputs.has(calorieAiInputSignature(description))) {
+      refreshCalorieAiInputState();
       return;
     }
     if (aiCallProtection.caloriesPending) return;
@@ -4960,6 +4987,7 @@ function formatSleepDuration(hours) {
     } finally {
       aiCallProtection.caloriesPending = false;
       button.disabled = false;
+      refreshCalorieAiInputState();
     }
   }
   async function searchMealAiGroundedCalories() {
@@ -4972,6 +5000,10 @@ function formatSleepDuration(hours) {
     }
     if (description.length < 3 || description.length > 1000) {
       status.textContent = "Décris ton repas avant de lancer une recherche.";
+      return;
+    }
+    if (completedCalorieAiInputs.has(calorieAiInputSignature(description))) {
+      refreshCalorieAiInputState();
       return;
     }
     if (aiCallProtection.caloriesPending) {
@@ -5036,8 +5068,9 @@ function formatSleepDuration(hours) {
         $("#mealAiCaloriesResult").textContent = `${webKcal} kcal · valeur trouvée sur le Web`;
         $("#mealAiCaloriesAssumptions").textContent =
           "Vérifie que le lien correspond au produit, aux quantités et au pays. Source suggérée par Google, non validée indépendamment par Énergie.";
+        completedCalorieAiInputs.add(calorieAiInputSignature(description));
         applyMealAiCalorieSuggestion();
-        $("#mealAiCaloriesStatus").textContent = "Valeur Web à vérifier · modifiable";
+        refreshCalorieAiInputState();
         return;
       }
       status.textContent = "Aucune valeur publiée exploitable. Estimation IA en cours…";
@@ -5084,8 +5117,9 @@ function formatSleepDuration(hours) {
       $("#mealAiCaloriesAssumptions").textContent =
         [String(estimate?.explanation || ""), ...assumptions].filter(Boolean).join(" · ").slice(0, 500) +
         " · Valeur approximative : ce n'est pas une information nutritionnelle officielle.";
+      completedCalorieAiInputs.add(calorieAiInputSignature(description));
       applyMealAiCalorieSuggestion();
-      $("#mealAiCaloriesStatus").textContent = "Estimation IA approximative · modifiable";
+      refreshCalorieAiInputState();
     } catch (error) {
       console.warn("Recherche Gemini avec Google indisponible", error);
       let diagnostic = "";
@@ -5116,7 +5150,7 @@ function formatSleepDuration(hours) {
                       : "Recherche indisponible (HTTP " + (code || "inconnu") + "). Consulte les logs Supabase.";
     } finally {
       aiCallProtection.caloriesPending = false;
-      btn.disabled = false;
+      refreshCalorieAiInputState();
     }
   }
   function applyMealAiCalorieSuggestion() {
@@ -17945,6 +17979,7 @@ function formatSleepDuration(hours) {
           render();
         };
     updateMealDialogType(type);
+    if (!m) completedCalorieAiInputs.delete(calorieAiInputSignature($("#mealDescription")?.value || ""));
     $("#mealTime").value = m?.time || new Date().toTimeString().slice(0, 5);
     setMealRecipeDescription(m?.description || "");
     setMealCnfItemsField(m?.cnfItems || []);
@@ -18088,7 +18123,9 @@ function formatSleepDuration(hours) {
 
     list.innerHTML = mealPhotoDrafts.map((photo, index) => {
       const src = photo.local || photo.url || "";
-      const analyzed = photo.aiAnalyzed === true;
+      const analyzed = photo.aiAnalyzed === true ||
+        !!(photo.local && completedPhotoAiInputs.has(photoAiInputSignature(photo.local)));
+      if (analyzed) photo.aiAnalyzed = true;
 
       return `<div class="meal-photo-preview-item">
         ${
@@ -18433,6 +18470,10 @@ function formatSleepDuration(hours) {
       setMealAiPhotoStatus("Connecte-toi pour utiliser l’analyse de photo par IA.", "error");
       return false;
     }
+    if (completedPhotoAiInputs.has(photoAiInputSignature(imageData))) {
+      setMealAiPhotoStatus("Cette photo a déjà été analysée.", "success");
+      return false;
+    }
     if (aiCallProtection.photoPending) {
       setMealAiPhotoStatus("Une analyse photo est déjà en cours…", "loading");
       return false;
@@ -18481,6 +18522,7 @@ function formatSleepDuration(hours) {
           ? "Suggestion incertaine ignorée : confirme l’aliment manuellement si tu le reconnais."
           : "Cette photo n’ajoute rien de nouveau à la description.", "success");
       }
+      completedPhotoAiInputs.add(photoAiInputSignature(imageData));
       return true;
     } catch (error) {
       console.warn("Analyse IA de la photo impossible", error);
@@ -18738,6 +18780,7 @@ function formatSleepDuration(hours) {
   $("#fetchRecipeImport").onclick = fetchRecipeForMeal;
   $("#recipeImportPortions").addEventListener("input", () => { buildRecipeImportDescription(); updateRecipeImportCalories(); });
   $("#mealDescription").addEventListener("input", refreshRecipeSourceLinks);
+  $("#mealDescription").addEventListener("input", refreshCalorieAiInputState);
   $("#recipeImportText").addEventListener("input", refreshRecipeSourceLinks);
   $("#applyRecipeImport").onclick = applyRecipeToMeal;
   $("#cnfGuidedSearch").addEventListener("input", (event) => {
