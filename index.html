@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="steps-tracking.css?v=3.56.39">
   <link rel="stylesheet" href="journal-summary.css?v=3.56.288">
   <link rel="stylesheet" href="onboarding.css?v=3.56.52">
-  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.438-flex-calories">
+  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.448-compact-calorie-proposal">
   <link rel="stylesheet" href="snack-favorite-offer.css?v=2">
 </head>
 <body>
@@ -186,18 +186,24 @@
         <button type="button" id="mealCalorieRecognitionNotice" class="meal-calorie-recognition-notice" hidden>ⓘ Estimation partielle · éléments à vérifier</button>
       </section>
       <div id="mealAiCaloriesPilot" class="meal-ai-calories-pilot" hidden>
-        <details id="mealAiGroundedResult" hidden>
-          <summary>Voir la recherche Google et les sources</summary>
-          <pre id="mealAiGroundedReport" style="white-space:pre-wrap;font:inherit;max-width:100%;overflow-wrap:anywhere"></pre>
-          <div id="mealAiGroundedSources"></div>
-          <iframe id="mealAiGoogleSearchWidget" title="Suggestions Google Search" sandbox="allow-popups allow-popups-to-escape-sandbox" style="width:100%;height:80px;border:0" hidden></iframe>
-          <p class="muted small">Les résultats de recherche ne sont pas vérifiés par Énergie. Vérifie le plat, la portion et les accompagnements avant de retenir une valeur.</p>
-        </details>
-        <div id="mealAiCaloriesProposal" hidden>
-          <strong id="mealAiCaloriesResult"></strong>
-          <p id="mealAiCaloriesAssumptions" class="muted small"></p>
-          <button type="button" id="applyMealAiCalories" class="secondary small">Utiliser cette estimation</button>
-          <button type="button" id="dismissMealAiCalories" class="text-button">Ignorer</button>
+        <div id="mealAiCaloriesProposal" class="meal-calorie-proposal-compact" hidden>
+          <div class="meal-calorie-proposal-top">
+            <span class="meal-calorie-proposal-label">✨ Calories proposées</span>
+            <strong id="mealAiCaloriesResult"></strong>
+          </div>
+          <p class="meal-calorie-proposal-warning">Résultat non vérifié · compare le plat et la portion.</p>
+          <div class="meal-calorie-proposal-actions">
+            <button type="button" id="applyMealAiCalories" class="secondary small">Utiliser</button>
+            <button type="button" id="dismissMealAiCalories" class="text-button small">Ignorer</button>
+          </div>
+          <details id="mealAiGroundedResult" hidden>
+            <summary>Voir les sources et les détails</summary>
+            <p id="mealAiCaloriesAssumptions" class="muted small"></p>
+            <pre id="mealAiGroundedReport" style="white-space:pre-wrap;font:inherit;max-width:100%;overflow-wrap:anywhere"></pre>
+            <div id="mealAiGroundedSources"></div>
+            <iframe id="mealAiGoogleSearchWidget" title="Suggestions Google Search" sandbox="allow-popups allow-popups-to-escape-sandbox" style="width:100%;height:80px;border:0" hidden></iframe>
+            <p class="muted small">Les résultats de recherche ne sont pas vérifiés par Énergie. Vérifie le plat, la portion et les accompagnements.</p>
+          </details>
         </div>
       </div>
       <dialog id="mealCalorieRecognitionDialog" class="meal-calorie-recognition-dialog">
