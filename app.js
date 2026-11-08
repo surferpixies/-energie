@@ -5016,14 +5016,36 @@ function formatSleepDuration(hours) {
       const { data: estimate, error: estimateError } = await client.functions.invoke("estimate-meal-calories", {
         body: { description, locale: "fr-CA" },
       });
-      if (estimateError) throw estimateError;
+      if (estimateError) {
+        let reason = "";
+        try {
+          const response = estimateError?.context;
+          if (response?.clone) {
+            const details = await response.clone().json();
+            reason = String(details?.error || "");
+          }
+        } catch (_) { /* An unavailable service may not return JSON. */ }
+        const code = Number(estimateError?.context?.status || 0);
+        status.textContent = reason === "daily-limit"
+          ? "Google n'a pas trouvé de calories publiées. Le repli IA a atteint sa limite quotidienne."
+          : reason === "quota-unavailable"
+            ? "Google n'a pas trouvé de calories publiées. Le quota du repli IA est indisponible."
+            : code === 401 || code === 403
+              ? "Google n'a pas trouvé de calories publiées. Le repli IA nécessite une session valide."
+              : "Google n'a pas trouvé de calories publiées et le repli IA est indisponible" +
+                (code ? " (HTTP " + code + ")" : "") + ". Réessaie plus tard ou saisis les calories manuellement.";
+        console.warn("Repli IA calories indisponible", estimateError);
+        return;
+      }
       if (!$("#mealDialog")?.open || $("#mealDescription")?.value.trim() !== description) {
         status.textContent = "Le repas a changé; estimation ignorée.";
         return;
       }
       const kcal = estimate?.kcal;
       if (!Number.isInteger(kcal) || kcal < 20 || kcal > 3500) {
-        status.textContent = "Aucune valeur fiable ni estimation suffisamment plausible. Précise les ingrédients ou saisis les calories manuellement.";
+        const explanation = typeof estimate?.explanation === "string" ? estimate.explanation.trim().slice(0, 240) : "";
+        status.textContent = "Google n'a pas trouvé de calories publiées et l'IA ne peut pas estimer ce repas avec assez d'informations." +
+          (explanation ? " " + explanation : "") + " Précise les ingrédients et les quantités pour réessayer.";
         return;
       }
       pendingAiCalorieSuggestion = { kcal, description, source: "ai-unverified" };
