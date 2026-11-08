@@ -145,12 +145,11 @@
         <button type="button" id="mealCalorieRecognitionNotice" class="meal-calorie-recognition-notice" hidden>ⓘ Estimation partielle · éléments à vérifier</button>
       </section>
       <div id="mealAiCaloriesPilot" class="meal-ai-calories-pilot" hidden>
-        <label class="muted small" style="display:block;margin-bottom:8px"><input type="checkbox" id="mealAiCaloriesConsent"> J’accepte l’envoi de cette description de repas à Google Gemini pour l’estimation. Au niveau gratuit, Google peut utiliser ces données pour améliorer ses services. Ne partage pas de renseignements médicaux personnels.</label>
-        <button type="button" id="estimateMealCaloriesAi" class="secondary small">✨ Estimer les calories avec l’IA</button>
-        <p id="mealAiCaloriesStatus" class="muted small" role="status" aria-live="polite">Estimation facultative, approximative et modifiable. L’analyse n’est lancée que sur demande.</p>
-        <button type="button" id="searchMealCaloriesAi" class="secondary small">🔎 Rechercher les calories sur Google (test)</button>
+        <label class="muted small" style="display:block;margin-bottom:8px"><input type="checkbox" id="mealAiCaloriesConsent"> J’accepte l’envoi de cette description de repas à Google Gemini pour l’estimation. La recherche et l’estimation peuvent entraîner des frais de traitement Gemini. Ne partage pas de renseignements médicaux personnels.</label>
+        <p id="mealAiCaloriesStatus" class="muted small" role="status" aria-live="polite">Recherche Web d’abord; si aucune valeur vérifiable n’est trouvée, estimation IA facultative. Aucun appel sans ton accord.</p>
+        <button type="button" id="searchMealCaloriesAi" class="secondary small">✨ Estimer les calories avec l’IA</button>
         <div id="mealAiGroundedResult" hidden>
-          <strong>Résultat de la recherche Google · à vérifier</strong>
+          <strong>Résultat de la recherche · sources à vérifier</strong>
           <pre id="mealAiGroundedReport" style="white-space:pre-wrap;font:inherit;max-width:100%;overflow-wrap:anywhere"></pre>
           <div id="mealAiGroundedSources"></div>
           <iframe id="mealAiGoogleSearchWidget" title="Suggestions Google Search" sandbox="allow-popups allow-popups-to-escape-sandbox" style="width:100%;height:80px;border:0" hidden></iframe>
@@ -794,7 +793,7 @@
   <script src="journal-consultation.js?v=3.56.199"></script>
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
-  <script src="app.js?v=3.56.416-grounded-diagnostics"></script>
+  <script src="app.js?v=3.56.417-ai-fallback"></script>
   <script>
     // iPhone: hide the native gray keyboard accessory toolbar (arrows / Done).
     // The Capacitor Keyboard plugin is synced into iOS by npm run ios:sync.
