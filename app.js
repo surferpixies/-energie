@@ -4,7 +4,7 @@
   const APP_KEY = "energieRepasDB";
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
-  const BARCODE_CACHE_KEY = "energieBarcodeProductsV3";
+  const BARCODE_CACHE_KEY = "energieBarcodeProductsV4";
   const CURRENT_VERSION = 93;
   const APP_RELEASE = "3.56.420";
   const Metrics = window.EnergieMetrics;
@@ -17125,6 +17125,20 @@ function formatSleepDuration(hours) {
     const n = match ? Number(match[1]) : null;
     return Number.isFinite(n) && n > 0 && n <= 2000 ? n : null;
   }
+  // Ne jamais inventer de calories lorsqu'une fiche comporte une portion douteuse.
+  // Les deux déclarations d'Open Food Facts doivent être présentes et cohérentes.
+  function verifiedBarcodeServingCalories(nutriments, servingGrams) {
+    const rawServing = nutriments?.["energy-kcal_serving"];
+    const rawPer100 = nutriments?.["energy-kcal_100g"];
+    if (rawServing == null || rawServing === "" || rawPer100 == null || rawPer100 === "") return null;
+    const serving = Number(rawServing), per100 = Number(rawPer100);
+    if (!Number.isFinite(servingGrams) || servingGrams <= 0 ||
+        !Number.isFinite(serving) || serving <= 0 || !Number.isFinite(per100) || per100 <= 0) return null;
+    const expected = per100 * servingGrams / 100;
+    // Tolérance seulement pour les arrondis d'étiquetage ; aucun recalcul de secours.
+    if (Math.abs(serving - expected) > Math.max(10, expected * 0.12)) return null;
+    return serving;
+  }
   function scaleNutritionPer100g(n, grams) {
     n = normalNutrition(n);
     grams = Number(grams);
@@ -17149,9 +17163,12 @@ function formatSleepDuration(hours) {
     if (!barcodeLastProduct) return;
     const grams = Number($("#barcodePortionGrams")?.value),
       base = barcodeLastProduct.nutritionPer100g;
-    if (base && Number.isFinite(grams) && grams > 0)
-      barcodeLastProduct.nutrition = scaleNutritionPer100g(base, grams);
-    else if (base) return;
+    // Seules les calories déclarées pour la portion validée sont proposées.
+    // Toute quantité différente doit être renseignée manuellement.
+    if (!barcodeLastProduct || grams !== barcodeLastProduct.servingGrams) {
+      barcodeLastProduct.nutrition = null;
+      return;
+    }
     const preview = $("#barcodeNutritionPreview");
     if (preview && nutritionVisibleToViewer() && barcodeLastProduct.nutrition) {
       preview.hidden = false;
@@ -17166,7 +17183,7 @@ function formatSleepDuration(hours) {
     if (portionWrap && portionInput) {
       const suggested = product.servingGrams;
       portionInput.value = suggested ? String(Math.round(suggested)) : "";
-      portionWrap.hidden = !nutritionVisibleToViewer() || !product.nutritionPer100g || !suggested;
+      portionWrap.hidden = true; // Aucune extrapolation automatique d'une portion incertaine.
     }
     const result = $("#barcodeResult"),
       name = $("#barcodeProductName"),
@@ -17178,10 +17195,12 @@ function formatSleepDuration(hours) {
     result.hidden = false;
     name.value = product.name || "";
     brand.textContent = product.brand || "";
-    badge.textContent = found ? "Produit reconnu" : "Produit inconnu";
-    help.textContent = found
-      ? "Tu peux simplifier ou modifier le nom avant de l’ajouter."
-      : "Écris simplement le nom que tu veux ajouter au repas.";
+    badge.textContent = !found ? "Produit inconnu" : product.nutrition?.calories != null ? "Produit reconnu" : "Calories à vérifier";
+    help.textContent = !found
+      ? "Écris simplement le nom que tu veux ajouter au repas."
+      : product.nutrition?.calories != null
+        ? "Calories issues d'une portion renseignée et cohérente dans Open Food Facts. Compare-les quand même à l'emballage."
+        : "Calories non fiables ou portion absente dans Open Food Facts. Vérifie l'emballage et entre les calories manuellement après l'ajout.";
     if (product.image) {
       image.src = product.image;
       image.hidden = false;
@@ -17190,7 +17209,7 @@ function formatSleepDuration(hours) {
       image.removeAttribute("src");
     }
     // Respecter les calories par portion publiées, sans les écraser par un calcul au 100 g.
-    if (product.nutritionPer100g && !product.nutrition) updateBarcodePortion();
+    // En l'absence d'une portion confirmée, aucune conversion au 100 g par défaut.
     if (nutritionVisibleToViewer() && product.nutrition) {
       preview.hidden = false;
       preview.innerHTML = `<strong>≈ ${esc(nutritionText(product.nutrition))}</strong><small>${esc(product.nutrition.basis || "portion indiquée")} · modifiable après l’ajout</small>`;
@@ -17223,9 +17242,9 @@ function formatSleepDuration(hours) {
         p = data?.product;
       if (data?.status === 1 && p) {
         const perServing = p.nutriments || {},
-          hasServing = Number.isFinite(Number(perServing["energy-kcal_serving"])) &&
-            perServing["energy-kcal_serving"] != null &&
-            perServing["energy-kcal_serving"] !== "";
+          servingGrams = parseServingGrams(p.serving_size),
+          checkedCalories = verifiedBarcodeServingCalories(perServing, servingGrams),
+          hasServing = checkedCalories != null;
         const per100 = normalNutrition({
             calories: perServing["energy-kcal_100g"],
             protein: perServing.proteins_100g,
@@ -17239,7 +17258,7 @@ function formatSleepDuration(hours) {
             basis: "pour 100 g",
             estimated: true,
           }),
-          servingGrams = parseServingGrams(p.serving_size);
+          checkedPortion = servingGrams != null;
         const product = {
           name: (
             p.product_name_fr ||
@@ -17253,7 +17272,7 @@ function formatSleepDuration(hours) {
           nutritionPer100g: per100,
           nutrition: hasServing
             ? normalNutrition({
-                calories: perServing["energy-kcal_serving"],
+                calories: checkedCalories,
                 protein: perServing.proteins_serving,
                 carbs: perServing.carbohydrates_serving,
                 fat: perServing.fat_serving,
@@ -17265,9 +17284,7 @@ function formatSleepDuration(hours) {
                 basis: p.serving_size ? `portion ${p.serving_size}` : "portion indiquée",
                 estimated: true,
               })
-            : per100 && servingGrams
-              ? scaleNutritionPer100g(per100, servingGrams)
-              : null,
+            : null,
         };
         if (product.name) {
           saveBarcodeCache(code, product);
