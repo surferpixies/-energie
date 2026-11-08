@@ -5,3 +5,7 @@ verify_jwt = false
 [functions.import-recipe]
 # Authentification validée dans la fonction via getUser().
 verify_jwt = false
+
+[functions.estimate-meal-calories]
+# JWT vérifié dans le handler via auth.getUser(); quota réservé via service_role.
+verify_jwt = false
