@@ -1,4 +1,6 @@
--- Pilote IA calories : quotas transactionnels (déployé séparément dans SQL Editor).
+-- Pilote IA calories : quotas transactionnels (à exécuter dans SQL Editor).
+-- Plafonds de test : 50 appels / utilisateur / jour et 500 appels globaux / jour.
+-- Un parcours Google puis repli IA peut compter pour deux appels.
 -- Aucune donnée de repas n'est enregistrée dans ces compteurs.
 create table if not exists public.calorie_ai_pilot_usage (
   usage_day date not null,
@@ -34,12 +36,12 @@ begin
   perform pg_advisory_xact_lock(hashtext('energie-calorie-ai-pilot'), current_day - date '2000-01-01');
   select request_count into global_count
     from public.calorie_ai_pilot_global_usage where usage_day = current_day;
-  if coalesce(global_count, 0) >= 200 then return false; end if;
+  if coalesce(global_count, 0)  >= 500 then return false; end if;
 
   select request_count into user_count
     from public.calorie_ai_pilot_usage
     where usage_day = current_day and user_id = p_user_id;
-  if coalesce(user_count, 0) >= 10 then return false; end if;
+  if coalesce(user_count, 0)  >= 50 then return false; end if;
 
   insert into public.calorie_ai_pilot_global_usage (usage_day, request_count)
   values (current_day, 1)
