@@ -3,6 +3,6 @@
 window.ENERGIE_CONFIG = {
   supabaseUrl: "https://drbrzyteaitaahediyds.supabase.co",
   supabasePublishableKey: "sb_publishable_-BGkUrOjPUBEZarW8OIfKg_GffhkLW_",
-  calorieAiPilotEnabled: false, // Activer seulement après migration SQL et déploiement de la fonction.
+  calorieAiPilotEnabled: true, // Activer seulement après migration SQL et déploiement de la fonction.
   appVersion: "3.5.2"
 };
