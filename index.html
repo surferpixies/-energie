@@ -186,14 +186,14 @@
         <button type="button" id="mealCalorieRecognitionNotice" class="meal-calorie-recognition-notice" hidden>ⓘ Estimation partielle · éléments à vérifier</button>
       </section>
       <div id="mealAiCaloriesPilot" class="meal-ai-calories-pilot" hidden>
-        <details id="mealAiGroundedResult" hidden style="display:none !important">
+        <details id="mealAiGroundedResult" hidden>
           <summary>Voir la recherche Google et les sources</summary>
           <pre id="mealAiGroundedReport" style="white-space:pre-wrap;font:inherit;max-width:100%;overflow-wrap:anywhere"></pre>
           <div id="mealAiGroundedSources"></div>
           <iframe id="mealAiGoogleSearchWidget" title="Suggestions Google Search" sandbox="allow-popups allow-popups-to-escape-sandbox" style="width:100%;height:80px;border:0" hidden></iframe>
-          <p class="muted small">Aucune donnée enregistrée automatiquement. Vérifie que les sources correspondent au produit et à la portion.</p>
+          <p class="muted small">Les résultats de recherche ne sont pas vérifiés par Énergie. Vérifie le plat, la portion et les accompagnements avant de retenir une valeur.</p>
         </details>
-        <div id="mealAiCaloriesProposal" hidden style="display:none !important">
+        <div id="mealAiCaloriesProposal" hidden>
           <strong id="mealAiCaloriesResult"></strong>
           <p id="mealAiCaloriesAssumptions" class="muted small"></p>
           <button type="button" id="applyMealAiCalories" class="secondary small">Utiliser cette estimation</button>
@@ -795,7 +795,7 @@
   <script src="journal-consultation.js?v=3.56.199"></script>
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
-  <script src="app.js?v=3.56.445-snack-favorite-card"></script>
+  <script src="app.js?v=3.56.446-calorie-confirmation"></script>
   <script>
     // iPhone: hide the native gray keyboard accessory toolbar (arrows / Done).
     // The Capacitor Keyboard plugin is synced into iOS by npm run ios:sync.
