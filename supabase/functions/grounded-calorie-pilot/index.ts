@@ -7,7 +7,7 @@ const cors = {
   "Content-Type": "application/json",
 };
 const reply = (status: number, value: unknown) => new Response(JSON.stringify(value), { status, headers: cors });
-const MODEL = "gemini-2.5-flash-lite";
+const MODEL = "gemini-3.5-flash-lite";
 const MAX_LEN = 1000;
 
 export async function handleGroundedCaloriePilot(req: Request): Promise<Response> {
