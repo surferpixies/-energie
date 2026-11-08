@@ -8791,6 +8791,7 @@ function formatSleepDuration(hours) {
       return;
     }
     original.hidden = true;
+    original.style.display = "none";
     const panel = document.createElement("section");
     panel.id = "snackFavoriteSuggestionPanel";
     panel.className = "dialog-card snack-manager-card";
@@ -8814,9 +8815,15 @@ function formatSleepDuration(hours) {
       }
       panel.remove();
       original.hidden = false;
+      original.style.display = "";
       dialog.close();
       render();
     };
+    dialog.addEventListener("close", () => {
+      if (panel.isConnected) panel.remove();
+      original.hidden = false;
+      original.style.display = "";
+    }, { once: true });
     panel.querySelector("#skipSnackFavoriteSuggestion").onclick = finish;
     panel.querySelector("#acceptSnackFavoriteSuggestion").onclick = () => {
       const name = nameInput.value.trim();
