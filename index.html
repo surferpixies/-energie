@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="steps-tracking.css?v=3.56.39">
   <link rel="stylesheet" href="journal-summary.css?v=3.56.288">
   <link rel="stylesheet" href="onboarding.css?v=3.56.52">
-  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.437-inline-calories">
+  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.438-flex-calories">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -172,11 +172,13 @@
         <div id="photoPreviewWrap" class="photo-preview-wrap meal-photo-preview" hidden><div id="photoPreviewList" class="meal-photo-preview-list"></div></div>
       </div>
       <section class="meal-calorie-editor meal-calorie-inline" aria-labelledby="mealCaloriesLabel">
-        <label id="mealCaloriesLabel" for="mealCalories">Calories estimées</label>
         <input id="mealCalorieMode" type="hidden" value="auto">
-        <div class="meal-calorie-ai-action"><button type="button" id="searchMealCaloriesAi" class="secondary small" title="Google en priorité, estimation IA au besoin" hidden>✨ Estimer avec l’IA</button></div>
-        <input id="mealCalories" type="text" inputmode="decimal" autocomplete="one-time-code" placeholder="—" aria-describedby="mealCalorieStatus">
-        <span class="meal-calorie-unit">kcal</span>
+        <div class="meal-calorie-controls">
+          <label id="mealCaloriesLabel" for="mealCalories">Calories estimées</label>
+          <div class="meal-calorie-ai-action"><button type="button" id="searchMealCaloriesAi" class="secondary small" title="Google en priorité, estimation IA au besoin" hidden>✨ Estimer avec l’IA</button></div>
+          <input id="mealCalories" type="text" inputmode="decimal" autocomplete="one-time-code" placeholder="—" aria-describedby="mealCalorieStatus">
+          <span class="meal-calorie-unit">kcal</span>
+        </div>
         <p id="mealAiCaloriesStatus" class="muted small" role="status" aria-live="polite"></p>
         <small id="mealCalorieStatus" role="status">Aucune estimation disponible · saisie facultative</small>
         <button type="button" class="text-button" id="resetMealCalories" hidden>Auto</button>
