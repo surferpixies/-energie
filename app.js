@@ -4885,8 +4885,8 @@ function formatSleepDuration(hours) {
   function refreshMealAiCaloriesPilot() {
     const panel = $("#mealAiCaloriesPilot"), button = $("#searchMealCaloriesAi");
     if (!panel || !button) return;
+    // Feature availability is controlled by config, not a Web-only query parameter.
     const enabled = window.ENERGIE_CONFIG?.calorieAiPilotEnabled === true &&
-      new URLSearchParams(window.location.search).get("calorie-ai-pilot") === "1" &&
       !!session && !db.settings?.demoMode && !professionalBetaMode &&
       !clientProfessionalLink?.id && caloriesVisible() &&
       db.settings?.mealEntryMode !== "guided";
