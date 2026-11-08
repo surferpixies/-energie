@@ -51,6 +51,7 @@ const runtimeFiles = [
   "journal-summary.css",
   "onboarding.css",
   "meal-stage-cards.css",
+  "snack-favorite-offer.css",
   "manifest.webmanifest",
   "sw.js",
   "surferpixies-signature.png"
