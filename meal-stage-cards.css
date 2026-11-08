@@ -260,3 +260,82 @@ html[data-theme="dark"] .meal-entry-stage-card {
     font-size:.66rem!important;
   }
 }
+
+/* v3.56.437 — calories comme outil secondaire, sans carte jaune encombrante. */
+#mealForm .meal-entry-stage-card .meal-calorie-editor.meal-calorie-inline {
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:6px 2px!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  grid-template-columns:max-content minmax(65px,98px) max-content!important;
+  row-gap:2px!important;
+  column-gap:8px!important;
+  justify-content:start!important;
+  align-items:center!important;
+}
+#mealForm .meal-calorie-inline #mealCaloriesLabel {
+  font-size:.7rem!important;
+  font-weight:700!important;
+  color:var(--muted)!important;
+  white-space:normal!important;
+}
+#mealForm .meal-calorie-inline #mealCalories {
+  width:98px!important;
+  max-width:100%!important;
+  min-height:32px!important;
+  height:32px!important;
+  font-size:.9rem!important;
+  padding:4px 9px!important;
+}
+#mealForm .meal-calorie-inline .meal-calorie-unit {
+  font-size:.7rem!important;
+  color:var(--muted)!important;
+}
+#mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) {
+  grid-template-columns:max-content max-content minmax(65px,98px) max-content!important;
+}
+#mealForm .meal-calorie-inline #searchMealCaloriesAi {
+  min-height:32px!important;
+  padding:5px 9px!important;
+  font-size:.69rem!important;
+}
+#mealForm .meal-calorie-inline #mealCalorieStatus,
+#mealForm .meal-calorie-inline #mealAiCaloriesStatus {
+  max-width:100%!important;
+  font-size:.61rem!important;
+  color:var(--muted)!important;
+  margin:0!important;
+}
+#mealForm .meal-calorie-inline #mealCalorieStatus:not(:empty) {
+  opacity:.85;
+}
+#mealForm .meal-entry-stage-card > .meal-calorie-target-gauge {
+  margin:0!important;
+}
+@media(max-width:720px) {
+  #mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) {
+    grid-template-columns:max-content minmax(65px,94px) max-content!important;
+  }
+  #mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) #mealCaloriesLabel {
+    grid-column:1/-1!important;
+    grid-row:1!important;
+  }
+  #mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) .meal-calorie-ai-action {
+    grid-column:1!important;
+    grid-row:2!important;
+  }
+  #mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) #mealCalories {
+    grid-column:2!important;
+    grid-row:2!important;
+  }
+  #mealForm .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) .meal-calorie-unit {
+    grid-column:3!important;
+    grid-row:2!important;
+  }
+}
