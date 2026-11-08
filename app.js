@@ -8775,9 +8775,16 @@ function formatSleepDuration(hours) {
     const shouldOffer = !!meal?.description?.trim() &&
       !favoriteForMeal(meal) && db.settings.hideFavoriteSuggestion !== true &&
       !professionalClientReadOnly();
-    if (!shouldOffer || !dialog.open) {
-      dialog.close();
+    if (!shouldOffer) {
+      if (dialog.open) dialog.close();
       render();
+      return;
+    }
+    if (!dialog.open) {
+      // Certains parcours ferment déjà la modale avant cette étape.
+      // Dans ce cas, ne pas perdre la suggestion.
+      render();
+      offerMealFavoriteSuggestion(meal);
       return;
     }
     // La suggestion reste dans le dialogue déjà ouvert : aucun second modal ni
