@@ -423,3 +423,28 @@ html[data-theme="dark"] .meal-entry-stage-card {
     max-width:76px!important;
   }
 }
+
+/* Résultat calorique compact : une proposition, sources et explications sur demande. */
+#mealForm .meal-ai-calories-pilot[hidden],
+#mealForm #mealAiCaloriesProposal[hidden],
+#mealForm #mealAiGroundedResult[hidden] { display:none!important; }
+#mealForm .meal-calorie-proposal-compact {
+  display:grid; gap:7px; padding:10px 12px; margin:4px 0 0;
+  border:1px solid var(--border); border-radius:13px;
+  background:var(--surface2); max-width:100%; box-sizing:border-box;
+}
+#mealForm .meal-calorie-proposal-top {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:8px; flex-wrap:wrap;
+}
+#mealForm .meal-calorie-proposal-label { font-weight:700; font-size:.79rem; }
+#mealForm #mealAiCaloriesResult { font-size:.9rem; line-height:1.2; }
+#mealForm .meal-calorie-proposal-warning {
+  font-size:.69rem; color:var(--muted); margin:0; line-height:1.35;
+}
+#mealForm .meal-calorie-proposal-actions { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+#mealForm .meal-calorie-proposal-actions button { min-height:32px; padding:6px 12px; font-size:.73rem; }
+#mealForm #mealAiGroundedResult { font-size:.72rem; border-top:1px solid var(--border); padding-top:7px; }
+#mealForm #mealAiGroundedResult > summary { color:var(--accent); cursor:pointer; font-weight:650; }
+#mealForm #mealAiGroundedResult p { margin:7px 0; }
+#mealForm #mealAiGroundedReport { font-size:.7rem; }
