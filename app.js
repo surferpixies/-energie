@@ -17194,12 +17194,17 @@ function formatSleepDuration(hours) {
     result.hidden = false;
     name.value = product.name || "";
     brand.textContent = product.brand || "";
-    badge.textContent = !found ? "Produit inconnu" : product.nutrition?.calories != null ? "Produit reconnu" : "Calories à vérifier";
+    const showCalorieAdvice = caloriesVisible();
+    badge.textContent = !found ? "Produit inconnu"
+      : !showCalorieAdvice || product.nutrition?.calories != null ? "Produit reconnu"
+      : "Calories à vérifier";
     help.textContent = !found
       ? "Écris simplement le nom que tu veux ajouter au repas."
-      : product.nutrition?.calories != null
-        ? "Calories issues d'une portion renseignée et cohérente dans Open Food Facts. Compare-les quand même à l'emballage."
-        : "Calories non fiables ou portion absente dans Open Food Facts. Vérifie l'emballage et entre les calories manuellement après l'ajout.";
+      : !showCalorieAdvice
+        ? "Tu peux simplifier ou modifier le nom avant de l'ajouter."
+        : product.nutrition?.calories != null
+          ? "Calories issues d'une portion renseignée et cohérente dans Open Food Facts. Compare-les quand même à l'emballage."
+          : "Calories non fiables ou portion absente dans Open Food Facts. Vérifie l'emballage et entre les calories manuellement après l'ajout.";
     if (product.image) {
       image.src = product.image;
       image.hidden = false;
