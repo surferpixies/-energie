@@ -8769,6 +8769,21 @@ function formatSleepDuration(hours) {
       })
       .slice(0, limit);
   }
+  function closeSnackManagerWithFavoriteSuggestion(meal) {
+    const dialog = $("#snackManagerDialog");
+    const shouldOffer = !!meal?.description?.trim() &&
+      !favoriteForMeal(meal) && db.settings.hideFavoriteSuggestion !== true &&
+      !professionalClientReadOnly();
+    if (dialog?.open && shouldOffer) {
+      // iOS WebKit: attendre le vrai événement close avant un autre showModal().
+      dialog.addEventListener("close", () => {
+        if (!favoriteForMeal(meal) && db.settings.hideFavoriteSuggestion !== true)
+          offerMealFavoriteSuggestion(meal);
+      }, { once: true });
+    }
+    dialog?.close();
+    render();
+  }
   function addRecentSnack(source) {
     if (professionalClientReadOnly()) return preventProfessionalClientEdit();
     if (!source) return;
@@ -8804,10 +8819,7 @@ function formatSleepDuration(hours) {
     } catch (memoryError) {
       console.warn("Mémoire alimentaire", memoryError);
     }
-    $("#snackManagerDialog").close();
-    render();
-    if (!favoriteForMeal(meal) && db.settings.hideFavoriteSuggestion !== true)
-      setTimeout(() => offerMealFavoriteSuggestion(meal), 320);
+    closeSnackManagerWithFavoriteSuggestion(meal);
   }
   function setQuickSnackAiStatus(message, state = "") {
     const el = $("#quickSnackAiStatus");
@@ -8931,10 +8943,7 @@ function formatSleepDuration(hours) {
     } catch (error) {
       console.warn("Mémoire alimentaire", error);
     }
-    $("#snackManagerDialog").close();
-    render();
-    if (!favoriteForMeal(meal) && db.settings.hideFavoriteSuggestion !== true)
-      setTimeout(() => offerMealFavoriteSuggestion(meal), 320);
+    closeSnackManagerWithFavoriteSuggestion(meal);
   }
   function openSnackManager() {
     if (professionalClientReadOnly()) return preventProfessionalClientEdit();
