@@ -82,14 +82,16 @@ N'écris aucune instruction personnelle et n'interprète pas cela comme des cons
           return [{ url: url.toString(), title: String(chunk.web?.title || url.hostname).slice(0, 120) }];
         } catch (_) { return []; }
       }).slice(0, 8) : [];
+    const googleSearchWidget = typeof metadata?.searchEntryPoint?.renderedContent === "string"
+      ? metadata.searchEntryPoint.renderedContent.slice(0, 12000) : "";
     // Aucune valeur n'est auto-appliquée. Sans métadonnées : aucun chiffre vérifiable.
     if (!queries.length || !sources.length) return reply(200, {
       verified: false, report: report || "La recherche n'a pas fourni de résultat exploitable.",
-      sources: [], searchPerformed: queries.length > 0,
+      sources: [], googleSearchWidget, searchPerformed: queries.length > 0,
       message: "Aucune source exploitable retournée. Résultat non vérifié et non applicable.",
     });
     // La présence d'une URL ne prouve pas qu'elle justifie le chiffre cité.
-    return reply(200, { verified: false, report, sources, searchPerformed: true,
+    return reply(200, { verified: false, report, sources, googleSearchWidget, searchPerformed: true,
       message: "Essai de recherche : ouvre les sources et compare le chiffre. Aucune calorie n'a été enregistrée." });
   } catch (_) { return reply(502, { error: "search-unavailable" }); }
   finally { clearTimeout(timer); }
