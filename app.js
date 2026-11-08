@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.418";
+  const APP_RELEASE = "3.56.420";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -4995,7 +4995,7 @@ function formatSleepDuration(hours) {
       const report = String(data?.report || "");
       // Un total "publié" n'est proposé que si Google confirme une recherche
       // et retourne au moins une référence cliquable. Le lien reste à vérifier.
-      const reportedTotal = report.match(/^TOTAL:\s*([\d\s.,]+)\s*kcal\s*$/im);
+      const reportedTotal = report.match(/\bTOTAL\s*:\s*(\d[\d\s.,]*?)\s*kcal\b/i);
       const webKcal = reportedTotal
         ? Number(reportedTotal[1].replace(/\s/g, "").replace(",", "."))
         : NaN;
