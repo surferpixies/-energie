@@ -148,13 +148,13 @@
         <label class="muted small" style="display:block;margin-bottom:8px"><input type="checkbox" id="mealAiCaloriesConsent"> J’accepte l’envoi de cette description de repas à Google Gemini pour l’estimation. La recherche et l’estimation peuvent entraîner des frais de traitement Gemini. Ne partage pas de renseignements médicaux personnels.</label>
         <p id="mealAiCaloriesStatus" class="muted small" role="status" aria-live="polite">Recherche Web d’abord; si aucune valeur vérifiable n’est trouvée, estimation IA facultative. Aucun appel sans ton accord.</p>
         <button type="button" id="searchMealCaloriesAi" class="secondary small">✨ Estimer les calories avec l’IA</button>
-        <div id="mealAiGroundedResult" hidden>
-          <strong>Résultat de la recherche · sources à vérifier</strong>
+        <details id="mealAiGroundedResult" hidden>
+          <summary>Voir la recherche Google et les sources</summary>
           <pre id="mealAiGroundedReport" style="white-space:pre-wrap;font:inherit;max-width:100%;overflow-wrap:anywhere"></pre>
           <div id="mealAiGroundedSources"></div>
           <iframe id="mealAiGoogleSearchWidget" title="Suggestions Google Search" sandbox="allow-popups allow-popups-to-escape-sandbox" style="width:100%;height:80px;border:0" hidden></iframe>
-          <p class="muted small">Ce résultat n'est pas enregistré automatiquement. Vérifie que les sources correspondent bien au produit canadien.</p>
-        </div>
+          <p class="muted small">Aucune donnée enregistrée automatiquement. Vérifie que les sources correspondent au produit et à la portion.</p>
+        </details>
         <div id="mealAiCaloriesProposal" hidden>
           <strong id="mealAiCaloriesResult"></strong>
           <p id="mealAiCaloriesAssumptions" class="muted small"></p>
@@ -793,7 +793,7 @@
   <script src="journal-consultation.js?v=3.56.199"></script>
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
-  <script src="app.js?v=3.56.417-ai-fallback"></script>
+  <script src="app.js?v=3.56.418-calorie-flow"></script>
   <script>
     // iPhone: hide the native gray keyboard accessory toolbar (arrows / Done).
     // The Capacitor Keyboard plugin is synced into iOS by npm run ios:sync.
