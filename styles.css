@@ -3269,3 +3269,12 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
 .energy-purpose-profile-card h3{margin:0;font-size:1.12rem;letter-spacing:-.02em;}
 .energy-purpose-profile-card p{margin:0;line-height:1.55;}
 .energy-purpose-profile-card .muted{color:var(--muted);}
+
+/* Compact AI calorie action, alongside the editable value. */
+.meal-calorie-inline{grid-template-columns:auto minmax(68px,100px) auto auto auto;column-gap:6px;row-gap:3px;align-items:center}
+.meal-calorie-inline #searchMealCaloriesAi{grid-column:auto;white-space:nowrap;padding:5px 9px;font-size:.72rem;min-height:30px}
+.meal-calorie-inline #mealCalorieStatus{grid-column:1/-1}
+.meal-ai-calories-pilot{padding:0!important;margin:0!important;border:0!important;background:transparent!important}
+.meal-ai-calories-pilot #mealAiCaloriesStatus:empty{display:none}
+.meal-ai-calories-pilot #mealAiCaloriesStatus:not(:empty){font-size:.7rem;margin:2px 0 4px}
+@media(max-width:440px){.meal-calorie-inline{grid-template-columns:auto minmax(50px,76px) auto auto auto}.meal-calorie-inline #searchMealCaloriesAi{padding:4px 7px;font-size:.68rem}}
