@@ -8770,69 +8770,46 @@ function formatSleepDuration(hours) {
       .slice(0, limit);
   }
   function closeSnackManagerWithFavoriteSuggestion(meal) {
-    const dialog = $("#snackManagerDialog");
-    if (!dialog) return;
+    // La saisie rapide n'utilise pas le formulaire de repas. Afficher la suggestion
+    // dans la page, APRÈS sauvegarde, sans dépendre du cycle de vie des <dialog>.
     const shouldOffer = !!meal?.description?.trim() &&
-      !favoriteForMeal(meal) && db.settings.hideFavoriteSuggestion !== true &&
-      !professionalClientReadOnly();
-    if (!shouldOffer) {
-      if (dialog.open) dialog.close();
-      render();
-      return;
-    }
-    if (!dialog.open) {
-      // Certains parcours ferment déjà la modale avant cette étape.
-      // Dans ce cas, ne pas perdre la suggestion.
-      render();
-      offerMealFavoriteSuggestion(meal);
-      return;
-    }
-    // La suggestion reste dans le dialogue déjà ouvert : aucun second modal ni
-    // délai asynchrone. Compatible Web, iOS WebKit et Android.
-    dialog.querySelector("#snackFavoriteSuggestionPanel")?.remove();
-    const original = dialog.querySelector(".snack-manager-card");
-    if (!original) {
-      dialog.close();
-      render();
-      offerMealFavoriteSuggestion(meal);
-      return;
-    }
-    original.hidden = true;
-    original.style.display = "none";
-    const panel = document.createElement("section");
-    panel.id = "snackFavoriteSuggestionPanel";
-    panel.className = "dialog-card snack-manager-card";
-    panel.innerHTML = `<div class="dialog-header"><div><p class="eyebrow">⭐ Favoris</p><h2>Garder cette collation ?</h2></div></div>
-      <p>Enregistre cette collation dans tes favoris pour la retrouver plus rapidement la prochaine fois.</p>
-      <label for="snackSuggestedFavoriteName"><strong>Nom du favori</strong></label>
-      <input id="snackSuggestedFavoriteName" type="text" maxlength="80" required>
-      <label class="meal-favorite-suggestion-optout"><input id="hideSnackFavoriteSuggestion" type="checkbox"> Ne plus afficher cette suggestion</label>
+      db.settings.hideFavoriteSuggestion !== true &&
+      !favoriteForMeal(meal) && !professionalClientReadOnly();
+    const snackDialog = $("#snackManagerDialog");
+    if (snackDialog?.open) snackDialog.close();
+    render();
+    document.getElementById("snackFavoriteSavedOffer")?.remove();
+    if (!shouldOffer) return;
+
+    const offer = document.createElement("aside");
+    offer.id = "snackFavoriteSavedOffer";
+    offer.className = "snack-favorite-saved-offer";
+    offer.setAttribute("role", "region");
+    offer.setAttribute("aria-label", "Suggestion de favori pour la collation");
+    offer.innerHTML = `<div class="snack-favorite-saved-offer-head">
+        <strong>⭐ Enregistrer cette collation dans tes favoris ?</strong>
+        <button type="button" class="icon-button" id="closeSnackSavedOffer" aria-label="Fermer">✕</button>
+      </div>
+      <label for="snackSavedFavoriteName">Nom du favori</label>
+      <input id="snackSavedFavoriteName" type="text" maxlength="80" required>
+      <label class="meal-favorite-suggestion-optout"><input id="hideSnackSavedOffer" type="checkbox"> Ne plus afficher cette suggestion</label>
       <div class="meal-favorite-suggestion-actions">
-        <button type="button" class="secondary" id="skipSnackFavoriteSuggestion">Non merci</button>
-        <button type="button" class="primary" id="acceptSnackFavoriteSuggestion">⭐ Oui, ajouter</button>
+        <button type="button" class="secondary" id="skipSnackSavedOffer">Non merci</button>
+        <button type="button" class="primary" id="acceptSnackSavedOffer">⭐ Oui, ajouter</button>
       </div>`;
-    dialog.appendChild(panel);
-    const nameInput = panel.querySelector("#snackSuggestedFavoriteName");
+    document.body.appendChild(offer);
+    const nameInput = offer.querySelector("#snackSavedFavoriteName");
     nameInput.value = meal.description.trim().slice(0, 45);
-    const finish = () => {
-      if (panel.querySelector("#hideSnackFavoriteSuggestion")?.checked) {
+    const dismiss = () => {
+      if (offer.querySelector("#hideSnackSavedOffer")?.checked) {
         db.settings.hideFavoriteSuggestion = true;
-        saveLocal("preference-favoris");
-        setDayChanged(todayKey());
+        persistProfilePreference("parametre-suggestions-favoris");
       }
-      panel.remove();
-      original.hidden = false;
-      original.style.display = "";
-      dialog.close();
-      render();
+      offer.remove();
     };
-    dialog.addEventListener("close", () => {
-      if (panel.isConnected) panel.remove();
-      original.hidden = false;
-      original.style.display = "";
-    }, { once: true });
-    panel.querySelector("#skipSnackFavoriteSuggestion").onclick = finish;
-    panel.querySelector("#acceptSnackFavoriteSuggestion").onclick = () => {
+    offer.querySelector("#skipSnackSavedOffer").onclick = dismiss;
+    offer.querySelector("#closeSnackSavedOffer").onclick = dismiss;
+    offer.querySelector("#acceptSnackSavedOffer").onclick = () => {
       const name = nameInput.value.trim();
       if (!name) { nameInput.focus(); return; }
       if (!favoriteForMeal(meal)) {
@@ -8844,9 +8821,9 @@ function formatSleepDuration(hours) {
         db.favorites.push(favorite);
         setFavoriteChanged(favorite);
       }
-      finish();
+      dismiss();
+      render();
     };
-    nameInput.focus();
   }
   function addRecentSnack(source) {
     if (professionalClientReadOnly()) return preventProfessionalClientEdit();
