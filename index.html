@@ -145,10 +145,10 @@
         <button type="button" id="mealCalorieRecognitionNotice" class="meal-calorie-recognition-notice" hidden>ⓘ Estimation partielle · éléments à vérifier</button>
       </section>
       <div id="mealAiCaloriesPilot" class="meal-ai-calories-pilot" hidden>
-        <label class="muted small" style="display:block;margin-bottom:8px"><input type="checkbox" id="mealAiCaloriesConsent"> J’accepte l’envoi de cette description de repas à Google Gemini pour l’estimation. La recherche et l’estimation peuvent entraîner des frais de traitement Gemini. Ne partage pas de renseignements médicaux personnels.</label>
-        <p id="mealAiCaloriesStatus" class="muted small" role="status" aria-live="polite">Recherche Web d’abord; si aucune valeur vérifiable n’est trouvée, estimation IA facultative. Aucun appel sans ton accord.</p>
+        <label class="muted small" style="display:block;margin-bottom:8px"><input type="checkbox" id="mealAiCaloriesConsent"> J’accepte que la description de mon repas soit transmise à Google Gemini pour rechercher ou estimer ses calories. N’y inscris pas de renseignements médicaux personnels.</label>
+        <p id="mealAiCaloriesStatus" class="muted small" role="status" aria-live="polite">Google d’abord, estimation IA au besoin. Aucun envoi sans ton accord.</p>
         <button type="button" id="searchMealCaloriesAi" class="secondary small">✨ Estimer les calories avec l’IA</button>
-        <details id="mealAiGroundedResult" hidden>
+        <details id="mealAiGroundedResult" hidden style="display:none !important">
           <summary>Voir la recherche Google et les sources</summary>
           <pre id="mealAiGroundedReport" style="white-space:pre-wrap;font:inherit;max-width:100%;overflow-wrap:anywhere"></pre>
           <div id="mealAiGroundedSources"></div>
