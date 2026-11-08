@@ -8771,18 +8771,68 @@ function formatSleepDuration(hours) {
   }
   function closeSnackManagerWithFavoriteSuggestion(meal) {
     const dialog = $("#snackManagerDialog");
+    if (!dialog) return;
     const shouldOffer = !!meal?.description?.trim() &&
       !favoriteForMeal(meal) && db.settings.hideFavoriteSuggestion !== true &&
       !professionalClientReadOnly();
-    if (dialog?.open && shouldOffer) {
-      // iOS WebKit: attendre le vrai événement close avant un autre showModal().
-      dialog.addEventListener("close", () => {
-        if (!favoriteForMeal(meal) && db.settings.hideFavoriteSuggestion !== true)
-          offerMealFavoriteSuggestion(meal);
-      }, { once: true });
+    if (!shouldOffer || !dialog.open) {
+      dialog.close();
+      render();
+      return;
     }
-    dialog?.close();
-    render();
+    // La suggestion reste dans le dialogue déjà ouvert : aucun second modal ni
+    // délai asynchrone. Compatible Web, iOS WebKit et Android.
+    dialog.querySelector("#snackFavoriteSuggestionPanel")?.remove();
+    const original = dialog.querySelector(".snack-manager-card");
+    if (!original) {
+      dialog.close();
+      render();
+      offerMealFavoriteSuggestion(meal);
+      return;
+    }
+    original.hidden = true;
+    const panel = document.createElement("section");
+    panel.id = "snackFavoriteSuggestionPanel";
+    panel.className = "dialog-card snack-manager-card";
+    panel.innerHTML = `<div class="dialog-header"><div><p class="eyebrow">⭐ Favoris</p><h2>Garder cette collation ?</h2></div></div>
+      <p>Enregistre cette collation dans tes favoris pour la retrouver plus rapidement la prochaine fois.</p>
+      <label for="snackSuggestedFavoriteName"><strong>Nom du favori</strong></label>
+      <input id="snackSuggestedFavoriteName" type="text" maxlength="80" required>
+      <label class="meal-favorite-suggestion-optout"><input id="hideSnackFavoriteSuggestion" type="checkbox"> Ne plus afficher cette suggestion</label>
+      <div class="meal-favorite-suggestion-actions">
+        <button type="button" class="secondary" id="skipSnackFavoriteSuggestion">Non merci</button>
+        <button type="button" class="primary" id="acceptSnackFavoriteSuggestion">⭐ Oui, ajouter</button>
+      </div>`;
+    dialog.appendChild(panel);
+    const nameInput = panel.querySelector("#snackSuggestedFavoriteName");
+    nameInput.value = meal.description.trim().slice(0, 45);
+    const finish = () => {
+      if (panel.querySelector("#hideSnackFavoriteSuggestion")?.checked) {
+        db.settings.hideFavoriteSuggestion = true;
+        saveLocal("preference-favoris");
+        setDayChanged(todayKey());
+      }
+      panel.remove();
+      original.hidden = false;
+      dialog.close();
+      render();
+    };
+    panel.querySelector("#skipSnackFavoriteSuggestion").onclick = finish;
+    panel.querySelector("#acceptSnackFavoriteSuggestion").onclick = () => {
+      const name = nameInput.value.trim();
+      if (!name) { nameInput.focus(); return; }
+      if (!favoriteForMeal(meal)) {
+        const favorite = normalFavorite({
+          name, type: "Collation", description: meal.description,
+          notes: meal.notes, cnfItems: meal.cnfItems,
+          manualCalories: meal.nutrition?.caloriesManual === true ? meal.nutrition.calories : null,
+        });
+        db.favorites.push(favorite);
+        setFavoriteChanged(favorite);
+      }
+      finish();
+    };
+    nameInput.focus();
   }
   function addRecentSnack(source) {
     if (professionalClientReadOnly()) return preventProfessionalClientEdit();
