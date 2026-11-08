@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="steps-tracking.css?v=3.56.39">
   <link rel="stylesheet" href="journal-summary.css?v=3.56.288">
   <link rel="stylesheet" href="onboarding.css?v=3.56.52">
-  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.435-calorie-bar">
+  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.436-meal-first">
 </head>
 <body>
   <div id="splashScreen" class="splash-screen" aria-hidden="true">
@@ -135,6 +135,42 @@
           <p id="mealQuickFillEmpty" class="muted small" hidden>Aucun choix disponible pour ce type de repas.</p>
         </section>
       </dialog>
+      <div class="meal-description-field">
+        <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><div class="meal-description-help-actions"><button type="button" id="openMealEntryGuide" class="text-button meal-entry-guide-link" aria-haspopup="dialog" aria-controls="mealEntryGuideDialog" data-i18n-skip>Guide pour entrer mon repas</button><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div></div>
+        <label id="mealFavoriteNameWrap" class="meal-favorite-name-wrap" for="mealFavoriteName" hidden>
+          <span><strong>Nom du favori</strong><small>Facultatif · affiché dans les favoris</small></span>
+          <input id="mealFavoriteName" name="energie_meal_favorite_name" type="text" maxlength="60" autocomplete="off" autocapitalize="sentences" placeholder="Ex. Déjeuner rapide">
+        </label>
+        <div class="meal-description-composer">
+          <textarea id="mealDescription" maxlength="1000" aria-describedby="mealDescriptionLimit" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli" required></textarea>
+          <small id="mealDescriptionLimit" class="muted tiny">Description du repas · 1 000 caractères maximum</small>
+          <div id="mealRecipeSourceLink" hidden></div>
+          <p id="mealGuidedEntryRequirement" class="meal-guided-entry-requirement" hidden>La saisie guidée FCÉN est obligatoire dans tes préférences.</p>
+          <button type="button" id="openRecipeImport" class="meal-cnf-guided-entry meal-recipe-import-entry" hidden><span class="meal-cnf-guided-icon" aria-hidden="true">🔗</span><span><strong>Importer une recette</strong><small>À partir d’un site Web</small></span><b aria-hidden="true">›</b></button>
+          <button type="button" id="openCnfGuidedEntry" class="meal-cnf-guided-entry"><span class="meal-cnf-guided-icon" aria-hidden="true">🇨🇦</span><span><strong>Saisie guidée FCÉN</strong><small>Santé Canada</small></span><b aria-hidden="true">›</b></button>
+          <div class="meal-description-toolbar">
+            <div class="meal-composer-actions">
+              <label class="meal-composer-action meal-photo-action"><input id="mealPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><strong>Photo <small id="mealPhotoCount">0/3</small></strong></label>
+              <button type="button" class="meal-composer-action meal-barcode-action" id="openBarcodeScanner"><span aria-hidden="true">▥</span><strong>Scanner</strong></button>
+            </div>
+            <small id="mealAiPhotoStatus" class="meal-ai-photo-status" role="status" aria-live="polite">La photo est ajoutée sans analyse. Utilise ✨ Analyser avec l’IA seulement si tu le souhaites.</small>
+          </div>
+        </div>
+        <div id="mealCnfLinkedStatus" class="meal-cnf-linked-status" hidden><span aria-hidden="true">✓</span><strong></strong><small>Quantités reliées directement aux fiches FCÉN</small></div>
+        <p class="meal-precision-hint"><span aria-hidden="true">💡</span><span id="mealPrecisionHintText">Décris ton repas naturellement. Précise les portions quand tu les connais et, au restaurant, le nom du resto et du plat. Le suivi des calories reste facultatif.</span></p>
+        <small id="mealFavoriteFeedback" class="meal-favorite-feedback" role="status" aria-live="polite" hidden></small>
+        <div id="mealAiSuggestion" class="meal-ai-suggestion" hidden>
+          <div><span aria-hidden="true">✨</span><span><strong>Suggestion de l’IA</strong><small id="mealAiSuggestionText"></small></span></div>
+          <div><button type="button" id="useMealAiSuggestion" class="secondary small">Utiliser</button><button type="button" id="dismissMealAiSuggestion" class="text-button small">Ignorer</button></div>
+        </div>
+        <div id="photoPreviewWrap" class="photo-preview-wrap meal-photo-preview" hidden><div id="photoPreviewList" class="meal-photo-preview-list"></div></div>
+      </div>
+      <div id="mealQuickFillBar" class="meal-quick-fill-bar">
+        <button type="button" id="copyPreviousMealQuick"><span id="copyPreviousMealIcon" aria-hidden="true">🍱</span><span id="copyPreviousMealLabel">Repas d’hier</span></button>
+        <button type="button" id="openFavoriteQuickFill"><span aria-hidden="true">⭐</span><span>Favoris</span></button>
+        <button type="button" id="openRecentQuickFill"><span aria-hidden="true">🕒</span><span>Récents</span></button>
+      <button type="button" id="openMealBeverage" class="meal-inline-beverage-button"><span aria-hidden="true">☕</span><strong>+ boisson</strong></button>
+      </div>
       <section class="meal-calorie-editor meal-calorie-inline" aria-labelledby="mealCaloriesLabel">
         <label id="mealCaloriesLabel" for="mealCalories">Calories estimées</label>
         <input id="mealCalorieMode" type="hidden" value="auto">
@@ -171,42 +207,6 @@
         </section>
       </dialog>
       <section id="mealCalorieTargetGauge" class="meal-calorie-target-gauge" hidden aria-live="polite"></section>
-      <div id="mealQuickFillBar" class="meal-quick-fill-bar">
-        <button type="button" id="copyPreviousMealQuick"><span id="copyPreviousMealIcon" aria-hidden="true">🍱</span><span id="copyPreviousMealLabel">Repas d’hier</span></button>
-        <button type="button" id="openFavoriteQuickFill"><span aria-hidden="true">⭐</span><span>Favoris</span></button>
-        <button type="button" id="openRecentQuickFill"><span aria-hidden="true">🕒</span><span>Récents</span></button>
-      <button type="button" id="openMealBeverage" class="meal-inline-beverage-button"><span aria-hidden="true">☕</span><strong>+ boisson</strong></button>
-      </div>
-      <div class="meal-description-field">
-        <div class="meal-description-label-row"><label for="mealDescription">Ce que tu as mangé ou bu</label><div class="meal-description-help-actions"><button type="button" id="openMealEntryGuide" class="text-button meal-entry-guide-link" aria-haspopup="dialog" aria-controls="mealEntryGuideDialog" data-i18n-skip>Guide pour entrer mon repas</button><button type="button" id="mealFavoriteToggle" class="meal-favorite-star" aria-pressed="false" aria-label="Ajouter ce repas aux favoris" title="Ajouter ce repas aux favoris"><span class="meal-favorite-toggle-icon" aria-hidden="true">☆</span></button></div></div>
-        <label id="mealFavoriteNameWrap" class="meal-favorite-name-wrap" for="mealFavoriteName" hidden>
-          <span><strong>Nom du favori</strong><small>Facultatif · affiché dans les favoris</small></span>
-          <input id="mealFavoriteName" name="energie_meal_favorite_name" type="text" maxlength="60" autocomplete="off" autocapitalize="sentences" placeholder="Ex. Déjeuner rapide">
-        </label>
-        <div class="meal-description-composer">
-          <textarea id="mealDescription" maxlength="1000" aria-describedby="mealDescriptionLimit" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli" required></textarea>
-          <small id="mealDescriptionLimit" class="muted tiny">Description du repas · 1 000 caractères maximum</small>
-          <div id="mealRecipeSourceLink" hidden></div>
-          <p id="mealGuidedEntryRequirement" class="meal-guided-entry-requirement" hidden>La saisie guidée FCÉN est obligatoire dans tes préférences.</p>
-          <button type="button" id="openRecipeImport" class="meal-cnf-guided-entry meal-recipe-import-entry" hidden><span class="meal-cnf-guided-icon" aria-hidden="true">🔗</span><span><strong>Importer une recette</strong><small>À partir d’un site Web</small></span><b aria-hidden="true">›</b></button>
-          <button type="button" id="openCnfGuidedEntry" class="meal-cnf-guided-entry"><span class="meal-cnf-guided-icon" aria-hidden="true">🇨🇦</span><span><strong>Saisie guidée FCÉN</strong><small>Santé Canada</small></span><b aria-hidden="true">›</b></button>
-          <div class="meal-description-toolbar">
-            <div class="meal-composer-actions">
-              <label class="meal-composer-action meal-photo-action"><input id="mealPhoto" type="file" accept="image/*" capture="environment"><span aria-hidden="true">📷</span><strong>Photo <small id="mealPhotoCount">0/3</small></strong></label>
-              <button type="button" class="meal-composer-action meal-barcode-action" id="openBarcodeScanner"><span aria-hidden="true">▥</span><strong>Scanner</strong></button>
-            </div>
-            <small id="mealAiPhotoStatus" class="meal-ai-photo-status" role="status" aria-live="polite">La photo est ajoutée sans analyse. Utilise ✨ Analyser avec l’IA seulement si tu le souhaites.</small>
-          </div>
-        </div>
-        <div id="mealCnfLinkedStatus" class="meal-cnf-linked-status" hidden><span aria-hidden="true">✓</span><strong></strong><small>Quantités reliées directement aux fiches FCÉN</small></div>
-        <p class="meal-precision-hint"><span aria-hidden="true">💡</span><span id="mealPrecisionHintText">Décris ton repas naturellement. Précise les portions quand tu les connais et, au restaurant, le nom du resto et du plat. Le suivi des calories reste facultatif.</span></p>
-        <small id="mealFavoriteFeedback" class="meal-favorite-feedback" role="status" aria-live="polite" hidden></small>
-        <div id="mealAiSuggestion" class="meal-ai-suggestion" hidden>
-          <div><span aria-hidden="true">✨</span><span><strong>Suggestion de l’IA</strong><small id="mealAiSuggestionText"></small></span></div>
-          <div><button type="button" id="useMealAiSuggestion" class="secondary small">Utiliser</button><button type="button" id="dismissMealAiSuggestion" class="text-button small">Ignorer</button></div>
-        </div>
-        <div id="photoPreviewWrap" class="photo-preview-wrap meal-photo-preview" hidden><div id="photoPreviewList" class="meal-photo-preview-list"></div></div>
-      </div>
       </section>
       <dialog id="cnfGuidedMealDialog" class="cnf-guided-dialog">
         <section class="dialog-card cnf-guided-card">
