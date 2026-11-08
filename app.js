@@ -6,7 +6,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV2";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.416";
+  const APP_RELEASE = "3.56.417";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -4883,7 +4883,7 @@ function formatSleepDuration(hours) {
   // Pilote calories IA : aucun appel automatique et désactivé jusqu'au déploiement Supabase.
   let pendingAiCalorieSuggestion = null;
   function refreshMealAiCaloriesPilot() {
-    const panel = $("#mealAiCaloriesPilot"), button = $("#estimateMealCaloriesAi");
+    const panel = $("#mealAiCaloriesPilot"), button = $("#searchMealCaloriesAi");
     if (!panel || !button) return;
     const enabled = window.ENERGIE_CONFIG?.calorieAiPilotEnabled === true &&
       new URLSearchParams(window.location.search).get("calorie-ai-pilot") === "1" &&
@@ -4959,7 +4959,9 @@ function formatSleepDuration(hours) {
     }
     btn.disabled = true;
     $("#mealAiGroundedResult").hidden = true;
-    status.textContent = "Recherche Google en cours avec Gemini 2.5 Flash-Lite…";
+    pendingAiCalorieSuggestion = null;
+    $("#mealAiCaloriesProposal").hidden = true;
+    status.textContent = "Recherche de valeurs nutritionnelles sur Google…";
     try {
       const { data, error } = await client.functions.invoke("grounded-calorie-pilot", {
         body: { description },
@@ -4992,9 +4994,38 @@ function formatSleepDuration(hours) {
       widget.hidden = !html;
       widget.srcdoc = html || "";
       $("#mealAiGroundedResult").hidden = false;
-      status.textContent = data?.searchPerformed
-        ? "Recherche effectuée. Vérifie les sources : aucun chiffre n'a été enregistré."
-        : "Aucune recherche Google confirmée par l'API. Réponse non vérifiée.";
+      const report = String(data?.report || "");
+      // Si une source officielle ne fournit pas les calories, ne pas s'arrêter à NON VERIFIE.
+      // La seconde requête est une estimation IA séparée et son coût/quota est distinct.
+      const needsEstimate = /TOTAL\\s*:\\s*NON[\\s-]?VERIFI[ÉE]/i.test(report) ||
+        !/TOTAL\\s*:\\s*[\\d\\s,.]+\\s*kcal/i.test(report) ||
+        data?.searchPerformed !== true || !(Array.isArray(data?.sources) && data.sources.length);
+      if (!needsEstimate) {
+        status.textContent = "Valeur trouvée sur le Web. Vérifie la source avant de la saisir; aucun chiffre n'a été enregistré.";
+        return;
+      }
+      status.textContent = "Aucune valeur publiée suffisamment vérifiable. Estimation IA en cours…";
+      const { data: estimate, error: estimateError } = await client.functions.invoke("estimate-meal-calories", {
+        body: { description, locale: "fr-CA" },
+      });
+      if (estimateError) throw estimateError;
+      if (!$("#mealDialog")?.open || $("#mealDescription")?.value.trim() !== description) {
+        status.textContent = "Le repas a changé; estimation ignorée.";
+        return;
+      }
+      const kcal = estimate?.kcal;
+      if (!Number.isInteger(kcal) || kcal < 20 || kcal > 3500) {
+        status.textContent = "Ni valeur publiée vérifiable ni estimation suffisamment plausible. Précise les ingrédients ou saisis les calories manuellement.";
+        return;
+      }
+      pendingAiCalorieSuggestion = { kcal, description };
+      $("#mealAiCaloriesResult").textContent = `≈ ${kcal} kcal · estimation IA non vérifiée`;
+      const assumptions = Array.isArray(estimate?.assumptions) ? estimate.assumptions.slice(0, 3) : [];
+      $("#mealAiCaloriesAssumptions").textContent =
+        [String(estimate?.explanation || ""), ...assumptions].filter(Boolean).join(" · ").slice(0, 500) +
+        " · La recette et ses portions peuvent différer. Ce n'est pas une valeur officielle Ricardo.";
+      $("#mealAiCaloriesProposal").hidden = false;
+      status.textContent = "Aucune calorie publiée retrouvée : estimation IA proposée, à confirmer. Deux appels Gemini ont été utilisés.";
     } catch (error) {
       console.warn("Recherche Gemini avec Google indisponible", error);
       let diagnostic = "";
@@ -5009,7 +5040,7 @@ function formatSleepDuration(hours) {
       } catch (_) { /* The function may not be deployed or returned no JSON. */ }
       status.textContent =
         diagnostic === "model-unavailable"
-          ? "Gemini 2.5 Flash-Lite n'est pas accessible avec ce projet Google (404). Aucun frais engagé."
+          ? "Le modèle Gemini de recherche est inaccessible avec ce projet Google (404)."
           : diagnostic === "quota-or-billing"
             ? "Google refuse la recherche Web : quota ou facturation requis (429). Aucun repas modifié."
             : diagnostic === "quota-unavailable"
