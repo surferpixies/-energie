@@ -4902,6 +4902,10 @@ function formatSleepDuration(hours) {
     const panel = $("#mealAiCaloriesPilot"), button = $("#estimateMealCaloriesAi"),
       status = $("#mealAiCaloriesStatus"), description = $("#mealDescription")?.value.trim() || "";
     if (!panel || panel.hidden || !button || !status || !session || !client) return;
+    if ($("#mealAiCaloriesConsent")?.checked !== true) {
+      status.textContent = "Coche d’abord ton accord pour transmettre cette description à Gemini.";
+      return;
+    }
     if (!description || description.length < 3 || description.length > 1000) {
       status.textContent = "Décris d'abord ton repas (3 à 1 000 caractères).";
       return;
@@ -17849,6 +17853,7 @@ function formatSleepDuration(hours) {
       $("#nutritionCalories").value = estimateNutritionFromText($("#mealDescription").value)?.calories ?? "";
     }
     pendingAiCalorieSuggestion = null;
+    if ($("#mealAiCaloriesConsent")) $("#mealAiCaloriesConsent").checked = false;
     if ($("#mealAiCaloriesProposal")) $("#mealAiCaloriesProposal").hidden = true;
     refreshMealAiCaloriesPilot();
     updateMealCalorieEditor();
