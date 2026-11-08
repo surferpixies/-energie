@@ -11191,6 +11191,26 @@ function formatSleepDuration(hours) {
     const water = Number(day.water) || 0;
     return `<section class="card consultation-hydration"><div class="row"><h3>💧 <small>(500 ml)</small> ${esc(t("Boissons et hydratation"))}</h3><strong>${water}/${goal}</strong></div><div class="water-row">${Array.from({length:goal}, (_, i) => `<button type="button" class="drop ${i < water ? "filled" : ""}" data-water="${i + 1}" aria-label="${(i + 1) * 500} ml">💧</button>`).join("")}</div></section>`;
   }
+  function consultationEventsWithCalorieProgressHtml(events) {
+    if (!events.length) return `<p class="muted small">${esc(t("Aucune entrée pour cette journée."))}</p>`;
+    if (!caloriesVisible()) return events.map(journalConsultationEventHtml).join("");
+    let cumulative = 0, missing = 0, counted = 0;
+    return events.map(event => {
+      const card = journalConsultationEventHtml(event);
+      if (event.kind !== "meal") return card;
+      const raw = event.meal?.nutrition?.calories;
+      const amount = raw == null || raw === "" ? NaN : Number(raw);
+      const available = Number.isFinite(amount) && amount >= 0;
+      if (available) { cumulative += amount; counted++; }
+      else missing++;
+      // Ne jamais présenter une journée partielle comme un total calorique complet.
+      const display = Math.round(cumulative).toLocaleString("fr-CA");
+      const value = available ? Math.round(amount).toLocaleString("fr-CA") + " kcal" : "Calories non renseignées";
+      const note = missing ? " · cumul partiel" : "";
+      const progress = `<div class="consultation-calorie-progress" role="status"><span>🔥 ${esc(value)}</span><strong>${counted ? esc(display) + " kcal" : "—"} <small>cumul${note}</small></strong></div>`;
+      return card + progress;
+    }).join("");
+  }
   function journalConsultationHtml(day) {
     const sleepTags = (day.sleepTags || []).map(sleepMarker).filter(Boolean).map(marker => `${marker.icon} ${esc(t(marker.label))}`).join(" · ");
     const events = window.ENERGIE_CONSULTATION.events(day, selectedDate, feelingScoresFor);
@@ -11198,7 +11218,7 @@ function formatSleepDuration(hours) {
       kind: "glucose", glucose: x, at: new Date(selectedDate + "T" + x.time + ":00").toISOString()
     }));
     const chronologicalEvents = [...events, ...glucoseEvents].sort((x,y) => new Date(x.at || 0) - new Date(y.at || 0));
-    return `<div class="journal-consultation"><article class="card consultation-event consultation-event--sleep"><div class="consultation-event-heading"><h3>🌙 ${esc(t("Sommeil de la nuit dernière"))}</h3><strong>${day.sleepHours != null ? esc(formatSleepDuration(day.sleepHours)) : esc(t("Non consigné"))}</strong></div><div class="consultation-sleep-times">${day.sleepStartTime ? `<span>${esc(t("Coucher"))} ${esc(day.sleepStartTime)}</span>` : ""}${day.sleepEndTime ? `<span>${esc(t("Réveil"))} ${esc(day.sleepEndTime)}</span>` : ""}</div>${sleepTags || day.sleepComment ? `<details class="consultation-sleep-details"><summary>${esc(t("Détails"))}</summary>${sleepTags ? `<p>${sleepTags}</p>` : ""}${day.sleepComment ? `<p translate="no">${esc(day.sleepComment)}</p>` : ""}</details>` : ""}<button type="button" class="consultation-entry-open edit-sleep">${esc(t(professionalClientReadOnly() ? "Voir les détails" : "Voir ou modifier"))}</button></article>${chronologicalEvents.map(journalConsultationEventHtml).join("") || `<p class="muted small">${esc(t("Aucune entrée pour cette journée."))}</p>`}${consultationHydrationHtml(day)}${stepsProgressHtml(day, false, true)}</div>`;
+    return `<div class="journal-consultation"><article class="card consultation-event consultation-event--sleep"><div class="consultation-event-heading"><h3>🌙 ${esc(t("Sommeil de la nuit dernière"))}</h3><strong>${day.sleepHours != null ? esc(formatSleepDuration(day.sleepHours)) : esc(t("Non consigné"))}</strong></div><div class="consultation-sleep-times">${day.sleepStartTime ? `<span>${esc(t("Coucher"))} ${esc(day.sleepStartTime)}</span>` : ""}${day.sleepEndTime ? `<span>${esc(t("Réveil"))} ${esc(day.sleepEndTime)}</span>` : ""}</div>${sleepTags || day.sleepComment ? `<details class="consultation-sleep-details"><summary>${esc(t("Détails"))}</summary>${sleepTags ? `<p>${sleepTags}</p>` : ""}${day.sleepComment ? `<p translate="no">${esc(day.sleepComment)}</p>` : ""}</details>` : ""}<button type="button" class="consultation-entry-open edit-sleep">${esc(t(professionalClientReadOnly() ? "Voir les détails" : "Voir ou modifier"))}</button></article>${consultationEventsWithCalorieProgressHtml(chronologicalEvents)}${consultationHydrationHtml(day)}${stepsProgressHtml(day, false, true)}</div>`;
   }
 
   function bindJournalConsultation() {
