@@ -65,7 +65,26 @@ N'écris aucune instruction personnelle et n'interprète pas cela comme des cons
       }),
       signal: aborter.signal,
     });
-    if (!resp.ok) return reply(resp.status === 429 ? 429 : 502, { error: "search-unavailable" });
+    if (!resp.ok) {
+      let upstreamCode = "";
+      let upstreamText = "";
+      try {
+        const details = await resp.json();
+        upstreamCode = String(details?.error?.status || "");
+        upstreamText = String(details?.error?.message || "").slice(0, 500);
+      } catch (_) { /* No error details from Google */ }
+      const unavailableModel = resp.status === 404;
+      const quota = resp.status === 429;
+      const unsupported = /not supported|not available|billing|paid tier|quota/i.test(upstreamText);
+      console.warn("Gemini grounded pilot failed", { status: resp.status, upstreamCode, reason: unavailableModel ? "model-unavailable" : quota ? "quota-or-billing" : unsupported ? "search-not-available" : "upstream-error" });
+      return reply(unavailableModel ? 404 : quota ? 429 : 502, {
+        error: unavailableModel ? "model-unavailable"
+          : quota ? "quota-or-billing"
+          : unsupported ? "search-not-available" : "search-unavailable",
+        upstreamStatus: resp.status,
+        upstreamCode,
+      });
+    }
     const answer = await resp.json();
     const candidate = answer?.candidates?.[0];
     const report = (candidate?.content?.parts || []).map((p: {text?: string}) => p.text || "").join("").slice(0, 2500);
