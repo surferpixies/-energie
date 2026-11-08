@@ -15,7 +15,7 @@
     html,body{margin:0;background:#eef8e7;}
     #splashScreen{position:fixed;inset:0;background:#eef8e7;}
   </style>
-  <link rel="stylesheet" href="styles.css?v=3.56.422-calorie-goals">
+  <link rel="stylesheet" href="styles.css?v=3.56.423-calorie-status">
   <link rel="stylesheet" href="meal-entry-guide.css?v=3.56.199">
   <link rel="stylesheet" href="display-preferences.css?v=3.56.199">
   <link rel="stylesheet" href="journal-consultation.css?v=3.56.403">
@@ -140,13 +140,12 @@
         <input id="mealCalorieMode" type="hidden" value="auto">
         <input id="mealCalories" type="text" inputmode="decimal" autocomplete="one-time-code" placeholder="—" aria-describedby="mealCalorieStatus">
         <span class="meal-calorie-unit">kcal</span>
-        <button type="button" id="searchMealCaloriesAi" class="secondary small" title="Google en priorité, estimation IA au besoin" hidden>✨ Estimer avec l’IA</button>
+        <div class="meal-calorie-ai-action"><button type="button" id="searchMealCaloriesAi" class="secondary small" title="Google en priorité, estimation IA au besoin" hidden>✨ Estimer avec l’IA</button><p id="mealAiCaloriesStatus" class="muted small" role="status" aria-live="polite"></p></div>
         <small id="mealCalorieStatus" role="status">Aucune estimation disponible · saisie facultative</small>
         <button type="button" class="text-button" id="resetMealCalories" hidden>Auto</button>
         <button type="button" id="mealCalorieRecognitionNotice" class="meal-calorie-recognition-notice" hidden>ⓘ Estimation partielle · éléments à vérifier</button>
       </section>
       <div id="mealAiCaloriesPilot" class="meal-ai-calories-pilot" hidden>
-        <p id="mealAiCaloriesStatus" class="muted small" role="status" aria-live="polite"></p>
         <details id="mealAiGroundedResult" hidden style="display:none !important">
           <summary>Voir la recherche Google et les sources</summary>
           <pre id="mealAiGroundedReport" style="white-space:pre-wrap;font:inherit;max-width:100%;overflow-wrap:anywhere"></pre>
