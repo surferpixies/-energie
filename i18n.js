@@ -2098,7 +2098,7 @@
     }
     if(locale==='en'){
       // A live reason counter changes according to the selections.
-      const reasons=s.match(/^(\\d+) raisons? sélectionnées?$/);
+      const reasons=s.match(/^(\d+) raisons? sélectionnées?$/);
       if(reasons) return reasons[1] + (reasons[1]==='1' ? ' reason selected' : ' reasons selected');
       // Dynamic guided-entry basket counters and nutrient totals.
       if (/^(\d+) aliments? · (.+) kcal$/.test(s)) return s.replace(/^(\d+) aliments? · (.+) kcal$/, (_,n,kcal) => n + (n === "1" ? " food" : " foods") + " · " + kcal + " kcal");
