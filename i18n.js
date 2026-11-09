@@ -2026,6 +2026,10 @@
   // These variants occur when dynamic UI updates or separately translated
   // meal names produce strings that are only partially localized.
   Object.assign(en, {
+    "Précise la raison": "Please specify the reason",
+    "(énergie, activité, émotion, moment social, etc.)": "(energy, activity, emotions, social occasion, etc.)",
+    "Ex. pour avoir de l’énergie, après une activité…": "e.g., for energy, after an activity…",
+    "Ex. pour avoir de l'énergie, après une activité...": "e.g., for energy, after an activity…",
     "Après breakfast": "After breakfast",
     "Après lunch": "After lunch",
     "Après dinner": "After dinner",
