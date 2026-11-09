@@ -2069,8 +2069,22 @@
     "0 raison sélectionnée": "0 reasons selected",
     "0 raisons sélectionnées": "0 reasons selected"
   });
+  // Post-meal feelings: instructions and headings.
+  Object.assign(en, {
+    "Qu’as-tu ressenti après?": "How did you feel afterwards?",
+    "Qu'as-tu ressenti après?": "How did you feel afterwards?",
+    "Chaque élément sélectionné possède sa propre intensité.": "Each selected feeling has its own intensity.",
+    "Autres indications": "Other information",
+    "ℹ️ Autres indications": "ℹ️ Other information",
+    "ℹ Autres indications": "ℹ Other information"
+  });
   function translateString(s){
     let out=translate(s);
+    // Some dynamically rendered headings include a variation-selector emoji
+    // and nonbreaking spaces in the same text node.
+    if(locale==='en' && out===s && /Autres\\s+indications/u.test(s)){
+      return s.replace(/Autres\\s+indications/u, 'Other information');
+    }
     // Text nodes can contain emojis or icons before the translatable text.
     if(locale==='en' && out===s){
       const prefixed=s.match(/^([^\p{L}\p{N}]+)(.+)$/u);
