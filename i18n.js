@@ -2022,6 +2022,32 @@
   "Explore changes in my weight": "Explore changes in my weight"
 });
   Object.assign(en, {"Je remarque que…":"I've noticed that…","Mal de tête ou migraine":"Headache or migraine"});
+  // English localization: compound labels and autosave notifications.
+  // These variants occur when dynamic UI updates or separately translated
+  // meal names produce strings that are only partially localized.
+  Object.assign(en, {
+    "Après breakfast": "After breakfast",
+    "Après lunch": "After lunch",
+    "Après dinner": "After dinner",
+    "Après snack": "After snack",
+    "Après déjeuner": "After breakfast",
+    "Après dîner": "After lunch",
+    "Après souper": "After dinner",
+    "Add une": "Add an",
+    "Add une Activity": "Add an activity",
+    "Ajouter une activité": "Add an activity",
+    "Ajouter une Activité": "Add an activity",
+    "Ajouter une mesure supplémentaire": "Add another measurement",
+    "Brouillon restauré": "Draft restored",
+    "Brouillon restauré ✓": "Draft restored ✓",
+    "Brouillon restauré ✔": "Draft restored ✔",
+    "Sauvegarde automatique active": "Autosave is on",
+    "Sauvegarde automatique activée": "Autosave is on",
+    "Après le déjeuner": "After breakfast",
+    "Après le dîner": "After lunch",
+    "Après le souper": "After dinner",
+    "Autre raison (énergie, activité, émotion, moment social, etc.)": "Other reason (energy, activity, emotions, social occasion, etc.)"
+  });
   function translateString(s){
     let out=translate(s);
     // Text nodes can contain emojis or icons before the translatable text.
