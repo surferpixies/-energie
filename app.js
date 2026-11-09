@@ -1273,7 +1273,7 @@ function formatSleepDuration(hours) {
     const status = form.querySelector(".form-autosave-status");
     if (!status) return;
     status.className = `form-autosave-status ${state || ""}`.trim();
-    status.textContent = text;
+    status.textContent = t(text);
   }
   function scheduleFormAutosave(form) {
     if (!AUTOSAVE_FORM_IDS.has(form?.id) || !form.closest("dialog[open]"))
@@ -11348,7 +11348,7 @@ function formatSleepDuration(hours) {
       const rawActivities = Array.isArray(day?.activities) ? day.activities.filter(Boolean) : [];
       const activityCount = rawActivities.length;
       if (!activityCount) {
-        return `<div class="journal-summary-activity-wrap"><button type="button" class="journal-summary-action journal-summary-action--activity" id="journalSummaryActivity"><span>Ajouter une</span><strong>Activité</strong><span class="summary-action-watermark" aria-hidden="true">🏃</span><span class="summary-action-plus" aria-hidden="true">+</span><small>Aucune activité notée</small></button>${activityFavoriteButtonsHtml(true)}</div>`;
+        return `<div class="journal-summary-activity-wrap"><button type="button" class="journal-summary-action journal-summary-action--activity" id="journalSummaryActivity"><span>${t("Ajouter une activité").replace(/ activité$/, "")}</span><strong>Activité</strong><span class="summary-action-watermark" aria-hidden="true">🏃</span><span class="summary-action-plus" aria-hidden="true">+</span><small>Aucune activité notée</small></button>${activityFavoriteButtonsHtml(true)}</div>`;
       }
       const first = normalizeActivity(rawActivities[0] || {});
       const type = first.type || "Autre";
@@ -11367,7 +11367,7 @@ function formatSleepDuration(hours) {
       return `<div class="journal-summary-activity-wrap"><button type="button" class="journal-summary-action journal-summary-action--activity has-entry" id="journalSummaryActivity"><span>Activité saisie</span><strong>${activityIcon(type)} ${esc(window.ENERGIE_LOCALE === "en" ? (window.t?.(type) || type) : type)} · ${minutes} min</strong><span class="summary-action-watermark" aria-hidden="true">✓</span><span class="summary-action-plus" aria-hidden="true">+</span><small>${detail}</small></button></div>`;
     } catch (error) {
       console.warn("Carte activité du sommaire indisponible:", error);
-      return `<div class="journal-summary-activity-wrap"><button type="button" class="journal-summary-action journal-summary-action--activity" id="journalSummaryActivity"><span>Ajouter une</span><strong>Activité</strong><span class="summary-action-watermark" aria-hidden="true">🏃</span><span class="summary-action-plus" aria-hidden="true">+</span><small>Ouvrir les activités</small></button></div>`;
+      return `<div class="journal-summary-activity-wrap"><button type="button" class="journal-summary-action journal-summary-action--activity" id="journalSummaryActivity"><span>${t("Ajouter une activité").replace(/ activité$/, "")}</span><strong>Activité</strong><span class="summary-action-watermark" aria-hidden="true">🏃</span><span class="summary-action-plus" aria-hidden="true">+</span><small>Ouvrir les activités</small></button></div>`;
     }
   }
 
