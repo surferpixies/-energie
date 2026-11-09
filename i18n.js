@@ -1958,16 +1958,14 @@
   Object.assign(en, {"Je remarque que…":"I've noticed that…","Mal de tête ou migraine":"Headache or migraine"});
   function translateString(s){
     let out=translate(s);
-    // Text nodes often include their leading emoji in the same string as the label.
-    // Keep the decoration while translating the underlying French text.
+    // Text nodes can contain emojis or icons before the translatable text.
     if(locale==='en' && out===s){
-      const prefixed=s.match(/^((?:(?:\\p{Extended_Pictographic}|[\\uFE0F\\u200D\\u20E3]|[\\u{1F1E6}-\\u{1F1FF}])|[\\s])+)(.+)$/u);
-      if(prefixed && prefixed[2] && dict[prefixed[2]]) return prefixed[1]+dict[prefixed[2]];
-      const numbered=s.match(/^(.*?)(\\s*\\(\\d+\\))$/u);
+      const prefixed=s.match(/^([^\p{L}\p{N}]+)(.+)$/u);
+      if(prefixed && dict[prefixed[2]]) return prefixed[1]+dict[prefixed[2]];
+      const numbered=s.match(/^(.*?)(\s*\(\d+\))$/u);
       if(numbered){
-        const translated=dict[numbered[1]];
-        if(translated) return translated+numbered[2];
-        const decorated=numbered[1].match(/^((?:(?:\\p{Extended_Pictographic}|[\\uFE0F\\u200D\\u20E3]|[\\u{1F1E6}-\\u{1F1FF}])|[\\s])+)(.+)$/u);
+        if(dict[numbered[1]]) return dict[numbered[1]]+numbered[2];
+        const decorated=numbered[1].match(/^([^\p{L}\p{N}]+)(.+)$/u);
         if(decorated && dict[decorated[2]]) return decorated[1]+dict[decorated[2]]+numbered[2];
       }
     }
