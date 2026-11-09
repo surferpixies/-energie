@@ -1204,6 +1204,15 @@
     "Aucune boisson": "No drink"
   });
 
+  // My Day: expandable meal and incomplete calorie totals.
+  Object.assign(en, {
+    "Afficher le repas complet": "Show full meal",
+    "Réduire le repas": "Collapse meal",
+    "Calories non renseignées": "Calories not entered",
+    "cumul": "running total",
+    "cumul partiel": "partial total"
+  });
+
   // ENERGIE_EN_COMPLETION_2026_10_19 — specific labels that the initial dictionary missed.
   Object.assign(en, {
     "Ressentis": "Feelings",
