@@ -2033,6 +2033,18 @@
       if (/^Dépense estimée ≈ (.+) kcal$/.test(s)) return s.replace(/^Dépense estimée/, "Estimated expenditure");
       if (/^≈ (.+) kcal avant le repère déficit · (.+)$/.test(s)) return s.replace("avant le repère déficit", "before the deficit target");
       if (/^(.+) kcal avant le repère déficit$/.test(s)) return s.replace("avant le repère déficit", "before the deficit target");
+      // Quick snack counts generated when multiple snacks are grouped.
+      const snackCount=s.match(/^(\d+) collations · (enregistrées|complétées|avant à compléter|après à compléter|suivi en cours)$/);
+      if(snackCount){
+        const status={
+          "enregistrées":"saved",
+          "complétées":"completed",
+          "avant à compléter":"before-meal feelings missing",
+          "après à compléter":"after-meal feelings missing",
+          "suivi en cours":"tracking in progress"
+        }[snackCount[2]];
+        return snackCount[1]+' snacks · '+status;
+      }
       // History subtitles and live counts (not static dictionary entries).
       let h;
       if ((h=s.match(/^(\d+) entrées$/))) return h[1] + ' entries';
