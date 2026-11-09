@@ -52,6 +52,18 @@ export async function handleEstimateMealCalories(request: Request): Promise<Resp
   if (quotaError) return reply(503, { error: "quota-unavailable" });
   if (admitted !== true) return reply(429, { error: "daily-limit" });
 
+  // Suivi non bloquant : aucun contenu de repas, aucun résultat ni photo conservé.
+  // Une ligne par réservation de quota acceptée, même si Google échoue ensuite.
+  try {
+    const { error: usageError } = await admin.from("ai_usage_events").insert({
+      user_id: identity.user.id,
+      call_type: "gemini_estimate",
+    });
+    if (usageError) console.warn("AI usage tracking unavailable", usageError.code);
+  } catch (_) {
+    console.warn("AI usage tracking unavailable");
+  }
+
   const instruction = `Tu aides à ESTIMER, non à diagnostiquer. Analyse uniquement la description d'un REPAS fournie.
 Retourne un JSON strict avec : kcal (nombre entier ou null), confidence ("low", "medium", "high"), foods (tableau de 1 à 12 objets {name, kcal}), assumptions (tableau de 0 à 4 chaînes), explanation (courte chaîne).
 Estime les portions usuelles si elles ne sont pas précisées; n'invente pas de quantité exacte ni de source officielle.
