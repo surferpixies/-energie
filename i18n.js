@@ -1990,7 +1990,7 @@
     // Text nodes can contain emojis or icons before the translatable text.
     if(locale==='en' && out===s){
       const prefixed=s.match(/^([^\p{L}\p{N}]+)(.+)$/u);
-      if(prefixed && dict[prefixed[2]]) return prefixed[1]+dict[prefixed[2]];
+      if(prefixed){ const translated=translateString(prefixed[2]); if(translated!==prefixed[2]) return prefixed[1]+translated; }
       const numbered=s.match(/^(.*?)(\s*\(\d+\))$/u);
       if(numbered){
         if(dict[numbered[1]]) return dict[numbered[1]]+numbered[2];
