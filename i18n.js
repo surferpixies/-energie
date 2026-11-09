@@ -1227,6 +1227,17 @@
   "Cette journée contribue progressivement à mieux décrire tes habitudes.": "This day helps build a clearer picture of your habits over time."
 });
 
+  // Quick snacks and meal-completion badges.
+  Object.assign(en, {
+    "Calories (saisie manuelle facultative)": "Calories (optional manual entry)",
+    "Repas noté": "Meal logged",
+    "Repas enregistré": "Meal saved",
+    "Ressenti après à venir": "After-meal feeling to come",
+    "Scanner": "Scan",
+    "Photo": "Photo",
+    "Ex. 150": "e.g. 150"
+  });
+
   // ENERGIE_EN_COMPLETION_2026_10_19 — specific labels that the initial dictionary missed.
   Object.assign(en, {
     "Ressentis": "Feelings",
