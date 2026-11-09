@@ -1137,6 +1137,27 @@
   "Pour une recherche de calories utile, décris exactement ce que tu as mangé : plat, sauce, accompagnements et portion (si connue).": "For a useful calorie search, describe exactly what you ate: dish, sauce, sides and portion (if known)."
 });
 
+  // ENERGIE_EN_RECIPES_2026_11_08 — imported recipe details and dynamic labels.
+  Object.assign(en, {
+    "Saisie libre": "Free entry",
+    "Portions consommées": "Servings eaten",
+    "Texte proposé (modifiable)": "Suggested text (editable)",
+    "Aucune donnée disponible": "No data available",
+    "Utiliser dans mon repas": "Use in my meal",
+    "Utiliser dans mon favori": "Use in my favorite",
+    "Calories (facultatif)": "Calories (optional)",
+    "Suivre mon sommeil": "Track my sleep",
+    "Suivre mon hydratation": "Track my hydration",
+    "Rechercher dans mes repas favoris…": "Search my favorite meals…",
+    "Photos des repas": "Meal photos",
+    "Photo de profil": "Profile photo",
+    "Nom A à Z": "Name A to Z",
+    "Enregistrer cet aliment": "Save this food",
+    "Repas favoris": "Favorite meals",
+    "La recherche a échoué. Réessaie.": "The search failed. Please try again.",
+    "Lire la recette": "Read recipe"
+  });
+
   // ENERGIE_EN_COMPLETION_2026_10_19 — specific labels that the initial dictionary missed.
   Object.assign(en, {
     "Ressentis": "Feelings",
