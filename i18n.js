@@ -1198,6 +1198,12 @@
   "Choisis comment noter tes repas, puis ce que tu souhaites suivre.": "Choose how to log your meals and what you want to track."
 });
 
+  // Favorite meal beverage fields.
+  Object.assign(en, {
+    "Boisson (facultatif)": "Drink (optional)",
+    "Aucune boisson": "No drink"
+  });
+
   // ENERGIE_EN_COMPLETION_2026_10_19 — specific labels that the initial dictionary missed.
   Object.assign(en, {
     "Ressentis": "Feelings",
