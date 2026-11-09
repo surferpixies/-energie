@@ -1158,6 +1158,46 @@
     "Lire la recette": "Read recipe"
   });
 
+  // ENERGIE_EN_AUDIT_2026_11_08 — labels from English profile and meal UI screenshots.
+  Object.assign(en, {
+  "Démonstrations": "Demos",
+  "Profils et scénarios fictifs": "Fictional profiles and scenarios",
+  "Repas et saisie": "Meals and logging",
+  "Favoris et préférences de mes repas": "Meal favorites and preferences",
+  "Suivi des calories": "Calorie tracking",
+  "Estimation IA sur demande, avec possibilité de corriger les calories manuellement.": "On-demand AI estimates, with the option to manually correct calories.",
+  "Calories saisies manuellement, sans recherche Google ni estimation IA.": "Calories entered manually, without Google Search or AI estimates.",
+  "Ces préférences se modifient dans « Modifier mes objectifs ».": "You can change these preferences under “Edit my goals”.",
+  "Recherche et estimation IA": "AI search and estimation",
+  "Autoriser l’envoi des descriptions à Google Gemini": "Allow meal descriptions to be sent to Google Gemini",
+  "Seulement lorsque tu appuies sur « Estimer avec l’IA ». Évite les renseignements médicaux personnels. Autorisation modifiable à tout moment.": "Only when you tap “Estimate with AI”. Avoid including personal medical information. You can change this permission at any time.",
+  "Choisis comment les repas complétés s’affichent dans le Journal en mode sommaire.": "Choose how completed meals appear in the Journal's summary view.",
+  "Active ou désactive les notifications sur ton appareil mobile.": "Turn notifications on or off on your mobile device.",
+  "Nombre de gouttes affichées – 1 goutte d’eau = 500 ml d’eau": "Number of water drops shown – 1 drop = 500 ml of water",
+  "Choisis les inconforts que tu souhaites voir lors de tes saisies.": "Choose which discomforts you want to see while logging.",
+  "Saisie des repas": "Meal logging",
+  "Décris librement tes repas. Si tu as choisi de suivre les calories, tu peux les saisir manuellement ou demander une estimation selon ta préférence.": "Describe your meals in your own words. If you track calories, you can enter them manually or request an estimate.",
+  "Suggestions de favoris": "Favorite suggestions",
+  "Proposer d’enregistrer mes nouveaux repas dans les favoris pour simplifier les prochaines saisies.": "Offer to save my new meals as favorites to make future logging easier.",
+  "Effacer la saisie": "Clear entry",
+  "+ boisson": "+ drink",
+  "Calories (facultatives)": "Calories (optional)",
+  "Estimer avec l’IA": "Estimate with AI",
+  "✨ Estimer avec l’IA": "✨ Estimate with AI",
+  "Mes objectifs Énergie": "My Énergie goals",
+  "Modifier mes objectifs": "Edit my goals",
+  "En quoi souhaitez-vous qu'Énergie vous aide ?": "How would you like Énergie to help you?",
+  "Pourquoi Énergie ?": "Why Énergie?",
+  "Repas favoris": "Favorite meals",
+  "Journal sommaire": "Journal summary",
+  "Objectif d'eau": "Water goal",
+  "Photos des repas": "Meal photos",
+  "Photo de profil": "Profile photo",
+  "Inconforts à suivre": "Discomforts to track",
+  "Suivre mes calories": "Track my calories",
+  "Choisis comment noter tes repas, puis ce que tu souhaites suivre.": "Choose how to log your meals and what you want to track."
+});
+
   // ENERGIE_EN_COMPLETION_2026_10_19 — specific labels that the initial dictionary missed.
   Object.assign(en, {
     "Ressentis": "Feelings",
@@ -1918,6 +1958,19 @@
   Object.assign(en, {"Je remarque que…":"I've noticed that…","Mal de tête ou migraine":"Headache or migraine"});
   function translateString(s){
     let out=translate(s);
+    // Text nodes often include their leading emoji in the same string as the label.
+    // Keep the decoration while translating the underlying French text.
+    if(locale==='en' && out===s){
+      const prefixed=s.match(/^((?:(?:\\p{Extended_Pictographic}|[\\uFE0F\\u200D\\u20E3]|[\\u{1F1E6}-\\u{1F1FF}])|[\\s])+)(.+)$/u);
+      if(prefixed && prefixed[2] && dict[prefixed[2]]) return prefixed[1]+dict[prefixed[2]];
+      const numbered=s.match(/^(.*?)(\\s*\\(\\d+\\))$/u);
+      if(numbered){
+        const translated=dict[numbered[1]];
+        if(translated) return translated+numbered[2];
+        const decorated=numbered[1].match(/^((?:(?:\\p{Extended_Pictographic}|[\\uFE0F\\u200D\\u20E3]|[\\u{1F1E6}-\\u{1F1FF}])|[\\s])+)(.+)$/u);
+        if(decorated && dict[decorated[2]]) return decorated[1]+dict[decorated[2]]+numbered[2];
+      }
+    }
     // Never feed a mapped French meal name back into another meal mapping.
     if(locale==='fr-FR') {
       if(out!==s) return out;
