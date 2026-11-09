@@ -1213,6 +1213,20 @@
     "cumul partiel": "partial total"
   });
 
+  // History summary labels.
+  Object.assign(en, {
+  "repas principaux": "main meals",
+  "repas et collations": "meals and snacks",
+  "fatigue moyenne": "average fatigue",
+  "jours suivis": "days tracked",
+  "favoris": "favorites",
+  "sommeil moyen": "average sleep",
+  "verres notés": "glasses logged",
+  "Résumé de la journée": "Daily summary",
+  "Ce résumé repose uniquement sur les données que tu as enregistrées.": "This summary is based only on the data you recorded.",
+  "Cette journée contribue progressivement à mieux décrire tes habitudes.": "This day helps build a clearer picture of your habits over time."
+});
+
   // ENERGIE_EN_COMPLETION_2026_10_19 — specific labels that the initial dictionary missed.
   Object.assign(en, {
     "Ressentis": "Feelings",
@@ -2008,6 +2022,14 @@
       if (/^Dépense estimée ≈ (.+) kcal$/.test(s)) return s.replace(/^Dépense estimée/, "Estimated expenditure");
       if (/^≈ (.+) kcal avant le repère déficit · (.+)$/.test(s)) return s.replace("avant le repère déficit", "before the deficit target");
       if (/^(.+) kcal avant le repère déficit$/.test(s)) return s.replace("avant le repère déficit", "before the deficit target");
+      // History subtitles and live counts (not static dictionary entries).
+      let h;
+      if ((h=s.match(/^(\d+) entrées$/))) return h[1] + ' entries';
+      if ((h=s.match(/^(\d+) après$/))) return h[1] + ' after';
+      if ((h=s.match(/^(\d+) collation(s)?$/))) return h[1] + (h[1]==='1' ? ' snack' : ' snacks');
+      if ((h=s.match(/^Cette semaine contient (\d+) repas répartis sur (\d+) jours\. La régularité du suivi améliore le contexte des observations\.$/))) return 'This week includes ' + h[1] + ' meals across ' + h[2] + ' days. Consistent logging adds context to your observations.';
+      if ((h=s.match(/^(\d+) repas possède(?:nt)? une comparaison entre les ressentis avant et après\.$/))) return h[1] + (h[1]==='1' ? ' meal has' : ' meals have') + ' a comparison of feelings before and after eating.';
+      if ((h=s.match(/^Les trois repas principaux sont documentés(?:, avec (\d+) collations? en complément)?\. Ce suivi régulier donnera davantage de contexte aux tendances futures\.$/))) return 'All three main meals are logged' + (h[1] ? ', along with ' + h[1] + (h[1]==='1' ? ' snack' : ' snacks') : '') + '. Consistent logging will add context to future patterns.';
       // Dynamic activity rows, counts and profile dates. Preserve stored activity keys.
       if (/^(Marche|Course|Vélo|Musculation|Yoga|Natation|Randonnée|Pilates|Danse|Elliptique|Rameur|Autre) · (\d+) min$/.test(s)) {
         return s.replace(/^(.+) · (\d+) min$/, (_,activity,mins) => `${translate(activity)} · ${mins} min`);
