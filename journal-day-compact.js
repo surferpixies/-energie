@@ -33,11 +33,11 @@
         const toggle = document.createElement('button');
         toggle.type = 'button';
         toggle.className = 'journey-meal-expand';
-        toggle.textContent = 'Afficher le repas complet';
+        toggle.textContent = window.ENERGIE_I18N?.t?.('Afficher le repas complet') || 'Afficher le repas complet';
         toggle.setAttribute('aria-expanded', 'false');
         toggle.addEventListener('click', () => {
           const expanded = card.classList.toggle('journey-meal-expanded');
-          toggle.textContent = expanded ? 'Réduire le repas' : 'Afficher le repas complet';
+          toggle.textContent = window.ENERGIE_I18N?.t?.(expanded ? 'Réduire le repas' : 'Afficher le repas complet') || (expanded ? 'Réduire le repas' : 'Afficher le repas complet');
           toggle.setAttribute('aria-expanded', String(expanded));
         });
         paragraph.insertAdjacentElement('afterend', toggle);
