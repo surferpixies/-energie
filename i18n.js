@@ -2052,6 +2052,23 @@
     "Après le souper": "After dinner",
     "Autre raison (énergie, activité, émotion, moment social, etc.)": "Other reason (energy, activity, emotions, social occasion, etc.)"
   });
+  // English completion: feelings form, reasons count, optional notes.
+  Object.assign(en, {
+    "Sélectionne ce que tu ressens maintenant et indique l’intensité de chaque élément.": "Select how you feel right now and rate the intensity of each feeling.",
+    "Sélectionne ce que tu ressens maintenant et indique l'intensité de chaque élément.": "Select how you feel right now and rate the intensity of each feeling.",
+    "Rechercher un ressenti…": "Search for a feeling…",
+    "Rechercher un ressenti...": "Search for a feeling…",
+    "Positifs : 0 = pas ressenti · 1 = faible · 5 = très présent.": "Positive feelings: 0 = not felt · 1 = mild · 5 = very strong.",
+    "Positifs : 0 = pas ressenti · 1 = faible · 5 = très présent": "Positive feelings: 0 = not felt · 1 = mild · 5 = very strong",
+    "Un détail à retenir sur ce repas…": "A detail to remember about this meal…",
+    "Un détail à retenir sur ce repas...": "A detail to remember about this meal…",
+    "Autre chose à signaler": "Anything else to note",
+    "Autres indications": "Other information",
+    "Précise la raison": "Please specify the reason",
+    "1 raison sélectionnée": "1 reason selected",
+    "0 raison sélectionnée": "0 reasons selected",
+    "0 raisons sélectionnées": "0 reasons selected"
+  });
   function translateString(s){
     let out=translate(s);
     // Text nodes can contain emojis or icons before the translatable text.
@@ -2080,6 +2097,9 @@
       for(const [pattern,replacement] of rules) if(pattern.test(s)) return s.replace(pattern,replacement);
     }
     if(locale==='en'){
+      // A live reason counter changes according to the selections.
+      const reasons=s.match(/^(\\d+) raisons? sélectionnées?$/);
+      if(reasons) return reasons[1] + (reasons[1]==='1' ? ' reason selected' : ' reasons selected');
       // Dynamic guided-entry basket counters and nutrient totals.
       if (/^(\d+) aliments? · (.+) kcal$/.test(s)) return s.replace(/^(\d+) aliments? · (.+) kcal$/, (_,n,kcal) => n + (n === "1" ? " food" : " foods") + " · " + kcal + " kcal");
       if (/^(\d+) aliments?$/.test(s)) return s.replace(/^(\d+) aliments?$/, (_,n) => n + (n === "1" ? " food" : " foods"));
