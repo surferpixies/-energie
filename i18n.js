@@ -1241,6 +1241,29 @@
   // Updated Solo account deletion wording.
   Object.assign(en, { "Après ta confirmation, la suppression efface ton compte Énergie, les données qui lui sont associées, ses photos et les données associées. La copie locale sur cet appareil est effacée lorsque le serveur confirme la suppression. Cette action est irréversible : tu ne pourras pas récupérer ton compte ou ton journal dans Énergie. Exporte ton journal avant de continuer si tu souhaites en garder une copie.": "After you confirm, deletion removes your Énergie account, its associated data and photos. The local copy on this device is cleared once the server confirms deletion. This action is irreversible: you will not be able to recover your account or journal in Énergie. Export your journal before continuing if you want to keep a copy." });
 
+  // Blood glucose, activity, meal reasons and autosave notices.
+  Object.assign(en, {
+  "Après": "After",
+  "Ajouter une mesure supplémentaire": "Add another measurement",
+  "Aucune activité notée": "No activity logged",
+  "Ouvrir les activités": "Open activities",
+  "Ajouter une": "Add an",
+  "Facultatif · plusieurs réponses possibles": "Optional · multiple answers allowed",
+  "Il n’y a pas de bonne ou de mauvaise réponse. Choisis simplement ce qui correspond à ce moment.": "There is no right or wrong answer. Just choose what fits this moment.",
+  "J’avais faim": "I was hungry",
+  "C’était l’heure de manger": "It was time to eat",
+  "Je m’ennuyais": "I was bored",
+  "Par gourmandise": "For pleasure",
+  "Autre raison": "Other reason",
+  "énergie, activité, émotion, moment social, etc.": "energy, activity, emotions, social occasion, etc.",
+  "Sauvegarde automatique active": "Autosave is on",
+  "Brouillon restauré ✓": "Draft restored ✓",
+  "Synchronisation…": "Syncing…",
+  "Sauvegardé ✓": "Saved ✓",
+  "Sauvegarde à reprendre": "Save needs retry",
+  "Calories (saisie manuelle facultative)": "Calories (optional manual entry)"
+});
+
   // ENERGIE_EN_COMPLETION_2026_10_19 — specific labels that the initial dictionary missed.
   Object.assign(en, {
     "Ressentis": "Feelings",
