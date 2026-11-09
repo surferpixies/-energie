@@ -2086,6 +2086,12 @@
     "Choisis l'intensité :": "Choose the intensity:",
     "Choisis une intensité": "Choose an intensity"
   });
+  // Disabled after-meal card status.
+  Object.assign(en, {
+    "Disponible après avoir enregistré le repas.": "Available after saving the meal.",
+    "Disponible après avoir enregistré le repas": "Available after saving the meal",
+    "Disponible après avoir enregistré ton repas.": "Available after saving your meal."
+  });
   function translateString(s){
     let out=translate(s);
     // Some dynamically rendered headings include a variation-selector emoji
