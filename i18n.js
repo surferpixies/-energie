@@ -2078,6 +2078,14 @@
     "ℹ️ Autres indications": "ℹ️ Other information",
     "ℹ Autres indications": "ℹ Other information"
   });
+  // Shared intensity selector in before- and after-meal feeling groups.
+  Object.assign(en, {
+    "Choisis l’intensité": "Choose the intensity",
+    "Choisis l'intensité": "Choose the intensity",
+    "Choisis l’intensité :": "Choose the intensity:",
+    "Choisis l'intensité :": "Choose the intensity:",
+    "Choisis une intensité": "Choose an intensity"
+  });
   function translateString(s){
     let out=translate(s);
     // Some dynamically rendered headings include a variation-selector emoji
