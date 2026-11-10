@@ -2092,6 +2092,33 @@
     "Disponible après avoir enregistré le repas": "Available after saving the meal",
     "Disponible après avoir enregistré ton repas.": "Available after saving your meal."
   });
+  // English UI sweep, 2026-11-09: journal, observations, history and reminders.
+  Object.assign(en, {
+    "Ressenti après attendu": "After-meal feeling pending",
+    "Facultatif · affiché dans les favoris": "Optional · shown in favorites",
+    "Repris du ressenti avant": "Copied from before-meal feelings",
+    "Les mêmes éléments et intensités sont préremplis. Modifie-les, retire-les ou ajoute d’autres ressentis selon ton état actuel.": "The same feelings and intensity ratings have been prefilled. Edit, remove or add feelings to reflect how you feel now.",
+    "UNE INFORMATION UTILE DE PLUS": "ONE MORE USEFUL INSIGHT",
+    "Cette observation positive nourrit aussi l’analyse et aide le cerveau à reconnaître les journées où tu te sens mieux.": "This positive observation also informs the analysis and helps Énergie recognize the days when you feel better.",
+    "Arbre mature": "Mature tree",
+    "Boissons inscrites": "Logged drinks",
+    "Type, heure et quantité": "Type, time and amount",
+    "RESSENTI HORS REPAS": "FEELINGS OUTSIDE MEALS",
+    "Observations globales": "General observations",
+    "Pour noter un ressenti positif ou un inconfort hors repas, sans l’attribuer automatiquement au dernier repas.": "Log a positive feeling or discomfort outside meals without automatically linking it to your last meal.",
+    "Aucune observation globale cette journée.": "No general observations logged today.",
+    "Filtres": "Filters",
+    "Rappels de glycémie après les repas": "Blood glucose reminders after meals",
+    "Le délai est calculé à partir de l’heure de début du repas enregistrée dans le Journal. Active les rappels pour recevoir une notification après le délai choisi.": "The delay is calculated from the meal start time logged in your Journal. Enable reminders to receive a notification after the selected delay.",
+    "Chaque point représente une mesure enregistrée. Les mesures d’une même journée sont reliées par une ligne pleine; un pointillé discret relie le dernier point d’une journée au premier point de la suivante. Clique sur un point pour consulter la mesure et son repas associé, sans interprétation médicale ni données inventées.": "Each point represents a recorded reading. Readings from the same day are connected by a solid line; a faint dashed line links the last point of one day to the first point of the next. Select a point to view its reading and associated meal, without medical interpretation or fabricated data.",
+    "starches repéré": "starches detected",
+    "eggs repéré": "eggs detected",
+    "féculents repérés": "starches detected",
+    "œufs repérés": "eggs detected",
+    "Une information utile de plus": "One more useful insight",
+    "Ressenti après": "Feeling after",
+    "Nom du favori": "Favorite name"
+  });
   function translateString(s){
     let out=translate(s);
     // Some dynamically rendered headings include a variation-selector emoji
@@ -2125,6 +2152,22 @@
       for(const [pattern,replacement] of rules) if(pattern.test(s)) return s.replace(pattern,replacement);
     }
     if(locale==='en'){
+      // Dynamic text in Journal / Insights. Preserve user data and timestamps.
+      let m;
+      if((m=s.match(/^Mesure de glycémie disponible depuis (.+)$/))) return 'Blood glucose reading available since '+m[1];
+      if((m=s.match(/^Mesure de glycémie disponible à partir de (.+)$/))) return 'Blood glucose reading available from '+m[1];
+      if((m=s.match(/^(.+) journées?$/)) && /^(?:🌳 )?Arbre mature/.test(s)) return s.replace('Arbre mature','Mature tree');
+      if((m=s.match(/^Hier, tu as noté « (.+) » après (déjeuner|dîner|souper|collation)(\\.)?$/i))){
+        const mealNames={déjeuner:'breakfast',dîner:'lunch',souper:'dinner',collation:'a snack'};
+        return 'Yesterday, you logged “'+translateString(m[1])+'” after '+mealNames[m[2].toLowerCase()]+'.';
+      }
+      if((m=s.match(/^Yesterday, you logged [«“](.+)[»”] after (déjeuner|dîner|souper|collation)\\.?$/i))){
+        const mealNames={déjeuner:'breakfast',dîner:'lunch',souper:'dinner',collation:'a snack'};
+        return 'Yesterday, you logged “'+translateString(m[1])+'” after '+mealNames[m[2].toLowerCase()]+'.';
+      }
+      if((m=s.match(/^(.+) repéré(?:s|es)? \\+ (.+) repéré(?:s|es)?$/i))){
+        return translateString(m[1]+' repéré')+' + '+translateString(m[2]+' repéré');
+      }
       // A live reason counter changes according to the selections.
       const reasons=s.match(/^(\d+) raisons? sélectionnées?$/);
       if(reasons) return reasons[1] + (reasons[1]==='1' ? ' reason selected' : ' reasons selected');
