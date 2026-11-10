@@ -2156,16 +2156,17 @@
       let m;
       if((m=s.match(/^Mesure de glycémie disponible depuis (.+)$/))) return 'Blood glucose reading available since '+m[1];
       if((m=s.match(/^Mesure de glycémie disponible à partir de (.+)$/))) return 'Blood glucose reading available from '+m[1];
-      if((m=s.match(/^(.+) journées?$/)) && /^(?:🌳 )?Arbre mature/.test(s)) return s.replace('Arbre mature','Mature tree');
-      if((m=s.match(/^Hier, tu as noté « (.+) » après (déjeuner|dîner|souper|collation)(\\.)?$/i))){
+      if(/^((?:🌳 )?)Arbre mature · \\d+ journées?$/.test(s)) return s.replace('Arbre mature','Mature tree').replace('journées','days').replace('journée','day');
+      if(/^starches repéré \\+ eggs repéré$/.test(s)) return 'starches detected + eggs detected';
+      if((m=s.match(/^Hier, tu as noté « (.+) » après (déjeuner|dîner|souper|collation)(\.)?$/i))){
         const mealNames={déjeuner:'breakfast',dîner:'lunch',souper:'dinner',collation:'a snack'};
         return 'Yesterday, you logged “'+translateString(m[1])+'” after '+mealNames[m[2].toLowerCase()]+'.';
       }
-      if((m=s.match(/^Yesterday, you logged [«“](.+)[»”] after (déjeuner|dîner|souper|collation)\\.?$/i))){
+      if((m=s.match(/^Yesterday, you logged [«“](.+)[»”] after (déjeuner|dîner|souper|collation)\.?$/i))){
         const mealNames={déjeuner:'breakfast',dîner:'lunch',souper:'dinner',collation:'a snack'};
         return 'Yesterday, you logged “'+translateString(m[1])+'” after '+mealNames[m[2].toLowerCase()]+'.';
       }
-      if((m=s.match(/^(.+) repéré(?:s|es)? \\+ (.+) repéré(?:s|es)?$/i))){
+      if((m=s.match(/^(.+) repéré(?:s|es)? \+ (.+) repéré(?:s|es)?$/i))){
         return translateString(m[1]+' repéré')+' + '+translateString(m[2]+' repéré');
       }
       // A live reason counter changes according to the selections.
