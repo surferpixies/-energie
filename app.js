@@ -1134,6 +1134,20 @@ function formatSleepDuration(hours) {
     }
   }
   let db = load();
+  // Keep the last journal view selected on this device across reloads.
+  // A remote profile snapshot can be older than the user's most recent choice.
+  const JOURNAL_VIEW_LOCAL_KEY = "energieJournalViewModeV1";
+  function savedJournalViewMode() {
+    try {
+      const mode = localStorage.getItem(JOURNAL_VIEW_LOCAL_KEY);
+      return ["summary", "detailed", "consultation"].includes(mode) ? mode : null;
+    } catch (_) { return null; }
+  }
+  function rememberJournalViewMode(mode) {
+    try { localStorage.setItem(JOURNAL_VIEW_LOCAL_KEY, mode); }
+    catch (error) { console.warn("Préférence de vue locale non enregistrée", error); }
+  }
+  if (savedJournalViewMode()) db.settings.journalViewMode = savedJournalViewMode();
   function isStorageQuotaError(error) {
     return (
       error?.name === "QuotaExceededError" ||
@@ -2337,7 +2351,7 @@ function formatSleepDuration(hours) {
       // Tant qu’une nouvelle vue locale attend la synchronisation, ne pas la remplacer
       // par l’ancienne préférence conservée sur le serveur.
       const pendingJournalView = outbox().some(op => op.kind === "day" && (!op._ownerUserId || op._ownerUserId === session?.user?.id));
-      if (!pendingJournalView && ["detailed", "summary", "consultation"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
+      if (!pendingJournalView && !savedJournalViewMode() && ["detailed", "summary", "consultation"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
       ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","nutrientIntakeTracking","macroTracking","autoNutritionEstimates","generalRecommendations","hideFavoriteSuggestion","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals","glucoseTracking","glucoseReminders"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
       });
@@ -11729,6 +11743,7 @@ function formatSleepDuration(hours) {
         const mode = ["summary", "consultation"].includes(button.dataset.journalView) ? button.dataset.journalView : "detailed";
         if (journalViewMode() === mode) return;
         db.settings.journalViewMode = mode;
+        rememberJournalViewMode(mode);
         persistProfilePreference("journal-view-mode");
         render();
       };
