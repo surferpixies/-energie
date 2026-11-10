@@ -2156,8 +2156,8 @@
       let m;
       if((m=s.match(/^Mesure de glycémie disponible depuis (.+)$/))) return 'Blood glucose reading available since '+m[1];
       if((m=s.match(/^Mesure de glycémie disponible à partir de (.+)$/))) return 'Blood glucose reading available from '+m[1];
-      if(/^((?:🌳 )?)Arbre mature · \\d+ journées?$/.test(s)) return s.replace('Arbre mature','Mature tree').replace('journées','days').replace('journée','day');
-      if(/^starches repéré \\+ eggs repéré$/.test(s)) return 'starches detected + eggs detected';
+      if(/^((?:🌳 )?)Arbre mature · \d+ journées?$/.test(s)) return s.replace('Arbre mature','Mature tree').replace('journées','days').replace('journée','day');
+      if(/^starches repéré \+ eggs repéré$/.test(s)) return 'starches detected + eggs detected';
       if((m=s.match(/^Hier, tu as noté « (.+) » après (déjeuner|dîner|souper|collation)(\.)?$/i))){
         const mealNames={déjeuner:'breakfast',dîner:'lunch',souper:'dinner',collation:'a snack'};
         return 'Yesterday, you logged “'+translateString(m[1])+'” after '+mealNames[m[2].toLowerCase()]+'.';
