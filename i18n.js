@@ -2169,6 +2169,11 @@
       if((m=s.match(/^(.+) repéré(?:s|es)? \+ (.+) repéré(?:s|es)?$/i))){
         return translateString(m[1]+' repéré')+' + '+translateString(m[2]+' repéré');
       }
+      // Daily calorie coverage counter, including singular and plural meal/snack forms.
+      const estimatedCount=s.match(/^(\d+) repas ou collations? avec calories estimées?\.$/);
+      if(estimatedCount) return estimatedCount[1] + (estimatedCount[1]==='1' ? ' meal or snack with estimated calories.' : ' meals or snacks with estimated calories.');
+      const estimatedCountVariant=s.match(/^(\d+) repas ou collations? avec calories estimées?$/);
+      if(estimatedCountVariant) return estimatedCountVariant[1] + (estimatedCountVariant[1]==='1' ? ' meal or snack with estimated calories' : ' meals or snacks with estimated calories');
       // A live reason counter changes according to the selections.
       const reasons=s.match(/^(\d+) raisons? sélectionnées?$/);
       if(reasons) return reasons[1] + (reasons[1]==='1' ? ' reason selected' : ' reasons selected');
