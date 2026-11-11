@@ -16297,7 +16297,8 @@ function formatSleepDuration(hours) {
     $("#energyGuidePrev").disabled=energyGuideIndex===0;
     $("#energyGuidePrev").style.visibility=energyGuideIndex===0?"hidden":"visible";
     $("#energyGuideSkip").textContent=labels.skip;
-    $("#energyGuideSkip").hidden=energyGuideIndex===ENERGY_GUIDE_SLIDES.length-1;
+    // Reserve its layout space on the final step so the entire guide stays fixed.
+    $("#energyGuideSkip").style.visibility=energyGuideIndex===ENERGY_GUIDE_SLIDES.length-1?"hidden":"visible";
     $("#energyGuideNext").textContent=energyGuideIndex===ENERGY_GUIDE_SLIDES.length-1?labels.finish:labels.next;
     $("#energyGuideHideLabel").textContent=labels.hide;
     document.querySelectorAll("[data-energy-language]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.energyLanguage===lang)));
