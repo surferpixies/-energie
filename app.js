@@ -16222,42 +16222,86 @@ function formatSleepDuration(hours) {
   }
 
 
-  const energyGuideImage = (name) => window.ENERGY_GUIDE_IMAGES?.[name] || `assets/onboarding/${name}.jpeg?v=3.56.42`;
+
+  // Seven evergreen onboarding screens: no app screenshots or remote assets.
+  const ENERGY_GUIDE_SEEN_KEY = "energieGuideSeenV1";
+  const ENERGY_GUIDE_SILENT_KEY = "energieGuideDoNotShowV1";
   const ENERGY_GUIDE_SLIDES = [
-    { kicker: "Bienvenue", title: "Découvre Énergie 🌱", copy: "Ton Journal rassemble repas, ressentis, activité, hydratation et pas au même endroit. Passe du Sommaire à la vue détaillée selon ce dont tu as besoin.", media: `<div class="energy-guide-media journal-pair"><img src="${energyGuideImage('journal-summary')}" alt="Journal Énergie en vue sommaire"><img src="${energyGuideImage('journal-detailed')}" alt="Journal Énergie en vue détaillée"></div>` },
-    { kicker: "Repas", title: "Note tes repas facilement 🍽️", copy: "Écris simplement ce que tu as mangé, ou gagne du temps avec Souper d’hier, Favoris et Récents. Une photo peut être conservée telle quelle; l’analyse IA reste disponible sur demande. Le Scanner peut aussi aider à remplir la description. Les estimations et éléments reconnus restent toujours à vérifier.", media: `<div class="energy-guide-media"><img src="${energyGuideImage('meal')}" alt="Formulaire de saisie d’un repas dans Énergie"></div>` },
-    { kicker: "Ressentis", title: "Dis comment tu te sens 🧠", copy: "Avant et après un repas, choisis ce que tu ressens et son intensité. Ces repères donnent à Énergie de meilleurs points de comparaison au fil du temps.", media: `<div class="energy-guide-media duo"><img src="${energyGuideImage('feeling-before')}" alt="Saisie des ressentis avant un repas"><img src="${energyGuideImage('feeling-after')}" alt="Saisie des ressentis après un repas"></div>` },
-    { kicker: "Ton quotidien", title: "Bouge et hydrate-toi 💧🚶", copy: "Ajoute une activité, utilise tes activités favorites, note tes boissons et suis ton objectif de pas. Ces informations complètent le contexte de ta journée.", media: `<div class="energy-guide-media daily-collage"><img class="daily-main" src="${energyGuideImage('hydration')}" alt="Ajout d’une boisson"><img class="daily-activity" src="${energyGuideImage('activity')}" alt="Ajout d’une activité"><img class="daily-steps" src="${energyGuideImage('steps')}" alt="Saisie du nombre de pas"></div>` },
-    { kicker: "Cerveau", title: "Ton journal devient plus utile 🧠", copy: "Le Cerveau montre la couverture de tes données : il indique ce qui est suffisamment documenté pour être analysé. Le pourcentage mesure la présence des informations, pas la qualité de tes habitudes.", media: `<div class="energy-guide-media"><img src="${energyGuideImage('brain')}" alt="Écran Cerveau et qualité du journal"></div>` },
-    { kicker: "Observations", title: "Découvre tes tendances 👁️", copy: "Observe l’évolution de tes habitudes, de tes pas et des autres indicateurs disponibles. Énergie cherche des tendances dans ton historique : une association observée ne prouve pas une cause.", media: `<div class="energy-guide-media"><img src="${energyGuideImage('observations')}" alt="Écran Observations avec graphiques de tendances"></div>` },
-    { kicker: "Le cœur d’Énergie", title: "Comprends ce qui te fait du bien 🌱", copy: "Énergie relie ce que tu manges à tes ressentis avant et après, puis regarde ce qui se répète au fil du temps. Des inconforts reviennent-ils après des repas contenant des produits laitiers, du soya ou certains aliments? Certaines habitudes accompagnent-elles plutôt les journées où tu te sens mieux? Plus ton journal se construit, plus les Observations peuvent faire ressortir des associations personnalisées.", media: `<div class="energy-guide-purpose"><div class="energy-guide-purpose-flow"><span>🍽️<b>Alimentation</b></span><i>+</i><span>🙂<b>Avant</b></span><i>+</i><span>🧠<b>Après</b></span><i>+</i><span>📆<b>Répétition</b></span><i>→</i><span>👁️<b>Observations</b></span></div><p class="energy-guide-purpose-note">Énergie met en évidence des associations et des tendances. Elles ne prouvent pas un lien de cause à effet et ne constituent pas un diagnostic médical.</p></div>` },
-    { kicker: "Profil", title: "Une app qui s’adapte à toi ⚙️", copy: "Dans Profil, choisis ce que tu veux suivre, règle tes objectifs et tes préférences, puis reviens à ce guide quand tu le souhaites.", media: `<div class="energy-guide-media"><img src="${energyGuideImage('profile')}" alt="Réglages du Profil dans Énergie"></div>` },
+    {icon:"🌱",fr:["Bienvenue dans Énergie","Énergie t’aide à mieux comprendre ton alimentation, tes ressentis et tes habitudes quotidiennes. Un espace personnel, sans jugement et à ton rythme."],en:["Welcome to Énergie","Énergie helps you better understand your eating habits, how you feel and your daily routines. A personal space, at your own pace and without judgment."]},
+    {icon:"💚",fr:["Avant de manger","Note comment tu te sens avant un repas : faim, énergie, humeur ou inconforts. Ces petites observations peuvent devenir précieuses avec le temps."],en:["Before eating","Note how you feel before a meal: hunger, energy, mood or discomfort. These small observations can become valuable over time."]},
+    {icon:"🍽️",fr:["Ton journal alimentaire","Consigne simplement tes repas, ajoute une photo ou retrouve tes favoris. Si tu le souhaites, l’IA peut estimer les calories, mais ses résultats restent approximatifs."],en:["Your food journal","Log your meals, add a photo or find your favorites. If you choose, AI can estimate calories, but its results are approximate."]},
+    {icon:"💗",fr:["Après ton repas","Prends aussi un moment pour noter comment tu te sens après avoir mangé. Comparer les ressentis avant et après enrichit progressivement ton journal."],en:["After your meal","Take a moment to record how you feel after eating. Comparing before-and-after feelings gradually adds context to your journal."]},
+    {icon:"🧠",fr:["Ton Cerveau Énergie","Avec le temps, Énergie peut faire ressortir des habitudes, des répétitions et certaines associations entre les repas et tes ressentis."],en:["Your Énergie Brain","Over time, Énergie can highlight habits, recurring patterns and possible associations between your meals and how you feel."],noteFr:"Ces observations sont des pistes de réflexion, pas un diagnostic ni un avis médical. Elles ne prouvent pas un lien de cause à effet.",noteEn:"These observations are insights, not a diagnosis or medical advice. They do not establish cause and effect."},
+    {icon:"🌙",fr:["Bien plus que les repas","Selon tes besoins, suis aussi ton poids, ton sommeil, tes pas, ton activité physique, ton hydratation ou ta glycémie. Aucun besoin de tout suivre."],en:["More than meals","You can also track weight, sleep, steps, physical activity, hydration or blood glucose. You don't have to track everything."]},
+    {icon:"⚙️",fr:["Énergie s’adapte à toi","Dans ton Profil, choisis tes objectifs, les données que tu veux suivre et l’affichage des calories. Commence simplement : tu pourras modifier tes préférences à tout moment."],en:["Énergie adapts to you","In Profile, choose your goals, what you want to track and whether to display calories. Start simply: you can adjust your preferences anytime."]}
   ];
-  let energyGuideIndex = 0;
+  let energyGuideIndex = 0, energyGuideLanguage = "fr", energyGuideInitialLocale = null;
+  const energyGuideLabels = {
+    fr:{skip:"Passer",previous:"Retour",next:"Suivant",finish:"Commencer avec Énergie",hide:"Ne plus afficher automatiquement",progress:"Étape"},
+    en:{skip:"Skip",previous:"Back",next:"Next",finish:"Start using Énergie",hide:"Don't show automatically again",progress:"Step"}
+  };
+  function energyGuideRememberDone() {
+    try {
+      localStorage.setItem(ENERGY_GUIDE_SEEN_KEY,"1");
+      if ($("#energyGuideDoNotShow")?.checked) localStorage.setItem(ENERGY_GUIDE_SILENT_KEY,"1");
+    } catch (_) {}
+  }
+  function closeEnergyGuide() {
+    const dialog=$("#energyGuideDialog");
+    energyGuideRememberDone();
+    if (dialog?.open) dialog.close();
+    else { dialog?.removeAttribute("open"); dialog?.classList.remove("energy-guide-dialog-fallback"); }
+    const requested=energyGuideLanguage==="en"?"en":"fr-CA";
+    if (requested!==energyGuideInitialLocale) {
+      try { localStorage.setItem("energieLocale",requested); } catch (_) {}
+      location.reload();
+    }
+  }
   function ensureEnergyGuideDialog() {
-    let dialog = $("#energyGuideDialog");
-    if (dialog) return dialog;
-    document.body.insertAdjacentHTML("beforeend", `<dialog id="energyGuideDialog" class="energy-guide-dialog"><section class="energy-guide-shell"><div class="energy-guide-top"><button type="button" class="energy-guide-skip" id="energyGuideSkip">Fermer</button><button type="button" class="energy-guide-close" id="energyGuideClose" aria-label="Fermer le guide">✕</button></div><div class="energy-guide-body" id="energyGuideBody"></div><div class="energy-guide-footer"><div class="energy-guide-dots" id="energyGuideDots" aria-label="Progression du guide"></div><div class="energy-guide-actions"><button type="button" class="energy-guide-prev" id="energyGuidePrev">Précédent</button><button type="button" class="energy-guide-next" id="energyGuideNext">Suivant</button></div></div></section></dialog>`);
-    dialog = $("#energyGuideDialog");
-    $("#energyGuideClose").onclick = () => dialog.close();
-    $("#energyGuideSkip").onclick = () => dialog.close();
-    $("#energyGuidePrev").onclick = () => { if (energyGuideIndex > 0) { energyGuideIndex--; renderEnergyGuideSlide(); } };
-    $("#energyGuideNext").onclick = () => { if (energyGuideIndex >= ENERGY_GUIDE_SLIDES.length - 1) dialog.close(); else { energyGuideIndex++; renderEnergyGuideSlide(); } };
-    let touchX = null;
-    dialog.addEventListener("touchstart", e => { touchX = e.changedTouches?.[0]?.clientX ?? null; }, {passive:true});
-    dialog.addEventListener("touchend", e => { if (touchX == null) return; const dx=(e.changedTouches?.[0]?.clientX ?? touchX)-touchX; touchX=null; if(Math.abs(dx)<55) return; if(dx<0 && energyGuideIndex<ENERGY_GUIDE_SLIDES.length-1) energyGuideIndex++; else if(dx>0 && energyGuideIndex>0) energyGuideIndex--; else return; renderEnergyGuideSlide(); }, {passive:true});
+    let dialog=$("#energyGuideDialog");
+    if(dialog) return dialog;
+    document.body.insertAdjacentHTML("beforeend",
+      '<dialog id="energyGuideDialog" class="energy-guide-dialog"><section class="energy-guide-shell">'+
+      '<header class="energy-guide-top"><div class="energy-guide-brand"><img src="assets/icon.svg" alt=""><strong>Énergie</strong></div>'+
+      '<div class="energy-guide-language" role="group" aria-label="Language / Langue"><button type="button" data-energy-language="fr">FR</button><button type="button" data-energy-language="en">EN</button></div></header>'+
+      '<div class="energy-guide-body" id="energyGuideBody"></div>'+
+      '<footer class="energy-guide-footer"><div id="energyGuideDots" class="energy-guide-dots"></div>'+
+      '<label class="energy-guide-hide"><input id="energyGuideDoNotShow" type="checkbox"><span id="energyGuideHideLabel"></span></label>'+
+      '<div class="energy-guide-actions"><button type="button" class="energy-guide-prev" id="energyGuidePrev"></button>'+
+      '<button type="button" class="energy-guide-skip" id="energyGuideSkip"></button>'+
+      '<button type="button" class="energy-guide-next" id="energyGuideNext"></button></div></footer></section></dialog>');
+    dialog=$("#energyGuideDialog");
+    dialog.querySelectorAll("[data-energy-language]").forEach(button=>button.onclick=()=>{
+      energyGuideLanguage=button.dataset.energyLanguage;renderEnergyGuideSlide();
+    });
+    $("#energyGuidePrev").onclick=()=>{if(energyGuideIndex>0){energyGuideIndex--;renderEnergyGuideSlide();}};
+    $("#energyGuideNext").onclick=()=>{
+      if(energyGuideIndex===ENERGY_GUIDE_SLIDES.length-1) closeEnergyGuide();
+      else {energyGuideIndex++;renderEnergyGuideSlide();}
+    };
+    $("#energyGuideSkip").onclick=closeEnergyGuide;
+    dialog.addEventListener("cancel",event=>{event.preventDefault();closeEnergyGuide();});
     return dialog;
   }
   function renderEnergyGuideSlide() {
-    const slide = ENERGY_GUIDE_SLIDES[energyGuideIndex];
-    const media = slide.media.replace(/assets\/onboarding\/([a-z-]+)\.jpeg\?v=3\.56\.42/g, (_, name) => energyGuideImage(name));
-    $("#energyGuideBody").innerHTML = `<p class="energy-guide-kicker">${slide.kicker}</p><h2 class="energy-guide-title">${slide.title}</h2><p class="energy-guide-copy">${slide.copy}</p>${media}`;
-    $("#energyGuideDots").innerHTML = ENERGY_GUIDE_SLIDES.map((_, i) => `<button type="button" class="energy-guide-dot ${i === energyGuideIndex ? "active" : ""}" data-energy-guide-dot="${i}" aria-label="Étape ${i+1} sur ${ENERGY_GUIDE_SLIDES.length}"></button>`).join("");
-    $$('[data-energy-guide-dot]').forEach(b => b.onclick = () => { energyGuideIndex = Number(b.dataset.energyGuideDot); renderEnergyGuideSlide(); });
-    $("#energyGuidePrev").disabled = energyGuideIndex === 0;
-    $("#energyGuidePrev").style.visibility = energyGuideIndex === 0 ? "hidden" : "visible";
-    $("#energyGuideNext").textContent = energyGuideIndex === ENERGY_GUIDE_SLIDES.length - 1 ? "Terminer" : "Suivant";
-    $("#energyGuideBody").scrollTop = 0;
+    const slide=ENERGY_GUIDE_SLIDES[energyGuideIndex], lang=energyGuideLanguage, labels=energyGuideLabels[lang];
+    const content=slide[lang],note=lang==="en"?slide.noteEn:slide.noteFr;
+    $("#energyGuideBody").innerHTML=
+      '<div class="energy-guide-art" aria-hidden="true"><span>'+slide.icon+'</span></div>'+
+      '<p class="energy-guide-kicker">'+labels.progress+' '+(energyGuideIndex+1)+' / '+ENERGY_GUIDE_SLIDES.length+'</p>'+
+      '<h2 class="energy-guide-title">'+content[0]+'</h2>'+
+      '<p class="energy-guide-copy">'+content[1]+'</p>'+
+      (note?'<p class="energy-guide-disclaimer">'+note+'</p>':'');
+    $("#energyGuideDots").innerHTML=ENERGY_GUIDE_SLIDES.map((_,i)=>
+      '<span class="energy-guide-dot '+(i===energyGuideIndex?'active':'')+'"></span>').join("");
+    $("#energyGuidePrev").textContent=labels.previous;
+    $("#energyGuidePrev").disabled=energyGuideIndex===0;
+    $("#energyGuidePrev").style.visibility=energyGuideIndex===0?"hidden":"visible";
+    $("#energyGuideSkip").textContent=labels.skip;
+    $("#energyGuideNext").textContent=energyGuideIndex===ENERGY_GUIDE_SLIDES.length-1?labels.finish:labels.next;
+    $("#energyGuideHideLabel").textContent=labels.hide;
+    document.querySelectorAll("[data-energy-language]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.energyLanguage===lang)));
+    $("#energyGuideBody").scrollTop=0;
   }
 
   let profileAccordionOpenKey = null;
@@ -16314,30 +16358,28 @@ function formatSleepDuration(hours) {
     if (creator) profile.appendChild(creator);
   }
 
-  let energyGuideImagesPromise = null;
-  function loadEnergyGuideImages() {
-    if (window.ENERGY_GUIDE_IMAGES) return Promise.resolve();
-    if (!energyGuideImagesPromise) energyGuideImagesPromise = new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = "onboarding-images.js?v=3.56.52";
-      script.onload = resolve;
-      script.onerror = () => { script.remove(); energyGuideImagesPromise = null; reject(new Error("Images du guide indisponibles")); };
-      document.head.appendChild(script);
-    });
-    return energyGuideImagesPromise;
-  }
-  async function openEnergyGuide() {
-    try { await loadEnergyGuideImages(); }
-    catch (error) { console.warn(error); }
-    const dialog = ensureEnergyGuideDialog();
-    energyGuideIndex = 0;
+
+  function openEnergyGuide() {
+    const dialog=ensureEnergyGuideDialog();
+    energyGuideInitialLocale=localStorage.getItem("energieLocale") || window.ENERGIE_LOCALE || "fr-CA";
+    energyGuideLanguage=energyGuideInitialLocale==="en"?"en":"fr";
+    energyGuideIndex=0;
+    $("#energyGuideDoNotShow").checked=localStorage.getItem(ENERGY_GUIDE_SILENT_KEY)==="1";
     renderEnergyGuideSlide();
-    if (dialog.open) return;
-    if (typeof dialog.showModal === "function") {
-      try { dialog.showModal(); return; } catch (_) {}
+    if(!dialog.open) {
+      try { dialog.showModal(); } catch (_) {
+        dialog.setAttribute("open","");
+        dialog.classList.add("energy-guide-dialog-fallback");
+      }
     }
-    dialog.setAttribute("open", "");
-    dialog.classList.add("energy-guide-dialog-fallback");
+  }
+  function showEnergyGuideOnFirstLaunch() {
+    try {
+      if(localStorage.getItem(ENERGY_GUIDE_SEEN_KEY)==="1" ||
+         localStorage.getItem(ENERGY_GUIDE_SILENT_KEY)==="1" ||
+         db.settings.demoMode || document.querySelector("dialog[open]")) return;
+    } catch (_) { return; }
+    openEnergyGuide();
   }
 
   let accountDeletionBusy = false;
@@ -20629,6 +20671,7 @@ function formatSleepDuration(hours) {
     if (!client) {
       render();
       setTimeout(showExperienceLaunchIfNeeded, 120);
+      setTimeout(showEnergyGuideOnFirstLaunch, 1800);
       return;
     }
     const { data } = await client.auth.getSession();
@@ -20687,6 +20730,7 @@ function formatSleepDuration(hours) {
     }
     render();
     setTimeout(showExperienceLaunchIfNeeded, 120);
+      setTimeout(showEnergyGuideOnFirstLaunch, 1800);
     setTimeout(maybeShowSoloGoalsWelcome, 850);
   }
   // Le service worker demeure réservé au site Web. Le conteneur Capacitor
