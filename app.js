@@ -16361,8 +16361,10 @@ function formatSleepDuration(hours) {
 
   function openEnergyGuide() {
     const dialog=ensureEnergyGuideDialog();
-    energyGuideInitialLocale=localStorage.getItem("energieLocale") || window.ENERGIE_LOCALE || "fr-CA";
-    energyGuideLanguage=energyGuideInitialLocale==="en"?"en":"fr";
+    const savedGuideLocale=localStorage.getItem("energieLocale");
+    energyGuideInitialLocale=window.ENERGIE_LOCALE || "fr-CA";
+    // French is the welcome default when the user has not chosen a language.
+    energyGuideLanguage=savedGuideLocale==="en"?"en":"fr";
     energyGuideIndex=0;
     $("#energyGuideDoNotShow").checked=localStorage.getItem(ENERGY_GUIDE_SILENT_KEY)==="1";
     renderEnergyGuideSlide();
@@ -16377,7 +16379,12 @@ function formatSleepDuration(hours) {
     try {
       if(localStorage.getItem(ENERGY_GUIDE_SEEN_KEY)==="1" ||
          localStorage.getItem(ENERGY_GUIDE_SILENT_KEY)==="1" ||
-         db.settings.demoMode || document.querySelector("dialog[open]")) return;
+         db.settings.demoMode) return;
+      const blockingDialog=document.querySelector("dialog[open]");
+      if(blockingDialog){
+        blockingDialog.addEventListener("close",()=>setTimeout(showEnergyGuideOnFirstLaunch,250),{once:true});
+        return;
+      }
     } catch (_) { return; }
     openEnergyGuide();
   }
@@ -20730,7 +20737,7 @@ function formatSleepDuration(hours) {
     }
     render();
     setTimeout(showExperienceLaunchIfNeeded, 120);
-      setTimeout(showEnergyGuideOnFirstLaunch, 1800);
+    setTimeout(showEnergyGuideOnFirstLaunch, 1800);
     setTimeout(maybeShowSoloGoalsWelcome, 850);
   }
   // Le service worker demeure réservé au site Web. Le conteneur Capacitor
