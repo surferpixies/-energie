@@ -336,3 +336,31 @@
 .energy-guide-dialog .energy-guide-header-actions .energy-guide-skip[hidden]{display:none!important}
 .energy-guide-dialog .energy-guide-actions{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr)}
 @media(max-width:360px){.energy-guide-dialog .energy-guide-header-actions .energy-guide-skip{font-size:.75rem;padding:3px 6px}}
+
+/* v3.56.476 — balanced onboarding navigation. */
+.energy-guide-dialog .energy-guide-actions{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:10px;
+}
+.energy-guide-dialog .energy-guide-actions button{
+  min-height:41px;
+  font-weight:750;
+}
+.energy-guide-dialog .energy-guide-actions .energy-guide-prev{
+  background:var(--surface-soft,#eff6ed);
+  border:1px solid rgba(66,129,84,.22);
+  color:var(--text,#183f2c);
+}
+.energy-guide-dialog .energy-guide-actions .energy-guide-next{
+  background:#36a95c;
+  border:1px solid #36a95c;
+  color:#fff;
+  font-weight:800;
+}
+.energy-guide-dialog .energy-guide-actions .energy-guide-next:hover{background:#2f9953}
+.energy-guide-dialog .energy-guide-actions .energy-guide-prev:disabled{opacity:.45}
+@media(max-width:420px){
+  .energy-guide-dialog .energy-guide-actions{gap:8px}
+  .energy-guide-dialog .energy-guide-actions button{min-height:40px}
+}
