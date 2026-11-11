@@ -10466,7 +10466,7 @@ function formatSleepDuration(hours) {
 
         if (!availability?.available) {
           if (showResult)
-            alert("Apple Health n’est pas disponible sur cet appareil.");
+            alert("Apple Santé n’est pas disponible sur cet appareil.");
 
           return false;
         }
@@ -10476,7 +10476,7 @@ function formatSleepDuration(hours) {
 
         if (!authorization?.authorized) {
           if (showResult)
-            alert("Apple Health n’a pas été autorisé.");
+            alert("Apple Santé n’a pas été autorisé.");
 
           return false;
         }
@@ -10655,8 +10655,8 @@ function formatSleepDuration(hours) {
 
         alert(
           count
-            ? `Apple Health synchronisé · ${count} journée${count > 1 ? "s" : ""} mise${count > 1 ? "s" : ""} à jour.`
-            : "Apple Health est déjà à jour.",
+            ? `Apple Santé synchronisé · ${count} journée${count > 1 ? "s" : ""} mise${count > 1 ? "s" : ""} à jour.`
+            : "Apple Santé est déjà à jour.",
         );
       }
 
@@ -10669,7 +10669,7 @@ function formatSleepDuration(hours) {
 
       if (showResult)
         alert(
-          `Impossible de synchroniser Apple Health : ${error?.message || "réessaie dans un moment"}.`,
+          `Impossible de synchroniser Apple Santé : ${error?.message || "réessaie dans un moment"}.`,
         );
 
       return false;
@@ -16674,7 +16674,7 @@ function formatSleepDuration(hours) {
       $(".steps-profile-card")?.insertAdjacentHTML(
         "afterend",
         `<section class="card apple-health-profile-card">
-          <h3>🍎 Apple Health</h3>
+          <h3>🍎 Apple Santé</h3>
           <p class="muted small">
             Importe automatiquement le sommeil, les pas, les activités et le poids de Santé.
             Rattrape aussi les journées passées sans données, sur six mois et tout ton historique Énergie. Les valeurs déjà saisies dans le passé sont conservées.
@@ -16683,8 +16683,8 @@ function formatSleepDuration(hours) {
             <div>
               <strong>
                 ${db.settings.appleHealthEnabled === true
-                  ? "Apple Health connecté"
-                  : "Connecter Apple Health"}
+                  ? "Apple Santé connecté"
+                  : "Connecter Apple Santé"}
               </strong>
               <p class="muted tiny">
                 Dernière synchronisation : ${esc(healthLastSync)}
