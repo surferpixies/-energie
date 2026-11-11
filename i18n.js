@@ -2146,6 +2146,12 @@
     "copie(s) locale(s)": "local copies",
     "Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.": "These tools aren't needed for everyday use of Énergie. They let you manually save or transfer a complete copy of your journal."
   });
+  // Keep the Apple integration localized: Apple Santé in French, Apple Health in English.
+  Object.assign(en, {
+    "Apple Santé": "Apple Health",
+    "Apple Santé connecté": "Apple Health connected",
+    "Connecter Apple Santé": "Connect Apple Health"
+  });
   function translateString(s){
     let out=translate(s);
     if(locale==='en' && out===s){
