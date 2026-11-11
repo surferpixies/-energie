@@ -16261,7 +16261,7 @@ function formatSleepDuration(hours) {
     let dialog=$("#energyGuideDialog");
     if(dialog) return dialog;
     document.body.insertAdjacentHTML("beforeend",
-      '<dialog id="energyGuideDialog" class="energy-guide-dialog"><section class="energy-guide-shell">'+
+      '<dialog id="energyGuideDialog" class="energy-guide-dialog"><section class="energy-guide-shell" translate="no">'+
       '<header class="energy-guide-top"><div class="energy-guide-brand"><img src="assets/icon.svg" alt=""><strong>Énergie</strong></div>'+
       '<div class="energy-guide-language" role="group" aria-label="Language / Langue"><button type="button" data-energy-language="fr">FR</button><button type="button" data-energy-language="en">EN</button></div></header>'+
       '<div class="energy-guide-body" id="energyGuideBody"></div>'+
