@@ -16263,12 +16263,11 @@ function formatSleepDuration(hours) {
     document.body.insertAdjacentHTML("beforeend",
       '<dialog id="energyGuideDialog" class="energy-guide-dialog"><section class="energy-guide-shell" translate="no">'+
       '<header class="energy-guide-top"><div class="energy-guide-brand"><img src="assets/icon.svg" alt=""><strong>Énergie</strong></div>'+
-      '<div class="energy-guide-language" role="group" aria-label="Language / Langue"><button type="button" data-energy-language="fr">Français</button><button type="button" data-energy-language="en">English</button></div></header>'+
+      '<div class="energy-guide-header-actions"><div class="energy-guide-language" role="group" aria-label="Language / Langue"><button type="button" data-energy-language="fr">Français</button><button type="button" data-energy-language="en">English</button></div><button type="button" class="energy-guide-skip" id="energyGuideSkip"></button></div></header>'+
       '<div class="energy-guide-body" id="energyGuideBody"></div>'+
       '<footer class="energy-guide-footer"><div id="energyGuideDots" class="energy-guide-dots"></div>'+
       '<label class="energy-guide-hide"><input id="energyGuideDoNotShow" type="checkbox"><span id="energyGuideHideLabel"></span></label>'+
       '<div class="energy-guide-actions"><button type="button" class="energy-guide-prev" id="energyGuidePrev"></button>'+
-      '<button type="button" class="energy-guide-skip" id="energyGuideSkip"></button>'+
       '<button type="button" class="energy-guide-next" id="energyGuideNext"></button></div></footer></section></dialog>');
     dialog=$("#energyGuideDialog");
     dialog.querySelectorAll("[data-energy-language]").forEach(button=>button.onclick=()=>{
@@ -16298,6 +16297,7 @@ function formatSleepDuration(hours) {
     $("#energyGuidePrev").disabled=energyGuideIndex===0;
     $("#energyGuidePrev").style.visibility=energyGuideIndex===0?"hidden":"visible";
     $("#energyGuideSkip").textContent=labels.skip;
+    $("#energyGuideSkip").hidden=energyGuideIndex===ENERGY_GUIDE_SLIDES.length-1;
     $("#energyGuideNext").textContent=energyGuideIndex===ENERGY_GUIDE_SLIDES.length-1?labels.finish:labels.next;
     $("#energyGuideHideLabel").textContent=labels.hide;
     document.querySelectorAll("[data-energy-language]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.energyLanguage===lang)));
