@@ -312,3 +312,27 @@
   .energy-guide-dialog .energy-guide-brand{gap:6px;font-size:1rem}
   .energy-guide-dialog .energy-guide-brand img{width:28px;height:28px}
 }
+
+/* v3.56.475 — unobtrusive Skip below the language switch. */
+.energy-guide-dialog .energy-guide-top{align-items:flex-start}
+.energy-guide-dialog .energy-guide-header-actions{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:0}
+.energy-guide-dialog .energy-guide-header-actions .energy-guide-skip{
+  display:block;
+  width:auto;
+  min-width:0;
+  min-height:30px;
+  margin:0;
+  padding:4px 8px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  box-shadow:none;
+  color:var(--muted);
+  font-size:.8rem;
+  font-weight:650;
+  line-height:1.2;
+  text-align:right;
+}
+.energy-guide-dialog .energy-guide-header-actions .energy-guide-skip[hidden]{display:none!important}
+.energy-guide-dialog .energy-guide-actions{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr)}
+@media(max-width:360px){.energy-guide-dialog .energy-guide-header-actions .energy-guide-skip{font-size:.75rem;padding:3px 6px}}
