@@ -2130,6 +2130,22 @@
     "Ex. Déjeuner rapide": "e.g., Quick breakfast",
     "repas ou collation avec calories estimées": "meal or snack with estimated calories"
   });
+  // Profile / native app English sweep (November 2026).
+  Object.assign(en, {
+    "Retrouve ton journal dans la version Web d’Énergie.": "Access your journal in Énergie's web version.",
+    "Ouvrir la version Web": "Open the web version",
+    "Sur mobile, les rappels peuvent apparaître même lorsque Énergie n’est pas ouverte, si les notifications sont autorisées.": "On mobile, reminders can appear even when Énergie isn't open, if notifications are enabled.",
+    "Importe automatiquement le sommeil, les pas, les activités et le poids de Santé. Rattrape aussi les journées passées sans données, sur six mois et tout ton historique Énergie. Les valeurs déjà saisies dans le passé sont conservées.": "Automatically import sleep, steps, activities and weight from Apple Health. You can also fill in missing data from the past six months and your Énergie history. Previously entered values are preserved.",
+    "Apple Health connecté": "Apple Health connected",
+    "Connecter Apple Health": "Connect Apple Health",
+    "Dernière synchronisation :": "Last sync:",
+    "Poids mesuré": "Measured weight",
+    "Ex. 165,5": "e.g., 165.5",
+    "Ex. 75,2": "e.g., 75.2",
+    "Options avancées": "Advanced options",
+    "copie(s) locale(s)": "local copies",
+    "Ces outils ne sont pas nécessaires au fonctionnement normal d’Énergie. Ils servent surtout à conserver ou transférer manuellement une copie complète du journal.": "These tools aren't needed for everyday use of Énergie. They let you manually save or transfer a complete copy of your journal."
+  });
   function translateString(s){
     let out=translate(s);
     if(locale==='en' && out===s){
@@ -2172,6 +2188,15 @@
       for(const [pattern,replacement] of rules) if(pattern.test(s)) return s.replace(pattern,replacement);
     }
     if(locale==='en'){
+      // Native profile labels containing live dates and backup counts.
+      let profileMatch;
+      if((profileMatch=s.match(/^Options avancées\s*·\s*(\d+)\s*copie\(s\)\s*locale\(s\)$/i))){
+        const n=Number(profileMatch[1]);
+        return 'Advanced options · '+n+' local backup '+(n===1?'copy':'copies');
+      }
+      if((profileMatch=s.match(/^Dernière synchronisation\s*:\s*(.+)$/))){
+        return 'Last sync: '+profileMatch[1];
+      }
       // Dynamic text in Journal / Insights. Preserve user data and timestamps.
       let m;
       if((m=s.match(/^Mesure de glycémie disponible depuis (.+)$/))) return 'Blood glucose reading available since '+m[1];
