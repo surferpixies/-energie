@@ -146,3 +146,29 @@
 .profile-backup-content{
   padding:0 16px 16px;
 }
+
+/* v3.56.470 — screenshot-free bilingual welcome guide. */
+.energy-guide-dialog{width:min(94vw,500px);max-height:min(92dvh,760px)}
+.energy-guide-shell{min-height:min(670px,90dvh);max-height:92dvh}
+.energy-guide-top{padding:20px 22px;gap:12px}
+.energy-guide-brand{display:flex;align-items:center;gap:10px;color:var(--text);font-weight:800;font-size:1.17rem}
+.energy-guide-brand img{width:34px;height:34px;border-radius:10px}
+.energy-guide-language{display:flex;gap:3px;padding:3px;border-radius:12px;background:var(--surface2,#edf4ec)}
+.energy-guide-language button{border:0;background:transparent;border-radius:9px;padding:8px 11px;color:var(--text);font-weight:700;cursor:pointer}
+.energy-guide-language button[aria-pressed=true]{background:var(--surface,#fff);box-shadow:0 1px 5px rgba(0,0,0,.09)}
+.energy-guide-body{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px 26px 10px}
+.energy-guide-art{width:min(58vw,220px);height:min(58vw,220px);max-height:29dvh;min-height:130px;display:grid;place-items:center;margin:5px auto 24px;border-radius:36%;background:radial-gradient(circle at 30% 22%,rgba(180,230,175,.65),rgba(119,190,144,.18) 58%,rgba(114,165,140,.07) 76%);border:1px solid rgba(73,135,97,.13)}
+.energy-guide-art span{font-size:clamp(4.2rem,15vw,7.3rem);line-height:1;filter:drop-shadow(0 8px 12px rgba(55,110,67,.12))}
+.energy-guide-title{font-size:clamp(1.55rem,5vw,2rem);line-height:1.13}
+.energy-guide-copy{max-width:385px;margin:14px auto 0;font-size:1rem;line-height:1.57}
+.energy-guide-disclaimer{max-width:385px;font-size:.83rem;line-height:1.45;color:var(--muted);border-top:1px solid var(--border,rgba(90,120,100,.2));padding-top:12px;margin:15px auto 0}
+.energy-guide-footer{padding:12px 20px calc(16px + env(safe-area-inset-bottom))}
+.energy-guide-hide{display:flex;align-items:center;justify-content:center;gap:8px;margin:2px 0 17px;color:var(--muted);font-size:.83rem}
+.energy-guide-hide input{accent-color:#31ad57}
+.energy-guide-actions{grid-template-columns:1fr auto 1.4fr;gap:7px}
+.energy-guide-actions button{min-height:46px;padding:8px 12px;font-size:.87rem;border-radius:13px}
+.energy-guide-skip{border:0;background:transparent;color:var(--muted);font-weight:700}
+.energy-guide-next{background:#31ad57}
+.energy-guide-dot{display:block}
+@media(max-width:420px){.energy-guide-shell{min-height:min(620px,92dvh)}.energy-guide-body{padding:12px 18px 8px}.energy-guide-art{margin-bottom:15px;min-height:110px}.energy-guide-copy{font-size:.92rem}.energy-guide-actions button{padding:7px;font-size:.8rem}.energy-guide-top{padding:15px}}
+@media(prefers-reduced-motion:reduce){.energy-guide-dialog *{animation:none!important;transition:none!important}}
