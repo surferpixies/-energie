@@ -63,8 +63,6 @@
   margin:0;
 }
 .personal-profile-card #profileWeightDate{
-  -webkit-appearance:none;
-  appearance:none;
   text-align:left;
   font-size:16px;
   padding-inline:10px;
