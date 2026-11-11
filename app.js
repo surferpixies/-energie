@@ -16237,8 +16237,8 @@ function formatSleepDuration(hours) {
   ];
   let energyGuideIndex = 0, energyGuideLanguage = "fr", energyGuideInitialLocale = null;
   const energyGuideLabels = {
-    fr:{skip:"Passer",previous:"Retour",next:"Suivant",finish:"Commencer avec Énergie",hide:"Ne plus afficher automatiquement",progress:"Étape"},
-    en:{skip:"Skip",previous:"Back",next:"Next",finish:"Start using Énergie",hide:"Don't show automatically again",progress:"Step"}
+    fr:{skip:"Passer",previous:"Précédent",next:"Suivant",finish:"Commencer avec Énergie",hide:"Ne plus afficher automatiquement",progress:"Étape"},
+    en:{skip:"Skip",previous:"Previous",next:"Next",finish:"Start using Énergie",hide:"Don't show automatically again",progress:"Step"}
   };
   function energyGuideRememberDone() {
     try {
