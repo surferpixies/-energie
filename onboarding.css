@@ -191,3 +191,70 @@
 .energy-guide-dialog .energy-guide-actions button{box-sizing:border-box;display:block;min-width:0;max-width:100%;width:100%;min-height:39px;padding:7px 6px;border-radius:11px;font-size:clamp(.7rem,2vw,.86rem);line-height:1.2;white-space:normal;overflow-wrap:break-word}
 .energy-guide-dialog .energy-guide-actions .energy-guide-skip{padding:7px 3px}
 @media(max-width:420px){.energy-guide-dialog .energy-guide-shell{min-height:min(590px,91dvh)}.energy-guide-dialog .energy-guide-top{padding:13px 15px}.energy-guide-dialog .energy-guide-art{width:min(42vw,150px);height:min(42vw,150px);margin-bottom:12px}.energy-guide-dialog .energy-guide-footer{padding-inline:12px}.energy-guide-dialog .energy-guide-actions{gap:4px}.energy-guide-dialog .energy-guide-actions button{min-height:38px;font-size:.73rem}}
+
+/* v3.56.473 — steady onboarding composition: no vertical re-centering between slides. */
+.energy-guide-dialog .energy-guide-body{
+  display:grid;
+  flex:1 1 auto;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:minmax(150px,170px) 20px minmax(69px,69px) auto auto;
+  row-gap:0;
+  align-content:start;
+  justify-content:stretch;
+  justify-items:center;
+  align-items:start;
+  overflow-y:auto;
+  min-height:0;
+  padding-top:9px;
+}
+.energy-guide-dialog .energy-guide-art{
+  grid-row:1;
+  align-self:start;
+  justify-self:center;
+  margin:0;
+  width:min(43.5vw,165px);
+  height:min(43.5vw,165px);
+  max-height:165px;
+}
+.energy-guide-dialog .energy-guide-kicker{
+  grid-row:2;
+  margin:0;
+  align-self:start;
+}
+.energy-guide-dialog .energy-guide-title{
+  grid-row:3;
+  align-self:start;
+  margin:7px auto 0;
+  max-width:100%;
+  line-height:1.13;
+}
+.energy-guide-dialog .energy-guide-copy{
+  grid-row:4;
+  align-self:start;
+  margin:5px auto 0;
+}
+.energy-guide-dialog .energy-guide-disclaimer{
+  grid-row:5;
+  align-self:start;
+  margin:12px auto 0;
+}
+@media(max-width:420px){
+  .energy-guide-dialog .energy-guide-body{
+    grid-template-rows:148px 19px 68px auto auto;
+    padding-top:8px;
+  }
+  .energy-guide-dialog .energy-guide-art{
+    width:min(42vw,145px);
+    height:min(42vw,145px);
+  }
+}
+@media(max-height:650px){
+  .energy-guide-dialog .energy-guide-body{
+    grid-template-rows:118px 18px 61px auto auto;
+    padding-top:5px;
+  }
+  .energy-guide-dialog .energy-guide-art{
+    width:112px;height:112px;
+  }
+  .energy-guide-dialog .energy-guide-art span{font-size:3.6rem}
+}
