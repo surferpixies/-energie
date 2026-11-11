@@ -47,3 +47,35 @@
 .metrics-values tbody th{font-weight:500;white-space:nowrap}
 @media(max-width:640px){.personal-trends-grid{grid-template-columns:minmax(0,1fr)}.personal-trend-card{padding:12px 14px}.personal-trends>.section-title h2{margin-bottom:3px}}
 @media(prefers-reduced-motion:reduce){.metrics-chart *{transition:none!important;animation:none!important}}
+
+/* v3.56.478 — weight entry: avoid iOS date picker colliding with the unit control. */
+.personal-profile-card #profileWeightFields{min-width:0;max-width:100%}
+.personal-profile-card #profileWeightFields .personal-weight-grid{min-width:0;max-width:100%}
+.personal-profile-card #profileWeightFields .personal-weight-grid>label{min-width:0;max-width:100%}
+.personal-profile-card #profileWeightDate,
+.personal-profile-card #profileWeightUnit,
+.personal-profile-card #profileWeight{
+  display:block;
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  margin:0;
+}
+.personal-profile-card #profileWeightDate{
+  -webkit-appearance:none;
+  appearance:none;
+  text-align:left;
+  font-size:16px;
+  padding-inline:10px;
+}
+/* Native iOS date controls need more width than a compact grid cell can safely provide. */
+@media(max-width:600px){
+  .personal-profile-card #profileWeightFields .personal-weight-grid{
+    grid-template-columns:minmax(0,1fr);
+    gap:12px;
+  }
+  .personal-profile-card #profileWeightFields .personal-weight-input{
+    grid-column:auto;
+  }
+}
