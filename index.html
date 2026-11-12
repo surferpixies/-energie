@@ -178,7 +178,7 @@
       <section class="meal-calorie-editor meal-calorie-inline" aria-labelledby="mealCaloriesLabel">
         <input id="mealCalorieMode" type="hidden" value="auto">
         <div class="meal-calorie-controls">
-          <label id="mealCaloriesLabel" for="mealCalories">Calories estimées</label>
+          <label id="mealCaloriesLabel" for="mealCalories">🔥 Calories</label>
           <div class="meal-calorie-ai-action"><button type="button" id="searchMealCaloriesAi" class="secondary small" title="Google en priorité, estimation IA au besoin" hidden>✨ Estimer avec l’IA</button></div>
           <input id="mealCalories" type="text" inputmode="decimal" autocomplete="one-time-code" placeholder="—" aria-describedby="mealCalorieStatus">
           <span class="meal-calorie-unit">kcal</span>
@@ -265,7 +265,7 @@
           <section id="mealNutritionSection" class="meal-nutrition-section" hidden>
             <div class="meal-nutrition-heading"><div><span class="eyebrow">Nutrition facultative</span><strong>Estimation nutritionnelle</strong></div><button type="button" class="secondary small" id="estimateMealNutrition">Estimer</button></div>
             <div class="nutrition-fields">
-              <label>Calories<input id="nutritionCalories" type="number" min="0" step="any" inputmode="decimal" placeholder="—"></label>
+              <label>🔥 Calories<input id="nutritionCalories" type="number" min="0" step="any" inputmode="decimal" placeholder="—"></label>
               <label>Protéines (g)<input id="nutritionProtein" type="number" min="0" step="any" inputmode="decimal" placeholder="—"></label>
               <label>Glucides (g)<input id="nutritionCarbs" type="number" min="0" step="any" inputmode="decimal" placeholder="—"></label>
               <label>Lipides (g)<input id="nutritionFat" type="number" min="0" step="any" inputmode="decimal" placeholder="—"></label>
@@ -306,7 +306,7 @@
         <label for="recipeImportText">Texte proposé (modifiable)</label>
         <textarea id="recipeImportText" rows="6" maxlength="1000"></textarea>
         <div id="recipeImportSourceLink" hidden></div>
-        <label for="recipeImportCalories">Calories (facultatif)</label>
+        <label for="recipeImportCalories">🔥 Calories (facultatif)</label>
         <input id="recipeImportCalories" inputmode="decimal" type="text" placeholder="Aucune donnée disponible" />
         <p id="recipeImportCalorieInfo" class="muted small"></p>
         <button type="button" id="applyRecipeImport" class="primary">Utiliser dans mon repas</button>
@@ -354,7 +354,7 @@
           </div>
         </div>
         <div id="quickSnackCaloriesRow" class="quick-snack-calories-row" hidden>
-          <label for="quickSnackCalories">Calories (saisie manuelle facultative)</label>
+          <label for="quickSnackCalories">🔥 Calories (saisie manuelle facultative)</label>
           <div class="quick-snack-calories-input"><input id="quickSnackCalories" type="number" min="0" step="any" inputmode="decimal" placeholder="Ex. 150" disabled><span>kcal</span></div>
         </div>
         <div id="quickSnackPhotoPreview" class="quick-snack-photo-preview" hidden><div id="quickSnackPhotoList" class="meal-photo-preview-list"></div><button type="button" id="removeQuickSnackPhoto" class="text-button small">Tout retirer</button></div>
@@ -495,9 +495,9 @@
       </fieldset>
       <label>Durée en minutes<input id="activityMinutes" name="energie_activity_duration_value" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Ex. 45" aria-label="Durée de l’activité en minutes"></label>
       <fieldset class="activity-intensity-fieldset"><legend>Intensité</legend><div class="activity-intensity-choices" role="radiogroup" aria-label="Intensité de l’activité"><button type="button" data-intensity="low">Faible</button><button type="button" data-intensity="moderate" class="active">Modérée</button><button type="button" data-intensity="high">Élevée</button></div><input id="activityIntensity" type="hidden" value="moderate"></fieldset>
-      <div class="activity-estimate-card"><div><span>🔥</span><div><small>Calories estimées</small><strong id="activityEstimateValue">— kcal</strong></div></div><p>Estimation indicative selon l’activité, la durée et l’intensité.</p></div>
+      <div class="activity-estimate-card"><div><span>🔥</span><div><small>🔥 Calories estimées</small><strong id="activityEstimateValue">— kcal</strong></div></div><p>Estimation indicative selon l’activité, la durée et l’intensité.</p></div>
       <label class="activity-favorite-toggle"><input id="activityFavorite" type="checkbox"><span>⭐ <span data-i18n-key="Enregistrer comme activité favorite">Enregistrer comme activité favorite</span></span></label>
-      <label>Calories mesurées <span class="muted tiny">(facultatif)</span><input id="activityActualCalories" type="number" min="0" max="10000" step="1" inputmode="numeric" autocomplete="one-time-code" placeholder="Ex. 320"><small class="field-hint">Entre la valeur de ta montre ou de ton appareil pour remplacer l’estimation.</small></label>
+      <label>🔥 Calories mesurées <span class="muted tiny">(facultatif)</span><input id="activityActualCalories" type="number" min="0" max="10000" step="1" inputmode="numeric" autocomplete="one-time-code" placeholder="Ex. 320"><small class="field-hint">Entre la valeur de ta montre ou de ton appareil pour remplacer l’estimation.</small></label>
       <div><p class="eyebrow">Activités enregistrées</p><div id="dayActivitiesList" class="day-activities-list"></div></div>
       <button type="submit" class="primary">Ajouter l'activité</button>
     </form>
