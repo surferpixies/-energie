@@ -164,7 +164,10 @@
           </div>
         </div>
         <div id="mealCnfLinkedStatus" class="meal-cnf-linked-status" hidden><span aria-hidden="true">✓</span><strong></strong><small>Quantités reliées directement aux fiches FCÉN</small></div>
-        <p class="meal-precision-hint"><span aria-hidden="true">💡</span><span id="mealPrecisionHintText">⚠️ Pour une recherche de calories utile, écris exactement ce que tu as mangé : plat, sauce, accompagnements et portion (si connue). Ex. « Brochette de poulet avec sauce chez St-Hubert, sans accompagnement » n’est PAS le même repas que « Brochette de poulet avec riz et sauce chez St-Hubert ». Même avec une description précise, vérifie toujours la source et la portion : une estimation peut être erronée.</span></p>
+        <button type="button" class="meal-calorie-help-card" id="openMealCalorieHelp" aria-haspopup="dialog" aria-controls="mealCalorieHelpDialog">
+          <span class="meal-calorie-help-icon" aria-hidden="true">💡</span>
+          <span class="meal-calorie-help-copy"><strong id="mealCalorieHelpTitle">Optimiser l’estimation des calories</strong><small id="mealCalorieHelpSummary">Une description précise des aliments et des quantités consommées aide à obtenir une estimation plus juste.</small><em id="mealCalorieHelpAction">Voir les conseils et astuces <span aria-hidden="true">›</span></em></span>
+        </button>
         <small id="mealFavoriteFeedback" class="meal-favorite-feedback" role="status" aria-live="polite" hidden></small>
         <div id="mealAiSuggestion" class="meal-ai-suggestion" hidden>
           <div><span aria-hidden="true">✨</span><span><strong>Suggestion de l’IA</strong><small id="mealAiSuggestionText"></small></span></div>
@@ -810,6 +813,18 @@
         ?.catch(error => console.warn('iOS keyboard accessory bar:', error));
     }
   </script>
+  <dialog id="mealCalorieHelpDialog" class="meal-calorie-help-dialog" aria-labelledby="mealCalorieHelpDialogTitle">
+    <div class="meal-calorie-help-modal">
+      <header class="meal-calorie-help-header"><h2 id="mealCalorieHelpDialogTitle"></h2><button type="button" id="closeMealCalorieHelp" class="icon-button" aria-label="Fermer">✕</button></header>
+      <p id="mealCalorieHelpIntro"></p>
+      <ul id="mealCalorieHelpList"></ul>
+      <h3 id="mealCalorieHelpExamplesTitle"></h3>
+      <div id="mealCalorieHelpExamples" class="meal-calorie-help-examples"></div>
+      <section class="meal-calorie-help-favorites"><strong id="mealCalorieHelpFavoritesTitle"></strong><p id="mealCalorieHelpFavoritesText"></p><p id="mealCalorieHelpFavoritesMore"></p></section>
+      <p id="mealCalorieHelpFootnote" class="meal-calorie-help-footnote"></p>
+      <button type="button" id="confirmMealCalorieHelp" class="primary meal-calorie-help-confirm"></button>
+    </div>
+  </dialog>
   <script src="meal-entry-guide.js?v=3.56.427-guide-refresh"></script>
   <script src="journal-day-compact.js?v=3.56.453-en"></script>
 </body>
