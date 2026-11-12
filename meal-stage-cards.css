@@ -448,3 +448,15 @@ html[data-theme="dark"] .meal-entry-stage-card {
 #mealForm #mealAiGroundedResult > summary { color:var(--accent); cursor:pointer; font-weight:650; }
 #mealForm #mealAiGroundedResult p { margin:7px 0; }
 #mealForm #mealAiGroundedReport { font-size:.7rem; }
+
+
+/* v3.56.485 - Show concise verification, not the technical grounding report. */
+#mealForm #mealAiGroundedReport { display:none!important; }
+#mealForm #mealAiGroundedClarity[hidden],
+#mealForm #mealAiGroundedSources[hidden] { display:none!important; }
+#mealForm #mealAiGroundedClarity {
+  margin:7px 0;
+  font-size:.77rem;
+  line-height:1.45;
+  color:var(--muted);
+}
