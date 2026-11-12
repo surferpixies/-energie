@@ -16190,7 +16190,7 @@ function formatSleepDuration(hours) {
       const linked = p.mealId ? meals.find(m => m.id === p.mealId) : null;
       const normalized = type => ["Déjeuner","Dîner","Souper","Collation"].find(name => name.toLocaleLowerCase("fr-CA") === String(type || "").toLocaleLowerCase("fr-CA"));
       if (linked) return normalized(linked.type) || "Collation";
-      const preceding = meals.filter(m => /^\\d{2}:\\d{2}$/.test(m.time || "") && m.time <= p.time)
+      const preceding = meals.filter(m => /^\d{2}:\d{2}$/.test(m.time || "") && m.time <= p.time)
         .sort((a,b) => b.time.localeCompare(a.time))[0];
       if (preceding && normalized(preceding.type)) return normalized(preceding.type);
       const hour = Number(p.time.slice(0,2));
