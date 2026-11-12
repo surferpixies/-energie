@@ -25,8 +25,9 @@ pre{white-space:pre-wrap;word-break:break-word;background:#f1eee5;padding:12px;b
   <div id="summary" class="card">Analyse en cours…</div>
   <div id="results"></div>
 </main>
+<script src="journal-indexeddb.js?v=stage1"></script>
 <script>
-(() => {
+(async () => {
   "use strict";
   const results = document.getElementById("results");
   const summary = document.getElementById("summary");
@@ -76,6 +77,21 @@ pre{white-space:pre-wrap;word-break:break-word;background:#f1eee5;padding:12px;b
     backups.forEach((b,i)=>addCandidate(`Sauvegarde interne ${i+1}`, "energieRepasBackups", b.payload, b.reason || "backup"));
   }
 
+  // La nouvelle sauvegarde principale est dans IndexedDB, séparée par compte.
+  const ownerId = localStorage.getItem("energieLocalOwnerUserId") || "";
+  if (ownerId && window.EnergieJournalIndexedDB) {
+    try {
+      const saved = await window.EnergieJournalIndexedDB.read(ownerId);
+      const parsed = safeParse(saved);
+      if (parsed) addCandidate("Journal IndexedDB", "indexeddb", parsed, "IndexedDB");
+      const rescue = await window.EnergieJournalIndexedDB.read(ownerId + "::recovery-before-restore");
+      const rescueParsed = safeParse(rescue);
+      if (rescueParsed) addCandidate("Sauvegarde avant restauration IndexedDB", "indexeddb-backup", rescueParsed, "IndexedDB");
+    } catch (error) {
+      console.warn("Lecture du journal IndexedDB impossible", error);
+    }
+  }
+
   // Trier les candidats les plus prometteurs d'abord
   candidates.sort((a,b)=>(b.meals-a.meals)||(b.days-a.days));
 
@@ -118,7 +134,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:#f1eee5;padding:12px;b
 
   function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 
-  document.addEventListener("click",e=>{
+  document.addEventListener("click",async e=>{
     const d=e.target.dataset.download;
     if(d!==undefined){
       const c=candidates[Number(d)];
@@ -128,13 +144,28 @@ pre{white-space:pre-wrap;word-break:break-word;background:#f1eee5;padding:12px;b
     if(r!==undefined){
       const c=candidates[Number(r)];
       if(!confirm(`Restaurer cette copie (${c.meals} repas, ${c.days} journées) comme données actives? La copie actuelle sera sauvegardée avant.`)) return;
-      const current = localStorage.getItem("energieRepasDB");
-      const existingBackups = safeParse(localStorage.getItem("energieRepasBackups")) || [];
-      existingBackups.unshift({at:new Date().toISOString(),reason:"avant-restauration-outil",payload:safeParse(current) || current});
-      localStorage.setItem("energieRepasBackups",JSON.stringify(existingBackups.slice(0,20)));
-      localStorage.setItem("energieRepasDB",JSON.stringify(c.payload));
-      localStorage.setItem("energieRepasDB_shadow",JSON.stringify(c.payload));
-      alert("Copie restaurée. Retourne maintenant à l'application principale et recharge-la.");
+      try {
+        if (ownerId && window.EnergieJournalIndexedDB) {
+          const previous = await window.EnergieJournalIndexedDB.read(ownerId);
+          if (previous) await window.EnergieJournalIndexedDB.write(ownerId + "::recovery-before-restore", previous);
+          await window.EnergieJournalIndexedDB.write(ownerId, JSON.stringify(c.payload));
+          // Le journal restauré devient la copie de référence dans IndexedDB.
+          // Éviter qu'une ancienne copie locale le remplace au prochain lancement.
+          localStorage.removeItem("energieRepasDB");
+          localStorage.removeItem("energieRepasDB_shadow");
+        } else {
+          const current = localStorage.getItem("energieRepasDB");
+          const existingBackups = safeParse(localStorage.getItem("energieRepasBackups")) || [];
+          existingBackups.unshift({at:new Date().toISOString(),reason:"avant-restauration-outil",payload:safeParse(current) || current});
+          localStorage.setItem("energieRepasBackups",JSON.stringify(existingBackups.slice(0,20)));
+          localStorage.setItem("energieRepasDB",JSON.stringify(c.payload));
+          localStorage.setItem("energieRepasDB_shadow",JSON.stringify(c.payload));
+        }
+        alert("Copie restaurée. Ferme les autres onglets Énergie et recharge l'application.");
+      } catch (error) {
+        console.error("Restauration impossible", error);
+        alert("La restauration a échoué. Aucune autre copie n'a été effacée volontairement.");
+      }
     }
   });
 })();
