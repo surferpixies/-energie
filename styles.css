@@ -3421,3 +3421,64 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) #mealCalories {width:88px!important}
   .meal-calorie-inline:has(#searchMealCaloriesAi:not([hidden])) #searchMealCaloriesAi {font-size:.68rem!important;padding:7px 9px!important}
 }
+
+
+/* Énergie Solo — aide discrète à l'estimation calorique et favoris. */
+.meal-calorie-help-card {
+  display: grid;
+  grid-template-columns: 30px minmax(0,1fr);
+  align-items: start;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  margin: 9px 0 12px;
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: var(--surface2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.meal-calorie-help-card[hidden] { display: none !important; }
+.meal-calorie-help-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.meal-calorie-help-icon { display: inline-flex; justify-content: center; font-size: 1.2rem; line-height: 1.4; }
+.meal-calorie-help-copy { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.meal-calorie-help-copy strong { font-size: .85rem; line-height: 1.35; font-weight: 750; }
+.meal-calorie-help-copy small { color: var(--muted); font-size: .75rem; line-height: 1.45; }
+.meal-calorie-help-copy em { color: var(--accent-strong); font-size: .75rem; font-style: normal; font-weight: 700; margin-top: 3px; }
+.meal-calorie-help-dialog {
+  box-sizing: border-box;
+  width: min(94vw, 470px);
+  max-width: 470px;
+  max-height: min(85dvh, 800px);
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 21px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 16px 50px #0003;
+}
+.meal-calorie-help-dialog::backdrop { background: rgba(15,33,24,.45); }
+.meal-calorie-help-modal { padding: 19px 20px 21px; font-size: .86rem; line-height: 1.55; }
+.meal-calorie-help-header { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.meal-calorie-help-header h2 { font-size: 1.08rem; line-height: 1.3; margin: 0; }
+.meal-calorie-help-modal p { margin: 8px 0 13px; }
+.meal-calorie-help-modal ul { padding-left: 19px; margin: 8px 0 17px; }
+.meal-calorie-help-modal li { margin: 6px 0; }
+.meal-calorie-help-modal h3 { font-size: .9rem; margin: 18px 0 9px; }
+.meal-calorie-help-examples { padding: 10px 13px; border-radius: 13px; background: var(--surface2); }
+.meal-calorie-help-examples p { margin: 5px 0; }
+.meal-calorie-help-examples p + p { border-top: 1px solid var(--border); margin-top: 11px; padding-top: 11px; }
+.meal-calorie-help-favorites { margin-top: 17px; padding-top: 14px; border-top: 1px solid var(--border); }
+.meal-calorie-help-favorites strong { color: var(--accent-strong); }
+.meal-calorie-help-favorites p { margin: 8px 0; }
+.meal-calorie-help-footnote { color: var(--muted); font-size: .76rem; border-top: 1px solid var(--border); padding-top: 12px; }
+.meal-calorie-help-confirm { width: 100%; margin-top: 10px; }
+@media (max-width: 430px) {
+  .meal-calorie-help-dialog { width: calc(100vw - 28px); max-height: 86dvh; }
+  .meal-calorie-help-modal { padding: 16px; }
+}
