@@ -18254,7 +18254,7 @@ function formatSleepDuration(hours) {
     const guidedWithoutQuantity = db.settings?.mealEntryMode === "guided" &&
       (m?.cnfItems || []).some(item => !(Number(item.grams) > 0));
     const soloManualCalories = !professionalBetaMode && !clientProfessionalLink?.id && db.settings?.mealEntryMode !== "guided" && db.settings?.manualCaloriesInFreeEntry === true;
-    $("#mealCaloriesLabel").textContent = soloManualCalories ? "Calories (facultatives)" : "Calories estimées";
+    $("#mealCaloriesLabel").textContent = "Calories";
     // Initialise le champ avant de lire le repas : aucune valeur du repas
     // précédent ne doit se retrouver dans une nouvelle saisie libre.
     $("#mealCalories").value = soloManualCalories && (m?.nutrition?.caloriesManual || ["ai-unverified", "web-unconfirmed"].includes(m?.nutrition?.source))
