@@ -1163,17 +1163,47 @@ function formatSleepDuration(hours) {
   // Keep the last journal view selected on this device across reloads.
   // A remote profile snapshot can be older than the user's most recent choice.
   const JOURNAL_VIEW_LOCAL_KEY = "energieJournalViewModeV1";
-  function savedJournalViewMode() {
+  // Small independent journal preference survives even when the large journal
+  // snapshot exceeds Safari localStorage quota. Legacy values remain supported.
+  const JOURNAL_VIEW_CODES = { summary: "s", detailed: "d", consultation: "c" };
+  function savedJournalViewPreference() {
     try {
-      const mode = localStorage.getItem(JOURNAL_VIEW_LOCAL_KEY);
-      return ["summary", "detailed", "consultation"].includes(mode) ? mode : null;
-    } catch (_) { return null; }
+      const stored = localStorage.getItem(JOURNAL_VIEW_LOCAL_KEY) || "";
+      const [modeCode, visibleCodes] = stored.split("|");
+      const decode = code => Object.keys(JOURNAL_VIEW_CODES).find(id => JOURNAL_VIEW_CODES[id] === code);
+      const mode = decode(modeCode) || (["summary", "detailed", "consultation"].includes(stored) ? stored : null);
+      const visible = visibleCodes
+        ? ["summary", "detailed", "consultation"].filter(id => visibleCodes.includes(JOURNAL_VIEW_CODES[id]))
+        : null;
+      return { mode, visible: visible?.some(id => id === "summary" || id === "detailed") ? visible : null };
+    } catch (_) { return { mode: null, visible: null }; }
   }
-  function rememberJournalViewMode(mode) {
-    try { localStorage.setItem(JOURNAL_VIEW_LOCAL_KEY, mode); }
-    catch (error) { console.warn("Préférence de vue locale non enregistrée", error); }
+  function savedJournalViewMode() {
+    return savedJournalViewPreference().mode;
   }
-  if (savedJournalViewMode()) db.settings.journalViewMode = savedJournalViewMode();
+  function savedJournalVisibleViews() {
+    return savedJournalViewPreference().visible;
+  }
+  function rememberJournalViewMode(mode, visibleViews = db.settings?.journalVisibleViews) {
+    const valid = ["summary", "detailed", "consultation"];
+    const requested = Array.isArray(visibleViews) ? visibleViews.filter(id => valid.includes(id)) : valid;
+    const safe = requested.some(id => id === "summary" || id === "detailed") ? requested : ["summary", ...requested];
+    const key = (JOURNAL_VIEW_CODES[mode] || JOURNAL_VIEW_CODES[safe[0]]) + "|" + safe.map(id => JOURNAL_VIEW_CODES[id]).join("");
+    try {
+      localStorage.setItem(JOURNAL_VIEW_LOCAL_KEY, key);
+      return true;
+    } catch (error) {
+      if (isStorageQuotaError(error)) {
+        freeLocalStorageForJournal();
+        try { localStorage.setItem(JOURNAL_VIEW_LOCAL_KEY, key); return true; }
+        catch (retryError) { console.warn("Préférence de vue non enregistrée faute d’espace", retryError); }
+      } else console.warn("Préférence de vue non enregistrée", error);
+      return false;
+    }
+  }
+  const initialJournalViews = savedJournalViewPreference();
+  if (initialJournalViews.mode) db.settings.journalViewMode = initialJournalViews.mode;
+  if (initialJournalViews.visible) db.settings.journalVisibleViews = initialJournalViews.visible;
   function isStorageQuotaError(error) {
     return (
       error?.name === "QuotaExceededError" ||
@@ -2376,7 +2406,7 @@ function formatSleepDuration(hours) {
       // par l’ancienne préférence conservée sur le serveur.
       const pendingJournalView = outbox().some(op => op.kind === "day" && (!op._ownerUserId || op._ownerUserId === session?.user?.id));
       if (!pendingJournalView && !savedJournalViewMode() && ["detailed", "summary", "consultation"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
-      if (Array.isArray(pref.journalVisibleViews) && pref.journalVisibleViews.length)
+      if (!pendingJournalView && !savedJournalVisibleViews() && Array.isArray(pref.journalVisibleViews) && pref.journalVisibleViews.length)
         db.settings.journalVisibleViews = normalizeJournalVisibleViews(pref.journalVisibleViews);
       ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","nutrientIntakeTracking","macroTracking","autoNutritionEstimates","generalRecommendations","hideFavoriteSuggestion","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
@@ -17201,10 +17231,10 @@ function formatSleepDuration(hours) {
           return;
         }
         db.settings.journalVisibleViews = next;
-        if (!next.includes(db.settings.journalViewMode)) {
+        if (!next.includes(db.settings.journalViewMode))
           db.settings.journalViewMode = next[0];
-          rememberJournalViewMode(next[0]);
-        }
+        // Persist the tiny preference before attempting the full journal save.
+        rememberJournalViewMode(db.settings.journalViewMode, next);
         persistProfilePreference("journal-visible-views");
         renderProfile();
       };
