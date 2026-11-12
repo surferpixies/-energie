@@ -1175,15 +1175,18 @@ function formatSleepDuration(hours) {
     try {
       const saved = await storage.read(owner);
       const legacy = localStorage.getItem(APP_KEY);
-      let savedParsed = null;
+      let savedParsed = null, legacyParsed = null;
       try { savedParsed = saved ? JSON.parse(saved) : null; } catch (_) {}
+      try { legacyParsed = legacy ? JSON.parse(legacy) : null; } catch (_) {}
       const savedValid = !!(savedParsed && typeof savedParsed === "object"
         && savedParsed.days && savedParsed.settings);
+      const legacyValid = !!(legacyParsed && typeof legacyParsed === "object"
+        && legacyParsed.days && legacyParsed.settings);
       // The legacy copy may contain edits made by an older application version.
-      // Never replace it with an older IndexedDB snapshot.
-      const legacyUpdated = Date.parse(db.updatedAt || "") || 0;
+      // An invalid legacy string must never overwrite a valid IndexedDB journal.
+      const legacyUpdated = Date.parse(legacyParsed?.updatedAt || "") || 0;
       const storedUpdated = Date.parse(savedParsed?.updatedAt || "") || 0;
-      if (savedValid && (!legacy || storedUpdated >= legacyUpdated)) {
+      if (savedValid && (!legacyValid || storedUpdated >= legacyUpdated)) {
         db = migrate(savedParsed);
       } else {
         await storage.write(owner, JSON.stringify(db));
