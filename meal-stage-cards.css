@@ -528,3 +528,36 @@ html[data-theme="dark"] .meal-entry-stage-card {
 #mealForm .meal-calories-unified-card > #mealAiCaloriesPilot {
   margin-top:0!important;
 }
+
+
+/* v3.56.489 — Compact one-line calorie tips entry; IDs retained for translations. */
+#mealForm .meal-calories-unified-card > #openMealCalorieHelp {
+  display:grid!important;
+  grid-template-columns:28px minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:10px!important;
+  min-height:48px!important;
+  padding:10px 14px!important;
+}
+#mealForm #openMealCalorieHelp .meal-calorie-help-icon {
+  align-self:center;
+  line-height:1!important;
+}
+#mealForm #openMealCalorieHelp .meal-calorie-help-copy {
+  display:block!important;
+}
+#mealForm #openMealCalorieHelp #mealCalorieHelpTitle {
+  display:block;
+  font-size:.85rem;
+  line-height:1.25;
+}
+#mealForm #openMealCalorieHelp #mealCalorieHelpSummary,
+#mealForm #openMealCalorieHelp #mealCalorieHelpAction {
+  display:none!important;
+}
+#mealForm #openMealCalorieHelp .meal-calorie-help-chevron {
+  font-size:1.45rem;
+  font-weight:700;
+  line-height:1;
+  color:var(--accent-strong);
+}
