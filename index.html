@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="steps-tracking.css?v=3.56.39">
   <link rel="stylesheet" href="journal-summary.css?v=3.56.288">
   <link rel="stylesheet" href="onboarding.css?v=3.56.476-balanced-buttons">
-  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.485-calorie-clarity">
+  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.487-calories-card">
   <link rel="stylesheet" href="snack-favorite-offer.css?v=2">
 </head>
 <body>
@@ -175,6 +175,7 @@
         </div>
         <div id="photoPreviewWrap" class="photo-preview-wrap meal-photo-preview" hidden><div id="photoPreviewList" class="meal-photo-preview-list"></div></div>
       </div>
+      <div class="meal-calories-unified-card">
       <section class="meal-calorie-editor meal-calorie-inline" aria-labelledby="mealCaloriesLabel">
         <input id="mealCalorieMode" type="hidden" value="auto">
         <div class="meal-calorie-controls">
@@ -198,11 +199,12 @@
               <p id="mealAiGroundedReport" class="muted small" style="white-space:pre-wrap;overflow-wrap:anywhere" hidden></p>
               <p id="mealAiGroundedClarity" class="muted small" role="status" hidden></p>
               <div id="mealAiGroundedSources"></div>
-              <iframe id="mealAiGoogleSearchWidget" title="Suggestions Google Search" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation" scrolling="auto" style="width:100%;max-width:100%;height:100px;border:0;overflow:auto;background:transparent" hidden></iframe>
+              <iframe id="mealAiGoogleSearchWidget" title="Suggestions Google Search" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation" scrolling="auto" style="width:100%;max-width:100%;height:64px;border:0;overflow:auto;background:transparent" hidden></iframe>
               
             </div>
           </details>
         </div>
+      </div>
       </div>
       <dialog id="mealCalorieRecognitionDialog" class="meal-calorie-recognition-dialog">
         <section class="dialog-card meal-calorie-recognition-card">
