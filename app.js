@@ -1397,6 +1397,7 @@ function formatSleepDuration(hours) {
       updateMealFeelingsOverview();
       updateMealCompositionReview();
       updateMealCnfLinkedStatus();
+      updateNewMealClearButton();
     }
     if (form.id === "activityForm") updateActivityEstimate();
     if (["feelingForm", "missingBeforeForm"].includes(form.id))
@@ -1451,8 +1452,8 @@ function formatSleepDuration(hours) {
           '<span class="form-autosave-status ready" aria-live="polite">Sauvegarde automatique active</span>',
         );
     }
-    form.addEventListener("input", () => scheduleFormAutosave(form));
-    form.addEventListener("change", () => scheduleFormAutosave(form));
+    form.addEventListener("input", () => { scheduleFormAutosave(form); if (form.id === "mealForm") updateNewMealClearButton(); });
+    form.addEventListener("change", () => { scheduleFormAutosave(form); if (form.id === "mealForm") updateNewMealClearButton(); });
     form.addEventListener("click", (event) => {
       if (
         event.target.closest(
@@ -18068,6 +18069,7 @@ function formatSleepDuration(hours) {
     updateMealEntryBrainGuide();
   }
   function updateMealEntryBrainGuide() {
+    updateNewMealClearButton();
     const beforeIcon = $("#beforeFeelingSummaryIcon"),
       descriptionField = $("#mealDescription")?.closest(".meal-description-field"),
       mealStageIcon = $("#mealEntryStageIcon"),
@@ -18155,6 +18157,22 @@ function formatSleepDuration(hours) {
     });
   }
 
+  // Ne montrer « Effacer la saisie » que pour une nouvelle entrée ayant
+  // réellement des informations (l'heure et le type ne comptent pas).
+  function updateNewMealClearButton() {
+    const button = $("#deleteCurrentMeal");
+    if (!button || $("#mealId")?.value) return;
+    const hasContent =
+      Boolean($("#mealDescription")?.value.trim()) ||
+      Boolean($("#mealNotes")?.value.trim()) ||
+      Boolean($("#mealCalories")?.value.trim()) ||
+      Boolean($("#mealCnfItems")?.value.trim()) ||
+      mealPhotoDrafts.length > 0 ||
+      Boolean($("#eatingReasonOther")?.value.trim()) ||
+      $('#mealForm input[name="eatingReason"]:checked').length > 0 ||
+      $("#beforeFeelingTags [data-scored-item].active").length > 0;
+    button.hidden = $("#mealForm")?.classList.contains("demo-detail-readonly") || !hasContent;
+  }
   function openMeal(id = null, presetType = null, forceReadOnly = false) {
     $("#mealDialog").dataset.favoriteBeverage = "";
     clearTimeout(mealNutritionPreviewTimer);
@@ -18185,7 +18203,7 @@ function formatSleepDuration(hours) {
         : "Ajouter un repas";
     $("#mealId").value = m?.id || "";
     const deleteButton = $("#deleteCurrentMeal");
-    deleteButton.hidden = readOnly;
+    deleteButton.hidden = readOnly || !m;
     deleteButton.textContent = m ? "Supprimer" : "Effacer la saisie";
     deleteButton.onclick = m
       ? () => {
@@ -18201,7 +18219,7 @@ function formatSleepDuration(hours) {
           $("#mealNotes").value = "";
           setMealCnfItemsField([]);
           inlineGuidedRows = [{ id: null, query: "", quantity: null, unit: "g" }];
-          $("#mealDescription").dispatchEvent(new Event("input", { bubbles: true }));
+          clearFormDraft($("#mealForm"));
           $("#mealDialog").close();
           render();
         };
@@ -18319,6 +18337,7 @@ function formatSleepDuration(hours) {
     }
     refreshRecipeSourceLinks();
     $("#mealDialog").showModal();
+    if (!m) updateNewMealClearButton();
     // Sur iPhone, la synchronisation peut avoir déjà remplacé la copie locale
     // par un chemin Supabase. Résoudre l’URL signée dès l’ouverture évite que
     // la photo semble avoir disparu lorsque l’utilisateur revient au repas.
@@ -18340,6 +18359,7 @@ function formatSleepDuration(hours) {
   }
 
   function showPhotoPreview() {
+    updateNewMealClearButton();
     const wrap = $("#photoPreviewWrap"),
       list = $("#photoPreviewList"),
       count = $("#mealPhotoCount");
