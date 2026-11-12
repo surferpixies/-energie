@@ -19196,9 +19196,21 @@ function formatSleepDuration(hours) {
       oldBeforeScores = normalizeFeelingScores(old?.feelingsBefore),
       beforeChanged =
         JSON.stringify(oldBeforeScores) !== JSON.stringify(feelingsBefore),
-      beforeRecordedAt =
-        old?.feelingsBeforeQuality?.recordedAt ||
-        (!old || beforeChanged ? new Date().toISOString() : null);
+      // The "before" feeling belongs to the meal's effective local time,
+      // even when the meal is entered later or its clock time is edited.
+      mealTimeForBefore = $("#mealTime").value,
+      beforeMealDate = /^\\d{2}:\\d{2}$/.test(mealTimeForBefore)
+        ? new Date(`${selectedDate}T${mealTimeForBefore}:00`)
+        : null,
+      beforeRecordedAt = beforeMealDate && !Number.isNaN(beforeMealDate.getTime())
+        ? beforeMealDate.toISOString()
+        : (old?.feelingsBeforeQuality?.recordedAt || new Date().toISOString()),
+      // Preserve when the user actually reported it, separately from meal time.
+      beforeCapturedAt = !old || beforeChanged
+        ? new Date().toISOString()
+        : (old?.feelingsBeforeQuality?.capturedAt ||
+           old?.feelingsBeforeQuality?.recordedAt ||
+           new Date().toISOString());
     const meal = normalMeal(
       {
         ...old,
@@ -19236,6 +19248,7 @@ function formatSleepDuration(hours) {
         feelingsBeforeQuality: {
           ...beforeQuality,
           recordedAt: beforeRecordedAt,
+          capturedAt: beforeCapturedAt,
         },
         eatingReasons: collectEatingReasons(),
         eatingReasonOther: collectEatingReasons().includes("other")
