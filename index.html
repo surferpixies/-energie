@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="steps-tracking.css?v=3.56.39">
   <link rel="stylesheet" href="journal-summary.css?v=3.56.288">
   <link rel="stylesheet" href="onboarding.css?v=3.56.476-balanced-buttons">
-  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.487-calories-card">
+  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.488-calories-nested">
   <link rel="stylesheet" href="snack-favorite-offer.css?v=2">
 </head>
 <body>
@@ -164,10 +164,6 @@
           </div>
         </div>
         <div id="mealCnfLinkedStatus" class="meal-cnf-linked-status" hidden><span aria-hidden="true">✓</span><strong></strong><small>Quantités reliées directement aux fiches FCÉN</small></div>
-        <button type="button" class="meal-calorie-help-card" id="openMealCalorieHelp" aria-haspopup="dialog" aria-controls="mealCalorieHelpDialog">
-          <span class="meal-calorie-help-icon" aria-hidden="true">💡</span>
-          <span class="meal-calorie-help-copy"><strong id="mealCalorieHelpTitle">Optimiser l’estimation des calories</strong><small id="mealCalorieHelpSummary">Une description précise des aliments et des quantités consommées aide à obtenir une estimation plus juste.</small><em id="mealCalorieHelpAction">Voir les conseils et astuces <span aria-hidden="true">›</span></em></span>
-        </button>
         <small id="mealFavoriteFeedback" class="meal-favorite-feedback" role="status" aria-live="polite" hidden></small>
         <div id="mealAiSuggestion" class="meal-ai-suggestion" hidden>
           <div><span aria-hidden="true">✨</span><span><strong>Suggestion de l’IA</strong><small id="mealAiSuggestionText"></small></span></div>
@@ -189,6 +185,10 @@
         <button type="button" class="text-button" id="resetMealCalories" hidden>Auto</button>
         <button type="button" id="mealCalorieRecognitionNotice" class="meal-calorie-recognition-notice" hidden>ⓘ Estimation partielle · éléments à vérifier</button>
       </section>
+        <button type="button" class="meal-calorie-help-card" id="openMealCalorieHelp" aria-haspopup="dialog" aria-controls="mealCalorieHelpDialog">
+          <span class="meal-calorie-help-icon" aria-hidden="true">💡</span>
+          <span class="meal-calorie-help-copy"><strong id="mealCalorieHelpTitle">Optimiser l’estimation des calories</strong><small id="mealCalorieHelpSummary">Une description précise des aliments et des quantités consommées aide à obtenir une estimation plus juste.</small><em id="mealCalorieHelpAction">Voir les conseils et astuces <span aria-hidden="true">›</span></em></span>
+        </button>
       <div id="mealAiCaloriesPilot" class="meal-ai-calories-pilot" hidden>
         <div id="mealAiCaloriesProposal" class="meal-calorie-proposal-compact" hidden>
           <details class="meal-calorie-estimate-details">
