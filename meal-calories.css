@@ -4,3 +4,6 @@
 .meal-calorie-editor small { color:var(--muted); }
 .meal-calorie-editor button { text-align:left; min-height:44px; white-space:normal; }
 .meal-calorie-editor [hidden] { display:none!important; }
+
+/* Keep calculation-origin notes internal; show only useful AI feedback. */
+#mealCalorieStatus { display: none !important; }
