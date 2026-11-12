@@ -34,7 +34,7 @@
   <link rel="stylesheet" href="steps-tracking.css?v=3.56.39">
   <link rel="stylesheet" href="journal-summary.css?v=3.56.288">
   <link rel="stylesheet" href="onboarding.css?v=3.56.476-balanced-buttons">
-  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.448-compact-calorie-proposal">
+  <link rel="stylesheet" href="meal-stage-cards.css?v=3.56.485-calorie-clarity">
   <link rel="stylesheet" href="snack-favorite-offer.css?v=2">
 </head>
 <body>
@@ -195,7 +195,8 @@
             <p id="mealAiCaloriesResult" class="muted small"></p>
             <p id="mealAiCaloriesAssumptions" class="muted small"></p>
             <div id="mealAiGroundedResult" hidden>
-              <p id="mealAiGroundedReport" class="muted small" style="white-space:pre-wrap;overflow-wrap:anywhere"></p>
+              <p id="mealAiGroundedReport" class="muted small" style="white-space:pre-wrap;overflow-wrap:anywhere" hidden></p>
+              <p id="mealAiGroundedClarity" class="muted small" role="status" hidden></p>
               <div id="mealAiGroundedSources"></div>
               <iframe id="mealAiGoogleSearchWidget" title="Suggestions Google Search" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation" scrolling="auto" style="width:100%;max-width:100%;height:112px;border:0;overflow:auto;background:transparent" hidden></iframe>
               <p class="muted small">Les résultats de recherche ne sont pas vérifiés par Énergie. Vérifie le plat, la portion et les accompagnements.</p>
@@ -799,6 +800,7 @@
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
   <script src="app.js?v=3.56.483-calorie-fire-web"></script>
+  <script src="calorie-result-clarity.js?v=3.56.485"></script>
   <script>
     // iPhone: hide the native gray keyboard accessory toolbar (arrows / Done).
     // The Capacitor Keyboard plugin is synced into iOS by npm run ios:sync.
