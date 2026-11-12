@@ -4982,6 +4982,24 @@ function formatSleepDuration(hours) {
   function calorieAiInputSignature(description = $("#mealDescription")?.value || "") {
     return [session?.user?.id || "", selectedDate, $("#mealId")?.value || "new", String(description).trim()].join("|");
   }
+  function calorieAiRequestSnapshot() {
+    return {
+      userId: session?.user?.id,
+      date: selectedDate,
+      mealId: $("#mealId")?.value || "",
+      value: $("#mealCalories")?.value || "",
+      mode: $("#mealCalorieMode")?.value || ""
+    };
+  }
+  function calorieAiRequestStillCurrent(snapshot, description) {
+    return $("#mealDialog")?.open &&
+      $("#mealDescription")?.value.trim() === description &&
+      session?.user?.id === snapshot.userId &&
+      selectedDate === snapshot.date &&
+      ($("#mealId")?.value || "") === snapshot.mealId &&
+      ($("#mealCalories")?.value || "") === snapshot.value &&
+      ($("#mealCalorieMode")?.value || "") === snapshot.mode;
+  }
   function photoAiInputSignature(imageData) {
     let hash = 2166136261;
     const data = String(imageData || "");
@@ -5048,6 +5066,7 @@ function formatSleepDuration(hours) {
       status.textContent = `Attends ${remaining} s avant une nouvelle estimation.`;
       return;
     }
+    const requestSnapshot = calorieAiRequestSnapshot();
     aiCallProtection.caloriesPending = true;
     aiCallProtection.caloriesAt = Date.now();
     button.disabled = true;
@@ -5059,7 +5078,7 @@ function formatSleepDuration(hours) {
         body: { description, locale: window.ENERGIE_LOCALE || "fr-CA" },
       });
       if (error) throw error;
-      if (!$("#mealDialog")?.open || $("#mealDescription")?.value.trim() !== description) {
+      if (!calorieAiRequestStillCurrent(requestSnapshot, description)) {
         status.textContent = "Le repas a changé : estimation ignorée.";
         return;
       }
@@ -5111,6 +5130,7 @@ function formatSleepDuration(hours) {
       status.textContent = `Attends ${remaining} s avant une nouvelle estimation.`;
       return;
     }
+    const requestSnapshot = calorieAiRequestSnapshot();
     aiCallProtection.caloriesPending = true;
     aiCallProtection.caloriesAt = Date.now();
     btn.disabled = true;
@@ -5123,7 +5143,7 @@ function formatSleepDuration(hours) {
         body: { description },
       });
       if (error) throw error;
-      if (!$("#mealDialog")?.open || $("#mealDescription")?.value.trim() !== description) {
+      if (!calorieAiRequestStillCurrent(requestSnapshot, description)) {
         status.textContent = "Le repas a changé; résultat ignoré.";
         return;
       }
@@ -5202,7 +5222,7 @@ function formatSleepDuration(hours) {
         console.warn("Repli IA calories indisponible", estimateError);
         return;
       }
-      if (!$("#mealDialog")?.open || $("#mealDescription")?.value.trim() !== description) {
+      if (!calorieAiRequestStillCurrent(requestSnapshot, description)) {
         status.textContent = "Le repas a changé; estimation ignorée.";
         return;
       }
