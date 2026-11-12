@@ -561,3 +561,23 @@ html[data-theme="dark"] .meal-entry-stage-card {
   line-height:1;
   color:var(--accent-strong);
 }
+
+
+/* v3.56.490 — Keep the optional calorie tip visually secondary. */
+#mealForm .meal-calories-unified-card > #openMealCalorieHelp {
+  min-height:42px!important;
+  padding:8px 12px!important;
+  gap:8px!important;
+  grid-template-columns:24px minmax(0,1fr) auto!important;
+}
+#mealForm #openMealCalorieHelp #mealCalorieHelpTitle {
+  font-size:.76rem!important;
+  line-height:1.25!important;
+  font-weight:650!important;
+}
+#mealForm #openMealCalorieHelp .meal-calorie-help-icon {
+  font-size:1rem!important;
+}
+#mealForm #openMealCalorieHelp .meal-calorie-help-chevron {
+  font-size:1.2rem!important;
+}
