@@ -1646,8 +1646,17 @@ function formatSleepDuration(hours) {
   }
 
   function clearLocalJournalAfterSignOut() {
-    // Prevent any subsequent journal write from targeting a signed-out owner.
+    // Finish already queued writes, then remove the signed-out account's
+    // IndexedDB journal. This also applies to permanent account deletion.
+    const ownerToErase = journalIndexedDBOwner;
     journalIndexedDBOwner = "";
+    if (ownerToErase && window.EnergieJournalIndexedDB?.remove) {
+      journalIndexedDBWriteQueue = journalIndexedDBWriteQueue
+        .catch(() => {})
+        .then(() => window.EnergieJournalIndexedDB.remove(ownerToErase));
+      journalIndexedDBWriteQueue.catch((error) =>
+        console.error("Effacement du journal IndexedDB impossible", error));
+    }
     try {
       [
         APP_KEY,
