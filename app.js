@@ -9934,11 +9934,10 @@ function formatSleepDuration(hours) {
     return FEELING_TAGS.filter((tag) => {
       if (mode === "before" && tag.afterOnly) return false;
       if (tag.deprecated && !selected.has(tag.id)) return false;
-      // Before a meal, keep the positive choice intentionally simple.
-      // Historical selections remain visible/editable through selectedIds.
-      if (mode === "before" && POSITIVE_FEELING_IDS.has(tag.id))
+      // Keep a single positive choice in both pickers. Previous individual
+      // positive feelings remain editable when they are already recorded.
+      if (POSITIVE_FEELING_IDS.has(tag.id))
         return tag.id === "positive_wellbeing" || selected.has(tag.id);
-      if (POSITIVE_FEELING_IDS.has(tag.id)) return true;
       if (!plan && db.settings?.trackedFeelingsConfigured) {
         const tracked = new Set(trackedFeelingIds());
         return tag.scopedOnly || tracked.has(tag.id) || selected.has(tag.id);
@@ -19199,7 +19198,7 @@ function formatSleepDuration(hours) {
       // The "before" feeling belongs to the meal's effective local time,
       // even when the meal is entered later or its clock time is edited.
       mealTimeForBefore = $("#mealTime").value,
-      beforeMealDate = /^\\d{2}:\\d{2}$/.test(mealTimeForBefore)
+      beforeMealDate = /^\d{2}:\d{2}$/.test(mealTimeForBefore)
         ? new Date(`${selectedDate}T${mealTimeForBefore}:00`)
         : null,
       beforeRecordedAt = beforeMealDate && !Number.isNaN(beforeMealDate.getTime())
