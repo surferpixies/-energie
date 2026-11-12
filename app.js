@@ -17190,7 +17190,7 @@ function formatSleepDuration(hours) {
     toggleSetting("#settingSeasonalIcons", "seasonalIcons");
     toggleSetting("#settingRecognizedElements", "showRecognizedElements");
     toggleSetting("#settingSummaryHideCompletedMeals", "summaryHideCompletedMeals");
-    $('[data-profile-journal-view]').forEach(input => {
+    document.querySelectorAll('[data-profile-journal-view]').forEach(input => {
       input.onchange = () => {
         const before = journalVisibleViews();
         const next = JOURNAL_VIEW_CHOICES.map(([id]) => id)
