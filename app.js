@@ -3295,15 +3295,85 @@ function formatSleepDuration(hours) {
     };
     return packs[window.ENERGIE_LOCALE || "fr-CA"] || packs["fr-CA"];
   }
+  function calorieHelpCopy() {
+    const en = window.ENERGIE_LOCALE === "en";
+    return en ? {
+      title: "Improve your calorie estimate",
+      summary: "Describing the foods and quantities you consumed helps produce a more accurate estimate.",
+      action: "View tips and examples",
+      intro: "For a better estimate, describe your meal as it was actually consumed.",
+      points: [
+        "<strong>Amounts:</strong> specify how much you ate (grams, cups, servings, units, etc.).",
+        "<strong>Ingredients:</strong> include foods, sauces and side dishes.",
+        "<strong>Restaurants:</strong> mention the restaurant, exact dish and sides you chose."
+      ],
+      examplesTitle: "A few examples",
+      examples: [
+        "St-Hubert chicken skewer with sauce, rice and coleslaw, one serving.",
+        "Overnight oats with 16 g peanut butter, 100 g oats, 95 g banana and 30 g chia seeds."
+      ],
+      favoritesTitle: "⭐ Save time with favorites!",
+      favoritesText: "Eat the same meals or snacks regularly? Save them to your favorites to find and add them to your journal without entering everything again.",
+      favoritesMore: "Reuse your usual descriptions and quantities, then adjust them when needed.",
+      footnote: "Calories remain estimates, even with a detailed description. You can review and adjust them.",
+      confirm: "Got it!"
+    } : {
+      title: "Optimiser l’estimation des calories",
+      summary: "Une description précise des aliments et des quantités consommées aide à obtenir une estimation plus juste.",
+      action: "Voir les conseils et astuces",
+      intro: "Pour améliorer l’estimation, décris ton repas tel qu’il a réellement été consommé.",
+      points: [
+        "<strong>Quantités :</strong> indique les portions consommées (grammes, tasses, unités, etc.).",
+        "<strong>Composition :</strong> précise les aliments, sauces et accompagnements.",
+        "<strong>Restaurant :</strong> mentionne le nom du restaurant et le plat exact, avec les accompagnements choisis."
+      ],
+      examplesTitle: "Quelques exemples",
+      examples: [
+        "Brochette de poulet St-Hubert avec sauce, riz et salade de chou, 1 portion.",
+        "Overnight oatmeal avec 16 g de beurre d’arachides, 100 g d’avoine, 95 g de banane et 30 g de graines de chia."
+      ],
+      favoritesTitle: "⭐ Gagne du temps avec les favoris !",
+      favoritesText: "Tu consommes régulièrement les mêmes repas ou collations ? Enregistre-les dans tes favoris pour les retrouver rapidement et les ajouter à ton journal sans avoir à tout saisir de nouveau.",
+      favoritesMore: "Tu peux ainsi réutiliser tes descriptions et quantités habituelles, puis les ajuster au besoin.",
+      footnote: "Les calories demeurent des estimations, même avec une description détaillée. Tu peux toujours les vérifier et les ajuster.",
+      confirm: "Compris !"
+    };
+  }
   function applyMealCompositionLocale() {
-    const ui = mealCompositionUi(), hint = $("#mealPrecisionHintText"), complete = $("#completeMealDescription"), keep = $("#keepMealDescription");
-    if (hint) hint.textContent = caloriesVisible()
-      ? ui.hint
-      : (window.ENERGIE_LOCALE === "en"
-        ? "Describe your meal naturally. You can include portions, ingredients and the restaurant or dish name. AI can suggest a description from a photo if you request it; calorie tracking remains optional."
-        : "Décris ton repas naturellement. Tu peux préciser les portions, les ingrédients et le nom du restaurant ou du plat. L’IA peut suggérer une description à partir d’une photo si tu le demandes; le suivi des calories reste facultatif.");
+    const ui = mealCompositionUi(), complete = $("#completeMealDescription"), keep = $("#keepMealDescription");
     if (complete) complete.textContent = ui.complete;
     if (keep) keep.textContent = ui.continue;
+    const copy = calorieHelpCopy(), card = $("#openMealCalorieHelp"), dialog = $("#mealCalorieHelpDialog");
+    if (!card || !dialog) return;
+    // L'aide ne s'affiche que lorsque le suivi des calories est visible.
+    card.hidden = !caloriesVisible();
+    $("#mealCalorieHelpTitle").textContent = copy.title;
+    $("#mealCalorieHelpSummary").textContent = copy.summary;
+    $("#mealCalorieHelpAction").textContent = copy.action + " ›";
+    $("#mealCalorieHelpDialogTitle").textContent = copy.title;
+    $("#mealCalorieHelpIntro").textContent = copy.intro;
+    $("#mealCalorieHelpList").innerHTML = copy.points.map(item => "<li>" + item + "</li>").join("");
+    $("#mealCalorieHelpExamplesTitle").textContent = copy.examplesTitle;
+    $("#mealCalorieHelpExamples").replaceChildren(...copy.examples.map(example => {
+      const p = document.createElement("p");
+      p.textContent = example;
+      return p;
+    }));
+    $("#mealCalorieHelpFavoritesTitle").textContent = copy.favoritesTitle;
+    $("#mealCalorieHelpFavoritesText").textContent = copy.favoritesText;
+    $("#mealCalorieHelpFavoritesMore").textContent = copy.favoritesMore;
+    $("#mealCalorieHelpFootnote").textContent = copy.footnote;
+    $("#confirmMealCalorieHelp").textContent = copy.confirm;
+    $("#closeMealCalorieHelp").setAttribute("aria-label", window.ENERGIE_LOCALE === "en" ? "Close" : "Fermer");
+    card.onclick = () => {
+      // La modale d'aide est ouverte depuis le dialogue de saisie principal.
+      // Fermer ce dernier risquerait de perdre le contexte : utiliser show() plutôt que showModal().
+      if (!dialog.open) dialog.show();
+      dialog.scrollTop = 0;
+    };
+    const close = () => { if (dialog.open) dialog.close(); };
+    $("#closeMealCalorieHelp").onclick = close;
+    $("#confirmMealCalorieHelp").onclick = close;
   }
   function compositionTraitChip(trait, certainty) {
     const ui = mealCompositionUi(),
