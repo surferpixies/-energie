@@ -4998,7 +4998,7 @@ function formatSleepDuration(hours) {
     button.disabled = aiCallProtection.caloriesPending || completed;
     button.title = completed ? "Estimation déjà réalisée. Modifie le repas pour recommencer." : "Google en priorité, estimation IA au besoin";
     const status = $("#mealAiCaloriesStatus");
-    if (completed && status && !aiCallProtection.caloriesPending) status.textContent = "✓ Déjà estimé · modifie le repas pour relancer";
+    if (completed && status && !aiCallProtection.caloriesPending) status.textContent = "✓ Calories ajoutées automatiquement · modifiables";
     else if (status?.textContent.startsWith("Déjà estimé")) status.textContent = "";
   }
   const CALORIE_AI_COOLDOWN_MS = 20000;
@@ -5068,13 +5068,15 @@ function formatSleepDuration(hours) {
         status.textContent = "Aucune estimation suffisamment plausible. Tu peux inscrire les calories toi-même.";
         return;
       }
-      pendingAiCalorieSuggestion = { kcal, description };
+      pendingAiCalorieSuggestion = { kcal, description, source: "ai-unverified" };
       $("#mealAiCaloriesResult").textContent = `≈ ${kcal} kcal · estimation IA`;
       const assumptions = Array.isArray(data?.assumptions) ? data.assumptions.slice(0, 3) : [];
       $("#mealAiCaloriesAssumptions").textContent = [String(data?.explanation || ""), ...assumptions].filter(Boolean).join(" · ").slice(0, 500) +
         " · Valeur approximative, non vérifiée auprès du restaurant.";
+      applyMealAiCalorieSuggestion();
+      completedCalorieAiInputs.add(calorieAiInputSignature(description));
       $("#mealAiCaloriesProposal").hidden = false;
-      status.textContent = "Vérifie l'estimation avant de l'utiliser.";
+      status.textContent = "✓ Calories ajoutées automatiquement · modifiables";
     } catch (error) {
       console.warn("Estimation IA calories indisponible", error);
       status.textContent = "Estimation IA indisponible ou quota atteint. La saisie manuelle reste possible.";
@@ -5166,9 +5168,10 @@ function formatSleepDuration(hours) {
         $("#mealAiCaloriesResult").textContent = `${webKcal} kcal · valeur trouvée sur le Web`;
         $("#mealAiCaloriesAssumptions").textContent =
           "Vérifie que le lien correspond au produit, aux quantités et au pays. Source suggérée par Google, non validée indépendamment par Énergie.";
+        applyMealAiCalorieSuggestion();
         completedCalorieAiInputs.add(calorieAiInputSignature(description));
         $("#mealAiCaloriesProposal").hidden = false;
-        status.textContent = "Valeur trouvée sur le Web, non vérifiée : confirme le plat et la portion dans la source avant de l’utiliser.";
+        status.textContent = "✓ Valeur Web ajoutée · modifiable, source à vérifier";
         refreshCalorieAiInputState();
         return;
       }
@@ -5216,9 +5219,10 @@ function formatSleepDuration(hours) {
       $("#mealAiCaloriesAssumptions").textContent =
         [String(estimate?.explanation || ""), ...assumptions].filter(Boolean).join(" · ").slice(0, 500) +
         " · Valeur approximative : ce n'est pas une information nutritionnelle officielle.";
+      applyMealAiCalorieSuggestion();
       completedCalorieAiInputs.add(calorieAiInputSignature(description));
       $("#mealAiCaloriesProposal").hidden = false;
-      status.textContent = "Estimation IA non vérifiée : confirme les ingrédients et la portion avant de l’utiliser.";
+      status.textContent = "✓ Calories estimées ajoutées automatiquement · modifiables";
       refreshCalorieAiInputState();
     } catch (error) {
       console.warn("Recherche Gemini avec Google indisponible", error);
@@ -19037,12 +19041,6 @@ function formatSleepDuration(hours) {
   });
   $("#estimateMealCaloriesAi")?.addEventListener("click", requestMealAiCalorieEstimate);
   $("#searchMealCaloriesAi")?.addEventListener("click", searchMealAiGroundedCalories);
-  $("#applyMealAiCalories")?.addEventListener("click", applyMealAiCalorieSuggestion);
-  $("#dismissMealAiCalories")?.addEventListener("click", () => {
-    pendingAiCalorieSuggestion = null;
-    $("#mealAiCaloriesProposal").hidden = true;
-    $("#mealAiCaloriesStatus").textContent = "Estimation ignorée. Tu peux toujours saisir les calories manuellement.";
-  });
   $("#resetMealCalories").onclick = resetMealCalories;
   $("#mealCalorieRecognitionNotice").onclick = openMealCalorieRecognition;
   $("#closeMealCalorieRecognition").onclick = () => $("#mealCalorieRecognitionDialog")?.close();
