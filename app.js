@@ -18204,7 +18204,7 @@ function formatSleepDuration(hours) {
     $("#mealId").value = m?.id || "";
     const deleteButton = $("#deleteCurrentMeal");
     deleteButton.hidden = readOnly || !m;
-    deleteButton.textContent = m ? "Supprimer" : "Effacer la saisie";
+    deleteButton.textContent = "Supprimer";
     deleteButton.onclick = m
       ? () => {
           if (confirm(`Supprimer « ${m.description} »?`)) {
