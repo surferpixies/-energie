@@ -3367,8 +3367,8 @@ function formatSleepDuration(hours) {
     $("#closeMealCalorieHelp").setAttribute("aria-label", window.ENERGIE_LOCALE === "en" ? "Close" : "Fermer");
     card.onclick = () => {
       // La modale d'aide est ouverte depuis le dialogue de saisie principal.
-      // Fermer ce dernier risquerait de perdre le contexte : utiliser show() plutôt que showModal().
-      if (!dialog.open) dialog.show();
+      // Une modale au-dessus de la saisie conserve les valeurs du repas.
+      if (!dialog.open) dialog.showModal();
       dialog.scrollTop = 0;
     };
     const close = () => { if (dialog.open) dialog.close(); };
