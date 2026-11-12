@@ -495,7 +495,7 @@
       </fieldset>
       <label>Durée en minutes<input id="activityMinutes" name="energie_activity_duration_value" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Ex. 45" aria-label="Durée de l’activité en minutes"></label>
       <fieldset class="activity-intensity-fieldset"><legend>Intensité</legend><div class="activity-intensity-choices" role="radiogroup" aria-label="Intensité de l’activité"><button type="button" data-intensity="low">Faible</button><button type="button" data-intensity="moderate" class="active">Modérée</button><button type="button" data-intensity="high">Élevée</button></div><input id="activityIntensity" type="hidden" value="moderate"></fieldset>
-      <div class="activity-estimate-card"><div><span>🔥</span><div><small>🔥 Calories estimées</small><strong id="activityEstimateValue">— kcal</strong></div></div><p>Estimation indicative selon l’activité, la durée et l’intensité.</p></div>
+      <div class="activity-estimate-card"><div><span>🔥</span><div><small>Calories estimées</small><strong id="activityEstimateValue">— kcal</strong></div></div><p>Estimation indicative selon l’activité, la durée et l’intensité.</p></div>
       <label class="activity-favorite-toggle"><input id="activityFavorite" type="checkbox"><span>⭐ <span data-i18n-key="Enregistrer comme activité favorite">Enregistrer comme activité favorite</span></span></label>
       <label>🔥 Calories mesurées <span class="muted tiny">(facultatif)</span><input id="activityActualCalories" type="number" min="0" max="10000" step="1" inputmode="numeric" autocomplete="one-time-code" placeholder="Ex. 320"><small class="field-hint">Entre la valeur de ta montre ou de ton appareil pour remplacer l’estimation.</small></label>
       <div><p class="eyebrow">Activités enregistrées</p><div id="dayActivitiesList" class="day-activities-list"></div></div>
@@ -798,7 +798,7 @@
   <script src="journal-consultation.js?v=3.56.199"></script>
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
-  <script src="app.js?v=3.56.481-ai-auto-calories"></script>
+  <script src="app.js?v=3.56.482-calorie-fire"></script>
   <script>
     // iPhone: hide the native gray keyboard accessory toolbar (arrows / Done).
     // The Capacitor Keyboard plugin is synced into iOS by npm run ios:sync.
