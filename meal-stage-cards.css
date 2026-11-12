@@ -511,3 +511,20 @@ html[data-theme="dark"] .meal-entry-stage-card {
 @media(max-width:440px) {
   #mealForm .meal-calories-unified-card { padding:10px; }
 }
+
+
+/* v3.56.488 — Optimization tips are an inset card within Calories. */
+#mealForm .meal-calories-unified-card > #openMealCalorieHelp {
+  width:100%;
+  max-width:100%;
+  margin:3px 0 2px!important;
+  box-sizing:border-box;
+  text-align:left;
+  border-radius:13px;
+}
+#mealForm .meal-calories-unified-card > #openMealCalorieHelp[hidden] {
+  display:none!important;
+}
+#mealForm .meal-calories-unified-card > #mealAiCaloriesPilot {
+  margin-top:0!important;
+}
