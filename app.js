@@ -11325,7 +11325,11 @@ function formatSleepDuration(hours) {
       goal = stepsGoalForDay(day),
       pct = steps == null ? 0 : Math.min(100, Math.round((steps / goal) * 100)),
       label = steps == null ? "Ajouter mes pas" : `${steps.toLocaleString("fr-CA")} / ${goal.toLocaleString("fr-CA")} ${window.ENERGIE_LOCALE === "en" ? "steps" : "pas"}`;
-    return `<button type="button" class="steps-journal-button edit-steps ${compact ? "journal-summary-steps" : ""}" aria-label="${steps == null ? "Ajouter le nombre de pas" : `Modifier les pas, ${label}`}"><span class="steps-journal-icon" aria-hidden="true">👟</span><span><small>${steps == null || steps === 0 ? "Pas aujourd’hui" : "Mes pas aujourd’hui"}</small><strong>${label}</strong><i class="steps-journal-progress"><b style="width:${pct}%"></b></i></span>${consultation ? `<span class="journey-steps-action" aria-hidden="true">${esc(t("Voir ou modifier"))}</span>` : `<em aria-hidden="true">›</em>`}</button>`;
+    const isToday = selectedDate === todayKey();
+    const stepsHeading = steps == null || steps === 0
+      ? (isToday ? "Pas aujourd’hui" : "Aucun pas consigné")
+      : (isToday ? "Mes pas aujourd’hui" : "Mes pas");
+    return `<button type="button" class="steps-journal-button edit-steps ${compact ? "journal-summary-steps" : ""}" aria-label="${steps == null ? "Ajouter le nombre de pas" : `Modifier les pas, ${label}`}"><span class="steps-journal-icon" aria-hidden="true">👟</span><span><small>${stepsHeading}</small><strong>${label}</strong><i class="steps-journal-progress"><b style="width:${pct}%"></b></i></span>${consultation ? `<span class="journey-steps-action" aria-hidden="true">${esc(t("Voir ou modifier"))}</span>` : `<em aria-hidden="true">›</em>`}</button>`;
   }
 
   function openSteps() {
