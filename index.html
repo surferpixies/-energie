@@ -190,22 +190,16 @@
       </section>
       <div id="mealAiCaloriesPilot" class="meal-ai-calories-pilot" hidden>
         <div id="mealAiCaloriesProposal" class="meal-calorie-proposal-compact" hidden>
-          <div class="meal-calorie-proposal-top">
-            <span class="meal-calorie-proposal-label">✨ Calories proposées</span>
-            <strong id="mealAiCaloriesResult"></strong>
-          </div>
-          <p class="meal-calorie-proposal-warning">Résultat non vérifié · compare le plat et la portion.</p>
-          <div class="meal-calorie-proposal-actions">
-            <button type="button" id="applyMealAiCalories" class="secondary small">Utiliser</button>
-            <button type="button" id="dismissMealAiCalories" class="text-button small">Ignorer</button>
-          </div>
-          <details id="mealAiGroundedResult" hidden>
-            <summary>Voir les sources et les détails</summary>
+          <details class="meal-calorie-estimate-details">
+            <summary>ⓘ Détails de l’estimation (facultatif)</summary>
+            <p id="mealAiCaloriesResult" class="muted small"></p>
             <p id="mealAiCaloriesAssumptions" class="muted small"></p>
-            <pre id="mealAiGroundedReport" style="white-space:pre-wrap;font:inherit;max-width:100%;overflow-wrap:anywhere"></pre>
-            <div id="mealAiGroundedSources"></div>
-            <iframe id="mealAiGoogleSearchWidget" title="Suggestions Google Search" sandbox="allow-popups allow-popups-to-escape-sandbox" style="width:100%;height:80px;border:0" hidden></iframe>
-            <p class="muted small">Les résultats de recherche ne sont pas vérifiés par Énergie. Vérifie le plat, la portion et les accompagnements.</p>
+            <div id="mealAiGroundedResult" hidden>
+              <p id="mealAiGroundedReport" class="muted small" style="white-space:pre-wrap;overflow-wrap:anywhere"></p>
+              <div id="mealAiGroundedSources"></div>
+              <iframe id="mealAiGoogleSearchWidget" title="Suggestions Google Search" sandbox="allow-popups allow-popups-to-escape-sandbox" style="width:100%;height:80px;border:0" hidden></iframe>
+              <p class="muted small">Les résultats de recherche ne sont pas vérifiés par Énergie. Vérifie le plat, la portion et les accompagnements.</p>
+            </div>
           </details>
         </div>
       </div>
@@ -804,7 +798,7 @@
   <script src="journal-consultation.js?v=3.56.199"></script>
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
-  <script src="app.js?v=3.56.480-calorie-help"></script>
+  <script src="app.js?v=3.56.481-ai-auto-calories"></script>
   <script>
     // iPhone: hide the native gray keyboard accessory toolbar (arrows / Done).
     // The Capacitor Keyboard plugin is synced into iOS by npm run ios:sync.
