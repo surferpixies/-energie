@@ -8,6 +8,7 @@ const output = path.join(root, "www");
 const runtimeFiles = [
   "index.html",
   "app.js",
+  "journal-indexeddb.js",
   "calorie-result-clarity.js",
   "google-search-widget-links.js",
   "brain-journal.js",
