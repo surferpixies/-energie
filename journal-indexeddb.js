@@ -45,5 +45,16 @@
       transaction.onabort = () => reject(transaction.error || new Error("Écriture IndexedDB interrompue"));
     });
   }
-  window.EnergieJournalIndexedDB = Object.freeze({ read, write });
+  async function remove(owner) {
+    if (!owner) return false;
+    const database = await open();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction(STORE, "readwrite");
+      transaction.objectStore(STORE).delete(owner);
+      transaction.oncomplete = () => resolve(true);
+      transaction.onerror = () => reject(transaction.error || new Error("Suppression IndexedDB impossible"));
+      transaction.onabort = () => reject(transaction.error || new Error("Suppression IndexedDB interrompue"));
+    });
+  }
+  window.EnergieJournalIndexedDB = Object.freeze({ read, write, remove });
 })();
