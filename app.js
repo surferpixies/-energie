@@ -2,6 +2,7 @@
   "use strict";
   const CFG = window.ENERGIE_CONFIG || {};
   const APP_KEY = "energieRepasDB";
+  const GLUCOSE_FEATURE_ENABLED = false; // Fonction suspendue pour Énergie Solo
   const BACKUP_KEY = "energieRepasBackups";
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
@@ -707,7 +708,7 @@ function formatSleepDuration(hours) {
     d.formDrafts =
       d.formDrafts && typeof d.formDrafts === "object" ? d.formDrafts : {};
     d.water = Number(d.water) || 0;
-    d.glucoseMeasurements = (Array.isArray(d.glucoseMeasurements) ? d.glucoseMeasurements : []).filter(x => x && Number.isFinite(Number(x.value)) && Number(x.value)>0 && Number(x.value)<40 && /^\d{2}:\d{2}$/.test(x.time || "")).map(x => ({id: String(x.id || uid()), value: Number(x.value), time: x.time, context: ["fasting","before","after","bedtime","other"].includes(x.context) ? x.context : "other",...(typeof x.scheduledTime === "string" ? {scheduledTime:x.scheduledTime} : {}),...(typeof x.mealId === "string" ? {mealId:x.mealId} : {}),...(typeof x.glucoseSlot === "string" ? {glucoseSlot:x.glucoseSlot} : {})}));
+    d.glucoseMeasurements = [];
     d.beverages = (Array.isArray(d.beverages) ? d.beverages : [])
       .map((item) => normalBeverage(item, key))
       .filter(Boolean);
@@ -973,6 +974,9 @@ function formatSleepDuration(hours) {
     const out = freshDB();
     if (!raw || typeof raw !== "object") return out;
     out.settings = { ...out.settings, ...(raw.settings || {}) };
+    out.settings.glucoseTracking = false;
+    out.settings.glucoseReminders = false;
+    if (Array.isArray(out.settings.soloGoals)) out.settings.soloGoals = out.settings.soloGoals.filter(id => id !== "glucose");
     // Depuis v3.56.98, une photo ajoutée à un repas est toujours conservée.
     // L’ancien réglage est forcé à true pour éviter toute perte silencieuse après une mise à jour.
     out.settings.retainMealPhotos = true;
@@ -1122,6 +1126,24 @@ function formatSleepDuration(hours) {
     }
   }
   function load() {
+    // Purge des anciennes mesures locales avant création de la sauvegarde.
+    try {
+      for (const key of [APP_KEY, `${APP_KEY}_shadow`]) {
+        const data = localStorage.getItem(key);
+        if (!data) continue;
+        const saved = JSON.parse(data);
+        if (!saved || typeof saved !== "object") continue;
+        for (const day of Object.values(saved.days || {})) {
+          if (day && typeof day === "object") delete day.glucoseMeasurements;
+        }
+        if (saved.settings) {
+          for (const field of ["glucoseTracking", "glucoseReminders", "glucoseMode", "glucoseReminderTimes", "glucoseMealDelay", "glucoseMealTypes"]) delete saved.settings[field];
+          if (Array.isArray(saved.settings.soloGoals)) saved.settings.soloGoals = saved.settings.soloGoals.filter(id => id !== "glucose");
+        }
+        localStorage.setItem(key, JSON.stringify(saved));
+      }
+      localStorage.removeItem(BACKUP_KEY);
+    } catch (error) { console.warn("Purge locale glycémie incomplète", error); }
     const raw = localStorage.getItem(APP_KEY);
     if (!raw) return freshDB();
     try {
@@ -1176,6 +1198,9 @@ function formatSleepDuration(hours) {
       return;
     db.version = CURRENT_VERSION;
     db.updatedAt = new Date().toISOString();
+    db.settings.glucoseTracking = false;
+    db.settings.glucoseReminders = false;
+    for (const day of Object.values(db.days || {})) if (day && typeof day === "object") day.glucoseMeasurements = [];
     const txt = JSON.stringify(db);
     let saved = false;
     try {
@@ -1999,7 +2024,6 @@ function formatSleepDuration(hours) {
               sleepTiming: {start: d.sleepStartTime || "", end: d.sleepEndTime || ""},
               taken: d.supplementsTaken || [],
               beverages: d.beverages || [],
-              glucoseMeasurements: d.glucoseMeasurements || [],
               steps: d.steps,
               stepsSource: d.stepsSource || null,
               stepsGoal: d.stepsGoal,
@@ -2013,12 +2037,6 @@ function formatSleepDuration(hours) {
               profilePreferences: {
                 professionalOptionChoices: window.EnergieProfessionalOptions.cleanChoices(preferenceSettings.professionalOptionChoices),
                 waterGoal: Number(preferenceSettings.waterGoal) || 8,
-                glucoseTracking: preferenceSettings.glucoseTracking === true,
-                glucoseReminders: preferenceSettings.glucoseReminders === true,
-                glucoseMode: ["scheduled","meals"].includes(preferenceSettings.glucoseMode) ? preferenceSettings.glucoseMode : "free",
-                glucoseMealDelay: [60,90,120].includes(Number(preferenceSettings.glucoseMealDelay)) ? Number(preferenceSettings.glucoseMealDelay) : 120,
-                glucoseMealTypes: (preferenceSettings.glucoseMealTypes || []).filter(x => ["Déjeuner","Dîner","Souper"].includes(x)),
-                glucoseReminderTimes: (preferenceSettings.glucoseReminderTimes || []).filter(x => /^\d{2}:\d{2}$/.test(x)).slice(0,6),
                 journalViewMode: preferenceSettings.journalViewMode || "detailed",
                 summaryHideCompletedMeals: preferenceSettings.summaryHideCompletedMeals !== false,
                 insightsEnabled: preferenceSettings.insightsEnabled !== false,
@@ -2352,7 +2370,7 @@ function formatSleepDuration(hours) {
       // par l’ancienne préférence conservée sur le serveur.
       const pendingJournalView = outbox().some(op => op.kind === "day" && (!op._ownerUserId || op._ownerUserId === session?.user?.id));
       if (!pendingJournalView && !savedJournalViewMode() && ["detailed", "summary", "consultation"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
-      ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","nutrientIntakeTracking","macroTracking","autoNutritionEstimates","generalRecommendations","hideFavoriteSuggestion","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals","glucoseTracking","glucoseReminders"].forEach((key) => {
+      ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","nutrientIntakeTracking","macroTracking","autoNutritionEstimates","generalRecommendations","hideFavoriteSuggestion","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
       });
       if (["free","guided"].includes(pref.mealEntryMode)) db.settings.mealEntryMode = pref.mealEntryMode;
@@ -2362,10 +2380,6 @@ function formatSleepDuration(hours) {
       if (typeof pref.offerAiCaloriesPerMeal === "boolean") db.settings.offerAiCaloriesPerMeal = pref.offerAiCaloriesPerMeal;
       if (typeof pref.soloGoalsConfigured === "boolean") db.settings.soloGoalsConfigured = pref.soloGoalsConfigured;
       if (Array.isArray(pref.soloGoals)) db.settings.soloGoals = pref.soloGoals.filter(x => SOLO_GOALS.some(goal => goal.id === x));
-      if (["free","scheduled","meals"].includes(pref.glucoseMode)) db.settings.glucoseMode = pref.glucoseMode;
-      if (Array.isArray(pref.glucoseReminderTimes)) db.settings.glucoseReminderTimes = pref.glucoseReminderTimes.filter(x => /^\d{2}:\d{2}$/.test(x)).slice(0,6);
-      if ([60,90,120].includes(Number(pref.glucoseMealDelay))) db.settings.glucoseMealDelay = Number(pref.glucoseMealDelay);
-      if (Array.isArray(pref.glucoseMealTypes)) db.settings.glucoseMealTypes = pref.glucoseMealTypes.filter(x => ["Déjeuner","Dîner","Souper"].includes(x));
       if (Number(pref.feelingDelayHours) > 0) db.settings.feelingDelayHours = Number(pref.feelingDelayHours);
       if (Array.isArray(pref.feelingMealTypes)) db.settings.feelingMealTypes = [...pref.feelingMealTypes];
     }
@@ -2381,7 +2395,7 @@ function formatSleepDuration(hours) {
         if (typeof r.supplements?.sleepTiming?.start === "string") d.sleepStartTime = r.supplements.sleepTiming.start;
         if (typeof r.supplements?.sleepTiming?.end === "string") d.sleepEndTime = r.supplements.sleepTiming.end;
         d.water = r.water || 0;
-        d.glucoseMeasurements = Array.isArray(r.supplements?.glucoseMeasurements) ? r.supplements.glucoseMeasurements : [];
+        d.glucoseMeasurements = [];
         d.beverages = (Array.isArray(r.supplements?.beverages) ? r.supplements.beverages : [])
           .map((item) => normalBeverage(item, r.log_date))
           .filter(Boolean);
@@ -2418,14 +2432,6 @@ function formatSleepDuration(hours) {
         if (!d.sleepComment && r.sleep_comment) d.sleepComment = r.sleep_comment;
         if (!d.sleepStartTime && r.supplements?.sleepTiming?.start) d.sleepStartTime = r.supplements.sleepTiming.start;
         if (!d.sleepEndTime && r.supplements?.sleepTiming?.end) d.sleepEndTime = r.supplements.sleepTiming.end;
-        // When a local day looks newer (e.g. a meal was edited), don't hide
-        // glucose readings already saved in Supabase. Avoid overriding a pending
-        // local day operation, including an intentional deletion.
-        if (!(d.glucoseMeasurements || []).length &&
-            Array.isArray(r.supplements?.glucoseMeasurements) &&
-            !outbox().some(op => op.kind === "day" && op.date === r.log_date)) {
-          d.glucoseMeasurements = r.supplements.glucoseMeasurements;
-        }
         if (!(Number(d.water) > 0) && Number(r.water) > 0) d.water = Number(r.water);
         if (!(d.beverages || []).length && Array.isArray(r.supplements?.beverages))
           d.beverages = r.supplements.beverages
@@ -10780,7 +10786,7 @@ function formatSleepDuration(hours) {
       const pending = await plugin.getPending();
       const ours = (pending?.notifications || []).filter(x => x?.extra?.energieKind === "glucose");
       if (ours.length) await plugin.cancel({notifications: ours.map(x => ({id:x.id}))});
-      if (!db.settings.glucoseReminders || !(await nativeFeelingPermission(false))) return;
+      if (!GLUCOSE_FEATURE_ENABLED || !db.settings.glucoseReminders || !(await nativeFeelingPermission(false))) return;
       const notifications = glucoseReminderItems().slice(0,40).map(({meal,due}) => ({
         id: nativeFeelingNotificationId("glucose:" + meal.id),
         title: "🩸 " + t("Suivi de la glycémie"),
@@ -11197,6 +11203,7 @@ function formatSleepDuration(hours) {
   }
 
   function glucoseMealDueInfo(meal) {
+    if (!GLUCOSE_FEATURE_ENABLED) return null;
     if (!meal || !db.settings.glucoseTracking || !/^\d{2}:\d{2}$/.test(meal.time || "")) return null;
     const due = new Date(new Date(selectedDate + "T" + meal.time + ":00").getTime() + Number(db.settings.glucoseMealDelay || 120) * 60000);
     if (Number.isNaN(due.getTime())) return null;
@@ -11566,6 +11573,7 @@ function formatSleepDuration(hours) {
 
 
   function glucoseProfileHtml() {
+    if (!GLUCOSE_FEATURE_ENABLED) return "";
     return `<section class="card glucose-profile-card"><div class="glucose-profile-head"><h3>🩸 ${t("Suivi de la glycémie")}</h3></div>
       <p class="muted small">${t("Mesures manuelles en mmol/L. Aucune interprétation médicale automatique.")}</p>
       <label class="toggle-row"><span><strong>${t("Activer le suivi de la glycémie")}</strong></span><input type="checkbox" id="glucoseTrackingEnabled" ${db.settings.glucoseTracking ? "checked" : ""}></label>
@@ -11573,6 +11581,7 @@ function formatSleepDuration(hours) {
   }
 
   function glucoseJournalHtml(d) {
+    if (!GLUCOSE_FEATURE_ENABLED) return "";
     if (!db.settings.glucoseTracking || db.settings.demoMode || professionalBetaMode) return "";
     const readings = d.glucoseMeasurements || [];
     const meals = d.meals || [];
@@ -11606,6 +11615,7 @@ function formatSleepDuration(hours) {
       +'<p id="glucoseStatus" role="status" class="muted tiny"></p></section>';
   }
   function bindGlucoseJournal() {
+    if (!GLUCOSE_FEATURE_ENABLED) return;
     const status = $("#glucoseStatus");
     const invalid = () => {if(status)status.textContent=t("Entre une mesure valide en mmol/L.");};
     const parse = x => Number(String(x||"").trim().replace(",","."));
@@ -16012,6 +16022,7 @@ function formatSleepDuration(hours) {
 
   let glucoseChartPoints = [];
   function bindGlucoseObservationFilter() {
+    if (!GLUCOSE_FEATURE_ENABLED) return;
     document.querySelectorAll(".glucose-observations-trend [data-glucose-point], .glucose-fullscreen-dialog [data-glucose-point]").forEach(button => {
       if (button.dataset.glucoseBound === "1") return;
       button.dataset.glucoseBound = "1";
@@ -16061,6 +16072,7 @@ function formatSleepDuration(hours) {
     }
   }
   function glucoseObservationsHtml(filter = null) {
+    if (!GLUCOSE_FEATURE_ENABLED) return "";
     if (db.settings.glucoseTracking !== true || db.settings.demoMode || professionalBetaMode) return "";
     const end = selectedDate < todayKey() ? selectedDate : todayKey();
     const start = addDaysKey(end, -29);
@@ -16236,7 +16248,7 @@ function formatSleepDuration(hours) {
     {icon:"🍽️",fr:["Ton journal alimentaire","Consigne simplement tes repas, ajoute une photo ou retrouve tes favoris. Tu peux aussi utiliser l’IA pour obtenir une estimation des calories, selon tes préférences."],en:["Your food journal","Log your meals, add a photo or find your favorites. You can also use AI to get a calorie estimate, depending on your preferences."]},
     {icon:"😕",fr:["Après ton repas","Prends aussi un moment pour noter comment tu te sens après avoir mangé. Comparer les ressentis avant et après enrichit progressivement ton journal."],en:["After your meal","Take a moment to record how you feel after eating. Comparing before-and-after feelings gradually adds context to your journal."]},
     {icon:"🧠",fr:["Ton Cerveau Énergie","Avec le temps, Énergie peut faire ressortir des habitudes, des répétitions et certaines associations entre les repas et tes ressentis."],en:["Your Énergie Brain","Over time, Énergie can highlight habits, recurring patterns and possible associations between your meals and how you feel."],noteFr:"Ces observations sont des pistes de réflexion, pas un diagnostic ni un avis médical. Elles ne prouvent pas un lien de cause à effet.",noteEn:"These observations are insights, not a diagnosis or medical advice. They do not establish cause and effect."},
-    {icon:"🌙",fr:["Bien plus que les repas","Selon tes besoins, suis aussi ton poids, ton sommeil, tes pas, ton activité physique, ton hydratation ou ta glycémie. Aucun besoin de tout suivre."],en:["More than meals","You can also track weight, sleep, steps, physical activity, hydration or blood glucose. You don't have to track everything."]},
+    {icon:"🌙",fr:["Bien plus que les repas","Selon tes besoins, suis aussi ton poids, ton sommeil, tes pas, ton activité physique, ton hydratation ou ton hydratation. Aucun besoin de tout suivre."],en:["More than meals","You can also track weight, sleep, steps, physical activity, hydration or blood glucose. You don't have to track everything."]},
     {icon:"⚙️",fr:["Énergie s’adapte à toi","Dans ton Profil, choisis tes objectifs, les données que tu veux suivre et l’affichage des calories. Commence simplement : tu pourras modifier tes préférences à tout moment."],en:["Énergie adapts to you","In Profile, choose your goals, what you want to track and whether to display calories. Start simply: you can adjust your preferences anytime."]}
   ];
   let energyGuideIndex = 0, energyGuideLanguage = "fr", energyGuideInitialLocale = null;
@@ -16320,7 +16332,7 @@ function formatSleepDuration(hours) {
       {key: "demo", icon: "🧪", title: "Démonstrations", description: "Profils et scénarios fictifs", selectors: ".lab-selector-panel,.demo-profile-card"},
       {key: "meals", icon: "🍽️", title: "Repas et saisie", description: "Favoris et préférences de mes repas", selectors: ".meal-entry-mode-settings,.guided-entry-settings,.nutrition-source-profile-card,.recognized-elements-setting-card,.eating-reasons-setting-card,.future-meal-planning-setting-card,.profile-favorites-panel"},
       {key: "calories", icon: "⚖️", title: "Calories et objectifs", description: "Affichage, estimations et cible calorique", selectors: ".calorie-balance-profile-card"},
-      {key: "tracking", icon: "💧", title: "Suivi quotidien", description: "Hydratation, pas, glycémie, Santé, ressentis et suppléments", selectors: ".steps-profile-card,.glucose-profile-card,.apple-health-profile-card,#waterGoal,#settingFeelingReminders,#supplementNameInput"},
+      {key: "tracking", icon: "💧", title: "Suivi quotidien", description: "Hydratation, pas, Santé, ressentis et suppléments", selectors: ".steps-profile-card,.glucose-profile-card,.apple-health-profile-card,#waterGoal,#settingFeelingReminders,#supplementNameInput"},
       {key: "observations", icon: "👁️", title: "Observations", description: "Tendances, analyses et suggestions", selectors: "#settingInsights,#settingNutrition,#settingRecommendations,.professional-setting-card"},
       {key: "sharing", icon: "🔒", title: "Confidentialité et sauvegarde", description: "Photos et sauvegardes", selectors: ".profile-avatar-settings-card,.meal-photo-settings-card,.profile-backup-panel"},
       {key: "appearance", icon: "🎨", title: "Apparence", description: "Langue, thème et présentation du journal", selectors: ".seasonal-setting-card,.journal-summary-setting-card,#languageSettingCard,.profile-theme-settings-card"},
@@ -16433,7 +16445,6 @@ function formatSleepDuration(hours) {
     { id: "reasons", icon: "🧠", label: "Comprendre mes raisons de manger", hint: "Faim, envies et émotions" },
     { id: "feelings", icon: "🌿", label: "Observer mes ressentis", hint: "Digestion, énergie et humeur" },
     { id: "weight", icon: "⚖️", label: "Suivre mon poids", hint: "Retrouver mes mesures dans Observations" },
-    { id: "glucose", icon: "🩸", label: "Suivre ma glycémie", hint: "Retrouver mes mesures dans Observations" },
     { id: "steps", icon: "👟", label: "Suivre mon activité physique", hint: "Pas et activités quotidiennes" },
     { id: "sleep", icon: "🌙", label: "Observer mon sommeil", hint: "Durée et habitudes de sommeil" },
     { id: "water", icon: "💧", label: "Suivre mon hydratation", hint: "Eau et boissons" },
@@ -16458,12 +16469,11 @@ function formatSleepDuration(hours) {
   }
   function selectedSoloGoals() {
     const saved = Array.isArray(db.settings?.soloGoals)
-      ? db.settings.soloGoals : ["feelings", "weight", "sleep", "water"];
+      ? db.settings.soloGoals.filter(id => id !== "glucose") : ["feelings", "weight", "sleep", "water"];
     const selected = new Set(saved);
     const linked = [
       ["calories", db.settings?.hideCalories !== true],
       ["reasons", db.settings?.showEatingReasons !== false],
-      ["glucose", db.settings?.glucoseTracking === true],
       ["steps", db.settings?.stepsTracking === true],
     ];
     linked.forEach(([id, enabled]) => enabled ? selected.add(id) : selected.delete(id));
@@ -16526,7 +16536,7 @@ function formatSleepDuration(hours) {
     db.settings.manualCaloriesInFreeEntry = calories;
     if (db.settings.mealEntryMode === "free") db.settings.forceGuidedCnfMealEntry = false;
     db.settings.showEatingReasons = selected.has("reasons");
-    db.settings.glucoseTracking = selected.has("glucose");
+    db.settings.glucoseTracking = false;
     db.settings.stepsTracking = selected.has("steps");
     // Ressentis, poids, sommeil et hydratation restent accessibles ; aucun
     // rappel ni permission Apple Health/Health Connect n'est activé ici.
@@ -18016,6 +18026,7 @@ function formatSleepDuration(hours) {
         : "Facultatif · plusieurs réponses possibles";
   }
   function renderMealGlucosePanel(meal, readOnly = false) {
+    if (!GLUCOSE_FEATURE_ENABLED) { $("#mealGlucosePanel")?.remove(); return; }
     $("#mealGlucosePanel")?.remove();
     if (!meal || db.settings.demoMode || professionalBetaMode) return;
     const status = glucoseMealDueInfo(meal);
