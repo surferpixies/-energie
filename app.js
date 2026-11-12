@@ -1695,6 +1695,7 @@ function formatSleepDuration(hours) {
     try {
       localStorage.removeItem(LOCAL_OWNER_KEY);
     } catch (_) {}
+    return journalIndexedDBWriteQueue;
   }
   const MEMORY_CLOUD_TABLE = "user_food_memory";
   let memorySyncTimer = null,
@@ -16643,8 +16644,11 @@ function formatSleepDuration(hours) {
       avatarManager.clear();
       // Le serveur a confirmé la suppression : retirer aussi les copies locales.
       session = null;
-      clearLocalJournalAfterSignOut();
+      const localJournalCleared = await clearLocalJournalAfterSignOut()
+        .then(() => true, () => false);
       try { await client.auth.signOut({scope:"local"}); } catch (_) {}
+      if (!localJournalCleared)
+        console.error("Le compte est supprimé, mais son effacement IndexedDB local doit être vérifié.");
       render();
       alert(t("Ton compte Énergie a été supprimé.") + (appleLinked ? "\n\n" + t("Tu peux aussi retirer Énergie dans les réglages de ton compte Apple, sous Connexion avec Apple.") : ""));
     } catch (_) {
