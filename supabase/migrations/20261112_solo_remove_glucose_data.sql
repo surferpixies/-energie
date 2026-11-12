@@ -15,7 +15,7 @@ begin;
 -- Nettoie les mesures et toutes les préférences de glycémie dans le JSON des journées.
 with sanitized as (
   select
-    id,
+    user_id, log_date,
     supplements - 'glucoseMeasurements' as base,
     case
       when jsonb_typeof(supplements->'profilePreferences') = 'object'
@@ -27,7 +27,7 @@ with sanitized as (
   from public.daily_logs
   where supplements is not null and jsonb_typeof(supplements) = 'object'
 ), ready as (
-  select id,
+  select user_id, log_date,
     case when clean_preferences is null
       then base
       else jsonb_set(base, '{profilePreferences}', clean_preferences, true)
@@ -37,7 +37,7 @@ with sanitized as (
 update public.daily_logs as d
 set supplements = ready.clean
 from ready
-where d.id = ready.id
+where d.user_id = ready.user_id and d.log_date = ready.log_date
   and d.supplements is distinct from ready.clean;
 commit;
 --
