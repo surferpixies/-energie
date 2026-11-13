@@ -7,7 +7,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.499";
+  const APP_RELEASE = "3.56.500";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -1902,12 +1902,10 @@ function formatSleepDuration(hours) {
       return true;
     try {
       const state = rebuildBrainMemoryFromJournal();
-      const { error: deleteError } = await client
-        .from(MEMORY_CLOUD_TABLE)
-        .delete()
-        .eq("user_id", session.user.id);
-      if (deleteError) throw deleteError;
       const rows = cloudMemoryRows(state);
+      // Never delete the user's cloud food memory before a network write:
+      // Safari may block a request or the network may fail midway. Derived
+      // memories can be reconciled later without destructive replacement.
       if (rows.length) {
         const { error: upsertError } = await client
           .from(MEMORY_CLOUD_TABLE)
