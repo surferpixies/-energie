@@ -7,7 +7,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.500";
+  const APP_RELEASE = "3.56.501";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10431,48 +10431,9 @@ function formatSleepDuration(hours) {
     return `<span aria-hidden="true">🌱</span><p><strong>Cette comparaison enrichit ton historique</strong><small>Énergie attendra que cette évolution se répète avant d’en faire une observation.</small></p>`;
   }
   function showMealEnergyResponse(meal) {
-    if (!meal?.feeling) return;
-    const beforeScores = feelingScoresFor(meal, "before"),
-      afterScores = feelingScoresFor(meal, "after"),
-      hasBefore = Object.keys(beforeScores).length > 0,
-      hasAfter = Object.keys(afterScores).length > 0,
-      rows = comparableFeelingDeltas(meal),
-      main = rows[0],
-      positiveFeeling = main?.tag?.group === "positive",
-      title = !hasBefore
-        ? "Ton ressenti après est bien enregistré"
-        : !main
-          ? "Énergie vient d’apprendre quelque chose"
-          : main.delta > 0
-            ? positiveFeeling
-              ? "Une évolution positive après ce repas"
-              : "Un changement à garder à l’œil"
-            : main.delta < 0
-              ? positiveFeeling
-                ? "Un changement à garder à l’œil"
-                : "Une amélioration après ce repas"
-              : "Un ressenti demeuré stable",
-      text = !hasBefore
-        ? "Comme tu ne te souvenais pas de ton état avant le repas, aucune évolution n’a été inventée. Cette donnée demeure utile comme ressenti après."
-        : main
-          ? `${main.tag.emoji} ${t(main.tag.label)} est passé de ${feelingEndpointLabel(main.start)} à ${feelingEndpointLabel(main.end)} après ce repas.`
-          : "Tes ressentis avant et après sont conservés. Les prochaines saisies aideront à reconnaître ce qui se répète.";
-    // Une confirmation stable n'a pas besoin d'interrompre la saisie.
-    // La réponse visuelle est réservée à une évolution réellement mesurable.
-    if (!hasBefore || !hasAfter || !main || main.delta === 0) return;
-    $("#energyResponseTitle").textContent = title;
-    $("#energyResponseText").textContent = text;
-    const changes = hasBefore
-      ? feelingChangesHtml(
-          beforeScores,
-          afterScores,
-          true,
-        )
-      : "";
-    $("#energyResponseChanges").innerHTML = changes;
-    $("#energyResponseChanges").hidden = !changes;
-    $("#energyResponseHistory").innerHTML = energyResponseHistoryHtml(meal, main);
-    $("#energyResponseDialog").showModal();
+    // No interruption after recording or editing meal feelings.
+    // Their comparison remains available in the journal and observations.
+    return;
   }
   function openMissingBeforeDialog(meal, continuation = "summary") {
     const currentMeal = allMeals().find((item) => item.id === meal?.id) || meal;
