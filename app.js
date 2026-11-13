@@ -1641,7 +1641,13 @@ function formatSleepDuration(hours) {
     if (ownerId !== userId) quarantineAndResetLocalJournal();
     try {
       localStorage.setItem(LOCAL_OWNER_KEY, userId);
-      if (journalIndexedDBActive) journalIndexedDBOwner = userId;
+      // Never redirect an existing account's IndexedDB writes to a different
+      // user. A newly signed-in account stays on legacy storage until reload,
+      // when its own IndexedDB cache can be initialized safely.
+      if (journalIndexedDBOwner && journalIndexedDBOwner !== userId) {
+        journalIndexedDBActive = false;
+        journalIndexedDBOwner = "";
+      }
     } catch (_) {}
   }
 
@@ -1649,6 +1655,7 @@ function formatSleepDuration(hours) {
     // Finish already queued writes, then remove the signed-out account's
     // IndexedDB journal. This also applies to permanent account deletion.
     const ownerToErase = journalIndexedDBOwner;
+    journalIndexedDBActive = false;
     journalIndexedDBOwner = "";
     if (ownerToErase && window.EnergieJournalIndexedDB?.remove) {
       journalIndexedDBWriteQueue = journalIndexedDBWriteQueue
