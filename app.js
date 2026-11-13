@@ -1160,6 +1160,51 @@ function formatSleepDuration(hours) {
     }
   }
   let db = load();
+  // Stage 1: migrate the journal snapshot into a storage area not subject to
+  // Safari's small localStorage quota. Keep all cloud synchronization rules intact.
+  let journalIndexedDBActive = false;
+  let journalIndexedDBOwner = "";
+  let journalIndexedDBWriteQueue = Promise.resolve();
+  async function initializeJournalIndexedDB() {
+    const owner = (() => {
+      try { return localStorage.getItem("energieLocalOwnerUserId") || ""; }
+      catch (_) { return ""; }
+    })();
+    const storage = window.EnergieJournalIndexedDB;
+    if (!owner || !storage) return;
+    try {
+      const saved = await storage.read(owner);
+      const legacy = localStorage.getItem(APP_KEY);
+      let savedParsed = null, legacyParsed = null;
+      try { savedParsed = saved ? JSON.parse(saved) : null; } catch (_) {}
+      try { legacyParsed = legacy ? JSON.parse(legacy) : null; } catch (_) {}
+      const savedValid = !!(savedParsed && typeof savedParsed === "object"
+        && savedParsed.days && savedParsed.settings);
+      const legacyValid = !!(legacyParsed && typeof legacyParsed === "object"
+        && legacyParsed.days && legacyParsed.settings);
+      // The legacy copy may contain edits made by an older application version.
+      // An invalid legacy string must never overwrite a valid IndexedDB journal.
+      const legacyUpdated = Date.parse(legacyParsed?.updatedAt || "") || 0;
+      const storedUpdated = Date.parse(savedParsed?.updatedAt || "") || 0;
+      if (savedValid && (!legacyValid || storedUpdated >= legacyUpdated)) {
+        db = migrate(savedParsed);
+      } else {
+        await storage.write(owner, JSON.stringify(db));
+      }
+      journalIndexedDBOwner = owner;
+      journalIndexedDBActive = true;
+      // Only free the old quota after IndexedDB has supplied or committed
+      // a valid snapshot. The Supabase outbox is deliberately never deleted.
+      try {
+        localStorage.removeItem(APP_KEY);
+        localStorage.removeItem(`${APP_KEY}_shadow`);
+        localStorage.removeItem(BACKUP_KEY);
+      } catch (_) {}
+      console.info("Journal Énergie conservé dans IndexedDB");
+    } catch (error) {
+      console.warn("IndexedDB indisponible : conservation du stockage historique", error);
+    }
+  }
   // Keep the last journal view selected on this device across reloads.
   // A remote profile snapshot can be older than the user's most recent choice.
   const JOURNAL_VIEW_LOCAL_KEY = "energieJournalViewModeV1";
@@ -1236,6 +1281,19 @@ function formatSleepDuration(hours) {
     db.settings.glucoseReminders = false;
     for (const day of Object.values(db.days || {})) if (day && typeof day === "object") day.glucoseMeasurements = [];
     const txt = JSON.stringify(db);
+    if (journalIndexedDBActive && journalIndexedDBOwner) {
+      const owner = journalIndexedDBOwner;
+      journalIndexedDBWriteQueue = journalIndexedDBWriteQueue
+        .catch(() => {})
+        .then(() => window.EnergieJournalIndexedDB.write(owner, txt));
+      journalIndexedDBWriteQueue.catch((error) => {
+        console.error("Sauvegarde IndexedDB impossible", error);
+        // Emergency fallback: retain a local copy if space permits.
+        try { localStorage.setItem(APP_KEY, txt); }
+        catch (fallbackError) { console.error("Sauvegarde locale de secours impossible", fallbackError); }
+      });
+      return true; // Async save queued; the transaction confirms durability.
+    }
     let saved = false;
     try {
       localStorage.setItem(APP_KEY, txt);
@@ -1583,10 +1641,29 @@ function formatSleepDuration(hours) {
     if (ownerId !== userId) quarantineAndResetLocalJournal();
     try {
       localStorage.setItem(LOCAL_OWNER_KEY, userId);
+      // Never redirect an existing account's IndexedDB writes to a different
+      // user. A newly signed-in account stays on legacy storage until reload,
+      // when its own IndexedDB cache can be initialized safely.
+      if (journalIndexedDBOwner && journalIndexedDBOwner !== userId) {
+        journalIndexedDBActive = false;
+        journalIndexedDBOwner = "";
+      }
     } catch (_) {}
   }
 
   function clearLocalJournalAfterSignOut() {
+    // Finish already queued writes, then remove the signed-out account's
+    // IndexedDB journal. This also applies to permanent account deletion.
+    const ownerToErase = journalIndexedDBOwner;
+    journalIndexedDBActive = false;
+    journalIndexedDBOwner = "";
+    if (ownerToErase && window.EnergieJournalIndexedDB?.remove) {
+      journalIndexedDBWriteQueue = journalIndexedDBWriteQueue
+        .catch(() => {})
+        .then(() => window.EnergieJournalIndexedDB.remove(ownerToErase));
+      journalIndexedDBWriteQueue.catch((error) =>
+        console.error("Effacement du journal IndexedDB impossible", error));
+    }
     try {
       [
         APP_KEY,
@@ -1625,6 +1702,7 @@ function formatSleepDuration(hours) {
     try {
       localStorage.removeItem(LOCAL_OWNER_KEY);
     } catch (_) {}
+    return journalIndexedDBWriteQueue;
   }
   const MEMORY_CLOUD_TABLE = "user_food_memory";
   let memorySyncTimer = null,
@@ -16573,8 +16651,11 @@ function formatSleepDuration(hours) {
       avatarManager.clear();
       // Le serveur a confirmé la suppression : retirer aussi les copies locales.
       session = null;
-      clearLocalJournalAfterSignOut();
+      const localJournalCleared = await clearLocalJournalAfterSignOut()
+        .then(() => true, () => false);
       try { await client.auth.signOut({scope:"local"}); } catch (_) {}
+      if (!localJournalCleared)
+        console.error("Le compte est supprimé, mais son effacement IndexedDB local doit être vérifié.");
       render();
       alert(t("Ton compte Énergie a été supprimé.") + (appleLinked ? "\n\n" + t("Tu peux aussi retirer Énergie dans les réglages de ton compte Apple, sous Connexion avec Apple.") : ""));
     } catch (_) {
@@ -21040,9 +21121,11 @@ function formatSleepDuration(hours) {
   // Le splash doit être lisible immédiatement à partir des données locales.
   // L'authentification et la synchro Supabase continuent ensuite en arrière-plan
   // pendant que le splash est déjà complet.
-  initDailySplash();
-  initAuth();
-  scheduleFeelingChecks();
+  initializeJournalIndexedDB().finally(() => {
+    initDailySplash();
+    initAuth();
+    scheduleFeelingChecks();
+  });
 
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
