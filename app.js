@@ -7,7 +7,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.498";
+  const APP_RELEASE = "3.56.499";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -10473,9 +10473,7 @@ function formatSleepDuration(hours) {
       : "";
     $("#energyResponseChanges").innerHTML = changes;
     $("#energyResponseChanges").hidden = !changes;
-    $("#energyResponseHistory").innerHTML = onlyNeutral
-      ? `<span aria-hidden="true">✅</span><p><strong>Aucun changement signalé</strong><small>Cette confirmation complète ton journal sans créer d’observation particulière.</small></p>`
-      : energyResponseHistoryHtml(meal, main);
+    $("#energyResponseHistory").innerHTML = energyResponseHistoryHtml(meal, main);
     $("#energyResponseDialog").showModal();
   }
   function openMissingBeforeDialog(meal, continuation = "summary") {
