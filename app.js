@@ -7,7 +7,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.502";
+  const APP_RELEASE = "3.56.503";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -5182,6 +5182,8 @@ function formatSleepDuration(hours) {
     aiCallProtection.caloriesPending = true;
     aiCallProtection.caloriesAt = Date.now();
     button.disabled = true;
+    button.classList.add("is-ai-working");
+    status.classList.add("is-ai-working");
     pendingAiCalorieSuggestion = null;
     $("#mealAiCaloriesProposal").hidden = true;
     status.textContent = "Estimation IA en cours…";
@@ -5213,6 +5215,8 @@ function formatSleepDuration(hours) {
       status.textContent = "Estimation IA indisponible ou quota atteint. La saisie manuelle reste possible.";
     } finally {
       aiCallProtection.caloriesPending = false;
+      button.classList.remove("is-ai-working");
+      status.classList.remove("is-ai-working");
       button.disabled = false;
       refreshCalorieAiInputState();
     }
@@ -5246,6 +5250,8 @@ function formatSleepDuration(hours) {
     aiCallProtection.caloriesPending = true;
     aiCallProtection.caloriesAt = Date.now();
     btn.disabled = true;
+    btn.classList.add("is-ai-working");
+    status.classList.add("is-ai-working");
     $("#mealAiGroundedResult").hidden = true;
     pendingAiCalorieSuggestion = null;
     $("#mealAiCaloriesProposal").hidden = true;
@@ -5386,6 +5392,8 @@ function formatSleepDuration(hours) {
                       : "Recherche indisponible (HTTP " + (code || "inconnu") + "). Consulte les logs Supabase.";
     } finally {
       aiCallProtection.caloriesPending = false;
+      btn.classList.remove("is-ai-working");
+      status.classList.remove("is-ai-working");
       refreshCalorieAiInputState();
     }
   }
@@ -18741,7 +18749,7 @@ function formatSleepDuration(hours) {
     }
     aiCallProtection.photoPending = true;
     aiCallProtection.photoAt = Date.now();
-    document.querySelectorAll("[data-analyze-meal-photo], #analyzePreviewPhoto").forEach(button => { button.disabled = true; });
+    document.querySelectorAll("[data-analyze-meal-photo], #analyzePreviewPhoto").forEach(button => { button.disabled = true; button.classList.add("is-ai-working"); });
     setMealAiPhotoStatus("Analyse de la photo en cours…", "loading");
     hideMealAiSuggestion();
     try {
@@ -18786,7 +18794,7 @@ function formatSleepDuration(hours) {
       return false;
     } finally {
       aiCallProtection.photoPending = false;
-      document.querySelectorAll("[data-analyze-meal-photo], #analyzePreviewPhoto").forEach(button => { button.disabled = false; });
+      document.querySelectorAll("[data-analyze-meal-photo], #analyzePreviewPhoto").forEach(button => { button.disabled = false; button.classList.remove("is-ai-working"); });
     }
   }
   function createFavoriteFromMeal(m) {
