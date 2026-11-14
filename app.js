@@ -7,7 +7,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.501";
+  const APP_RELEASE = "3.56.502";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -647,7 +647,6 @@
         mealQuantityRequired: true,
         showEatingReasons: true,
         futureMealPlanning: false,
-        pilotMode: false,
         physiologicalContext: "none",
         menstrualLastStart: "",
         pregnancyDueDate: "",
@@ -2179,7 +2178,6 @@ function formatSleepDuration(hours) {
                 mealQuantityRequired: preferenceSettings.mealQuantityRequired === true,
                 showEatingReasons: preferenceSettings.showEatingReasons !== false,
                 futureMealPlanning: preferenceSettings.futureMealPlanning === true,
-                pilotMode: preferenceSettings.pilotMode === true,
               },
               defaults: db.settings.supplements || [],
               defaultsUpdatedAt: db.settings.supplementsUpdatedAt || db.updatedAt,
@@ -2484,7 +2482,7 @@ function formatSleepDuration(hours) {
       if (!pendingJournalView && !savedJournalViewMode() && ["detailed", "summary", "consultation"].includes(pref.journalViewMode)) db.settings.journalViewMode = pref.journalViewMode;
       if (!pendingJournalView && !savedJournalVisibleViews() && Array.isArray(pref.journalVisibleViews) && pref.journalVisibleViews.length)
         db.settings.journalVisibleViews = normalizeJournalVisibleViews(pref.journalVisibleViews);
-      ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","nutrientIntakeTracking","macroTracking","autoNutritionEstimates","generalRecommendations","hideFavoriteSuggestion","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","pilotMode","summaryHideCompletedMeals"].forEach((key) => {
+      ["hideCalories","showCnfGuidedEntry","showCiqualGuidedEntry","insightsEnabled","nutritionObservations","nutrientIntakeTracking","macroTracking","autoNutritionEstimates","generalRecommendations","hideFavoriteSuggestion","showSources","professionalSupport","shareMealPhotosWithProfessional","feelingReminders","feelingDelayPreferenceSet","seasonalIcons","showRecognizedElements","forceGuidedCnfMealEntry","showEatingReasons","futureMealPlanning","summaryHideCompletedMeals"].forEach((key) => {
         if (typeof pref[key] === "boolean") db.settings[key] = pref[key];
       });
       if (["free","guided"].includes(pref.mealEntryMode)) db.settings.mealEntryMode = pref.mealEntryMode;
@@ -8595,87 +8593,6 @@ function formatSleepDuration(hours) {
     const state = journalBrainDailyMessage(dateKey);
     return `<button type="button" class="card journal-brain-card" id="openJournalBrain" aria-label="Ouvrir le Cerveau"><span class="journal-brain-visual" aria-hidden="true"><span class="journal-brain-plant">${state.plant}</span><span class="journal-brain-icon">🧠</span></span><span class="journal-brain-copy"><span class="journal-brain-top"><span><small>${esc(state.eyebrow)}</small><strong>${esc(state.title)}</strong></span><b>›</b></span><span class="journal-brain-message">${esc(state.text)}</span><span class="journal-brain-progress"><i><em style="width:${state.progress}%"></em></i><small>${state.plant} ${esc(state.label)} · ${state.days} journée${state.days !== 1 ? "s" : ""}</small></span></span></button>`;
   }
-  function pilotContextLabel() {
-    const viewLabels = { today: "Journal", history: "Historique", brain: "Cerveau", insights: "Observations", followup: "Suivi", profile: "Profil" };
-    const dialog = [...document.querySelectorAll("dialog[open]")].filter((item) => item.id !== "pilotFeedbackDialog").at(-1);
-    const dialogTitle = dialog?.querySelector("h1,h2,h3")?.textContent?.trim();
-    return dialogTitle ? `${viewLabels[currentView] || currentView} › ${dialogTitle}` : (viewLabels[currentView] || currentView);
-  }
-  function pilotPlatformLabel() {
-    if (nativeHealthKit()) return "iOS";
-    return /Android/i.test(navigator.userAgent || "") ? "Android" : "Web";
-  }
-  function pilotTimestampLabel(value) {
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("fr-CA", { dateStyle: "medium", timeStyle: "short" }).format(date);
-  }
-  function openPilotFeedback() {
-    if (db.settings?.pilotMode !== true || !session || db.settings.demoMode) return;
-    const dialog = $("#pilotFeedbackDialog");
-    if (!dialog) return;
-    const now = new Date().toISOString(), context = pilotContextLabel();
-    $("#pilotFeedbackForm")?.reset();
-    document.querySelectorAll("[data-pilot-feedback-type]").forEach((button) => { button.classList.remove("is-selected"); button.setAttribute("aria-pressed", "false"); });
-    $("#pilotFeedbackType").value = "";
-    $("#pilotFeedbackTimestamp").value = now;
-    $("#pilotFeedbackContext").value = context;
-    $("#pilotFeedbackDateDisplay").textContent = pilotTimestampLabel(now);
-    $("#pilotFeedbackContextDisplay").textContent = context;
-    $("#pilotFeedbackTechnicalDisplay").textContent = `Énergie ${APP_RELEASE} · ${pilotPlatformLabel()}`;
-    $("#pilotFeedbackStatus").textContent = "";
-    $("#pilotFeedbackSubmit").disabled = false;
-    dialog.showModal();
-  }
-  function renderPilotFeedbackChrome() {
-    document.querySelectorAll(".pilot-feedback-link").forEach((node) => node.remove());
-    if (db.settings?.pilotMode !== true || !session || db.settings.demoMode) return;
-    const link = document.createElement("button");
-    link.type = "button";
-    link.className = "pilot-feedback-link";
-    link.innerHTML = '<span aria-hidden="true">🧪</span><span>' + t("Suggestion / bogue") + '</span>';
-    link.setAttribute("aria-label", "Signaler une suggestion, un bogue ou un autre commentaire");
-    link.onclick = openPilotFeedback;
-    document.body.appendChild(link);
-  }
-  async function uploadPilotFeedbackAttachment(feedbackId, file) {
-    if (!file) return null;
-    if (file.size > 10 * 1024 * 1024) throw new Error("La pièce jointe dépasse 10 Mo.");
-    const safeName = String(file.name || "piece-jointe").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-100);
-    const path = `${session.user.id}/${feedbackId}/${Date.now()}-${safeName || "piece-jointe"}`;
-    const { error } = await client.storage.from("pilot-feedback").upload(path, file, { upsert: false, contentType: file.type || "application/octet-stream" });
-    if (error) throw error;
-    return path;
-  }
-  async function submitPilotFeedback(event) {
-    event.preventDefault();
-    if (!client || !session) return;
-    const type = $("#pilotFeedbackType").value, comment = $("#pilotFeedbackComment").value.trim();
-    if (!["suggestion", "bug", "other"].includes(type)) { $("#pilotFeedbackStatus").textContent = "Choisis d’abord le type de commentaire."; return; }
-    if (!comment) { $("#pilotFeedbackStatus").textContent = "Ajoute un court commentaire avant l’envoi."; return; }
-    const submit = $("#pilotFeedbackSubmit");
-    submit.disabled = true;
-    $("#pilotFeedbackStatus").textContent = "Envoi en cours…";
-    const id = uid();
-    let attachmentPath = null;
-    try {
-      attachmentPath = await uploadPilotFeedbackAttachment(id, $("#pilotFeedbackAttachment").files?.[0] || null);
-      const { error } = await client.from("pilot_feedback").insert({
-        id, user_id: session.user.id, feedback_type: type, comment,
-        reported_at: $("#pilotFeedbackTimestamp").value || new Date().toISOString(),
-        context: $("#pilotFeedbackContext").value || pilotContextLabel(),
-        platform: pilotPlatformLabel(), app_version: APP_RELEASE, attachment_path: attachmentPath,
-      });
-      if (error) throw error;
-      $("#pilotFeedbackStatus").textContent = "Merci, ton commentaire a été transmis.";
-      setTimeout(() => $("#pilotFeedbackDialog")?.close(), 900);
-    } catch (error) {
-      console.error("pilot feedback", error);
-      if (attachmentPath) { try { await client.storage.from("pilot-feedback").remove([attachmentPath]); } catch (_) {} }
-      $("#pilotFeedbackStatus").textContent = error?.message || "L’envoi n’a pas fonctionné. Réessaie dans un moment.";
-      submit.disabled = false;
-    }
-  }
-
   function render() {
     wrapProfessionalOptionSettings();
     // Saisie libre unique pour les comptes Solo. Le moteur FCÉN/Ciqual reste intact.
@@ -8736,7 +8653,6 @@ function formatSleepDuration(hours) {
     applyProfessionalClientReadOnlyUi();
     decorateSupplementIcons();
     renderDemoChrome();
-    renderPilotFeedbackChrome();
     bindViewSwipe();
   }
   function applyProfessionalClientReadOnlyUi() {
@@ -16382,20 +16298,6 @@ function formatSleepDuration(hours) {
   }
 
   let keepPhysiologicalPanelOpen = false;
-  $("#pilotFeedbackForm")?.addEventListener("submit", submitPilotFeedback);
-  $("#closePilotFeedback")?.addEventListener("click", () => $("#pilotFeedbackDialog")?.close());
-  document.querySelectorAll("[data-pilot-feedback-type]").forEach((button) => {
-    button.addEventListener("click", () => {
-      document.querySelectorAll("[data-pilot-feedback-type]").forEach((item) => {
-        const selected = item === button;
-        item.classList.toggle("is-selected", selected);
-        item.setAttribute("aria-pressed", selected ? "true" : "false");
-      });
-      $("#pilotFeedbackType").value = button.dataset.pilotFeedbackType;
-      $("#pilotFeedbackStatus").textContent = "";
-    });
-  });
-
   document.addEventListener("click", (event) => {
     const button = event.target.closest("[data-open-weight-fullscreen]");
     if (!button) return;
@@ -16916,7 +16818,6 @@ function formatSleepDuration(hours) {
     accountCard?.insertAdjacentHTML("afterend", personalProfileHtml());
     accountCard?.insertAdjacentHTML("afterend", avatarManager.settingsHtml());
     const accountProfileCard = ($("#syncNow") || $("#signIn"))?.closest("section.card");
-    accountProfileCard?.insertAdjacentHTML("afterend", `<section class="card pilot-mode-profile-card"><h3>🧪 ${t("Mode pilote")}</h3><p class="muted small">${t("Active un lien discret dans Énergie pour transmettre rapidement une suggestion, un bogue ou un autre commentaire pendant le projet pilote.")}</p><label class="toggle-row"><span><strong>${t("Activer le mode pilote")}</strong><small>${t("Le contexte technique est ajouté automatiquement, jamais le contenu de ton journal.")}</small></span><input id="settingPilotMode" type="checkbox" ${db.settings.pilotMode === true ? "checked" : ""}></label></section>`);
 
     const calorieOptions = $(".calorie-balance-profile-card .calorie-settings-options");
     const nutritionNotice = $("#settingNutrition")?.closest("section.card")?.querySelector(".info-notice");
@@ -17296,7 +17197,6 @@ function formatSleepDuration(hours) {
     });
     toggleSetting("#settingEatingReasons", "showEatingReasons");
     toggleSetting("#settingFutureMealPlanning", "futureMealPlanning");
-    toggleSetting("#settingPilotMode", "pilotMode");
     toggleSetting("#settingInsights", "insightsEnabled");
     const macroToggle = $("#settingMacros");
     if (macroToggle)
