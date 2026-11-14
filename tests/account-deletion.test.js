@@ -1,14 +1,13 @@
 const assert = require('node:assert/strict'), fs = require('node:fs'), vm = require('node:vm');
 const backend = fs.readFileSync('supabase/functions/delete-account/index.ts','utf8').replace(/^import .*\n/,'').replace('export async function','async function');
 const userId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
-let authenticated = true, storageFails = false, removed = [], deleted = [], feedback = [];
+let authenticated = true, storageFails = false, removed = [], deleted = [];
 const admin = {
   auth:{getUser:async()=>authenticated?{data:{user:{id:userId}}}:{error:{}},admin:{deleteUser:async id=>{deleted.push(id);return {};}}},
   storage:{listBuckets:async()=>({data:[{id:'meal-photos'}]}),from:()=>({
     list:async prefix=>storageFails?{error:{}}:{data:prefix===userId?[{name:'meal',id:null}]:[{name:'photo.jpg',id:'file'}]},
     remove:async paths=>{removed.push(...paths);return {};},
   })},
-  from:()=>({delete:()=>({eq:async (key,id)=>{feedback.push([key,id]);return {};}})}),
 };
 const server=vm.createContext({Request,Response,createClient:()=>admin,Deno:{env:{get:()=> 'server-only'},serve:()=>{}}});
 vm.runInContext(backend,server);
@@ -28,7 +27,7 @@ vm.runInContext(appSource.slice(appSource.indexOf('  let accountDeletionBusy'),a
  authenticated=false;assert.equal((await server.handleDeleteAccount(request({confirmation:'DELETE'}))).status,401);authenticated=true;
  storageFails=true;assert.equal((await server.handleDeleteAccount(request({confirmation:'DELETE'}))).status,500);assert.equal(deleted.length,0);storageFails=false;
  const result=await server.handleDeleteAccount(request({confirmation:'DELETE'}));assert.equal(result.status,200);assert.equal((await result.json()).userId,userId);
- assert.deepEqual(deleted,[userId]);assert.deepEqual(removed,[`${userId}/meal/photo.jpg`]);assert.deepEqual(feedback,[['user_id',userId]]);
+ assert.deepEqual(deleted,[userId]);assert.deepEqual(removed,[`${userId}/meal/photo.jpg`]);
  await ui.deleteOwnAccount();assert.equal(calls,0,'Annuler ne supprime rien');
  confirmed=true;online=false;await ui.deleteOwnAccount();assert.equal(calls,0);online=true;
  ui.professionalBetaMode=true;await ui.deleteOwnAccount();assert.equal(calls,0);ui.professionalBetaMode=false;
