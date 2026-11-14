@@ -48,9 +48,6 @@ export async function handleDeleteAccount(request) {
         if (error) throw error;
       }
     }
-    // Les commentaires pilotes peuvent avoir un lien nullable : les retirer explicitement.
-    const {error:feedbackError} = await admin.from("pilot_feedback").delete().eq("user_id",userId);
-    if (feedbackError && feedbackError.code !== "42P01" && feedbackError.code !== "PGRST205") throw feedbackError;
     // Les tables du journal, favoris, mémoire, profil et suivi ont des FK ON DELETE CASCADE.
     const {error:deleteError} = await admin.auth.admin.deleteUser(userId, false);
     if (deleteError) throw deleteError;
