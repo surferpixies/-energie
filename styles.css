@@ -3476,3 +3476,33 @@ body.professional-beta-mode .professional-beta-context-copy span::before {
   .meal-calorie-help-dialog { width: calc(100vw - 28px); max-height: 86dvh; }
   .meal-calorie-help-modal { padding: 16px; }
 }
+
+/* Énergie 3.56.503 — Retour visuel discret pendant les appels IA. */
+@keyframes energie-ai-spinner { to { transform: rotate(360deg); } }
+#mealAiCaloriesStatus.is-ai-working::before,
+.meal-ai-photo-status.is-loading::before,
+#quickSnackAiStatus.is-loading::before,
+button.is-ai-working::before {
+  content:"";
+  display:inline-block;
+  width:.8em;
+  height:.8em;
+  margin-right:.45em;
+  border:2px solid currentColor;
+  border-right-color:transparent;
+  border-radius:50%;
+  vertical-align:-.11em;
+  animation:energie-ai-spinner .75s linear infinite;
+}
+#mealAiCaloriesStatus.is-ai-working,
+.meal-ai-photo-status.is-loading,
+#quickSnackAiStatus.is-loading {
+  color:var(--accent-strong);
+}
+button.is-ai-working { cursor:progress; opacity:.78; }
+@media (prefers-reduced-motion:reduce) {
+  #mealAiCaloriesStatus.is-ai-working::before,
+  .meal-ai-photo-status.is-loading::before,
+  #quickSnackAiStatus.is-loading::before,
+  button.is-ai-working::before { animation:none; border-right-color:currentColor; }
+}
