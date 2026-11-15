@@ -7,7 +7,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.507";
+  const APP_RELEASE = "3.56.508";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -5257,15 +5257,9 @@ function formatSleepDuration(hours) {
     $("#mealAiCaloriesProposal").hidden = true;
     status.textContent = "Recherche de valeurs nutritionnelles sur Google…";
     try {
-      let { data, error } = await client.functions.invoke("search-meal-calories", {
+      const { data, error } = await client.functions.invoke("search-meal-calories", {
         body: { description },
       });
-      // Transition: l'ancien point d'entrée reste actif jusqu'au déploiement du nouveau.
-      if (error?.context?.status === 404) {
-        ({ data, error } = await client.functions.invoke("grounded-calorie-pilot", {
-          body: { description },
-        }));
-      }
       if (error) throw error;
       if (!calorieAiRequestStillCurrent(requestSnapshot, description)) {
         status.textContent = "Le repas a changé; résultat ignoré.";
