@@ -3506,3 +3506,14 @@ button.is-ai-working { cursor:progress; opacity:.78; }
   #quickSnackAiStatus.is-loading::before,
   button.is-ai-working::before { animation:none; border-right-color:currentColor; }
 }
+
+/* Énergie 3.56.504 — Explications de confidentialité et Loi 25 dans le profil. */
+.profile-law25-details{margin-top:15px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);overflow:hidden}
+.profile-law25-details summary{cursor:pointer;padding:12px 14px;font-weight:750;font-size:.76rem;line-height:1.45;color:var(--text);list-style-position:inside}
+.profile-law25-details summary:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+.profile-law25-details[open] summary{border-bottom:1px solid var(--border)}
+.profile-law25-content{padding:4px 14px 14px}
+.profile-law25-content h4{margin-top:14px;font-size:.75rem}
+.profile-law25-content p{white-space:normal;line-height:1.65}
+.profile-law25-content a{color:var(--accent-strong);text-decoration:underline;text-underline-offset:2px}
+.profile-law25-content .profile-law25-source{margin-top:15px;padding-top:10px;border-top:1px solid var(--border);font-size:.69rem}
