@@ -3517,3 +3517,93 @@ button.is-ai-working { cursor:progress; opacity:.78; }
 .profile-law25-content p{white-space:normal;line-height:1.65}
 .profile-law25-content a{color:var(--accent-strong);text-decoration:underline;text-underline-offset:2px}
 .profile-law25-content .profile-law25-source{margin-top:15px;padding-top:10px;border-top:1px solid var(--border);font-size:.69rem}
+
+
+/* Énergie 3.56.514 — Calories compactes dans l’importateur de recettes. */
+.recipe-import-calorie-row {
+  display:grid;
+  grid-template-columns:max-content minmax(0,max-content) minmax(65px,92px) max-content;
+  align-items:center;
+  justify-content:start;
+  gap:8px;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--surface2);
+  max-width:100%;
+  box-sizing:border-box;
+}
+.recipe-import-calorie-row label {
+  margin:0;
+  font-size:.87rem;
+  font-weight:700;
+  white-space:nowrap;
+}
+.recipe-import-calorie-row #estimateRecipeImportCaloriesAi {
+  display:inline-flex;
+  width:auto!important;
+  max-width:100%;
+  min-width:0;
+  min-height:34px;
+  height:auto;
+  padding:7px 11px!important;
+  margin:0!important;
+  border-radius:999px;
+  align-items:center;
+  justify-content:center;
+  font-size:.77rem!important;
+  line-height:1.2;
+  font-weight:700;
+  white-space:nowrap;
+}
+.recipe-import-calorie-row #estimateRecipeImportCaloriesAi[hidden] { display:none!important; }
+.recipe-import-calorie-row:has(#estimateRecipeImportCaloriesAi[hidden]) {
+  grid-template-columns:max-content minmax(65px,92px) max-content;
+}
+.recipe-import-card .recipe-import-calorie-row #recipeImportCalories {
+  width:100%;
+  min-width:0;
+  max-width:92px;
+  height:36px;
+  min-height:36px;
+  padding:5px 9px;
+  margin:0;
+  font-size:.95rem;
+  box-sizing:border-box;
+}
+.recipe-import-calorie-unit {
+  font-size:.79rem;
+  color:var(--muted);
+  white-space:nowrap;
+}
+#recipeImportCalorieInfo:empty,
+#recipeImportAiStatus:empty { display:none!important; }
+#recipeImportCalorieInfo,
+#recipeImportAiStatus { margin:2px 0 0; font-size:.75rem; line-height:1.35; }
+@media(max-width:430px) {
+  .recipe-import-calorie-row { gap:5px; padding:8px 9px; }
+  .recipe-import-calorie-row label { font-size:.74rem; }
+  .recipe-import-calorie-row #estimateRecipeImportCaloriesAi {
+    padding:7px 8px!important;
+    font-size:.69rem!important;
+    white-space:normal;
+    text-align:center;
+  }
+  .recipe-import-card .recipe-import-calorie-row #recipeImportCalories {
+    min-width:55px; font-size:.85rem; padding:5px 6px;
+  }
+  .recipe-import-calorie-unit { font-size:.71rem; }
+}
+@media(max-width:350px) {
+  .recipe-import-calorie-row {
+    grid-template-columns:max-content minmax(0,1fr) max-content;
+  }
+  .recipe-import-calorie-row #estimateRecipeImportCaloriesAi {
+    grid-column:2 / 4;
+    grid-row:1;
+    justify-self:start;
+  }
+  .recipe-import-calorie-row #recipeImportCalories { grid-column:2; grid-row:2; }
+  .recipe-import-calorie-row .recipe-import-calorie-unit { grid-column:3; grid-row:2; }
+  .recipe-import-calorie-row label { grid-row:2; }
+}
