@@ -7,7 +7,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.509";
+  const APP_RELEASE = "3.56.510";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -5159,8 +5159,8 @@ function formatSleepDuration(hours) {
       status.textContent = "Autorise l’IA dans Profil → Calories avant de commencer.";
       return;
     }
-    if (!description || description.length < 3 || description.length > 1000) {
-      status.textContent = "Pour l’estimation IA, utilise une description de 3 à 1 000 caractères. Ton repas peut toutefois contenir jusqu’à 2 000 caractères.";
+    if (!description || description.length < 3 || description.length > MEAL_DESCRIPTION_MAX_LENGTH) {
+      status.textContent = "Pour l’estimation IA, utilise une description de 3 à 2 000 caractères.";
       return;
     }
     // Ne pas payer un appel pour remplacer des calories déjà renseignées manuellement.
@@ -5229,8 +5229,8 @@ function formatSleepDuration(hours) {
       status.textContent = "Active l’autorisation IA dans Profil → Recherche et estimation IA, ou dans « Modifier mes objectifs ».";
       return;
     }
-    if (description.length < 3 || description.length > 1000) {
-      status.textContent = "Pour la recherche IA, utilise une description de 3 à 1 000 caractères. Le repas enregistré peut contenir jusqu’à 2 000 caractères.";
+    if (description.length < 3 || description.length > MEAL_DESCRIPTION_MAX_LENGTH) {
+      status.textContent = "Pour la recherche IA, utilise une description de 3 à 2 000 caractères.";
       return;
     }
     if (completedCalorieAiInputs.has(calorieAiInputSignature(description))) {
