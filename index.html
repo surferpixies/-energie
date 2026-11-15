@@ -310,8 +310,10 @@
         <textarea id="recipeImportText" rows="6" maxlength="2000"></textarea>
         <div id="recipeImportSourceLink" hidden></div>
         <label for="recipeImportCalories">🔥 Calories (facultatif)</label>
+        <button type="button" id="estimateRecipeImportCaloriesAi" class="secondary" hidden>✨ Estimer avec l’IA</button>
         <input id="recipeImportCalories" inputmode="decimal" type="text" placeholder="Aucune donnée disponible" />
         <p id="recipeImportCalorieInfo" class="muted small"></p>
+        <p id="recipeImportAiStatus" class="muted small" role="status" aria-live="polite"></p>
         <button type="button" id="applyRecipeImport" class="primary">Utiliser dans mon repas</button>
       </div>
     </section>
@@ -783,7 +785,7 @@
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
   <script src="journal-indexeddb.js?v=3.56.498"></script>
-  <script src="app.js?v=3.56.512-recipe-fast-estimate"></script>
+  <script src="app.js?v=3.56.513-recipe-ai"></script>
   <script>
     // Keep the dinner "+ boisson" shortcut neutral without changing the beverage choices.
     (() => {
