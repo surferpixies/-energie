@@ -7,7 +7,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.510";
+  const APP_RELEASE = "3.56.511";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -5132,6 +5132,7 @@ function formatSleepDuration(hours) {
     else if (status?.textContent.startsWith("Déjà estimé")) status.textContent = "";
   }
   const CALORIE_AI_COOLDOWN_MS = 20000;
+  const CALORIE_AI_MAX_WAIT_MS = 40000;
   const PHOTO_AI_COOLDOWN_MS = 30000;
   function aiCooldownSeconds(lastAt, duration) {
     return Math.max(0, Math.ceil((duration - (Date.now() - lastAt)) / 1000));
@@ -5187,8 +5188,10 @@ function formatSleepDuration(hours) {
     pendingAiCalorieSuggestion = null;
     $("#mealAiCaloriesProposal").hidden = true;
     status.textContent = "Estimation IA en cours…";
+    const timeoutSignal = AbortSignal.timeout(CALORIE_AI_MAX_WAIT_MS);
     try {
       const { data, error } = await client.functions.invoke("estimate-meal-calories", {
+        signal: timeoutSignal,
         body: { description, locale: window.ENERGIE_LOCALE || "fr-CA" },
       });
       if (error) throw error;
@@ -5212,7 +5215,9 @@ function formatSleepDuration(hours) {
       status.textContent = "✓ Calories ajoutées automatiquement · modifiables";
     } catch (error) {
       console.warn("Estimation IA calories indisponible", error);
-      status.textContent = "Estimation IA indisponible ou quota atteint. La saisie manuelle reste possible.";
+      status.textContent = timeoutSignal.aborted
+        ? "Estimation trop longue (40 s). Réessaie ou inscris les calories manuellement."
+        : "Estimation IA indisponible ou quota atteint. La saisie manuelle reste possible.";
     } finally {
       aiCallProtection.caloriesPending = false;
       button.classList.remove("is-ai-working");
@@ -5256,8 +5261,11 @@ function formatSleepDuration(hours) {
     pendingAiCalorieSuggestion = null;
     $("#mealAiCaloriesProposal").hidden = true;
     status.textContent = "Recherche de valeurs nutritionnelles sur Google…";
+    // Un seul budget de temps pour Google et le repli Gemini : pas deux attentes sans limite.
+    const timeoutSignal = AbortSignal.timeout(CALORIE_AI_MAX_WAIT_MS);
     try {
       const { data, error } = await client.functions.invoke("search-meal-calories", {
+        signal: timeoutSignal,
         body: { description },
       });
       if (error) throw error;
@@ -5316,9 +5324,12 @@ function formatSleepDuration(hours) {
       status.textContent = "Aucune valeur publiée exploitable. Estimation IA en cours…";
       // Une seule demande de l'utilisateur, avec repli IA transparent.
       // Les deux appels peuvent être facturés et décomptent chacun du quota.
+      if (timeoutSignal.aborted) throw new Error("calorie-ai-timeout");
       const { data: estimate, error: estimateError } = await client.functions.invoke("estimate-meal-calories", {
+        signal: timeoutSignal,
         body: { description, locale: "fr-CA" },
       });
+      if (timeoutSignal.aborted) throw new Error("calorie-ai-timeout");
       if (estimateError) {
         let reason = "";
         try {
@@ -5363,6 +5374,10 @@ function formatSleepDuration(hours) {
       status.textContent = "✓ Calories estimées ajoutées automatiquement · modifiables";
       refreshCalorieAiInputState();
     } catch (error) {
+      if (timeoutSignal.aborted) {
+        status.textContent = "Recherche et estimation trop longues (40 s). Tu peux réessayer ou saisir les calories manuellement.";
+        return;
+      }
       console.warn("Recherche Gemini avec Google indisponible", error);
       let diagnostic = "";
       let code = 0;
