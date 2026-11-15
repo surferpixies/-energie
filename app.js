@@ -5265,7 +5265,7 @@ function formatSleepDuration(hours) {
     status.textContent = recipeWithIngredients
       ? "Estimation des ingrédients de la recette…" : "Recherche de valeurs nutritionnelles sur Google…";
     // Un seul budget de temps pour Google et le repli Gemini : pas deux attentes sans limite.
-    const timeoutSignal = AbortSignal.timeout(CALORIE_AI_MAX_WAIT_MS);
+    const timeoutSignal = AbortSignal.timeout(recipeWithIngredients ? 25000 : CALORIE_AI_MAX_WAIT_MS);
     try {
       if (!recipeWithIngredients) {
       const { data, error } = await client.functions.invoke("search-meal-calories", {
@@ -5328,8 +5328,7 @@ function formatSleepDuration(hours) {
       }
       status.textContent = recipeWithIngredients
         ? "Estimation des ingrédients de la recette…" : "Aucune valeur publiée exploitable. Estimation IA en cours…";
-      // Une seule demande de l'utilisateur, avec repli IA transparent.
-      // Les deux appels peuvent être facturés et décomptent chacun du quota.
+      // Recette : un seul appel Gemini; repas simple : recherche puis repli IA.
       if (timeoutSignal.aborted) throw new Error("calorie-ai-timeout");
       const { data: estimate, error: estimateError } = await client.functions.invoke("estimate-meal-calories", {
         signal: timeoutSignal,
@@ -5381,10 +5380,17 @@ function formatSleepDuration(hours) {
       refreshCalorieAiInputState();
     } catch (error) {
       if (timeoutSignal.aborted) {
-        status.textContent = "Recherche et estimation trop longues (40 s). Tu peux réessayer ou saisir les calories manuellement.";
+        status.textContent = recipeWithIngredients
+          ? "Estimation trop longue (25 s). Tu peux réessayer ou inscrire les calories manuellement."
+          : "Recherche et estimation trop longues (40 s). Tu peux réessayer ou saisir les calories manuellement.";
         return;
       }
-      console.warn("Recherche Gemini avec Google indisponible", error);
+      console.warn(recipeWithIngredients ? "Estimation recette indisponible" : "Recherche Gemini avec Google indisponible", error);
+      if (recipeWithIngredients) {
+        const code = Number(error?.context?.status || 0);
+        status.textContent = "Estimation de la recette indisponible" + (code ? " (HTTP " + code + ")" : "") + ". Tu peux saisir les calories manuellement.";
+        return;
+      }
       let diagnostic = "";
       let code = 0;
       try {
