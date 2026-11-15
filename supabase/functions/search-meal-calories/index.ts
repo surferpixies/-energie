@@ -8,7 +8,7 @@ const cors = {
 };
 const reply = (status: number, value: unknown) => new Response(JSON.stringify(value), { status, headers: cors });
 const MODEL = "gemini-3.5-flash-lite";
-const MAX_LEN = 1000;
+const MAX_LEN = 2000;
 
 export async function handleSearchMealCalories(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
