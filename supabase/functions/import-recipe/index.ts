@@ -16,9 +16,9 @@ const FETCH_TIMEOUT_MS = 10_000;
 
 // Lire un flux sous une limite stricte : Content-Length peut être absent ou mensonger.
 // Toujours annuler le lecteur dès qu'on atteint la limite.
-async function readLimitedHtml(upstream: Response): Promise<string> {
-  if (!upstream.body) throw new Error("empty-body");
-  const reader = upstream.body.getReader();
+async function readLimitedText(body: ReadableStream<Uint8Array> | null, maxBytes: number): Promise<string> {
+  if (!body) throw new Error("empty-body");
+  const reader = body.getReader();
   const chunks: Uint8Array[] = [];
   let total = 0;
   try {
@@ -26,7 +26,7 @@ async function readLimitedHtml(upstream: Response): Promise<string> {
       const { done, value } = await reader.read();
       if (done) break;
       total += value.byteLength;
-      if (total > MAX_PAGE_BYTES) throw new Error("page-too-large");
+      if (total > maxBytes) throw new Error("body-too-large");
       chunks.push(value);
     }
   } finally {
@@ -170,10 +170,7 @@ Deno.serve(async (request) => {
   try {
     const length = Number(request.headers.get("content-length") || "0");
     if (length > MAX_REQUEST_BYTES) return response(413, {error: "request-too-large"});
-    const rawBody = await request.text();
-    if (new TextEncoder().encode(rawBody).byteLength > MAX_REQUEST_BYTES) {
-      return response(413, {error: "request-too-large"});
-    }
+    const rawBody = await readLimitedText(request.body, MAX_REQUEST_BYTES);
     const parsed = JSON.parse(rawBody);
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) ||
         Object.keys(parsed).some(key => key !== "url")) throw new Error("invalid-body");
@@ -221,7 +218,7 @@ Deno.serve(async (request) => {
       await upstream.body?.cancel().catch(() => {});
       return response(422, {error: "unsupported-content-or-size"});
     }
-    const html = await readLimitedHtml(upstream);
+    const html = await readLimitedText(upstream.body, MAX_PAGE_BYTES);
     // IGA peut renvoyer sa page générale même pour un lien vers une recette.
     // Ne jamais traiter cette page comme une fiche recette.
     if (target.hostname.endsWith("iga.ca") && target.pathname.startsWith("/fr/recettes/")) {
@@ -235,7 +232,7 @@ Deno.serve(async (request) => {
     const recipe = parseRecipe(html) || parseRecipeMicrodata(html);
     return recipe ? response(200, {recipe}) : response(422,{error:"recipe-structured-data-missing"});
   } catch (error) {
-    if (error instanceof Error && error.message === "page-too-large") {
+    if (error instanceof Error && error.message === "body-too-large") {
       return response(422, {error: "page-too-large"});
     }
     console.warn("import-recipe fetch failed", error instanceof Error ? error.name : "unknown");
