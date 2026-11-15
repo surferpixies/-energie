@@ -149,8 +149,8 @@
           <input id="mealFavoriteName" name="energie_meal_favorite_name" type="text" maxlength="60" autocomplete="off" autocapitalize="sentences" placeholder="Ex. Déjeuner rapide">
         </label>
         <div class="meal-description-composer">
-          <textarea id="mealDescription" maxlength="1000" aria-describedby="mealDescriptionLimit" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli" required></textarea>
-          <small id="mealDescriptionLimit" class="muted tiny">Description du repas · 1 000 caractères maximum</small>
+          <textarea id="mealDescription" maxlength="2000" aria-describedby="mealDescriptionLimit" name="energie_meal_description_value" autocomplete="one-time-code" autocapitalize="sentences" rows="4" placeholder="Ex. 150 g poulet, 1 tasse riz, 1 tasse brocoli" required></textarea>
+          <small id="mealDescriptionLimit" class="muted tiny">Description du repas · 2 000 caractères maximum</small>
           <div id="mealRecipeSourceLink" hidden></div>
           <p id="mealGuidedEntryRequirement" class="meal-guided-entry-requirement" hidden>La saisie guidée FCÉN est obligatoire dans tes préférences.</p>
           <button type="button" id="openRecipeImport" class="meal-cnf-guided-entry meal-recipe-import-entry" hidden><span class="meal-cnf-guided-icon" aria-hidden="true">🔗</span><span><strong>Importer une recette</strong><small>À partir d’un site Web</small></span><b aria-hidden="true">›</b></button>
@@ -307,7 +307,7 @@
         <label for="recipeImportPortions">Portions consommées</label>
         <input id="recipeImportPortions" type="number" min="0.25" max="20" step="0.25" value="1" />
         <label for="recipeImportText">Texte proposé (modifiable)</label>
-        <textarea id="recipeImportText" rows="6" maxlength="1000"></textarea>
+        <textarea id="recipeImportText" rows="6" maxlength="2000"></textarea>
         <div id="recipeImportSourceLink" hidden></div>
         <label for="recipeImportCalories">🔥 Calories (facultatif)</label>
         <input id="recipeImportCalories" inputmode="decimal" type="text" placeholder="Aucune donnée disponible" />
@@ -783,7 +783,7 @@
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
   <script src="journal-indexeddb.js?v=3.56.498"></script>
-  <script src="app.js?v=3.56.508-calorie-search"></script>
+  <script src="app.js?v=3.56.509-recipe-length"></script>
   <script>
     // Keep the dinner "+ boisson" shortcut neutral without changing the beverage choices.
     (() => {
