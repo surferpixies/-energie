@@ -175,8 +175,10 @@ Deno.serve(async (request) => {
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) ||
         Object.keys(parsed).some(key => key !== "url")) throw new Error("invalid-body");
     target = validateUrl(parsed.url, sites);
-  } catch (_) {
-    return response(400, {error: "invalid-or-unsupported-url"});
+  } catch (error) {
+    return error instanceof Error && error.message === "body-too-large"
+      ? response(413, {error: "request-too-large"})
+      : response(400, {error: "invalid-or-unsupported-url"});
   }
 
   // Le quota est réservé côté SQL avant le moindre accès réseau à un site tiers.
