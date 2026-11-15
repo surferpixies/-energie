@@ -119,11 +119,11 @@ pre{white-space:pre-wrap;word-break:break-word;background:#f1eee5;padding:12px;b
     const card=document.createElement("section");
     card.className="card";
     card.innerHTML=`
-      <h2>${c.label}</h2>
+      <h2>${escapeHtml(c.label)}</h2>
       <span class="badge">${c.meals} repas</span>
       <span class="badge">${c.days} journée(s)</span>
-      <span class="badge">${c.source}</span>
-      <p class="muted">Clé : ${c.key}</p>
+      <span class="badge">${escapeHtml(c.source)}</span>
+      <p class="muted">Clé : ${escapeHtml(c.key)}</p>
       <div>
         <button class="secondary" data-download="${idx}">Télécharger cette copie</button>
         <button class="primary" data-restore="${idx}">Restaurer comme données actives</button>
