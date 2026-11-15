@@ -13,3 +13,7 @@ verify_jwt = false
 [functions.grounded-calorie-pilot]
 # getUser valide la session avant toute recherche Google.
 verify_jwt = false
+
+[functions.search-meal-calories]
+# Remplace progressivement grounded-calorie-pilot; authentification contrôlée dans le handler.
+verify_jwt = false
