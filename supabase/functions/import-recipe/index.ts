@@ -9,13 +9,46 @@ const headers = {
 const response = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers });
 
+const MAX_REQUEST_BYTES = 4096;
+const MAX_PAGE_BYTES = 1_500_000;
+const MAX_REDIRECTS = 2;
+const FETCH_TIMEOUT_MS = 10_000;
+
+// Lire un flux sous une limite stricte : Content-Length peut être absent ou mensonger.
+// Toujours annuler le lecteur dès qu'on atteint la limite.
+async function readLimitedHtml(upstream: Response): Promise<string> {
+  if (!upstream.body) throw new Error("empty-body");
+  const reader = upstream.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > MAX_PAGE_BYTES) throw new Error("page-too-large");
+      chunks.push(value);
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const part of chunks) {
+    bytes.set(part, offset);
+    offset += part.byteLength;
+  }
+  return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+}
+
 // Liste de domaines chargée depuis public.recipe_sites; jamais depuis l'utilisateur.
 type RecipeSite = {domain: string; display_name: string; status: string; enabled: boolean};
 function validateUrl(raw: unknown, sites: RecipeSite[]): URL {
   if (typeof raw !== "string" || raw.length > 2048) throw new Error("invalid-url");
   const url = new URL(raw);
   const host = url.hostname.toLowerCase();
-  if (url.protocol !== "https:" || url.port || url.username || url.password ||
+  if (url.protocol !== "https:" || url.port || url.username || url.password || url.hostname.endsWith(".local") ||
       !sites.some(site => site.enabled && site.status !== "blocked" &&
         (host === site.domain || host === "www." + site.domain))) {
     throw new Error("unsupported-domain");
@@ -120,7 +153,7 @@ Deno.serve(async (request) => {
   if (!server || !secret) return response(503, {error: "service-unavailable"});
   const admin = createClient(server, secret, {auth: {persistSession:false,autoRefreshToken:false}});
   const {data, error} = await admin.auth.getUser(bearer.replace(/^Bearer\s+/i, ""));
-  if (error || !data.user) return response(401, {error: "authentication-required"});
+  if (error || !data?.user?.id) return response(401, {error: "authentication-required"});
   const {data: rows, error: settingsError} = await admin.from("recipe_sites")
     .select("domain,display_name,status,enabled");
   if (settingsError || !rows) {
@@ -134,28 +167,61 @@ Deno.serve(async (request) => {
       .map(({domain, display_name, status}) => ({domain, name: display_name, status}))});
   }
   let target: URL;
-  try { target = validateUrl((await request.json()).url, sites); }
-  catch (_) { return response(400, {error:"invalid-or-unsupported-url"}); }
+  try {
+    const length = Number(request.headers.get("content-length") || "0");
+    if (length > MAX_REQUEST_BYTES) return response(413, {error: "request-too-large"});
+    const rawBody = await request.text();
+    if (new TextEncoder().encode(rawBody).byteLength > MAX_REQUEST_BYTES) {
+      return response(413, {error: "request-too-large"});
+    }
+    const parsed = JSON.parse(rawBody);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) ||
+        Object.keys(parsed).some(key => key !== "url")) throw new Error("invalid-body");
+    target = validateUrl(parsed.url, sites);
+  } catch (_) {
+    return response(400, {error: "invalid-or-unsupported-url"});
+  }
+
+  // Le quota est réservé côté SQL avant le moindre accès réseau à un site tiers.
+  const { data: admitted, error: quotaError } = await admin.rpc("reserve_recipe_import_request", {
+    p_user_id: data.user.id,
+  });
+  if (quotaError) {
+    console.error("Recipe import quota unavailable", quotaError.code || "unknown");
+    return response(503, {error: "recipe-import-quota-unavailable"});
+  }
+  if (admitted !== true) return response(429, {error: "recipe-import-rate-limit"});
+
   try {
     let current = target;
     let upstream: Response | null = null;
-    for (let hop = 0; hop < 3; hop++) {
+    // Suivre au maximum deux redirections, chaque destination étant revalidée.
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
       upstream = await fetch(current, {
         redirect: "manual",
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
         headers: {"Accept": "text/html,application/xhtml+xml", "User-Agent": "EnergieRecipeImporter/1.0"},
       });
       if (![301,302,303,307,308].includes(upstream.status)) break;
+      // Ne pas laisser le flux de la redirection occuper des ressources.
+      await upstream.body?.cancel().catch(() => {});
+      if (hop === MAX_REDIRECTS) return response(422, {error: "recipe-too-many-redirects"});
       const destination = upstream.headers.get("location");
-      if (!destination) return response(422, {error:"recipe-redirect-missing"});
+      if (!destination) return response(422, {error: "recipe-redirect-missing"});
       current = validateUrl(new URL(destination, current).toString(), sites);
     }
-    if (!upstream?.ok) return response(422,{error:"recipe-site-http-error", siteStatus: upstream?.status || null});
+    if (!upstream?.ok) {
+      await upstream?.body?.cancel().catch(() => {});
+      return response(422,{error:"recipe-site-http-error", siteStatus: upstream?.status || null});
+    }
     const contentType = upstream.headers.get("content-type") || "";
-    if (!/text\/html|application\/xhtml\+xml/i.test(contentType)) return response(422,{error:"unsupported-content"});
-    if (Number(upstream.headers.get("content-length") || 0) > 1500000) return response(422,{error:"page-too-large"});
-    const html = await upstream.text();
-    if (html.length > 1500000) return response(422,{error:"page-too-large"});
+    const declared = Number(upstream.headers.get("content-length") || "0");
+    if (!/^(text\/html|application\/xhtml\+xml)(?:\s*;|\s*$)/i.test(contentType) ||
+        (Number.isFinite(declared) && declared > MAX_PAGE_BYTES)) {
+      await upstream.body?.cancel().catch(() => {});
+      return response(422, {error: "unsupported-content-or-size"});
+    }
+    const html = await readLimitedHtml(upstream);
     // IGA peut renvoyer sa page générale même pour un lien vers une recette.
     // Ne jamais traiter cette page comme une fiche recette.
     if (target.hostname.endsWith("iga.ca") && target.pathname.startsWith("/fr/recettes/")) {
@@ -169,7 +235,10 @@ Deno.serve(async (request) => {
     const recipe = parseRecipe(html) || parseRecipeMicrodata(html);
     return recipe ? response(200, {recipe}) : response(422,{error:"recipe-structured-data-missing"});
   } catch (error) {
-    console.warn("import-recipe fetch failed", String(error).slice(0, 250));
+    if (error instanceof Error && error.message === "page-too-large") {
+      return response(422, {error: "page-too-large"});
+    }
+    console.warn("import-recipe fetch failed", error instanceof Error ? error.name : "unknown");
     return response(422, {error:"recipe-site-connection-failed"});
   }
 });
