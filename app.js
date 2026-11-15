@@ -7,7 +7,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.513";
+  const APP_RELEASE = "3.56.514";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -4310,7 +4310,9 @@ function formatSleepDuration(hours) {
       info.textContent = "Calories indiquées par le site pour une portion, ajustées selon la quantité choisie. Vérifie avant d’enregistrer.";
     } else {
       field.value = "";
-      info.textContent = "Aucune donnée calorique fiable trouvée : tu peux laisser ce champ vide.";
+      // L’absence de calories publiées est normale : ne pas afficher un avertissement
+      // avant que la personne demande une estimation IA.
+      info.textContent = "";
     }
   }
   async function estimateRecipeImportCaloriesAi() {
