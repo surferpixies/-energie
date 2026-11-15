@@ -10,7 +10,7 @@ const reply = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers });
 
 const MODEL = Deno.env.get("GEMINI_CALORIE_MODEL") || "gemini-3.5-flash-lite";
-const MAX_DESCRIPTION = 1000;
+const MAX_DESCRIPTION = 2000;
 const MAX_RESPONSE = 3000;
 
 export async function handleEstimateMealCalories(request: Request): Promise<Response> {
