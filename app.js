@@ -7,7 +7,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.511";
+  const APP_RELEASE = "3.56.512";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -5260,10 +5260,14 @@ function formatSleepDuration(hours) {
     $("#mealAiGroundedResult").hidden = true;
     pendingAiCalorieSuggestion = null;
     $("#mealAiCaloriesProposal").hidden = true;
-    status.textContent = "Recherche de valeurs nutritionnelles sur Google…";
+    // Une liste explicite d’ingrédients est une recette personnalisée : estimer directement.
+    const recipeWithIngredients = /(?:^|\n)\s*[•]\s*\S/m.test(description);
+    status.textContent = recipeWithIngredients
+      ? "Estimation des ingrédients de la recette…" : "Recherche de valeurs nutritionnelles sur Google…";
     // Un seul budget de temps pour Google et le repli Gemini : pas deux attentes sans limite.
     const timeoutSignal = AbortSignal.timeout(CALORIE_AI_MAX_WAIT_MS);
     try {
+      if (!recipeWithIngredients) {
       const { data, error } = await client.functions.invoke("search-meal-calories", {
         signal: timeoutSignal,
         body: { description },
@@ -5321,7 +5325,9 @@ function formatSleepDuration(hours) {
         refreshCalorieAiInputState();
         return;
       }
-      status.textContent = "Aucune valeur publiée exploitable. Estimation IA en cours…";
+      }
+      status.textContent = recipeWithIngredients
+        ? "Estimation des ingrédients de la recette…" : "Aucune valeur publiée exploitable. Estimation IA en cours…";
       // Une seule demande de l'utilisateur, avec repli IA transparent.
       // Les deux appels peuvent être facturés et décomptent chacun du quota.
       if (timeoutSignal.aborted) throw new Error("calorie-ai-timeout");
@@ -5341,12 +5347,12 @@ function formatSleepDuration(hours) {
         } catch (_) { /* An unavailable service may not return JSON. */ }
         const code = Number(estimateError?.context?.status || 0);
         status.textContent = reason === "daily-limit"
-          ? "Google n'a pas trouvé de calories publiées. Le repli IA a atteint sa limite quotidienne."
+          ? "L’estimation IA a atteint sa limite quotidienne."
           : reason === "quota-unavailable"
-            ? "Google n'a pas trouvé de calories publiées. Le quota du repli IA est indisponible."
+            ? "Le quota de l’estimation IA est indisponible."
             : code === 401 || code === 403
-              ? "Google n'a pas trouvé de calories publiées. Le repli IA nécessite une session valide."
-              : "Google n'a pas trouvé de calories publiées et le repli IA est indisponible" +
+              ? "L’estimation IA nécessite une session valide."
+              : "L’estimation IA est indisponible" +
                 (code ? " (HTTP " + code + ")" : "") + ". Réessaie plus tard ou saisis les calories manuellement.";
         console.warn("Repli IA calories indisponible", estimateError);
         return;
@@ -5358,7 +5364,7 @@ function formatSleepDuration(hours) {
       const kcal = estimate?.kcal;
       if (!Number.isInteger(kcal) || kcal < 20 || kcal > 3500) {
         const explanation = typeof estimate?.explanation === "string" ? estimate.explanation.trim().slice(0, 240) : "";
-        status.textContent = "Google n'a pas trouvé de calories publiées et l'IA ne peut pas estimer ce repas avec assez d'informations." +
+        status.textContent = "L’IA ne peut pas estimer ce repas avec assez d’informations." +
           (explanation ? " " + explanation : "") + " Précise les ingrédients et les quantités pour réessayer.";
         return;
       }
