@@ -7,7 +7,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.508";
+  const APP_RELEASE = "3.56.509";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -2872,7 +2872,7 @@ function formatSleepDuration(hours) {
     "salade de pâtes": { fiber: 4, sugars: 5, sodium: 550 },
     prosciutto: { fiber: 0, sugars: 0, sodium: 1050 },
   };
-  const MEAL_DESCRIPTION_MAX_LENGTH = 1000;
+  const MEAL_DESCRIPTION_MAX_LENGTH = 2000;
 
   function foodNutrients(food) {
     // Les valeurs FCÉN sont la source nutritionnelle de référence et ne doivent
@@ -3230,7 +3230,7 @@ function formatSleepDuration(hours) {
   function mealNutritionRecognition(text) {
     if (hasUnspecifiedPackagedSauce(text)) return { recognized: [], unrecognized: [String(text)] };
     const value = normalizeCommonMealPhrasing(text).trim();
-    if (value.length > MEAL_DESCRIPTION_MAX_LENGTH) return { recognized: [], unrecognized: ["Description trop longue : 1 000 caractères maximum."] };
+    if (value.length > MEAL_DESCRIPTION_MAX_LENGTH) return { recognized: [], unrecognized: ["Description trop longue : 2 000 caractères maximum."] };
     const recognizedDish = mealCompositionAnalysis(value)?.dish;
     if (!value) return { recognized: [], unrecognized: [] };
     if (recognizedDish?.nutrition && !/[+,;\n\r|]|\s+\/\s+/.test(value))
@@ -4263,7 +4263,7 @@ function formatSleepDuration(hours) {
       ? "\nPortion consommée : " + recipeAmountText(portions) + " sur " + recipeAmountText(total)
       : "\nPortion consommée : " + recipeAmountText(portions) + " (rendement à vérifier)") +
       (source ? "\nRecette originale : " + source : "");
-    const maxLength = 1000 - suffix.length;
+    const maxLength = MEAL_DESCRIPTION_MAX_LENGTH - suffix.length;
     let description = title, omitted = 0;
     for (const ingredient of importedRecipe.ingredients || []) {
       const scaled = scaleRecipeIngredient(ingredient, factor);
@@ -4443,7 +4443,7 @@ function formatSleepDuration(hours) {
     const field = favoriteForm ? favoriteForm.querySelector('[name="description"]') : $("#mealDescription");
     const text = recipeImportDescriptionForSave();
     const portions = Number($("#recipeImportPortions").value);
-    if (!text || text.length > 1000 || !Number.isFinite(portions) || portions <= 0 || portions > 20) {
+    if (!text || text.length > MEAL_DESCRIPTION_MAX_LENGTH || !Number.isFinite(portions) || portions <= 0 || portions > 20) {
       $("#recipeImportStatus").textContent = "Vérifie le texte et le nombre de portions.";
       $("#recipeImportStatus").scrollIntoView({block:"nearest"});
       return;
@@ -5160,7 +5160,7 @@ function formatSleepDuration(hours) {
       return;
     }
     if (!description || description.length < 3 || description.length > 1000) {
-      status.textContent = "Décris d'abord ton repas (3 à 1 000 caractères).";
+      status.textContent = "Pour l’estimation IA, utilise une description de 3 à 1 000 caractères. Ton repas peut toutefois contenir jusqu’à 2 000 caractères.";
       return;
     }
     // Ne pas payer un appel pour remplacer des calories déjà renseignées manuellement.
@@ -5230,7 +5230,7 @@ function formatSleepDuration(hours) {
       return;
     }
     if (description.length < 3 || description.length > 1000) {
-      status.textContent = "Décris ton repas avant de lancer une recherche.";
+      status.textContent = "Pour la recherche IA, utilise une description de 3 à 1 000 caractères. Le repas enregistré peut contenir jusqu’à 2 000 caractères.";
       return;
     }
     if (completedCalorieAiInputs.has(calorieAiInputSignature(description))) {
@@ -5506,10 +5506,10 @@ function formatSleepDuration(hours) {
     clearTimeout(mealNutritionPreviewTimer);
     const descriptionField = $("#mealDescription");
     const tooLong = (descriptionField?.value.length || 0) > MEAL_DESCRIPTION_MAX_LENGTH;
-    descriptionField?.setCustomValidity(tooLong ? "Limite de 1 000 caractères pour la description du repas." : "");
+    descriptionField?.setCustomValidity(tooLong ? "Limite de 2 000 caractères pour la description du repas." : "");
     if (tooLong) {
       updateMealCompositionReview();
-      fillNutritionInputs(null, "Raccourcis la description à 1 000 caractères pour relancer l’estimation.");
+      fillNutritionInputs(null, "Raccourcis la description à 2 000 caractères pour relancer l’estimation.");
       return;
     }
     if (db.settings?.mealEntryMode === "guided") {
