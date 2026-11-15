@@ -3608,29 +3608,27 @@ button.is-ai-working { cursor:progress; opacity:.78; }
   .recipe-import-calorie-row label { grid-row:2; }
 }
 
-/* Énergie 3.56.515 — Bouton IA clairement identifiable sur le panneau vert. */
+/* Énergie 3.56.515 — Même vert doux que le bouton IA du repas. */
+.recipe-import-calorie-row { background:#f5faef; }
 .recipe-import-calorie-row #estimateRecipeImportCaloriesAi:not([hidden]) {
-  background:#246b46!important;
-  color:#fff!important;
-  border:1px solid #205f3e!important;
-  box-shadow:0 1px 3px rgba(16,57,32,.18);
+  background:var(--surface2)!important;
+  color:var(--text)!important;
+  border:1px solid transparent!important;
+  box-shadow:none!important;
 }
 .recipe-import-calorie-row #estimateRecipeImportCaloriesAi:not([hidden]):hover:not(:disabled) {
-  background:#1b5839!important;
-  border-color:#164d31!important;
+  background:#cee9ba!important;
 }
 .recipe-import-calorie-row #estimateRecipeImportCaloriesAi:focus-visible {
-  outline:3px solid #e9b944;
+  outline:2px solid var(--accent);
   outline-offset:2px;
 }
-.recipe-import-calorie-row #estimateRecipeImportCaloriesAi.is-ai-working {
-  opacity:.8;
-}
+.recipe-import-calorie-row #estimateRecipeImportCaloriesAi.is-ai-working { opacity:.75; }
+[data-theme="dark"] .recipe-import-calorie-row { background:var(--surface); }
 [data-theme="dark"] .recipe-import-calorie-row #estimateRecipeImportCaloriesAi:not([hidden]) {
-  background:#aed5b4!important;
-  color:#173521!important;
-  border-color:#c1e1c5!important;
+  background:var(--surface2)!important;
+  color:var(--text)!important;
 }
 [data-theme="dark"] .recipe-import-calorie-row #estimateRecipeImportCaloriesAi:not([hidden]):hover:not(:disabled) {
-  background:#c6e7c9!important;
+  background:#395441!important;
 }
