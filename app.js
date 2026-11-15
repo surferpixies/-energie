@@ -7,7 +7,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.505";
+  const APP_RELEASE = "3.56.506";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -17597,7 +17597,7 @@ function formatSleepDuration(hours) {
     const s = $("#favoriteMealSelect");
     if (!s) return;
     const favorites = favoritesForType(type);
-    s.innerHTML = `<option value="">Choisir un favori…</option>${favorites.map((f) => `<option value="${f.id}">${esc(f.name)}</option>`).join("")}`;
+    s.innerHTML = `<option value="">Choisir un favori…</option>${favorites.map((f) => `<option value="${esc(f.id)}">${esc(f.name)}</option>`).join("")}`;
     s.closest("label").hidden = !favorites.length;
   }
   function setMealFavoriteToggle(active, favoriteId = "") {
