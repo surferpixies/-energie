@@ -309,9 +309,12 @@
         <label for="recipeImportText">Texte proposé (modifiable)</label>
         <textarea id="recipeImportText" rows="6" maxlength="2000"></textarea>
         <div id="recipeImportSourceLink" hidden></div>
-        <label for="recipeImportCalories">🔥 Calories (facultatif)</label>
-        <button type="button" id="estimateRecipeImportCaloriesAi" class="secondary" hidden>✨ Estimer avec l’IA</button>
-        <input id="recipeImportCalories" inputmode="decimal" type="text" placeholder="Aucune donnée disponible" />
+        <div class="recipe-import-calorie-row">
+          <label for="recipeImportCalories">🔥 Calories</label>
+          <button type="button" id="estimateRecipeImportCaloriesAi" class="secondary" hidden>✨ Estimer avec l’IA</button>
+          <input id="recipeImportCalories" inputmode="decimal" type="text" placeholder="—" aria-describedby="recipeImportCalorieInfo" />
+          <span class="recipe-import-calorie-unit">kcal</span>
+        </div>
         <p id="recipeImportCalorieInfo" class="muted small"></p>
         <p id="recipeImportAiStatus" class="muted small" role="status" aria-live="polite"></p>
         <button type="button" id="applyRecipeImport" class="primary">Utiliser dans mon repas</button>
@@ -785,7 +788,7 @@
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
   <script src="journal-indexeddb.js?v=3.56.498"></script>
-  <script src="app.js?v=3.56.513-recipe-ai"></script>
+  <script src="app.js?v=3.56.514-recipe-calories-compact"></script>
   <script>
     // Keep the dinner "+ boisson" shortcut neutral without changing the beverage choices.
     (() => {
