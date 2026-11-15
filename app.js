@@ -7,7 +7,7 @@
   const OUTBOX_KEY = "energieRepasOutboxV16";
   const BARCODE_CACHE_KEY = "energieBarcodeProductsV5";
   const CURRENT_VERSION = 93;
-  const APP_RELEASE = "3.56.512";
+  const APP_RELEASE = "3.56.513";
   const Metrics = window.EnergieMetrics;
   // The five explicit positive feelings replace the retired generic neutral choice.
   const POSITIVE_FEELINGS = [
@@ -4248,12 +4248,28 @@ function formatSleepDuration(hours) {
     });
   }
   let recipeImportMeta = "";
+  let recipeImportAiController = null;
+  let recipeImportAiEstimated = false;
+  function resetRecipeImportAi() {
+    recipeImportAiController?.abort();
+    recipeImportAiController = null;
+    const button = $("#estimateRecipeImportCaloriesAi");
+    const status = $("#recipeImportAiStatus");
+    if (button) {
+      button.disabled = false;
+      button.classList.remove("is-ai-working");
+      button.textContent = "✨ Estimer avec l’IA";
+    }
+    if (status) status.textContent = "";
+  }
   function recipeImportDescriptionForSave() {
     const visible = $("#recipeImportText")?.value.trim() || "";
     return recipeImportMeta ? visible + "\n" + recipeImportMeta : visible;
   }
   function buildRecipeImportDescription() {
     if (!importedRecipe) return;
+    resetRecipeImportAi();
+    recipeImportAiEstimated = false;
     const portions = Number($("#recipeImportPortions")?.value);
     const total = recipeYieldCount(importedRecipe.recipeYield);
     const factor = total && portions > 0 && Number.isFinite(portions) ? portions / total : 1;
@@ -4282,6 +4298,10 @@ function formatSleepDuration(hours) {
   }
   function updateRecipeImportCalories() {
     const field = $("#recipeImportCalories"), info = $("#recipeImportCalorieInfo");
+    const button = $("#estimateRecipeImportCaloriesAi");
+    if (button) button.hidden = !(client && session && calorieAiModeEnabled() &&
+      window.ENERGIE_CONFIG?.calorieAiPilotEnabled === true &&
+      !db.settings?.demoMode && !professionalBetaMode && !clientProfessionalLink?.id);
     if (!field || !info) return;
     const perServing = importedRecipe?.caloriesPerServing;
     const portions = Number($("#recipeImportPortions")?.value);
@@ -4291,6 +4311,72 @@ function formatSleepDuration(hours) {
     } else {
       field.value = "";
       info.textContent = "Aucune donnée calorique fiable trouvée : tu peux laisser ce champ vide.";
+    }
+  }
+  async function estimateRecipeImportCaloriesAi() {
+    const button = $("#estimateRecipeImportCaloriesAi");
+    const status = $("#recipeImportAiStatus");
+    const field = $("#recipeImportCalories");
+    const dialog = $("#recipeImportDialog");
+    if (!button || !status || !field || !dialog?.open || !importedRecipe ||
+        !client || !session || !calorieAiModeEnabled() || recipeImportAiController) return;
+    if (db.settings?.calorieAiConsent !== true) {
+      status.textContent = "Active l’autorisation IA dans Profil → Recherche et estimation IA.";
+      return;
+    }
+    const description = $("#recipeImportText")?.value.trim() || "";
+    const portions = $("#recipeImportPortions")?.value;
+    const currentRecipe = importedRecipe;
+    if (description.length < 3 || description.length > MEAL_DESCRIPTION_MAX_LENGTH ||
+        !(Number(portions) > 0) || Number(portions) > 20) {
+      status.textContent = "Vérifie les ingrédients et les portions avant l’estimation.";
+      return;
+    }
+    if (field.value.trim() && !confirm("Remplacer les calories déjà indiquées par une estimation IA ?")) return;
+    const controller = new AbortController();
+    recipeImportAiController = controller;
+    button.disabled = true;
+    button.classList.add("is-ai-working");
+    button.textContent = "Estimation en cours…";
+    status.textContent = "✨ L’IA analyse les ingrédients et les portions…";
+    // Un seul appel à Gemini, sans recherche Google préalable.
+    const timeout = setTimeout(() => controller.abort(), 25000);
+    try {
+      const { data, error } = await client.functions.invoke("estimate-meal-calories", {
+        signal: controller.signal,
+        body: { description, locale: window.ENERGIE_LOCALE || "fr-CA" },
+      });
+      if (controller.signal.aborted) throw new Error("timeout");
+      if (error) throw error;
+      // Ignorer tout résultat si l'utilisateur a modifié la recette, les portions ou fermé la fenêtre.
+      if (!dialog.open || currentRecipe !== importedRecipe ||
+          description !== ($("#recipeImportText")?.value.trim() || "") ||
+          portions !== $("#recipeImportPortions")?.value ||
+          recipeImportAiController !== controller) return;
+      const kcal = data?.kcal;
+      if (!Number.isInteger(kcal) || kcal < 20 || kcal > 3500) {
+        status.textContent = "L’IA n’a pas obtenu d’estimation fiable. Tu peux saisir les calories manuellement.";
+        return;
+      }
+      field.value = String(kcal);
+      recipeImportAiEstimated = true;
+      $("#recipeImportCalorieInfo").textContent =
+        "✨ Estimation IA approximative pour les portions choisies, non publiée par le site. Modifiable avant d’enregistrer.";
+      status.textContent = "✓ Estimation ajoutée. Tu peux modifier les calories.";
+    } catch (error) {
+      if (recipeImportAiController !== controller) return;
+      status.textContent = controller.signal.aborted
+        ? "Estimation trop longue (25 s). Tu peux réessayer ou saisir les calories manuellement."
+        : "Estimation IA indisponible. Tu peux saisir les calories manuellement.";
+      console.warn("Estimation IA de recette indisponible", error);
+    } finally {
+      clearTimeout(timeout);
+      if (recipeImportAiController === controller) {
+        recipeImportAiController = null;
+        button.disabled = false;
+        button.classList.remove("is-ai-working");
+        button.textContent = "✨ Estimer avec l’IA";
+      }
     }
   }
   let recipeSites = [];
@@ -4363,6 +4449,8 @@ function formatSleepDuration(hours) {
     if (!dialog) return;
     recipeImportTarget = target === "favorite" ? "favorite" : "meal";
     $("#applyRecipeImport").textContent = recipeImportTarget === "favorite" ? "Utiliser dans mon favori" : "Utiliser dans mon repas";
+    resetRecipeImportAi();
+    recipeImportAiEstimated = false;
     importedRecipe = null;
     recipeImportMeta = "";
     $("#recipeImportUrl").value = "";
@@ -4396,6 +4484,8 @@ function formatSleepDuration(hours) {
     button.disabled = true;
     status.textContent = "Lecture de la recette…";
     $("#recipeImportPreview").hidden = true;
+    resetRecipeImportAi();
+    recipeImportAiEstimated = false;
     importedRecipe = null;
     try {
       const { data, error } = await client.functions.invoke("import-recipe", {body:{url}});
@@ -19072,11 +19162,23 @@ function formatSleepDuration(hours) {
   $("#openCnfGuidedEntry").onclick = openCnfGuidedMealEntry;
   $("#openRecipeImport").onclick = openRecipeImportDialog;
   $("#closeRecipeImport").onclick = () => $("#recipeImportDialog").close();
+  $("#recipeImportDialog").addEventListener("close", resetRecipeImportAi);
   $("#fetchRecipeImport").onclick = fetchRecipeForMeal;
   $("#recipeImportPortions").addEventListener("input", () => { buildRecipeImportDescription(); updateRecipeImportCalories(); });
   $("#mealDescription").addEventListener("input", refreshRecipeSourceLinks);
   $("#mealDescription").addEventListener("input", refreshCalorieAiInputState);
-  $("#recipeImportText").addEventListener("input", refreshRecipeSourceLinks);
+  $("#recipeImportText").addEventListener("input", () => {
+    refreshRecipeSourceLinks();
+    resetRecipeImportAi();
+    if (recipeImportAiEstimated) {
+      $("#recipeImportCalories").value = "";
+      $("#recipeImportCalorieInfo").textContent =
+        "Ingrédients modifiés : relance l’estimation IA pour obtenir les nouvelles calories.";
+      recipeImportAiEstimated = false;
+    }
+  });
+  $("#recipeImportCalories").addEventListener("input", () => { recipeImportAiEstimated = false; });
+  $("#estimateRecipeImportCaloriesAi").onclick = estimateRecipeImportCaloriesAi;
   $("#applyRecipeImport").onclick = applyRecipeToMeal;
   $("#cnfGuidedSearch").addEventListener("input", (event) => {
     clearTimeout(mealCnfGuidedSearchTimer);
