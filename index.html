@@ -846,7 +846,7 @@
       const key = 'energieWellnessNoticeAccepted:v2';
       let accepted = false;
       try { accepted = !!localStorage.getItem(key); } catch (_) {}
-      if (accepted) return;
+      let reviewing = false;
       const dialog = document.getElementById('energieWellnessNotice');
       const en = /^en/i.test(window.ENERGIE_LOCALE || document.documentElement.lang || navigator.language);
       const copy = en ? {
@@ -858,6 +858,7 @@
         items:['Énergie est un outil de bien-être, et non une application médicale.','Les estimations nutritionnelles et caloriques, y compris celles de l’IA, sont données à titre indicatif et peuvent varier.','Pour toute question concernant ta santé, un professionnel de la santé demeure ta meilleure ressource.'],
         confirm:'Je comprends la nature et les limites d’Énergie.', next:'Continuer vers Énergie'
       };
+      const renderNotice = () => {
       dialog.innerHTML = '<img src="assets/icon.svg" alt=""><h2 id="energieWellnessTitle"></h2><p></p><ul></ul><label style="display:flex;align-items:center;gap:12px;margin-top:20px;line-height:1.4"><input type="checkbox" style="width:20px;height:20px;flex:0 0 20px;accent-color:#387c65"><span></span></label><button type="button" class="primary" disabled></button>';
       dialog.querySelector('h2').textContent = copy.title;
       dialog.querySelector('p').textContent = copy.intro;
@@ -867,19 +868,38 @@
       const button = dialog.querySelector('button');
       button.textContent = copy.next;
       checkbox.addEventListener('change', () => { button.disabled = !checkbox.checked; });
-      dialog.addEventListener('cancel', event => event.preventDefault());
+      if (reviewing) { checkbox.closest('label').hidden = true; checkbox.closest('label').style.display = 'none'; button.disabled = false; button.textContent = en ? 'Close' : 'Fermer'; }
       button.addEventListener('click', () => {
+        if (reviewing) { reviewing = false; dialog.close(); return; }
         if (!checkbox.checked) return;
         accepted = true;
         try { localStorage.setItem(key, new Date().toISOString()); } catch (_) {}
         dialog.close();
       });
-      const show = () => { if (!accepted && !dialog.open) dialog.showModal(); };
+      };
+      dialog.addEventListener("cancel", event => { if (!reviewing) event.preventDefault(); else reviewing = false; });
+      const show = () => { if (!accepted && !dialog.open) { reviewing = false; renderNotice(); dialog.showModal(); } };
+      const app = document.getElementById("app");
+      const profileNav = document.querySelector('[data-view="profile"]');
+      const addProfileLink = () => {
+        if (!profileNav?.classList.contains("active") || !app || document.getElementById("energieWellnessProfileLink")) return;
+        const link = document.createElement("button");
+        link.id = "energieWellnessProfileLink"; link.type = "button"; link.className = "secondary";
+        link.style.cssText = "display:block;margin:16px auto;max-width:95%;";
+        link.textContent = /^en/i.test(window.ENERGIE_LOCALE || document.documentElement.lang) ? "About Énergie — wellness notice" : "À propos d’Énergie — notice de bien-être";
+        link.addEventListener("click", () => { if (!dialog.open) { reviewing = accepted; renderNotice(); dialog.showModal(); } });
+        app.append(link);
+      };
+      if (app && profileNav) {
+        const refresh = () => { if (!profileNav.classList.contains("active")) document.getElementById("energieWellnessProfileLink")?.remove(); else addProfileLink(); };
+        const observer = new MutationObserver(refresh);
+        observer.observe(app, {childList:true}); observer.observe(profileNav,{attributes:true,attributeFilter:["class"]}); refresh();
+      }
       if (document.readyState === 'complete') show();
       else window.addEventListener('load', show, {once:true});
       // If startup opens another native dialog, keep the notice on top.
       new MutationObserver(records => {
-        if (accepted || !dialog.open) return;
+        if (accepted || reviewing || !dialog.open) return;
         if (records.some(record => record.target !== dialog && record.target.tagName === 'DIALOG' && record.target.open)) {
           dialog.close(); show();
         }
