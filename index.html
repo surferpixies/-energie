@@ -837,6 +837,9 @@
     #energieWellnessNotice li{margin-bottom:8px}
     #energieWellnessNotice button{width:100%;margin-top:12px}
     #energieWellnessNotice button:disabled{opacity:.45;cursor:not-allowed}
+    #energieWellnessNotice .wellness-language{display:flex;justify-content:flex-end;gap:4px;margin-bottom:12px}
+    #energieWellnessNotice .wellness-language button{width:auto;margin:0;padding:6px 14px;border:1px solid #b9cbbf;border-radius:999px;background:#fff;color:#387c65;font-weight:600}
+    #energieWellnessNotice .wellness-language button[aria-pressed="true"]{background:#387c65;color:white;border-color:#387c65}
     #energieWellnessNotice img{width:48px;height:48px;margin-bottom:12px}
   </style>
   <dialog id="energieWellnessNotice" aria-labelledby="energieWellnessTitle"></dialog>
@@ -859,13 +862,25 @@
         confirm:'Je comprends la nature et les limites d’Énergie.', next:'Continuer vers Énergie'
       };
       const renderNotice = () => {
-      dialog.innerHTML = '<img src="assets/icon.svg" alt=""><h2 id="energieWellnessTitle"></h2><p></p><ul></ul><label style="display:flex;align-items:center;gap:12px;margin-top:20px;line-height:1.4"><input type="checkbox" style="width:20px;height:20px;flex:0 0 20px;accent-color:#387c65"><span></span></label><button type="button" class="primary" disabled></button>';
+      dialog.innerHTML = '<div class="wellness-language" role="group" aria-label="Language / Langue"><button type="button" lang="fr" data-wellness-lang="fr">FR</button><button type="button" lang="en" data-wellness-lang="en">EN</button></div><img src="assets/icon.svg" alt=""><h2 id="energieWellnessTitle"></h2><p></p><ul></ul><label style="display:flex;align-items:center;gap:12px;margin-top:20px;line-height:1.4"><input type="checkbox" style="width:20px;height:20px;flex:0 0 20px;accent-color:#387c65"><span></span></label><button type="button" class="primary" disabled></button>';
       dialog.querySelector('h2').textContent = copy.title;
       dialog.querySelector('p').textContent = copy.intro;
       copy.items.forEach(item => { const li = document.createElement('li'); li.textContent = item; dialog.querySelector('ul').append(li); });
       const checkbox = dialog.querySelector('input');
       dialog.querySelector('label span').textContent = copy.confirm;
-      const button = dialog.querySelector('button');
+      const button = dialog.querySelector('button.primary');
+      dialog.querySelectorAll('[data-wellness-lang]').forEach(langButton => {
+        const target = langButton.dataset.wellnessLang;
+        langButton.setAttribute('aria-pressed', String(target === (en ? 'en' : 'fr')));
+        langButton.addEventListener('click', () => {
+          if (target === (en ? 'en' : 'fr')) return;
+          try { localStorage.setItem('energieLocale', target === 'en' ? 'en' : 'fr-CA'); } catch (_) { return; }
+          const url = new URL(window.location.href);
+          url.searchParams.set('_lang', Date.now().toString());
+          if (reviewing) url.searchParams.set('_wellnessReview', '1');
+          window.location.replace(url.toString());
+        });
+      });
       button.textContent = copy.next;
       checkbox.addEventListener('change', () => { button.disabled = !checkbox.checked; });
       if (reviewing) { checkbox.closest('label').hidden = true; checkbox.closest('label').style.display = 'none'; button.disabled = false; button.textContent = en ? 'Close' : 'Fermer'; }
@@ -895,8 +910,15 @@
         const observer = new MutationObserver(refresh);
         observer.observe(app, {childList:true}); observer.observe(profileNav,{attributes:true,attributeFilter:["class"]}); refresh();
       }
-      if (document.readyState === 'complete') show();
-      else window.addEventListener('load', show, {once:true});
+      const openOnLoad = () => {
+        const url = new URL(window.location.href);
+        const reopen = url.searchParams.get('_wellnessReview') === '1';
+        if (reopen) { url.searchParams.delete('_wellnessReview'); history.replaceState(history.state, '', url.toString()); }
+        if (reopen && accepted && !dialog.open) { reviewing = true; renderNotice(); dialog.showModal(); }
+        else show();
+      };
+      if (document.readyState === 'complete') openOnLoad();
+      else window.addEventListener('load', openOnLoad, {once:true});
       // If startup opens another native dialog, keep the notice on top.
       new MutationObserver(records => {
         if (accepted || reviewing || !dialog.open) return;
