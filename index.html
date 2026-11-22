@@ -788,6 +788,23 @@
   <script src="brain-journal.js?v=3.56.199"></script>
   <script src="professional-options.js?v=3.56.199"></script>
   <script src="journal-indexeddb.js?v=3.56.498"></script>
+  <script>
+    (() => {
+      if (window.Capacitor?.isNativePlatform?.() || ['ios','android'].includes(window.Capacitor?.getPlatform?.())) return;
+      const sdk = window.supabase;
+      if (!sdk?.createClient) return;
+      const original = sdk.createClient;
+      const capture = function (...args) {
+        const client = original.apply(this,args);
+        if (args[0] === window.ENERGIE_CONFIG?.supabaseUrl) {
+          window.energieWellnessClient = client;
+          sdk.createClient = original;
+        }
+        return client;
+      };
+      sdk.createClient = capture;
+    })();
+  </script>
   <script src="app.js?v=3.56.515-recipe-ai-contrast"></script>
   <script>
     // Keep the dinner "+ boisson" shortcut neutral without changing the beverage choices.
@@ -850,6 +867,27 @@
       let accepted = false;
       try { accepted = !!localStorage.getItem(key); } catch (_) {}
       let reviewing = false;
+      const client = window.energieWellnessClient;
+      let accountId = null, generation = 0, busy = false, checkedAccount = false;
+      const guestAccepted = () => { try { return !!localStorage.getItem(key); } catch (_) { return false; } };
+      const syncAccount = async session => {
+        const id = session?.user?.id || null;
+        if (checkedAccount && id === accountId) return;
+        checkedAccount = true;
+        accountId = id;
+        const token = ++generation;
+        busy = false;
+        if (dialog.open) dialog.close();
+        reviewing = false;
+        accepted = false;
+        if (!id) { accepted = guestAccepted(); show(); return; }
+        try {
+          const {data,error} = await client.from('wellness_notice_acceptances').select('notice_version').eq('user_id',id).eq('notice_version','v2').maybeSingle();
+          if (token !== generation) return;
+          accepted = !error && !!data;
+        } catch (_) { if (token !== generation) return; }
+        if (token === generation) show();
+      };
       const dialog = document.getElementById('energieWellnessNotice');
       const en = /^en/i.test(window.ENERGIE_LOCALE || document.documentElement.lang || navigator.language);
       const copy = en ? {
@@ -884,9 +922,28 @@
       button.textContent = copy.next;
       checkbox.addEventListener('change', () => { button.disabled = !checkbox.checked; });
       if (reviewing) { checkbox.closest('label').hidden = true; checkbox.closest('label').style.display = 'none'; button.disabled = false; button.textContent = en ? 'Close' : 'Fermer'; }
-      button.addEventListener('click', () => {
+      button.addEventListener('click', async () => {
         if (reviewing) { reviewing = false; dialog.close(); return; }
-        if (!checkbox.checked) return;
+        if (!checkbox.checked || busy) return;
+        if (accountId) {
+          const token = generation;
+          busy = true; button.disabled = true; checkbox.disabled = true;
+          dialog.querySelectorAll('[data-wellness-lang]').forEach(b => b.disabled = true);
+          try {
+            const {error} = await client.rpc('accept_wellness_notice',{p_locale:en?'en':'fr'});
+            if (token !== generation) return;
+            if (error) throw error;
+            accepted = true; dialog.close();
+          } catch (_) {
+            if (token !== generation) return;
+            let status = dialog.querySelector('[role="alert"]');
+            if (!status) { status = document.createElement('p'); status.setAttribute('role','alert'); dialog.append(status); }
+            status.textContent = en ? 'Unable to save your confirmation. Please try again.' : 'Impossible d’enregistrer ta confirmation. Réessaie dans un instant.';
+          } finally {
+            if (token === generation) { busy = false; button.disabled = !checkbox.checked; checkbox.disabled = false; dialog.querySelectorAll('[data-wellness-lang]').forEach(b => b.disabled = false); }
+          }
+          return;
+        }
         accepted = true;
         try { localStorage.setItem(key, new Date().toISOString()); } catch (_) {}
         dialog.close();
@@ -917,11 +974,18 @@
         if (reopen && accepted && !dialog.open) { reviewing = true; renderNotice(); dialog.showModal(); }
         else show();
       };
-      if (document.readyState === 'complete') openOnLoad();
-      else window.addEventListener('load', openOnLoad, {once:true});
+      const initialize = async () => {
+        if (client) {
+          client.auth.onAuthStateChange((_event, session) => setTimeout(() => syncAccount(session), 0));
+          try { const {data} = await client.auth.getSession(); await syncAccount(data?.session); } catch (_) { await syncAccount(null); }
+        }
+        openOnLoad();
+      };
+      if (document.readyState === 'complete') initialize();
+      else window.addEventListener('load', initialize, {once:true});
       // If startup opens another native dialog, keep the notice on top.
       new MutationObserver(records => {
-        if (accepted || reviewing || !dialog.open) return;
+        if (accepted || reviewing || busy || !dialog.open) return;
         if (records.some(record => record.target !== dialog && record.target.tagName === 'DIALOG' && record.target.open)) {
           dialog.close(); show();
         }
