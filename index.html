@@ -951,6 +951,17 @@
       };
       dialog.addEventListener("cancel", event => { if (!reviewing) event.preventDefault(); else reviewing = false; });
       const show = () => { if (!accepted && !dialog.open) { reviewing = false; renderNotice(); dialog.showModal(); } };
+      const legalLinks = () => {
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:12px;margin:12px 0;font-size:.9rem';
+        for (const [fr,eng,frHash,enHash] of [['Conditions d’utilisation','Terms of use','conditions','terms'],['Politique de confidentialité','Privacy policy','confidentialite','privacy']]) {
+          const a = document.createElement('a'); a.textContent = en?eng:fr; a.href = './legal.html?lang='+ (en?'en':'fr')+'#'+(en?enHash:frHash); a.target='_blank'; a.rel='noopener noreferrer'; wrap.append(a);
+        }
+        const contact = document.createElement('a'); contact.href='mailto:contact.energie@icloud.com'; contact.textContent=en?'Contact us':'Nous joindre'; wrap.append(contact);
+        return wrap;
+      };
+      const auth = document.getElementById('authCredentialsStep');
+      if (auth && !document.getElementById('energieAuthLegal')) { const links=legalLinks(); links.id='energieAuthLegal'; auth.append(links); }
       const app = document.getElementById("app");
       const profileNav = document.querySelector('[data-view="profile"]');
       const addProfileLink = () => {
@@ -960,7 +971,10 @@
         link.style.cssText = "display:block;margin:16px auto;max-width:95%;";
         link.textContent = /^en/i.test(window.ENERGIE_LOCALE || document.documentElement.lang) ? "About Énergie — wellness notice" : "À propos d’Énergie — notice de bien-être";
         link.addEventListener("click", () => { if (!dialog.open) { reviewing = accepted; renderNotice(); dialog.showModal(); } });
-        app.append(link);
+        const privacyCard = app.querySelector('.profile-privacy-card');
+        const host = privacyCard || app;
+        const group = document.createElement('div'); group.id='energieWellnessProfileLink'; link.removeAttribute('id');
+        group.append(link,legalLinks()); host.append(group);
       };
       if (app && profileNav) {
         const refresh = () => { if (!profileNav.classList.contains("active")) document.getElementById("energieWellnessProfileLink")?.remove(); else addProfileLink(); };
